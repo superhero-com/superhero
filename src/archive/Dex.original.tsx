@@ -23,7 +23,7 @@ import { errorToUserMessage } from '../libs/errorMessages';
 import { useToast } from '../components/ToastProvider';
 import { CONFIG } from '../config';
 // @ts-ignore
-import WaeAci from '../../../external/dex-contracts-v2/deployment/aci/WAE.aci.json';
+import WaeAci from 'dex-contracts-v2/build/WAE.aci.json';
 import { bridgeEthToAe } from '../libs/bridge';
 import './Dex.scss';
 

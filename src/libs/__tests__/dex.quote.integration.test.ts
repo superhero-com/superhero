@@ -3,9 +3,9 @@ import { AeSdk, Node } from '@aeternity/aepp-sdk';
 import { DEX_ADDRESSES } from '../../libs/dex';
 // Use the same ACIs as production code
 // @ts-ignore
-import RouterAci from '../../../../external/dex-contracts-v2/deployment/aci/AedexV2Router.aci.json';
+import RouterAci from '../dex-contracts-v2/build/AedexV2Router.aci.json';
 // @ts-ignore
-import FactoryAci from '../../../../external/dex-contracts-v2/deployment/aci/AedexV2Factory.aci.json';
+import FactoryAci from '../dex-contracts-v2/build/AedexV2Factory.aci.json';
 
 // Integration tests that hit a live node for read-only contract calls
 // Skips gracefully if the node is unreachable or pair not found

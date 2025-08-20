@@ -33,7 +33,8 @@
     "sophia-bonding-curve": "git+https://git@github.com/aeternity/BondingCurve#1.0.0-alpha.3",
     "tipping-contract": "git+https://git@github.com/aeternity/tipping-contract#v5.0.0-alpha2",
     "wordbazaar-contracts": "git+https://git@github.com/aeternity/wordbazaar-contracts#v0.0.4-alpha4",
-    "zustand": "^4.5.2"
+    "zustand": "^4.5.2",
+    "dex-contracts-v2": "github:aeternity/dex-contracts-v2#69f800fece02da1444af7f0d6622fec356a15496"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.11",

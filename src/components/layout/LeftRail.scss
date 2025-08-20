@@ -1,0 +1,631 @@
+/* Enhanced Left Rail Styles */
+
+.left-rail {
+  // Super Sexy Scrollbars
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+    margin: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, 
+      rgba(78, 205, 196, 0.6) 0%, 
+      rgba(255, 107, 107, 0.6) 50%, 
+      rgba(78, 205, 196, 0.6) 100%);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &:hover {
+      background: linear-gradient(135deg, 
+        rgba(78, 205, 196, 0.8) 0%, 
+        rgba(255, 107, 107, 0.8) 50%, 
+        rgba(78, 205, 196, 0.8) 100%);
+      box-shadow: 
+        0 4px 16px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        0 0 20px rgba(78, 205, 196, 0.3);
+      transform: scaleX(1.2);
+    }
+    
+    &:active {
+      background: linear-gradient(135deg, 
+        rgba(78, 205, 196, 1) 0%, 
+        rgba(255, 107, 107, 1) 50%, 
+        rgba(78, 205, 196, 1) 100%);
+      box-shadow: 
+        0 6px 20px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        0 0 30px rgba(78, 205, 196, 0.5);
+    }
+  }
+  
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  
+  // Firefox scrollbar styling
+  scrollbar-width: thin;
+  scrollbar-color: rgba(78, 205, 196, 0.6) rgba(255, 255, 255, 0.02);
+  
+  // Hide scrollbars when not needed (optional)
+  &:not(:hover)::-webkit-scrollbar-thumb {
+    opacity: 0.7;
+  }
+  
+  &:hover::-webkit-scrollbar-thumb {
+    opacity: 1;
+  }
+
+  .genz-card {
+    &.enhanced-stats {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 4px 16px rgba(78, 205, 196, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      
+      &:hover {
+        transform: translateY(-6px);
+        box-shadow: 
+          0 20px 60px rgba(0, 0, 0, 0.4),
+          0 12px 32px rgba(78, 205, 196, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      }
+    }
+  }
+
+  // Enhanced Time Display
+  .enhanced-time-display {
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 
+        0 12px 32px rgba(78, 205, 196, 0.2),
+        0 6px 16px rgba(69, 183, 209, 0.15);
+      border-color: rgba(78, 205, 196, 0.4);
+    }
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--neon-teal), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    &:hover::before {
+      opacity: 1;
+    }
+    
+    // Time display specific animations
+    .time-main {
+      animation: timeGlow 2s ease-in-out infinite alternate;
+    }
+    
+    .time-emoji {
+      animation: emojiFloat 3s ease-in-out infinite;
+    }
+    
+    .block-indicator {
+      animation: blockPulse 1.5s ease-in-out infinite;
+    }
+  }
+
+  // Enhanced button hover effects
+  .genz-btn {
+    position: relative;
+    overflow: hidden;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.6s ease;
+    }
+    
+    &:hover::after {
+      left: 100%;
+    }
+    
+    &:active {
+      transform: translateY(-1px) scale(0.98);
+    }
+  }
+
+  // Trending topics with gradient backgrounds
+  .trending-topic {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &:hover {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
+      border-color: rgba(255, 107, 107, 0.3);
+      box-shadow: 
+        0 8px 24px rgba(255, 107, 107, 0.2),
+        0 4px 12px rgba(78, 205, 196, 0.1);
+    }
+  }
+
+  // Token cards with glassmorphism
+  .token-card {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &:hover {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.04) 100%);
+      border-color: rgba(78, 205, 196, 0.3);
+      box-shadow: 
+        0 12px 32px rgba(0, 0, 0, 0.3),
+        0 6px 16px rgba(78, 205, 196, 0.15);
+    }
+  }
+
+  // Live activity feed with pulsing indicators
+  .live-activity-item {
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      left: -4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--neon-green);
+      animation: pulse 2s infinite;
+    }
+    
+    &.new-token::before {
+      background: var(--neon-blue);
+    }
+  }
+
+  // Price alert cards with dynamic colors
+  .price-alert {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.3s ease;
+    
+    &.positive {
+      border-color: rgba(16, 185, 129, 0.3);
+      
+      &:hover {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+      }
+    }
+    
+    &.negative {
+      border-color: rgba(255, 107, 107, 0.3);
+      
+      &:hover {
+        background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 107, 107, 0.05) 100%);
+        box-shadow: 0 8px 24px rgba(255, 107, 107, 0.2);
+      }
+    }
+  }
+
+  // Pro tips with category indicators
+  .pro-tip {
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--tip-color, var(--neon-purple));
+      transition: width 0.3s ease;
+    }
+    
+    &:hover::before {
+      width: 6px;
+    }
+  }
+
+  // Market stats with gradient backgrounds
+  .market-stat {
+    background: linear-gradient(135deg, rgba(78, 205, 196, 0.15) 0%, rgba(78, 205, 196, 0.05) 100%);
+    border: 1px solid rgba(78, 205, 196, 0.25);
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(78, 205, 196, 0.2);
+    }
+    
+    &.pink {
+      background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 107, 107, 0.05) 100%);
+      border-color: rgba(255, 107, 107, 0.25);
+      
+      &:hover {
+        box-shadow: 0 8px 24px rgba(255, 107, 107, 0.2);
+      }
+    }
+  }
+
+  // Status indicators
+  .status-indicator {
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: inherit;
+      animation: ripple 2s infinite;
+    }
+  }
+
+  // Enhanced animations
+  @keyframes ripple {
+    0% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.8;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(2);
+      opacity: 0;
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-4px);
+    }
+  }
+
+  @keyframes glow {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(78, 205, 196, 0.5);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(78, 205, 196, 0.8), 0 0 30px rgba(78, 205, 196, 0.6);
+    }
+  }
+
+  // Time display specific animations
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes timeGlow {
+    0% {
+      text-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+    }
+    100% {
+      text-shadow: 0 0 20px rgba(78, 205, 196, 0.8), 0 0 30px rgba(78, 205, 196, 0.6);
+    }
+  }
+
+  @keyframes emojiFloat {
+    0%, 100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-3px) rotate(5deg);
+    }
+  }
+
+  @keyframes blockPulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.1);
+    }
+  }
+
+  // Floating animation for cards
+  .genz-card {
+    animation: float 6s ease-in-out infinite;
+    
+    &:nth-child(2) {
+      animation-delay: -1s;
+    }
+    
+    &:nth-child(3) {
+      animation-delay: -2s;
+    }
+    
+    &:nth-child(4) {
+      animation-delay: -3s;
+    }
+  }
+
+  // Enhanced Mobile Responsiveness
+  @media (max-width: 768px) {
+    .genz-card {
+      margin-bottom: 12px;
+      padding: 16px;
+      border-radius: 16px;
+      
+      &:hover {
+        transform: none;
+      }
+    }
+    
+    .genz-btn {
+      padding: 8px 12px;
+      font-size: 11px;
+      border-radius: 10px;
+    }
+    
+    // Enhanced Stats Mobile
+    .enhanced-stats {
+      .card-header {
+        gap: 8px;
+        margin-bottom: 12px;
+        
+        .card-icon {
+          font-size: 16px;
+        }
+        
+        h4 {
+          font-size: 14px;
+        }
+      }
+      
+      .status-indicator {
+        width: 6px;
+        height: 6px;
+      }
+    }
+    
+    // Enhanced Time Display Mobile
+    .enhanced-time-display {
+      padding: 12px;
+      border-radius: 12px;
+      
+      .time-main {
+        font-size: 16px !important;
+        letter-spacing: 0.5px !important;
+      }
+      
+      .time-emoji {
+        font-size: 16px !important;
+      }
+      
+      .date-display {
+        font-size: 10px !important;
+      }
+      
+      .block-indicator {
+        font-size: 9px !important;
+        padding: 4px 8px !important;
+      }
+    }
+    
+    // Quick Actions Mobile
+    .genz-card {
+      .card-header {
+        gap: 8px;
+        margin-bottom: 12px;
+        
+        .card-icon {
+          font-size: 16px;
+        }
+        
+        h4 {
+          font-size: 14px;
+        }
+      }
+    }
+    
+    // Trending Topics Mobile
+    .trending-topic {
+      padding: 6px 10px;
+      font-size: 10px;
+      border-radius: 8px;
+      
+      &:hover {
+        transform: translateY(-1px) scale(1.01);
+      }
+    }
+    
+    // Token Cards Mobile
+    .token-card {
+      padding: 8px 10px;
+      gap: 8px;
+      
+      .token-info {
+        .token-symbol {
+          font-size: 10px;
+        }
+        
+        .token-balance {
+          font-size: 8px;
+        }
+      }
+    }
+    
+    // Live Activity Mobile
+    .live-activity-item {
+      padding: 6px 8px;
+      font-size: 9px;
+      gap: 6px;
+      
+      &::before {
+        width: 4px;
+        height: 4px;
+        left: -2px;
+      }
+    }
+    
+    // Price Alerts Mobile
+    .price-alert {
+      padding: 8px 10px;
+      gap: 8px;
+      
+      .price-change {
+        font-size: 9px;
+      }
+    }
+    
+    // Pro Tips Mobile
+    .pro-tip {
+      padding: 6px;
+      gap: 6px;
+      
+      .tip-icon {
+        font-size: 12px;
+      }
+      
+      .tip-text {
+        font-size: 10px;
+      }
+      
+      .tip-category {
+        font-size: 7px;
+      }
+    }
+  }
+  
+  // Tablet Responsiveness
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .genz-card {
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+    
+    .genz-btn {
+      padding: 9px 13px;
+      font-size: 11.5px;
+    }
+    
+    .enhanced-time-display {
+      padding: 14px;
+      
+      .time-main {
+        font-size: 16px !important;
+      }
+      
+      .time-emoji {
+        font-size: 18px !important;
+      }
+    }
+  }
+  
+  // High DPI Displays
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .genz-card {
+      backdrop-filter: blur(30px);
+    }
+  }
+  
+  // Reduced Motion
+  @media (prefers-reduced-motion: reduce) {
+    .genz-card {
+      transition: none;
+      
+      &:hover {
+        transform: none;
+      }
+    }
+    
+    .trending-topic,
+    .token-card,
+    .live-activity-item,
+    .price-alert,
+    .pro-tip,
+    .enhanced-time-display {
+      transition: none;
+      
+      &:hover {
+        transform: none;
+      }
+    }
+    
+    .status-indicator::after {
+      animation: none;
+    }
+    
+    .genz-spinner {
+      animation: none;
+    }
+    
+    .time-main,
+    .time-emoji,
+    .block-indicator {
+      animation: none;
+    }
+  }
+  
+  // Touch Device Optimizations
+  @media (hover: none) and (pointer: coarse) {
+    .genz-card {
+      &:hover {
+        transform: none;
+      }
+    }
+    
+    .trending-topic,
+    .token-card,
+    .live-activity-item,
+    .price-alert,
+    .pro-tip,
+    .enhanced-time-display {
+      &:hover {
+        transform: none;
+      }
+      
+      &:active {
+        transform: scale(0.98);
+      }
+    }
+    
+    .genz-btn {
+      &:hover {
+        transform: none;
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+  }
+}

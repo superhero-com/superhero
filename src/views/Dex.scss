@@ -1,0 +1,625 @@
+@use '../styles/variables.scss' as *;
+@use '../styles/mixins.scss' as *;
+
+.dex-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.02) 0%, rgba(139, 92, 246, 0.01) 100%);
+  position: relative;
+  
+  @include mobile {
+    padding: 16px;
+    max-width: 100%;
+  }
+  
+  @include mobile-small {
+    padding: 12px;
+  }
+}
+
+.dex-theme-switcher {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+  
+  @include mobile {
+    top: 16px;
+    right: 16px;
+  }
+  
+  @include mobile-small {
+    top: 12px;
+    right: 12px;
+  }
+}
+
+.dex-header {
+  margin-bottom: 32px;
+  text-align: center;
+  
+  @include mobile {
+    margin-bottom: 24px;
+  }
+}
+
+.dex-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: $primary_gradient;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 16px 0;
+  letter-spacing: -0.025em;
+  
+  @include mobile {
+    font-size: 2rem;
+  }
+  
+  @include mobile-small {
+    font-size: 1.75rem;
+  }
+}
+
+.dex-description {
+  font-size: 1.125rem;
+  color: $light_font_color;
+  margin: 0;
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
+  
+  @include mobile {
+    font-size: 1rem;
+  }
+  
+  @include mobile-small {
+    font-size: 0.875rem;
+  }
+}
+
+.dex-link {
+  background: $accent_gradient;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    filter: brightness(1.2);
+    transform: translateY(-1px);
+    text-shadow: $glow_shadow;
+  }
+}
+
+// Sexy Mobile-optimized form elements
+.dex-form {
+  background: $card_gradient;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  border-radius: 20px;
+  padding: 32px;
+  margin-bottom: 24px;
+  box-shadow: $card_shadow;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: $border_gradient;
+    opacity: 0.3;
+  }
+  
+  @include mobile {
+    padding: 24px;
+    margin-bottom: 20px;
+    border-radius: 16px;
+  }
+  
+  @include mobile-small {
+    padding: 20px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+  }
+}
+
+.dex-input-group {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 20px;
+  
+  @include mobile {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+.dex-input-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dex-input-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $standard_font_color;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  
+  @include mobile-small {
+    font-size: 0.75rem;
+  }
+}
+
+.dex-input {
+  width: 100%;
+  padding: 16px 20px;
+  background: $secondary_gradient;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  border-radius: 16px;
+  color: $standard_font_color;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  min-height: 56px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  // Prevent zoom on iOS
+  font-size: 16px;
+  
+  &::placeholder {
+    color: $light_font_color;
+    font-weight: 400;
+  }
+  
+  &:focus {
+    border-color: transparent;
+    background: $secondary_gradient;
+    box-shadow: $glow_shadow, inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
+  @include mobile {
+    min-height: 60px;
+  }
+  
+  @include mobile-small {
+    padding: 14px 16px;
+    font-size: 0.875rem;
+    min-height: 52px;
+  }
+}
+
+.dex-select {
+  min-width: 140px;
+  padding: 16px 20px;
+  background: $secondary_gradient;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  border-radius: 16px;
+  color: $standard_font_color;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 56px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  &:hover:not(:disabled) {
+    border-color: transparent;
+    background: $secondary_gradient;
+    box-shadow: $glow_shadow, inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
+  @include mobile {
+    min-height: 60px;
+    width: 100%;
+  }
+  
+  @include mobile-small {
+    padding: 14px 16px;
+    font-size: 0.875rem;
+    min-height: 52px;
+  }
+}
+
+.dex-switch-button {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
+  
+  button {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    background: $button_gradient;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: $button_shadow;
+    
+    &:hover:not(:disabled) {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: $glow_shadow, $button_shadow;
+    }
+    
+    &:active:not(:disabled) {
+      transform: translateY(0) scale(1);
+    }
+    
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    
+    @include mobile {
+      width: 52px;
+      height: 52px;
+    }
+  }
+}
+
+.dex-swap-button {
+  width: 100%;
+  padding: 20px 32px;
+  background: $button_gradient;
+  border: none;
+  border-radius: 16px;
+  color: white;
+  font-size: 1.125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 64px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: $button_shadow;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: $glow_shadow, $button_shadow;
+    
+    &::before {
+      left: 100%;
+    }
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: $button_shadow;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
+  @include mobile {
+    min-height: 68px;
+    font-size: 1rem;
+  }
+  
+  @include mobile-small {
+    padding: 18px 24px;
+    font-size: 0.875rem;
+    min-height: 60px;
+  }
+}
+
+.dex-error {
+  color: $error_color;
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  margin: 16px 0;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.1);
+  
+  @include mobile-small {
+    font-size: 0.75rem;
+    padding: 12px;
+  }
+}
+
+.dex-widget {
+  background: $card_gradient;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: $card_shadow;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: $border_gradient;
+    opacity: 0.2;
+  }
+  
+  @include mobile {
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  
+  @include mobile-small {
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+}
+
+.dex-widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    background: $primary_gradient;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+    
+    @include mobile-small {
+      font-size: 1rem;
+    }
+  }
+  
+  .dex-widget-subtitle {
+    font-size: 0.75rem;
+    color: $light_font_color;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    
+    @include mobile-small {
+      font-size: 0.625rem;
+    }
+  }
+}
+
+.dex-widget-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: $secondary_gradient;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  border-radius: 12px;
+  color: $standard_font_color;
+  font-size: 0.875rem;
+  outline: none;
+  min-height: 48px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &::placeholder {
+    color: $light_font_color;
+  }
+  
+  &:focus {
+    border-color: transparent;
+    background: $secondary_gradient;
+    box-shadow: $glow_shadow, inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+  }
+  
+  @include mobile-small {
+    padding: 10px 12px;
+    font-size: 0.75rem;
+    min-height: 44px;
+  }
+}
+
+.dex-widget-button {
+  padding: 12px 20px;
+  background: $button_gradient;
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 48px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: $button_shadow;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: $glow_shadow, $button_shadow;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
+  @include mobile-small {
+    padding: 10px 16px;
+    font-size: 0.75rem;
+    min-height: 44px;
+  }
+}
+
+.dex-button-group {
+  display: flex;
+  gap: 12px;
+  
+  @include mobile {
+    flex-wrap: wrap;
+  }
+  
+  .dex-widget-button {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+// Sexy DEX Tabs
+.dex-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  
+  @include mobile {
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  
+  @include mobile-small {
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+}
+
+.dex-tab {
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: $secondary_gradient;
+  color: $light_font_color;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 48px;
+  touch-action: manipulation;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  &:hover:not(:disabled) {
+    background: $secondary_gradient;
+    color: $standard_font_color;
+    box-shadow: $glow_shadow, inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  &--active {
+    background: $button_gradient;
+    border-color: transparent;
+    color: white;
+    box-shadow: $button_shadow;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $glow_shadow, $button_shadow;
+    }
+  }
+  
+  @include mobile {
+    padding: 10px 16px;
+    font-size: 0.75rem;
+    min-height: 44px;
+  }
+  
+  @include mobile-small {
+    padding: 8px 12px;
+    font-size: 0.625rem;
+    min-height: 40px;
+  }
+}
+
+.dex-tabs__spacer {
+  margin-left: auto;
+}
+
+.dex-tabs__add-button {
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: $secondary_gradient;
+  color: $light_font_color;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 48px;
+  touch-action: manipulation;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  &:hover:not(:disabled) {
+    background: $secondary_gradient;
+    color: $standard_font_color;
+    box-shadow: $glow_shadow, inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  @include mobile {
+    padding: 10px 16px;
+    font-size: 0.75rem;
+    min-height: 44px;
+  }
+  
+  @include mobile-small {
+    padding: 8px 12px;
+    font-size: 0.625rem;
+    min-height: 40px;
+  }
+}

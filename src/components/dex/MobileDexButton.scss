@@ -1,0 +1,140 @@
+@use '../../styles/variables.scss' as *;
+@use '../../styles/mixins.scss' as *;
+
+.mobile-dex-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  user-select: none;
+  position: relative;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  // Variants
+  &--primary {
+    background: $primary_color;
+    color: white;
+    
+    &:hover:not(:disabled) {
+      background: darken($primary_color, 10%);
+      box-shadow: 0 4px 12px rgba($primary_color, 0.3);
+    }
+  }
+  
+  &--secondary {
+    background: $secondary_color;
+    color: white;
+    
+    &:hover:not(:disabled) {
+      background: darken($secondary_color, 10%);
+    }
+  }
+  
+  &--outline {
+    background: transparent;
+    color: $primary_color;
+    border: 2px solid $primary_color;
+    
+    &:hover:not(:disabled) {
+      background: rgba($primary_color, 0.1);
+    }
+  }
+  
+  &--ghost {
+    background: transparent;
+    color: $light_font_color;
+    
+    &:hover:not(:disabled) {
+      background: rgba($light_font_color, 0.1);
+    }
+  }
+  
+  &--danger {
+    background: $error_color;
+    color: white;
+    
+    &:hover:not(:disabled) {
+      background: darken($error_color, 10%);
+    }
+  }
+  
+  // Sizes
+  &--small {
+    padding: 8px 16px;
+    font-size: 14px;
+    min-height: 40px;
+  }
+  
+  &--medium {
+    padding: 12px 20px;
+    font-size: 16px;
+    min-height: 48px;
+  }
+  
+  &--large {
+    padding: 16px 24px;
+    font-size: 18px;
+    min-height: 56px;
+  }
+  
+  &--full-width {
+    width: 100%;
+  }
+  
+  // Loading state
+  &--loading {
+    cursor: wait;
+  }
+  
+  &__spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  &__content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@include mobile {
+  .mobile-dex-button {
+    &--medium {
+      min-height: 52px;
+    }
+    
+    &--large {
+      min-height: 60px;
+    }
+  }
+}

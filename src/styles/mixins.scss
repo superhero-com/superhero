@@ -1,0 +1,201 @@
+@use './variables.scss' as *;
+
+// Sexy Glassmorphism Mixin
+@mixin glassmorphism($blur: 10px, $opacity: 0.1) {
+  background: rgba(255, 255, 255, $opacity);
+  backdrop-filter: blur($blur);
+  -webkit-backdrop-filter: blur($blur);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+// Sexy Neon Glow Mixin
+@mixin neon-glow($color: $primary_color, $intensity: 0.3) {
+  box-shadow: 
+    0 0 5px rgba($color, $intensity),
+    0 0 10px rgba($color, $intensity * 0.8),
+    0 0 15px rgba($color, $intensity * 0.6),
+    0 0 20px rgba($color, $intensity * 0.4);
+}
+
+// Sexy Hover Lift Mixin
+@mixin hover-lift($distance: -4px, $shadow-intensity: 0.2) {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    transform: translateY($distance);
+    box-shadow: 
+      0 8px 25px rgba(0, 0, 0, $shadow-intensity),
+      0 4px 10px rgba(0, 0, 0, $shadow-intensity * 0.5);
+  }
+}
+
+// Sexy Pulse Animation Mixin
+@mixin pulse-glow($color: $primary_color) {
+  animation: pulse-glow 2s infinite;
+  
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba($color, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba($color, 0.6), 0 0 30px rgba($color, 0.4);
+    }
+  }
+}
+
+// Sexy Gradient Text Mixin
+@mixin gradient-text($gradient: $primary_gradient) {
+  background: $gradient;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+// Sexy Border Gradient Mixin
+@mixin border-gradient($gradient: $border_gradient) {
+  border: 1px solid transparent;
+  background: linear-gradient($secondary_color, $secondary_color) padding-box,
+              $gradient border-box;
+}
+
+// Sexy Floating Animation Mixin
+@mixin floating($distance: 10px, $duration: 3s) {
+  animation: floating $duration ease-in-out infinite;
+  
+  @keyframes floating {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-$distance);
+    }
+  }
+}
+
+// Sexy Shimmer Effect Mixin
+@mixin shimmer($color: rgba(255, 255, 255, 0.1)) {
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, $color, transparent);
+    transition: left 0.5s;
+  }
+  
+  &:hover::before {
+    left: 100%;
+  }
+}
+
+// Sexy Scale on Hover Mixin
+@mixin scale-hover($scale: 1.05) {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    transform: scale($scale);
+  }
+}
+
+// Sexy Focus Ring Mixin
+@mixin focus-ring($color: $primary_color, $size: 3px) {
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 $size rgba($color, 0.5);
+  }
+}
+
+// Sexy Loading Spinner Mixin
+@mixin loading-spinner($color: $primary_color, $size: 20px) {
+  width: $size;
+  height: $size;
+  border: 2px solid rgba($color, 0.3);
+  border-top: 2px solid $color;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+}
+
+// Sexy Card Hover Mixin
+@mixin card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 
+      0 20px 40px rgba(0, 0, 0, 0.1),
+      0 10px 20px rgba(0, 0, 0, 0.05);
+  }
+}
+
+// Sexy Button Press Mixin
+@mixin button-press {
+  &:active {
+    transform: translateY(1px) scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
+// Sexy Text Shadow Mixin
+@mixin text-shadow($color: rgba(0, 0, 0, 0.3), $blur: 2px) {
+  text-shadow: 0 $blur $blur * 2 $color;
+}
+
+// Sexy Background Pattern Mixin
+@mixin background-pattern($color: rgba(99, 102, 241, 0.05)) {
+  background-image: 
+    radial-gradient(circle at 25% 25%, $color 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, $color 0%, transparent 50%);
+  background-size: 100px 100px;
+  background-position: 0 0, 50px 50px;
+}
+
+// Sexy Mobile Responsive Mixins
+@mixin mobile {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
+@mixin mobile-small {
+  @media (max-width: 480px) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: 769px) and (max-width: 1024px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 1025px) {
+    @content;
+  }
+}
+
+// Sexy Dark Mode Mixin
+@mixin dark-mode {
+  @media (prefers-color-scheme: dark) {
+    @content;
+  }
+}
+
+// Sexy Reduced Motion Mixin
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+

@@ -1,0 +1,41 @@
+// Unified Sexy Color Scheme
+$primary_color: var(--primary-color);
+$background_color: var(--background-color);
+$secondary_color: var(--secondary-color);
+$search_nav_border_color: var(--search-nav-border-color);
+$custom_links_color: var(--custom-links-color);
+$standard_font_color: var(--standard-font-color);
+$light_font_color: var(--light-font-color);
+$light-color: var(--light-color);
+$actions_ribbon_background_color: var(--actions-ribbon-background-color);
+$mobile_navigation_height: 3rem;
+
+// Additional colors to align with Vue theme names
+$thumbnail_background_color: var(--thumbnail-background-color);
+$thumbnail_background_color_alt: var(--thumbnail-background-color-alt);
+
+// App specific
+$topnav_background: var(--topnav-background);
+
+// Sexy Accent Colors
+$accent_color: var(--accent-color);
+$accent_gradient: var(--accent-gradient);
+$success_color: var(--success-color);
+$warning_color: var(--warning-color);
+$error_color: var(--error-color);
+
+// Sexy Gradients
+$primary_gradient: var(--primary-gradient);
+$secondary_gradient: var(--secondary-gradient);
+$card_gradient: var(--card-gradient);
+$button_gradient: var(--button-gradient);
+
+// Sexy Shadows
+$glow_shadow: var(--glow-shadow);
+$card_shadow: var(--card-shadow);
+$button_shadow: var(--button-shadow);
+
+// Sexy Borders
+$border_gradient: var(--border-gradient);
+$border_glow: var(--border-glow);
+

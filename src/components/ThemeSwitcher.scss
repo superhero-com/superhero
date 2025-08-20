@@ -1,0 +1,259 @@
+@use '../styles/variables.scss' as *;
+@use '../styles/mixins.scss' as *;
+
+.theme-switcher {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 16px;
+  background: $card_gradient;
+  box-shadow: $card_shadow;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: $border_gradient;
+    opacity: 0.3;
+  }
+  
+  @include mobile {
+    gap: 8px;
+    padding: 6px;
+  }
+}
+
+.theme-toggle {
+  position: relative;
+  width: 60px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  &.animating {
+    pointer-events: none;
+  }
+  
+  @include mobile {
+    width: 52px;
+    height: 28px;
+  }
+}
+
+.toggle-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: $secondary_gradient;
+  border-radius: 20px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    background: $button_gradient;
+    border-radius: 18px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .theme-toggle.light &::before {
+    opacity: 1;
+  }
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 28px;
+  height: 28px;
+  background: $card_gradient;
+  border-radius: 50%;
+  box-shadow: $button_shadow;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  
+  .theme-toggle.light & {
+    transform: translateX(28px);
+  }
+  
+  @include mobile {
+    width: 24px;
+    height: 24px;
+    
+    .theme-toggle.light & {
+      transform: translateX(24px);
+    }
+  }
+}
+
+.icon-container {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  @include mobile {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.sun-icon,
+.moon-icon {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  color: $standard_font_color;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  .theme-toggle.dark & {
+    .sun-icon {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+    .moon-icon {
+      opacity: 0;
+      transform: scale(0.8) rotate(-90deg);
+    }
+  }
+  
+  .theme-toggle.light & {
+    .sun-icon {
+      opacity: 0;
+      transform: scale(0.8) rotate(90deg);
+    }
+    .moon-icon {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+}
+
+.theme-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $standard_font_color;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  @include mobile {
+    font-size: 0.75rem;
+  }
+}
+
+// Sexy hover effects
+.theme-switcher:hover {
+  box-shadow: $glow_shadow, $card_shadow;
+  transform: translateY(-2px);
+}
+
+.theme-toggle:hover .toggle-thumb {
+  box-shadow: $glow_shadow, $button_shadow;
+}
+
+// Sexy focus states
+.theme-toggle:focus-visible {
+  outline: none;
+  box-shadow: $glow_shadow;
+}
+
+// Sexy animation for theme change
+@keyframes theme-change-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.theme-toggle.animating {
+  animation: theme-change-pulse 0.3s ease-in-out;
+}
+
+// Sexy glassmorphism effect for light theme
+:root[data-theme='light'] .theme-switcher {
+  @include glassmorphism(10px, 0.1);
+  background: $card_gradient;
+}
+
+// Sexy neon glow for dark theme
+:root[data-theme='dark'] .theme-switcher {
+  @include neon-glow($primary_color, 0.2);
+}
+
+// Sexy floating animation
+.theme-switcher {
+  @include floating(3px, 4s);
+}
+
+// Sexy shimmer effect on hover
+.theme-toggle {
+  @include shimmer(rgba(255, 255, 255, 0.1));
+}
+
+// Sexy scale effect for mobile
+@include mobile {
+  .theme-switcher {
+    transform: scale(0.9);
+    
+    &:hover {
+      transform: scale(0.95) translateY(-2px);
+    }
+  }
+}
+
+// Sexy reduced motion support
+@include reduced-motion {
+  .theme-switcher,
+  .theme-toggle,
+  .toggle-track,
+  .toggle-thumb,
+  .sun-icon,
+  .moon-icon {
+    animation: none;
+    transition: none;
+  }
+  
+  .theme-switcher:hover {
+    transform: none;
+  }
+  
+  .theme-toggle:hover {
+    transform: none;
+  }
+}

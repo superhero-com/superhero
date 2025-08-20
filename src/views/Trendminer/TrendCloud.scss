@@ -1,0 +1,750 @@
+@use '../../styles/variables.scss' as *;
+@use '../../styles/mixins.scss' as *;
+
+.trend-cloud {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  
+  @include mobile {
+    padding: 16px 12px;
+  }
+  
+  @include mobile-small {
+    padding: 12px 8px;
+  }
+}
+
+// Header section
+.trend-cloud-header {
+  margin-bottom: 24px;
+  
+  @include mobile {
+    margin-bottom: 20px;
+  }
+}
+
+.header-content {
+  margin-bottom: 20px;
+  
+  @include mobile {
+    margin-bottom: 16px;
+  }
+}
+
+.trend-cloud-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: $primary_color;
+  margin: 0 0 8px 0;
+  
+  @include mobile {
+    font-size: 24px;
+  }
+  
+  @include mobile-small {
+    font-size: 20px;
+  }
+}
+
+.trend-cloud-subtitle {
+  font-size: 14px;
+  color: $light_font_color;
+  opacity: 0.75;
+  margin: 0;
+  line-height: 1.4;
+  
+  @include mobile {
+    font-size: 13px;
+  }
+}
+
+.header-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  
+  @include mobile {
+    gap: 12px;
+  }
+}
+
+.view-toggle {
+  display: flex;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 4px;
+  
+  @include mobile {
+    gap: 4px;
+  }
+}
+
+.view-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  color: $primary_color;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 36px;
+  
+  @include mobile {
+    padding: 6px 12px;
+    font-size: 13px;
+    min-height: 32px;
+  }
+  
+  &.active {
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  &:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+
+.search-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  
+  @include mobile {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+.search-input {
+  flex: 1;
+  min-width: 200px;
+  
+  @include mobile {
+    min-width: 100%;
+  }
+}
+
+.source-select {
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: white;
+  color: $primary_color;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  
+  @include mobile {
+    padding: 10px 14px;
+    font-size: 16px; // Prevents zoom on iOS
+    min-width: 100%;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: $accent_color;
+    box-shadow: 0 0 0 2px rgba($accent_color, 0.2);
+  }
+}
+
+.filter-controls {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  
+  @include mobile {
+    gap: 12px;
+  }
+}
+
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: $primary_color;
+  cursor: pointer;
+  
+  @include mobile {
+    font-size: 13px;
+    gap: 6px;
+  }
+  
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: $accent_color;
+  }
+}
+
+.view-tokens-btn {
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: white;
+  color: $primary_color;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  @include mobile {
+    padding: 6px 12px;
+    font-size: 13px;
+    min-height: 32px;
+  }
+  
+  &:hover {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+  }
+}
+
+// Config panel
+.config-panel {
+  margin-bottom: 20px;
+  
+  @include mobile {
+    margin-bottom: 16px;
+  }
+}
+
+.config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  
+  @include mobile {
+    margin-bottom: 12px;
+  }
+}
+
+.config-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: $primary_color;
+  margin: 0;
+  
+  @include mobile {
+    font-size: 14px;
+  }
+}
+
+.config-toggle {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: white;
+  color: $primary_color;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  @include mobile {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  
+  &:hover {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.2);
+  }
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  
+  @include mobile {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+.config-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  
+  @include mobile {
+    gap: 6px;
+  }
+}
+
+.config-label {
+  font-size: 12px;
+  color: $light_font_color;
+  font-weight: 500;
+  
+  @include mobile {
+    font-size: 11px;
+  }
+}
+
+.config-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  @include mobile {
+    gap: 8px;
+  }
+}
+
+.config-range {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.1);
+  outline: none;
+  -webkit-appearance: none;
+  
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: $accent_color;
+    cursor: pointer;
+  }
+  
+  &::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: $accent_color;
+    cursor: pointer;
+    border: none;
+  }
+}
+
+.config-value {
+  font-size: 12px;
+  color: $primary_color;
+  font-weight: 600;
+  min-width: 30px;
+  text-align: right;
+  
+  @include mobile {
+    font-size: 11px;
+  }
+}
+
+.config-select,
+.config-input {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: white;
+  color: $primary_color;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  
+  @include mobile {
+    padding: 6px 10px;
+    font-size: 16px; // Prevents zoom on iOS
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: $accent_color;
+    box-shadow: 0 0 0 2px rgba($accent_color, 0.2);
+  }
+}
+
+// Loading and error states
+.trend-cloud-loading,
+.trend-cloud-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: 40px 20px;
+  text-align: center;
+  
+  @include mobile {
+    min-height: 150px;
+    padding: 30px 16px;
+  }
+}
+
+.trend-cloud-loading {
+  color: $light_font_color;
+  
+  .loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba($accent_color, 0.3);
+    border-top: 3px solid $accent_color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+}
+
+.trend-cloud-error {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+}
+
+// Cloud container
+.cloud-container {
+  margin-bottom: 20px;
+  
+  @include mobile {
+    margin-bottom: 16px;
+  }
+}
+
+.word-cloud {
+  position: relative;
+  border: 1px dashed rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 420px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
+  @include mobile {
+    padding: 12px;
+    min-height: 300px;
+    gap: 6px;
+  }
+}
+
+.cloud-word {
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+  opacity: 0.95;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: transform 120ms ease, background-color 120ms ease, filter 120ms ease;
+  cursor: pointer;
+  
+  @include mobile {
+    padding: 1px 4px;
+  }
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.8);
+    transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.hover-tooltip {
+  position: fixed;
+  z-index: 1000;
+  background: white;
+  color: $primary_color;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+  max-width: 200px;
+  
+  @include mobile {
+    font-size: 11px;
+    padding: 6px 8px;
+    max-width: 150px;
+  }
+  
+  .tooltip-title {
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  
+  .tooltip-score {
+    opacity: 0.8;
+    margin-bottom: 4px;
+  }
+  
+  .tooltip-status {
+    font-weight: 600;
+    
+    &.tokenized {
+      color: #22c55e;
+    }
+    
+    &.not-tokenized {
+      color: #f59e0b;
+    }
+  }
+}
+
+// Visx container
+.visx-container {
+  margin-bottom: 20px;
+  
+  @include mobile {
+    margin-bottom: 16px;
+  }
+}
+
+// Grid container
+.grid-container {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  margin-bottom: 20px;
+  
+  @include mobile {
+    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    margin-bottom: 16px;
+  }
+}
+
+.grid-item {
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.grid-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.grid-title {
+  font-weight: 800;
+  margin-bottom: 6px;
+  font-size: 14px;
+  
+  @include mobile {
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+}
+
+.grid-score,
+.grid-source {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-bottom: 4px;
+  
+  @include mobile {
+    font-size: 11px;
+  }
+}
+
+.grid-status {
+  font-size: 12px;
+  margin-top: 6px;
+  font-weight: 600;
+  
+  @include mobile {
+    font-size: 11px;
+    margin-top: 4px;
+  }
+  
+  &.tokenized {
+    color: #22c55e;
+  }
+  
+  &.not-tokenized {
+    color: #f59e0b;
+  }
+}
+
+// Selected details
+.selected-details {
+  margin-bottom: 20px;
+  
+  @include mobile {
+    margin-bottom: 16px;
+  }
+}
+
+.selected-header {
+  margin-bottom: 16px;
+  
+  @include mobile {
+    margin-bottom: 12px;
+  }
+}
+
+.selected-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: $primary_color;
+  margin: 0 0 8px 0;
+  
+  @include mobile {
+    font-size: 16px;
+  }
+}
+
+.selected-score {
+  font-size: 13px;
+  opacity: 0.8;
+  color: $light_font_color;
+  
+  @include mobile {
+    font-size: 12px;
+  }
+}
+
+.selected-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  
+  @include mobile {
+    gap: 8px;
+  }
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  min-height: 36px;
+  
+  @include mobile {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: 32px;
+  }
+  
+  &.primary {
+    color: white;
+    
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+  
+  &.secondary {
+    color: $primary_color;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    
+    &:hover {
+      border-color: rgba(0, 0, 0, 0.2);
+      transform: translateY(-1px);
+    }
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Footer
+.trend-cloud-footer {
+  font-size: 12px;
+  opacity: 0.7;
+  color: $light_font_color;
+  text-align: center;
+  padding: 16px 0;
+  
+  @include mobile {
+    font-size: 11px;
+    padding: 12px 0;
+  }
+  
+  .footer-link {
+    color: $accent_color;
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// Responsive adjustments
+@include tablet {
+  .trend-cloud {
+    padding: 24px 20px;
+  }
+  
+  .header-controls {
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .search-controls {
+    flex-direction: row;
+    gap: 16px;
+  }
+  
+  .config-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .word-cloud {
+    min-height: 500px;
+  }
+}
+
+@include desktop {
+  .trend-cloud {
+    padding: 32px 24px;
+  }
+  
+  .trend-cloud-title {
+    font-size: 32px;
+  }
+  
+  .config-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .word-cloud {
+    min-height: 600px;
+  }
+  
+  .grid-container {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}

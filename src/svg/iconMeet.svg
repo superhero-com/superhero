@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 19 19" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>iconMeet</title>
+    <g id="iconMeet" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="iconMeet" transform="translate(-1.000000, -1.000000)">
+            <rect id="bound" x="0" y="0" width="21" height="21"></rect>
+            <rect id="Combined-Shape" fill="currentColor" x="1.75" y="5.25" width="11.375" height="10.5" rx="2"></rect>
+            <path d="M19.25,7.6642119 L19.25,13.3357848 C19.25,13.8880695 18.8022847,14.3357848 18.25,14.3357848 C17.9847833,14.3357848 17.7304293,14.2304278 17.5428929,14.0428912 L14.7071064,11.207102 C14.3165823,10.8165775 14.3165826,10.1834126 14.7071071,9.79288845 L17.5428936,6.95710477 C17.933418,6.56658067 18.566583,6.56658098 18.9571071,6.95710546 C19.1446433,7.14464181 19.25,7.39899558 19.25,7.6642119 Z" id="Path-2" fill="currentColor" opacity="0.439999998"></path>
+        </g>
+    </g>
+</svg>

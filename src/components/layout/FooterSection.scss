@@ -1,0 +1,9 @@
+@use '../../styles/variables.scss' as *;
+
+.footer { border-top: 1px solid $search_nav_border_color; margin-top: 24px; }
+.container { max-width: 980px; margin: 0 auto; padding: 12px 16px; display: flex; gap: 16px; align-items: center; }
+.left { color: $light_font_color; }
+.right { margin-left: auto; display: flex; gap: 12px; }
+.right a { color: $light_font_color; text-decoration: none; }
+
+

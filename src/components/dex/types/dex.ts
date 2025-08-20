@@ -1,0 +1,102 @@
+export interface Token {
+  contractId: string | 'AE';
+  symbol: string;
+  decimals: number;
+  isAe?: boolean;
+}
+
+export interface TokenBalance {
+  in?: string;
+  out?: string;
+}
+
+export interface WrapBalances {
+  ae?: string;
+  wae?: string;
+}
+
+export interface SwapState {
+  tokenIn: Token | null;
+  tokenOut: Token | null;
+  amountIn: string;
+  amountOut: string;
+  isExactIn: boolean;
+  loading: boolean;
+  error: string | null;
+  quoteLoading: boolean;
+  path: string[];
+  routesFromBackend: any[][] | null;
+  priceImpactPct: number | null;
+  allowanceInfo: string | null;
+  balances: TokenBalance;
+  searchIn: string;
+  searchOut: string;
+}
+
+export interface EthxitState {
+  ethxitIn: string;
+  ethxitOut: string;
+  ethxitQuoting: boolean;
+  ethxitSwapping: boolean;
+  ethxitError: string | null;
+}
+
+export interface EthBridgeState {
+  ethBridgeIn: string;
+  ethBridgeOutAe: string;
+  ethBridgeQuoting: boolean;
+  ethBridgeProcessing: boolean;
+  ethBridgeError: string | null;
+  ethBridgeStep: 'idle' | 'bridging' | 'waiting' | 'swapping' | 'done';
+}
+
+export interface WrapState {
+  wrapAmount: string;
+  wrapBalances: WrapBalances;
+  wrapping: boolean;
+}
+
+export interface RecentActivity {
+  type: 'swap' | 'wrap' | 'unwrap';
+  hash?: string;
+}
+
+export interface SwapQuoteParams {
+  amountIn: string;
+  amountOut: string;
+  tokenIn: Token | null;
+  tokenOut: Token | null;
+  isExactIn: boolean;
+}
+
+export interface SwapExecutionParams {
+  amountIn: string;
+  amountOut: string;
+  tokenIn: Token | null;
+  tokenOut: Token | null;
+  path: string[];
+  slippagePct: number;
+  deadlineMins: number;
+  isExactIn: boolean;
+}
+
+export interface TokenListState {
+  tokens: Token[];
+  loading: boolean;
+}
+
+export interface SwapSettings {
+  slippagePct: number;
+  deadlineMins: number;
+}
+
+export interface RouteInfo {
+  path: string[];
+  reserves?: Array<{
+    token0: string;
+    token1: string;
+    reserve0: string;
+    reserve1: string;
+  }>;
+  priceImpact?: number;
+}

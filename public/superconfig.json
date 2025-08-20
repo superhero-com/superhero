@@ -1,0 +1,20 @@
+{
+  "BACKEND_URL": "https://raendom-backend.z52da5wt.xyz",
+  "TRENDMINER_API_URL": "https://api.dev.trendminer.fun",
+  "TRENDMINER_WS_URL": "https://ws.dev.trendminer.fun",
+  "NODE_URL": "https://mainnet.aeternity.io",
+  "WALLET_URL": "https://wallet.superhero.com",
+  "MIDDLEWARE_URL": "https://mainnet.aeternity.io/mdw",
+  "JITSI_DOMAIN": "meet.jit.si",
+  "GOVERNANCE_API_URL": "https://governance.aeternity.com/api",
+  "EXPLORER_URL": "https://aescan.io",
+  "IMGUR_API_CLIENT_ID": "",
+  "GIPHY_API_KEY": "",
+  "COMMIT_HASH": "",
+  "DEX_BACKEND_URL": "https://dex-backend-mainnet.prd.service.aepps.com",
+  "MAINNET_DEX_BACKEND_URL": "https://dex-backend-mainnet.prd.service.aepps.com",
+  "TESTNET_DEX_BACKEND_URL": "https://dex-backend-testnet.prd.service.aepps.com",
+  "CONTRACT_V3_ADDRESS": "ct_2Hyt9ZxzXra5NAzhePkRsDPDWppoatVD7CtHnUoHVbuehwR8Nb",
+  "CONTRACT_V33333_ADDRESS": "ct_WscpdLQf6ZZxoVqrsEwUwmuAEdzEkJii5W5TzG84rVgHeK6BW"
+}
+

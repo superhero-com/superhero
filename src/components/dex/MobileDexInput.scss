@@ -1,0 +1,348 @@
+@use '../../styles/variables.scss' as *;
+@use '../../styles/mixins.scss' as *;
+
+.mobile-dex-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  
+  &__label {
+    font-size: 14px;
+    font-weight: 500;
+    color: $light_font_color;
+    margin: 0;
+    
+    @include mobile-small {
+      font-size: 13px;
+    }
+  }
+  
+  &__wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  &__field {
+    width: 100%;
+    background: $card_bg_color;
+    border: 1px solid $border_color;
+    border-radius: 12px;
+    color: $light_font_color;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    outline: none;
+    touch-action: manipulation;
+    
+    // Prevent zoom on iOS
+    font-size: 16px;
+    
+    &::placeholder {
+      color: $secondary_font_color;
+      font-weight: 400;
+    }
+    
+    &:focus {
+      border-color: $primary_color;
+      background: rgba($primary_color, 0.05);
+      box-shadow: 0 0 0 3px rgba($primary_color, 0.1);
+    }
+    
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: rgba($border_color, 0.1);
+    }
+    
+    // Number input styling
+    &[type="number"] {
+      -moz-appearance: textfield;
+      
+      &::-webkit-outer-spin-button,
+      &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+    }
+  }
+  
+  // Variants
+  &--default {
+    .mobile-dex-input__field {
+      background: $card_bg_color;
+      border-color: $border_color;
+    }
+  }
+  
+  &--filled {
+    .mobile-dex-input__field {
+      background: rgba($primary_color, 0.05);
+      border-color: rgba($primary_color, 0.2);
+    }
+  }
+  
+  &--outlined {
+    .mobile-dex-input__field {
+      background: transparent;
+      border-color: $border_color;
+    }
+  }
+  
+  // Sizes
+  &--small {
+    .mobile-dex-input__field {
+      padding: 8px 12px;
+      font-size: 14px;
+      min-height: 40px;
+    }
+    
+    .mobile-dex-input__left-icon,
+    .mobile-dex-input__right-icon {
+      width: 32px;
+      height: 32px;
+    }
+  }
+  
+  &--medium {
+    .mobile-dex-input__field {
+      padding: 12px 16px;
+      font-size: 16px;
+      min-height: 48px;
+    }
+    
+    .mobile-dex-input__left-icon,
+    .mobile-dex-input__right-icon {
+      width: 40px;
+      height: 40px;
+    }
+  }
+  
+  &--large {
+    .mobile-dex-input__field {
+      padding: 16px 20px;
+      font-size: 18px;
+      min-height: 56px;
+    }
+    
+    .mobile-dex-input__left-icon,
+    .mobile-dex-input__right-icon {
+      width: 48px;
+      height: 48px;
+    }
+  }
+  
+  // Icon positioning
+  &--with-left-icon {
+    .mobile-dex-input__field {
+      padding-left: 56px;
+    }
+    
+    &.mobile-dex-input--small .mobile-dex-input__field {
+      padding-left: 48px;
+    }
+    
+    &.mobile-dex-input--large .mobile-dex-input__field {
+      padding-left: 64px;
+    }
+  }
+  
+  &--with-right-icon {
+    .mobile-dex-input__field {
+      padding-right: 48px;
+    }
+    
+    &.mobile-dex-input--small .mobile-dex-input__field {
+      padding-right: 40px;
+    }
+    
+    &.mobile-dex-input--large .mobile-dex-input__field {
+      padding-right: 56px;
+    }
+  }
+  
+  // Icons
+  &__left-icon,
+  &__right-icon {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $secondary_font_color;
+    pointer-events: none;
+    z-index: 1;
+    
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+  
+  &__left-icon {
+    left: 12px;
+    min-width: 24px;
+    text-align: center;
+  }
+  
+  &__right-icon {
+    right: 12px;
+    min-width: 24px;
+    text-align: center;
+  }
+  
+  // Loading state
+  &--loading {
+    .mobile-dex-input__field {
+      opacity: 0.7;
+      cursor: wait;
+    }
+  }
+  
+  &__loading-indicator {
+    position: absolute;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  
+  &__spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid $primary_color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  // Error state
+  &--error {
+    .mobile-dex-input__field {
+      border-color: $error_color;
+      background: rgba($error_color, 0.05);
+      
+      &:focus {
+        border-color: $error_color;
+        box-shadow: 0 0 0 3px rgba($error_color, 0.1);
+      }
+    }
+  }
+  
+  // Disabled state
+  &--disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  
+  // Message
+  &__message {
+    font-size: 12px;
+    margin: 0;
+    
+    &--error {
+      color: $error_color;
+    }
+    
+    &--helper {
+      color: $secondary_font_color;
+    }
+    
+    @include mobile-small {
+      font-size: 11px;
+    }
+  }
+}
+
+// Spinner animation
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// Mobile-specific optimizations
+@include mobile {
+  .mobile-dex-input {
+    &__field {
+      // Ensure proper touch behavior
+      touch-action: manipulation;
+      
+      // Better focus on mobile
+      &:focus {
+        box-shadow: 0 0 0 2px rgba($primary_color, 0.2);
+      }
+    }
+    
+    // Larger touch targets on mobile
+    &--medium {
+      .mobile-dex-input__field {
+        min-height: 52px;
+      }
+    }
+    
+    &--large {
+      .mobile-dex-input__field {
+        min-height: 60px;
+      }
+    }
+  }
+}
+
+@include mobile-small {
+  .mobile-dex-input {
+    &__field {
+      // Slightly smaller on very small screens
+      font-size: 15px;
+    }
+    
+    &--medium {
+      .mobile-dex-input__field {
+        padding: 10px 14px;
+        min-height: 48px;
+      }
+    }
+    
+    &--large {
+      .mobile-dex-input__field {
+        padding: 14px 18px;
+        min-height: 56px;
+      }
+    }
+  }
+}
+
+// Focus visible for accessibility
+.mobile-dex-input__field:focus-visible {
+  outline: 2px solid $primary_color;
+  outline-offset: 2px;
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .mobile-dex-input {
+    &__field {
+      border-width: 2px;
+    }
+    
+    &--error .mobile-dex-input__field {
+      border-width: 3px;
+    }
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .mobile-dex-input {
+    &__field {
+      transition: none;
+    }
+    
+    &__spinner {
+      animation: none;
+    }
+  }
+}

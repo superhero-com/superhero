@@ -1,0 +1,103 @@
+# --- Node / Package managers ---
+node_modules/
+.npm/
+.yarn/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Do not ignore lockfiles; keep them committed
+# (package-lock.json, yarn.lock, pnpm-lock.yaml)
+
+
+# --- Logs & PIDs ---
+logs/
+*.log
+*.log.*
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+
+# --- Environment files ---
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+
+# --- Build outputs / Bundler caches ---
+dist/
+build/
+.cache/
+.tmp/
+tmp/
+out/
+.vite/
+
+# Framework/service specific
+.next/
+.nuxt/
+.vercel/
+.netlify/
+
+
+# --- TypeScript ---
+*.tsbuildinfo
+
+
+# --- Testing / Coverage ---
+coverage/
+.nyc_output/
+.eslintcache
+.stylelintcache
+
+# Vitest/Jest caches
+.jest/
+.vitest/
+node_modules/.cache/
+
+
+# --- Cypress ---
+cypress/screenshots/
+cypress/videos/
+cypress/downloads/
+
+
+# --- IDE / Editors ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*.orig
+*.rej
+
+
+# --- OS files ---
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+external/
+# --- Project specific (monorepo subfolders) ---
+# Backend service runtime output
+external/superhero-social-backend/logs/
+external/superhero-social-backend/traces/
+
+# Vue reference project transient artifacts
+external/superhero-ui-vue-for-reference/dist/
+external/superhero-ui-vue-for-reference/node_modules/
+
+

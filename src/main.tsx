@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import ToastProvider from './components/ToastProvider';
@@ -10,8 +11,22 @@ import { store } from './store/store';
 import './styles/tailwind.css';
 import './styles/base.scss';
 import './i18n';
+import { OpenAPI } from './api/generated';
+
+// TODO: should be based on the active network
+OpenAPI.BASE = `http://localhost:3000`;
 
 const root = ReactDOM.createRoot(document.getElementById('root')!);
+
+// Create a client for TanStack Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 const IME: any = import.meta as any;
 // Bootstrap: load runtime config before rendering
@@ -36,15 +51,17 @@ const IME: any = import.meta as any;
 
   root.render(
     <React.StrictMode>
-      <Provider store={store}>
-        <ToastProvider>
-          <BrowserRouter>
-            <ErrorBoundary>
-              <App />
-            </ErrorBoundary>
-          </BrowserRouter>
-        </ToastProvider>
-      </Provider>
+      <QueryClientProvider client={queryClient}>
+        <Provider store={store}>
+          <ToastProvider>
+            <BrowserRouter>
+              <ErrorBoundary>
+                <App />
+              </ErrorBoundary>
+            </BrowserRouter>
+          </ToastProvider>
+        </Provider>
+      </QueryClientProvider>
     </React.StrictMode>,
   );
 })();

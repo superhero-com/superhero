@@ -187,7 +187,18 @@ function mockFetch(path: string) {
   return Promise.resolve({});
 }
 
+// API function for new posts endpoint
+export async function fetchPosts(limit: number = 5) {
+  const response = await fetch(`http://localhost:3000/api/posts?limit=${limit}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch posts: ${response.status}`);
+  }
+  return response.json();
+}
+
 export const Backend = {
+  // New posts API
+  fetchPosts,
   // Unified Post aliases (keeping legacy endpoints under the hood)
   getPostById: (id: string) => fetchJson(`tips/single/${id}`),
   getPostChildren: (postId: string) => fetchJson(`comment/api/tip/${encodeURIComponent(postId)}`),

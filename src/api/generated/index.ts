@@ -15,6 +15,7 @@ export type { DailyTradeVolumeResultDto } from './models/DailyTradeVolumeResultD
 export type { DailyUniqueActiveUsersResultDto } from './models/DailyUniqueActiveUsersResultDto';
 export type { MarketCapSumDto } from './models/MarketCapSumDto';
 export type { Pagination } from './models/Pagination';
+export type { PostDto } from './models/PostDto';
 export type { PriceDto } from './models/PriceDto';
 export type { PriceMovementDto } from './models/PriceMovementDto';
 export type { TokenDto } from './models/TokenDto';

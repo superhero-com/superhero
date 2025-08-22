@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import type { RootState, AppDispatch } from '../store/store';
-import { markTipsNextLoading, markTipsReloading, reloadTips, loadNextPageOfTips, loadCommentCountsForPosts } from '../store/slices/backendSlice';
+import { loadCommentCountsForPosts } from '../store/slices/backendSlice';
+import { fetchPosts } from '../api/backend';
 import AeButton from '../components/AeButton';
 import './FeedList.scss';
 import { linkify } from '../utils/linkify';
@@ -11,45 +13,61 @@ import LeftRail from '../components/layout/LeftRail';
 import RightRail from '../components/layout/RightRail';
 import { open } from '../store/slices/modalsSlice';
 import UserBadge from '../components/UserBadge';
-import { IconComment, IconSearch, IconFilter, IconSort } from '../icons';
+import { IconComment } from '../icons';
 import Identicon from '../components/Identicon';
 import { relativeTime } from '../utils/time';
 import CreatePost from '../components/CreatePost';
+import { PostDto, PostsService } from '../api/generated';
 
-function useQuery() { return new URLSearchParams(useLocation().search); }
-
-const EMPTY_LIST: any[] = [];
+function useUrlQuery() { return new URLSearchParams(useLocation().search); }
 
 export default function FeedList() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const query = useQuery();
-  const isHiddenContent = useSelector((s: RootState) => s.root.isHiddenContent);
+  const urlQuery = useUrlQuery();
   const chainNames = useSelector((s: RootState) => s.root.chainNames) as any;
 
-  const feed = query.get('feed') || 'main';
-  const sortBy = query.get('sortBy') || 'latest';
-  const search = query.get('search') || '';
-  const filterBy = query.get('filterBy') || 'all';
+  const sortBy = urlQuery.get('sortBy') || 'latest';
+  const search = urlQuery.get('search') || '';
+  const filterBy = urlQuery.get('filterBy') || 'all';
 
   const [localSearch, setLocalSearch] = useState(search);
-  const [showFilters, setShowFilters] = useState(false);
 
-  const args = useMemo(() => [sortBy, null, search, isHiddenContent, true, true] as any, [isHiddenContent, search, sortBy]);
-  const key = JSON.stringify(args);
-  const list = useSelector((s: RootState) => s.backend.tips[key] ?? EMPTY_LIST);
-  const endReached = useSelector((s: RootState) => s.backend.tipsEndReached[key]);
-  const loadingNext = useSelector((s: RootState) => s.backend.tipsNextPageLoading[key]);
+  // Use TanStack Query infinite query to fetch posts
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useInfiniteQuery({
+    queryKey: ['posts', { limit: 5, sortBy, search, filterBy }],
+    queryFn: ({ pageParam = 1 }) => PostsService.listAll({ 
+      limit: 5, 
+      page: pageParam,
+      orderBy: sortBy === 'latest' ? 'created_at' : sortBy === 'hot' ? 'total_comments' : 'created_at',
+      orderDirection: 'DESC'
+    }),
+    getNextPageParam: (lastPage) => {
+      if (lastPage?.meta?.currentPage < lastPage?.meta?.totalPages) {
+        return lastPage.meta.currentPage + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
+  });
+
+  const list: PostDto[] = data?.pages?.flatMap(page => page?.items ?? []) ?? [];
+  const endReached = !hasNextPage;
   
   const commentCounts = useSelector((s: RootState) => s.backend.commentCounts);
   const commentCountsLoading = useSelector((s: RootState) => s.backend.commentCountsLoading);
 
-  useEffect(() => {
-    dispatch(markTipsReloading(key));
-    dispatch(reloadTips(args));
-  }, [dispatch, key]);
 
   useEffect(() => {
+    console.log('list', list);
     if (list.length > 0) {
       const postIds = list
         .map(item => item.id || item._id)
@@ -90,13 +108,13 @@ export default function FeedList() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const params = new URLSearchParams(query);
+    const params = new URLSearchParams(urlQuery);
     if (localSearch.trim()) { params.set('search', localSearch.trim()); } else { params.delete('search'); }
     navigate(`/?${params.toString()}`);
   };
 
   const handleFilterChange = (newFilter: string) => {
-    const params = new URLSearchParams(query);
+    const params = new URLSearchParams(urlQuery);
     if (newFilter === 'all') { params.delete('filterBy'); } else { params.set('filterBy', newFilter); }
     navigate(`/?${params.toString()}`);
   };
@@ -105,7 +123,7 @@ export default function FeedList() {
     <Shell left={<LeftRail />} right={<RightRail />}>
       <div className="tips-list">
         {/* Move CreatePost above tab bar */}
-        <CreatePost onSuccess={() => { dispatch(markTipsReloading(key)); dispatch(reloadTips(args)); }} />
+        <CreatePost onSuccess={() => { refetch(); }} />
 
         <div className="actions">
           <div className="row">
@@ -134,7 +152,19 @@ export default function FeedList() {
         </div>
 
         <div className="feed">
-          {filteredAndSortedList.length === 0 && (
+          {error && (
+            <div className="feed-item empty-state" key="error">
+              <div className="avatar" />
+              <div className="content">
+                <div className="title">Failed to load posts</div>
+                <div className="subtitle">
+                  {error instanceof Error ? error.message : 'An error occurred while fetching posts'}
+                </div>
+                <AeButton onClick={() => refetch()}>Retry</AeButton>
+              </div>
+            </div>
+          )}
+          {!error && filteredAndSortedList.length === 0 && !isLoading && (
             <div className="feed-item empty-state" key="empty">
               <div className="avatar" />
               <div className="content">
@@ -147,8 +177,16 @@ export default function FeedList() {
               </div>
             </div>
           )}
+          {isLoading && filteredAndSortedList.length === 0 && (
+            <div className="feed-item empty-state" key="loading">
+              <div className="avatar" />
+              <div className="content">
+                <div className="title">Loading posts...</div>
+              </div>
+            </div>
+          )}
           {filteredAndSortedList.map((item: any) => {
-            const authorAddress = item.address || item.author || item.sender || item.owner || null;
+            const authorAddress = item.sender_address;
             const postId = item.id || item._id;
             const commentCount = getCommentCount(postId);
             const chainName = chainNames?.[authorAddress];
@@ -183,11 +221,11 @@ export default function FeedList() {
                         <UserBadge address={authorAddress} showAvatar={false} chainName={chainName} />
                       )}
                     </div>
-                    {item.timestamp && (
-                      <span className="timestamp">{relativeTime(new Date(item.timestamp))}</span>
+                    {item.created_at && (
+                      <span className="timestamp">{relativeTime(new Date(item.created_at))}</span>
                     )}
                   </div>
-                  <div className="title">{linkify(item.title)}</div>
+                  <div className="title">{linkify(item.content)}</div>
                   <div className="url">{linkify(item.url)}</div>
                   {item.media && Array.isArray(item.media) && item.media.length > 0 && (
                     <div className="media-grid">
@@ -214,7 +252,7 @@ export default function FeedList() {
 
         {!endReached && filteredAndSortedList.length > 0 && (
           <div className="load-more">
-            <AeButton loading={loadingNext} onClick={() => { dispatch(markTipsNextLoading(key)); dispatch(loadNextPageOfTips(args)); }}>Load more</AeButton>
+            <AeButton loading={isFetchingNextPage} onClick={() => fetchNextPage()}>Load more</AeButton>
           </div>
         )}
       </div>

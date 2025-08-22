@@ -2,11 +2,15 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Pagination } from '../models/Pagination';
+import type { PostDto } from '../models/PostDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class PostsService {
     /**
+     * Get all posts
+     * Retrieve a paginated list of all posts with optional sorting
      * @returns any
      * @throws ApiError
      */
@@ -20,7 +24,7 @@ export class PostsService {
         orderDirection?: 'ASC' | 'DESC',
         limit?: number,
         page?: number,
-    }): CancelablePromise<any> {
+    }): CancelablePromise<Pagination> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/posts',
@@ -33,7 +37,9 @@ export class PostsService {
         });
     }
     /**
-     * @returns any
+     * Get post by ID
+     * Retrieve a specific post by its unique identifier
+     * @returns PostDto Post retrieved successfully
      * @throws ApiError
      */
     public static getById({
@@ -43,7 +49,7 @@ export class PostsService {
          * Post ID
          */
         id: string,
-    }): CancelablePromise<any> {
+    }): CancelablePromise<PostDto> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/posts/{id}',

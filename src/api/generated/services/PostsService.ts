@@ -10,18 +10,23 @@ import { request as __request } from '../core/request';
 export class PostsService {
     /**
      * Get all posts
-     * Retrieve a paginated list of all posts with optional sorting
+     * Retrieve a paginated list of all posts with optional sorting and search functionality
      * @returns any
      * @throws ApiError
      */
     public static listAll({
         orderBy,
         orderDirection,
+        search,
         limit,
         page,
     }: {
         orderBy?: 'total_comments' | 'created_at',
         orderDirection?: 'ASC' | 'DESC',
+        /**
+         * Search term to filter posts by content or topics
+         */
+        search?: string,
         limit?: number,
         page?: number,
     }): CancelablePromise<Pagination> {
@@ -31,6 +36,7 @@ export class PostsService {
             query: {
                 'order_by': orderBy,
                 'order_direction': orderDirection,
+                'search': search,
                 'limit': limit,
                 'page': page,
             },

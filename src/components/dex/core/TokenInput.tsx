@@ -1,6 +1,7 @@
 import React from 'react';
 import TokenSelector from './TokenSelector';
 import { Token } from '../types/dex';
+import { Decimal } from '../../../libs/decimal';
 
 interface TokenInputProps {
   label: string;
@@ -47,10 +48,139 @@ export default function TokenInput({
   };
 
   return (
-    <div style={{ display: 'grid', gap: 6 }}>
-      <label style={{ fontSize: 12, opacity: 0.85 }}>{label}</label>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <div style={{ display: 'grid', gap: 6 }}>
+    <div style={{
+      background: 'rgba(255, 255, 255, 0.03)',
+      border: '1px solid var(--glass-border)',
+      borderRadius: 16,
+      padding: 16,
+      backdropFilter: 'blur(10px)',
+      transition: 'all 0.3s ease'
+    }}>
+      {/* Label and Balance Row */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12
+      }}>
+        <label style={{
+          fontSize: 14,
+          fontWeight: 600,
+          color: 'var(--light-font-color)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        }}>
+          {label}
+        </label>
+        {balance && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            fontSize: 12,
+            color: 'var(--light-font-color)'
+          }}>
+            <div>
+              Balance:
+              <span style={{
+                fontWeight: 600,
+                color: 'var(--standard-font-color)',
+                fontSize: 12,
+                marginLeft: 8
+              }}>
+                {Decimal.from(balance).prettify()}
+              </span>
+            </div>
+            
+            {/* Max, 50% buttons */}
+            <div style={{ 
+              display: 'flex', 
+              gap: 6, 
+              alignItems: 'center'
+            }}>
+              <button
+                onClick={() => {
+                  if (balance && !disabled && !readOnly) {
+                    const halfBalance = Decimal.from(balance).div(2).toString();
+                    onAmountChange(halfBalance);
+                  }
+                }}
+                disabled={disabled || readOnly || !balance || Number(balance) === 0}
+                style={{
+                  padding: '2px 8px',
+                  borderRadius: 6,
+                  border: '1px solid var(--glass-border)',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: 'var(--light-font-color)',
+                  fontSize: 10,
+                  fontWeight: 600,
+                  cursor: disabled || readOnly || !balance ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  opacity: disabled || readOnly || !balance ? 0.5 : 1
+                }}
+                onMouseOver={(e) => {
+                  if (!disabled && !readOnly && balance && Number(balance) > 0) {
+                    e.currentTarget.style.background = 'var(--accent-color)';
+                    e.currentTarget.style.color = 'white';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.color = 'var(--light-font-color)';
+                }}
+              >
+                50%
+              </button>
+              
+              <button
+                onClick={() => {
+                  if (balance && !disabled && !readOnly) {
+                    onAmountChange(balance);
+                  }
+                }}
+                disabled={disabled || readOnly || !balance || Number(balance) === 0}
+                style={{
+                  padding: '4px 8px',
+                  borderRadius: 6,
+                  border: '1px solid var(--glass-border)',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: 'var(--light-font-color)',
+                  fontSize: 10,
+                  fontWeight: 600,
+                  cursor: disabled || readOnly || !balance ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  opacity: disabled || readOnly || !balance ? 0.5 : 1
+                }}
+                onMouseOver={(e) => {
+                  if (!disabled && !readOnly && balance && Number(balance) > 0) {
+                    e.currentTarget.style.background = 'var(--accent-color)';
+                    e.currentTarget.style.color = 'white';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.color = 'var(--light-font-color)';
+                }}
+              >
+                MAX
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Main Input Row */}
+      <div style={{
+        display: 'flex',
+        gap: 12,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backdropFilter: 'blur(10px)',
+        padding: '4px 0px 4px 12px',
+        borderRadius: 12,
+      }}>
+        {/* Token Selector */}
+        <div style={{ flexShrink: 0 }}>
           <TokenSelector
             selected={token}
             onSelect={onTokenChange}
@@ -62,17 +192,12 @@ export default function TokenInput({
             onSearchChange={onSearchChange}
           />
         </div>
-        
-        <div style={{ 
-          flex: 1, 
-          padding: '8px 10px', 
-          borderRadius: 8, 
-          background: '#1a1a23', 
-          color: 'white', 
-          border: '1px solid #3a3a4a',
+
+        {/* Amount Input */}
+        <div style={{
+          flex: 1,
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
+          alignItems: 'center'
         }}>
           <input
             type="text"
@@ -82,28 +207,22 @@ export default function TokenInput({
             onChange={handleAmountChange}
             readOnly={readOnly}
             disabled={disabled}
-            style={{ 
-              flex: 1, 
-              background: 'transparent', 
-              border: 'none', 
-              color: 'white',
+            style={{
+              flex: 1,
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--standard-font-color)',
               outline: 'none',
-              fontSize: '14px'
+              fontSize: '18px',
+              fontWeight: 600,
+              fontFamily: 'monospace',
+              boxShadow: 'none',
+              backdropFilter: 'none',
+              textAlign: 'right'
             }}
             aria-label={`amount-${label.toLowerCase()}`}
           />
-          {token && (
-            <span style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px', fontWeight: 500 }}>
-              {token.symbol}
-            </span>
-          )}
         </div>
-        
-        {balance && (
-          <div style={{ alignSelf: 'center', fontSize: 12, opacity: 0.8 }}>
-            Balance: {balance}
-          </div>
-        )}
       </div>
     </div>
   );

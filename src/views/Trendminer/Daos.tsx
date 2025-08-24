@@ -4,9 +4,8 @@ import './Daos.scss';
 import { AeSdk, Node } from '@aeternity/aepp-sdk';
 import { CONFIG } from '../../config';
 import TokenMiniChart from '../../components/Trendminer/TokenMiniChart';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../store/store';
 
+import { useWallet } from '../../hooks';
 type TokenItem = {
   address: string;
   name: string;
@@ -25,7 +24,7 @@ export default function Daos() {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<'market_cap'|'holders_count'|'created_at'>('market_cap');
   const [treasuryMap, setTreasuryMap] = useState<Record<string, number>>({});
-  const address = useSelector((s: RootState) => s.root.address);
+  const address = useWallet().address;
   const [ownedContracts, setOwnedContracts] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 30;

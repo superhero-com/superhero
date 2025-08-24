@@ -1,12 +1,12 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
 import MiniWalletInfo from './MiniWalletInfo';
 import ConnectWalletButton from './ConnectWalletButton';
+import { useWallet } from '../hooks';
 
 type Props = { label?: string; block?: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 export default function WalletConnectBtn({ label, block, style, ...rest }: Props) {
-  const address = useSelector((s: any) => s.root.address as string | null);
+  const { address } = useWallet();
   if (address) {
     return <MiniWalletInfo block={block} style={style as any} />;
   }

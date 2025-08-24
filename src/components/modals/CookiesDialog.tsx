@@ -1,11 +1,8 @@
 import React from 'react';
 import AeButton from '../AeButton';
-import { useDispatch } from 'react-redux';
-import { setCookies } from '../../store/slices/backendSlice';
 
 export default function CookiesDialog({ onClose }: { onClose: () => void }) {
-  const dispatch = useDispatch();
-  return (
+    return (
     <div>
       <h3>Cookies</h3>
       <p>We use local storage for preferences. Allow?</p>

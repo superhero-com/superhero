@@ -2,10 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import DexTabs from '../components/dex/DexTabs';
 import DexSettings from '../components/dex/DexSettings';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from '../store/store';
-import { initSdk, scanForWallets } from '../store/slices/aeternitySlice';
-import { setSlippage } from '../store/slices/dexSlice';
 import ConnectWalletButton from '../components/ConnectWalletButton';
 import {
   DEX_ADDRESSES,
@@ -22,6 +18,7 @@ import { getRouterTokenAllowance, getTokenBalance } from '../libs/dex';
 import { errorToUserMessage } from '../libs/errorMessages';
 import { useToast } from '../components/ToastProvider';
 import { CONFIG } from '../config';
+import { useWallet, useDex } from '../../hooks';
 // @ts-ignore
 import WaeAci from 'dex-contracts-v2/build/WAE.aci.json';
 import { bridgeEthToAe } from '../libs/bridge';
@@ -90,8 +87,7 @@ function useTokenList(): [SelectToken[], boolean] {
 }
 
 export default function Dex() {
-  const dispatch = useDispatch<AppDispatch>();
-  const address = useSelector((s: RootState) => s.root.address);
+    const address = useWallet().address;
   const location = useLocation();
   const [tokens, tokensLoading] = useTokenList();
 
@@ -100,8 +96,8 @@ export default function Dex() {
   const [amountIn, setAmountIn] = useState<string>('');
   const [amountOut, setAmountOut] = useState<string>('');
   const [isExactIn, setIsExactIn] = useState<boolean>(true);
-  const slippagePct = useSelector((s: RootState) => s.dex.slippagePct);
-  const deadlineMins = useSelector((s: RootState) => s.dex.deadlineMins);
+  const slippagePct = useDex().slippagePct;
+  const deadlineMins = useDex().deadlineMins;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);

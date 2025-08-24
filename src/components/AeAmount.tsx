@@ -1,7 +1,6 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store/store';
 import { formatTokenAmount, shiftDecimalPlaces } from '../utils/number';
+import { useWallet } from '../../hooks';
 import './AeAmount.scss';
 
 interface Props {
@@ -12,7 +11,7 @@ interface Props {
 }
 
 export default function AeAmount({ amount = 0, round = 2, token = null, noSymbol }: Props) {
-  const tokenInfo = useSelector((s: RootState) => s.root.tokenInfo);
+  const { tokenInfo } = useWallet();
   const info = token ? tokenInfo[token] : null;
   const decimals = info?.decimals ?? 18;
   const symbol = info?.symbol ?? 'AE';

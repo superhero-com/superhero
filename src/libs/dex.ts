@@ -5,7 +5,7 @@ export const DEX_ADDRESSES = {
   factory: 'ct_2mfj3FoZxnhkSw5RZMcP8BfPoB1QR4QiYGNCdkAvLZ1zfF6paW',
   router: 'ct_azbNZ1XrPjXfqBqbAh1ffLNTQ1sbnuUDFvJrXjYz7JQA1saQ3',
   wae: 'ct_J3zBY8xxjsRr3QojETNw48Eb38fjvEuJKkQ6KzECvubvEcvCa',
-  aeeth: 'ct_ryTY1mxqjCjq1yBn9i6HDaCSdA6thXUFZTA84EMzbWd1SLKdh',
+  aeeth: 'ct_ryTY1mxqjCjq1yBn9i6HDaCSdA6thXUFZTA84EMzbWd1SLKdh', //
 };
 
 // Use deployment ACIs from external dex-contracts to match sdk expectations
@@ -247,7 +247,8 @@ export async function initDexContracts(sdk: any, routerAddress?: string): Promis
 
 export function toAettos(amount: string | number, decimals = 18): bigint {
   if (!amount) return 0n;
-  return BigInt(new BigNumber(String(amount)).shiftedBy(decimals).integerValue(BigNumber.ROUND_DOWN).toString());
+  const bn = new BigNumber(String(amount)).shiftedBy(decimals).integerValue(BigNumber.ROUND_DOWN);
+  return BigInt(bn.toFixed(0));
 }
 
 export function fromAettos(aettos: bigint | number | string, decimals = 18): string {
@@ -257,13 +258,13 @@ export function fromAettos(aettos: bigint | number | string, decimals = 18): str
 export function addSlippage(amount: bigint, slippagePct: number): bigint {
   const a = new BigNumber(amount.toString());
   const res = a.multipliedBy(1 + slippagePct / 100).integerValue(BigNumber.ROUND_DOWN);
-  return BigInt(res.toString());
+  return BigInt(res.toFixed(0));
 }
 
 export function subSlippage(amount: bigint, slippagePct: number): bigint {
   const a = new BigNumber(amount.toString());
   const res = a.multipliedBy(1 - slippagePct / 100).integerValue(BigNumber.ROUND_DOWN);
-  return BigInt(res.toString());
+  return BigInt(res.toFixed(0));
 }
 
 export async function ensureAllowanceForRouter(sdk: any, tokenAddress: string, owner: string, needed: bigint, routerAddress?: string): Promise<void> {

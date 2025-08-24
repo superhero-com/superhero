@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Identicon from './Identicon';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store/store';
 import { Backend } from '../api/backend';
 
+import { useWallet } from '../hooks';
 export default function UserBadge(
   { address, showAvatar = true, linkTo = 'profile', shortAddress = false, chainName }: { 
     address: string; 
@@ -15,7 +14,7 @@ export default function UserBadge(
   }
 ) {
   const navigate = useNavigate();
-  const chainNames = useSelector((s: RootState) => s.root.chainNames) as any;
+  const chainNames = useWallet().chainNames as any;
   const name = chainName || chainNames?.[address] || 'Legend';
   const [profile, setProfile] = useState<any>(null);
   const [hover, setHover] = useState(false);

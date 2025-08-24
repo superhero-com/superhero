@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store/store';
 import { ACI, DEX_ADDRESSES, addSlippage, initDexContracts, removeLiquidity, removeLiquidityAe, toAettos, fromAettos, getPairAddress, ensurePairAllowanceForRouter, getPairInfo, subSlippage, getPairAllowanceToRouter } from '../libs/dex';
 import ConfirmLiquidityModal from '../components/dex/ConfirmLiquidityModal';
 import TokenSelector from '../components/dex/TokenSelector';
@@ -11,9 +9,10 @@ import { useToast } from '../components/ToastProvider';
 import AeButton from '../components/AeButton';
 import { CONFIG } from '../config';
 
+import { useWallet } from '../../hooks';
 export default function PoolRemove() {
   const { id } = useParams(); // expect pair address ct_...
-  const address = useSelector((s: RootState) => s.root.address);
+  const address = useWallet().address;
   const [percent, setPercent] = useState(0);
   const location = useLocation();
   const [slippage, setSlippage] = useState<number>(() => Number(localStorage.getItem('dex:slippage') || 5));

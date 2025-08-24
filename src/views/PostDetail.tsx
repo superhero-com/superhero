@@ -1,77 +1,220 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, memo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Backend } from '../api/backend';
+import { PostDto, PostsService } from '../api/generated';
 import Shell from '../components/layout/Shell';
 import LeftRail from '../components/layout/LeftRail';
 import RightRail from '../components/layout/RightRail';
 import UserBadge from '../components/UserBadge';
 import AeButton from '../components/AeButton';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from '../store/store';
-import { callWithAuth } from '../store/slices/backendSlice';
 import { relativeTime } from '../utils/time';
-import { open } from '../store/slices/modalsSlice';
-import { deeplinkPost } from '../auth/deeplink';
 import Identicon from '../components/Identicon';
 import './PostDetail.scss';
+
+import { useWallet, useModal } from '../../hooks';
+// Types
+interface Comment {
+  id: string;
+  text: string;
+  timestamp: string;
+  author?: string;
+  address?: string;
+  sender?: string;
+  parentId?: string;
+}
+
+interface PostAvatarProps {
+  authorAddress: string;
+  chainName?: string;
+  size?: number;
+  overlaySize?: number;
+}
+
+interface CommentItemProps {
+  comment: Comment;
+  chainNames: Record<string, string>;
+}
+
+interface PostContentProps {
+  post: any; // Using any for now since the old Backend API structure is different from PostDto
+}
+
+// Component: Reusable Post Avatar
+const PostAvatar = memo(({ 
+  authorAddress, 
+  chainName, 
+  size = 56, 
+  overlaySize = 28 
+}: PostAvatarProps) => (
+  <div className="avatar-container">
+    <div className="avatar-stack">
+      {chainName && chainName !== 'Legend' && (
+        <div className="chain-avatar">
+          <Identicon address={authorAddress} size={size} name={chainName} />
+        </div>
+      )}
+      {(!chainName || chainName === 'Legend') && (
+        <div className="address-avatar">
+          <Identicon address={authorAddress} size={size} />
+        </div>
+      )}
+      {chainName && chainName !== 'Legend' && (
+        <div className="address-avatar-overlay">
+          <Identicon address={authorAddress} size={overlaySize} />
+        </div>
+      )}
+    </div>
+  </div>
+));
+
+// Component: Individual Comment Item
+const CommentItem = memo(({ comment, chainNames }: CommentItemProps) => {
+  const authorAddress = comment.address || comment.author || comment.sender;
+  const chainName = chainNames?.[authorAddress];
+
+  return (
+    <div className="comment-item">
+      <div className="comment-avatar">
+        <PostAvatar 
+          authorAddress={authorAddress} 
+          chainName={chainName} 
+          size={40} 
+          overlaySize={20} 
+        />
+      </div>
+      <div className="comment-content">
+        <div className="comment-header">
+          <UserBadge 
+            address={authorAddress} 
+            showAvatar={false}
+            chainName={chainName}
+          />
+          {comment.timestamp && (
+            <span className="comment-timestamp">
+              {relativeTime(new Date(comment.timestamp))}
+            </span>
+          )}
+        </div>
+        <div className="comment-text">{comment.text}</div>
+      </div>
+    </div>
+  );
+});
+
+// Component: Post Content Display
+const PostContent = memo(({ post }: PostContentProps) => (
+  <>
+    <h2 className="post-title">{post.title}</h2>
+    {post.url && (
+      <a href={post.url} target="_blank" rel="noreferrer" className="post-url">
+        {post.url}
+      </a>
+    )}
+    {post.linkPreview && (post.linkPreview.title || post.linkPreview.description) && (
+      <a href={post.url} target="_blank" rel="noreferrer" className="link-preview">
+        <div className="preview-content">
+          {post.linkPreview.image && (
+            <img 
+              src={Backend.getTipPreviewUrl(post.linkPreview.image)} 
+              alt="preview" 
+              className="preview-image" 
+            />
+          )}
+          <div className="preview-text">
+            <div className="preview-title">{post.linkPreview.title}</div>
+            <div className="preview-description">{post.linkPreview.description}</div>
+          </div>
+        </div>
+      </a>
+    )}
+    {post.media && Array.isArray(post.media) && post.media.length > 0 && (
+      <div className="media-grid">
+        {post.media.map((m: string) => (
+          <img key={m} src={m} alt="media" className="media-item" />
+        ))}
+      </div>
+    )}
+    {/* {post.text && (
+      <div className="post-text">{post.text}</div>
+    )} */}
+  </>
+));
 
 export default function PostDetail() {
   const { postId, id } = useParams();
   const navigate = useNavigate();
-  const [post, setPost] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [children, setChildren] = useState<any[]>([]);
-  const [selectedComment, setSelectedComment] = useState<any | null>(null);
-  const [newReply, setNewReply] = useState('');
-  const [openReplyFor, setOpenReplyFor] = useState<string | number | null>(null);
-  const dispatch = useDispatch<AppDispatch>();
-  const address = useSelector((s: RootState) => s.root.address) as string | null;
-  const useSdkWallet = useSelector((s: RootState) => s.aeternity.useSdkWallet);
-  const chainNames = useSelector((s: RootState) => s.root.chainNames) as any;
+  const { address, chainNames } = useWallet();
+  const { openModal } = useModal();
 
-  useEffect(() => {
-    if (!postId) return;
-    let cancelled = false;
-    Backend.getPostById(postId).then((p) => { if (!cancelled) setPost(p); }).catch(() => {});
-    Backend.getPostChildren(postId).then((list) => { if (!cancelled) setChildren(Array.isArray(list) ? list : []); }).catch(() => {});
-    setLoading(false);
-    return () => { cancelled = true; };
-  }, [postId]);
+  // Query for post data using new PostsService
+  const { 
+    data: postData, 
+    isLoading: isPostLoading, 
+    error: postError,
+    refetch: refetchPost
+  } = useQuery({
+    queryKey: ['post', postId],
+    queryFn: () => PostsService.getById({ id: postId! }),
+    enabled: !!postId,
+    refetchInterval: 120 * 1000, // Auto-refresh every 2 minutes
+  });
 
-  // Load selected comment when /comment/:id is present
-  useEffect(() => {
-    if (!id) { setSelectedComment(null); return; }
-    let cancelled = false;
-    Backend.getCommentById(id).then((c) => { if (!cancelled) setSelectedComment(c); }).catch(() => {});
-    return () => { cancelled = true; };
-  }, [id]);
+  // Query for post comments using legacy Backend API
+  const { 
+    data: comments = [], 
+    isLoading: isCommentsLoading, 
+    error: commentsError,
+    refetch: refetchComments
+  } = useQuery({
+    queryKey: ['post-comments', postId],
+    queryFn: async () => {
+      const result = await Backend.getPostChildren(postId!);
+      return Array.isArray(result) ? result : [];
+    },
+    enabled: !!postId,
+    refetchInterval: 120 * 1000, // Auto-refresh every 2 minutes
+  });
 
-  // Periodic refresh (120s)
-  useEffect(() => {
-    if (!postId) return;
-    const interval = window.setInterval(async () => {
-      try {
-        const [p, list] = await Promise.all([
-          Backend.getPostById(postId),
-          Backend.getPostChildren(postId),
-        ]);
-        setPost(p);
-        setChildren(Array.isArray(list) ? list : []);
-        if (id) {
-          try { setSelectedComment(await Backend.getCommentById(id)); } catch {}
-        }
-      } catch {}
-    }, 120 * 1000);
-    return () => window.clearInterval(interval);
-  }, [postId, id]);
+  // Query for selected comment if id is present
+  const { 
+    data: selectedComment, 
+    isLoading: isSelectedCommentLoading,
+    error: selectedCommentError
+  } = useQuery({
+    queryKey: ['comment', id],
+    queryFn: () => Backend.getCommentById(id!),
+    enabled: !!id,
+    refetchInterval: 120 * 1000,
+  });
+
+  // For backward compatibility, create a post object that matches the old structure
+  const post = useMemo(() => {
+    if (!postData) return null;
+    
+    // Convert PostDto to legacy format for existing components
+    return {
+      id: postData.id,
+      title: postData.content, // Use content as title since PostDto doesn't have title
+      text: postData.content,
+      author: postData.sender_address,
+      address: postData.sender_address,
+      timestamp: postData.created_at,
+      media: postData.media,
+      url: null, // PostDto doesn't have URL field
+      linkPreview: null, // PostDto doesn't have linkPreview
+    };
+  }, [postData]);
+
+  const isLoading = isPostLoading || isCommentsLoading || isSelectedCommentLoading;
+  const error = postError || commentsError || selectedCommentError;
 
   // Compute list to render depending on focus (tip vs single comment)
   const topLevelReplies = useMemo(() => {
-    if (!children) return [] as any[];
-    if (id) return children.filter((c) => String(c.parentId) === String(id));
-    return children.filter((c) => !c.parentId);
-  }, [children, id]);
+    if (!comments) return [] as Comment[];
+    if (id) return comments.filter((c: Comment) => String(c.parentId) === String(id));
+    return comments.filter((c: Comment) => !c.parentId);
+  }, [comments, id]);
 
   // Dynamic meta tags similar to Vue metaInfo()
   useEffect(() => {
@@ -100,10 +243,76 @@ export default function PostDetail() {
     setMeta('name', 'twitter:image:alt', 'Superhero post');
   }, [id, postId, post, selectedComment]);
 
+  // Helper function to get author info
   const getAuthorInfo = (item: any) => {
-    const authorAddress = item.address || item.author || item.sender;
+    const authorAddress = item?.address || item?.author || item?.sender;
     const chainName = chainNames?.[authorAddress];
     return { authorAddress, chainName };
+  };
+
+  // Render helpers
+  const renderLoadingState = () => (
+    <div className="loading-state">Loading…</div>
+  );
+
+  const renderErrorState = () => (
+    <div className="error-state">
+      Error loading post. 
+      <AeButton variant="ghost" size="sm" onClick={() => {
+        refetchPost();
+        refetchComments();
+      }}>
+        Retry
+      </AeButton>
+    </div>
+  );
+
+  const renderPostHeader = (displayPost: any) => {
+    const { authorAddress, chainName } = getAuthorInfo(displayPost);
+    
+    return (
+      <header className="post-header">
+        <div className="author-section">
+          {authorAddress && (
+            <div className="author-display">
+              <PostAvatar authorAddress={authorAddress} chainName={chainName} />
+              <UserBadge 
+                address={authorAddress} 
+                showAvatar={false}
+                chainName={chainName}
+                linkTo="profile" 
+                shortAddress 
+              />
+            </div>
+          )}
+        </div>
+        <div className="post-actions">
+          {!id && displayPost?.timestamp && (
+            <div className="timestamp">
+              {relativeTime(new Date(displayPost.timestamp))}
+            </div>
+          )}
+          {/* Temporarily disabled - menu functionality 
+          {!id && (
+            <AeButton 
+              variant="ghost" 
+              size="sm"
+              onClick={() => openModal({ 
+                name: 'feed-item-menu', 
+                props: { 
+                  postId, 
+                  url: displayPost.url || '', 
+                  author: displayPost.author || displayPost.address
+                } 
+              }))}
+            >
+              •••
+            </AeButton>
+          )}
+          */}
+        </div>
+      </header>
+    );
   };
 
   return (
@@ -115,149 +324,25 @@ export default function PostDetail() {
           </AeButton>
         </div>
         
-        {loading && <div className="loading-state">Loading…</div>}
-        {error && <div className="error-state">Error loading post.</div>}
+        {isLoading && renderLoadingState()}
+        {error && renderErrorState()}
         
         {(id ? selectedComment : post) && (
           <article className="post-detail">
-            <header className="post-header">
-              <div className="author-section">
-                {(() => {
-                  const { authorAddress, chainName } = getAuthorInfo(id ? selectedComment : post);
-                  return authorAddress ? (
-                    <div className="author-display">
-                      <div className="avatar-container">
-                        <div className="avatar-stack">
-                          {/* Chain avatar (bigger) if available */}
-                          {chainName && chainName !== 'Legend' && (
-                            <div className="chain-avatar">
-                              <Identicon address={authorAddress} size={56} name={chainName} />
-                            </div>
-                          )}
-                          {/* Address avatar (smaller) if no chain name, or as overlay */}
-                          {(!chainName || chainName === 'Legend') && (
-                            <div className="address-avatar">
-                              <Identicon address={authorAddress} size={56} />
-                            </div>
-                          )}
-                          {/* Overlay avatar for chain names */}
-                          {chainName && chainName !== 'Legend' && (
-                            <div className="address-avatar-overlay">
-                              <Identicon address={authorAddress} size={28} />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <UserBadge 
-                        address={authorAddress} 
-                        showAvatar={false}
-                        chainName={chainName}
-                        linkTo="profile" 
-                        shortAddress 
-                      />
-                    </div>
-                  ) : null;
-                })()}
-              </div>
-              <div className="post-actions">
-                {!id && post?.timestamp && (
-                  <div className="timestamp">
-                    {relativeTime(new Date(post.timestamp))}
-                  </div>
-                )}
-                {!id && (
-                  <AeButton 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => dispatch(open({ 
-                      name: 'feed-item-menu', 
-                      props: { postId, url: post.url, author: (post.author || post.address) } 
-                    }))}
-                  >
-                    •••
-                  </AeButton>
-                )}
-              </div>
-            </header>
+            {renderPostHeader(id ? selectedComment : post)}
             
-            {!id && <h2 className="post-title">{post.title}</h2>}
-            {!id && post.url && (
-              <a href={post.url} target="_blank" rel="noreferrer" className="post-url">
-                {post.url}
-              </a>
-            )}
-            {!id && post.linkPreview && (post.linkPreview.title || post.linkPreview.description) && (
-              <a href={post.url} target="_blank" rel="noreferrer" className="link-preview">
-                <div className="preview-content">
-                  {post.linkPreview.image && (
-                    <img 
-                      src={Backend.getTipPreviewUrl(post.linkPreview.image)} 
-                      alt="preview" 
-                      className="preview-image" 
-                    />
-                  )}
-                  <div className="preview-text">
-                    <div className="preview-title">{post.linkPreview.title}</div>
-                    <div className="preview-description">{post.linkPreview.description}</div>
-                  </div>
-                </div>
-              </a>
-            )}
-            {!id && post.media && Array.isArray(post.media) && post.media.length > 0 && (
-              <div className="media-grid">
-                {post.media.map((m: string) => (
-                  <img key={m} src={m} alt="media" className="media-item" />
-                ))}
-              </div>
-            )}
-            {!id && post.text && (
-              <div className="post-text">{post.text}</div>
-            )}
+            {!id && post && <PostContent post={post} />}
             
             {/* Comments section */}
             <div className="comments-section">
               <h3 className="comments-title">Comments ({topLevelReplies.length})</h3>
-              {topLevelReplies.map((comment) => {
-                const { authorAddress, chainName } = getAuthorInfo(comment);
-                return (
-                  <div key={comment.id} className="comment-item">
-                    <div className="comment-avatar">
-                      <div className="avatar-stack">
-                        {chainName && chainName !== 'Legend' && (
-                          <div className="chain-avatar">
-                            <Identicon address={authorAddress} size={40} name={chainName} />
-                          </div>
-                        )}
-                        {(!chainName || chainName === 'Legend') && (
-                          <div className="address-avatar">
-                            <Identicon address={authorAddress} size={40} />
-                          </div>
-                        )}
-                        {chainName && chainName !== 'Legend' && (
-                          <div className="address-avatar-overlay">
-                            <Identicon address={authorAddress} size={20} />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="comment-content">
-                      <div className="comment-header">
-                        <UserBadge 
-                          address={authorAddress} 
-                          showAvatar={false}
-                          chainName={chainName}
-                        />
-                        {comment.timestamp && (
-                          <span className="comment-timestamp">
-                            {relativeTime(new Date(comment.timestamp))}
-                          </span>
-                        )}
-                      </div>
-                      <div className="comment-text">{comment.text}</div>
-                    </div>
-                  </div>
-                );
-              })}
+              {topLevelReplies.map((comment: Comment) => (
+                <CommentItem 
+                  key={comment.id} 
+                  comment={comment} 
+                  chainNames={chainNames} 
+                />
+              ))}
             </div>
           </article>
         )}

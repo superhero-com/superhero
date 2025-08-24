@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import type { AppDispatch } from '../../../store/store';
-import { initSdk, scanForWallets } from '../../../store/slices/aeternitySlice';
-import { 
-  initDexContracts, 
-  toAettos, 
-  fromAettos, 
-  subSlippage, 
+import {
+  initDexContracts,
+  toAettos,
+  fromAettos,
+  subSlippage,
   addSlippage,
   ensureAllowanceForRouter,
   getRouterTokenAllowance,
@@ -16,9 +13,11 @@ import { errorToUserMessage } from '../../../libs/errorMessages';
 import { useToast } from '../../ToastProvider';
 import { CONFIG } from '../../../config';
 import { SwapExecutionParams } from '../types/dex';
+import { useAeternity } from '../../../hooks';
 
 export function useSwapExecution() {
-  const dispatch = useDispatch<AppDispatch>();
+  const { initSdk, scanForWallets, getAeSdk } = useAeternity();
+
   const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [allowanceInfo, setAllowanceInfo] = useState<string | null>(null);
@@ -26,12 +25,14 @@ export function useSwapExecution() {
   async function ensureWallet() {
     // eslint-disable-next-line no-console
     console.info('[dex] Ensuring wallet is connected…');
-    await dispatch(initSdk());
+    await initSdk();
+    await scanForWallets();
     const address = (window as any).__aeSdk?.address;
+    console.log("[dex] ensureWallet::", address);
     if (!address) {
       // eslint-disable-next-line no-console
       console.info('[dex] No address set, scanning for wallets…');
-      await dispatch(scanForWallets());
+      await scanForWallets();
     }
     // eslint-disable-next-line no-console
     console.info('[dex] Wallet ensure complete');
@@ -41,40 +42,41 @@ export function useSwapExecution() {
     if (!tokenIn || tokenIn.isAe) return; // AE does not need allowance
     const sdk = (window as any).__aeSdk;
     const address = sdk?.address;
-    
+
     // eslint-disable-next-line no-console
-    console.info('[dex] Ensuring allowance for router…', { 
-      token: tokenIn.contractId, 
-      amount: amountAettos.toString() 
+    console.info('[dex] Ensuring allowance for router…', {
+      token: tokenIn.contractId,
+      amount: amountAettos.toString()
     });
-    
+
     await ensureAllowanceForRouter(sdk, tokenIn.contractId, address, amountAettos);
-    
+
     try {
       const current = await getRouterTokenAllowance(sdk, tokenIn.contractId, address);
       setAllowanceInfo(`Allowance: ${fromAettos(current, tokenIn.decimals)} ${tokenIn.symbol}`);
-    } catch {}
+    } catch { }
   }
 
   async function executeSwap(params: SwapExecutionParams): Promise<string | null> {
     setLoading(true);
-    
+    //
+
     try {
       // eslint-disable-next-line no-console
       console.info('[dex] Submitting swap…');
       await ensureWallet();
-      
+
       const sdk = (window as any).__aeSdk;
       const { router } = await initDexContracts(sdk);
       const address = sdk?.address;
-      
+
       const p = params.path.length ? params.path : [];
       if (!p.length) throw new Error('No route found');
-      
+
       const amountInAettos = toAettos(params.amountIn || '0', params.tokenIn?.decimals || 18);
       const amountOutAettos = toAettos(params.amountOut || '0', params.tokenOut?.decimals || 18);
       const minOutAettos = subSlippage(amountOutAettos, params.slippagePct);
-      
+
       // Approve when tokenIn is an AEX9 for exact-in, or when maxIn for exact-out
       if (params.isExactIn) {
         await approveIfNeeded(amountInAettos, params.tokenIn);
@@ -89,16 +91,16 @@ export function useSwapExecution() {
       const isOutAe = !!params.tokenOut?.isAe;
 
       let txHash: string | undefined;
-      
+
       if (!isInAe && !isOutAe) {
         if (params.isExactIn) {
           // eslint-disable-next-line no-console
-          console.info('[dex] swap_exact_tokens_for_tokens', { 
-            amountInAettos: amountInAettos.toString(), 
-            minOutAettos: minOutAettos.toString(), 
-            path: p, 
-            toAccount, 
-            deadline: deadline.toString() 
+          console.info('[dex] swap_exact_tokens_for_tokens', {
+            amountInAettos: amountInAettos.toString(),
+            minOutAettos: minOutAettos.toString(),
+            path: p,
+            toAccount,
+            deadline: deadline.toString()
           });
           const res = await (router as any).swap_exact_tokens_for_tokens(
             amountInAettos,
@@ -115,12 +117,12 @@ export function useSwapExecution() {
           const maxIn = (BigInt(addSlippage(inNeeded, params.slippagePct).toString()));
           await approveIfNeeded(maxIn, params.tokenIn);
           // eslint-disable-next-line no-console
-          console.info('[dex] swap_tokens_for_exact_tokens', { 
-            amountOutAettos: amountOutAettos.toString(), 
-            maxIn: maxIn.toString(), 
-            path: p, 
-            toAccount, 
-            deadline: deadline.toString() 
+          console.info('[dex] swap_tokens_for_exact_tokens', {
+            amountOutAettos: amountOutAettos.toString(),
+            maxIn: maxIn.toString(),
+            path: p,
+            toAccount,
+            deadline: deadline.toString()
           });
           const res = await (router as any).swap_tokens_for_exact_tokens(
             amountOutAettos,
@@ -135,12 +137,12 @@ export function useSwapExecution() {
       } else if (isInAe && !isOutAe) {
         if (params.isExactIn) {
           // eslint-disable-next-line no-console
-          console.info('[dex] swap_exact_ae_for_tokens', { 
-            minOutAettos: minOutAettos.toString(), 
-            path: p, 
-            toAccount, 
-            deadline: deadline.toString(), 
-            amountInAettos: amountInAettos.toString() 
+          console.info('[dex] swap_exact_ae_for_tokens', {
+            minOutAettos: minOutAettos.toString(),
+            path: p,
+            toAccount,
+            deadline: deadline.toString(),
+            amountInAettos: amountInAettos.toString()
           });
           const res = await (router as any).swap_exact_ae_for_tokens(
             minOutAettos,
@@ -156,12 +158,12 @@ export function useSwapExecution() {
           const inNeeded = decodedResult[0] as bigint;
           const maxAe = addSlippage(inNeeded, params.slippagePct).toString();
           // eslint-disable-next-line no-console
-          console.info('[dex] swap_ae_for_exact_tokens', { 
-            amountOutAettos: amountOutAettos.toString(), 
-            maxAe, 
-            path: p, 
-            toAccount, 
-            deadline: deadline.toString() 
+          console.info('[dex] swap_ae_for_exact_tokens', {
+            amountOutAettos: amountOutAettos.toString(),
+            maxAe,
+            path: p,
+            toAccount,
+            deadline: deadline.toString()
           });
           const res = await (router as any).swap_ae_for_exact_tokens(
             amountOutAettos,
@@ -176,12 +178,12 @@ export function useSwapExecution() {
       } else if (!isInAe && isOutAe) {
         if (params.isExactIn) {
           // eslint-disable-next-line no-console
-          console.info('[dex] swap_exact_tokens_for_ae', { 
-            amountInAettos: amountInAettos.toString(), 
-            minOutAettos: minOutAettos.toString(), 
-            path: p, 
-            toAccount, 
-            deadline: deadline.toString() 
+          console.info('[dex] swap_exact_tokens_for_ae', {
+            amountInAettos: amountInAettos.toString(),
+            minOutAettos: minOutAettos.toString(),
+            path: p,
+            toAccount,
+            deadline: deadline.toString()
           });
           const res = await (router as any).swap_exact_tokens_for_ae(
             amountInAettos,
@@ -198,12 +200,12 @@ export function useSwapExecution() {
           const maxIn = addSlippage(inNeeded, params.slippagePct);
           await approveIfNeeded(maxIn, params.tokenIn);
           // eslint-disable-next-line no-console
-          console.info('[dex] swap_tokens_for_exact_ae', { 
-            amountOutAettos: amountOutAettos.toString(), 
-            maxIn: maxIn.toString(), 
-            path: p, 
-            toAccount, 
-            deadline: deadline.toString() 
+          console.info('[dex] swap_tokens_for_exact_ae', {
+            amountOutAettos: amountOutAettos.toString(),
+            maxIn: maxIn.toString(),
+            path: p,
+            toAccount,
+            deadline: deadline.toString()
           });
           const res = await (router as any).swap_tokens_for_exact_ae(
             amountOutAettos,
@@ -222,7 +224,7 @@ export function useSwapExecution() {
 
       // eslint-disable-next-line no-console
       console.info('[dex] Swap submitted', { txHash });
-      
+
       try {
         const url = CONFIG.EXPLORER_URL ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${txHash || ''}` : '';
         toast.push(
@@ -236,25 +238,25 @@ export function useSwapExecution() {
             }, 'View on explorer')
           )
         );
-      } catch {}
-      
+      } catch { }
+
       return txHash || null;
     } catch (e: any) {
       // eslint-disable-next-line no-console
       console.warn('[dex] Swap failed', e);
-      const errorMsg = errorToUserMessage(e, { 
-        action: 'swap', 
-        slippagePct: params.slippagePct, 
-        deadlineMins: params.deadlineMins 
+      const errorMsg = errorToUserMessage(e, {
+        action: 'swap',
+        slippagePct: params.slippagePct,
+        deadlineMins: params.deadlineMins
       });
-      
+
       try {
         toast.push(React.createElement('div', {},
           React.createElement('div', {}, 'Swap failed'),
           React.createElement('div', { style: { opacity: 0.9 } }, errorMsg)
         ));
-      } catch {}
-      
+      } catch { }
+
       throw new Error(errorMsg);
     } finally {
       setLoading(false);

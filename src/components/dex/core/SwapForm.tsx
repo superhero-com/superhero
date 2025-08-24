@@ -44,7 +44,6 @@ export default function SwapForm() {
   };
 
   // UI state
-  const [showSettings, setShowSettings] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   // Initialize default tokens
@@ -186,35 +185,34 @@ export default function SwapForm() {
           Swap Tokens
         </h2>
         
-        <button 
-          aria-label="open-settings" 
-          onClick={() => setShowSettings((v) => !v)} 
-          style={{ 
-            padding: '8px 12px', 
-            borderRadius: 12, 
-            border: '1px solid var(--glass-border)', 
-            background: 'var(--glass-bg)', 
-            color: 'var(--standard-font-color)',
-            cursor: 'pointer',
-            backdropFilter: 'blur(10px)',
-            transition: 'all 0.3s ease',
-            fontSize: 12,
-            fontWeight: 500
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.background = 'var(--accent-color)';
-            e.currentTarget.style.transform = 'translateY(-1px)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.background = 'var(--glass-bg)';
-            e.currentTarget.style.transform = 'translateY(0)';
-          }}
-        >
-          ⚙️ Settings
-        </button>
+        <SwapSettings>
+          <button 
+            aria-label="open-settings"
+            style={{ 
+              padding: '8px 12px', 
+              borderRadius: 12, 
+              border: '1px solid var(--glass-border)', 
+              background: 'var(--glass-bg)', 
+              color: 'var(--standard-font-color)',
+              cursor: 'pointer',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.3s ease',
+              fontSize: 12,
+              fontWeight: 500
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = 'var(--accent-color)';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = 'var(--glass-bg)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            ⚙️ Settings
+          </button>
+        </SwapSettings>
       </div>
-
-      <SwapSettings show={showSettings} onToggle={() => setShowSettings(!showSettings)} />
 
       {/* Token Input From */}
       <div style={{ marginBottom: 8 }}>
@@ -353,42 +351,6 @@ export default function SwapForm() {
         tokenIn={tokenIn}
         tokenOut={tokenOut}
       />
-
-      {/* Exact Output Toggle */}
-      <div style={{ 
-        display: 'flex', 
-        gap: 12, 
-        alignItems: 'center', 
-        marginBottom: 20,
-        padding: '12px 16px',
-        background: 'rgba(255, 255, 255, 0.03)',
-        borderRadius: 12,
-        border: '1px solid var(--glass-border)'
-      }}>
-        <label 
-          htmlFor="dex-exact-out" 
-          style={{ 
-            fontSize: 14, 
-            color: 'var(--light-font-color)',
-            cursor: 'pointer',
-            flex: 1
-          }}
-          title="Switch to exact output (max sold will be calculated)"
-        >
-          Exact Output Mode
-        </label>
-        <input 
-          id="dex-exact-out" 
-          type="checkbox" 
-          checked={!isExactIn} 
-          onChange={(e) => setIsExactIn(!e.target.checked)} 
-          style={{
-            width: 18,
-            height: 18,
-            cursor: 'pointer'
-          }}
-        />
-      </div>
 
       {/* Error Display */}
       {error && (

@@ -1,7 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store/store';
 import AeAmountFiat from '../components/AeAmountFiat';
 import './Landing.scss';
 
@@ -18,7 +16,7 @@ import votingIconPng from '../../../src/assets/landing/superhero-voting-icon.png
 import leagueIconPng from '../../../src/assets/landing/superhero-league-icon.png';
 
 export default function Landing() {
-  const stats = useSelector((s: RootState) => s.backend.stats);
+  const stats = null; // TODO: Replace with useBackend hook
 
   return (
     <div className="landing-page-container">

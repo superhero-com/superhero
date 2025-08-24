@@ -1,21 +1,13 @@
 import React, { useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { AppDispatch } from '../../store/store';
-import { initSdk, scanForWallets } from '../../store/slices/aeternitySlice';
 import { AeSdk } from '@aeternity/aepp-sdk';
-// Lazy import bctsl-sdk to avoid bundling issues if not present
-let bctsl: any;
-async function ensureBctsl() {
-  if (!bctsl) {
-    try {
-      bctsl = await import('bctsl-sdk');
-    } catch (e) {
-      throw new Error('bctsl-sdk not available');
-    }
-  }
-  return bctsl;
-}
+import {
+  BondingCurveTokenSale,
+  initAffiliationTokenGatingTokenSale,
+  toTokenDecimals,
+} from "bctsl-sdk";
+
 import WalletConnectBtn from '../../components/WalletConnectBtn';
+import { useAeternity } from '../../hooks';
 import BigNumber from 'bignumber.js';
 import { calculateBuyPriceWithAffiliationFee, calculateSellReturn, calculateTokensFromAE, calculateTokensToSellFromAE, toDecimals, toAe } from '../../utils/bondingCurve';
 import './TradeCard.scss';
@@ -23,7 +15,7 @@ import './TradeCard.scss';
 type Props = { token: any };
 
 export default function TradeCard({ token }: Props) {
-  const dispatch = useDispatch<AppDispatch>();
+  const {  initSdk, scanForWallets, getAeSdk } = useAeternity();
   const [isBuying, setIsBuying] = useState(true);
   const [tokenA, setTokenA] = useState<number | ''>(''); // token amount
   const [tokenB, setTokenB] = useState<number | ''>(''); // ae amount
@@ -37,21 +29,35 @@ export default function TradeCard({ token }: Props) {
 
   const disabled = useMemo(() => loading || (!tokenA && !tokenB), [loading, tokenA, tokenB]);
 
-  function connect() {
-    dispatch(initSdk());
-    dispatch(scanForWallets());
-    setSdkReady(true);
-  }
+  // async function connect() {
+  //   try {
+  //     if (!sdk) {
+  //       await initSdk();
+  //       await scanForWallets();
+  //       setSdkReady(true);
+  //     }
+  //   } catch (error) {
+  //     console.error('Failed to connect wallet:', error);
+  //     setError('Failed to connect wallet');
+  //   }
+  // }
 
   async function submit() {
     setLoading(true);
     setError(null);
+    const sdk = getAeSdk();
+    await scanForWallets();
+    // if no wallet, connect
+    if (!sdk) {
+      // await initSdk();
+     
+    }
     try {
-      const sdk: any = (window as any).__aeSdk as AeSdk;
       if (!sdk) throw new Error('Wallet not connected');
-      const { initAffiliationTokenGatingTokenSale } = await ensureBctsl();
       const saleAddress = token?.sale_address || token?.address;
       if (!saleAddress) throw new Error('Token sale address missing');
+      console.log('saleAddress', saleAddress);
+      console.log('sdk', getAeSdk());
       const tokenSale = await initAffiliationTokenGatingTokenSale(sdk, saleAddress);
       const isBuy = isBuying;
       if (isBuy) {
@@ -74,6 +80,7 @@ export default function TradeCard({ token }: Props) {
       setTokenA('');
       setTokenB('');
     } catch (e: any) {
+      console.error('Failed to connect wallet:', e);
       setError(e?.message || 'Transaction failed');
     } finally {
       setLoading(false);

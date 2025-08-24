@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../../store/store';
 import { getTokenBalance, fromAettos, DEX_ADDRESSES } from '../../../libs/dex';
 import { Token, TokenBalance, WrapBalances } from '../types/dex';
+import { useWallet } from '../../../hooks';
 
 export function useTokenBalances(tokenIn: Token | null, tokenOut: Token | null) {
-  const address = useSelector((s: RootState) => s.root.address);
+  const address = useWallet().address;
   const [balances, setBalances] = useState<TokenBalance>({});
   const [wrapBalances, setWrapBalances] = useState<WrapBalances>({});
 

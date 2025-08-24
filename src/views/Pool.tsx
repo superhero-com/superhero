@@ -6,12 +6,11 @@ import AddLiquidityForm from '../components/pool/core/AddLiquidityForm';
 import { useLiquidityPositions } from '../components/pool/hooks/useLiquidityPositions';
 import { LiquidityPosition } from '../components/pool/types/pool';
 import ConnectWalletButton from '../components/ConnectWalletButton';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store/store';
 
+import { useWallet } from '../hooks';
 export default function PoolRefactored() {
   const navigate = useNavigate();
-  const address = useSelector((s: RootState) => s.root.address);
+  const address = useWallet().address;
   const { positions, loading, error } = useLiquidityPositions();
   const [activeTab, setActiveTab] = useState<'positions' | 'add'>('positions');
 

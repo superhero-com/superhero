@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendminerApi } from '../../api/backend';
 import GlobalStatsAnalytics from '../../components/Trendminer/GlobalStatsAnalytics';
-import { useSelector } from 'react-redux';
 
+import { useWallet } from '../../hooks';
 type TokenItem = {
   address: string;
   name: string;
@@ -24,7 +24,7 @@ export default function TokenList() {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<'trending_score'|'market_cap'|'newest'|'oldest'|'holders_count'>('trending_score');
   const [collection, setCollection] = useState<'all'|'word'|'number'>('all');
-  const address = useSelector((s: any) => s.root.address as string | null);
+  const address = useWallet().address;
   const [myOnly, setMyOnly] = useState<boolean>(false);
   const observerRef = useRef<HTMLDivElement>(null);
 

@@ -1,15 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import type { RootState, AppDispatch } from '../store/store';
+import React, { useEffect, useRef, useState } from 'react';
+import { IconClose, IconGif, IconImage, IconSmile } from '../icons';
 import AeButton from './AeButton';
-import { IconClose, IconImage, IconSmile, IconGif } from '../icons';
-import Identicon from './Identicon';
 import './CreatePost.scss';
-import { Backend } from '../api/backend';
+import Identicon from './Identicon';
+import { useWallet, useAeternity } from '../hooks';
 // @ts-ignore
 import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
+import { PostsService } from '../api/generated';
 import { CONFIG } from '../config';
-import { scanForWallets, useSdkWallet } from '../store/slices/aeternitySlice';
 
 interface CreatePostProps {
   onClose?: () => void;
@@ -19,7 +17,7 @@ interface CreatePostProps {
 }
 
 const DEFAULT_EMOJIS = [
-  '😀','😄','😍','🔥','🚀','✨','🎉','🙌','🧠','💡','🧪','🦾','🤝','💬','🔗','📈','🧭','🛠️','🧩','🦄',
+  '😀', '😄', '😍', '🔥', '🚀', '✨', '🎉', '🙌', '🧠', '💡', '🧪', '🦾', '🤝', '💬', '🔗', '📈', '🧭', '🛠️', '🧩', '🦄',
 ];
 
 const PROMPTS: string[] = [
@@ -36,10 +34,9 @@ const PROMPTS: string[] = [
 ];
 
 export default function CreatePost({ onClose, onSuccess, className = '', onTextChange }: CreatePostProps) {
-  const dispatch = useDispatch<AppDispatch>();
-  const address = useSelector((s: RootState) => s.root.address) as string | null;
-  const chainNames = useSelector((s: RootState) => s.root.chainNames) as Record<string, string>;
-  
+  const { address, chainNames } = useWallet();
+  const { scanForWallets, enableSdkWallet } = useAeternity();
+
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -49,7 +46,7 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
   const [showGif, setShowGif] = useState(false);
   const [gifInput, setGifInput] = useState('');
   const [promptIndex, setPromptIndex] = useState(0);
-  
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiBtnRef = useRef<HTMLButtonElement>(null);
@@ -108,9 +105,9 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
       const hasActiveAccount = sdk && typeof sdk.addresses === 'function' && (sdk.addresses() || []).length > 0;
       if (!hasActiveAccount) {
         try {
-          await (dispatch as any)(scanForWallets()).unwrap();
-          (dispatch as any)(useSdkWallet());
-        } catch {}
+          await scanForWallets();
+          enableSdkWallet();
+        } catch { }
         sdk = (window as any).__aeSdk;
       }
       if (!sdk || typeof sdk.signMessage !== 'function' || (sdk.addresses?.() || []).length === 0) {
@@ -124,7 +121,12 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
       const postMedia: string[] = [...mediaUrls];
       const contract = await sdk.initializeContract({ aci: TIPPING_V3_ACI as any, address: CONFIG.CONTRACT_V3_ADDRESS });
       const { decodedResult } = await contract.post_without_tip(trimmed, postMedia);
-      try { await Backend.awaitTip(`${decodedResult}_v3`); } catch {}
+      try {
+        await PostsService.getById({
+          id: `${decodedResult}_v3`
+        });
+      } catch { }
+      // try { await Backend.awaitTip(`${decodedResult}_v3`); } catch {}
       // Reset after success
       setText('');
       setMediaFiles([]);

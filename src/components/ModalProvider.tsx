@@ -1,22 +1,19 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState } from '../store/store';
-import { close } from '../store/slices/modalsSlice';
+import { useModal } from '../hooks';
 
 type Registry = Record<string, React.ComponentType<any>>;
 
 export default function ModalProvider({ registry }: { registry: Registry }) {
-  const opened = useSelector((s: RootState) => s.modals.opened);
-  const dispatch = useDispatch();
+  const { openedModals, closeModal } = useModal();
   return (
     <>
-      {opened.map(({ key, name, props }) => {
+      {openedModals.map(({ key, name, props }) => {
         const Component = registry[name];
         if (!Component) return null;
         return (
-          <div key={key} className="modal-overlay" onClick={() => dispatch(close(key))}>
+          <div key={key} className="modal-overlay" onClick={() => closeModal(key)}>
             <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
-              <Component {...props} onClose={() => dispatch(close(key))} />
+              <Component {...props} onClose={() => closeModal(key)} />
             </div>
           </div>
         );

@@ -4,20 +4,21 @@ import WalletConnectBtn from '../../components/WalletConnectBtn';
 import { getAffiliationTreasury, aeToAettos } from '../../libs/affiliation';
 import InvitationList from '../../components/Invitation/InvitationList';
 import { addGeneratedInvites } from '../../libs/invitation';
-import { useSelector } from 'react-redux';
 import Shell from '../../components/layout/Shell';
 import LeftRail from '../../components/layout/LeftRail';
 import RightRail from '../../components/layout/RightRail';
 import './Invite.scss';
 
+import { useWallet, useAeternity } from '../../hooks';
+import { Decimal } from '../../libs/decimal';
 export default function Invite() {
   const [rows, setRows] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
-  const [orderBy, setOrderBy] = useState<'amount'|'created_at'>('created_at');
-  const [orderDirection, setOrderDirection] = useState<'ASC'|'DESC'>('DESC');
+  const [orderBy, setOrderBy] = useState<'amount' | 'created_at'>('created_at');
+  const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
   // Generate invite(s)
   const [amountAe, setAmountAe] = useState<number | ''>('');
   const [count, setCount] = useState<number>(1);
@@ -27,7 +28,8 @@ export default function Invite() {
   const [accumulatedRewardsAe, setAccumulatedRewardsAe] = useState<number>(0);
   const [uniqueInviteesCount, setUniqueInviteesCount] = useState<number>(0);
   const [withdrawing, setWithdrawing] = useState(false);
-  const address = useSelector((s: any) => s.root.address as string | null);
+  const address = useWallet().address;
+  const { getAeSdk, scanForWallets } = useAeternity();
   const [showInfo, setShowInfo] = useState<boolean>(() => {
     try { return localStorage.getItem('invite_info_dismissed') !== '1'; } catch { return true; }
   });
@@ -71,15 +73,19 @@ export default function Invite() {
       if (!Number.isFinite(amt) || amt <= 0) throw new Error('Enter amount');
       if (!Number.isFinite(count) || count < 1) throw new Error('Enter count');
       setGenerating(true);
-      const sdk: any = (window as any).__aeSdk;
+      const sdk = await getAeSdk();
+      await scanForWallets();
       if (!sdk) throw new Error('Connect your wallet first');
       const treasury = await getAffiliationTreasury(sdk);
       // Generate in-memory keypairs via aepp-sdk
       const mod = await import('@aeternity/aepp-sdk');
       const keys = new Array(count).fill(0).map(() => mod.generateKeyPair());
       const invitees = keys.map((k: any) => k.publicKey);
-     const redemptionFeeCover = 0n; // claim flow removed
-      await treasury.registerInvitationCode(invitees, redemptionFeeCover, aeToAettos(amt));
+      const redemptionFeeCover = 10n ** 15n;
+      console.log('amt::', amt);
+      const inviteAmount = BigInt(Decimal.from(amt).bigNumber);
+      await treasury.registerInvitationCode(invitees, redemptionFeeCover, inviteAmount);
+      // await treasury.registerInvitationCode(invitees, redemptionFeeCover, aeToAettos(amt));
       const links = keys.map((k: any) => `${location.protocol}//${location.host}#invite_code=${k.secretKey}`);
       setInviteLinks(links);
       if (sdk?.addresses) {
@@ -88,6 +94,7 @@ export default function Invite() {
       }
       setAmountAe('');
     } catch (e: any) {
+      console.log('generateInvites error::', e);
       setError(e?.message || 'Failed to create invitations');
     } finally {
       setGenerating(false);
@@ -182,11 +189,11 @@ export default function Invite() {
                   </div>
                 </div>
               </div>
-              <button 
-                onClick={() => { 
-                  try { localStorage.setItem('invite_info_dismissed', '1'); } catch {} 
-                  setShowInfo(false); 
-                }} 
+              <button
+                onClick={() => {
+                  try { localStorage.setItem('invite_info_dismissed', '1'); } catch { }
+                  setShowInfo(false);
+                }}
                 className="invite-dismiss-btn"
               >
                 ✕
@@ -203,7 +210,7 @@ export default function Invite() {
               <div className="invite-card-icon">🎯</div>
               <h3>Generate Invites</h3>
             </div>
-            
+
             <div className="invite-wallet-section">
               <WalletConnectBtn />
             </div>
@@ -213,35 +220,35 @@ export default function Invite() {
                 <div className="invite-input-group">
                   <label className="invite-label">
                     <span>Amount per invite (AE)</span>
-                    <input 
-                      type="number" 
-                      min="0" 
-                      step="any" 
-                      value={amountAe} 
-                      onChange={(e) => setAmountAe(e.target.value === '' ? '' : Number(e.target.value))} 
-                      placeholder="0.0" 
-                      className="invite-input" 
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={amountAe}
+                      onChange={(e) => setAmountAe(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="0.0"
+                      className="invite-input"
                     />
                   </label>
                 </div>
                 <div className="invite-input-group">
                   <label className="invite-label">
                     <span>Number of invites</span>
-                    <input 
-                      type="number" 
-                      min={1} 
-                      step={1} 
-                      value={count} 
-                      onChange={(e) => setCount(Math.max(1, Number(e.target.value||1)))} 
-                      className="invite-input" 
+                    <input
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={count}
+                      onChange={(e) => setCount(Math.max(1, Number(e.target.value || 1)))}
+                      className="invite-input"
                     />
                   </label>
                 </div>
               </div>
-              
-              <button 
-                type="submit" 
-                disabled={generating || !address} 
+
+              <button
+                type="submit"
+                disabled={generating || !address}
                 className={`invite-generate-btn genz-btn ${!address ? 'genz-btn-disabled' : 'genz-btn-teal'}`}
               >
                 {generating ? (
@@ -264,13 +271,13 @@ export default function Invite() {
                 <div className="invite-links-grid">
                   {inviteLinks.map((link, i) => (
                     <div key={i} className="invite-link-item">
-                      <input 
-                        value={link} 
-                        readOnly 
-                        className="invite-link-input" 
-                        onFocus={(e) => e.currentTarget.select()} 
+                      <input
+                        value={link}
+                        readOnly
+                        className="invite-link-input"
+                        onFocus={(e) => e.currentTarget.select()}
                       />
-                      <button 
+                      <button
                         onClick={() => copyToClipboard(link, i)}
                         className={`invite-copy-btn ${copiedIndex === i ? 'copied' : ''}`}
                       >
@@ -298,8 +305,8 @@ export default function Invite() {
                   <span className="invite-progress-text">{uniqueInviteesCount}/4 invitees</span>
                 </div>
                 <div className="invite-progress-bar">
-                  <div 
-                    className="invite-progress-fill" 
+                  <div
+                    className="invite-progress-fill"
                     style={{ width: `${progressPercentage}%` }}
                   ></div>
                 </div>
@@ -314,10 +321,10 @@ export default function Invite() {
                   <span className="invite-reward-label">Available Rewards</span>
                   <span className="invite-reward-value">{accumulatedRewardsAe.toFixed(4)} AE</span>
                 </div>
-                
-                <button 
-                  onClick={withdrawRewards} 
-                  disabled={withdrawing || !isEligibleForRewards} 
+
+                <button
+                  onClick={withdrawRewards}
+                  disabled={withdrawing || !isEligibleForRewards}
                   className={`invite-withdraw-btn genz-btn ${isEligibleForRewards ? 'genz-btn-pink' : 'genz-btn-disabled'}`}
                 >
                   {withdrawing ? (
@@ -349,17 +356,17 @@ export default function Invite() {
           <div className="invite-section-header">
             <h3 className="invite-section-title">Public Activity Feed</h3>
             <div className="invite-filters">
-              <select 
-                className="invite-select" 
-                value={orderBy} 
+              <select
+                className="invite-select"
+                value={orderBy}
                 onChange={(e) => setOrderBy(e.target.value as any)}
               >
                 <option value="created_at">Newest</option>
                 <option value="amount">Amount</option>
               </select>
-              <select 
-                className="invite-select" 
-                value={orderDirection} 
+              <select
+                className="invite-select"
+                value={orderDirection}
                 onChange={(e) => setOrderDirection(e.target.value as any)}
               >
                 <option value="DESC">Desc</option>
@@ -397,9 +404,9 @@ export default function Invite() {
 
           {hasMore && (
             <div className="invite-load-more">
-              <button 
-                onClick={() => fetchPage(page)} 
-                disabled={loading} 
+              <button
+                onClick={() => fetchPage(page)}
+                disabled={loading}
                 className="invite-load-btn genz-btn genz-btn-blue"
               >
                 {loading ? 'Loading...' : 'Load more'}

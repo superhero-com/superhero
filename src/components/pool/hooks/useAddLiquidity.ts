@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../../store/store';
 import { ACI, DEX_ADDRESSES, getPairInfo, initDexContracts, toAettos, fromAettos } from '../../../libs/dex';
 import { errorToUserMessage } from '../../../libs/errorMessages';
 import { useToast } from '../../ToastProvider';
@@ -8,10 +6,11 @@ import { CONFIG } from '../../../config';
 import { AddLiquidityState, LiquidityQuoteParams, LiquidityExecutionParams } from '../types/pool';
 import BigNumber from 'bignumber.js';
 
+import { useWallet, useDex } from '../../../hooks';
 export function useAddLiquidity() {
-  const address = useSelector((s: RootState) => s.root.address);
-  const slippagePct = useSelector((s: RootState) => s.dex.slippagePct);
-  const deadlineMins = useSelector((s: RootState) => s.dex.deadlineMins);
+  const address = useWallet().address;
+  const slippagePct = useDex().slippagePct;
+  const deadlineMins = useDex().deadlineMins;
   const toast = useToast();
 
   const [state, setState] = useState<AddLiquidityState>({

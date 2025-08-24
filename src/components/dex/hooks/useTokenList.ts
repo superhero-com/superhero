@@ -23,6 +23,8 @@ export function useTokenList(): TokenListState {
         const raw: Token[] = [
           { contractId: 'AE', symbol: 'AE', decimals: 18, isAe: true },
           { contractId: DEX_ADDRESSES.wae, symbol: 'WAE', decimals: 18 },
+          // aeETH
+          { contractId: DEX_ADDRESSES.aeeth, symbol: 'aeETH', decimals: 18 },
           ...(resp || []).map((t: any) => ({
             contractId: t.address,
             symbol: t.symbol || t.name || 'TKN',

@@ -6,13 +6,10 @@ import LeftRail from '../components/layout/LeftRail';
 import RightRail from '../components/layout/RightRail';
 import UserBadge from '../components/UserBadge';
 import AeButton from '../components/AeButton';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from '../store/store';
-import { callWithAuth } from '../store/slices/backendSlice';
 import { relativeTime } from '../utils/time';
 import { deeplinkPost } from '../auth/deeplink';
-import { open } from '../store/slices/modalsSlice';
 
+import { useWallet, useModal } from '../../hooks';
 // Legacy page kept for compatibility, redirect to unified PostDetail route
 export default function TipDetail() {
   const { tipId } = useParams();
@@ -23,9 +20,8 @@ export default function TipDetail() {
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
   const [openReplyFor, setOpenReplyFor] = useState<string | number | null>(null);
-  const dispatch = useDispatch<AppDispatch>();
-  const address = useSelector((s: RootState) => s.root.address) as string | null;
-  const useSdkWallet = useSelector((s: RootState) => s.aeternity.useSdkWallet);
+    const address = useWallet().address as string | null;
+  const useSdkWallet = true; // TODO: Replace with useAeternity hook
   useEffect(() => {
     if (!tipId) return;
     // Redirect to unified path
@@ -45,7 +41,7 @@ export default function TipDetail() {
               <div>{tip.address && <UserBadge address={tip.address} />}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 {tip.timestamp && <div style={{ color: '#9aa0a6', fontSize: 12 }}>{new Date(tip.timestamp).toLocaleString()}</div>}
-                <AeButton onClick={() => dispatch(open({ name: 'feed-item-menu', props: { tipId, url: tip.url, author: tip.address } }))}>•••</AeButton>
+                <AeButton onClick={() => openModal({ name: 'feed-item-menu', props: { tipId, url: tip.url, author: tip.address } })}>•••</AeButton>
               </div>
             </header>
             <h2 style={{ margin: 0, fontSize: 18 }}>{tip.title}</h2>

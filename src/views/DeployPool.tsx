@@ -1,6 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from '../store/store';
 import AeButton from '../components/AeButton';
 import DexTabs from '../components/dex/DexTabs';
 import TokenSelector from '../components/dex/TokenSelector';
@@ -9,9 +7,9 @@ import { DEX_ADDRESSES, getPairAddress, initDexContracts, fromAettos } from '../
 import { CONFIG } from '../config';
 import BigNumber from 'bignumber.js';
 
+import { useWallet } from '../../hooks';
 export default function DeployPool() {
-  const dispatch = useDispatch<AppDispatch>();
-  const address = useSelector((s: RootState) => s.root.address);
+    const address = useWallet().address;
   const [token, setToken] = useState('');
   const [tokenSymbol, setTokenSymbol] = useState('');
   const [amountAe, setAmountAe] = useState('');

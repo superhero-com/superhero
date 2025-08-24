@@ -1,13 +1,10 @@
 import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from '../store/store';
 import { useNavigate } from 'react-router-dom';
 import DexTabs from '../components/dex/DexTabs';
-import { scanAccountLiquidity } from '../store/slices/dexSlice';
 
+import { useWallet } from '../../hooks';
 export default function Pool() {
-  const dispatch = useDispatch<AppDispatch>();
-  const address = useSelector((s: RootState) => s.root.address);
+    const address = useWallet().address;
   // Avoid returning a new object reference from selector each render
   const providedRaw = useSelector((s: RootState) => s.dex.providedLiquidity[address || '']);
   const EMPTY: Record<string, any> = React.useMemo(() => ({}), []);

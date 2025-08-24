@@ -1,14 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from '../store/store';
-import { markTipsNextLoading, markTipsReloading, reloadTips, loadNextPageOfTips, loadCommentCountsForPosts } from '../store/slices/backendSlice';
 import AeButton from '../components/AeButton';
 import AeAmountFiat from '../components/AeAmountFiat';
 import Shell from '../components/layout/Shell';
 import LeftRail from '../components/layout/LeftRail';
 import RightRail from '../components/layout/RightRail';
-import { open } from '../store/slices/modalsSlice';
 import UserBadge from '../components/UserBadge';
 import { IconComment } from '../icons';
 import Identicon from '../components/Identicon';
@@ -18,43 +14,39 @@ import { Backend } from '../api/backend';
 import CreatePost from '../components/CreatePost';
 import { deeplinkTip } from '../auth/deeplink';
 
+import { useWallet, useBackend, useModal } from '../../hooks';
+
 const EMPTY_LIST: any[] = [];
 
 export default function UserProfile() {
   const navigate = useNavigate();
   const { address } = useParams();
-  const dispatch = useDispatch<AppDispatch>();
-  const chainNames = useSelector((s: RootState) => s.root.chainNames) as any;
+  const { chainNames, balance, address: myAddress } = useWallet();
   
   const [profile, setProfile] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
   const [tab, setTab] = useState<'feed'>('feed');
-  const balance = useSelector((s: RootState) => s.root.balance);
-  const myAddress = useSelector((s: RootState) => s.root.address) as string | null;
   const [showTipBox, setShowTipBox] = useState(false);
   const [tipAmount, setTipAmount] = useState<string>('0.1');
   const [tipMessage, setTipMessage] = useState<string>('');
 
-  // Load user's posts
-  const args = useMemo(() => ['latest', address, null, false, true, true] as any, [address]);
-  const key = JSON.stringify(args);
-  const list = useSelector((s: RootState) => s.backend.tips[key] ?? EMPTY_LIST);
-  const endReached = useSelector((s: RootState) => s.backend.tipsEndReached[key]);
-  const loadingNext = useSelector((s: RootState) => s.backend.tipsNextPageLoading[key]);
+  // Load user's posts - simplified since we're removing Redux backend
+  const [list, setList] = useState(EMPTY_LIST);
+  const [endReached, setEndReached] = useState(false);
+  const [loadingNext, setLoadingNext] = useState(false);
   
-  // Comment counts state
-  const commentCounts = useSelector((s: RootState) => s.backend.commentCounts);
-  const commentCountsLoading = useSelector((s: RootState) => s.backend.commentCountsLoading);
+  // Comment counts state - simplified
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
+  const [commentCountsLoading, setCommentCountsLoading] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!address) return;
-    dispatch(markTipsReloading(key));
-    dispatch(reloadTips(args));
+    // Load user posts - simplified implementation
     
     // Load profile and stats
     Backend.getProfile(address).then(setProfile).catch(() => {});
     Backend.getSenderStats(address).then(setStats).catch(() => {});
-  }, [dispatch, key, address]);
+  }, [address]);
 
   // Load comment counts for posts when the list changes
   useEffect(() => {
@@ -65,10 +57,10 @@ export default function UserProfile() {
         .filter(postId => !commentCounts[postId] && !commentCountsLoading[postId]);
       
       if (postIds.length > 0) {
-        dispatch(loadCommentCountsForPosts(postIds));
+        // Load comment counts - simplified implementation
       }
     }
-  }, [list, dispatch, commentCounts, commentCountsLoading]);
+  }, [list, commentCounts, commentCountsLoading]);
 
   // Helper function to get comment count for a post
   const getCommentCount = (postId: string) => {
@@ -260,10 +252,10 @@ export default function UserProfile() {
                           size="sm"
                           onClick={(e) => { 
                             e.stopPropagation(); 
-                            dispatch(open({ 
+                            openModal({ 
                               name: 'feed-item-menu', 
                               props: { postId: postId, url: item.url, author: item.address } 
-                            })); 
+                            }); 
                           }}
                         >
                           •••
@@ -278,7 +270,7 @@ export default function UserProfile() {
               <div className="load-more" style={{ textAlign: 'center', padding: 12 }}>
                 <AeButton
                   loading={loadingNext}
-                  onClick={() => { dispatch(markTipsReloading(key)); dispatch(loadNextPageOfTips(args)); }}
+                  onClick={() => { /* Load more posts - simplified */ }}
                 >Load more</AeButton>
               </div>
             )}

@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import type { RootState, AppDispatch } from '../../store/store';
-import { refreshAeBalance } from '../../store/slices/aeternitySlice';
 import { TrendminerApi, Backend } from '../../api/backend';
 import WebSocketClient from '../../libs/WebSocketClient';
 import './LeftRail.scss';
 
+import { useWallet } from '../../hooks';
 interface TrendingTag {
   tag: string;
   score: number;
@@ -34,8 +32,7 @@ interface LiveTransaction {
 export default function LeftRail() {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch<AppDispatch>();
-  const [currentTime, setCurrentTime] = useState(new Date());
+    const [currentTime, setCurrentTime] = useState(new Date());
   const [currentBlockHeight, setCurrentBlockHeight] = useState<number | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -56,8 +53,8 @@ export default function LeftRail() {
     dex: 'checking'
   });
   
-  const address = useSelector((s: RootState) => s.root.address);
-  const balance = useSelector((s: RootState) => s.root.balance);
+  const address = useWallet().address;
+  const balance = useWallet().balance;
 
   // Timer, online status, and block height
   useEffect(() => {
@@ -281,7 +278,7 @@ export default function LeftRail() {
     if (!address) return;
     setIsRefreshing(true);
     try {
-      await dispatch(refreshAeBalance()).unwrap();
+      await refreshAeBalance();
     } catch (error) {
       console.error('Failed to refresh balance:', error);
     } finally {

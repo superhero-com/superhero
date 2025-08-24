@@ -1,21 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import BigNumber from 'bignumber.js';
-import { useDispatch, useSelector } from 'react-redux';
 import { TrendminerApi } from '../api/backend';
 import TradeCard from '../views/Trendminer/TradeCard';
 import MobileInput from './MobileInput';
 import AeButton from './AeButton';
 import MobileCard from './MobileCard';
-import { initSdk, scanForWallets } from '../store/slices/aeternitySlice';
 import { DEX_ADDRESSES, initDexContracts, toAettos, fromAettos, subSlippage, ensureAllowanceForRouter } from '../libs/dex';
-import type { RootState } from '../store/store';
+
+import { useWallet, useAeternity } from '../hooks';
 
 type TokenItem = any;
 
 export default function SwapCard() {
-  const dispatch = useDispatch();
-  const address = useSelector((s: RootState) => s.root.address);
-  const sdkState = useSelector((s: RootState) => s.aeternity.sdk);
+  const { address } = useWallet();
+  const { sdk: sdkState, initSdk, scanForWallets } = useAeternity();
   
   const [tokens, setTokens] = useState<TokenItem[]>([]);
   const [selected, setSelected] = useState<TokenItem | null>(null);
@@ -59,10 +57,10 @@ export default function SwapCard() {
   useEffect(() => {
     (async () => {
       if (!sdkState) {
-        await dispatch<any>(initSdk());
+        await initSdk();
       }
     })();
-  }, [dispatch, sdkState]);
+  }, [initSdk, sdkState]);
 
   useEffect(() => {
     (async () => {
@@ -85,7 +83,7 @@ export default function SwapCard() {
 
   const connectWallet = async () => {
     try {
-      await dispatch<any>(scanForWallets());
+      await scanForWallets();
     } catch (e: any) {
       setSwapError(e?.message || 'Failed to connect wallet');
     }

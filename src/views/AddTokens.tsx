@@ -1,8 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import DexTabs from '../components/dex/DexTabs';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from '../store/store';
-import { initSdk, scanForWallets } from '../store/slices/aeternitySlice';
 import { ACI, DEX_ADDRESSES, fromAettos, initDexContracts, getPairAddress } from '../libs/dex';
 import { useToast } from '../components/ToastProvider';
 import { CONFIG } from '../config';
@@ -10,9 +7,9 @@ import { useNavigate } from 'react-router-dom';
 import BigNumber from 'bignumber.js';
 import AeButton from '../components/AeButton';
 
+import { useWallet } from '../../hooks';
 export default function AddTokens() {
-  const dispatch = useDispatch<AppDispatch>();
-  const address = useSelector((s: RootState) => s.root.address);
+    const address = useWallet().address;
   const toast = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -23,8 +20,8 @@ export default function AddTokens() {
   const scanSeqRef = React.useRef(0);
 
   async function ensureWallet() {
-    await dispatch(initSdk());
-    if (!address) await dispatch(scanForWallets());
+    await initSdk();
+    if (!address) await scanForWallets();
   }
 
   async function discoverWalletTokens() {

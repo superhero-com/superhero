@@ -1,6 +1,7 @@
 import React from 'react';
 import TokenSelector from './TokenSelector';
 import { Token } from '../types/dex';
+import { Decimal } from '../../../libs/decimal';
 
 interface TokenInputProps {
   label: string;
@@ -73,18 +74,105 @@ export default function TokenInput({
         </label>
         {balance && (
           <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
             fontSize: 12,
             color: 'var(--light-font-color)'
           }}>
-            Balance: <span style={{ fontWeight: 600, color: 'var(--standard-font-color)' }}>{balance}</span>
+            <div>
+              Balance:
+              <span style={{
+                fontWeight: 600,
+                color: 'var(--standard-font-color)',
+                fontSize: 12,
+                marginLeft: 8
+              }}>
+                {Decimal.from(balance).prettify()}
+              </span>
+            </div>
+            
+            {/* Max, 50% buttons */}
+            <div style={{ 
+              display: 'flex', 
+              gap: 6, 
+              alignItems: 'center'
+            }}>
+              <button
+                onClick={() => {
+                  if (balance && !disabled && !readOnly) {
+                    const halfBalance = Decimal.from(balance).div(2).toString();
+                    onAmountChange(halfBalance);
+                  }
+                }}
+                disabled={disabled || readOnly || !balance || Number(balance) === 0}
+                style={{
+                  padding: '2px 8px',
+                  borderRadius: 6,
+                  border: '1px solid var(--glass-border)',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: 'var(--light-font-color)',
+                  fontSize: 10,
+                  fontWeight: 600,
+                  cursor: disabled || readOnly || !balance ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  opacity: disabled || readOnly || !balance ? 0.5 : 1
+                }}
+                onMouseOver={(e) => {
+                  if (!disabled && !readOnly && balance && Number(balance) > 0) {
+                    e.currentTarget.style.background = 'var(--accent-color)';
+                    e.currentTarget.style.color = 'white';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.color = 'var(--light-font-color)';
+                }}
+              >
+                50%
+              </button>
+              
+              <button
+                onClick={() => {
+                  if (balance && !disabled && !readOnly) {
+                    onAmountChange(balance);
+                  }
+                }}
+                disabled={disabled || readOnly || !balance || Number(balance) === 0}
+                style={{
+                  padding: '4px 8px',
+                  borderRadius: 6,
+                  border: '1px solid var(--glass-border)',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: 'var(--light-font-color)',
+                  fontSize: 10,
+                  fontWeight: 600,
+                  cursor: disabled || readOnly || !balance ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  opacity: disabled || readOnly || !balance ? 0.5 : 1
+                }}
+                onMouseOver={(e) => {
+                  if (!disabled && !readOnly && balance && Number(balance) > 0) {
+                    e.currentTarget.style.background = 'var(--accent-color)';
+                    e.currentTarget.style.color = 'white';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.color = 'var(--light-font-color)';
+                }}
+              >
+                MAX
+              </button>
+            </div>
           </div>
         )}
       </div>
 
       {/* Main Input Row */}
-      <div style={{ 
-        display: 'flex', 
-        gap: 12, 
+      <div style={{
+        display: 'flex',
+        gap: 12,
         alignItems: 'center',
         justifyContent: 'space-between',
         backdropFilter: 'blur(10px)',
@@ -104,7 +192,7 @@ export default function TokenInput({
             onSearchChange={onSearchChange}
           />
         </div>
-        
+
         {/* Amount Input */}
         <div style={{
           flex: 1,

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../../store/store';
 import { useTokenBalances } from '../hooks/useTokenBalances';
 import { toAettos, DEX_ADDRESSES } from '../../../libs/dex';
 import { errorToUserMessage } from '../../../libs/errorMessages';
+import { useWallet } from '../../../hooks';
 // Mock WAE ACI for testing - in production this should be the actual ACI file
 const WaeAci = {
   contract: {
@@ -24,7 +23,7 @@ const WaeAci = {
 };
 
 export default function WrapUnwrapWidget() {
-  const address = useSelector((s: RootState) => s.root.address);
+  const address = useWallet().address;
   const { wrapBalances, refreshWrapBalances } = useTokenBalances(null, null);
   const [wrapAmount, setWrapAmount] = useState<string>('');
   const [wrapping, setWrapping] = useState(false);

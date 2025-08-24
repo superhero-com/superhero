@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import AeButton from '../AeButton';
-import type { RootState } from '../../store/store';
-import { callWithAuth } from '../../store/slices/backendSlice';
+import { useWallet, useAeternity, useBackend } from '../../hooks';
 
 export default function PostModal({ onClose }: { onClose: () => void }) {
   const [title, setTitle] = useState('');
   const [media, setMedia] = useState('');
   const [loading, setLoading] = useState(false);
-  const useSdkWallet = useSelector((s: RootState) => s.aeternity.useSdkWallet);
-  const address = useSelector((s: RootState) => s.root.address) as string | null;
-  const dispatch = useDispatch();
-  return (
+  const { address } = useWallet();
+  const { useSdkWallet } = useAeternity();
+  const { callWithAuth } = useBackend();
+    return (
     <div>
       <h3>Create Post</h3>
       <div style={{ display: 'grid', gap: 8 }}>
@@ -28,7 +26,7 @@ export default function PostModal({ onClose }: { onClose: () => void }) {
             setLoading(true);
             try {
               if (!address) { alert('Please connect a wallet first.'); return; }
-              await (dispatch as any)(callWithAuth({ method: 'sendPostWithoutTip' as any, arg: { title, media } }));
+              await callWithAuth({ method: 'sendPostWithoutTip' as any, arg: { title, media } });
               onClose();
             } catch (e) {
               console.error(e);

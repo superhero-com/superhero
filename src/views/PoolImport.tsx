@@ -1,20 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from '../store/store';
-import { loadAccountLp } from '../store/slices/dexSlice';
 import { DEX_ADDRESSES } from '../libs/dex';
 import AeButton from '../components/AeButton';
 
+import { useWallet } from '../../hooks';
 export default function PoolImport() {
-  const dispatch = useDispatch<AppDispatch>();
-  const address = useSelector((s: RootState) => s.root.address);
+    const address = useWallet().address;
   const [tokenA, setTokenA] = useState('');
   const [tokenB, setTokenB] = useState('');
   const [result, setResult] = useState<{ pairId: string | null; balance: bigint } | null>(null);
 
   async function check() {
     if (!address || !tokenA || !tokenB) return;
-    const res = await dispatch(loadAccountLp({ address, tokenA, tokenB })).unwrap();
+    const res = await loadAccountLp({ address, tokenA, tokenB });
     setResult(res as any);
   }
 

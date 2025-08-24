@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import BigNumber from 'bignumber.js';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from '../../store/store';
 import AeButton from '../AeButton';
 import ConnectWalletButton from '../ConnectWalletButton';
-import { logout, refreshAeBalance } from '../../store/slices/aeternitySlice';
+import { useWallet, useAeternity } from '../../hooks';
 import Identicon from '../Identicon';
 import { useToast } from '../ToastProvider';
 import { getTokenBalance, fromAettos, DEX_ADDRESSES } from '../../libs/dex';
@@ -29,11 +27,9 @@ type TokenBalance = {
 };
 
 export default function WalletCard({ prices, selectedCurrency = 'usd' }: Props) {
-  const dispatch = useDispatch<AppDispatch>();
   const toast = useToast();
-  const address = useSelector((s: RootState) => s.root.address);
-  const balance = useSelector((s: RootState) => s.root.balance);
-  const chainNames = useSelector((s: RootState) => s.root.chainNames);
+  const { address, balance, chainNames } = useWallet();
+  const { logout, refreshAeBalance } = useAeternity();
 
   const [tokenBalances, setTokenBalances] = useState<TokenBalance[]>([]);
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false);
@@ -177,7 +173,7 @@ export default function WalletCard({ prices, selectedCurrency = 'usd' }: Props) 
     if (!address) return;
     setIsRefreshingBalance(true);
     try {
-      await dispatch(refreshAeBalance()).unwrap();
+      await refreshAeBalance();
       const mdwBalances = await fetchRealTokenBalances(address);
       setTokenBalances(mdwBalances);
       toast.push(<>Balance refreshed successfully!</>);
@@ -190,16 +186,16 @@ export default function WalletCard({ prices, selectedCurrency = 'usd' }: Props) 
   };
 
   const handleLogout = () => {
-    dispatch(logout());
+    logout();
     toast.push(<>Wallet disconnected successfully!</>);
   };
 
   useEffect(() => {
     if (address) {
-      dispatch(refreshAeBalance());
+      refreshAeBalance();
       fetchRealTokenBalances(address).then(setTokenBalances).catch(() => setTokenBalances([]));
     }
-  }, [address, dispatch]);
+  }, [address, refreshAeBalance]);
 
   useEffect(() => {
     if (showWalletDetails && address && tokenBalances.length === 0) {

@@ -4,12 +4,12 @@ import WalletConnectBtn from '../../components/WalletConnectBtn';
 import { getAffiliationTreasury, aeToAettos } from '../../libs/affiliation';
 import InvitationList from '../../components/Invitation/InvitationList';
 import { addGeneratedInvites } from '../../libs/invitation';
-import { useSelector } from 'react-redux';
 import Shell from '../../components/layout/Shell';
 import LeftRail from '../../components/layout/LeftRail';
 import RightRail from '../../components/layout/RightRail';
 import './Invite.scss';
 
+import { useWallet } from '../../hooks';
 export default function Invite() {
   const [rows, setRows] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -27,7 +27,7 @@ export default function Invite() {
   const [accumulatedRewardsAe, setAccumulatedRewardsAe] = useState<number>(0);
   const [uniqueInviteesCount, setUniqueInviteesCount] = useState<number>(0);
   const [withdrawing, setWithdrawing] = useState(false);
-  const address = useSelector((s: any) => s.root.address as string | null);
+  const address = useWallet().address;
   const [showInfo, setShowInfo] = useState<boolean>(() => {
     try { return localStorage.getItem('invite_info_dismissed') !== '1'; } catch { return true; }
   });

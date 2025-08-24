@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import AeButton from '../AeButton';
 import { Backend } from '../../api/backend';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../store/store';
 
+import { useWallet } from '../../hooks';
 export default function FeedItemMenu({ tipId, postId, url, author, onClose }: { tipId?: string; postId?: string; url: string; author: string; onClose: () => void }) {
-  const address = useSelector((s: RootState) => s.root.address) as string;
+  const address = useWallet().address as string;
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
   const id = tipId || postId;

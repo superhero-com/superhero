@@ -1,7 +1,6 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store/store';
 import { shiftDecimalPlaces } from '../utils/number';
+import { useWallet, useBackend } from '../../hooks';
 import './FiatValue.scss';
 
 interface Props {
@@ -19,10 +18,8 @@ export default function FiatValue({
   noSymbol,
   currency = null,
 }: Props) {
-  const selectedCurrency = useSelector((s: RootState) => s.root.selectedCurrency);
-  const tokenInfo = useSelector((s: RootState) => s.root.tokenInfo);
-  const tokenPrices = useSelector((s: RootState) => s.root.tokenPrices);
-  const prices = useSelector((s: RootState) => s.backend.prices) as Record<string, number>;
+  const { selectedCurrency, tokenInfo, tokenPrices } = useWallet();
+  const { prices } = useBackend();
 
   const showCurrency = (currency || selectedCurrency).toLowerCase();
   const rate = prices?.[showCurrency];

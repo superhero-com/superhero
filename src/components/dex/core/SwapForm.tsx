@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../../store/store';
 import ConnectWalletButton from '../../ConnectWalletButton';
 import TokenInput from './TokenInput';
 import SwapSettings from './SwapSettings';
@@ -13,10 +11,11 @@ import { useSwapExecution } from '../hooks/useSwapExecution';
 import { DEX_ADDRESSES } from '../../../libs/dex';
 import { Token, SwapQuoteParams } from '../types/dex';
 
+import { useWallet, useDex } from '../../../hooks';
 export default function SwapForm() {
-  const address = useSelector((s: RootState) => s.root.address);
-  const slippagePct = useSelector((s: RootState) => s.dex.slippagePct);
-  const deadlineMins = useSelector((s: RootState) => s.dex.deadlineMins);
+  const address = useWallet().address;
+  const slippagePct = useDex().slippagePct;
+  const deadlineMins = useDex().deadlineMins;
 
   // Token list and balances
   const { tokens, loading: tokensLoading } = useTokenList();
@@ -64,8 +63,10 @@ export default function SwapForm() {
       tokenOut,
       isExactIn
     };
+    console.log("call debouncedQuote::", params);
     debouncedQuote(params, handleQuoteResult);
-  }, [isExactIn, amountIn, tokenIn, tokenOut, debouncedQuote]);
+  }, [isExactIn, amountIn, tokenIn, tokenOut]);
+// }, [isExactIn, amountIn, tokenIn, tokenOut, debouncedQuote]);
 
   // Quote for exact-out mode when amountOut or tokens change
   useEffect(() => {

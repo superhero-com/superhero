@@ -1,18 +1,7 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { initSdk } from './store/slices/aeternitySlice';
-import type { RootState, AppDispatch } from './store/store';
 import { Backend } from './api/backend';
-import {
-  setAddress,
-  setChainNames,
-  setGraylistedUrls,
-  setTokenInfo,
-  setVerifiedUrls,
-  setWordRegistry,
-} from './store/slices/rootSlice';
-import { setPrices, setStats } from './store/slices/backendSlice';
+import { useWallet, useAeternity, useBackend } from './hooks';
 import { Suspense } from 'react';
 import { routes } from './routes';
 import { consumeAuthCallback } from './auth/deeplink';
@@ -35,8 +24,17 @@ function useQuery() {
 }
 
 function useInit() {
-  const dispatch = useDispatch<AppDispatch>();
-  const address = useSelector((s: RootState) => s.root.address);
+  const { 
+    address, 
+    setAddress, 
+    setChainNames, 
+    setGraylistedUrls, 
+    setTokenInfo, 
+    setVerifiedUrls, 
+    setWordRegistry 
+  } = useWallet();
+  const { initSdk } = useAeternity();
+  const { setPrices, setStats } = useBackend();
   const navigate = useNavigate();
   const query = useQuery();
   const didInitRef = React.useRef(false);
@@ -45,9 +43,9 @@ function useInit() {
     if (didInitRef.current) return; // guard StrictMode double invoke in dev
     didInitRef.current = true;
     // on mount: init SDK and data
-    dispatch(initSdk()).then(async () => {
+    initSdk().then(async () => {
       const addressParam = query.get('address');
-      if (addressParam) dispatch(setAddress(addressParam));
+      if (addressParam) setAddress(addressParam);
       await reloadData();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -63,13 +61,13 @@ function useInit() {
       Backend.getPrice(),
       Backend.getTipStats(),
     ]);
-    dispatch(setChainNames(chainNames));
-    dispatch(setGraylistedUrls(graylistedUrls));
-    dispatch(setVerifiedUrls(verifiedUrls));
-    dispatch(setTokenInfo(tokenInfo || {}));
-    dispatch(setWordRegistry([]));
-    dispatch(setPrices(price.aeternity));
-    dispatch(setStats(stats));
+    setChainNames(chainNames);
+    setGraylistedUrls(graylistedUrls);
+    setVerifiedUrls(verifiedUrls);
+    setTokenInfo(tokenInfo || {});
+    setWordRegistry([]);
+    setPrices(price.aeternity);
+    setStats(stats);
   }
 
   useEffect(() => {

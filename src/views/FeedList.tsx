@@ -1,9 +1,6 @@
 import React, { useEffect, useMemo, useState, memo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import type { RootState, AppDispatch } from '../store/store';
-import { loadCommentCountsForPosts } from '../store/slices/backendSlice';
 import { fetchPosts } from '../api/backend';
 import AeButton from '../components/AeButton';
 import './FeedList.scss';
@@ -11,7 +8,6 @@ import { linkify } from '../utils/linkify';
 import Shell from '../components/layout/Shell';
 import LeftRail from '../components/layout/LeftRail';
 import RightRail from '../components/layout/RightRail';
-import { open } from '../store/slices/modalsSlice';
 import UserBadge from '../components/UserBadge';
 import { IconComment } from '../icons';
 import Identicon from '../components/Identicon';
@@ -19,6 +15,7 @@ import { relativeTime } from '../utils/time';
 import CreatePost from '../components/CreatePost';
 import { PostDto, PostsService } from '../api/generated';
 
+import { useWallet, useModal } from '../hooks';
 // Types
 interface PostApiResponse {
   items: PostDto[];
@@ -32,7 +29,6 @@ interface PostApiResponse {
 interface FeedItemProps {
   item: PostDto;
   commentCount: number;
-  isCommentLoading: boolean;
   chainName?: string;
   onItemClick: (postId: string) => void;
   onMenuClick: (postId: string, url: string, author: string) => void;
@@ -152,7 +148,6 @@ const EmptyState = memo(({ type, error, hasSearch, onRetry }: EmptyStateProps) =
 const FeedItem = memo(({ 
   item, 
   commentCount, 
-  isCommentLoading, 
   chainName, 
   onItemClick, 
   onMenuClick 
@@ -200,7 +195,7 @@ const FeedItem = memo(({
         <div className="footer">
           <div className="footer-left">
             <span className="comment-count">
-              <IconComment /> {isCommentLoading ? '...' : commentCount}
+              <IconComment /> {commentCount}
             </span>
           </div>
           <div className="footer-right">
@@ -215,12 +210,12 @@ const FeedItem = memo(({
 });
 
 export default function FeedList() {
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const urlQuery = useUrlQuery();
-  const chainNames = useSelector((s: RootState) => s.root.chainNames) as any;
-  const commentCounts = useSelector((s: RootState) => s.backend.commentCounts);
-  const commentCountsLoading = useSelector((s: RootState) => s.backend.commentCountsLoading);
+  const { chainNames } = useWallet();
+  const { openModal } = useModal();
+  
+  // Comment counts are now provided directly by the API in post.total_comments
 
   // URL parameters
   const sortBy = urlQuery.get('sortBy') || 'latest';
@@ -263,19 +258,7 @@ export default function FeedList() {
     [data]
   );
 
-  // Load comment counts for posts
-  useEffect(() => {
-    if (list.length > 0) {
-      const postIds = list
-        .map(item => item.id)
-        .filter(Boolean)
-        .filter(postId => !commentCounts[postId] && !commentCountsLoading[postId]);
-      
-      if (postIds.length > 0) {
-        dispatch(loadCommentCountsForPosts(postIds));
-      }
-    }
-  }, [list, dispatch, commentCounts, commentCountsLoading]);
+  // No need for separate comment loading - posts API provides total_comments
 
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {
@@ -295,12 +278,12 @@ export default function FeedList() {
       filtered = filtered.filter(item => item.media && Array.isArray(item.media) && item.media.length > 0);
     } else if (filterBy === 'withComments') {
       filtered = filtered.filter(item => {
-        return (commentCounts[item.id] ?? 0) > 0;
+        return (item.total_comments ?? 0) > 0;
       });
     }
     
     return filtered;
-  }, [list, localSearch, filterBy, chainNames, commentCounts]);
+  }, [list, localSearch, filterBy, chainNames]);
 
   // Event handlers
   const handleSortChange = (newSortBy: string) => {
@@ -312,10 +295,10 @@ export default function FeedList() {
   };
 
   const handleMenuClick = (postId: string, url: string, author: string) => {
-    dispatch(open({ 
+    openModal({ 
       name: 'feed-item-menu', 
       props: { postId, url, author } 
-    }));
+    });
   };
 
   // Render helpers
@@ -336,8 +319,7 @@ export default function FeedList() {
     return filteredAndSortedList.map((item) => {
       const postId = item.id;
       const authorAddress = item.sender_address;
-      const commentCount = commentCounts[postId] ?? 0;
-      const isCommentLoading = commentCountsLoading[postId] ?? false;
+      const commentCount = item.total_comments ?? 0;
       const chainName = chainNames?.[authorAddress];
 
       return (
@@ -345,7 +327,6 @@ export default function FeedList() {
           key={postId}
           item={item}
           commentCount={commentCount}
-          isCommentLoading={isCommentLoading}
           chainName={chainName}
           onItemClick={handleItemClick}
           onMenuClick={handleMenuClick}

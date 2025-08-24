@@ -1,9 +1,8 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../store/store';
+import { useWallet } from '../../hooks';
 
 export default function TokenSelect({ onSelect, onClose }: { onSelect: (token: string) => void; onClose: () => void }) {
-  const tokenInfo = useSelector((s: RootState) => s.root.tokenInfo);
+  const { tokenInfo } = useWallet();
   const tokens = Object.entries(tokenInfo || {});
   return (
     <div>

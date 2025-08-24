@@ -1,13 +1,12 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../../store/store';
 import ConnectWalletButton from '../../ConnectWalletButton';
 import TokenSelector from '../../dex/TokenSelector';
 import { useAddLiquidity } from '../hooks/useAddLiquidity';
 import { CONFIG } from '../../../config';
 
+import { useWallet } from '../../hooks';
 export default function AddLiquidityForm() {
-  const address = useSelector((s: RootState) => s.root.address);
+  const address = useWallet().address;
   const { state, setState, executeAddLiquidity } = useAddLiquidity();
 
   const handleAmountChange = (field: 'amountA' | 'amountB') => (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,17 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import BigNumber from 'bignumber.js';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState } from '../store/store';
-import { initSdk, scanForWallets } from '../store/slices/aeternitySlice';
 import { DEX_ADDRESSES, initDexContracts, toAettos, fromAettos, subSlippage, addSlippage, ensureAllowanceForRouter } from '../libs/dex';
 import AeButton from '../components/AeButton';
+
+import { useWallet, useAeternity } from '../../hooks';
 
 type TokenSelection = { address: string | 'native'; symbol: string; decimals: number };
 
 export default function Swap() {
-  const dispatch = useDispatch();
-  const address = useSelector((s: RootState) => s.root.address);
-  const sdkState = useSelector((s: RootState) => s.aeternity.sdk);
+  const { address } = useWallet();
+  const { sdk: sdkState, initSdk } = useAeternity();
   const [router, setRouter] = useState<any | null>(null);
   const [factory, setFactory] = useState<any | null>(null);
 
@@ -31,10 +29,10 @@ export default function Swap() {
   useEffect(() => {
     (async () => {
       if (!sdkState) {
-        await dispatch<any>(initSdk());
+        await initSdk();
       }
     })();
-  }, [dispatch, sdkState]);
+  }, [initSdk, sdkState]);
 
   useEffect(() => {
     (async () => {

@@ -1,8 +1,6 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { AppDispatch } from '../store/store';
-import { initSdk, scanForWallets, useSdkWallet } from '../store/slices/aeternitySlice';
 import { deeplinkLogin } from '../auth/deeplink';
+import { useWallet, useAeternity } from '../hooks';
 import Favicon from '../svg/favicon.svg?react';
 
 type Props = {
@@ -13,20 +11,20 @@ type Props = {
 };
 
 export default function ConnectWalletButton({ label = 'Connect Wallet', block, style, className }: Props) {
-  const dispatch = useDispatch<AppDispatch>();
-  const address = useSelector((s: any) => s.root.address as string | null);
+  const { address } = useWallet();
+  const { initSdk, scanForWallets, enableSdkWallet } = useAeternity();
   const [loading, setLoading] = React.useState(false);
 
   async function handleConnect() {
     setLoading(true);
     try {
-      try { await dispatch(initSdk()); } catch {}
-      const addr = await dispatch(scanForWallets()).unwrap().catch(() => null);
+      try { await initSdk(); } catch {}
+      const addr = await scanForWallets().catch(() => null);
       if (!addr) {
         // fallback to deeplink connect if Web Wallet not detected
         deeplinkLogin();
       } else {
-        dispatch(useSdkWallet());
+        enableSdkWallet();
       }
     } finally {
       setLoading(false);

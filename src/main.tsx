@@ -1,13 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { Provider } from 'react-redux';
+import { Provider } from 'jotai';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import ToastProvider from './components/ToastProvider';
 import { CONFIG, loadConfig, assertConfig } from './config';
-import { store } from './store/store';
 import './styles/tailwind.css';
 import './styles/base.scss';
 import './i18n';
@@ -52,7 +51,7 @@ const IME: any = import.meta as any;
   root.render(
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
-        <Provider store={store}>
+        <Provider>
           <ToastProvider>
             <BrowserRouter>
               <ErrorBoundary>

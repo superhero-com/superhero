@@ -1,7 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import type { RootState, AppDispatch } from '../../../store/store';
-import { setSlippage } from '../../../store/slices/dexSlice';
 import ConnectWalletButton from '../../ConnectWalletButton';
 import { 
   initDexContracts, 
@@ -15,11 +12,11 @@ import { errorToUserMessage } from '../../../libs/errorMessages';
 import { useToast } from '../../ToastProvider';
 import { CONFIG } from '../../../config';
 
+import { useWallet, useDex } from '../../../hooks';
 export default function EthxitWidget() {
-  const dispatch = useDispatch<AppDispatch>();
-  const address = useSelector((s: RootState) => s.root.address);
-  const slippagePct = useSelector((s: RootState) => s.dex.slippagePct);
-  const deadlineMins = useSelector((s: RootState) => s.dex.deadlineMins);
+  const address = useWallet().address;
+  const slippagePct = useDex().slippagePct;
+  const deadlineMins = useDex().deadlineMins;
   const toast = useToast();
 
   const [ethxitIn, setEthxitIn] = useState('');
@@ -232,7 +229,7 @@ export default function EthxitWidget() {
             onChange={(e) => {
               const value = parseFloat(e.target.value);
               if (!isNaN(value) && value >= 0.1 && value <= 50) {
-                dispatch(setSlippage(value));
+                setSlippage(value);
               }
             }}
             style={{ 

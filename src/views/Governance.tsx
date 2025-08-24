@@ -4,60 +4,69 @@ import LeftRail from '../components/layout/LeftRail';
 import RightRail from '../components/layout/RightRail';
 import { CONFIG } from '../config';
 import './Governance.scss';
-import { useDispatch, useSelector } from 'react-redux';
-import type { AppDispatch, RootState } from '../store/store';
-import { 
-  loadPolls, 
-  loadDelegation, 
-  setDelegation, 
-  revokeDelegation, 
-  loadPoll, 
-  loadPollResults, 
-  loadMyVote, 
-  submitVote, 
-  revokeMyVote, 
-  loadDelegators, 
-  loadAccount,
-  loadPollComments
-} from '../store/slices/governanceSlice';
 import AeButton from '../components/AeButton';
 import MobileInput from '../components/MobileInput';
 import MobileCard from '../components/MobileCard';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import { HeaderLogo as IconGovernance, IconComment } from '../icons';
 
+import { useWallet, useGovernance } from '../../hooks';
 type TabType = 'polls' | 'vote' | 'account';
 
 export default function Governance() {
-  const dispatch = useDispatch<AppDispatch>();
   const { id: pollId } = useParams();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>('polls');
   const [selectedVote, setSelectedVote] = useState<string | null>(null);
   const [isVoting, setIsVoting] = useState(false);
   
-  // Polls list state
-  const polls = useSelector((s: RootState) => s.governance.polls);
+  // State for UI
   const [status, setStatus] = useState<string>('');
   const [search, setSearch] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [pageSize] = useState<number>(20);
   
-  // Account state
-  const address = useSelector((s: RootState) => s.root.address);
-  const delegation = useSelector((s: RootState) => s.governance.delegation);
-  const [delegateAddress, setDelegateAddress] = useState<string>(delegation.to || '');
-  const delegators = useSelector((s: RootState) => (address ? s.governance.delegatorsByAddress[address] : []));
-  const account = useSelector((s: RootState) => (address ? s.governance.accountByAddress[address] : null));
+  // Hooks
+  const { address } = useWallet();
+  const {
+    usePolls,
+    usePoll,
+    usePollResults,
+    useMyVote,
+    useDelegation,
+    useDelegators,
+    useAccount,
+    usePollComments,
+    useSubmitVote,
+    useRevokeVote,
+    useSetDelegation,
+    useRevokeDelegation,
+    useSendPollComment
+  } = useGovernance();
   
-  // Individual poll state
-  const poll = useSelector((s: RootState) => (pollId ? s.governance.pollById[pollId] : null));
-  const results = useSelector((s: RootState) => (pollId ? s.governance.resultsById[pollId] : null));
-  const myVote = useSelector((s: RootState) => (pollId ? s.governance.myVoteById[pollId] : null));
+  // Queries
+  const { data: polls = [] } = usePolls({ page, pageSize, status, search });
+  const { data: poll } = usePoll(pollId || '');
+  const { data: results } = usePollResults(pollId || '');
+  const { data: myVote } = useMyVote(pollId || '');
+  const { data: delegation = { to: null } } = useDelegation();
+  const { data: delegators = [] } = useDelegators(address || '');
+  const { data: account } = useAccount(address || '');
+  const { data: pollComments = [] } = usePollComments(pollId || '');
   
-  // Comment state
-  const pollComments = useSelector((s: RootState) => s.governance.pollComments);
-  const pollCommentsLoading = useSelector((s: RootState) => s.governance.pollCommentsLoading);
+  // Mutations
+  const submitVoteMutation = useSubmitVote();
+  const revokeVoteMutation = useRevokeVote();
+  const setDelegationMutation = useSetDelegation();
+  const revokeDelegationMutation = useRevokeDelegation();
+  const sendCommentMutation = useSendPollComment();
+  
+  const [delegateAddress, setDelegateAddress] = useState<string>(delegation?.to || '');
+
+  // Update delegate address when delegation changes
+  useEffect(() => {
+    setDelegateAddress(delegation?.to || '');
+  }, [delegation?.to]);
 
   // Determine active tab based on URL
   useEffect(() => {
@@ -70,52 +79,18 @@ export default function Governance() {
     }
   }, [pollId, location.pathname]);
 
-  // Load polls data
-  useEffect(() => { 
-    dispatch(loadPolls({ page, pageSize, status: status || undefined, search: search || undefined })); 
-  }, [dispatch, page, pageSize, status, search]);
-
-  // Load comments for displayed polls
-  useEffect(() => {
-    polls.forEach(poll => {
-      if (poll.id) {
-        loadCommentsForPoll(poll.id);
-      }
-    });
-  }, [polls, dispatch]);
-  
-  // Load account data
-  useEffect(() => { 
-    if (address) {
-      dispatch(loadDelegation(address));
-      dispatch(loadDelegators(address));
-      dispatch(loadAccount(address));
-    }
-  }, [dispatch, address]);
-
-  // Load individual poll data
-  useEffect(() => {
-    if (pollId) {
-      dispatch(loadPoll(pollId));
-      dispatch(loadPollResults(pollId));
-      dispatch(loadMyVote(pollId));
-    }
-  }, [dispatch, pollId]);
-
-  useEffect(() => {
-    setDelegateAddress(delegation.to || '');
-  }, [delegation.to]);
+  // Data is now loaded automatically by React Query hooks
 
   const iframeSrc = CONFIG.GOVERNANCE_URL;
   
   const handleSaveDelegation = () => {
     if (delegateAddress.trim()) {
-      dispatch(setDelegation({ to: delegateAddress.trim() }));
+      setDelegationMutation.mutate({ to: delegateAddress.trim() });
     }
   };
 
   const handleRevokeDelegation = () => {
-    dispatch(revokeDelegation());
+    revokeDelegationMutation.mutate();
     setDelegateAddress('');
   };
 
@@ -125,7 +100,7 @@ export default function Governance() {
       setSelectedVote(option);
       
       try {
-        await dispatch(submitVote({ pollId, option: String(option) }));
+        await submitVoteMutation.mutateAsync({ pollId, option: String(option) });
         // Add a small delay for better UX
         setTimeout(() => {
           setIsVoting(false);
@@ -140,7 +115,7 @@ export default function Governance() {
 
   const handleRevokeVote = () => {
     if (pollId) {
-      dispatch(revokeMyVote(pollId));
+      revokeVoteMutation.mutate(pollId);
     }
   };
 
@@ -161,14 +136,7 @@ export default function Governance() {
   };
 
   const getCommentCount = (pollId: string) => {
-    const comments = pollComments[pollId] || [];
-    return comments.length;
-  };
-
-  const loadCommentsForPoll = (pollId: string) => {
-    if (!pollComments[pollId] && !pollCommentsLoading[pollId]) {
-      dispatch(loadPollComments(pollId));
-    }
+    return pollComments.length;
   };
 
   const renderPollsTab = () => (

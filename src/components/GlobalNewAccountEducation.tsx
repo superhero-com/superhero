@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import type { RootState, AppDispatch } from '../store/store';
-import { setIsNewAccount } from '../store/slices/rootSlice';
+import { useWallet } from '../hooks';
 
 export default function GlobalNewAccountEducation() {
-  const dispatch = useDispatch<AppDispatch>();
-  const address = useSelector((s: RootState) => s.root.address);
-  const balance = useSelector((s: RootState) => s.root.balance);
-  const isNewAccount = useSelector((s: RootState) => s.root.isNewAccount);
+  const { address, balance, isNewAccount, setIsNewAccount } = useWallet();
   const [isDismissed, setIsDismissed] = useState(false);
 
   // Check if this is a new account (no AE balance and marked as new)
@@ -19,7 +14,7 @@ export default function GlobalNewAccountEducation() {
 
   const handleDismiss = () => {
     setIsDismissed(true);
-    dispatch(setIsNewAccount(false));
+    setIsNewAccount(false);
   };
 
   return (

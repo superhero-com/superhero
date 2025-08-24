@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../../store/store';
 import { useSwapExecution } from '../hooks/useSwapExecution';
 import { 
   initDexContracts, 
@@ -16,10 +14,11 @@ import { errorToUserMessage } from '../../../libs/errorMessages';
 import { useToast } from '../../ToastProvider';
 import { CONFIG } from '../../../config';
 
+import { useWallet, useDex } from '../../../hooks';
 export default function EthBridgeWidget() {
-  const address = useSelector((s: RootState) => s.root.address);
-  const slippagePct = useSelector((s: RootState) => s.dex.slippagePct);
-  const deadlineMins = useSelector((s: RootState) => s.dex.deadlineMins);
+  const address = useWallet().address;
+  const slippagePct = useDex().slippagePct;
+  const deadlineMins = useDex().deadlineMins;
   const { ensureWallet } = useSwapExecution();
   const toast = useToast();
 

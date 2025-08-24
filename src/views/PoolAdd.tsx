@@ -1,6 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from '../store/store';
 import { ACI, DEX_ADDRESSES, MINIMUM_LIQUIDITY, addLiquidity, addLiquidityAe, ensureAllowanceForRouter, fromAettos, getPairInfo, initDexContracts, toAettos, getRouterTokenAllowance } from '../libs/dex';
 import { useLocation } from 'react-router-dom';
 import BigNumber from 'bignumber.js';
@@ -12,9 +10,9 @@ import { useToast } from '../components/ToastProvider';
 import { CONFIG } from '../config';
 import AeButton from '../components/AeButton';
 
+import { useWallet, useDex } from '../../hooks';
 export default function PoolAdd() {
-  const dispatch = useDispatch<AppDispatch>();
-  const address = useSelector((s: RootState) => s.root.address);
+    const address = useWallet().address;
   const [tokenA, setTokenA] = useState('');
   const [tokenB, setTokenB] = useState('');
   const [symbolA, setSymbolA] = useState('');
@@ -25,8 +23,8 @@ export default function PoolAdd() {
   const [decB, setDecB] = useState(18);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const slippage = useSelector((s: RootState) => s.dex.slippagePct);
-  const deadline = useSelector((s: RootState) => s.dex.deadlineMins);
+  const slippage = useDex().slippagePct;
+  const deadline = useDex().deadlineMins;
   const location = useLocation();
   const [pairPreview, setPairPreview] = useState<{ ratioAinB?: string; ratioBinA?: string; sharePct?: string; lpMintEstimate?: string } | null>(null);
   const [reserves, setReserves] = useState<{ reserveA?: bigint; reserveB?: bigint } | null>(null);

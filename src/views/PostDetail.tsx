@@ -8,13 +8,11 @@ import LeftRail from '../components/layout/LeftRail';
 import RightRail from '../components/layout/RightRail';
 import UserBadge from '../components/UserBadge';
 import AeButton from '../components/AeButton';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from '../store/store';
 import { relativeTime } from '../utils/time';
-import { open } from '../store/slices/modalsSlice';
 import Identicon from '../components/Identicon';
 import './PostDetail.scss';
 
+import { useWallet, useModal } from '../../hooks';
 // Types
 interface Comment {
   id: string;
@@ -146,9 +144,8 @@ const PostContent = memo(({ post }: PostContentProps) => (
 export default function PostDetail() {
   const { postId, id } = useParams();
   const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
-  const address = useSelector((s: RootState) => s.root.address) as string | null;
-  const chainNames = useSelector((s: RootState) => s.root.chainNames) as any;
+  const { address, chainNames } = useWallet();
+  const { openModal } = useModal();
 
   // Query for post data using new PostsService
   const { 
@@ -295,22 +292,24 @@ export default function PostDetail() {
               {relativeTime(new Date(displayPost.timestamp))}
             </div>
           )}
+          {/* Temporarily disabled - menu functionality 
           {!id && (
             <AeButton 
               variant="ghost" 
               size="sm"
-              onClick={() => dispatch(open({ 
+              onClick={() => openModal({ 
                 name: 'feed-item-menu', 
                 props: { 
                   postId, 
                   url: displayPost.url || '', 
-                  author: (displayPost.author || displayPost.address) 
+                  author: displayPost.author || displayPost.address
                 } 
               }))}
             >
               •••
             </AeButton>
           )}
+          */}
         </div>
       </header>
     );

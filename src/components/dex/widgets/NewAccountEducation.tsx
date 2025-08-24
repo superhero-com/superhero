@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../../store/store';
 import { useTokenList } from '../hooks/useTokenList';
 import { useTokenBalances } from '../hooks/useTokenBalances';
 
+import { useWallet } from '../../../hooks';
 export default function NewAccountEducation() {
-  const address = useSelector((s: RootState) => s.root.address);
-  const balance = useSelector((s: RootState) => s.root.balance);
-  const isNewAccount = useSelector((s: RootState) => s.root.isNewAccount);
+  const address = useWallet().address;
+  const balance = useWallet().balance;
+  const isNewAccount = useWallet().isNewAccount;
   const { tokens } = useTokenList();
   const { balances } = useTokenBalances(null, null);
 

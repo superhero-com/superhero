@@ -1,17 +1,14 @@
 import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import type { RootState, AppDispatch } from '../../../store/store';
-import { setSlippage } from '../../../store/slices/dexSlice';
 
+import { useDex } from '../../../hooks';
 interface SwapSettingsProps {
   show: boolean;
   onToggle: () => void;
 }
 
 export default function SwapSettings({ show, onToggle }: SwapSettingsProps) {
-  const dispatch = useDispatch<AppDispatch>();
-  const slippagePct = useSelector((s: RootState) => s.dex.slippagePct);
-  const deadlineMins = useSelector((s: RootState) => s.dex.deadlineMins);
+    const slippagePct = useDex().slippagePct;
+  const deadlineMins = useDex().deadlineMins;
 
   if (!show) return null;
 
@@ -35,7 +32,7 @@ export default function SwapSettings({ show, onToggle }: SwapSettingsProps) {
             onChange={(e) => {
               const value = parseFloat(e.target.value);
               if (!isNaN(value) && value >= 0.1 && value <= 50) {
-                dispatch(setSlippage(value));
+                setSlippage(value);
               }
             }}
             style={{ 
@@ -63,7 +60,7 @@ export default function SwapSettings({ show, onToggle }: SwapSettingsProps) {
               const value = parseInt(e.target.value);
               if (!isNaN(value) && value >= 1 && value <= 60) {
                 // Note: This would need to be added to the dex slice
-                // dispatch(setDeadline(value));
+                // setDeadline(value);
               }
             }}
             style={{ 

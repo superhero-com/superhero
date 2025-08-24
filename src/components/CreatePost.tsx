@@ -1,15 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { IconClose, IconGif, IconImage, IconSmile } from '../icons';
-import type { AppDispatch, RootState } from '../store/store';
 import AeButton from './AeButton';
 import './CreatePost.scss';
 import Identicon from './Identicon';
+import { useWallet, useAeternity } from '../hooks';
 // @ts-ignore
 import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
 import { PostsService } from '../api/generated';
 import { CONFIG } from '../config';
-import { scanForWallets, useSdkWallet } from '../store/slices/aeternitySlice';
 
 interface CreatePostProps {
   onClose?: () => void;
@@ -36,9 +34,8 @@ const PROMPTS: string[] = [
 ];
 
 export default function CreatePost({ onClose, onSuccess, className = '', onTextChange }: CreatePostProps) {
-  const dispatch = useDispatch<AppDispatch>();
-  const address = useSelector((s: RootState) => s.root.address) as string | null;
-  const chainNames = useSelector((s: RootState) => s.root.chainNames) as Record<string, string>;
+  const { address, chainNames } = useWallet();
+  const { scanForWallets, enableSdkWallet } = useAeternity();
 
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -108,8 +105,8 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
       const hasActiveAccount = sdk && typeof sdk.addresses === 'function' && (sdk.addresses() || []).length > 0;
       if (!hasActiveAccount) {
         try {
-          await (dispatch as any)(scanForWallets()).unwrap();
-          (dispatch as any)(useSdkWallet());
+          await scanForWallets();
+          enableSdkWallet();
         } catch { }
         sdk = (window as any).__aeSdk;
       }

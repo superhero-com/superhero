@@ -1,8 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Backend } from '../../api/backend';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from '../../store/store';
-import { refreshAeBalance } from '../../store/slices/aeternitySlice';
 import Sparkline from '../Trendminer/Sparkline';
 import TrendingSidebar from '../Trendminer/TrendingSidebar';
 import { useToast } from '../ToastProvider';
@@ -10,6 +7,7 @@ import { TrendminerApi } from '../../api/backend';
 import './RightRail.scss';
 import WalletCard from './WalletCard';
 
+import { useAeternity, useWallet } from '../../hooks';
 interface SearchSuggestion {
   type: 'user' | 'token' | 'topic' | 'post' | 'dao' | 'pool' | 'transaction';
   id: string;
@@ -31,8 +29,8 @@ interface SearchFilter {
 }
 
 export default function RightRail() {
-  const dispatch = useDispatch<AppDispatch>();
   const toast = useToast();
+  const { refreshAeBalance } = useAeternity();
   const [trending, setTrending] = useState<Array<[string, any]>>([] as any);
   const [prices, setPrices] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,8 +85,8 @@ export default function RightRail() {
     }
   });
 
-  const address = useSelector((s: RootState) => s.root.address);
-  const chainNames = useSelector((s: RootState) => s.root.chainNames);
+  const address = useWallet().address;
+  const chainNames = useWallet().chainNames;
 
   const formatPrice = (price: number, currency: string) => {
     const formatter = new Intl.NumberFormat('en-US', {
@@ -455,9 +453,9 @@ export default function RightRail() {
 
   useEffect(() => {
     if (address) {
-      dispatch(refreshAeBalance());
+      refreshAeBalance();
     }
-  }, [address, dispatch]);
+  }, [address]);
 
   // Load saved searches from localStorage
   useEffect(() => {

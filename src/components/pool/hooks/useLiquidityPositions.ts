@@ -1,19 +1,17 @@
 import { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import type { RootState, AppDispatch } from '../../../store/store';
-import { scanAccountLiquidity } from '../../../store/slices/dexSlice';
 import { LiquidityPosition, PoolListState } from '../types/pool';
+import { useWallet, useDex } from '../../hooks';
 
 export function useLiquidityPositions(): PoolListState {
-  const dispatch = useDispatch<AppDispatch>();
-  const address = useSelector((s: RootState) => s.root.address);
+  const { address } = useWallet();
+  const { providedLiquidity, scanAccountLiquidity } = useDex();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showImport, setShowImport] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
 
-  // Get liquidity positions from Redux store
-  const providedRaw = useSelector((s: RootState) => s.dex.providedLiquidity[address || '']);
+  // Get liquidity positions from Jotai store
+  const providedRaw = providedLiquidity[address || ''];
   const provided = providedRaw || {};
 
   // Convert to our typed format
@@ -37,7 +35,7 @@ export function useLiquidityPositions(): PoolListState {
     setLoading(true);
     setError(null);
 
-    dispatch(scanAccountLiquidity(address))
+    scanAccountLiquidity(address)
       .then(() => {
         setLoading(false);
       })
@@ -45,7 +43,7 @@ export function useLiquidityPositions(): PoolListState {
         setError(err.message || 'Failed to load liquidity positions');
         setLoading(false);
       });
-  }, [address, dispatch]);
+  }, [address, scanAccountLiquidity]);
 
   return {
     positions,

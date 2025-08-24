@@ -4,7 +4,7 @@ import TokenSelector from '../../dex/TokenSelector';
 import { useAddLiquidity } from '../hooks/useAddLiquidity';
 import { CONFIG } from '../../../config';
 
-import { useWallet } from '../../hooks';
+import { useWallet } from '../../../hooks';
 export default function AddLiquidityForm() {
   const address = useWallet().address;
   const { state, setState, executeAddLiquidity } = useAddLiquidity();

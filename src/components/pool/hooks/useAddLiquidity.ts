@@ -6,7 +6,7 @@ import { CONFIG } from '../../../config';
 import { AddLiquidityState, LiquidityQuoteParams, LiquidityExecutionParams } from '../types/pool';
 import BigNumber from 'bignumber.js';
 
-import { useWallet, useDex } from './index';
+import { useWallet, useDex } from '../../../hooks';
 export function useAddLiquidity() {
   const address = useWallet().address;
   const slippagePct = useDex().slippagePct;

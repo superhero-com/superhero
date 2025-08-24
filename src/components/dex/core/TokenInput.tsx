@@ -47,32 +47,56 @@ export default function TokenInput({
   };
 
   return (
-    <div style={{ display: 'grid', gap: 6 }}>
-      <label style={{ fontSize: 12, opacity: 0.85 }}>{label}</label>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <div style={{ display: 'grid', gap: 6 }}>
-          <TokenSelector
-            selected={token}
-            onSelect={onTokenChange}
-            exclude={excludeTokens}
-            disabled={disabled}
-            loading={loading}
-            tokens={tokens}
-            searchValue={searchValue}
-            onSearchChange={onSearchChange}
-          />
-        </div>
-        
+    <div style={{ 
+      background: 'rgba(255, 255, 255, 0.03)',
+      border: '1px solid var(--glass-border)',
+      borderRadius: 16,
+      padding: 16,
+      backdropFilter: 'blur(10px)',
+      transition: 'all 0.3s ease'
+    }}>
+      {/* Label and Balance Row */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: 12
+      }}>
+        <label style={{ 
+          fontSize: 14, 
+          fontWeight: 600,
+          color: 'var(--light-font-color)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        }}>
+          {label}
+        </label>
+        {balance && (
+          <div style={{ 
+            fontSize: 12, 
+            color: 'var(--light-font-color)',
+            background: 'rgba(255, 255, 255, 0.05)',
+            padding: '4px 8px',
+            borderRadius: 8,
+            border: '1px solid var(--glass-border)'
+          }}>
+            Balance: <span style={{ fontWeight: 600, color: 'var(--standard-font-color)' }}>{balance}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Main Input Row */}
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        {/* Amount Input */}
         <div style={{ 
-          flex: 1, 
-          padding: '8px 10px', 
-          borderRadius: 8, 
-          background: '#1a1a23', 
-          color: 'white', 
-          border: '1px solid #3a3a4a',
+          flex: 1,
+          background: 'rgba(255, 255, 255, 0.05)',
+          border: '1px solid var(--glass-border)',
+          borderRadius: 12,
+          padding: '12px 16px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          transition: 'all 0.3s ease'
         }}>
           <input
             type="text"
@@ -86,24 +110,56 @@ export default function TokenInput({
               flex: 1, 
               background: 'transparent', 
               border: 'none', 
-              color: 'white',
+              color: 'var(--standard-font-color)',
               outline: 'none',
-              fontSize: '14px'
+              fontSize: '18px',
+              fontWeight: 600,
+              fontFamily: 'monospace'
             }}
             aria-label={`amount-${label.toLowerCase()}`}
+            onFocus={(e) => {
+              e.currentTarget.parentElement.style.borderColor = 'var(--accent-color)';
+              e.currentTarget.parentElement.style.boxShadow = '0 0 0 2px rgba(78, 205, 196, 0.2)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.parentElement.style.borderColor = 'var(--glass-border)';
+              e.currentTarget.parentElement.style.boxShadow = 'none';
+            }}
           />
           {token && (
-            <span style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px', fontWeight: 500 }}>
-              {token.symbol}
-            </span>
+            <div style={{ 
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '4px 8px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 8,
+              marginLeft: 8
+            }}>
+              <span style={{ 
+                color: 'var(--standard-font-color)', 
+                fontSize: '14px', 
+                fontWeight: 700
+              }}>
+                {token.symbol}
+              </span>
+            </div>
           )}
         </div>
-        
-        {balance && (
-          <div style={{ alignSelf: 'center', fontSize: 12, opacity: 0.8 }}>
-            Balance: {balance}
-          </div>
-        )}
+
+        {/* Token Selector */}
+        <div style={{ flexShrink: 0 }}>
+          <TokenSelector
+            selected={token}
+            onSelect={onTokenChange}
+            exclude={excludeTokens}
+            disabled={disabled}
+            loading={loading}
+            tokens={tokens}
+            searchValue={searchValue}
+            onSearchChange={onSearchChange}
+          />
+        </div>
       </div>
     </div>
   );

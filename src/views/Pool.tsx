@@ -7,7 +7,7 @@ import { useLiquidityPositions } from '../components/pool/hooks/useLiquidityPosi
 import { LiquidityPosition } from '../components/pool/types/pool';
 import ConnectWalletButton from '../components/ConnectWalletButton';
 
-import { useWallet } from '../../hooks';
+import { useWallet } from '../hooks';
 export default function PoolRefactored() {
   const navigate = useNavigate();
   const address = useWallet().address;

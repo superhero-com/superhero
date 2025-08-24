@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { LiquidityPosition, PoolListState } from '../types/pool';
-import { useWallet, useDex } from '../../hooks';
+import { useWallet, useDex } from '../../../hooks';
 
 export function useLiquidityPositions(): PoolListState {
   const { address } = useWallet();

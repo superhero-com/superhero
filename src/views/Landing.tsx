@@ -3,17 +3,18 @@ import { Link } from 'react-router-dom';
 import AeAmountFiat from '../components/AeAmountFiat';
 import './Landing.scss';
 
-// Assets (re-using Vue landing assets)
-import bannerImg from '../../../src/assets/landing/banner-img.png';
-import votingSvg from '../../../src/assets/landing/voting.svg';
-import postPng from '../../../src/assets/landing/post.png';
-import appStoreSvg from '../../../src/assets/landing/appstore.svg';
-import googlePlaySvg from '../../../src/assets/landing/googleplay.svg';
-import mockupPng from '../../../src/assets/landing/mockup.png';
-import githubSvg from '../../../src/assets/landing/github.svg';
-import meetPng from '../../../src/assets/landing/superhero-meet-icon.png';
-import votingIconPng from '../../../src/assets/landing/superhero-voting-icon.png';
-import leagueIconPng from '../../../src/assets/landing/superhero-league-icon.png';
+// Assets
+import votingSvg from '../svg/landing/voting.svg';
+import appStoreSvg from '../svg/landing/appstore.svg';
+import googlePlaySvg from '../svg/landing/googleplay.svg';
+import githubSvg from '../svg/landing/github.svg';
+// Placeholder for missing images - using existing SVGs or removing them
+// import bannerImg from '../../../src/assets/landing/banner-img.png';
+// import postPng from '../../../src/assets/landing/post.png';
+// import mockupPng from '../../../src/assets/landing/mockup.png';
+// import meetPng from '../../../src/assets/landing/superhero-meet-icon.png';
+// import votingIconPng from '../../../src/assets/landing/superhero-voting-icon.png';
+// import leagueIconPng from '../../../src/assets/landing/superhero-league-icon.png';
 
 export default function Landing() {
   const stats = null; // TODO: Replace with useBackend hook
@@ -35,7 +36,8 @@ export default function Landing() {
             </p>
             <Link to="/" className="sh-btn-blue">Get started</Link>
             <div className="banner-img">
-              <img src={bannerImg} alt="Superhero app preview" />
+              {/* <img src={bannerImg} alt="Superhero app preview" /> */}
+              <div style={{ background: '#333', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>Superhero App Preview</div>
             </div>
           </div>
         </div>
@@ -76,7 +78,8 @@ export default function Landing() {
               </div>
             </div>
             <div className="sh-col-9 voting-img">
-              <img src={postPng} alt="Decentralized posting" />
+              {/* <img src={postPng} alt="Decentralized posting" /> */}
+              <div style={{ background: '#f0f0f0', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Decentralized Posting</div>
             </div>
           </div>
 
@@ -147,7 +150,8 @@ export default function Landing() {
               </div>
             </div>
             <div className="sh-col-6 left-tips-img">
-              <img src={mockupPng} alt="Superhero wallet mockup" />
+              {/* <img src={mockupPng} alt="Superhero wallet mockup" /> */}
+              <div style={{ background: '#f0f0f0', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Wallet Mockup</div>
             </div>
           </div>
         </div>
@@ -165,7 +169,8 @@ export default function Landing() {
           </div>
           <div className="sh-row">
             <div className="sh-col-4 crypto-box">
-              <img src={meetPng} alt="Superhero Meet" />
+              {/* <img src={meetPng} alt="Superhero Meet" /> */}
+              <div style={{ background: '#e0e0e0', width: '60px', height: '60px', borderRadius: '50%' }}></div>
               <h4>Superhero Meet</h4>
               <p>
                 Spin up a conference room in seconds – no account required – and even live-stream to
@@ -173,7 +178,8 @@ export default function Landing() {
               </p>
             </div>
             <div className="sh-col-4 crypto-box">
-              <img src={votingIconPng} alt="Superhero Voting" />
+              {/* <img src={votingIconPng} alt="Superhero Voting" /> */}
+              <div style={{ background: '#e0e0e0', width: '60px', height: '60px', borderRadius: '50%' }}></div>
               <h4>Superhero Voting</h4>
               <p>
                 Create polls, vote, delegate, and collect voting power from the community. Every vote
@@ -181,7 +187,7 @@ export default function Landing() {
               </p>
             </div>
             <div className="sh-col-4 crypto-box">
-              <img src={leagueIconPng} alt="Superhero Button" />
+              {/* <img src={leagueIconPng} alt="Superhero Button" /> */}
               <h4>Superhero Button</h4>
               <p>
                 Add a simple, customizable tip button to your website or blog and let people reward

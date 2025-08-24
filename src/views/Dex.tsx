@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import ThemeSwitcher from '../components/ThemeSwitcher';
 import DexTabs from '../components/dex/DexTabs';
 import SwapForm from '../components/dex/core/SwapForm';
-import WrapUnwrapWidget from '../components/dex/widgets/WrapUnwrapWidget';
-import EthxitWidget from '../components/dex/widgets/EthxitWidget';
+import { useTokenList } from '../components/dex/hooks/useTokenList';
+import RecentActivity from '../components/dex/supporting/RecentActivity';
+import { RecentActivity as RecentActivityType } from '../components/dex/types/dex';
 import EthBridgeWidget from '../components/dex/widgets/EthBridgeWidget';
 import NewAccountEducation from '../components/dex/widgets/NewAccountEducation';
-import RecentActivity from '../components/dex/supporting/RecentActivity';
-import ThemeSwitcher from '../components/ThemeSwitcher';
-import { useTokenList } from '../components/dex/hooks/useTokenList';
-import { RecentActivity as RecentActivityType } from '../components/dex/types/dex';
+import WrapUnwrapWidget from '../components/dex/widgets/WrapUnwrapWidget';
 import './Dex.scss';
 
 export default function DexRefactored() {
@@ -58,7 +57,6 @@ export default function DexRefactored() {
       <SwapForm />
 
       {/* Specialized Widgets */}
-      <EthxitWidget />
       <WrapUnwrapWidget />
       <EthBridgeWidget />
 

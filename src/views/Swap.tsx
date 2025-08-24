@@ -3,7 +3,7 @@ import BigNumber from 'bignumber.js';
 import { DEX_ADDRESSES, initDexContracts, toAettos, fromAettos, subSlippage, addSlippage, ensureAllowanceForRouter } from '../libs/dex';
 import AeButton from '../components/AeButton';
 
-import { useWallet, useAeternity } from '../../hooks';
+import { useWallet, useAeternity } from '../hooks';
 
 type TokenSelection = { address: string | 'native'; symbol: string; decimals: number };
 

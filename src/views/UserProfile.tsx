@@ -14,7 +14,7 @@ import { Backend } from '../api/backend';
 import CreatePost from '../components/CreatePost';
 import { deeplinkTip } from '../auth/deeplink';
 
-import { useWallet, useBackend, useModal } from '../../hooks';
+import { useWallet, useBackend, useModal } from '../hooks';
 
 const EMPTY_LIST: any[] = [];
 

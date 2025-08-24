@@ -10,7 +10,7 @@ import MobileCard from '../components/MobileCard';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import { HeaderLogo as IconGovernance, IconComment } from '../icons';
 
-import { useWallet, useGovernance } from '../../hooks';
+import { useWallet, useGovernance } from '../hooks';
 type TabType = 'polls' | 'vote' | 'account';
 
 export default function Governance() {

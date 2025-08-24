@@ -47,7 +47,7 @@ export default function TokenInput({
   };
 
   return (
-    <div style={{ 
+    <div style={{
       background: 'rgba(255, 255, 255, 0.03)',
       border: '1px solid var(--glass-border)',
       borderRadius: 16,
@@ -56,14 +56,14 @@ export default function TokenInput({
       transition: 'all 0.3s ease'
     }}>
       {/* Label and Balance Row */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 12
       }}>
-        <label style={{ 
-          fontSize: 14, 
+        <label style={{
+          fontSize: 14,
           fontWeight: 600,
           color: 'var(--light-font-color)',
           textTransform: 'uppercase',
@@ -72,13 +72,9 @@ export default function TokenInput({
           {label}
         </label>
         {balance && (
-          <div style={{ 
-            fontSize: 12, 
-            color: 'var(--light-font-color)',
-            background: 'rgba(255, 255, 255, 0.05)',
-            padding: '4px 8px',
-            borderRadius: 8,
-            border: '1px solid var(--glass-border)'
+          <div style={{
+            fontSize: 12,
+            color: 'var(--light-font-color)'
           }}>
             Balance: <span style={{ fontWeight: 600, color: 'var(--standard-font-color)' }}>{balance}</span>
           </div>
@@ -86,67 +82,15 @@ export default function TokenInput({
       </div>
 
       {/* Main Input Row */}
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-        {/* Amount Input */}
-        <div style={{ 
-          flex: 1,
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid var(--glass-border)',
-          borderRadius: 12,
-          padding: '12px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          transition: 'all 0.3s ease'
-        }}>
-          <input
-            type="text"
-            inputMode="decimal"
-            placeholder={placeholder}
-            value={amount}
-            onChange={handleAmountChange}
-            readOnly={readOnly}
-            disabled={disabled}
-            style={{ 
-              flex: 1, 
-              background: 'transparent', 
-              border: 'none', 
-              color: 'var(--standard-font-color)',
-              outline: 'none',
-              fontSize: '18px',
-              fontWeight: 600,
-              fontFamily: 'monospace'
-            }}
-            aria-label={`amount-${label.toLowerCase()}`}
-            onFocus={(e) => {
-              e.currentTarget.parentElement.style.borderColor = 'var(--accent-color)';
-              e.currentTarget.parentElement.style.boxShadow = '0 0 0 2px rgba(78, 205, 196, 0.2)';
-            }}
-            onBlur={(e) => {
-              e.currentTarget.parentElement.style.borderColor = 'var(--glass-border)';
-              e.currentTarget.parentElement.style.boxShadow = 'none';
-            }}
-          />
-          {token && (
-            <div style={{ 
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '4px 8px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: 8,
-              marginLeft: 8
-            }}>
-              <span style={{ 
-                color: 'var(--standard-font-color)', 
-                fontSize: '14px', 
-                fontWeight: 700
-              }}>
-                {token.symbol}
-              </span>
-            </div>
-          )}
-        </div>
-
+      <div style={{ 
+        display: 'flex', 
+        gap: 12, 
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backdropFilter: 'blur(10px)',
+        padding: '4px 0px 4px 12px',
+        borderRadius: 12,
+      }}>
         {/* Token Selector */}
         <div style={{ flexShrink: 0 }}>
           <TokenSelector
@@ -158,6 +102,37 @@ export default function TokenInput({
             tokens={tokens}
             searchValue={searchValue}
             onSearchChange={onSearchChange}
+          />
+        </div>
+        
+        {/* Amount Input */}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center'
+        }}>
+          <input
+            type="text"
+            inputMode="decimal"
+            placeholder={placeholder}
+            value={amount}
+            onChange={handleAmountChange}
+            readOnly={readOnly}
+            disabled={disabled}
+            style={{
+              flex: 1,
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--standard-font-color)',
+              outline: 'none',
+              fontSize: '18px',
+              fontWeight: 600,
+              fontFamily: 'monospace',
+              boxShadow: 'none',
+              backdropFilter: 'none',
+              textAlign: 'right'
+            }}
+            aria-label={`amount-${label.toLowerCase()}`}
           />
         </div>
       </div>

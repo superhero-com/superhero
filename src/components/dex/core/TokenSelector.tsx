@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
 import { Token } from '../types/dex';
 
 interface TokenSelectorProps {
@@ -46,6 +47,10 @@ export default function TokenSelector({
     onSelect(token);
     setOpen(false);
     setCustomAddress('');
+    // Clear search when closing
+    if (onSearchChange) {
+      onSearchChange('');
+    }
   };
 
   const handleAddCustomToken = () => {
@@ -70,146 +75,162 @@ export default function TokenSelector({
   };
 
   return (
-    <div>
-      {label && (
-        <div style={{ 
-          fontSize: 12, 
-          color: 'var(--light-font-color)',
-          fontWeight: 600,
-          marginBottom: 6,
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
-        }}>
-          {label}
-        </div>
-      )}
-      
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button
-          onClick={() => {
-            setOpen(true);
-            // Clear search when opening dialog
-            if (onSearchChange) {
-              onSearchChange('');
-            }
-          }}
-          disabled={disabled || loading}
-          style={{ 
-            minWidth: 120,
-            padding: '10px 16px', 
-            borderRadius: 12, 
-            background: selected ? 'var(--button-gradient)' : 'rgba(255, 255, 255, 0.05)', 
-            color: 'var(--standard-font-color)', 
-            border: '1px solid var(--glass-border)',
-            fontSize: '14px',
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <div>
+        {label && (
+          <div style={{ 
+            fontSize: 12, 
+            color: 'var(--light-font-color)',
             fontWeight: 600,
-            cursor: disabled || loading ? 'not-allowed' : 'pointer',
-            backdropFilter: 'blur(10px)',
-            transition: 'all 0.3s ease',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8
-          }}
-          onMouseOver={(e) => {
-            if (!disabled && !loading) {
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 107, 0.3)';
-            }
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-        >
-          {loading ? (
-            <div style={{ 
-              width: 14, 
-              height: 14, 
-              border: '2px solid rgba(255,255,255,0.3)',
-              borderTop: '2px solid var(--standard-font-color)',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}></div>
-          ) : (
-            <>
-              {selected ? `${selected.symbol}` : 'Select Token'}
-              <span style={{ opacity: 0.7 }}>▼</span>
-            </>
-          )}
-        </button>
+            marginBottom: 6,
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px'
+          }}>
+            {label}
+          </div>
+        )}
+        
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Dialog.Trigger asChild>
+            <button
+              disabled={disabled || loading}
+              onClick={() => {
+                // Clear search when opening dialog
+                if (onSearchChange) {
+                  onSearchChange('');
+                }
+                setCustomAddress('');
+              }}
+              style={{ 
+                minWidth: 120,
+                padding: '10px 16px', 
+                borderRadius: 12, 
+                background: selected ? 'var(--button-gradient)' : 'rgba(255, 255, 255, 0.05)', 
+                color: 'var(--standard-font-color)', 
+                border: '1px solid var(--glass-border)',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: disabled || loading ? 'not-allowed' : 'pointer',
+                backdropFilter: 'blur(10px)',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8
+              }}
+              onMouseOver={(e) => {
+                if (!disabled && !loading) {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 107, 0.3)';
+                }
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              {loading ? (
+                <div style={{ 
+                  width: 14, 
+                  height: 14, 
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  borderTop: '2px solid var(--standard-font-color)',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite'
+                }}></div>
+              ) : (
+                <>
+                  {selected ? `${selected.symbol}` : 'Select Token'}
+                  <span style={{ opacity: 0.7 }}>▼</span>
+                </>
+              )}
+            </button>
+          </Dialog.Trigger>
+        </div>
       </div>
 
-      {open && (
-        <div 
-          role="dialog" 
-          aria-label="token-selector" 
-          style={{ 
-            position: 'fixed', 
-            inset: 0, 
-            background: 'rgba(0,0,0,0.9)', 
-            display: 'grid', 
-            placeItems: 'center',
+      <Dialog.Portal>
+        <Dialog.Overlay 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.9)',
+            backdropFilter: 'blur(12px)',
             zIndex: 1000,
-            backdropFilter: 'blur(12px)'
+            animation: 'fadeIn 150ms ease-out'
           }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setOpen(false);
-          }}
-        >
-          <div style={{ 
-            background: 'rgba(20, 20, 28, 0.95)', 
-            color: 'var(--standard-font-color)', 
-            border: '1px solid rgba(255, 255, 255, 0.1)', 
-            borderRadius: 24, 
-            padding: 24, 
-            width: 520, 
+        />
+        <Dialog.Content
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: 'rgba(20, 20, 28, 0.98)',
+            color: 'var(--standard-font-color)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: 24,
+            padding: 24,
+            width: 520,
             maxWidth: '90vw',
-            maxHeight: '85vh', 
+            maxHeight: '85vh',
             overflowY: 'auto',
             backdropFilter: 'blur(20px)',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6), 0 8px 32px rgba(255, 107, 107, 0.2)'
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6), 0 8px 32px rgba(255, 107, 107, 0.2)',
+            zIndex: 1001,
+            animation: 'slideInFromTop 200ms ease-out',
+            outline: 'none'
+          }}
+        >
+          {/* Header */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: 20
           }}>
-            {/* Header */}
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              marginBottom: 16
+            <Dialog.Title style={{ 
+              fontWeight: 700, 
+              fontSize: 20,
+              margin: 0,
+              background: 'var(--primary-gradient)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
             }}>
-              <h3 style={{ 
-                fontWeight: 700, 
-                fontSize: 18,
-                margin: 0,
-                background: 'var(--primary-gradient)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}>
-                Select Token
-              </h3>
+              Select a token
+            </Dialog.Title>
+            <Dialog.Close asChild>
               <button 
-                onClick={() => setOpen(false)} 
                 style={{ 
                   padding: '8px 12px', 
-                  borderRadius: 10,
-                  background: 'var(--glass-bg)',
-                  border: '1px solid var(--glass-border)',
+                  borderRadius: 12,
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   color: 'var(--standard-font-color)',
                   cursor: 'pointer',
                   backdropFilter: 'blur(10px)',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  fontSize: 16,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 36,
+                  height: 36
                 }}
                 onMouseOver={(e) => {
                   e.currentTarget.style.background = 'var(--error-color)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
                 }}
                 onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'var(--glass-bg)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.transform = 'scale(1)';
                 }}
               >
                 ✕
               </button>
-            </div>
+            </Dialog.Close>
+          </div>
             
             {/* Search Input */}
             <div style={{ position: 'relative', marginBottom: 20 }}>
@@ -534,17 +555,32 @@ export default function TokenSelector({
                 View Token List
               </button>
             </div>
-          </div>
-        </div>
-      )}
+        </Dialog.Content>
+      </Dialog.Portal>
       
-      {/* Add keyframes for spinner animation */}
+      {/* Add keyframes for animations */}
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideInFromTop {
+          from { 
+            opacity: 0;
+            transform: translate(-50%, -60%) scale(0.95);
+          }
+          to { 
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+          }
+        }
       `}</style>
-    </div>
+    </Dialog.Root>
   );
 }

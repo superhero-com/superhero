@@ -15,6 +15,7 @@
     "@ethersproject/bignumber": "^5.8.0",
     "@mdi/font": "7.4.47",
     "@multiavatar/multiavatar": "^1.0.7",
+    "@radix-ui/react-dialog": "^1.1.15",
     "@tanstack/react-query": "^5.85.5",
     "@visx/wordcloud": "^3.10.0",
     "aeternity-fungible-token": "git+https://git@github.com/aeternity/aeternity-fungible-token#v2.2.0",

@@ -48,8 +48,8 @@ export default function SwapForm() {
 
   // Initialize default tokens
   useEffect(() => {
-    if (!tokenIn && tokens.length) setTokenIn(tokens[0]);
-    if (!tokenOut && tokens.length) setTokenOut(tokens[1] || null);
+    if (!tokenIn && tokens.length) setTokenIn(tokens[2]);
+    if (!tokenOut && tokens.length) setTokenOut(tokens[0] || null);
   }, [tokens, tokenIn, tokenOut]);
 
   // Quote for exact-in mode when amountIn or tokens change

@@ -33,9 +33,26 @@ export default function SwapRouteInfo({ routeInfo, tokens, tokenIn, tokenOut }: 
 
   if (!routeInfo.path.length) return null;
 
+  function buildRouteDisplay(): string {
+    const routeLabels = routeInfo.path.map(p => routeLabel(p));
+    let routeDisplay = routeLabels.map((label, i) => (i > 0 ? ' → ' : '') + label).join('');
+    
+    // If route starts with WAE, prepend AE
+    if (routeLabels.length > 0 && routeLabels[0] === 'WAE') {
+      routeDisplay = 'AE → ' + routeDisplay;
+    }
+    
+    // If route ends with WAE, append AE
+    if (routeLabels.length > 0 && routeLabels[routeLabels.length - 1] === 'WAE') {
+      routeDisplay = routeDisplay + ' → AE';
+    }
+    
+    return routeDisplay;
+  }
+
   return (
     <div style={{ fontSize: 12, opacity: 0.8 }}>
-      Route: {routeInfo.path.map((p, i) => (i > 0 ? ' → ' : '') + routeLabel(p)).join('')}
+      Route: {buildRouteDisplay()}
       
       {routeInfo.reserves && routeInfo.reserves.length > 0 && (
         <div style={{ marginTop: 8, display: 'grid', gap: 6 }}>

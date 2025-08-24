@@ -83,7 +83,7 @@ export default function TokenSelector({
             color: 'var(--light-font-color)',
             fontWeight: 600,
             marginBottom: 6,
-            textTransform: 'uppercase',
+            textTransform: 'none',
             letterSpacing: '0.5px'
           }}>
             {label}
@@ -116,7 +116,8 @@ export default function TokenSelector({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 8
+                gap: 8,
+                textTransform: 'none'
               }}
               onMouseOver={(e) => {
                 if (!disabled && !loading) {
@@ -136,7 +137,7 @@ export default function TokenSelector({
                   border: '2px solid rgba(255,255,255,0.3)',
                   borderTop: '2px solid var(--standard-font-color)',
                   borderRadius: '50%',
-                  animation: 'spin 1s linear infinite'
+                  animation: 'spin 1s linear infinite',
                 }}></div>
               ) : (
                 <>
@@ -454,7 +455,8 @@ export default function TokenSelector({
                       fontWeight: 700, 
                       fontSize: 16,
                       marginBottom: 2,
-                      color: 'var(--standard-font-color)'
+                      color: 'var(--standard-font-color)',
+                      textTransform: 'none',
                     }}>
                       {token.symbol}
                     </div>

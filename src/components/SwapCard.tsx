@@ -7,7 +7,7 @@ import AeButton from './AeButton';
 import MobileCard from './MobileCard';
 import { DEX_ADDRESSES, initDexContracts, toAettos, fromAettos, subSlippage, ensureAllowanceForRouter } from '../libs/dex';
 
-import { useWallet, useAeternity } from '../../hooks';
+import { useWallet, useAeternity } from '../hooks';
 
 type TokenItem = any;
 

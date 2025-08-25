@@ -64,7 +64,11 @@ export function useSwapExecution() {
     try {
       // eslint-disable-next-line no-console
       console.info('[dex] Submitting swap…');
-      await ensureWallet();
+      try {
+        await ensureWallet();
+      } catch (error) {
+        console.log('error', error);
+      }
 
       const sdk = (window as any).__aeSdk;
       const { router } = await initDexContracts(sdk);

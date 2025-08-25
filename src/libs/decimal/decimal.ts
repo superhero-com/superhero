@@ -2,21 +2,22 @@ import assert from "assert";
 
 import { BigNumber } from "@ethersproject/bignumber";
 
-const getDigits = (numDigits: number) => TEN.pow(numDigits);
-
 const MAX_UINT_256 =
   "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 const PRECISION = 18;
 const ONE = BigNumber.from(1);
 const TEN = BigNumber.from(10);
+
+const getDigits = (numDigits: number) => TEN.pow(numDigits);
 const DIGITS = getDigits(PRECISION);
 
 const stringRepresentationFormat = /^[0-9]*(\.[0-9]*)?(e[-+]?[0-9]+)?$/;
 const trailingZeros = /0*$/;
 const magnitudes = ["", "K", "M", "B", "T"];
 
-const roundedMul = (x: BigNumber, y: BigNumber) =>
-  x.mul(y).add(Decimal.HALF.hex).div(DIGITS);
+// Move roundedMul after Decimal class definition to avoid circular reference
+// const roundedMul = (x: BigNumber, y: BigNumber) =>
+//   x.mul(y).add(Decimal.HALF.hex).div(DIGITS);
 
 /**
  * Types that can be converted into a Decimal.
@@ -402,3 +403,7 @@ export class Decimal {
     return a.gt(b) ? a : b;
   }
 }
+
+// Define roundedMul after Decimal class to avoid circular reference
+const roundedMul = (x: BigNumber, y: BigNumber) =>
+  x.mul(y).add(Decimal.HALF.hex).div(DIGITS);

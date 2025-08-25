@@ -61,7 +61,7 @@ jobs:
               --log-driver json-file \
               --log-opt max-size=100m \
               --log-opt max-file=30 \
-              -v $HOST_DATA_DIR/superconfig.json:/public/superconfig.json \
+              -v $HOST_DATA_DIR/superconfig.json:/srv/public/superconfig.json \
               -p 3000:80 \
               -e NODE_ENV=production \
               ${{ secrets.DOCKERHUB_REPO }}:${{ inputs.VERSION }}

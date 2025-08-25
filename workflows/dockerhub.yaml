@@ -1,0 +1,65 @@
+name: Dockerhub
+on:
+  workflow_dispatch: {}
+  push:
+    tags: [v*]
+    branches: [main, staging, develop]
+concurrency: ${{ github.workflow }}-${{ github.ref_name }}
+jobs:
+  buildx:
+    name: Docker Buildx
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # needed for docker-package to be able to calculate the version
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ secrets.DOCKERHUB_REPO }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+          flavor: |
+            latest=${{ contains(github.ref_name, '-rc.') && 'false' || 'auto' }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          secrets: |
+            "GITHUB_TOKEN=${{ secrets.NPM_GITHUB_TOKEN }}"
+  deploy_develop:
+    if: github.ref_name == 'develop'
+    name: Develop Deploy
+    uses: ./.github/workflows/deploy_develop.yaml
+    secrets: inherit
+    needs: buildx
+  deploy_staging:
+    if: github.ref_name == 'staging'
+    name: Staging Deploy
+    uses: ./.github/workflows/deploy_staging.yaml
+    secrets: inherit
+    needs: buildx
+  deploy_main:
+    if: github.ref_name == 'main'
+    name: Production Deploy
+    uses: ./.github/workflows/deploy_main.yaml
+    secrets: inherit
+    needs: buildx

@@ -5,7 +5,7 @@ import { useWallet, useAeternity, useBackend } from './hooks';
 import { Suspense } from 'react';
 import { routes } from './routes';
 import { consumeAuthCallback } from './auth/deeplink';
-import AppHeader from './components/layout/app-header/AppHeader';
+import AppHeader from './components/layout/app-header';
 import CollectInvitationLinkCard from './components/Invitation/CollectInvitationLinkCard';
 import MobileNavigation from './components/layout/MobileNavigation';
 import ModalProvider from './components/ModalProvider';

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './AppHeader.scss';
 import { HeaderLogo } from '../../../icons';
+import HeaderWalletButton from './HeaderWalletButton';
 
 export default function AppHeader() {
   const { pathname } = useLocation();
@@ -47,7 +48,10 @@ export default function AppHeader() {
           </div>
 
         </nav>
-        <button className="link" onClick={toggleTheme} aria-label="Toggle theme">{theme === 'dark' ? 'Light' : 'Dark'}</button>
+        <div className="header-actions">
+          <button className="link" onClick={toggleTheme} aria-label="Toggle theme">{theme === 'dark' ? 'Light' : 'Dark'}</button>
+          <HeaderWalletButton />
+        </div>
       </div>
     </header>
   );

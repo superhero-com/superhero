@@ -1,13 +1,13 @@
-@use '../../styles/variables.scss' as *;
-@use '../../styles/mixins.scss' as *;
+@use '../../../styles/variables.scss' as *;
+@use '../../../styles/mixins.scss' as *;
 
-.topnav {
+.app-header {
   background-color: $topnav_background;
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
   
   /* Hide on mobile - use mobile navigation instead */
   @include mobile {
@@ -16,9 +16,9 @@
 }
 
 .container {
-  max-width: 1200px;
+  width: 100%;
+  max-width: 1648px;
   margin: 0 auto;
-  padding: 0 1rem;
   display: flex;
   align-items: center;
   gap: 24px;
@@ -166,7 +166,7 @@
 
 /* Dark theme adjustments */
 :root[data-theme='light'] {
-  .topnav {
+  .app-header {
     background-color: rgba(255, 255, 255, 0.9);
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }
@@ -226,5 +226,4 @@
     }
   }
 }
-
 

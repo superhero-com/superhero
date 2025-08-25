@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import './TopNav.scss';
-import { HeaderLogo } from '../../icons';
+import './AppHeader.scss';
+import { HeaderLogo } from '../../../icons';
 
-export default function TopNav() {
+export default function AppHeader() {
   const { pathname } = useLocation();
   const isDaoPath = pathname.startsWith('/trendminer/dao') || pathname.startsWith('/trendminer/daos');
   const [theme, setTheme] = React.useState<'light' | 'dark'>(() => {
@@ -18,7 +18,7 @@ export default function TopNav() {
     setTheme(next);
   }, [theme]);
   return (
-    <header className="topnav">
+    <header className="app-header">
       <div className="container">
         <Link to="/" className="brand" aria-label="Superhero Home">
           <HeaderLogo className="icon logo" />
@@ -52,5 +52,3 @@ export default function TopNav() {
     </header>
   );
 }
-
-

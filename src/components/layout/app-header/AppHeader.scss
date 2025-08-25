@@ -15,20 +15,7 @@
   }
 }
 
-.container {
-  width: 100%;
-  max-width: 1648px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  height: 64px;
-  
-  @include tablet {
-    padding: 0 0.75rem;
-    gap: 20px;
-  }
-}
+
 
 .brand {
   display: flex;

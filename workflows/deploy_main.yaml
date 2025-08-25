@@ -1,0 +1,31 @@
+name: Production deploy (multi-server)
+on:
+  workflow_dispatch:
+    inputs:
+      VERSION:
+        description: "Version to deploy to production"
+        default: "main"
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      VERSION:
+        description: "Version to deploy to production"
+        default: "main"
+        required: false
+        type: string
+jobs:
+  deploy:
+    name: superhero
+    uses: ./.github/workflows/ssh_deploy.yaml
+    with:
+      VERSION: ${{ inputs.VERSION }}
+      CONTAINER_NAME: "production-superhero-mainnet"
+    secrets:
+      DEPLOY_HOST: "api.superhero.com"
+      DEPLOY_KEY: ${{ secrets.PROD_DEPLOY_KEY }}
+      DEPLOY_USERNAME: ${{ secrets.PROD_DEPLOY_USERNAME }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      DOCKERHUB_REPO: ${{ secrets.DOCKERHUB_REPO }}
+  

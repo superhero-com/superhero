@@ -1,0 +1,30 @@
+name: Staging deploy (multi-server)
+on:
+  workflow_dispatch:
+    inputs:
+      VERSION:
+        description: "Version to deploy to staging"
+        default: "staging"
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      VERSION:
+        description: "Version to deploy to staging"
+        default: "staging"
+        required: false
+        type: string
+jobs:
+  deploy:
+    name: superhero
+    uses: ./.github/workflows/ssh_deploy.yaml
+    with:
+      VERSION: ${{ inputs.VERSION }}
+      CONTAINER_NAME: "staging-superhero-mainnet"
+    secrets:
+      DEPLOY_HOST: "api.stag.superhero.com"
+      DEPLOY_KEY: ${{ secrets.STAG_DEPLOY_KEY }}
+      DEPLOY_USERNAME: ${{ secrets.STAG_DEPLOY_USERNAME }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      DOCKERHUB_REPO: ${{ secrets.DOCKERHUB_REPO }}

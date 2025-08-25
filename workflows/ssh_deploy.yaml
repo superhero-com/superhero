@@ -1,0 +1,67 @@
+# This workflow is only for inclusion in other workflows.
+name: Deploy via ssh
+on:
+  workflow_call:
+    inputs:
+      VERSION:
+        description: "Version to deploy (dockerhub tag)"
+        required: false
+        default: "latest"
+        type: string
+      CONTAINER_NAME:
+        description: "Container name"
+        default: "superhero-api"
+        required: false
+        type: string
+    secrets:
+      DEPLOY_HOST:
+        description: "Host to deploy to"
+        required: true
+      DEPLOY_USERNAME:
+        description: "Username to use for ssh"
+        required: true
+      DEPLOY_KEY:
+        description: "SSH key to use for ssh"
+        required: true
+      DOCKERHUB_USERNAME:
+        description: "Dockerhub username"
+        required: true
+      DOCKERHUB_TOKEN:
+        description: "Dockerhub password"
+        required: true
+      DOCKERHUB_REPO:
+        description: "Dockerhub repository"
+        required: true
+jobs:
+  deploy:
+    name: Deploy via ssh
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run deploy script
+        uses: appleboy/ssh-action@v1.0.0
+        env:
+          VERSION: "${{ inputs.VERSION }}"
+          SHA: "${{ github.sha }}"
+          HOST_DATA_DIR: "./${{ inputs.CONTAINER_NAME }}"
+        with:
+          host: "${{ secrets.DEPLOY_HOST }}"
+          username: "${{ secrets.DEPLOY_USERNAME }}"
+          key: "${{ secrets.DEPLOY_KEY }}"
+          envs: >
+            HOST_DATA_DIR,
+            SHA
+          script: |
+            echo $SHA > $HOST_DATA_DIR/REVISION || true
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+            docker pull ${{ secrets.DOCKERHUB_REPO }}:${{ inputs.VERSION }} || true
+            docker stop ${{ inputs.CONTAINER_NAME }} || true
+            docker rm ${{ inputs.CONTAINER_NAME }} || true
+            docker run -d --name ${{ inputs.CONTAINER_NAME }} \
+              --restart=always \
+              --log-driver json-file \
+              --log-opt max-size=100m \
+              --log-opt max-file=30 \
+              -v $HOST_DATA_DIR/superconfig.json:/public/superconfig.json \
+              -p 3000:80 \
+              -e NODE_ENV=production \
+              ${{ secrets.DOCKERHUB_REPO }}:${{ inputs.VERSION }}

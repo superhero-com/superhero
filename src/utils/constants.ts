@@ -10,3 +10,12 @@ export const NETWORK_ID_TESTNET = "ae_uat";
 
 export const NETWORK_TESTNET: INetwork = configs.networks[NETWORK_ID_TESTNET];
 export const NETWORK_MAINNET: INetwork = configs.networks[NETWORK_ID_MAINNET];
+
+
+
+export const IS_FRAMED_AEPP = window.parent !== window;
+export const IS_MOBILE = window.navigator.userAgent.includes("Mobi");
+export const IS_SAFARI =
+  /Mozilla\/5.0 \((Macintosh|iPad|iPhone|iPod); [\s\S]+?\) AppleWebKit\/\S+ \(KHTML, like Gecko\)( (Version|Safari|Mobile)\/\S+)+/.test(
+    navigator.userAgent,
+  );

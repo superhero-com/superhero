@@ -1,9 +1,11 @@
-import { createContext, useEffect, useState } from "react";
 import { AeSdk, AeSdkAepp, CompilerHttp, Encoded, Node } from "@aeternity/aepp-sdk";
+import { useAtom } from "jotai";
+import { createContext, useEffect, useState } from "react";
+import { activeAccountAtom } from "../atoms/accountAtoms";
 import configs from "../configs";
 import { NETWORK_MAINNET } from "../utils/constants";
-import { createDeepLinkUrl } from "../utils/url";
 import { INetwork } from "../utils/types";
+import { createDeepLinkUrl } from "../utils/url";
 
 export const AeSdkContext = createContext<{
     sdk: AeSdkAepp,
@@ -19,6 +21,7 @@ export const AeSdkContext = createContext<{
     setActiveNetwork: (network: INetwork) => void,
     setTransactionsQueue: (queue: Record<string, { status: string; tx: Encoded.Transaction; signUrl: string }>) => void,
     initSdk: () => void,
+    scanForAccounts: () => void,
 }>(null);
 
 const nodes: { instance: Node; name: string }[] = Object.values(
@@ -31,7 +34,7 @@ const nodes: { instance: Node; name: string }[] = Object.values(
 export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     const [aeSdk, setAeSdk] = useState<AeSdkAepp>();
     const [staticAeSdk, setStaticAeSdk] = useState<AeSdk | null>(null);
-    const [activeAccount, setActiveAccount] = useState<string | undefined>(undefined);
+    const [activeAccount, setActiveAccount] = useAtom<string | undefined>(activeAccountAtom);
     const [accounts, setAccounts] = useState<string[]>([]);
     const [currentBlockHeight, setCurrentBlockHeight] = useState<number | null>(null);
     const [activeNetwork, setActiveNetwork] = useState<INetwork | null>(null);
@@ -162,6 +165,16 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
         );
     }
 
+    async function scanForAccounts() {
+        const currentAddress = Object.keys(
+            aeSdk._accounts?.current || {},
+        )[0] as any;
+
+        setAccounts([currentAddress]);
+
+        setActiveAccount(currentAddress);
+    }
+
     useEffect(() => {
         initSdk();
     }, []);
@@ -185,6 +198,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             setActiveNetwork,
             setTransactionsQueue,
             initSdk,
+            scanForAccounts,
         }}>
             {children}
         </AeSdkContext.Provider>

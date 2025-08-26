@@ -4,23 +4,20 @@ import { deeplinkLogin } from '../../../auth/deeplink';
 import Identicon from '../../Identicon';
 import Favicon from '../../../svg/favicon.svg?react';
 import './HeaderWalletButton.scss';
+import { useWalletConnect } from '../../../hooks/useWalletConnect';
+import { useAeSdk } from '../../../hooks/useAeSdk';
 
 export default function HeaderWalletButton() {
-  const { address, balance, chainNames } = useWallet();
-  const { initSdk, scanForWallets, enableSdkWallet, logout } = useAeternity();
+  const { activeAccount } = useAeSdk();
+  const { walletConnected, connectWallet, disconnectWallet, walletInfo, scanningForAccounts, connectingWallet } = useWalletConnect();
+  // const { address, balance, chainNames } = useWallet();
+  // const { initSdk, scanForWallets, enableSdkWallet, logout } = useAeternity();
   const [loading, setLoading] = React.useState(false);
 
   async function handleConnect() {
     setLoading(true);
     try {
-      try { await initSdk(); } catch {}
-      const addr = await scanForWallets().catch(() => null);
-      if (!addr) {
-        // fallback to deeplink connect if Web Wallet not detected
-        deeplinkLogin();
-      } else {
-        enableSdkWallet();
-      }
+      await connectWallet();
     } finally {
       setLoading(false);
     }
@@ -30,15 +27,15 @@ export default function HeaderWalletButton() {
 
 
   const handleLogout = () => {
-    logout();
+    disconnectWallet();
     setShowDropdown(false);
   };
 
-  const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
-  const chainName = address ? chainNames?.[address] : undefined;
+  const shortAddress = activeAccount ? `${activeAccount.slice(0, 6)}...${activeAccount.slice(-4)}` : '';
+  const chainName = activeAccount ? activeAccount : undefined;
 
   // If not connected, show connect button
-  if (!address) {
+  if (!walletInfo) {
     return (
       <button
         type="button"
@@ -63,11 +60,11 @@ export default function HeaderWalletButton() {
         onClick={() => setShowDropdown(!showDropdown)}
       >
         <div className="avatar">
-          <Identicon address={address} size={32} name={chainName} />
+          <Identicon address={activeAccount} size={32} name={chainName} />
         </div>
         <div className="wallet-info">
           <div className="address">{shortAddress}</div>
-          <div className="balance">{Number(balance || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} AE</div>
+          {/* <div className="balance">{Number(balance || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} AE</div> */}
         </div>
       </button>
 
@@ -75,16 +72,16 @@ export default function HeaderWalletButton() {
         <div className="wallet-dropdown">
           <div className="dropdown-header">
             <div className="avatar-large">
-              <Identicon address={address} size={40} name={chainName} />
+              <Identicon address={activeAccount} size={40} name={chainName} />
             </div>
             <div className="user-info">
               <div className="chain-name">{chainName || 'My Wallet'}</div>
-              <div className="full-address">{address}</div>
+              <div className="full-address">{activeAccount}</div>
             </div>
           </div>
           <div className="dropdown-balance">
             <span className="balance-label">Balance:</span>
-            <span className="balance-amount">{Number(balance || 0).toLocaleString(undefined, { maximumFractionDigits: 6 })} AE</span>
+            {/* <span className="balance-amount">{Number(balance || 0).toLocaleString(undefined, { maximumFractionDigits: 6 })} AE</span> */}
           </div>
           <div className="dropdown-actions">
             <button onClick={handleLogout} className="logout-btn">

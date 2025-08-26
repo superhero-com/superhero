@@ -1,3 +1,5 @@
+import { BrowserWindowMessageConnection } from "@aeternity/aepp-sdk";
+
 export interface INetwork {
     url: string;
     name: string;
@@ -32,3 +34,16 @@ export interface IAppConfigs {
     // languages: SupportedLanguage[];
     avatarServiceUrl: string;
 }
+
+export interface Wallet {
+    info: {
+      id: string;
+      type: string;
+      origin: string;
+    };
+    getConnection: () => BrowserWindowMessageConnection;
+  }
+  
+  export interface Wallets {
+    [key: string]: Wallet;
+  }

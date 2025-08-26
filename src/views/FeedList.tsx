@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, memo } from 'react';
+import React, { useEffect, useMemo, useState, memo, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { fetchPosts } from '../api/backend';
@@ -15,7 +15,7 @@ import { relativeTime } from '../utils/time';
 import CreatePost from '../features/social/components/CreatePost';
 import { PostDto, PostsService } from '../api/generated';
 
-import { useWallet, useModal } from '../hooks';
+import { useWallet } from '../hooks';
 // Types
 interface PostApiResponse {
   items: PostDto[];
@@ -31,7 +31,6 @@ interface FeedItemProps {
   commentCount: number;
   chainName?: string;
   onItemClick: (postId: string) => void;
-  onMenuClick: (postId: string, url: string, author: string) => void;
 }
 
 interface PostAvatarProps {
@@ -75,7 +74,11 @@ const PostAvatar = memo(({ authorAddress, chainName }: PostAvatarProps) => (
       )}
     </div>
   </div>
-));
+), (prevProps, nextProps) => {
+  // Custom comparison for better performance
+  return prevProps.authorAddress === nextProps.authorAddress && 
+         prevProps.chainName === nextProps.chainName;
+});
 
 // Component: Sort Controls
 const SortControls = memo(({ sortBy, onSortChange }: SortControlsProps) => (
@@ -149,20 +152,14 @@ const FeedItem = memo(({
   item, 
   commentCount, 
   chainName, 
-  onItemClick, 
-  onMenuClick 
+  onItemClick
 }: FeedItemProps) => {
   const postId = item.id;
   const authorAddress = item.sender_address;
 
-  const handleItemClick = () => {
+  const handleItemClick = useCallback(() => {
     onItemClick(postId);
-  };
-
-  const handleMenuClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onMenuClick(postId, '', authorAddress); // URL not available in PostDto
-  };
+  }, [onItemClick, postId]);
 
   return (
     <div className="feed-item" key={postId}>
@@ -186,8 +183,15 @@ const FeedItem = memo(({
         
         {item.media && Array.isArray(item.media) && item.media.length > 0 && (
           <div className="media-grid">
-            {item.media.slice(0, 4).map((m: string) => (
-              <img key={m} src={m} alt="media" className="media-item" />
+            {item.media.slice(0, 4).map((m: string, index: number) => (
+              <img 
+                key={`${postId}-${index}`} 
+                src={m} 
+                alt="media" 
+                className="media-item"
+                loading="lazy"
+                decoding="async"
+              />
             ))}
           </div>
         )}
@@ -198,14 +202,21 @@ const FeedItem = memo(({
               <IconComment /> {commentCount}
             </span>
           </div>
-          <div className="footer-right">
-            <AeButton variant="ghost" size="sm" onClick={handleMenuClick}>
-              •••
-            </AeButton>
-          </div>
         </div>
       </div>
     </div>
+  );
+});
+
+// Memoized FeedItem with performance optimizations
+const MemoizedFeedItem = memo(FeedItem, (prevProps, nextProps) => {
+  // Deep comparison for optimal re-rendering
+  return (
+    prevProps.item.id === nextProps.item.id &&
+    prevProps.commentCount === nextProps.commentCount &&
+    prevProps.chainName === nextProps.chainName &&
+    prevProps.item.created_at === nextProps.item.created_at &&
+    JSON.stringify(prevProps.item.media) === JSON.stringify(nextProps.item.media)
   );
 });
 
@@ -213,7 +224,6 @@ export default function FeedList() {
   const navigate = useNavigate();
   const urlQuery = useUrlQuery();
   const { chainNames } = useWallet();
-  const { openModal } = useModal();
   
   // Comment counts are now provided directly by the API in post.total_comments
 
@@ -285,21 +295,16 @@ export default function FeedList() {
     return filtered;
   }, [list, localSearch, filterBy, chainNames]);
 
-  // Event handlers
-  const handleSortChange = (newSortBy: string) => {
+  // Memoized event handlers for better performance
+  const handleSortChange = useCallback((newSortBy: string) => {
     navigate(`/?sortBy=${newSortBy}`);
-  };
+  }, [navigate]);
 
-  const handleItemClick = (postId: string) => {
+  const handleItemClick = useCallback((postId: string) => {
     navigate(`/post/${postId}`);
-  };
+  }, [navigate]);
 
-  const handleMenuClick = (postId: string, url: string, author: string) => {
-    openModal({ 
-      name: 'feed-item-menu', 
-      props: { postId, url, author } 
-    });
-  };
+
 
   // Render helpers
   const renderEmptyState = () => {
@@ -315,7 +320,8 @@ export default function FeedList() {
     return null;
   };
 
-  const renderFeedItems = () => {
+  // Memoized render function for better performance
+  const renderFeedItems = useMemo(() => {
     return filteredAndSortedList.map((item) => {
       const postId = item.id;
       const authorAddress = item.sender_address;
@@ -323,17 +329,16 @@ export default function FeedList() {
       const chainName = chainNames?.[authorAddress];
 
       return (
-        <FeedItem
+        <MemoizedFeedItem
           key={postId}
           item={item}
           commentCount={commentCount}
           chainName={chainName}
           onItemClick={handleItemClick}
-          onMenuClick={handleMenuClick}
         />
       );
     });
-  };
+  }, [filteredAndSortedList, chainNames, handleItemClick]);
 
   return (
     <Shell left={<LeftRail />} right={<RightRail />}>
@@ -344,7 +349,7 @@ export default function FeedList() {
 
         <div className="feed">
           {renderEmptyState()}
-          {renderFeedItems()}
+          {renderFeedItems}
         </div>
 
         {hasNextPage && filteredAndSortedList.length > 0 && (

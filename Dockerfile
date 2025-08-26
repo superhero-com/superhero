@@ -6,7 +6,7 @@ WORKDIR /app
 RUN apk add --no-cache python3 make g++
 
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --retry 3 --retry-delay 1000
 COPY . .
 RUN npm run build
 

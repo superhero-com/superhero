@@ -22,7 +22,7 @@
     "axios": "^1.6.5",
     "bctsl-sdk": "github:bctsl/bctsl-sdk#v1.0.0",
     "bignumber.js": "^9.0.1",
-    "dex-contracts-v2": "github:aeternity/dex-contracts-v2#69f800fece02da1444af7f0d6622fec356a15496",
+    "dex-contracts-v2": "git+https://git@github.com/aeternity/dex-contracts-v2#69f800fece02da1444af7f0d6622fec356a15496",
     "ethers": "^6.13.2",
     "glob": "^11.0.3",
     "i18next": "^23.7.6",

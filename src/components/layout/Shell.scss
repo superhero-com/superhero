@@ -4,7 +4,9 @@
 .shell {
   margin: 0 auto;
   min-height: 100vh;
-  max-width: 1320px;
+  width: 100%;
+  max-width: 1648px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   
@@ -30,7 +32,7 @@
   }
   
   @include desktop {
-    grid-template-columns: 220px minmax(0, 1fr) 360px;
+    grid-template-columns: 380px minmax(0, 1fr) 360px;
     gap: 16px;
     padding: 8px 16px;
   }

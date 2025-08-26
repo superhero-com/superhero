@@ -32,20 +32,8 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
-      sourcemap: true,
+      sourcemap: false,
       chunkSizeWarningLimit: 900,
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) return 'vendor-react';
-              if (id.includes('@reduxjs/toolkit') || id.includes('redux')) return 'vendor-redux';
-              if (id.includes('@aeternity')) return 'vendor-ae';
-              return 'vendor';
-            }
-          },
-        },
-      },
     },
     css: {
       preprocessorOptions: {

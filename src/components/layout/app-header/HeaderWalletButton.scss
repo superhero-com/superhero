@@ -1,0 +1,248 @@
+@use '../../../styles/variables.scss' as *;
+@use '../../../styles/mixins.scss' as *;
+
+.header-wallet-container {
+  position: relative;
+}
+
+.header-wallet-button {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 255, 157, 0.3);
+  }
+
+  &.connect {
+    color: $standard_font_color;
+    font-weight: 500;
+
+    .icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .text {
+      white-space: nowrap;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &.connected {
+    color: $standard_font_color;
+    padding: 6px;
+
+    .avatar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .wallet-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      line-height: 1.2;
+
+      .address {
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+
+      .balance {
+        font-size: 0.75rem;
+        color: $light_font_color;
+      }
+    }
+  }
+}
+
+.wallet-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background-color: $topnav_background;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  min-width: 280px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  padding: 16px;
+  z-index: 1001;
+  backdrop-filter: blur(10px);
+
+  .dropdown-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+
+    .avatar-large {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0;
+
+      .chain-name {
+        font-weight: 600;
+        color: $standard_font_color;
+        margin-bottom: 2px;
+      }
+
+      .full-address {
+        font-size: 0.75rem;
+        color: $light_font_color;
+        word-break: break-all;
+        font-family: monospace;
+      }
+    }
+  }
+
+  .dropdown-balance {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-bottom: 12px;
+
+    .balance-label {
+      color: $light_font_color;
+      font-size: 0.875rem;
+    }
+
+    .balance-amount {
+      color: $standard_font_color;
+      font-weight: 600;
+      font-family: monospace;
+    }
+  }
+
+  .dropdown-actions {
+    display: flex;
+    gap: 8px;
+
+    .logout-btn {
+      flex: 1;
+      background: none;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 8px 16px;
+      color: $light_font_color;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: $standard_font_color;
+      }
+    }
+  }
+}
+
+.dropdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: transparent;
+}
+
+/* Light theme adjustments */
+:root[data-theme='light'] {
+  .header-wallet-button {
+    border-color: rgba(0, 0, 0, 0.1);
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+      border-color: rgba(0, 0, 0, 0.2);
+    }
+
+    &.connect {
+      color: #374151;
+    }
+
+    &.connected {
+      color: #374151;
+
+      .wallet-info .balance {
+        color: #6b7280;
+      }
+    }
+  }
+
+  .wallet-dropdown {
+    background-color: rgba(255, 255, 255, 0.98);
+    border-color: rgba(0, 0, 0, 0.06);
+
+    .dropdown-header .user-info {
+      .chain-name {
+        color: #111827;
+      }
+
+      .full-address {
+        color: #6b7280;
+      }
+    }
+
+    .dropdown-balance {
+      background-color: rgba(0, 0, 0, 0.02);
+
+      .balance-label {
+        color: #6b7280;
+      }
+
+      .balance-amount {
+        color: #111827;
+      }
+    }
+
+    .dropdown-actions .logout-btn {
+      border-color: rgba(0, 0, 0, 0.2);
+      color: #6b7280;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+        color: #374151;
+      }
+    }
+  }
+}

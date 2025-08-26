@@ -9,7 +9,7 @@ import { useToast } from '../components/ToastProvider';
 import AeButton from '../components/AeButton';
 import { CONFIG } from '../config';
 
-import { useWallet } from '../../hooks';
+import { useWallet } from '../hooks';
 export default function PoolRemove() {
   const { id } = useParams(); // expect pair address ct_...
   const address = useWallet().address;

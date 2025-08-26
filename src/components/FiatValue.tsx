@@ -1,6 +1,6 @@
 import React from 'react';
 import { shiftDecimalPlaces } from '../utils/number';
-import { useWallet, useBackend } from '../../hooks';
+import { useWallet, useBackend } from '../hooks';
 import './FiatValue.scss';
 
 interface Props {

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { DEX_ADDRESSES } from '../libs/dex';
 import AeButton from '../components/AeButton';
 
-import { useWallet } from '../../hooks';
+import { useWallet } from '../hooks';
 export default function PoolImport() {
     const address = useWallet().address;
   const [tokenA, setTokenA] = useState('');

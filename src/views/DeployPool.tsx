@@ -7,7 +7,7 @@ import { DEX_ADDRESSES, getPairAddress, initDexContracts, fromAettos } from '../
 import { CONFIG } from '../config';
 import BigNumber from 'bignumber.js';
 
-import { useWallet } from '../../hooks';
+import { useWallet } from '../hooks';
 export default function DeployPool() {
     const address = useWallet().address;
   const [token, setToken] = useState('');

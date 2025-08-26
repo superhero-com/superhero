@@ -189,7 +189,7 @@ function mockFetch(path: string) {
 
 // API function for new posts endpoint
 export async function fetchPosts(limit: number = 5) {
-  const response = await fetch(`http://localhost:3000/api/posts?limit=${limit}`);
+  const response = await fetch(`https://api.dev.tokensale.org/api/posts?limit=${limit}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch posts: ${response.status}`);
   }

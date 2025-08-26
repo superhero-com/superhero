@@ -6,7 +6,7 @@ import {
 import { useAtom } from "jotai";
 import { useAeSdk } from "./useAeSdk";
 import { IS_FRAMED_AEPP, IS_MOBILE, IS_SAFARI } from "../utils/constants";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { WalletInfo } from "node_modules/@aeternity/aepp-sdk/es/aepp-wallet-communication/rpc/types";
 import { createDeepLinkUrl } from "../utils/url";
 import type { Wallet, Wallets } from "../utils/types";
@@ -52,6 +52,14 @@ export function useWalletConnect() {
     //       immediate: true,
     //     },
     //   );
+
+    useEffect(() => {
+        const sdkAddresses = sdk?.addresses();
+        console.log("[useWalletConnect] activeAccount", activeAccount, sdkAddresses);
+        if (activeAccount && sdkAddresses?.length === 0) {
+            connectWallet()
+        }
+    }, [activeAccount]);
 
     async function subscribeAddress() {
         /*

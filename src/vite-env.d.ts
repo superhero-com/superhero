@@ -13,4 +13,11 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
+// SVG module declarations for Vite
+declare module '*.svg?react' {
+  import React from 'react';
+  const Component: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  export default Component;
+}
+
 

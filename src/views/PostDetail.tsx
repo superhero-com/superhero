@@ -12,7 +12,7 @@ import { relativeTime } from '../utils/time';
 import Identicon from '../components/Identicon';
 import './PostDetail.scss';
 
-import { useWallet, useModal } from '../../hooks';
+import { useWallet, useModal } from '../hooks';
 // Types
 interface Comment {
   id: string;

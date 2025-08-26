@@ -11,6 +11,7 @@ import './styles/tailwind.css';
 import './styles/base.scss';
 import './i18n';
 import { OpenAPI } from './api/generated';
+import { AeSdkProvider } from './context/AeSdkProvider';
 
 // TODO: should be based on the active network
 OpenAPI.BASE = `http://localhost:3000`;
@@ -55,7 +56,9 @@ const IME: any = import.meta as any;
           <ToastProvider>
             <BrowserRouter>
               <ErrorBoundary>
-                <App />
+                <AeSdkProvider>
+                  <App />
+                </AeSdkProvider>
               </ErrorBoundary>
             </BrowserRouter>
           </ToastProvider>

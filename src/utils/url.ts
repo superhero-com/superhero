@@ -1,6 +1,5 @@
 import isFQDN from 'is-fqdn';
-import { CONFIG } from '../config';
-import { get } from 'lodash-es';
+import configs from '../configs';
 
 export function toURL(url: string) {
   return new URL(url.includes('://') ? url : `https://${url}`);
@@ -16,7 +15,7 @@ export function validateTipUrl(urlStr: string) {
 }
 
 export function createDeepLinkUrl({ type, callbackUrl, ...params }: Record<string, string>) {
-  const url = new URL(`${CONFIG.WALLET_URL}/${type}`);
+  const url = new URL(`${configs.wallet.url}/${type}`);
   if (callbackUrl) {
     url.searchParams.set('x-success', callbackUrl);
     url.searchParams.set('x-cancel', callbackUrl);

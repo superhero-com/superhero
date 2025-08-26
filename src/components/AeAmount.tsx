@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatTokenAmount, shiftDecimalPlaces } from '../utils/number';
-import { useWallet } from '../../hooks';
+import { useWallet } from '../hooks';
 import './AeAmount.scss';
 
 interface Props {

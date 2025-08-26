@@ -9,7 +9,7 @@ import AeButton from '../components/AeButton';
 import { relativeTime } from '../utils/time';
 import { deeplinkPost } from '../auth/deeplink';
 
-import { useWallet, useModal } from '../../hooks';
+import { useWallet, useModal } from '../hooks';
 // Legacy page kept for compatibility, redirect to unified PostDetail route
 export default function TipDetail() {
   const { tipId } = useParams();

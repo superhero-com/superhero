@@ -10,7 +10,7 @@ import { useToast } from '../components/ToastProvider';
 import { CONFIG } from '../config';
 import AeButton from '../components/AeButton';
 
-import { useWallet, useDex } from '../../hooks';
+import { useWallet, useDex } from '../hooks';
 export default function PoolAdd() {
     const address = useWallet().address;
   const [tokenA, setTokenA] = useState('');

@@ -5,7 +5,7 @@ import { useWallet, useAeternity, useBackend } from './hooks';
 import { Suspense } from 'react';
 import { routes } from './routes';
 import { consumeAuthCallback } from './auth/deeplink';
-import TopNav from './components/layout/TopNav';
+import AppHeader from './components/layout/app-header';
 import CollectInvitationLinkCard from './components/Invitation/CollectInvitationLinkCard';
 import MobileNavigation from './components/layout/MobileNavigation';
 import ModalProvider from './components/ModalProvider';
@@ -90,7 +90,7 @@ export default function App() {
   useInit();
   return (
     <div className="app-container">
-      <TopNav />
+      <AppHeader />
       <div className="app-content">
         <CollectInvitationLinkCard />
       </div>

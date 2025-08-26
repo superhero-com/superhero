@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import BigNumber from 'bignumber.js';
 import AeButton from '../components/AeButton';
 
-import { useWallet } from '../../hooks';
+import { useWallet } from '../hooks';
 export default function AddTokens() {
     const address = useWallet().address;
   const toast = useToast();

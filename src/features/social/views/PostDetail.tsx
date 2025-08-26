@@ -11,21 +11,21 @@ import AeButton from '../../../components/AeButton';
 import { relativeTime } from '../../../utils/time';
 import { useWallet } from '../../../hooks';
 import PostAvatar from '../components/PostAvatar';
-import CommentItem from '../components/CommentItem';
 import PostContent from '../components/PostContent';
 import CommentForm from '../components/CommentForm';
-import { Comment } from '../types';
+import PostCommentsList from '../components/PostCommentsList';
+import { PostDto } from '../../../api/generated';
 import './PostDetail.scss';
 
 export default function PostDetail() {
-  const { postId, id } = useParams();
+  const { postId } = useParams();
   const navigate = useNavigate();
-  const { address, chainNames } = useWallet();
+  const { chainNames } = useWallet();
 
   // Query for post data using new PostsService
-  const { 
-    data: postData, 
-    isLoading: isPostLoading, 
+  const {
+    data: postData,
+    isLoading: isPostLoading,
     error: postError,
     refetch: refetchPost
   } = useQuery({
@@ -35,41 +35,14 @@ export default function PostDetail() {
     refetchInterval: 120 * 1000, // Auto-refresh every 2 minutes
   });
 
-  // Query for post comments using legacy Backend API
-  const { 
-    data: comments = [], 
-    isLoading: isCommentsLoading, 
-    error: commentsError,
-    refetch: refetchComments
-  } = useQuery({
-    queryKey: ['post-comments', postId],
-    queryFn: async () => {
-      const result = await PostsService.getComments({
-        id: postId!,
-        limit: 100
-      });
-      return result.items;
-    },
-    enabled: !!postId,
-    refetchInterval: 120 * 1000, // Auto-refresh every 2 minutes
-  });
 
-  // Query for selected comment if id is present
-  const { 
-    data: selectedComment, 
-    isLoading: isSelectedCommentLoading,
-    error: selectedCommentError
-  } = useQuery({
-    queryKey: ['comment', id],
-    queryFn: () => Backend.getCommentById(id!),
-    enabled: !!id,
-    refetchInterval: 120 * 1000,
-  });
+
+
 
   // For backward compatibility, create a post object that matches the old structure
   const post = useMemo(() => {
     if (!postData) return null;
-    
+
     // Convert PostDto to legacy format for existing components
     return {
       id: postData.id,
@@ -84,24 +57,18 @@ export default function PostDetail() {
     };
   }, [postData]);
 
-  const isLoading = isPostLoading || isCommentsLoading || isSelectedCommentLoading;
-  const error = postError || commentsError || selectedCommentError;
+  const isLoading = isPostLoading;
+  const error = postError;
 
-  // Compute list to render depending on focus (tip vs single comment)
-  const topLevelReplies = useMemo(() => {
-    if (!comments) return [] as Comment[];
-    if (id) return comments.filter((c: Comment) => String(c.parentId) === String(id));
-    return comments.filter((c: Comment) => !c.parentId);
-  }, [comments, id]);
+
 
   // Dynamic meta tags similar to Vue metaInfo()
   useEffect(() => {
-    const record = id ? selectedComment : post;
-    if (!record) return;
-    const title = id ? 'Comment' : `Tip ${String(postId).split('_')[0]}`;
-    const description = id ? record.title || record.text : record.text;
-    const author = id ? (record.sender || record.address || record.author) : record.author;
-    const image = (record.media && record.media[0]) || (author ? Backend.getProfileImageUrl(author) : undefined);
+    if (!postData) return;
+    const title = `Tip ${String(postId).split('_')[0]}`;
+    const description = postData.content;
+    const author = postData.sender_address;
+    const image = (postData.media && postData.media[0]) || (author ? Backend.getProfileImageUrl(author) : undefined);
     document.title = title;
     function setMeta(attr: 'name' | 'property', key: string, value: string) {
       if (!value) return;
@@ -119,7 +86,7 @@ export default function PostDetail() {
     setMeta('name', 'twitter:site', '@superhero_chain');
     setMeta('name', 'twitter:creator', '@superhero_chain');
     setMeta('name', 'twitter:image:alt', 'Superhero post');
-  }, [id, postId, post, selectedComment]);
+  }, [postId, postData]);
 
   // Helper function to get author info
   const getAuthorInfo = (item: any) => {
@@ -130,9 +97,8 @@ export default function PostDetail() {
 
   // Handle comment added callback
   const handleCommentAdded = useCallback(() => {
-    refetchComments();
     refetchPost();
-  }, [refetchComments, refetchPost]);
+  }, [refetchPost]);
 
   // Render helpers
   const renderLoadingState = () => (
@@ -141,10 +107,9 @@ export default function PostDetail() {
 
   const renderErrorState = () => (
     <div className="error-state">
-      Error loading post. 
+      Error loading post.
       <AeButton variant="ghost" size="sm" onClick={() => {
         refetchPost();
-        refetchComments();
       }}>
         Retry
       </AeButton>
@@ -153,25 +118,25 @@ export default function PostDetail() {
 
   const renderPostHeader = (displayPost: any) => {
     const { authorAddress, chainName } = getAuthorInfo(displayPost);
-    
+
     return (
       <header className="post-header">
         <div className="author-section">
           {authorAddress && (
             <div className="author-display">
               <PostAvatar authorAddress={authorAddress} chainName={chainName} size={56} overlaySize={28} />
-              <UserBadge 
-                address={authorAddress} 
+              <UserBadge
+                address={authorAddress}
                 showAvatar={false}
                 chainName={chainName}
-                linkTo="profile" 
-                shortAddress 
+                linkTo="profile"
+                shortAddress
               />
             </div>
           )}
         </div>
         <div className="post-actions">
-          {!id && displayPost?.timestamp && (
+          {displayPost?.timestamp && (
             <div className="timestamp">
               {relativeTime(new Date(displayPost.timestamp))}
             </div>
@@ -189,38 +154,34 @@ export default function PostDetail() {
             ← Back
           </AeButton>
         </div>
-        
+
         {isLoading && renderLoadingState()}
         {error && renderErrorState()}
-        
-        {(id ? selectedComment : post) && (
+
+        {post && (
           <article className="post-detail">
-            {renderPostHeader(id ? selectedComment : post)}
-            
-            {!id && post && <PostContent post={post} />}
-            
-            {/* Comment form - only show for main post, not for individual comments */}
-            {!id && postId && (
+            {renderPostHeader(post)}
+
+            <PostContent post={post} />
+
+            {/* Comment form */}
+            {postId && (
               <div className="comment-form-section">
-                <CommentForm 
-                  postId={postId} 
+                <CommentForm
+                  postId={postId}
                   onCommentAdded={handleCommentAdded}
                   placeholder="Share your thoughts..."
                 />
               </div>
             )}
-            
+
             {/* Comments section */}
-            <div className="comments-section">
-              <h3 className="comments-title">Comments ({topLevelReplies.length})</h3>
-              {topLevelReplies.map((comment: Comment) => (
-                <CommentItem 
-                  key={comment.id} 
-                  comment={comment} 
-                  chainNames={chainNames} 
-                />
-              ))}
-            </div>
+            {postData && postData.total_comments > 0 && (
+              <PostCommentsList
+                id={postId!}
+                onCommentAdded={handleCommentAdded}
+              />
+            )}
           </article>
         )}
       </div>

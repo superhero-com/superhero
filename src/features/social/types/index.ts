@@ -35,19 +35,13 @@ export interface EmptyStateProps {
   onRetry?: () => void;
 }
 
-export interface Comment {
-  id: string;
-  text: string;
-  timestamp: string;
-  author?: string;
-  address?: string;
-  sender?: string;
-  parentId?: string;
-}
-
 export interface CommentItemProps {
-  comment: Comment;
+  comment: PostDto;
   chainNames: Record<string, string>;
+  replies?: PostDto[];
+  onCommentAdded?: () => void;
+  depth?: number;
+  maxDepth?: number;
 }
 
 export interface PostContentProps {

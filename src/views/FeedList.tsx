@@ -12,7 +12,7 @@ import UserBadge from '../components/UserBadge';
 import { IconComment } from '../icons';
 import Identicon from '../components/Identicon';
 import { relativeTime } from '../utils/time';
-import CreatePost from '../components/CreatePost';
+import CreatePost from '../features/social/components/CreatePost';
 import { PostDto, PostsService } from '../api/generated';
 
 import { useWallet, useModal } from '../hooks';

@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { IconClose, IconGif, IconImage, IconSmile } from '../icons';
-import AeButton from './AeButton';
+import { IconClose, IconGif, IconImage, IconSmile } from '../../../icons';
+import AeButton from '../../../components/AeButton';
 import './CreatePost.scss';
-import Identicon from './Identicon';
-import { useWallet, useAeternity } from '../hooks';
+import Identicon from '../../../components/Identicon';
 // @ts-ignore
 import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
-import { PostsService } from '../api/generated';
-import { CONFIG } from '../config';
+import { PostsService } from '../../../api/generated';
+import { CONFIG } from '../../../config';
+import { useAccount } from '../../../hooks/useAccount';
+import { useAeSdk } from '../../../hooks/useAeSdk';
 
 interface CreatePostProps {
   onClose?: () => void;
@@ -34,8 +35,8 @@ const PROMPTS: string[] = [
 ];
 
 export default function CreatePost({ onClose, onSuccess, className = '', onTextChange }: CreatePostProps) {
-  const { address, chainNames } = useWallet();
-  const { scanForWallets, enableSdkWallet } = useAeternity();
+  const { sdk, } = useAeSdk();
+  const { activeAccount, chainNames } = useAccount();
 
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -97,29 +98,16 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
     e.preventDefault();
     const trimmed = text.trim();
     if (!trimmed) return;
-    if (!address) return;
+    if (!activeAccount) return;
 
     setIsSubmitting(true);
     try {
-      let sdk: any = (window as any).__aeSdk;
-      const hasActiveAccount = sdk && typeof sdk.addresses === 'function' && (sdk.addresses() || []).length > 0;
-      if (!hasActiveAccount) {
-        try {
-          await scanForWallets();
-          enableSdkWallet();
-        } catch { }
-        sdk = (window as any).__aeSdk;
-      }
-      if (!sdk || typeof sdk.signMessage !== 'function' || (sdk.addresses?.() || []).length === 0) {
-        alert('Wallet not connected. Please connect your wallet and try again.');
-        return;
-      }
-      if (!CONFIG.CONTRACT_V3_ADDRESS) {
-        alert('Posting is not available: CONTRACT_V3_ADDRESS is not configured.');
-        return;
-      }
+
       const postMedia: string[] = [...mediaUrls];
-      const contract = await sdk.initializeContract({ aci: TIPPING_V3_ACI as any, address: CONFIG.CONTRACT_V3_ADDRESS });
+      const contract = await sdk.initializeContract({
+        aci: TIPPING_V3_ACI as any,
+        address: CONFIG.CONTRACT_V3_ADDRESS
+      });
       const { decodedResult } = await contract.post_without_tip(trimmed, postMedia);
       try {
         await PostsService.getById({
@@ -161,7 +149,7 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
   const handleExpand = () => { if (!isExpanded) setIsExpanded(true); };
   const handleClose = () => { if (isExpanded) { setIsExpanded(false); setText(''); setMediaFiles([]); setMediaUrls([]); } onClose?.(); };
 
-  if (!address) {
+  if (!activeAccount) {
     return (
       <div className={`create-post-container ${className}`}>
         <div className="create-post-box">
@@ -174,7 +162,7 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
     );
   }
 
-  const chainName = chainNames?.[address || ''];
+  const chainName = chainNames?.[activeAccount || ''];
   const currentPrompt = PROMPTS[promptIndex];
 
   return (
@@ -182,7 +170,7 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
       <div className={`create-post-box ${isExpanded ? 'expanded' : ''}`}>
         {!isExpanded ? (
           <div className="create-post-trigger" onClick={handleExpand}>
-            <div className="trigger-avatar"><Identicon address={address} size={40} name={chainName} /></div>
+            <div className="trigger-avatar"><Identicon address={activeAccount} size={40} name={chainName} /></div>
             <div className="trigger-text">{currentPrompt}</div>
             <div className="trigger-actions">
               <button className="action-button" title="Add image"><IconImage /></button>
@@ -191,7 +179,7 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
         ) : (
           <form onSubmit={handleSubmit} className="create-post-form">
             <div className="form-header">
-              <div className="form-avatar"><Identicon address={address} size={48} name={chainName} /></div>
+              <div className="form-avatar"><Identicon address={activeAccount} size={48} name={chainName} /></div>
               <button type="button" className="close-button" onClick={handleClose} title="Close"><IconClose /></button>
             </div>
 

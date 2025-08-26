@@ -64,4 +64,37 @@ export class PostsService {
             },
         });
     }
+    /**
+     * Get comments for a post
+     * Retrieve paginated comments for a specific post
+     * @returns any
+     * @throws ApiError
+     */
+    public static getComments({
+        id,
+        orderDirection,
+        limit,
+        page,
+    }: {
+        /**
+         * Post ID
+         */
+        id: string,
+        orderDirection?: 'ASC' | 'DESC',
+        limit?: number,
+        page?: number,
+    }): CancelablePromise<Pagination> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/posts/{id}/comments',
+            path: {
+                'id': id,
+            },
+            query: {
+                'order_direction': orderDirection,
+                'limit': limit,
+                'page': page,
+            },
+        });
+    }
 }

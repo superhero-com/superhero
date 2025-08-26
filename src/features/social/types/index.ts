@@ -19,6 +19,8 @@ export interface FeedItemProps {
 export interface PostAvatarProps {
   authorAddress: string;
   chainName?: string;
+  size?: number;
+  overlaySize?: number;
 }
 
 export interface SortControlsProps {
@@ -31,4 +33,29 @@ export interface EmptyStateProps {
   error?: Error | null;
   hasSearch?: boolean;
   onRetry?: () => void;
+}
+
+export interface Comment {
+  id: string;
+  text: string;
+  timestamp: string;
+  author?: string;
+  address?: string;
+  sender?: string;
+  parentId?: string;
+}
+
+export interface CommentItemProps {
+  comment: Comment;
+  chainNames: Record<string, string>;
+}
+
+export interface PostContentProps {
+  post: any; // Using any for now since the old Backend API structure is different from PostDto
+}
+
+export interface CommentFormProps {
+  postId: string;
+  onCommentAdded?: () => void;
+  placeholder?: string;
 }

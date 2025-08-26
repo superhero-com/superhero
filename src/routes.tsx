@@ -13,7 +13,7 @@ const TrendDao = lazy(() => import('./views/Trendminer/Dao'));
   const TrendAccounts = lazy(() => import('./views/Trendminer/Accounts'));
   const TrendAccountDetails = lazy(() => import('./views/Trendminer/AccountDetails'));
 const TrendCreate = lazy(() => import('./views/Trendminer/CreateToken'));
-const PostDetail = lazy(() => import('./views/PostDetail'));
+const PostDetail = lazy(() => import('./features/social/views/PostDetail'));
 const UserProfile = lazy(() => import('./views/UserProfile'));
 const Landing = lazy(() => import('./views/Landing'));
 const Conference = lazy(() => import('./views/Conference'));

@@ -1,151 +1,26 @@
-import React, { useEffect, useMemo, useState, memo } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Backend } from '../api/backend';
-import { PostDto, PostsService } from '../api/generated';
-import Shell from '../components/layout/Shell';
-import LeftRail from '../components/layout/LeftRail';
-import RightRail from '../components/layout/RightRail';
-import UserBadge from '../components/UserBadge';
-import AeButton from '../components/AeButton';
-import { relativeTime } from '../utils/time';
-import Identicon from '../components/Identicon';
+import { Backend } from '../../../api/backend';
+import { PostsService } from '../../../api/generated';
+import Shell from '../../../components/layout/Shell';
+import LeftRail from '../../../components/layout/LeftRail';
+import RightRail from '../../../components/layout/RightRail';
+import UserBadge from '../../../components/UserBadge';
+import AeButton from '../../../components/AeButton';
+import { relativeTime } from '../../../utils/time';
+import { useWallet } from '../../../hooks';
+import PostAvatar from '../components/PostAvatar';
+import CommentItem from '../components/CommentItem';
+import PostContent from '../components/PostContent';
+import CommentForm from '../components/CommentForm';
+import { Comment } from '../types';
 import './PostDetail.scss';
-
-import { useWallet, useModal } from '../hooks';
-// Types
-interface Comment {
-  id: string;
-  text: string;
-  timestamp: string;
-  author?: string;
-  address?: string;
-  sender?: string;
-  parentId?: string;
-}
-
-interface PostAvatarProps {
-  authorAddress: string;
-  chainName?: string;
-  size?: number;
-  overlaySize?: number;
-}
-
-interface CommentItemProps {
-  comment: Comment;
-  chainNames: Record<string, string>;
-}
-
-interface PostContentProps {
-  post: any; // Using any for now since the old Backend API structure is different from PostDto
-}
-
-// Component: Reusable Post Avatar
-const PostAvatar = memo(({ 
-  authorAddress, 
-  chainName, 
-  size = 56, 
-  overlaySize = 28 
-}: PostAvatarProps) => (
-  <div className="avatar-container">
-    <div className="avatar-stack">
-      {chainName && chainName !== 'Legend' && (
-        <div className="chain-avatar">
-          <Identicon address={authorAddress} size={size} name={chainName} />
-        </div>
-      )}
-      {(!chainName || chainName === 'Legend') && (
-        <div className="address-avatar">
-          <Identicon address={authorAddress} size={size} />
-        </div>
-      )}
-      {chainName && chainName !== 'Legend' && (
-        <div className="address-avatar-overlay">
-          <Identicon address={authorAddress} size={overlaySize} />
-        </div>
-      )}
-    </div>
-  </div>
-));
-
-// Component: Individual Comment Item
-const CommentItem = memo(({ comment, chainNames }: CommentItemProps) => {
-  const authorAddress = comment.address || comment.author || comment.sender;
-  const chainName = chainNames?.[authorAddress];
-
-  return (
-    <div className="comment-item">
-      <div className="comment-avatar">
-        <PostAvatar 
-          authorAddress={authorAddress} 
-          chainName={chainName} 
-          size={40} 
-          overlaySize={20} 
-        />
-      </div>
-      <div className="comment-content">
-        <div className="comment-header">
-          <UserBadge 
-            address={authorAddress} 
-            showAvatar={false}
-            chainName={chainName}
-          />
-          {comment.timestamp && (
-            <span className="comment-timestamp">
-              {relativeTime(new Date(comment.timestamp))}
-            </span>
-          )}
-        </div>
-        <div className="comment-text">{comment.text}</div>
-      </div>
-    </div>
-  );
-});
-
-// Component: Post Content Display
-const PostContent = memo(({ post }: PostContentProps) => (
-  <>
-    <h2 className="post-title">{post.title}</h2>
-    {post.url && (
-      <a href={post.url} target="_blank" rel="noreferrer" className="post-url">
-        {post.url}
-      </a>
-    )}
-    {post.linkPreview && (post.linkPreview.title || post.linkPreview.description) && (
-      <a href={post.url} target="_blank" rel="noreferrer" className="link-preview">
-        <div className="preview-content">
-          {post.linkPreview.image && (
-            <img 
-              src={Backend.getTipPreviewUrl(post.linkPreview.image)} 
-              alt="preview" 
-              className="preview-image" 
-            />
-          )}
-          <div className="preview-text">
-            <div className="preview-title">{post.linkPreview.title}</div>
-            <div className="preview-description">{post.linkPreview.description}</div>
-          </div>
-        </div>
-      </a>
-    )}
-    {post.media && Array.isArray(post.media) && post.media.length > 0 && (
-      <div className="media-grid">
-        {post.media.map((m: string) => (
-          <img key={m} src={m} alt="media" className="media-item" />
-        ))}
-      </div>
-    )}
-    {/* {post.text && (
-      <div className="post-text">{post.text}</div>
-    )} */}
-  </>
-));
 
 export default function PostDetail() {
   const { postId, id } = useParams();
   const navigate = useNavigate();
   const { address, chainNames } = useWallet();
-  const { openModal } = useModal();
 
   // Query for post data using new PostsService
   const { 
@@ -169,8 +44,11 @@ export default function PostDetail() {
   } = useQuery({
     queryKey: ['post-comments', postId],
     queryFn: async () => {
-      const result = await Backend.getPostChildren(postId!);
-      return Array.isArray(result) ? result : [];
+      const result = await PostsService.getComments({
+        id: postId!,
+        limit: 100
+      });
+      return result.items;
     },
     enabled: !!postId,
     refetchInterval: 120 * 1000, // Auto-refresh every 2 minutes
@@ -250,6 +128,12 @@ export default function PostDetail() {
     return { authorAddress, chainName };
   };
 
+  // Handle comment added callback
+  const handleCommentAdded = useCallback(() => {
+    refetchComments();
+    refetchPost();
+  }, [refetchComments, refetchPost]);
+
   // Render helpers
   const renderLoadingState = () => (
     <div className="loading-state">Loading…</div>
@@ -275,7 +159,7 @@ export default function PostDetail() {
         <div className="author-section">
           {authorAddress && (
             <div className="author-display">
-              <PostAvatar authorAddress={authorAddress} chainName={chainName} />
+              <PostAvatar authorAddress={authorAddress} chainName={chainName} size={56} overlaySize={28} />
               <UserBadge 
                 address={authorAddress} 
                 showAvatar={false}
@@ -292,24 +176,6 @@ export default function PostDetail() {
               {relativeTime(new Date(displayPost.timestamp))}
             </div>
           )}
-          {/* Temporarily disabled - menu functionality 
-          {!id && (
-            <AeButton 
-              variant="ghost" 
-              size="sm"
-              onClick={() => openModal({ 
-                name: 'feed-item-menu', 
-                props: { 
-                  postId, 
-                  url: displayPost.url || '', 
-                  author: displayPost.author || displayPost.address
-                } 
-              }))}
-            >
-              •••
-            </AeButton>
-          )}
-          */}
         </div>
       </header>
     );
@@ -333,6 +199,17 @@ export default function PostDetail() {
             
             {!id && post && <PostContent post={post} />}
             
+            {/* Comment form - only show for main post, not for individual comments */}
+            {!id && postId && (
+              <div className="comment-form-section">
+                <CommentForm 
+                  postId={postId} 
+                  onCommentAdded={handleCommentAdded}
+                  placeholder="Share your thoughts..."
+                />
+              </div>
+            )}
+            
             {/* Comments section */}
             <div className="comments-section">
               <h3 className="comments-title">Comments ({topLevelReplies.length})</h3>
@@ -350,5 +227,3 @@ export default function PostDetail() {
     </Shell>
   );
 }
-
-

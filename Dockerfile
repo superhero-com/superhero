@@ -1,6 +1,10 @@
 # Build stage
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+# Install build dependencies for node-gyp
+RUN apk add --no-cache python3 make g++
+
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .

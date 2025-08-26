@@ -1,7 +1,7 @@
 import React, { lazy } from 'react';
 import { RouteObject } from 'react-router-dom';
 
-const FeedList = lazy(() => import('./views/FeedList'));
+const FeedList = lazy(() => import('./features/social/views/FeedList'));
 const Trending = lazy(() => import('./views/Trending'));
 const TrendTokens = lazy(() => import('./views/Trendminer/TokenList'));
 const TrendCloud = lazy(() => import('./views/Trendminer/TrendCloud'));

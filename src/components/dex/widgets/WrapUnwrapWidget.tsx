@@ -2,28 +2,14 @@ import React, { useState } from 'react';
 import { useTokenBalances } from '../hooks/useTokenBalances';
 import { toAettos, DEX_ADDRESSES } from '../../../libs/dex';
 import { errorToUserMessage } from '../../../libs/errorMessages';
-import { useWallet } from '../../../hooks';
-// Mock WAE ACI for testing - in production this should be the actual ACI file
-const WaeAci = {
-  contract: {
-    name: 'WAE',
-    functions: [
-      {
-        name: 'deposit',
-        arguments: [{ name: 'amount', type: 'int' }],
-        returns: 'unit'
-      },
-      {
-        name: 'withdraw',
-        arguments: [{ name: 'amount', type: 'int' }],
-        returns: 'unit'
-      }
-    ]
-  }
-};
+import { useAccount, useAeSdk, useWallet } from '../../../hooks';
+import { Decimal } from '../../../libs/decimal';
+import waeACI from 'dex-contracts-v2/build/WAE.aci.json';
+
 
 export default function WrapUnwrapWidget() {
-  const address = useWallet().address;
+  const { sdk } = useAeSdk();
+  const { activeAccount } = useAccount();
   const { wrapBalances, refreshWrapBalances } = useTokenBalances(null, null);
   const [wrapAmount, setWrapAmount] = useState<string>('');
   const [wrapping, setWrapping] = useState(false);
@@ -33,9 +19,12 @@ export default function WrapUnwrapWidget() {
     try {
       setWrapping(true);
       setError(null);
-      const sdk = (window as any).__aeSdk;
-      const wae = await sdk.initializeContract({ aci: WaeAci, address: DEX_ADDRESSES.wae });
-      const aettos = toAettos(amountAe || '0', 18).toString();
+      const wae = await sdk.initializeContract({
+        aci: waeACI,
+        address: DEX_ADDRESSES.wae
+      });
+      const aettos = Decimal.from(amountAe).bigNumber;
+      // const aettos = toAettos(amountAe || '0', 18).toString();
       await wae.deposit({ amount: aettos });
       setWrapAmount('');
       void refreshWrapBalances();
@@ -50,9 +39,8 @@ export default function WrapUnwrapWidget() {
     try {
       setWrapping(true);
       setError(null);
-      const sdk = (window as any).__aeSdk;
-      const wae = await sdk.initializeContract({ aci: WaeAci, address: DEX_ADDRESSES.wae });
-      const aettos = toAettos(amountWae || '0', 18);
+      const wae = await sdk.initializeContract({ aci: waeACI, address: DEX_ADDRESSES.wae });
+      const aettos = Decimal.from(amountWae).bigNumber;
       await wae.withdraw(aettos, null);
       setWrapAmount('');
       void refreshWrapBalances();
@@ -71,7 +59,7 @@ export default function WrapUnwrapWidget() {
           AE: {wrapBalances.ae ?? '…'} | WAE: {wrapBalances.wae ?? '…'}
         </div>
       </div>
-      
+
       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
         <input
           aria-label="wrap-amount"
@@ -81,37 +69,37 @@ export default function WrapUnwrapWidget() {
           step="any"
           value={wrapAmount}
           onChange={(e) => setWrapAmount(e.target.value)}
-          style={{ 
-            flex: 1, 
-            padding: '8px 10px', 
-            borderRadius: 8, 
-            background: '#1a1a23', 
-            color: 'white', 
-            border: '1px solid #3a3a4a' 
+          style={{
+            flex: 1,
+            padding: '8px 10px',
+            borderRadius: 8,
+            background: '#1a1a23',
+            color: 'white',
+            border: '1px solid #3a3a4a'
           }}
         />
-        <button 
-          onClick={() => void wrapAeToWae(wrapAmount || '0')} 
-          disabled={wrapping || !wrapAmount || Number(wrapAmount) <= 0} 
-          style={{ 
-            padding: '8px 10px', 
-            borderRadius: 8, 
-            border: '1px solid #3a3a4a', 
-            background: '#2a2a39', 
+        <button
+          onClick={() => void wrapAeToWae(wrapAmount || '0')}
+          disabled={wrapping || !wrapAmount || Number(wrapAmount) <= 0}
+          style={{
+            padding: '8px 10px',
+            borderRadius: 8,
+            border: '1px solid #3a3a4a',
+            background: '#2a2a39',
             color: 'white',
             cursor: wrapping ? 'not-allowed' : 'pointer'
           }}
         >
           {wrapping ? 'Wrapping…' : 'Wrap AE→WAE'}
         </button>
-        <button 
-          onClick={() => void unwrapWaeToAe(wrapAmount || '0')} 
-          disabled={wrapping || !wrapAmount || Number(wrapAmount) <= 0} 
-          style={{ 
-            padding: '8px 10px', 
-            borderRadius: 8, 
-            border: '1px solid #3a3a4a', 
-            background: '#2a2a39', 
+        <button
+          onClick={() => void unwrapWaeToAe(wrapAmount || '0')}
+          disabled={wrapping || !wrapAmount || Number(wrapAmount) <= 0}
+          style={{
+            padding: '8px 10px',
+            borderRadius: 8,
+            border: '1px solid #3a3a4a',
+            background: '#2a2a39',
             color: 'white',
             cursor: wrapping ? 'not-allowed' : 'pointer'
           }}

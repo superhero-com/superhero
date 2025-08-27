@@ -1,21 +1,21 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import ConnectWalletButton from '../../ConnectWalletButton';
-import TokenInput from './TokenInput';
-import SwapSettings from './SwapSettings';
-import SwapRouteInfo from './SwapRouteInfo';
-import SwapConfirmation from './SwapConfirmation';
-import { useTokenList } from '../hooks/useTokenList';
-import { useTokenBalances } from '../hooks/useTokenBalances';
-import { useSwapQuote } from '../hooks/useSwapQuote';
-import { useSwapExecution } from '../hooks/useSwapExecution';
+import { useEffect, useMemo, useState } from 'react';
 import { DEX_ADDRESSES } from '../../../libs/dex';
-import { Token, SwapQuoteParams } from '../types/dex';
+import ConnectWalletButton from '../../ConnectWalletButton';
+import { useSwapExecution } from '../hooks/useSwapExecution';
+import { useSwapQuote } from '../hooks/useSwapQuote';
+import { useTokenBalances } from '../hooks/useTokenBalances';
+import { useTokenList } from '../hooks/useTokenList';
+import { SwapQuoteParams, Token } from '../types/dex';
+import SwapConfirmation from './SwapConfirmation';
+import SwapRouteInfo from './SwapRouteInfo';
+import SwapSettings from './SwapSettings';
+import TokenInput from './TokenInput';
 
-import { useWallet, useDex } from '../../../hooks';
+import { useAccount, useDex } from '../../../hooks';
+
 export default function SwapForm() {
-  const address = useWallet().address;
-  const slippagePct = useDex().slippagePct;
-  const deadlineMins = useDex().deadlineMins;
+  const { activeAccount: address } = useAccount();
+  const { slippagePct, deadlineMins } = useDex();
 
   // Token list and balances
   const { tokens, loading: tokensLoading } = useTokenList();
@@ -65,7 +65,7 @@ export default function SwapForm() {
     console.log("call debouncedQuote::", params);
     debouncedQuote(params, handleQuoteResult);
   }, [isExactIn, amountIn, tokenIn, tokenOut]);
-// }, [isExactIn, amountIn, tokenIn, tokenOut, debouncedQuote]);
+  // }, [isExactIn, amountIn, tokenIn, tokenOut, debouncedQuote]);
 
   // Quote for exact-out mode when amountOut or tokens change
   useEffect(() => {
@@ -90,7 +90,7 @@ export default function SwapForm() {
 
   const handleSwap = async () => {
     if (!tokenIn || !tokenOut || !amountIn || !amountOut) return;
-    
+
     try {
       const txHash = await executeSwap({
         amountIn,
@@ -102,7 +102,7 @@ export default function SwapForm() {
         deadlineMins,
         isExactIn
       });
-      
+
       if (txHash) {
         setAmountIn('');
         setAmountOut('');
@@ -153,7 +153,7 @@ export default function SwapForm() {
   const isSwapDisabled = swapLoading || !amountIn || Number(amountIn) <= 0 || !amountOut || !tokenIn || !tokenOut;
 
   return (
-    <div className="genz-card" style={{ 
+    <div className="genz-card" style={{
       maxWidth: 480,
       margin: '0 auto',
       background: 'var(--glass-bg)',
@@ -166,15 +166,15 @@ export default function SwapForm() {
       overflow: 'hidden'
     }}>
       {/* Header */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 24
       }}>
-        <h2 style={{ 
-          fontSize: 20, 
-          fontWeight: 700, 
+        <h2 style={{
+          fontSize: 20,
+          fontWeight: 700,
           color: 'var(--standard-font-color)',
           margin: 0,
           background: 'var(--primary-gradient)',
@@ -184,15 +184,15 @@ export default function SwapForm() {
         }}>
           Swap Tokens
         </h2>
-        
+
         <SwapSettings>
-          <button 
+          <button
             aria-label="open-settings"
-            style={{ 
-              padding: '8px 12px', 
-              borderRadius: 12, 
-              border: '1px solid var(--glass-border)', 
-              background: 'var(--glass-bg)', 
+            style={{
+              padding: '8px 12px',
+              borderRadius: 12,
+              border: '1px solid var(--glass-border)',
+              background: 'var(--glass-bg)',
               color: 'var(--standard-font-color)',
               cursor: 'pointer',
               backdropFilter: 'blur(10px)',
@@ -233,8 +233,8 @@ export default function SwapForm() {
       </div>
 
       {/* Swap Arrow Button */}
-      <div style={{ 
-        display: 'flex', 
+      <div style={{
+        display: 'flex',
         justifyContent: 'center',
         margin: '16px 0',
         position: 'relative'
@@ -299,7 +299,7 @@ export default function SwapForm() {
 
       {/* Trading Info Panel */}
       {(routeInfo.priceImpact != null || allowanceInfo) && (
-        <div style={{ 
+        <div style={{
           background: 'rgba(255, 255, 255, 0.05)',
           border: '1px solid var(--glass-border)',
           borderRadius: 16,
@@ -308,30 +308,30 @@ export default function SwapForm() {
           backdropFilter: 'blur(10px)'
         }}>
           {routeInfo.priceImpact != null && (
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
               alignItems: 'center',
               marginBottom: allowanceInfo ? 8 : 0
             }}>
               <span style={{ fontSize: 14, color: 'var(--light-font-color)' }}>
                 Price Impact
               </span>
-              <span style={{ 
-                fontSize: 14, 
+              <span style={{
+                fontSize: 14,
                 fontWeight: 600,
-                color: routeInfo.priceImpact > 10 ? 'var(--error-color)' : 
-                       routeInfo.priceImpact > 5 ? 'var(--warning-color)' : 
-                       'var(--success-color)'
+                color: routeInfo.priceImpact > 10 ? 'var(--error-color)' :
+                  routeInfo.priceImpact > 5 ? 'var(--warning-color)' :
+                    'var(--success-color)'
               }}>
                 {routeInfo.priceImpact.toFixed(2)}%
               </span>
             </div>
           )}
-          
+
           {allowanceInfo && !tokenIn?.isAe && (
-            <div style={{ 
-              fontSize: 12, 
+            <div style={{
+              fontSize: 12,
               color: 'var(--light-font-color)',
               padding: '8px 12px',
               background: 'rgba(255, 107, 107, 0.1)',
@@ -345,7 +345,7 @@ export default function SwapForm() {
       )}
 
       {/* Route Information */}
-      <SwapRouteInfo 
+      <SwapRouteInfo
         routeInfo={routeInfo}
         tokens={tokens}
         tokenIn={tokenIn}
@@ -354,8 +354,8 @@ export default function SwapForm() {
 
       {/* Error Display */}
       {error && (
-        <div style={{ 
-          color: 'var(--error-color)', 
+        <div style={{
+          color: 'var(--error-color)',
           fontSize: 14,
           padding: '12px 16px',
           background: 'rgba(255, 107, 107, 0.1)',
@@ -374,13 +374,13 @@ export default function SwapForm() {
           onClick={() => setShowConfirm(true)}
           disabled={isSwapDisabled}
           className="genz-btn"
-          style={{ 
+          style={{
             width: '100%',
-            padding: '16px 24px', 
-            borderRadius: 16, 
+            padding: '16px 24px',
+            borderRadius: 16,
             border: 'none',
-            background: isSwapDisabled ? 
-              'rgba(255, 255, 255, 0.1)' : 
+            background: isSwapDisabled ?
+              'rgba(255, 255, 255, 0.1)' :
               'var(--button-gradient)',
             color: 'white',
             cursor: isSwapDisabled ? 'not-allowed' : 'pointer',
@@ -389,17 +389,17 @@ export default function SwapForm() {
             letterSpacing: '0.5px',
             textTransform: 'uppercase',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: isSwapDisabled ? 
-              'none' : 
+            boxShadow: isSwapDisabled ?
+              'none' :
               'var(--button-shadow)',
             opacity: isSwapDisabled ? 0.6 : 1
           }}
         >
           {swapLoading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <div style={{ 
-                width: 16, 
-                height: 16, 
+              <div style={{
+                width: 16,
+                height: 16,
                 border: '2px solid rgba(255,255,255,0.3)',
                 borderTop: '2px solid white',
                 borderRadius: '50%',
@@ -410,13 +410,13 @@ export default function SwapForm() {
           ) : 'Swap Tokens'}
         </button>
       ) : (
-        <ConnectWalletButton 
+        <ConnectWalletButton
           label="Connect Wallet to Swap"
           block
-          style={{ 
+          style={{
             width: '100%',
-            padding: '16px 24px', 
-            borderRadius: 16, 
+            padding: '16px 24px',
+            borderRadius: 16,
             border: 'none',
             background: 'var(--button-gradient)',
             color: 'white',

@@ -1,6 +1,9 @@
 import React from 'react';
 import { LiquidityPosition } from '../types/pool';
 import { CONFIG } from '../../../config';
+import { Decimal } from '../../../libs/decimal';
+import { toAe } from '@aeternity/aepp-sdk';
+import AddressChip from '../../../components/AddressChip';
 
 interface LiquidityPositionCardProps {
   position: LiquidityPosition;
@@ -8,35 +11,51 @@ interface LiquidityPositionCardProps {
   onAdd?: (pairId: string) => void;
 }
 
-export default function LiquidityPositionCard({ 
-  position, 
-  onRemove, 
-  onAdd 
+export default function LiquidityPositionCard({
+  position,
+  onRemove,
+  onAdd
 }: LiquidityPositionCardProps) {
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'space-between', 
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-between',
       alignItems: 'center',
       padding: 0
     }}>
       <div style={{ flex: 1 }}>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 12, 
-          marginBottom: 8 
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          marginBottom: 8,
+          flexWrap: 'wrap'
         }}>
-          <div style={{ 
-            fontSize: 16, 
-            fontWeight: 600, 
-            color: 'var(--standard-font-color)' 
+          <div style={{
+            fontSize: 16,
+            fontWeight: 600,
+            color: 'var(--standard-font-color)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4
           }}>
-            {position.token0} / {position.token1}
+            <AddressChip
+              address={position.token0}
+              linkToExplorer
+              style={{ fontSize: 10 }}
+            />
+            <span style={{ fontSize: 18, color: 'var(--light-font-color)' }}>
+              /
+            </span>
+            <AddressChip
+              address={position.token1}
+              linkToExplorer
+              style={{ fontSize: 10 }}
+            />
           </div>
           {position.valueUsd && (
-            <div style={{ 
-              fontSize: 12, 
+            <div style={{
+              fontSize: 12,
               color: 'var(--success-color)',
               fontWeight: 600,
               padding: '4px 8px',
@@ -44,15 +63,25 @@ export default function LiquidityPositionCard({
               background: 'rgba(76, 175, 80, 0.1)',
               border: '1px solid rgba(76, 175, 80, 0.2)'
             }}>
-              ${Number(position.valueUsd).toLocaleString()}
+              ${Decimal.from(position.valueUsd ?? '0').prettify()}
             </div>
           )}
+          <span style={{ fontSize: 10, color: 'var(--light-font-color)' }}>
+            View Pair
+          </span>
+          <AddressChip
+            address={position.pairId}
+            copyable
+            linkToExplorer
+            hideAvatar
+            style={{ fontSize: 10 }}
+          />
         </div>
-        
-        <div style={{ 
-          display: 'flex', 
-          gap: 20, 
-          fontSize: 12, 
+
+        <div style={{
+          display: 'flex',
+          gap: 20,
+          fontSize: 12,
           color: 'var(--light-font-color)'
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -60,7 +89,7 @@ export default function LiquidityPositionCard({
               LP Tokens
             </span>
             <span style={{ fontWeight: 600, color: 'var(--standard-font-color)' }}>
-              {Number(position.balance).toFixed(6)}
+              {Decimal.from(toAe(position.balance ?? '0')).prettify()}
             </span>
           </div>
           {position.sharePct && (
@@ -69,25 +98,25 @@ export default function LiquidityPositionCard({
                 Pool Share
               </span>
               <span style={{ fontWeight: 600, color: 'var(--standard-font-color)' }}>
-                {Number(position.sharePct).toFixed(4)}%
+                {Decimal.from(position.sharePct ?? '0').prettify()}%
               </span>
             </div>
           )}
         </div>
       </div>
 
-      <div style={{ 
-        display: 'flex', 
-        gap: 8 
+      <div style={{
+        display: 'flex',
+        gap: 8
       }}>
         {onAdd && (
           <button
             onClick={() => onAdd(position.pairId)}
-            style={{ 
-              padding: '8px 16px', 
-              borderRadius: 10, 
-              border: '1px solid var(--glass-border)', 
-              background: 'var(--glass-bg)', 
+            style={{
+              padding: '8px 16px',
+              borderRadius: 10,
+              border: '1px solid var(--glass-border)',
+              background: 'var(--glass-bg)',
               color: 'var(--standard-font-color)',
               cursor: 'pointer',
               fontSize: 12,
@@ -110,11 +139,11 @@ export default function LiquidityPositionCard({
         {onRemove && (
           <button
             onClick={() => onRemove(position.pairId)}
-            style={{ 
-              padding: '8px 16px', 
-              borderRadius: 10, 
-              border: '1px solid rgba(255, 107, 107, 0.3)', 
-              background: 'rgba(255, 107, 107, 0.1)', 
+            style={{
+              padding: '8px 16px',
+              borderRadius: 10,
+              border: '1px solid rgba(255, 107, 107, 0.3)',
+              background: 'rgba(255, 107, 107, 0.1)',
               color: 'var(--error-color)',
               cursor: 'pointer',
               fontSize: 12,

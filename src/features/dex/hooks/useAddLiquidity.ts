@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 import React, { useEffect, useState } from 'react';
 import { CONFIG } from '../../../config';
-import { ACI, DEX_ADDRESSES, fromAettos, getPairInfo, initDexContracts, toAettos } from '../../../libs/dex';
+import { ACI, DEX_ADDRESSES, fromAettos, getPairInfo, initDexContracts, toAettos, subSlippage, MINIMUM_LIQUIDITY, ensureAllowanceForRouter } from '../../../libs/dex';
 import { errorToUserMessage } from '../../../libs/errorMessages';
 import { useToast } from '../../../components/ToastProvider';
 import { AddLiquidityState, LiquidityExecutionParams } from '../../../components/pool/types/pool';
@@ -120,9 +120,32 @@ export function useAddLiquidity() {
 
       let sharePct = '0.00000000';
       let lpMintEstimate: string | undefined;
+      let error: string | null = null;
+      let suggestedAmountB: string | undefined;
+      let suggestedAmountA: string | undefined;
 
       const ain = state.amountA ? new BigNumber(toAettos(state.amountA, state.decA).toString()) : null;
       const bin = state.amountB ? new BigNumber(toAettos(state.amountB, state.decB).toString()) : null;
+
+      // Validate ratio for existing pools
+      if (ain && bin && !rA.isZero() && !rB.isZero()) {
+        const currentRatio = rA.div(rB);
+        const inputRatio = ain.div(bin);
+        const ratioDifference = currentRatio.minus(inputRatio).abs().div(currentRatio).times(100);
+        
+        // If ratio difference is > 1%, suggest optimal amounts
+        if (ratioDifference.gt(1)) {
+          // Calculate optimal amount B based on amount A
+          const optimalB = ain.div(currentRatio);
+          suggestedAmountB = fromAettos(optimalB.toString(), state.decB);
+          
+          // Calculate optimal amount A based on amount B  
+          const optimalA = bin.times(currentRatio);
+          suggestedAmountA = fromAettos(optimalA.toString(), state.decA);
+          
+          error = `Ratio mismatch. Current pool ratio: 1 ${state.symbolA} = ${rB.div(rA).toFixed(6)} ${state.symbolB}`;
+        }
+      }
 
       if (ain && bin && info.totalSupply && info.totalSupply > 0n) {
         const totalSupply = new BigNumber(info.totalSupply.toString());
@@ -133,11 +156,14 @@ export function useAddLiquidity() {
 
       setState(prev => ({
         ...prev,
+        error,
         pairPreview: {
           ratioAinB,
           ratioBinA,
           sharePct,
           lpMintEstimate,
+          suggestedAmountA,
+          suggestedAmountB,
         }
       }));
 
@@ -159,6 +185,15 @@ export function useAddLiquidity() {
 
       const amountAAettos = toAettos(params.amountA, state.decA);
       const amountBAettos = toAettos(params.amountB, state.decB);
+      
+      console.log('Raw amounts::', {
+        amountA: params.amountA,
+        amountB: params.amountB,
+        decA: state.decA,
+        decB: state.decB,
+        amountAAettos: amountAAettos.toString(),
+        amountBAettos: amountBAettos.toString()
+      });
 
       let txHash: string;
 
@@ -170,7 +205,13 @@ export function useAddLiquidity() {
       console.log('executeAddLiquidity->currentTime::', Date.now())
       console.log('executeAddLiquidity->deadline::', Date.now() + params.deadlineMins * 60 * 1000)
       console.log('executeAddLiquidity->deadlineMinutes::', params.deadlineMins)
+      console.log('executeAddLiquidity->slippagePct::', params.slippagePct)
       console.log('========================')
+      
+      // Validate slippage percentage
+      if (params.slippagePct < 0 || params.slippagePct >= 100) {
+        throw new Error(`Invalid slippage percentage: ${params.slippagePct}%. Must be between 0 and 100.`);
+      }
 
       if (params.isAePair) {
         const isTokenAAe = params.tokenA === 'AE';
@@ -178,10 +219,29 @@ export function useAddLiquidity() {
         const amountTokenDesired = isTokenAAe ? amountBAettos : amountAAettos;
         const amountAeDesired = isTokenAAe ? amountAAettos : amountBAettos;
         
-        // Calculate minimum amounts with slippage
-        const minToken = amountTokenDesired - (amountTokenDesired * BigInt(Math.floor(params.slippagePct * 100)) / 10000n);
-        const minAe = amountAeDesired - (amountAeDesired * BigInt(Math.floor(params.slippagePct * 100)) / 10000n);
-        const minimumLiquidity = 1000n; // Default minimum liquidity
+        // Calculate minimum amounts with slippage using dex library function
+        const minToken = subSlippage(amountTokenDesired, params.slippagePct);
+        const minAe = subSlippage(amountAeDesired, params.slippagePct);
+        const minimumLiquidity = MINIMUM_LIQUIDITY;
+        
+        // Validation - ensure all values are positive
+        if (amountTokenDesired <= 0n) {
+          throw new Error(`Invalid token amount: ${amountTokenDesired.toString()}`);
+        }
+        if (amountAeDesired <= 0n) {
+          throw new Error(`Invalid AE amount: ${amountAeDesired.toString()}`);
+        }
+        if (minToken <= 0n) {
+          throw new Error(`Invalid minimum token amount: ${minToken.toString()} (slippage: ${params.slippagePct}%)`);
+        }
+        if (minAe <= 0n) {
+          throw new Error(`Invalid minimum AE amount: ${minAe.toString()} (slippage: ${params.slippagePct}%)`);
+        }
+        
+        // Ensure allowance for the non-AE token
+        console.log('Ensuring token allowance for router...');
+        await ensureAllowanceForRouter(sdk, token, address, amountTokenDesired);
+        console.log('Token allowance ensured.');
         
         console.log('add_liquidity_ae params::', {
           token,
@@ -191,7 +251,9 @@ export function useAddLiquidity() {
           address,
           minimumLiquidity: minimumLiquidity.toString(),
           deadline: BigInt(Date.now() + params.deadlineMins * 60 * 1000).toString(),
-          amount: amountAeDesired.toString()
+          amount: amountAeDesired.toString(),
+          slippagePct: params.slippagePct,
+          slippageCheck: `${params.slippagePct}% slippage on ${amountTokenDesired.toString()} = ${minToken.toString()}`
         });
         
         const res = await router.add_liquidity_ae(
@@ -206,13 +268,30 @@ export function useAddLiquidity() {
         );
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       } else {
+        // Calculate minimum amounts with slippage using dex library function
+        const minAmountA = subSlippage(amountAAettos, params.slippagePct);
+        const minAmountB = subSlippage(amountBAettos, params.slippagePct);
+        const minimumLiquidity = MINIMUM_LIQUIDITY;
+        
+        // Validation - ensure all values are positive
+        if (amountAAettos <= 0n) {
+          throw new Error(`Invalid amount A: ${amountAAettos.toString()}`);
+        }
+        if (amountBAettos <= 0n) {
+          throw new Error(`Invalid amount B: ${amountBAettos.toString()}`);
+        }
+        if (minAmountA <= 0n) {
+          throw new Error(`Invalid minimum amount A: ${minAmountA.toString()} (slippage: ${params.slippagePct}%)`);
+        }
+        if (minAmountB <= 0n) {
+          throw new Error(`Invalid minimum amount B: ${minAmountB.toString()} (slippage: ${params.slippagePct}%)`);
+        }
+        
         // Ensure allowances for both tokens
-        // This would need to be implemented based on your allowance logic
-
-        // Calculate minimum amounts with slippage
-        const minAmountA = amountAAettos - (amountAAettos * BigInt(Math.floor(params.slippagePct * 100)) / 10000n);
-        const minAmountB = amountBAettos - (amountBAettos * BigInt(Math.floor(params.slippagePct * 100)) / 10000n);
-        const minimumLiquidity = 1000n; // Default minimum liquidity
+        console.log('Ensuring token allowances for router...');
+        await ensureAllowanceForRouter(sdk, params.tokenA, address, amountAAettos);
+        await ensureAllowanceForRouter(sdk, params.tokenB, address, amountBAettos);
+        console.log('Token allowances ensured.');
         
         console.log('add_liquidity params::', {
           tokenA: params.tokenA,
@@ -223,7 +302,10 @@ export function useAddLiquidity() {
           minAmountB: minAmountB.toString(),
           address,
           minimumLiquidity: minimumLiquidity.toString(),
-          deadline: BigInt(Date.now() + params.deadlineMins * 60 * 1000).toString()
+          deadline: BigInt(Date.now() + params.deadlineMins * 60 * 1000).toString(),
+          slippagePct: params.slippagePct,
+          slippageCheckA: `${params.slippagePct}% slippage on ${amountAAettos.toString()} = ${minAmountA.toString()}`,
+          slippageCheckB: `${params.slippagePct}% slippage on ${amountBAettos.toString()} = ${minAmountB.toString()}`
         });
         
         const res = await router.add_liquidity(

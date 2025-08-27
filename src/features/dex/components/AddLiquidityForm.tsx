@@ -16,7 +16,7 @@ import { usePool } from '../context/PoolProvider';
 export default function AddLiquidityForm() {
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
-  const { currentAction, selectedTokenA, selectedTokenB, clearSelection } = usePool();
+  const { currentAction, selectedTokenA, selectedTokenB, clearSelection, onPositionUpdated } = usePool();
 
   // Token list and balances
   const { tokens, loading: tokensLoading } = useTokenList();
@@ -38,41 +38,26 @@ export default function AddLiquidityForm() {
 
   // Helper function to find token by symbol or contract address
   const findToken = (identifier: string): Token | null => {
-    if (!identifier || !tokens.length) {
-      console.log('findToken: No identifier or tokens', { identifier, tokensLength: tokens.length });
-      return null;
-    }
-    
-    console.log('findToken: Looking for', identifier, 'in', tokens.map(t => ({ symbol: t.symbol, contractId: t.contractId, isAe: t.isAe })));
+    if (!identifier || !tokens.length) return null;
     
     // First try to find by symbol (case insensitive)
     const bySymbol = tokens.find(t => 
       t.symbol.toLowerCase() === identifier.toLowerCase()
     );
-    if (bySymbol) {
-      console.log('findToken: Found by symbol', bySymbol);
-      return bySymbol;
-    }
+    if (bySymbol) return bySymbol;
     
     // Then try to find by contract address
     const byAddress = tokens.find(t => 
       t.contractId === identifier || t.contractId === identifier.toLowerCase()
     );
-    if (byAddress) {
-      console.log('findToken: Found by address', byAddress);
-      return byAddress;
-    }
+    if (byAddress) return byAddress;
     
     // For AE, check if it's the native token
     if (identifier.toLowerCase() === 'ae') {
       const aeToken = tokens.find(t => t.isAe);
-      if (aeToken) {
-        console.log('findToken: Found AE token', aeToken);
-        return aeToken;
-      }
+      if (aeToken) return aeToken;
     }
     
-    console.log('findToken: Not found', identifier);
     return null;
   };
 
@@ -84,7 +69,6 @@ export default function AddLiquidityForm() {
     if (selectedTokenA) {
       const foundTokenA = findToken(selectedTokenA);
       if (foundTokenA && (!tokenA || tokenA.symbol !== foundTokenA.symbol)) {
-        console.log('Setting tokenA from context:', selectedTokenA, foundTokenA);
         setTokenA(foundTokenA);
       }
     }
@@ -92,7 +76,6 @@ export default function AddLiquidityForm() {
     if (selectedTokenB) {
       const foundTokenB = findToken(selectedTokenB);
       if (foundTokenB && (!tokenB || tokenB.symbol !== foundTokenB.symbol)) {
-        console.log('Setting tokenB from context:', selectedTokenB, foundTokenB);
         setTokenB(foundTokenB);
       }
     }
@@ -106,16 +89,7 @@ export default function AddLiquidityForm() {
     }
   }, [tokens, selectedTokenA, selectedTokenB]);
 
-  // Add debug logging for context changes
-  useEffect(() => {
-    console.log('Context changed:', { 
-      selectedTokenA, 
-      selectedTokenB, 
-      currentAction,
-      tokenA: tokenA?.symbol,
-      tokenB: tokenB?.symbol 
-    });
-  }, [selectedTokenA, selectedTokenB, currentAction, tokenA, tokenB]);
+
 
   // Update hook state when tokens change
   useEffect(() => {
@@ -182,9 +156,18 @@ export default function AddLiquidityForm() {
       });
 
       if (txHash) {
+        // Clear form
         setAmountA('');
         setAmountB('');
         setShowConfirm(false);
+        
+        // Clear selection if we were adding to existing position
+        if (currentAction === 'add') {
+          clearSelection();
+        }
+        
+        // Refresh positions after successful transaction
+        await onPositionUpdated();
       }
     } catch (error) {
       console.error('Add liquidity failed:', error);

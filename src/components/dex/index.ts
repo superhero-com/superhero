@@ -7,7 +7,8 @@ export { default as SwapRouteInfo } from './core/SwapRouteInfo';
 export { default as SwapConfirmation } from './core/SwapConfirmation';
 
 // Widget components
-export { default as WrapUnwrapWidget } from './widgets/WrapUnwrapWidget';
+// Legacy export - use import from '../features/dex' instead
+export { WrapUnwrapWidget } from '../../features/dex';
 export { default as EthxitWidget } from './widgets/EthxitWidget';
 export { default as EthBridgeWidget } from './widgets/EthBridgeWidget';
 

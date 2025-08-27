@@ -8,7 +8,7 @@ import RecentActivity from '../components/dex/supporting/RecentActivity';
 import { RecentActivity as RecentActivityType } from '../components/dex/types/dex';
 import EthBridgeWidget from '../components/dex/widgets/EthBridgeWidget';
 import NewAccountEducation from '../components/dex/widgets/NewAccountEducation';
-import WrapUnwrapWidget from '../components/dex/widgets/WrapUnwrapWidget';
+import { WrapUnwrapWidget } from '../features/dex';
 import './Dex.scss';
 
 export default function DexRefactored() {

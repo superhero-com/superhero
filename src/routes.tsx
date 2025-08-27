@@ -24,7 +24,7 @@ const FAQ = lazy(() => import('./views/FAQ'));
   const TxQueue = lazy(() => import('./views/TxQueue'));
   const Swap = lazy(() => import('./views/Swap'));
   const Dex = lazy(() => import('./views/Dex'));
-  const Pool = lazy(() => import('./views/Pool'));
+  const Pool = lazy(() => import('./features/dex/views/Pool'));
   const PoolImport = lazy(() => import('./views/PoolImport'));
   const PoolAdd = lazy(() => import('./views/PoolAdd'));
   const PoolRemove = lazy(() => import('./views/PoolRemove'));

@@ -4,7 +4,7 @@ import { CONFIG } from '../../../config';
 import { ACI, DEX_ADDRESSES, fromAettos, getPairInfo, initDexContracts, toAettos, subSlippage, MINIMUM_LIQUIDITY, ensureAllowanceForRouter } from '../../../libs/dex';
 import { errorToUserMessage } from '../../../libs/errorMessages';
 import { useToast } from '../../../components/ToastProvider';
-import { AddLiquidityState, LiquidityExecutionParams } from '../../../components/pool/types/pool';
+import { AddLiquidityState, LiquidityExecutionParams } from '../types/pool';
 
 import { useAccount, useAeSdk, useDex } from '../../../hooks';
 

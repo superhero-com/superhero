@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useTokenList } from '../hooks/useTokenList';
 import { useTokenBalances } from '../hooks/useTokenBalances';
 
-import { useWallet } from '../../../hooks';
+import { useAccount, useWallet } from '../../../hooks';
 export default function NewAccountEducation() {
-  const address = useWallet().address;
-  const balance = useWallet().balance;
-  const isNewAccount = useWallet().isNewAccount;
+  const { activeAccount: address, balance } = useAccount();
+  const { isNewAccount } = useWallet();
   const { tokens } = useTokenList();
   const { balances } = useTokenBalances(null, null);
 

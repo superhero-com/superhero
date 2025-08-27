@@ -1,5 +1,6 @@
 // Core components
 export { default as SwapForm } from './core/SwapForm';
+export { default as SwapTabSwitcher } from './core/SwapTabSwitcher';
 export { default as TokenInput } from './core/TokenInput';
 export { default as TokenSelector } from './core/TokenSelector';
 export { default as SwapSettings } from './core/SwapSettings';

@@ -93,3 +93,12 @@ export interface LiquidityExecutionParams {
   deadlineMins: number;
   isAePair: boolean;
 }
+
+export interface RemoveLiquidityExecutionParams {
+  tokenA: string;
+  tokenB: string;
+  liquidity: string; // LP tokens to remove
+  slippagePct: number;
+  deadlineMins: number;
+  isAePair: boolean;
+}

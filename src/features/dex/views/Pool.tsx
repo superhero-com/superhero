@@ -2,23 +2,35 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from '../../../hooks';
 import ConnectWalletButton from '../../../components/ConnectWalletButton';
-import { AddLiquidityForm, LiquidityPositionCard } from '../components';
+import { AddLiquidityForm, RemoveLiquidityForm, LiquidityPositionCard } from '../components';
 import { useLiquidityPositions } from '../hooks';
+import { PoolProvider, usePool } from '../context/PoolProvider';
 
-export default function Pool() {
+function PoolContent() {
   const navigate = useNavigate();
   const { activeAccount: address } = useAccount();
   const { positions, loading, error } = useLiquidityPositions();
+  const { selectPositionForAdd, selectPositionForRemove, currentAction } = usePool();
 
   const handleRemoveLiquidity = (pairId: string) => {
-    navigate(`/pool/remove/${pairId}`);
+    const position = positions.find(p => p.pairId === pairId);
+    if (position) {
+      selectPositionForRemove(position);
+    }
   };
 
   const handleAddLiquidity = (pairId: string) => {
-    // Focus on add liquidity section
-    const addLiquiditySection = document.getElementById('add-liquidity-section');
-    if (addLiquiditySection) {
-      addLiquiditySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const position = positions.find(p => p.pairId === pairId);
+    console.log('handleAddLiquidity called:', { pairId, position });
+    if (position) {
+      console.log('Calling selectPositionForAdd with:', position);
+      selectPositionForAdd(position);
+    }
+    
+    // Focus on the forms section
+    const formsSection = document.getElementById('liquidity-forms-section');
+    if (formsSection) {
+      formsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
@@ -330,20 +342,12 @@ export default function Pool() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {positions.map((position) => (
-                <div key={position.pairId} style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--glass-border)',
-                  borderRadius: 16,
-                  padding: 16,
-                  backdropFilter: 'blur(10px)',
-                  transition: 'all 0.3s ease'
-                }}>
-                  <LiquidityPositionCard
-                    position={position}
-                    onRemove={handleRemoveLiquidity}
-                    onAdd={handleAddLiquidity}
-                  />
-                </div>
+                <LiquidityPositionCard
+                  key={position.pairId}
+                  position={position}
+                  onRemove={handleRemoveLiquidity}
+                  onAdd={handleAddLiquidity}
+                />
               ))}
             </div>
           )}
@@ -459,10 +463,22 @@ export default function Pool() {
         `}</style>
       </div>
 
-      {/* Right Column - Add Liquidity */}
-      <div id="add-liquidity-section" style={{ position: 'sticky', top: 20 }}>
-        <AddLiquidityForm />
+      {/* Right Column - Liquidity Forms */}
+      <div id="liquidity-forms-section" style={{ position: 'sticky', top: 20, display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {currentAction === 'remove' ? (
+          <RemoveLiquidityForm />
+        ) : (
+          <AddLiquidityForm />
+        )}
       </div>
     </div>
+  );
+}
+
+export default function Pool() {
+  return (
+    <PoolProvider>
+      <PoolContent />
+    </PoolProvider>
   );
 }

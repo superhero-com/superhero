@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { ACI, DEX_ADDRESSES, getPairInfo, initDexContracts, toAettos, fromAettos } from '../../../libs/dex';
-import { errorToUserMessage } from '../../../libs/errorMessages';
-import { useToast } from '../../ToastProvider';
-import { CONFIG } from '../../../config';
-import { AddLiquidityState, LiquidityQuoteParams, LiquidityExecutionParams } from '../types/pool';
 import BigNumber from 'bignumber.js';
+import React, { useEffect, useState } from 'react';
+import { CONFIG } from '../../../config';
+import { ACI, DEX_ADDRESSES, fromAettos, getPairInfo, initDexContracts, toAettos } from '../../../libs/dex';
+import { errorToUserMessage } from '../../../libs/errorMessages';
+import { useToast } from '../../../components/ToastProvider';
+import { AddLiquidityState, LiquidityExecutionParams } from '../../../components/pool/types/pool';
 
-import { useWallet, useDex } from '../../../hooks';
+import { useAccount, useAeSdk, useDex } from '../../../hooks';
+
 export function useAddLiquidity() {
-  const address = useWallet().address;
-  const slippagePct = useDex().slippagePct;
-  const deadlineMins = useDex().deadlineMins;
+  const { sdk } = useAeSdk();
+  const { activeAccount: address } = useAccount();
+  const { slippagePct, deadlineMins } = useDex();
   const toast = useToast();
 
   const [state, setState] = useState<AddLiquidityState>({
@@ -34,9 +35,10 @@ export function useAddLiquidity() {
   });
 
   async function fetchTokenMeta(addr: string): Promise<{ decimals: number; symbol: string }> {
-    if (!addr || addr === 'AE') return { decimals: 18, symbol: 'AE' };
-    const sdk = (window as any).__aeSdk;
-    const t = await sdk.initializeContract({ aci: ACI.AEX9, address: addr });
+    if (addr === 'AE') {
+      return { decimals: 18, symbol: 'AE' };
+    }
+    const t = await sdk.initializeContract({ aci: ACI.AEX9, address: addr as `ct_${string}` });
     const { decodedResult } = await t.meta_info();
     return {
       decimals: Number(decodedResult.decimals ?? 18),
@@ -46,33 +48,33 @@ export function useAddLiquidity() {
 
   // Update token metadata when tokens change
   useEffect(() => {
-    if (!state.tokenA) return;
-    
+    if (!state.tokenA || state.tokenA === 'AE') return;
+
     fetchTokenMeta(state.tokenA)
       .then(({ decimals, symbol }) => {
         setState(prev => ({ ...prev, decA: decimals, symbolA: symbol }));
       })
       .catch(() => {
-        setState(prev => ({ 
-          ...prev, 
-          decA: 18, 
-          symbolA: state.tokenA === 'AE' ? 'AE' : '' 
+        setState(prev => ({
+          ...prev,
+          decA: 18,
+          symbolA: state.tokenA === 'AE' ? 'AE' : ''
         }));
       });
   }, [state.tokenA]);
 
   useEffect(() => {
-    if (!state.tokenB) return;
-    
+    if (!state.tokenB || state.tokenB === 'AE') return;
+
     fetchTokenMeta(state.tokenB)
       .then(({ decimals, symbol }) => {
         setState(prev => ({ ...prev, decB: decimals, symbolB: symbol }));
       })
       .catch(() => {
-        setState(prev => ({ 
-          ...prev, 
-          decB: 18, 
-          symbolB: state.tokenB === 'AE' ? 'AE' : '' 
+        setState(prev => ({
+          ...prev,
+          decB: 18,
+          symbolB: state.tokenB === 'AE' ? 'AE' : ''
         }));
       });
   }, [state.tokenB]);
@@ -89,27 +91,26 @@ export function useAddLiquidity() {
         return;
       }
 
-      const sdk = (window as any).__aeSdk;
       const { factory } = await initDexContracts(sdk);
       const aAddr = state.tokenA === 'AE' ? DEX_ADDRESSES.wae : state.tokenA;
       const bAddr = state.tokenB === 'AE' ? DEX_ADDRESSES.wae : state.tokenB;
-      
+
       const info = await getPairInfo(sdk, factory, aAddr, bAddr);
-      
+
       if (!info) {
-        setState(prev => ({ 
-          ...prev, 
-          pairPreview: null, 
-          reserves: null, 
-          pairExists: false 
+        setState(prev => ({
+          ...prev,
+          pairPreview: null,
+          reserves: null,
+          pairExists: false
         }));
         return;
       }
 
-      setState(prev => ({ 
-        ...prev, 
+      setState(prev => ({
+        ...prev,
         reserves: { reserveA: info.reserveA, reserveB: info.reserveB },
-        pairExists: true 
+        pairExists: true
       }));
 
       const rA = new BigNumber(fromAettos(info.reserveA, state.decA));
@@ -154,7 +155,6 @@ export function useAddLiquidity() {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      const sdk = (window as any).__aeSdk;
       const { router, factory } = await initDexContracts(sdk);
 
       const amountAAettos = toAettos(params.amountA, state.decA);
@@ -162,30 +162,80 @@ export function useAddLiquidity() {
 
       let txHash: string;
 
+      console.log('========================')
+      console.log('executeAddLiquidity->router::', router)
+      console.log('executeAddLiquidity->params::', params)
+      console.log('executeAddLiquidity->amountAAettos::', amountAAettos.toString())
+      console.log('executeAddLiquidity->amountBAettos::', amountBAettos.toString())
+      console.log('executeAddLiquidity->currentTime::', Date.now())
+      console.log('executeAddLiquidity->deadline::', Date.now() + params.deadlineMins * 60 * 1000)
+      console.log('executeAddLiquidity->deadlineMinutes::', params.deadlineMins)
+      console.log('========================')
+
       if (params.isAePair) {
-        const res = await router.addLiquidityAe(
-          params.tokenA === 'AE' ? amountAAettos : amountBAettos,
-          params.tokenA === 'AE' ? params.tokenB : params.tokenA,
-          params.tokenA === 'AE' ? amountBAettos : amountAAettos,
-          0n, // minAe
-          0n, // minTokens
+        const isTokenAAe = params.tokenA === 'AE';
+        const token = isTokenAAe ? params.tokenB : params.tokenA;
+        const amountTokenDesired = isTokenAAe ? amountBAettos : amountAAettos;
+        const amountAeDesired = isTokenAAe ? amountAAettos : amountBAettos;
+        
+        // Calculate minimum amounts with slippage
+        const minToken = amountTokenDesired - (amountTokenDesired * BigInt(Math.floor(params.slippagePct * 100)) / 10000n);
+        const minAe = amountAeDesired - (amountAeDesired * BigInt(Math.floor(params.slippagePct * 100)) / 10000n);
+        const minimumLiquidity = 1000n; // Default minimum liquidity
+        
+        console.log('add_liquidity_ae params::', {
+          token,
+          amountTokenDesired: amountTokenDesired.toString(),
+          minToken: minToken.toString(),
+          minAe: minAe.toString(),
           address,
-          Math.floor(Date.now() / 1000) + params.deadlineMins * 60,
+          minimumLiquidity: minimumLiquidity.toString(),
+          deadline: BigInt(Date.now() + params.deadlineMins * 60 * 1000).toString(),
+          amount: amountAeDesired.toString()
+        });
+        
+        const res = await router.add_liquidity_ae(
+          token,
+          amountTokenDesired,
+          minToken,
+          minAe,
+          address,
+          minimumLiquidity,
+          BigInt(Date.now() + params.deadlineMins * 60 * 1000),
+          { amount: amountAeDesired.toString() }
         );
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       } else {
         // Ensure allowances for both tokens
         // This would need to be implemented based on your allowance logic
+
+        // Calculate minimum amounts with slippage
+        const minAmountA = amountAAettos - (amountAAettos * BigInt(Math.floor(params.slippagePct * 100)) / 10000n);
+        const minAmountB = amountBAettos - (amountBAettos * BigInt(Math.floor(params.slippagePct * 100)) / 10000n);
+        const minimumLiquidity = 1000n; // Default minimum liquidity
         
-        const res = await router.addLiquidity(
+        console.log('add_liquidity params::', {
+          tokenA: params.tokenA,
+          tokenB: params.tokenB,
+          amountAAettos: amountAAettos.toString(),
+          amountBAettos: amountBAettos.toString(),
+          minAmountA: minAmountA.toString(),
+          minAmountB: minAmountB.toString(),
+          address,
+          minimumLiquidity: minimumLiquidity.toString(),
+          deadline: BigInt(Date.now() + params.deadlineMins * 60 * 1000).toString()
+        });
+        
+        const res = await router.add_liquidity(
           params.tokenA,
           params.tokenB,
           amountAAettos,
           amountBAettos,
-          0n, // minTokensA
-          0n, // minTokensB
+          minAmountA,
+          minAmountB,
           address,
-          Math.floor(Date.now() / 1000) + params.deadlineMins * 60,
+          minimumLiquidity,
+          BigInt(Date.now() + params.deadlineMins * 60 * 1000),
         );
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       }
@@ -216,19 +266,22 @@ export function useAddLiquidity() {
       return txHash;
 
     } catch (error) {
-      const errorMsg = errorToUserMessage(error, { 
-        action: 'add liquidity', 
-        slippagePct: params.slippagePct, 
-        deadlineMins: params.deadlineMins 
+      console.log('========================')
+      console.log('executeAddLiquidity->error::', error)
+      console.log('========================')
+      const errorMsg = errorToUserMessage(error, {
+        action: 'add-liquidity',
+        slippagePct: params.slippagePct,
+        deadlineMins: params.deadlineMins
       });
-      
+
       setState(prev => ({ ...prev, error: errorMsg, loading: false }));
-      
+
       toast.push(React.createElement('div', {},
         React.createElement('div', {}, 'Add liquidity failed'),
         React.createElement('div', { style: { opacity: 0.9 } }, errorMsg)
       ));
-      
+
       throw new Error(errorMsg);
     }
   }

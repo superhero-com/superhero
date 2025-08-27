@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DexTabs from '../components/dex/DexTabs';
 import LiquidityPositionCard from '../components/pool/core/LiquidityPositionCard';
-import AddLiquidityForm from '../components/pool/core/AddLiquidityForm';
+import { AddLiquidityForm } from '../features/dex/components';
 import { useLiquidityPositions } from '../components/pool/hooks/useLiquidityPositions';
 import { LiquidityPosition } from '../components/pool/types/pool';
 import ConnectWalletButton from '../components/ConnectWalletButton';

@@ -10,8 +10,8 @@ export { default as SwapConfirmation } from './core/SwapConfirmation';
 // Widget components
 // Legacy export - use import from '../features/dex' instead
 export { WrapUnwrapWidget } from '../../features/dex';
-export { default as EthxitWidget } from './widgets/EthxitWidget';
-export { default as EthBridgeWidget } from './widgets/EthBridgeWidget';
+// Legacy export - use import from '../../features/bridge' instead
+export { EthBridgeWidget } from '../../features/bridge';
 
 // Supporting components
 export { default as RecentActivity } from './supporting/RecentActivity';

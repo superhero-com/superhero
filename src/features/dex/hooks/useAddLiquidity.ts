@@ -1,10 +1,10 @@
 import BigNumber from 'bignumber.js';
 import React, { useEffect, useState } from 'react';
 import { CONFIG } from '../../../config';
-import { ACI, DEX_ADDRESSES, fromAettos, getPairInfo, initDexContracts, toAettos, subSlippage, MINIMUM_LIQUIDITY, ensureAllowanceForRouter } from '../../../libs/dex';
+import { ACI, DEX_ADDRESSES, fromAettos, getPairInfo, initDexContracts, toAettos, subSlippage, MINIMUM_LIQUIDITY, ensureAllowanceForRouter, ensurePairAllowanceForRouter } from '../../../libs/dex';
 import { errorToUserMessage } from '../../../libs/errorMessages';
 import { useToast } from '../../../components/ToastProvider';
-import { AddLiquidityState, LiquidityExecutionParams } from '../types/pool';
+import { AddLiquidityState, LiquidityExecutionParams, RemoveLiquidityExecutionParams } from '../types/pool';
 
 import { useAccount, useAeSdk, useDex } from '../../../hooks';
 
@@ -368,10 +368,203 @@ export function useAddLiquidity() {
     }
   }
 
+  // Remove liquidity function
+  async function executeRemoveLiquidity(params: RemoveLiquidityExecutionParams): Promise<string> {
+    if (!address) {
+      throw new Error('Wallet not connected');
+    }
+    
+    if (!sdk) {
+      throw new Error('SDK not available');
+    }
+
+    setState(prev => ({ ...prev, loading: true, error: null }));
+
+    try {
+      // Initialize DEX contracts
+      const { router, factory } = await initDexContracts(sdk);
+      
+      // Convert liquidity amount to bigint
+      const liquidityAmount = toAettos(params.liquidity, 18); // LP tokens are 18 decimals
+      
+      console.log('========================')
+      console.log('executeRemoveLiquidity->router::', router)
+      console.log('executeRemoveLiquidity->params::', params)
+      console.log('executeRemoveLiquidity->liquidityAmount::', liquidityAmount.toString())
+      console.log('executeRemoveLiquidity->currentTime::', Date.now())
+      console.log('executeRemoveLiquidity->deadline::', Date.now() + params.deadlineMins * 60 * 1000)
+      console.log('executeRemoveLiquidity->deadlineMinutes::', params.deadlineMins)
+      console.log('executeRemoveLiquidity->slippagePct::', params.slippagePct)
+      console.log('========================')
+      
+      // Validate parameters
+      if (liquidityAmount <= 0n) {
+        throw new Error('Invalid liquidity amount');
+      }
+      
+      if (params.slippagePct < 0 || params.slippagePct >= 100) {
+        throw new Error(`Invalid slippage percentage: ${params.slippagePct}%. Must be between 0 and 100.`);
+      }
+
+      let txHash = '';
+
+      if (params.isAePair) {
+        // Handle AE pair removal
+        const isTokenAAe = params.tokenA === 'AE';
+        const token = isTokenAAe ? params.tokenB : params.tokenA;
+        
+        // Get pair info to calculate expected amounts (use wrapped AE address)
+        const waeAddress = DEX_ADDRESSES.wae;
+        const pairInfo = await getPairInfo(sdk, factory, token, waeAddress);
+        
+        if (!pairInfo || !pairInfo.reserveA || !pairInfo.reserveB || !pairInfo.totalSupply) {
+          throw new Error('Unable to get pair information');
+        }
+
+        // Calculate expected amounts based on current reserves and total supply
+        const totalSupply = BigInt(pairInfo.totalSupply);
+        const reserveToken = isTokenAAe ? BigInt(pairInfo.reserveB) : BigInt(pairInfo.reserveA);
+        const reserveAe = isTokenAAe ? BigInt(pairInfo.reserveA) : BigInt(pairInfo.reserveB);
+        
+        // Calculate expected amounts: (liquidity * reserve) / totalSupply
+        const expectedTokenAmount = (liquidityAmount * reserveToken) / totalSupply;
+        const expectedAeAmount = (liquidityAmount * reserveAe) / totalSupply;
+        
+        // Apply slippage to get minimum amounts
+        const minTokenAmount = subSlippage(expectedTokenAmount, params.slippagePct);
+        const minAeAmount = subSlippage(expectedAeAmount, params.slippagePct);
+        
+        // Validation
+        if (minTokenAmount <= 0n) {
+          throw new Error(`Invalid minimum token amount: ${minTokenAmount.toString()}`);
+        }
+        if (minAeAmount <= 0n) {
+          throw new Error(`Invalid minimum AE amount: ${minAeAmount.toString()}`);
+        }
+        
+        // Ensure LP token allowance for router
+        console.log('Ensuring LP token allowance for router...');
+        await ensurePairAllowanceForRouter(sdk, pairInfo.pairAddress, address, liquidityAmount);
+        console.log('LP token allowance ensured.');
+        
+        console.log('remove_liquidity_ae params::', {
+          token,
+          liquidity: liquidityAmount.toString(),
+          minTokenAmount: minTokenAmount.toString(),
+          minAeAmount: minAeAmount.toString(),
+          address,
+          deadline: BigInt(Date.now() + params.deadlineMins * 60 * 1000).toString(),
+          expectedTokenAmount: expectedTokenAmount.toString(),
+          expectedAeAmount: expectedAeAmount.toString(),
+          totalSupply: totalSupply.toString(),
+          reserveToken: reserveToken.toString(),
+          reserveAe: reserveAe.toString()
+        });
+        
+        const res = await router.remove_liquidity_ae(
+          token,
+          liquidityAmount,
+          minTokenAmount,
+          minAeAmount,
+          address,
+          BigInt(Date.now() + params.deadlineMins * 60 * 1000)
+        );
+        
+        txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
+      } else {
+        // Handle token-token pair removal
+        const pairInfo = await getPairInfo(sdk, factory, params.tokenA, params.tokenB);
+        
+        if (!pairInfo || !pairInfo.reserveA || !pairInfo.reserveB || !pairInfo.totalSupply) {
+          throw new Error('Unable to get pair information');
+        }
+
+        // Calculate expected amounts based on current reserves and total supply
+        const totalSupply = BigInt(pairInfo.totalSupply);
+        const reserveA = BigInt(pairInfo.reserveA);
+        const reserveB = BigInt(pairInfo.reserveB);
+        
+        // Calculate expected amounts: (liquidity * reserve) / totalSupply
+        const expectedAmountA = (liquidityAmount * reserveA) / totalSupply;
+        const expectedAmountB = (liquidityAmount * reserveB) / totalSupply;
+        
+        // Apply slippage to get minimum amounts
+        const minAmountA = subSlippage(expectedAmountA, params.slippagePct);
+        const minAmountB = subSlippage(expectedAmountB, params.slippagePct);
+        
+        // Validation
+        if (minAmountA <= 0n) {
+          throw new Error(`Invalid minimum amount A: ${minAmountA.toString()}`);
+        }
+        if (minAmountB <= 0n) {
+          throw new Error(`Invalid minimum amount B: ${minAmountB.toString()}`);
+        }
+        
+        // Ensure LP token allowance for router
+        console.log('Ensuring LP token allowance for router...');
+        await ensurePairAllowanceForRouter(sdk, pairInfo.pairAddress, address, liquidityAmount);
+        console.log('LP token allowance ensured.');
+        
+        console.log('remove_liquidity params::', {
+          tokenA: params.tokenA,
+          tokenB: params.tokenB,
+          liquidity: liquidityAmount.toString(),
+          minAmountA: minAmountA.toString(),
+          minAmountB: minAmountB.toString(),
+          address,
+          deadline: BigInt(Date.now() + params.deadlineMins * 60 * 1000).toString(),
+          expectedAmountA: expectedAmountA.toString(),
+          expectedAmountB: expectedAmountB.toString(),
+          totalSupply: totalSupply.toString(),
+          reserveA: reserveA.toString(),
+          reserveB: reserveB.toString()
+        });
+        
+        const res = await router.remove_liquidity(
+          params.tokenA,
+          params.tokenB,
+          liquidityAmount,
+          minAmountA,
+          minAmountB,
+          address,
+          BigInt(Date.now() + params.deadlineMins * 60 * 1000)
+        );
+        
+        txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
+      }
+
+      setState(prev => ({ ...prev, loading: false }));
+
+      if (txHash) {
+        toast.push(React.createElement('div', {},
+          React.createElement('div', {}, 'Remove liquidity successful'),
+          React.createElement('div', { style: { opacity: 0.9 } }, `Transaction: ${txHash.slice(0, 8)}...${txHash.slice(-8)}`)
+        ));
+        
+        return txHash;
+      } else {
+        throw new Error('Transaction failed - no hash returned');
+      }
+    } catch (error: any) {
+      console.error('Remove liquidity error:', error);
+      
+      const errorMsg = errorToUserMessage(error);
+      setState(prev => ({ ...prev, error: errorMsg, loading: false }));
+
+      toast.push(React.createElement('div', {},
+        React.createElement('div', {}, 'Remove liquidity failed'),
+        React.createElement('div', { style: { opacity: 0.9 } }, errorMsg)
+      ));
+
+      throw new Error(errorMsg);
+    }
+  }
+
   return {
     state,
     setState,
     executeAddLiquidity,
+    executeRemoveLiquidity,
     computePairPreview,
   };
 }

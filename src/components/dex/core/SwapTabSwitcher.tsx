@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import SwapForm from './SwapForm';
 import { WrapUnwrapWidget } from '../../../features/dex';
-import EthBridgeWidget from '../widgets/EthBridgeWidget';
+import { EthBridgeWidget } from '../../../features/bridge';
 
 export type SwapTab = 'swap' | 'wrap' | 'bridge';
 

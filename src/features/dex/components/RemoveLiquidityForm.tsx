@@ -6,7 +6,7 @@ import { Decimal } from '../../../libs/decimal';
 import { toAe } from '@aeternity/aepp-sdk';
 
 export default function RemoveLiquidityForm() {
-  const { selectedPosition, clearSelection } = usePool();
+  const { selectedPosition, clearSelection, onPositionUpdated } = usePool();
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
   
@@ -71,9 +71,13 @@ export default function RemoveLiquidityForm() {
       });
       
       // For now, just simulate success
-      setTimeout(() => {
+      setTimeout(async () => {
         setLoading(false);
+        setShowConfirm(false);
         clearSelection();
+        
+        // Refresh positions after successful transaction
+        await onPositionUpdated();
       }, 2000);
     } catch (error) {
       console.error('Remove liquidity failed:', error);

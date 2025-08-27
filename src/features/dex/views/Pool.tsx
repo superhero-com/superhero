@@ -9,8 +9,13 @@ import { PoolProvider, usePool } from '../context/PoolProvider';
 function PoolContent() {
   const navigate = useNavigate();
   const { activeAccount: address } = useAccount();
-  const { positions, loading, error } = useLiquidityPositions();
-  const { selectPositionForAdd, selectPositionForRemove, currentAction } = usePool();
+  const { positions, loading, error, refreshPositions, invalidateCache } = useLiquidityPositions();
+  const { selectPositionForAdd, selectPositionForRemove, currentAction, setRefreshPositions } = usePool();
+
+  // Connect refresh function to context
+  React.useEffect(() => {
+    setRefreshPositions(() => refreshPositions);
+  }, [refreshPositions, setRefreshPositions]);
 
   const handleRemoveLiquidity = (pairId: string) => {
     const position = positions.find(p => p.pairId === pairId);
@@ -21,9 +26,7 @@ function PoolContent() {
 
   const handleAddLiquidity = (pairId: string) => {
     const position = positions.find(p => p.pairId === pairId);
-    console.log('handleAddLiquidity called:', { pairId, position });
     if (position) {
-      console.log('Calling selectPositionForAdd with:', position);
       selectPositionForAdd(position);
     }
     
@@ -178,49 +181,78 @@ function PoolContent() {
 
         {/* Positions List */}
         <div style={{ marginBottom: 24 }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            marginBottom: 16 
-          }}>
-            <h3 style={{ 
-              fontSize: 16, 
-              fontWeight: 600, 
-              color: 'var(--standard-font-color)', 
-              margin: 0 
+                      <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              marginBottom: 16 
             }}>
-              Active Positions
-            </h3>
-            {address && positions.length > 0 && (
-              <button
-                onClick={handleAddNewLiquidity}
-                style={{ 
-                  padding: '8px 16px', 
-                  borderRadius: 12, 
-                  border: '1px solid var(--success-color)', 
-                  background: 'var(--success-color)', 
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  transition: 'all 0.3s ease',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(76, 175, 80, 0.3)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                + Add New
-              </button>
-            )}
-          </div>
+              <h3 style={{ 
+                fontSize: 16, 
+                fontWeight: 600, 
+                color: 'var(--standard-font-color)', 
+                margin: 0 
+              }}>
+                Active Positions
+              </h3>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {address && (
+                  <button
+                    onClick={() => refreshPositions()}
+                    style={{ 
+                      padding: '8px 16px', 
+                      borderRadius: 12, 
+                      border: '1px solid var(--glass-border)', 
+                      background: 'var(--glass-bg)', 
+                      color: 'var(--standard-font-color)',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      transition: 'all 0.3s ease',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.background = 'var(--accent-color)';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.background = 'var(--glass-bg)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    🔄 Refresh
+                  </button>
+                )}
+                {address && positions.length > 0 && (
+                  <button
+                    onClick={handleAddNewLiquidity}
+                    style={{ 
+                      padding: '8px 16px', 
+                      borderRadius: 12, 
+                      border: '1px solid var(--success-color)', 
+                      background: 'var(--success-color)', 
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      transition: 'all 0.3s ease',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(76, 175, 80, 0.3)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    + Add New
+                  </button>
+                )}
+              </div>
+            </div>
 
           {loading ? (
             <div style={{ 

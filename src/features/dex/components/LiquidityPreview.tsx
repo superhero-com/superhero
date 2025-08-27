@@ -7,24 +7,32 @@ interface LiquidityPreviewProps {
     ratioBinA?: string;
     sharePct?: string;
     lpMintEstimate?: string;
+    suggestedAmountA?: string;
+    suggestedAmountB?: string;
   };
   tokenA: Token | null;
   tokenB: Token | null;
   pairExists: boolean;
+  hasError?: boolean;
+  onSuggestedAmountA?: (amount: string) => void;
+  onSuggestedAmountB?: (amount: string) => void;
 }
 
 export default function LiquidityPreview({
   preview,
   tokenA,
   tokenB,
-  pairExists
+  pairExists,
+  hasError,
+  onSuggestedAmountA,
+  onSuggestedAmountB
 }: LiquidityPreviewProps) {
   if (!tokenA || !tokenB) return null;
 
   return (
     <div style={{
-      background: 'rgba(255, 255, 255, 0.05)',
-      border: '1px solid var(--glass-border)',
+      background: hasError ? 'rgba(255, 107, 107, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+      border: hasError ? '1px solid rgba(255, 107, 107, 0.3)' : '1px solid var(--glass-border)',
       borderRadius: 16,
       padding: 16,
       marginBottom: 20,
@@ -39,8 +47,8 @@ export default function LiquidityPreview({
         alignItems: 'center',
         gap: 8
       }}>
-        <span>Pool Preview</span>
-        {!pairExists && (
+        <span>{hasError ? '⚠️ Ratio Warning' : 'Pool Preview'}</span>
+        {!pairExists && !hasError && (
           <span style={{
             fontSize: 11,
             padding: '2px 8px',
@@ -118,6 +126,82 @@ export default function LiquidityPreview({
           </div>
         )}
       </div>
+
+      {/* Suggested Amounts */}
+      {(preview.suggestedAmountA || preview.suggestedAmountB) && (
+        <div style={{
+          marginTop: 16,
+          padding: 12,
+          background: 'rgba(78, 205, 196, 0.1)',
+          border: '1px solid rgba(78, 205, 196, 0.3)',
+          borderRadius: 12
+        }}>
+          <div style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: 'var(--accent-color)',
+            marginBottom: 8
+          }}>
+            💡 Suggested Optimal Amounts
+          </div>
+          
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {preview.suggestedAmountB && onSuggestedAmountB && (
+              <button
+                onClick={() => onSuggestedAmountB(preview.suggestedAmountB!)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  border: '1px solid var(--accent-color)',
+                  background: 'rgba(78, 205, 196, 0.2)',
+                  color: 'var(--accent-color)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = 'var(--accent-color)';
+                  e.currentTarget.style.color = 'white';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'rgba(78, 205, 196, 0.2)';
+                  e.currentTarget.style.color = 'var(--accent-color)';
+                }}
+              >
+                Use {Number(preview.suggestedAmountB).toFixed(6)} {tokenB.symbol}
+              </button>
+            )}
+            
+            {preview.suggestedAmountA && onSuggestedAmountA && (
+              <button
+                onClick={() => onSuggestedAmountA(preview.suggestedAmountA!)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  border: '1px solid var(--accent-color)',
+                  background: 'rgba(78, 205, 196, 0.2)',
+                  color: 'var(--accent-color)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = 'var(--accent-color)';
+                  e.currentTarget.style.color = 'white';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'rgba(78, 205, 196, 0.2)';
+                  e.currentTarget.style.color = 'var(--accent-color)';
+                }}
+              >
+                Use {Number(preview.suggestedAmountA).toFixed(6)} {tokenA.symbol}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

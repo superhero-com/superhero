@@ -37,6 +37,8 @@ export interface AddLiquidityState {
     ratioBinA?: string;
     sharePct?: string;
     lpMintEstimate?: string;
+    suggestedAmountA?: string;
+    suggestedAmountB?: string;
   } | null;
   reserves: {
     reserveA?: bigint;

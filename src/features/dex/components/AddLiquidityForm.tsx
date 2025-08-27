@@ -114,7 +114,7 @@ export default function AddLiquidityForm() {
     }
   };
 
-  const isAddDisabled = state.loading || !amountA || Number(amountA) <= 0 || !amountB || Number(amountB) <= 0 || !tokenA || !tokenB;
+  const isAddDisabled = state.loading || !amountA || Number(amountA) <= 0 || !amountB || Number(amountB) <= 0 || !tokenA || !tokenB || !!state.error;
 
   return (
     <div className="genz-card" style={{
@@ -260,6 +260,9 @@ export default function AddLiquidityForm() {
           tokenA={tokenA}
           tokenB={tokenB}
           pairExists={state.pairExists}
+          hasError={!!state.error}
+          onSuggestedAmountA={setAmountA}
+          onSuggestedAmountB={setAmountB}
         />
       )}
 

@@ -4,6 +4,7 @@ import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useAccount } from '../../../hooks/useAccount';
 import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
 import { CONFIG } from '../../../config';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface CommentFormProps {
   postId: string;
@@ -20,6 +21,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { sdk } = useAeSdk();
   const { activeAccount } = useAccount();
+  const queryClient = useQueryClient();
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +47,9 @@ const CommentForm: React.FC<CommentFormProps> = ({
 
       // Clear the form
       setComment('');
+
+      // Invalidate the post comments query
+      queryClient.refetchQueries({ queryKey: ['post-comments', postId] });
 
       // Notify parent component
       if (onCommentAdded) {

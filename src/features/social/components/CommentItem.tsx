@@ -37,7 +37,8 @@ const CommentItem = memo(({
   const {
     data: fetchedReplies = [],
     isLoading: repliesLoading,
-    error: repliesError
+    error: repliesError,
+    refetch: refetchReplies
   } = useQuery({
     queryKey: ['comment-replies', comment.id],
     queryFn: async () => {
@@ -57,10 +58,14 @@ const CommentItem = memo(({
 
   const handleCommentAdded = useCallback(() => {
     setShowReplyForm(false);
+    // Refetch this comment's replies if they're currently shown
+    if (showReplies && hasReplies) {
+      refetchReplies();
+    }
     if (onCommentAdded) {
       onCommentAdded();
     }
-  }, [onCommentAdded]);
+  }, [onCommentAdded, showReplies, hasReplies, refetchReplies]);
 
   const toggleReplies = useCallback(() => {
     setShowReplies(!showReplies);
@@ -159,7 +164,7 @@ const CommentItem = memo(({
                 key={reply.id}
                 comment={reply}
                 chainNames={chainNames}
-                onCommentAdded={onCommentAdded}
+                onCommentAdded={handleCommentAdded}
                 depth={depth + 1}
                 maxDepth={maxDepth}
               />

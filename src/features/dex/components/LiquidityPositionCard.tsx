@@ -4,6 +4,7 @@ import { CONFIG } from '../../../config';
 import { Decimal } from '../../../libs/decimal';
 import { toAe } from '@aeternity/aepp-sdk';
 import AddressChip from '../../../components/AddressChip';
+import { usePool } from '../context/PoolProvider';
 
 interface LiquidityPositionCardProps {
   position: LiquidityPosition;
@@ -16,12 +17,20 @@ export default function LiquidityPositionCard({
   onRemove,
   onAdd
 }: LiquidityPositionCardProps) {
+  const { currentAction, selectedPosition } = usePool();
+  const isSelected = selectedPosition?.pairId === position.pairId;
+  
   return (
     <div style={{
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: 0
+      padding: 16,
+      borderRadius: 16,
+      background: isSelected ? 'rgba(255, 107, 107, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+      border: `1px solid ${isSelected ? 'var(--accent-color)' : 'var(--glass-border)'}`,
+      backdropFilter: 'blur(10px)',
+      transition: 'all 0.3s ease'
     }}>
       <div style={{ flex: 1 }}>
         <div style={{

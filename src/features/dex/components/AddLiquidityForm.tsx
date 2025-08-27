@@ -11,10 +11,12 @@ import LiquidityConfirmation from './LiquidityConfirmation';
 import LiquidityPreview from './LiquidityPreview';
 
 import { useAccount, useDex } from '../../../hooks';
+import { usePool } from '../context/PoolProvider';
 
 export default function AddLiquidityForm() {
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
+  const { currentAction, selectedTokenA, selectedTokenB, clearSelection } = usePool();
 
   // Token list and balances
   const { tokens, loading: tokensLoading } = useTokenList();
@@ -34,11 +36,86 @@ export default function AddLiquidityForm() {
   // UI state
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Initialize default tokens
+  // Helper function to find token by symbol or contract address
+  const findToken = (identifier: string): Token | null => {
+    if (!identifier || !tokens.length) {
+      console.log('findToken: No identifier or tokens', { identifier, tokensLength: tokens.length });
+      return null;
+    }
+    
+    console.log('findToken: Looking for', identifier, 'in', tokens.map(t => ({ symbol: t.symbol, contractId: t.contractId, isAe: t.isAe })));
+    
+    // First try to find by symbol (case insensitive)
+    const bySymbol = tokens.find(t => 
+      t.symbol.toLowerCase() === identifier.toLowerCase()
+    );
+    if (bySymbol) {
+      console.log('findToken: Found by symbol', bySymbol);
+      return bySymbol;
+    }
+    
+    // Then try to find by contract address
+    const byAddress = tokens.find(t => 
+      t.contractId === identifier || t.contractId === identifier.toLowerCase()
+    );
+    if (byAddress) {
+      console.log('findToken: Found by address', byAddress);
+      return byAddress;
+    }
+    
+    // For AE, check if it's the native token
+    if (identifier.toLowerCase() === 'ae') {
+      const aeToken = tokens.find(t => t.isAe);
+      if (aeToken) {
+        console.log('findToken: Found AE token', aeToken);
+        return aeToken;
+      }
+    }
+    
+    console.log('findToken: Not found', identifier);
+    return null;
+  };
+
+  // Initialize tokens based on context or defaults
   useEffect(() => {
-    if (!tokenA && tokens.length) setTokenA(tokens[2] || tokens[0]);
-    if (!tokenB && tokens.length) setTokenB(tokens[0] || tokens[1]);
-  }, [tokens, tokenA, tokenB]);
+    if (!tokens.length) return;
+
+    // Set initial tokens from context if provided (force update when context changes)
+    if (selectedTokenA) {
+      const foundTokenA = findToken(selectedTokenA);
+      if (foundTokenA && (!tokenA || tokenA.symbol !== foundTokenA.symbol)) {
+        console.log('Setting tokenA from context:', selectedTokenA, foundTokenA);
+        setTokenA(foundTokenA);
+      }
+    }
+    
+    if (selectedTokenB) {
+      const foundTokenB = findToken(selectedTokenB);
+      if (foundTokenB && (!tokenB || tokenB.symbol !== foundTokenB.symbol)) {
+        console.log('Setting tokenB from context:', selectedTokenB, foundTokenB);
+        setTokenB(foundTokenB);
+      }
+    }
+    
+    // Set default tokens if no context tokens provided and none selected
+    if (!selectedTokenA && !tokenA && tokens.length) {
+      setTokenA(tokens[2] || tokens[0]);
+    }
+    if (!selectedTokenB && !tokenB && tokens.length) {
+      setTokenB(tokens[0] || tokens[1]);
+    }
+  }, [tokens, selectedTokenA, selectedTokenB]);
+
+  // Add debug logging for context changes
+  useEffect(() => {
+    console.log('Context changed:', { 
+      selectedTokenA, 
+      selectedTokenB, 
+      currentAction,
+      tokenA: tokenA?.symbol,
+      tokenB: tokenB?.symbol 
+    });
+  }, [selectedTokenA, selectedTokenB, currentAction, tokenA, tokenB]);
 
   // Update hook state when tokens change
   useEffect(() => {
@@ -136,20 +213,52 @@ export default function AddLiquidityForm() {
         alignItems: 'center',
         marginBottom: 24
       }}>
-        <h2 style={{
-          fontSize: 20,
-          fontWeight: 700,
-          color: 'var(--standard-font-color)',
-          margin: 0,
-          background: 'var(--primary-gradient)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text'
-        }}>
-          Add Liquidity
-        </h2>
+        <div>
+          <h2 style={{
+            fontSize: 20,
+            fontWeight: 700,
+            color: 'var(--standard-font-color)',
+            margin: 0,
+            background: 'var(--primary-gradient)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>
+            Add Liquidity
+          </h2>
+          {currentAction === 'add' && selectedTokenA && selectedTokenB && (
+            <p style={{
+              fontSize: 12,
+              color: 'var(--light-font-color)',
+              margin: '4px 0 0 0'
+            }}>
+              Adding to {selectedTokenA}/{selectedTokenB} position
+            </p>
+          )}
+        </div>
 
-        <LiquiditySettings>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {currentAction === 'add' && (
+            <button
+              onClick={clearSelection}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 12,
+                border: '1px solid var(--glass-border)',
+                background: 'var(--glass-bg)',
+                color: 'var(--standard-font-color)',
+                cursor: 'pointer',
+                backdropFilter: 'blur(10px)',
+                transition: 'all 0.3s ease',
+                fontSize: 12,
+                fontWeight: 500
+              }}
+            >
+              ✕ Cancel
+            </button>
+          )}
+
+          <LiquiditySettings>
           <button
             aria-label="open-settings"
             style={{
@@ -175,7 +284,8 @@ export default function AddLiquidityForm() {
           >
             ⚙️ Settings
           </button>
-        </LiquiditySettings>
+                  </LiquiditySettings>
+        </div>
       </div>
 
       <div style={{

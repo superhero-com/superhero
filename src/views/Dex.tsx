@@ -2,13 +2,11 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import ThemeSwitcher from '../components/ThemeSwitcher';
 import DexTabs from '../components/dex/DexTabs';
-import SwapForm from '../components/dex/core/SwapForm';
+import SwapTabSwitcher from '../components/dex/core/SwapTabSwitcher';
 import { useTokenList } from '../components/dex/hooks/useTokenList';
 import RecentActivity from '../components/dex/supporting/RecentActivity';
 import { RecentActivity as RecentActivityType } from '../components/dex/types/dex';
-import EthBridgeWidget from '../components/dex/widgets/EthBridgeWidget';
 import NewAccountEducation from '../components/dex/widgets/NewAccountEducation';
-import WrapUnwrapWidget from '../components/dex/widgets/WrapUnwrapWidget';
 import './Dex.scss';
 
 export default function DexRefactored() {
@@ -53,12 +51,8 @@ export default function DexRefactored() {
       {/* New Account Education */}
       <NewAccountEducation />
 
-      {/* Main Swap Form */}
-      <SwapForm />
-
-      {/* Specialized Widgets */}
-      <WrapUnwrapWidget />
-      <EthBridgeWidget />
+      {/* Swap Tab Switcher - Contains all swap widgets */}
+      <SwapTabSwitcher />
 
       {/* Recent Activity */}
       <RecentActivity recent={recent} />

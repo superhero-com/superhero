@@ -1,0 +1,241 @@
+// Shared styles for all DEX views
+
+
+// Swap specific styles
+// .dex-swap-content {
+//   display: grid;
+//   grid-template-columns: 1fr 300px;
+//   gap: 32px;
+//   align-items: start;
+// }
+
+.dex-swap-main {
+  min-width: 0; // Prevent overflow
+}
+
+.dex-swap-sidebar {
+  min-width: 0; // Prevent overflow
+}
+
+// Wrap specific styles
+.dex-wrap-content {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+// Bridge specific styles
+.dex-bridge-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.dex-bridge-placeholder {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.placeholder-card {
+  background: var(--card-bg, #1a1a23);
+  border: 1px solid var(--border-color, #2a2a39);
+  border-radius: 12px;
+  padding: 32px;
+  
+  h3 {
+    font-size: 24px;
+    margin: 0 0 16px 0;
+    color: var(--text-primary, #ffffff);
+  }
+  
+  p {
+    font-size: 16px;
+    opacity: 0.8;
+    margin: 0 0 24px 0;
+    line-height: 1.5;
+  }
+}
+
+.placeholder-features {
+  text-align: left;
+  margin: 24px 0;
+  
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    
+    li {
+      padding: 8px 0;
+      position: relative;
+      padding-left: 24px;
+      
+      &::before {
+        content: '✓';
+        position: absolute;
+        left: 0;
+        color: var(--success-color, #4caf50);
+        font-weight: bold;
+      }
+    }
+  }
+}
+
+.placeholder-link {
+  display: inline-block;
+  color: var(--primary-color, #4caf50);
+  text-decoration: none;
+  font-weight: 500;
+  margin-top: 16px;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Explore views styles
+.dex-explore-tokens-container,
+.dex-explore-pools-container,
+.dex-explore-transactions-container {
+  padding: 0;
+  
+  // Ensure proper spacing between cards
+  .genz-card + .genz-card {
+    margin-top: 24px;
+  }
+}
+
+// Content styles for explore views are handled by the existing components
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .dex-page-title {
+    font-size: 24px;
+  }
+  
+  .dex-page-description {
+    font-size: 14px;
+  }
+  
+  .dex-swap-content {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  .dex-wrap-content,
+  .dex-bridge-content {
+    max-width: none;
+  }
+  
+  .placeholder-card {
+    padding: 24px 16px;
+    
+    h3 {
+      font-size: 20px;
+    }
+    
+    p {
+      font-size: 14px;
+    }
+  }
+  
+  // Mobile responsive for explore containers
+  .dex-explore-tokens-container,
+  .dex-explore-pools-container,
+  .dex-explore-transactions-container {
+    .genz-card {
+      margin-left: 8px;
+      margin-right: 8px;
+      padding: 16px !important;
+      border-radius: 16px !important;
+      
+      h1 {
+        font-size: 20px !important;
+      }
+      
+      p {
+        font-size: 14px !important;
+      }
+    }
+  }
+  
+  // Mobile responsive for compact filters
+  .dex-explore-tokens-container {
+    // Compact filter container on mobile
+    div[style*="padding: 12px 16px"] {
+      padding: 10px 12px !important;
+    }
+    
+    // Stack filter layout vertically on mobile
+    div[style*="justify-content: space-between"] {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 10px !important;
+    }
+    
+    // Filter controls full width
+    div[style*="gap: 12px"] {
+      justify-content: space-between !important;
+    }
+    
+    // Search input adjustments
+    div[style*="maxWidth: 400"] {
+      max-width: none !important;
+      order: 1;
+    }
+    
+    input[placeholder*="Search tokens"] {
+      font-size: 12px !important;
+      padding: 7px 10px 7px 28px !important;
+    }
+    
+    // Dropdown adjustments
+    select {
+      font-size: 11px !important;
+      padding: 5px 24px 5px 10px !important;
+      min-width: 90px !important;
+    }
+    
+    // Sort button smaller
+    button[title*="Sort"] {
+      min-width: 24px !important;
+      height: 24px !important;
+      font-size: 11px !important;
+    }
+    
+    // Results counter
+    div[style*="flexShrink: 0"] {
+      order: 3;
+      align-self: center;
+      padding: 4px 8px !important;
+      
+      span {
+        font-size: 10px !important;
+      }
+    }
+    
+    // Compact active filters
+    div[style*="marginTop: 10"] {
+      margin-top: 8px !important;
+      padding-top: 8px !important;
+    }
+  }
+}
+
+// Dark theme variables
+.dark {
+  --card-bg: #1a1a23;
+  --border-color: #2a2a39;
+  --text-primary: #ffffff;
+  --text-secondary: #9aa;
+  --primary-color: #4caf50;
+  --success-color: #4caf50;
+}
+
+// Light theme variables
+.light {
+  --card-bg: #ffffff;
+  --border-color: #e9ecef;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --primary-color: #4caf50;
+  --success-color: #4caf50;
+}

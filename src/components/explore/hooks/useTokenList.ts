@@ -6,8 +6,8 @@ export function useTokenList(): TokenListState {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<{ key: 'symbol' | 'name' | 'pairs' | 'decimals'; asc: boolean }>({
-    key: 'symbol',
-    asc: true
+    key: 'pairs',
+    asc: false
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

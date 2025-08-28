@@ -37,6 +37,8 @@ export interface AddLiquidityState {
     ratioBinA?: string;
     sharePct?: string;
     lpMintEstimate?: string;
+    suggestedAmountA?: string;
+    suggestedAmountB?: string;
   } | null;
   reserves: {
     reserveA?: bigint;
@@ -87,6 +89,15 @@ export interface LiquidityExecutionParams {
   tokenB: string;
   amountA: string;
   amountB: string;
+  slippagePct: number;
+  deadlineMins: number;
+  isAePair: boolean;
+}
+
+export interface RemoveLiquidityExecutionParams {
+  tokenA: string;
+  tokenB: string;
+  liquidity: string; // LP tokens to remove
   slippagePct: number;
   deadlineMins: number;
   isAePair: boolean;

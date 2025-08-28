@@ -26,14 +26,14 @@ export default function AppHeader() {
         </Link>
         <nav className="links">
           <Link to="/" className={pathname === '/' ? 'active' : ''}>Home</Link>
-          <Link to="/trending" className={pathname === '/trending' ? 'active' : ''}>Trends</Link>
+          {/* <Link to="/trending" className={pathname === '/trending' ? 'active' : ''}>Trends</Link> */}
           {/* TrendCloud moved to footer */}
           <Link to="/dex" className={pathname === '/dex' ? 'active' : ''}>DEX</Link>
-          <Link to="/trendminer/invite" className={pathname === '/trendminer/invite' ? 'active' : ''}>Invite & Earn</Link>
+          {/* <Link to="/trendminer/invite" className={pathname === '/trendminer/invite' ? 'active' : ''}>Invite & Earn</Link>
           <Link to="/voting" className={pathname === '/voting' ? 'active' : ''}>Governance & Voting</Link>
-          <Link to="/trendminer/daos" className={isDaoPath ? 'active' : ''}>DAOs</Link>
+          <Link to="/trendminer/daos" className={isDaoPath ? 'active' : ''}>DAOs</Link> */}
 
-          <div className="dropdown">
+          {/* <div className="dropdown">
             <button
               className={`dropdown-toggle${(pathname === '/landing' || pathname === '/faq') ? ' active' : ''}`}
               aria-haspopup="true"
@@ -45,11 +45,11 @@ export default function AppHeader() {
               <Link to="/landing" className={pathname === '/landing' ? 'active' : ''} role="menuitem">Info</Link>
               <Link to="/faq" className={pathname === '/faq' ? 'active' : ''} role="menuitem">FAQ</Link>
             </div>
-          </div>
+          </div> */}
 
         </nav>
         <div className="header-actions">
-          <button className="link" onClick={toggleTheme} aria-label="Toggle theme">{theme === 'dark' ? 'Light' : 'Dark'}</button>
+          {/* <button className="link" onClick={toggleTheme} aria-label="Toggle theme">{theme === 'dark' ? 'Light' : 'Dark'}</button> */}
           <HeaderWalletButton />
         </div>
       </div>

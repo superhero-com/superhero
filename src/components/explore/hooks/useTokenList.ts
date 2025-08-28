@@ -5,7 +5,7 @@ import { Token, TokenListState } from '../types/explore';
 export function useTokenList(): TokenListState {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [search, setSearch] = useState('');
-  const [sort, setSort] = useState<{ key: 'symbol' | 'name' | 'pairs' | 'decimals'; asc: boolean }>({
+  const [sort, setSort] = useState<{ key: 'name' | 'pairs' | 'priceUsd' | 'tvlUsd' | 'priceChangeDay' | 'volumeUsdDay' | 'volumeUsdAll'; asc: boolean }>({
     key: 'pairs',
     asc: false
   });
@@ -45,26 +45,24 @@ export function useTokenList(): TokenListState {
       let aValue: any = a[sort.key];
       let bValue: any = b[sort.key];
 
-      // Handle special case for pairs count
-      if (sort.key === 'pairs') {
-        aValue = a.pairs || 0;
-        bValue = b.pairs || 0;
-      }
-
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
+      // Handle numeric fields
+      if (['pairs', 'priceUsd', 'tvlUsd', 'priceChangeDay', 'volumeUsdDay', 'volumeUsdAll'].includes(sort.key)) {
+        aValue = sort.key === 'pairs' ? (a.pairs || 0) : parseFloat(a[sort.key] || '0');
+        bValue = sort.key === 'pairs' ? (b.pairs || 0) : parseFloat(b[sort.key] || '0');
         return aValue - bValue;
       }
 
+      // Handle string fields (name)
       return String(aValue || '').localeCompare(String(bValue || ''));
     });
 
     return sort.asc ? sorted : sorted.reverse();
   }, [tokens, search, sort]);
 
-  const toggleSort = (key: 'symbol' | 'name' | 'pairs' | 'decimals') => {
+  const toggleSort = (key: 'name' | 'pairs' | 'priceUsd' | 'tvlUsd' | 'priceChangeDay' | 'volumeUsdDay' | 'volumeUsdAll') => {
     setSort(prev => ({
       key,
-      asc: prev.key === key ? !prev.asc : true
+      asc: prev.key === key ? !prev.asc : false // Default to descending for numeric values
     }));
   };
 

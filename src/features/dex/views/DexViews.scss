@@ -92,6 +92,17 @@
 }
 
 // Explore views styles
+.dex-explore-tokens-container,
+.dex-explore-pools-container,
+.dex-explore-transactions-container {
+  padding: 0;
+  
+  // Ensure proper spacing between cards
+  .genz-card + .genz-card {
+    margin-top: 24px;
+  }
+}
+
 .dex-explore-tokens-content,
 .dex-explore-pools-content,
 .dex-explore-transactions-content {
@@ -127,6 +138,26 @@
     
     p {
       font-size: 14px;
+    }
+  }
+  
+  // Mobile responsive for explore containers
+  .dex-explore-tokens-container,
+  .dex-explore-pools-container,
+  .dex-explore-transactions-container {
+    .genz-card {
+      margin-left: 8px;
+      margin-right: 8px;
+      padding: 16px !important;
+      border-radius: 16px !important;
+      
+      h1 {
+        font-size: 20px !important;
+      }
+      
+      p {
+        font-size: 14px !important;
+      }
     }
   }
 }

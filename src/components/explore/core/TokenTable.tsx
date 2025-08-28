@@ -78,96 +78,350 @@ export default function TokenTable({
 
   return (
     <div style={{ overflowX: 'auto' }}>
-      {/* Controls */}
-      <div style={{ 
-        display: 'flex', 
-        gap: 12, 
-        alignItems: 'center', 
+      {/* Enhanced Filter Controls */}
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.03)',
+        border: '1px solid var(--glass-border)',
+        borderRadius: 16,
+        padding: 20,
         marginBottom: 24,
-        flexWrap: 'wrap'
+        backdropFilter: 'blur(15px)',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <label style={{ 
-            fontSize: 14, 
-            color: 'var(--light-font-color)',
-            fontWeight: 500
-          }}>Sort by</label>
-          <select 
-            value={sort.key} 
-            onChange={(e) => handleSort(e.target.value as any)}
-            style={{ 
-              padding: '8px 12px', 
-              borderRadius: 12, 
-              background: 'var(--glass-bg)', 
-              color: 'var(--standard-font-color)', 
-              border: '1px solid var(--glass-border)',
-              backdropFilter: 'blur(10px)',
-              fontSize: 14,
-              fontWeight: 500,
-              cursor: 'pointer',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            <option value="symbol">Symbol</option>
-            <option value="name">Name</option>
-            <option value="pairs">Pools</option>
-            <option value="decimals">Decimals</option>
-          </select>
-          <button 
-            onClick={() => handleSort(sort.key)}
-            style={{ 
-              padding: '8px 12px', 
-              borderRadius: 12, 
-              border: '1px solid var(--glass-border)', 
-              background: 'var(--glass-bg)', 
-              color: 'var(--standard-font-color)',
-              cursor: 'pointer',
-              backdropFilter: 'blur(10px)',
-              transition: 'all 0.3s ease',
-              fontSize: 14,
-              fontWeight: 600,
-              minWidth: 40
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = 'var(--accent-color)';
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = 'var(--glass-bg)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            {sort.asc ? '↑' : '↓'}
-          </button>
+        {/* Filter Header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          marginBottom: 16,
+          gap: 8
+        }}>
+          <div style={{
+            width: 4,
+            height: 20,
+            background: 'var(--primary-gradient)',
+            borderRadius: 2
+          }}></div>
+          <h3 style={{
+            fontSize: 16,
+            fontWeight: 600,
+            color: 'var(--standard-font-color)',
+            margin: 0,
+            background: 'var(--primary-gradient)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>
+            Filter & Sort Tokens
+          </h3>
         </div>
-        
-        <input 
-          placeholder="Filter tokens..." 
-          value={search} 
-          onChange={(e) => onSearchChange(e.target.value)}
-          style={{ 
-            marginLeft: 'auto', 
-            padding: '8px 16px', 
-            borderRadius: 12, 
-            background: 'var(--glass-bg)', 
-            color: 'var(--standard-font-color)', 
-            border: '1px solid var(--glass-border)',
-            backdropFilter: 'blur(10px)',
-            minWidth: 250,
-            fontSize: 14,
-            transition: 'all 0.3s ease',
-            outline: 'none'
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = 'var(--accent-color)';
-            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(76, 175, 80, 0.1)';
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = 'var(--glass-border)';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-        />
+
+        {/* Filter Controls Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'auto 1fr auto',
+          gap: 16,
+          alignItems: 'center'
+        }}>
+          {/* Sort Controls */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            flexWrap: 'wrap'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              background: 'rgba(255, 255, 255, 0.05)',
+              padding: '8px 12px',
+              borderRadius: 12,
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}>
+              <span style={{
+                fontSize: 12,
+                color: 'var(--light-font-color)',
+                fontWeight: 500,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                Sort
+              </span>
+              <div style={{
+                width: 1,
+                height: 16,
+                background: 'var(--glass-border)'
+              }}></div>
+              <select 
+                value={sort.key} 
+                onChange={(e) => handleSort(e.target.value as any)}
+                style={{ 
+                  padding: '6px 10px', 
+                  borderRadius: 8, 
+                  background: 'var(--glass-bg)', 
+                  color: 'var(--standard-font-color)', 
+                  border: '1px solid var(--glass-border)',
+                  backdropFilter: 'blur(10px)',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  outline: 'none'
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--accent-color)';
+                  e.currentTarget.style.boxShadow = '0 0 0 2px rgba(76, 175, 80, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--glass-border)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <option value="symbol">Symbol</option>
+                <option value="name">Name</option>
+                <option value="pairs">Pools</option>
+                <option value="decimals">Decimals</option>
+              </select>
+              <button 
+                onClick={() => handleSort(sort.key)}
+                style={{ 
+                  padding: '6px 8px', 
+                  borderRadius: 8, 
+                  border: '1px solid var(--glass-border)', 
+                  background: sort.asc ? 'var(--accent-color)' : 'var(--glass-bg)', 
+                  color: sort.asc ? 'white' : 'var(--standard-font-color)',
+                  cursor: 'pointer',
+                  backdropFilter: 'blur(10px)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  minWidth: 32,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  outline: 'none'
+                }}
+                onMouseOver={(e) => {
+                  if (!sort.asc) {
+                    e.currentTarget.style.background = 'var(--accent-color)';
+                    e.currentTarget.style.color = 'white';
+                  }
+                  e.currentTarget.style.transform = 'translateY(-1px) scale(1.05)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(76, 175, 80, 0.3)';
+                }}
+                onMouseOut={(e) => {
+                  if (!sort.asc) {
+                    e.currentTarget.style.background = 'var(--glass-bg)';
+                    e.currentTarget.style.color = 'var(--standard-font-color)';
+                  }
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+                title={sort.asc ? 'Sort Ascending' : 'Sort Descending'}
+              >
+                {sort.asc ? '↑' : '↓'}
+              </button>
+            </div>
+          </div>
+
+          {/* Search Input */}
+          <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
+            <div style={{
+              position: 'absolute',
+              left: 12,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'var(--light-font-color)',
+              fontSize: 16,
+              pointerEvents: 'none',
+              opacity: 0.6,
+              zIndex: 1
+            }}>
+              🔍
+            </div>
+            <input 
+              placeholder="Search tokens by name, symbol, or address..." 
+              value={search} 
+              onChange={(e) => onSearchChange(e.target.value)}
+              style={{ 
+                width: '100%',
+                padding: '10px 16px 10px 40px', 
+                borderRadius: 12, 
+                background: 'var(--glass-bg)', 
+                color: 'var(--standard-font-color)', 
+                border: '1px solid var(--glass-border)',
+                backdropFilter: 'blur(10px)',
+                fontSize: 14,
+                fontWeight: 400,
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'var(--accent-color)';
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(76, 175, 80, 0.1)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'var(--glass-border)';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.background = 'var(--glass-bg)';
+              }}
+            />
+            {search && (
+              <button
+                onClick={() => onSearchChange('')}
+                style={{
+                  position: 'absolute',
+                  right: 8,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: 24,
+                  height: 24,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: 'var(--light-font-color)',
+                  fontSize: 12,
+                  transition: 'all 0.3s ease',
+                  outline: 'none'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 107, 107, 0.2)';
+                  e.currentTarget.style.color = '#ff6b6b';
+                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.color = 'var(--light-font-color)';
+                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                }}
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Filter Stats */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            background: 'rgba(76, 175, 80, 0.1)',
+            padding: '6px 12px',
+            borderRadius: 20,
+            border: '1px solid rgba(76, 175, 80, 0.2)'
+          }}>
+            <div style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: 'var(--accent-color)',
+              animation: 'pulse 2s infinite'
+            }}></div>
+            <span style={{
+              fontSize: 12,
+              color: 'var(--accent-color)',
+              fontWeight: 600
+            }}>
+              {tokens.length} token{tokens.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+        </div>
+
+        {/* Active Filters Display */}
+        {(search || sort.key !== 'symbol') && (
+          <div style={{
+            marginTop: 16,
+            paddingTop: 16,
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              flexWrap: 'wrap'
+            }}>
+              <span style={{
+                fontSize: 12,
+                color: 'var(--light-font-color)',
+                fontWeight: 500
+              }}>
+                Active filters:
+              </span>
+              {search && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: 'rgba(76, 175, 80, 0.15)',
+                  padding: '4px 8px',
+                  borderRadius: 12,
+                  fontSize: 12,
+                  color: 'var(--accent-color)',
+                  border: '1px solid rgba(76, 175, 80, 0.3)'
+                }}>
+                  <span>Search: "{search}"</span>
+                  <button
+                    onClick={() => onSearchChange('')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--accent-color)',
+                      cursor: 'pointer',
+                      fontSize: 10,
+                      padding: 0,
+                      outline: 'none'
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+              {sort.key !== 'symbol' && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: 'rgba(76, 175, 80, 0.15)',
+                  padding: '4px 8px',
+                  borderRadius: 12,
+                  fontSize: 12,
+                  color: 'var(--accent-color)',
+                  border: '1px solid rgba(76, 175, 80, 0.3)'
+                }}>
+                  <span>Sort: {sort.key} {sort.asc ? '↑' : '↓'}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Add keyframes for pulse animation */}
+      <style>{`
+        @keyframes pulse {
+          0% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.5;
+            transform: scale(1.2);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
 
       {/* Table */}
       <div style={{

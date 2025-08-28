@@ -160,6 +160,56 @@
       }
     }
   }
+  
+  // Mobile responsive for enhanced filters
+  .dex-explore-tokens-container {
+    // Override grid layout for mobile
+    div[style*="grid-template-columns"] {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+      align-items: stretch !important;
+    }
+    
+    // Stack filter controls vertically
+    div[style*="display: grid"] > div:first-child {
+      order: 2;
+    }
+    
+    // Search input full width
+    div[style*="position: relative"] {
+      order: 1;
+      min-width: 100% !important;
+    }
+    
+    // Stats at bottom
+    div[style*="background: rgba(76, 175, 80, 0.1)"] {
+      order: 3;
+      align-self: center;
+    }
+    
+    // Reduce filter container padding
+    div[style*="padding: 20px"] {
+      padding: 12px !important;
+    }
+    
+    // Smaller search input on mobile
+    input[placeholder*="Search tokens"] {
+      font-size: 13px !important;
+      padding: 8px 12px 8px 32px !important;
+    }
+    
+    // Smaller sort controls
+    select {
+      font-size: 12px !important;
+      padding: 4px 8px !important;
+    }
+    
+    button[title*="Sort"] {
+      min-width: 28px !important;
+      font-size: 12px !important;
+    }
+  }
 }
 
 // Dark theme variables

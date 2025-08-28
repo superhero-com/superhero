@@ -11,7 +11,7 @@ import Identicon from '../components/Identicon';
 import { linkify } from '../utils/linkify';
 import { relativeTime } from '../utils/time';
 import { Backend } from '../api/backend';
-import CreatePost from '../components/CreatePost';
+import CreatePost from '../features/social/components/CreatePost';
 import { deeplinkTip } from '../auth/deeplink';
 
 import { useWallet, useBackend, useModal } from '../hooks';

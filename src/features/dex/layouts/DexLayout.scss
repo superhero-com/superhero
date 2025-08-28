@@ -62,63 +62,230 @@
   min-height: 400px;
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
+/* Desktop Navigation - Show by default */
+.dex-desktop-nav {
+  display: block;
+}
+
+/* Mobile Navigation - Hide by default */
+.dex-mobile-nav {
+  display: none;
+}
+
+/* Tablet & Mobile - Bottom Bar */
+@media (max-width: 1024px) {
   .dex-layout {
     padding: 16px;
-  }
-  
-  .dex-title {
-    font-size: 24px;
-  }
-  
-  .dex-description {
-    font-size: 14px;
+    padding-bottom: 80px; /* Space for bottom bar */
   }
   
   .dex-main-layout {
     flex-direction: column;
-    gap: 20px;
+    gap: 0;
   }
   
   .dex-sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
     width: 100%;
     min-width: 100%;
+    background: var(--card-bg, #1a1a23);
+    border-top: 1px solid var(--border-color, #2a2a39);
+    backdrop-filter: blur(20px);
+    z-index: 1000;
+    padding: 8px 12px 12px 12px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Hide desktop navigation, show mobile navigation */
+  .dex-desktop-nav {
+    display: none;
+  }
+  
+  .dex-mobile-nav {
+    display: block;
+  }
+  
+  .dex-nav-section {
+    margin-bottom: 0;
+    width: 100%;
+  }
+  
+  .dex-nav-section:not(:last-child) {
+    margin-bottom: 0;
+  }
+  
+  .dex-section-title {
+    display: none; /* Hide section titles for single line nav */
   }
   
   .dex-nav-buttons {
     flex-direction: row;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-wrap: nowrap;
+    gap: 4px;
+    overflow-x: auto;
+    padding-bottom: 0;
+    justify-content: space-evenly;
+    width: 100%;
   }
   
-  .dex-nav-buttons .dex-nav-button {
+  .dex-nav-buttons::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for cleaner look */
+  }
+  
+  .dex-nav-button {
     flex: 1;
-    min-width: calc(50% - 4px);
+    flex-shrink: 0;
+    min-width: 60px !important;
+    max-width: 80px !important;
+    padding: 6px 4px !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    font-size: 10px !important;
+    border-radius: 8px !important;
+    border: none !important;
+    background: transparent !important;
+  }
+  
+  .dex-nav-button.active {
+    background: var(--glass-bg, rgba(76, 175, 80, 0.1)) !important;
+    border: 1px solid var(--accent-color, #4caf50) !important;
+  }
+  
+  .dex-nav-icon {
+    font-size: 18px !important;
+  }
+  
+  .dex-nav-label {
+    font-size: 9px !important;
+    font-weight: 500 !important;
+    text-align: center !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   
   .dex-content {
-    padding: 20px;
+    flex: 1;
+    min-height: calc(100vh - 140px);
   }
   
-  .dex-section-title {
-    font-size: 14px;
+  /* Explore Expand Animation */
+  .dex-nav-buttons {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+  
+  /* Main navigation buttons sliding out to the left when explore expands */
+  .dex-nav-buttons.explore-expanded .dex-nav-button:not(.dex-explore-item):not(.dex-close-button) {
+    animation: slideOutLeft 0.3s ease-in forwards;
+  }
+  
+  @keyframes slideOutLeft {
+    0% {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(-100px) scale(0.8);
+    }
+  }
+  
+  /* Show all explore items */
+  .dex-nav-buttons.explore-expanded .dex-explore-item {
+    display: flex !important;
+    opacity: 1 !important;
+    transform: translateX(0) !important;
+    visibility: visible !important;
+    position: relative !important;
+  }
+  
+  @keyframes slideInFromRight {
+    0% {
+      opacity: 0;
+      transform: translateX(100px) scale(0.8);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+  
+  /* Close button transformation from Explore button */
+  .dex-close-button {
+    animation: transformToClose 0.3s ease-out forwards;
+    
+    &:hover {
+      background: rgba(255, 107, 107, 0.15) !important;
+      transform: scale(1.05);
+      box-shadow: 0 4px 16px rgba(255, 107, 107, 0.4);
+      border-color: var(--accent-color, #ff4444) !important;
+    }
+  }
+  
+  @keyframes transformToClose {
+    0% {
+      border-color: var(--accent-color, #4caf50);
+      background: var(--glass-bg, rgba(76, 175, 80, 0.1));
+      color: var(--accent-color, #4caf50);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      border-color: var(--accent-color, #ff6b6b);
+      background: rgba(255, 107, 107, 0.05);
+      color: var(--accent-color, #ff6b6b);
+      transform: scale(1);
+    }
+  }
+  
+  /* Normal buttons sliding back in from left when collapsing */
+  .dex-nav-buttons:not(.explore-expanded) .dex-nav-button {
+    animation: slideInFromLeft 0.3s ease-out forwards;
+  }
+  
+  @keyframes slideInFromLeft {
+    0% {
+      opacity: 0;
+      transform: translateX(-50px) scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
   }
 }
 
-/* Tablet */
-@media (max-width: 1024px) and (min-width: 769px) {
+/* Mobile Specific */
+@media (max-width: 768px) {
   .dex-layout {
-    padding: 20px;
+    padding: 12px;
+    padding-bottom: 70px; /* Smaller space for mobile */
   }
   
   .dex-sidebar {
-    min-width: 200px;
-    width: 200px;
+    padding: 6px 8px 8px 8px;
   }
   
-  .dex-content {
-    padding: 28px;
+  .dex-nav-button {
+    min-width: 50px !important;
+    max-width: 70px !important;
+    padding: 4px 2px !important;
+  }
+  
+  .dex-nav-icon {
+    font-size: 16px !important;
+  }
+  
+  .dex-nav-label {
+    font-size: 8px !important;
   }
 }
 

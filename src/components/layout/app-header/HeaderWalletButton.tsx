@@ -1,5 +1,5 @@
 import React from 'react';
-import { useWallet, useAeternity } from '../../../hooks';
+import { useWallet, useAeternity, useAccount } from '../../../hooks';
 import { deeplinkLogin } from '../../../auth/deeplink';
 import Identicon from '../../Identicon';
 import Favicon from '../../../svg/favicon.svg?react';
@@ -9,7 +9,8 @@ import { useAeSdk } from '../../../hooks/useAeSdk';
 
 export default function HeaderWalletButton() {
   const { activeAccount } = useAeSdk();
-  const { walletConnected, connectWallet, disconnectWallet, walletInfo, scanningForAccounts, connectingWallet } = useWalletConnect();
+  const { connectWallet, disconnectWallet, walletInfo} = useWalletConnect();
+  const { decimalBalance } = useAccount();
   // const { address, balance, chainNames } = useWallet();
   // const { initSdk, scanForWallets, enableSdkWallet, logout } = useAeternity();
   const [loading, setLoading] = React.useState(false);
@@ -64,7 +65,7 @@ export default function HeaderWalletButton() {
         </div>
         <div className="wallet-info">
           <div className="address">{shortAddress}</div>
-          {/* <div className="balance">{Number(balance || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} AE</div> */}
+          <div className="balance">{decimalBalance.prettify()} AE</div>
         </div>
       </button>
 
@@ -81,7 +82,7 @@ export default function HeaderWalletButton() {
           </div>
           <div className="dropdown-balance">
             <span className="balance-label">Balance:</span>
-            {/* <span className="balance-amount">{Number(balance || 0).toLocaleString(undefined, { maximumFractionDigits: 6 })} AE</span> */}
+            <span className="balance-amount">{decimalBalance.prettify()} AE</span>
           </div>
           <div className="dropdown-actions">
             <button onClick={handleLogout} className="logout-btn">

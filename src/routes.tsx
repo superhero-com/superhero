@@ -22,9 +22,20 @@ const Terms = lazy(() => import('./views/Terms'));
 const Privacy = lazy(() => import('./views/Privacy'));
 const FAQ = lazy(() => import('./views/FAQ'));
   const TxQueue = lazy(() => import('./views/TxQueue'));
+  
+  // DEX Components
+  const DexLayout = lazy(() => import('./features/dex/layouts/DexLayout'));
+  const DexSwap = lazy(() => import('./features/dex/views/DexSwap'));
+  const DexWrap = lazy(() => import('./features/dex/views/DexWrap'));
+  const DexBridge = lazy(() => import('./features/dex/views/DexBridge'));
+  const Pool = lazy(() => import('./features/dex/views/Pool'));
+  const DexExploreTokens = lazy(() => import('./features/dex/views/DexExploreTokens'));
+  const DexExplorePools = lazy(() => import('./features/dex/views/DexExplorePools'));
+  const DexExploreTransactions = lazy(() => import('./features/dex/views/DexExploreTransactions'));
+  
+  // Legacy DEX components (for backward compatibility)
   const Swap = lazy(() => import('./views/Swap'));
   const Dex = lazy(() => import('./views/Dex'));
-  const Pool = lazy(() => import('./views/Pool'));
   const PoolImport = lazy(() => import('./views/PoolImport'));
   const PoolAdd = lazy(() => import('./views/PoolAdd'));
   const PoolRemove = lazy(() => import('./views/PoolRemove'));
@@ -56,8 +67,26 @@ export const routes: RouteObject[] = [
   { path: '/voting', element: <Governance /> },
   { path: '/voting/p/:id', element: <Governance /> },
   { path: '/voting/account', element: <Governance /> },
+
+  // New DEX Routes with Layout
+  { path: '/dex', element: <DexLayout><DexSwap /></DexLayout> },
+  { path: '/dex/swap', element: <DexLayout><DexSwap /></DexLayout> },
+  { path: '/dex/wrap', element: <DexLayout><DexWrap /></DexLayout> },
+  { path: '/dex/bridge', element: <DexLayout><DexBridge /></DexLayout> },
+  { path: '/dex/pool', element: <DexLayout><Pool /></DexLayout> },
+  { path: '/dex/pool/import', element: <DexLayout><PoolImport /></DexLayout> },
+  { path: '/dex/pool/add', element: <DexLayout><PoolAdd /></DexLayout> },
+  { path: '/dex/pool/remove/:id', element: <DexLayout><PoolRemove /></DexLayout> },
+  { path: '/dex/pool/add-tokens', element: <DexLayout><AddTokens /></DexLayout> },
+  { path: '/dex/pool/deploy', element: <DexLayout><DeployPool /></DexLayout> },
+  { path: '/dex/explore/tokens', element: <DexLayout><DexExploreTokens /></DexLayout> },
+  { path: '/dex/explore/tokens/:id', element: <DexLayout><TokenDetail /></DexLayout> },
+  { path: '/dex/explore/pools', element: <DexLayout><DexExplorePools /></DexLayout> },
+  { path: '/dex/explore/pools/:id', element: <DexLayout><PoolDetail /></DexLayout> },
+  { path: '/dex/explore/transactions', element: <DexLayout><DexExploreTransactions /></DexLayout> },
+
+  // Legacy DEX Routes (for backward compatibility)
   { path: '/swap', element: <Swap /> },
-  { path: '/dex', element: <Dex /> },
   { path: '/pool', element: <Pool /> },
   { path: '/pool/import', element: <PoolImport /> },
   { path: '/pool/add', element: <PoolAdd /> },
@@ -67,6 +96,8 @@ export const routes: RouteObject[] = [
   { path: '/explore/pools/:id', element: <PoolDetail /> },
   { path: '/pool/add-tokens', element: <AddTokens /> },
   { path: '/pool/deploy', element: <DeployPool /> },
+
+
   { path: '/terms', element: <Terms /> },
   { path: '/privacy', element: <Privacy /> },
   { path: '/faq', element: <FAQ /> },

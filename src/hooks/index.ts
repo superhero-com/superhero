@@ -1,3 +1,7 @@
+export * from './useAeSdk';
+export * from './useAccount';
+export * from './useWalletConnect';
+
 // Export all custom hooks
 export { useWallet } from './useWallet';
 export { useAeternity } from './useAeternity';

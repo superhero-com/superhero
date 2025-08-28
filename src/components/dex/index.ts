@@ -1,5 +1,6 @@
 // Core components
 export { default as SwapForm } from './core/SwapForm';
+export { default as SwapTabSwitcher } from './core/SwapTabSwitcher';
 export { default as TokenInput } from './core/TokenInput';
 export { default as TokenSelector } from './core/TokenSelector';
 export { default as SwapSettings } from './core/SwapSettings';
@@ -7,9 +8,10 @@ export { default as SwapRouteInfo } from './core/SwapRouteInfo';
 export { default as SwapConfirmation } from './core/SwapConfirmation';
 
 // Widget components
-export { default as WrapUnwrapWidget } from './widgets/WrapUnwrapWidget';
-export { default as EthxitWidget } from './widgets/EthxitWidget';
-export { default as EthBridgeWidget } from './widgets/EthBridgeWidget';
+// Legacy export - use import from '../features/dex' instead
+export { WrapUnwrapWidget } from '../../features/dex';
+// Legacy export - use import from '../../features/bridge' instead
+export { EthBridgeWidget } from '../../features/bridge';
 
 // Supporting components
 export { default as RecentActivity } from './supporting/RecentActivity';

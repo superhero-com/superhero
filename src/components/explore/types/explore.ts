@@ -53,6 +53,10 @@ export interface TokenListState {
   };
   loading: boolean;
   error: string | null;
+  setSearch: (search: string) => void;
+  setSort: (sort: { key: 'symbol' | 'name' | 'pairs' | 'decimals'; asc: boolean }) => void;
+  toggleSort: (key: 'symbol' | 'name' | 'pairs' | 'decimals') => void;
+  refresh: () => void;
 }
 
 export interface PairListState {
@@ -64,6 +68,10 @@ export interface PairListState {
   };
   loading: boolean;
   error: string | null;
+  setSearch: (search: string) => void;
+  setSort: (sort: { key: 'transactions' | 'address' | 'pair'; asc: boolean }) => void;
+  toggleSort: (key: 'transactions' | 'address' | 'pair') => void;
+  refresh: () => void;
 }
 
 export interface TransactionListState {
@@ -72,6 +80,9 @@ export interface TransactionListState {
   window: '24h' | '7d';
   loading: boolean;
   error: string | null;
+  setType: (type: 'all' | 'swap' | 'add' | 'remove') => void;
+  setWindow: (window: '24h' | '7d') => void;
+  refresh: () => void;
 }
 
 export interface SortConfig<T> {

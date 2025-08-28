@@ -1,12 +1,10 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Token } from '../types/explore';
-import { CONFIG } from '../../../config';
 
 interface TokenTableProps {
   tokens: Token[];
-  sort: { key: 'symbol' | 'name' | 'pairs' | 'decimals'; asc: boolean };
-  onSortChange: (key: 'symbol' | 'name' | 'pairs' | 'decimals') => void;
+  sort: { key: 'name' | 'pairs' | 'priceUsd' | 'tvlUsd' | 'priceChangeDay' | 'volumeUsdDay' | 'volumeUsdAll'; asc: boolean };
+  onSortChange: (key: 'name' | 'pairs' | 'priceUsd' | 'tvlUsd' | 'priceChangeDay' | 'volumeUsdDay' | 'volumeUsdAll') => void;
   search: string;
   onSearchChange: (value: string) => void;
   loading: boolean;
@@ -22,7 +20,7 @@ export default function TokenTable({
 }: TokenTableProps) {
   const navigate = useNavigate();
 
-  const handleSort = (key: 'symbol' | 'name' | 'pairs' | 'decimals') => {
+  const handleSort = (key: 'name' | 'pairs' | 'priceUsd' | 'tvlUsd' | 'priceChangeDay' | 'volumeUsdDay' | 'volumeUsdAll') => {
     onSortChange(key);
   };
 
@@ -35,7 +33,7 @@ export default function TokenTable({
   };
 
   const handleAddClick = (token: Token) => {
-    navigate(`/dex/pool/add?from=AE&to=${token.address}`);
+    navigate(`/dex/pool?from=AE&to=${token.address}`);
   };
 
   if (loading) {
@@ -167,10 +165,13 @@ export default function TokenTable({
                     e.currentTarget.style.boxShadow = 'none';
                   }}
                 >
-                  <option value="symbol">Symbol</option>
                   <option value="name">Name</option>
                   <option value="pairs">Pools</option>
-                  <option value="decimals">Decimals</option>
+                  <option value="priceUsd">Price</option>
+                  <option value="tvlUsd">TVL</option>
+                  <option value="priceChangeDay">24h Change</option>
+                  <option value="volumeUsdDay">24h Volume</option>
+                  <option value="volumeUsdAll">Total Volume</option>
                 </select>
                 {/* Custom Dropdown Arrow */}
                 <div style={{
@@ -350,7 +351,7 @@ export default function TokenTable({
         </div>
 
         {/* Compact Active Filters Display */}
-        {(search || sort.key !== 'symbol') && (
+        {(search || sort.key !== 'name') && (
           <div style={{
             marginTop: 10,
             paddingTop: 10,
@@ -404,7 +405,7 @@ export default function TokenTable({
                 </button>
               </div>
             )}
-            {sort.key !== 'symbol' && (
+            {sort.key !== 'name' && (
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -462,8 +463,7 @@ export default function TokenTable({
                 color: 'var(--light-font-color)',
                 fontWeight: 600,
                 letterSpacing: '0.5px'
-              }}>Symbol</th>
-            
+              }}>Name</th>
               <th style={{
                 textAlign: 'center',
                 padding: '16px 12px',
@@ -473,13 +473,13 @@ export default function TokenTable({
                 letterSpacing: '0.5px'
               }}>Pools</th>
               <th style={{
-                textAlign: 'center',
+                textAlign: 'right',
                 padding: '16px 12px',
                 fontSize: 14,
                 color: 'var(--light-font-color)',
                 fontWeight: 600,
                 letterSpacing: '0.5px'
-              }}>Decimals</th>
+              }}>Price</th>
               <th style={{
                 textAlign: 'right',
                 padding: '16px 12px',
@@ -487,7 +487,7 @@ export default function TokenTable({
                 color: 'var(--light-font-color)',
                 fontWeight: 600,
                 letterSpacing: '0.5px'
-              }}>Price (USD)</th>
+              }}>TVL</th>
               <th style={{
                 textAlign: 'right',
                 padding: '16px 12px',
@@ -495,7 +495,23 @@ export default function TokenTable({
                 color: 'var(--light-font-color)',
                 fontWeight: 600,
                 letterSpacing: '0.5px'
-              }}>24h Vol</th>
+              }}>24h Change</th>
+              <th style={{
+                textAlign: 'right',
+                padding: '16px 12px',
+                fontSize: 14,
+                color: 'var(--light-font-color)',
+                fontWeight: 600,
+                letterSpacing: '0.5px'
+              }}>24h Volume</th>
+              <th style={{
+                textAlign: 'right',
+                padding: '16px 12px',
+                fontSize: 14,
+                color: 'var(--light-font-color)',
+                fontWeight: 600,
+                letterSpacing: '0.5px'
+              }}>Total Volume</th>
               <th style={{
                 textAlign: 'center',
                 padding: '16px 12px',
@@ -519,38 +535,45 @@ export default function TokenTable({
                   e.currentTarget.style.background = 'transparent';
                 }}
               >
+                {/* Name Column */}
                 <td style={{ padding: '16px 12px' }}>
-                  <button
-                    onClick={() => handleTokenClick(token)}
-                    style={{
-                      color: 'var(--accent-color)',
-                      textDecoration: 'none',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: 15,
-                      fontWeight: 600,
-                      transition: 'all 0.3s ease'
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.textDecoration = 'underline';
-                      e.currentTarget.style.transform = 'translateY(-1px)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.textDecoration = 'none';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                    }}
-                  >
-                    {token.symbol}<span style={{
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                    <button
+                      onClick={() => handleTokenClick(token)}
+                      style={{
+                        color: 'var(--accent-color)',
+                        textDecoration: 'none',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: 15,
+                        fontWeight: 600,
+                        transition: 'all 0.3s ease',
+                        padding: 0,
+                        textAlign: 'left'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.textDecoration = 'underline';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.textDecoration = 'none';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
+                      {token.symbol}
+                    </button>
+                    <span style={{
                       color: 'var(--light-font-color)',
+                      fontSize: 10,
                       fontWeight: 500,
                     }}>
-                       / {token.name}
+                      {token.name}
                     </span>
-                  </button>
+                  </div>
                 </td>
 
-               
+                {/* Pools Column */}
                 <td style={{
                   textAlign: 'center',
                   padding: '16px 12px',
@@ -560,15 +583,8 @@ export default function TokenTable({
                 }}>
                   {token.pairs || 0}
                 </td>
-                <td style={{
-                  textAlign: 'center',
-                  padding: '16px 12px',
-                  fontSize: 14,
-                  color: 'var(--standard-font-color)',
-                  fontWeight: 500
-                }}>
-                  {token.decimals}
-                </td>
+
+                {/* Price Column */}
                 <td style={{
                   textAlign: 'right',
                   padding: '16px 12px',
@@ -578,6 +594,8 @@ export default function TokenTable({
                 }}>
                   {token.priceUsd != null ? `$${Number(token.priceUsd).toFixed(4)}` : '-'}
                 </td>
+
+                {/* TVL Column */}
                 <td style={{
                   textAlign: 'right',
                   padding: '16px 12px',
@@ -585,7 +603,46 @@ export default function TokenTable({
                   color: 'var(--standard-font-color)',
                   fontWeight: 500
                 }}>
-                  {token.volume24h != null ? `$${Number(token.volume24h).toLocaleString()}` : '-'}
+                  {token.tvlUsd != null ? `$${Number(token.tvlUsd).toLocaleString()}` : '-'}
+                </td>
+
+                {/* 24h Price Change Column */}
+                <td style={{
+                  textAlign: 'right',
+                  padding: '16px 12px',
+                  fontSize: 14,
+                  fontWeight: 500
+                }}>
+                  {token.priceChangeDay != null ? (
+                    <span style={{
+                      color: Number(token.priceChangeDay) >= 0 ? 'var(--success-color)' : 'var(--error-color)',
+                      fontWeight: 600
+                    }}>
+                      {Number(token.priceChangeDay) >= 0 ? '+' : ''}{Number(token.priceChangeDay).toFixed(2)}%
+                    </span>
+                  ) : '-'}
+                </td>
+
+                {/* 24h Volume Column */}
+                <td style={{
+                  textAlign: 'right',
+                  padding: '16px 12px',
+                  fontSize: 14,
+                  color: 'var(--standard-font-color)',
+                  fontWeight: 500
+                }}>
+                  {token.volumeUsdDay != null ? `$${Number(token.volumeUsdDay).toLocaleString()}` : '-'}
+                </td>
+
+                {/* Total Volume Column */}
+                <td style={{
+                  textAlign: 'right',
+                  padding: '16px 12px',
+                  fontSize: 14,
+                  color: 'var(--standard-font-color)',
+                  fontWeight: 500
+                }}>
+                  {token.volumeUsdAll != null ? `$${Number(token.volumeUsdAll).toLocaleString()}` : '-'}
                 </td>
                 <td style={{ textAlign: 'center', padding: '16px 12px' }}>
                   <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>

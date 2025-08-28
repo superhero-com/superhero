@@ -4,7 +4,11 @@ export interface Token {
   name: string;
   decimals: number;
   priceUsd?: string;
-  volume24h?: string;
+  tvlUsd?: string;
+  priceChangeDay?: string;
+  volumeUsdDay?: string;
+  volumeUsdAll?: string;
+  volume24h?: string; // Keep for backward compatibility
   pairs?: number;
 }
 
@@ -48,14 +52,14 @@ export interface TokenListState {
   tokens: Token[];
   search: string;
   sort: {
-    key: 'symbol' | 'name' | 'pairs' | 'decimals';
+    key: 'name' | 'pairs' | 'priceUsd' | 'tvlUsd' | 'priceChangeDay' | 'volumeUsdDay' | 'volumeUsdAll';
     asc: boolean;
   };
   loading: boolean;
   error: string | null;
   setSearch: (search: string) => void;
-  setSort: (sort: { key: 'symbol' | 'name' | 'pairs' | 'decimals'; asc: boolean }) => void;
-  toggleSort: (key: 'symbol' | 'name' | 'pairs' | 'decimals') => void;
+  setSort: (sort: { key: 'name' | 'pairs' | 'priceUsd' | 'tvlUsd' | 'priceChangeDay' | 'volumeUsdDay' | 'volumeUsdAll'; asc: boolean }) => void;
+  toggleSort: (key: 'name' | 'pairs' | 'priceUsd' | 'tvlUsd' | 'priceChangeDay' | 'volumeUsdDay' | 'volumeUsdAll') => void;
   refresh: () => void;
 }
 

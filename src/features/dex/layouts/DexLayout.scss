@@ -1,0 +1,151 @@
+.dex-layout {
+  min-height: 100vh;
+  background: var(--bg-color, #0a0a0f);
+  color: var(--text-color, #ffffff);
+  padding: 24px;
+}
+
+.dex-container {
+  width: 100%;
+  max-width: 1648px;
+  margin: 0 auto;
+}
+
+.dex-main-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.dex-sidebar {
+  min-width: 240px;
+  width: 240px;
+  flex-shrink: 0;
+}
+
+.dex-nav-section {
+  margin-bottom: 24px;
+}
+
+.dex-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: var(--text-primary, #ffffff);
+  opacity: 0.8;
+}
+
+.dex-nav-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dex-nav-button {
+  // Styles are now inline in the component to match SwapTabSwitcher exactly
+}
+
+.dex-nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dex-nav-label {
+  flex: 1;
+  text-align: left;
+}
+
+.dex-content {
+  flex: 1;
+  min-height: 400px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .dex-layout {
+    padding: 16px;
+  }
+  
+  .dex-title {
+    font-size: 24px;
+  }
+  
+  .dex-description {
+    font-size: 14px;
+  }
+  
+  .dex-main-layout {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .dex-sidebar {
+    width: 100%;
+    min-width: 100%;
+  }
+  
+  .dex-nav-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .dex-nav-buttons .dex-nav-button {
+    flex: 1;
+    min-width: calc(50% - 4px);
+  }
+  
+  .dex-content {
+    padding: 20px;
+  }
+  
+  .dex-section-title {
+    font-size: 14px;
+  }
+}
+
+/* Tablet */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .dex-layout {
+    padding: 20px;
+  }
+  
+  .dex-sidebar {
+    min-width: 200px;
+    width: 200px;
+  }
+  
+  .dex-content {
+    padding: 28px;
+  }
+}
+
+/* Dark theme variables */
+.dark {
+  --bg-color: #0a0a0f;
+  --card-bg: #1a1a23;
+  --content-bg: rgba(26, 26, 35, 0.5);
+  --border-color: #2a2a39;
+  --hover-border: #4a4a59;
+  --text-primary: #ffffff;
+  --text-secondary: #9aa;
+  --hover-bg: rgba(255, 255, 255, 0.05);
+  --active-bg: rgba(76, 175, 80, 0.1);
+  --active-color: #4caf50;
+}
+
+/* Light theme variables */
+.light {
+  --bg-color: #ffffff;
+  --card-bg: #f8f9fa;
+  --content-bg: rgba(248, 249, 250, 0.8);
+  --border-color: #e9ecef;
+  --hover-border: #dee2e6;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --hover-bg: rgba(0, 0, 0, 0.05);
+  --active-bg: rgba(76, 175, 80, 0.1);
+  --active-color: #4caf50;
+}

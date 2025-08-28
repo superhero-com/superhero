@@ -1,0 +1,152 @@
+// Shared styles for all DEX views
+
+
+// Swap specific styles
+// .dex-swap-content {
+//   display: grid;
+//   grid-template-columns: 1fr 300px;
+//   gap: 32px;
+//   align-items: start;
+// }
+
+.dex-swap-main {
+  min-width: 0; // Prevent overflow
+}
+
+.dex-swap-sidebar {
+  min-width: 0; // Prevent overflow
+}
+
+// Wrap specific styles
+.dex-wrap-content {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+// Bridge specific styles
+.dex-bridge-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.dex-bridge-placeholder {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.placeholder-card {
+  background: var(--card-bg, #1a1a23);
+  border: 1px solid var(--border-color, #2a2a39);
+  border-radius: 12px;
+  padding: 32px;
+  
+  h3 {
+    font-size: 24px;
+    margin: 0 0 16px 0;
+    color: var(--text-primary, #ffffff);
+  }
+  
+  p {
+    font-size: 16px;
+    opacity: 0.8;
+    margin: 0 0 24px 0;
+    line-height: 1.5;
+  }
+}
+
+.placeholder-features {
+  text-align: left;
+  margin: 24px 0;
+  
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    
+    li {
+      padding: 8px 0;
+      position: relative;
+      padding-left: 24px;
+      
+      &::before {
+        content: '✓';
+        position: absolute;
+        left: 0;
+        color: var(--success-color, #4caf50);
+        font-weight: bold;
+      }
+    }
+  }
+}
+
+.placeholder-link {
+  display: inline-block;
+  color: var(--primary-color, #4caf50);
+  text-decoration: none;
+  font-weight: 500;
+  margin-top: 16px;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Explore views styles
+.dex-explore-tokens-content,
+.dex-explore-pools-content,
+.dex-explore-transactions-content {
+  // Content styles are handled by the existing components
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .dex-page-title {
+    font-size: 24px;
+  }
+  
+  .dex-page-description {
+    font-size: 14px;
+  }
+  
+  .dex-swap-content {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  .dex-wrap-content,
+  .dex-bridge-content {
+    max-width: none;
+  }
+  
+  .placeholder-card {
+    padding: 24px 16px;
+    
+    h3 {
+      font-size: 20px;
+    }
+    
+    p {
+      font-size: 14px;
+    }
+  }
+}
+
+// Dark theme variables
+.dark {
+  --card-bg: #1a1a23;
+  --border-color: #2a2a39;
+  --text-primary: #ffffff;
+  --text-secondary: #9aa;
+  --primary-color: #4caf50;
+  --success-color: #4caf50;
+}
+
+// Light theme variables
+.light {
+  --card-bg: #ffffff;
+  --border-color: #e9ecef;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --primary-color: #4caf50;
+  --success-color: #4caf50;
+}

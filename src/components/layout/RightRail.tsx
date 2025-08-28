@@ -1,11 +1,9 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { Backend } from '../../api/backend';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Backend, TrendminerApi } from '../../api/backend';
+import { useToast } from '../ToastProvider';
 import Sparkline from '../Trendminer/Sparkline';
 import TrendingSidebar from '../Trendminer/TrendingSidebar';
-import { useToast } from '../ToastProvider';
-import { TrendminerApi } from '../../api/backend';
 import './RightRail.scss';
-import WalletCard from './WalletCard';
 
 import { useAeternity, useWallet } from '../../hooks';
 interface SearchSuggestion {
@@ -642,9 +640,6 @@ export default function RightRail() {
           </div>
         )}
       </div>
-
-      {/* Wallet Section */}
-      <WalletCard prices={prices} selectedCurrency={selectedCurrency} />
 
       {/* Enhanced Price Section */}
       <div className="genz-card price-section">

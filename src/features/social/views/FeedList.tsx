@@ -1,0 +1,161 @@
+import React, { useMemo, useState, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { PostsService } from '../../../api/generated';
+import AeButton from '../../../components/AeButton';
+import Shell from '../../../components/layout/Shell';
+import LeftRail from '../../../components/layout/LeftRail';
+import RightRail from '../../../components/layout/RightRail';
+import { useWallet } from '../../../hooks';
+import CreatePost from '../components/CreatePost';
+import SortControls from '../components/SortControls';
+import EmptyState from '../components/EmptyState';
+import FeedItem from '../components/FeedItem';
+import { PostApiResponse } from '../types';
+import './FeedList.scss';
+
+// Custom hook
+function useUrlQuery() { return new URLSearchParams(useLocation().search); }
+
+export default function FeedList() {
+  const navigate = useNavigate();
+  const urlQuery = useUrlQuery();
+  const { chainNames } = useWallet();
+  
+  // Comment counts are now provided directly by the API in post.total_comments
+
+  // URL parameters
+  const sortBy = urlQuery.get('sortBy') || 'latest';
+  const search = urlQuery.get('search') || '';
+  const filterBy = urlQuery.get('filterBy') || 'all';
+
+  const [localSearch, setLocalSearch] = useState(search);
+
+  // Infinite query for posts
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useInfiniteQuery({
+    queryKey: ['posts', { limit: 5, sortBy, search, filterBy }],
+    queryFn: ({ pageParam = 1 }) => PostsService.listAll({ 
+      limit: 5, 
+      page: pageParam,
+      orderBy: sortBy === 'latest' ? 'created_at' : sortBy === 'hot' ? 'total_comments' : 'created_at',
+      orderDirection: 'DESC',
+      search: localSearch,
+    }) as unknown as Promise<PostApiResponse>,
+    getNextPageParam: (lastPage) => {
+      if (lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && 
+          lastPage.meta.currentPage < lastPage.meta.totalPages) {
+        return lastPage.meta.currentPage + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
+  });
+
+  // Derived state
+  const list = useMemo(() => 
+    data?.pages?.flatMap(page => page?.items ?? []) ?? [], 
+    [data]
+  );
+
+  // Memoized filtered list
+  const filteredAndSortedList = useMemo(() => {
+    let filtered = [...list];
+    
+    if (localSearch.trim()) {
+      const searchTerm = localSearch.toLowerCase();
+      filtered = filtered.filter(item => 
+        (item.content && item.content.toLowerCase().includes(searchTerm)) ||
+        (item.topics && item.topics.some(topic => topic.toLowerCase().includes(searchTerm))) ||
+        (item.sender_address && item.sender_address.toLowerCase().includes(searchTerm)) ||
+        (chainNames?.[item.sender_address] && chainNames[item.sender_address].toLowerCase().includes(searchTerm))
+      );
+    }
+    
+    if (filterBy === 'withMedia') {
+      filtered = filtered.filter(item => item.media && Array.isArray(item.media) && item.media.length > 0);
+    } else if (filterBy === 'withComments') {
+      filtered = filtered.filter(item => {
+        return (item.total_comments ?? 0) > 0;
+      });
+    }
+    
+    return filtered;
+  }, [list, localSearch, filterBy, chainNames]);
+
+  // Memoized event handlers for better performance
+  const handleSortChange = useCallback((newSortBy: string) => {
+    navigate(`/?sortBy=${newSortBy}`);
+  }, [navigate]);
+
+  const handleItemClick = useCallback((postId: string) => {
+    navigate(`/post/${postId}`);
+  }, [navigate]);
+
+  // Render helpers
+  const renderEmptyState = () => {
+    if (error) {
+      return <EmptyState type="error" error={error} onRetry={refetch} />;
+    }
+    if (!error && filteredAndSortedList.length === 0 && !isLoading) {
+      return <EmptyState type="empty" hasSearch={!!localSearch} />;
+    }
+    if (isLoading && filteredAndSortedList.length === 0) {
+      return <EmptyState type="loading" />;
+    }
+    return null;
+  };
+
+  // Memoized render function for better performance
+  const renderFeedItems = useMemo(() => {
+    return filteredAndSortedList.map((item) => {
+      const postId = item.id;
+      const authorAddress = item.sender_address;
+      const commentCount = item.total_comments ?? 0;
+      const chainName = chainNames?.[authorAddress];
+
+      return (
+        <FeedItem
+          key={postId}
+          item={item}
+          commentCount={commentCount}
+          chainName={chainName}
+          onItemClick={handleItemClick}
+        />
+      );
+    });
+  }, [filteredAndSortedList, chainNames, handleItemClick]);
+
+  return (
+    <Shell left={<LeftRail />} right={<RightRail />}>
+      <div className="tips-list">
+        <CreatePost onSuccess={refetch} />
+        
+        <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
+
+        <div className="feed">
+          {renderEmptyState()}
+          {renderFeedItems}
+        </div>
+
+        {hasNextPage && filteredAndSortedList.length > 0 && (
+          <div className="load-more">
+            <AeButton 
+              loading={isFetchingNextPage} 
+              onClick={() => fetchNextPage()}
+            >
+              Load more
+            </AeButton>
+          </div>
+        )}
+      </div>
+    </Shell>
+  );
+}

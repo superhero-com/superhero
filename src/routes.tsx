@@ -1,7 +1,7 @@
 import React, { lazy } from 'react';
 import { RouteObject } from 'react-router-dom';
 
-const FeedList = lazy(() => import('./views/FeedList'));
+const FeedList = lazy(() => import('./features/social/views/FeedList'));
 const Trending = lazy(() => import('./views/Trending'));
 const TrendTokens = lazy(() => import('./views/Trendminer/TokenList'));
 const TrendCloud = lazy(() => import('./views/Trendminer/TrendCloud'));
@@ -13,7 +13,7 @@ const TrendDao = lazy(() => import('./views/Trendminer/Dao'));
   const TrendAccounts = lazy(() => import('./views/Trendminer/Accounts'));
   const TrendAccountDetails = lazy(() => import('./views/Trendminer/AccountDetails'));
 const TrendCreate = lazy(() => import('./views/Trendminer/CreateToken'));
-const PostDetail = lazy(() => import('./views/PostDetail'));
+const PostDetail = lazy(() => import('./features/social/views/PostDetail'));
 const UserProfile = lazy(() => import('./views/UserProfile'));
 const Landing = lazy(() => import('./views/Landing'));
 const Conference = lazy(() => import('./views/Conference'));

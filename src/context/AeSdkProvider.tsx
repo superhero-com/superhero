@@ -42,6 +42,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     const [transactionsQueue, setTransactionsQueue] = useState<Record<string, { status: string; tx: Encoded.Transaction; signUrl: string }>>({});
 
     async function initSdk() {
+        console.log("[AeSdkProvider] initSdk activeAccount", activeAccount);
         const _aeSdk = new AeSdkAepp({
             name: "Superhero",
             nodes,

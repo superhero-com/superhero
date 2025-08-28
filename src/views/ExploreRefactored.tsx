@@ -14,6 +14,7 @@ export default function ExploreRefactored() {
   const pairList = usePairList();
   const transactionList = useTransactionList();
 
+  return;
   return (
     <div className="explore-container" style={{ maxWidth: 1400, margin: '0 auto', padding: '20px' }}>
       <DexTabs />

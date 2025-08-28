@@ -12,13 +12,13 @@ interface TokenTableProps {
   loading: boolean;
 }
 
-export default function TokenTable({ 
-  tokens, 
-  sort, 
-  onSortChange, 
-  search, 
-  onSearchChange, 
-  loading 
+export default function TokenTable({
+  tokens,
+  sort,
+  onSortChange,
+  search,
+  onSearchChange,
+  loading
 }: TokenTableProps) {
   const navigate = useNavigate();
 
@@ -27,21 +27,21 @@ export default function TokenTable({
   };
 
   const handleTokenClick = (token: Token) => {
-    navigate(`/explore/tokens/${token.address}`);
+    navigate(`/dex/explore/tokens/${token.address}`);
   };
 
   const handleSwapClick = (token: Token) => {
-    navigate(`/swap?from=AE&to=${token.address}`);
+    navigate(`/dex/swap?from=AE&to=${token.address}`);
   };
 
   const handleAddClick = (token: Token) => {
-    navigate(`/pool/add?from=AE&to=${token.address}`);
+    navigate(`/dex/pool/add?from=AE&to=${token.address}`);
   };
 
   if (loading) {
     return (
-      <div style={{ 
-        textAlign: 'center', 
+      <div style={{
+        textAlign: 'center',
         padding: 60,
         background: 'rgba(255, 255, 255, 0.02)',
         border: '1px solid var(--glass-border)',
@@ -125,7 +125,7 @@ export default function TokenTable({
                 Filter & Sort
               </span>
             </div>
-            
+
             {/* Enhanced Dropdown Container */}
             <div style={{
               position: 'relative',
@@ -137,17 +137,17 @@ export default function TokenTable({
                 position: 'relative',
                 display: 'inline-block'
               }}>
-                <select 
-                  value={sort.key} 
+                <select
+                  value={sort.key}
                   onChange={(e) => handleSort(e.target.value as any)}
-                  style={{ 
+                  style={{
                     appearance: 'none',
                     WebkitAppearance: 'none',
                     MozAppearance: 'none',
-                    padding: '6px 28px 6px 12px', 
-                    borderRadius: 8, 
-                    background: 'var(--glass-bg)', 
-                    color: 'var(--standard-font-color)', 
+                    padding: '6px 28px 6px 12px',
+                    borderRadius: 8,
+                    background: 'var(--glass-bg)',
+                    color: 'var(--standard-font-color)',
                     border: '1px solid var(--glass-border)',
                     backdropFilter: 'blur(10px)',
                     fontSize: 13,
@@ -194,14 +194,14 @@ export default function TokenTable({
                   ▼
                 </div>
               </div>
-              
-              <button 
+
+              <button
                 onClick={() => handleSort(sort.key)}
-                style={{ 
-                  padding: '6px 8px', 
-                  borderRadius: 6, 
-                  border: '1px solid var(--glass-border)', 
-                  background: sort.asc ? 'var(--accent-color)' : 'var(--glass-bg)', 
+                style={{
+                  padding: '6px 8px',
+                  borderRadius: 6,
+                  border: '1px solid var(--glass-border)',
+                  background: sort.asc ? 'var(--accent-color)' : 'var(--glass-bg)',
                   color: sort.asc ? 'white' : 'var(--standard-font-color)',
                   cursor: 'pointer',
                   backdropFilter: 'blur(10px)',
@@ -253,16 +253,16 @@ export default function TokenTable({
             }}>
               🔍
             </div>
-            <input 
-              placeholder="Search tokens..." 
-              value={search} 
+            <input
+              placeholder="Search tokens..."
+              value={search}
               onChange={(e) => onSearchChange(e.target.value)}
-              style={{ 
+              style={{
                 width: '100%',
-                padding: '8px 12px 8px 32px', 
-                borderRadius: 8, 
-                background: 'var(--glass-bg)', 
-                color: 'var(--standard-font-color)', 
+                padding: '8px 12px 8px 32px',
+                borderRadius: 8,
+                background: 'var(--glass-bg)',
+                color: 'var(--standard-font-color)',
                 border: '1px solid var(--glass-border)',
                 backdropFilter: 'blur(10px)',
                 fontSize: 13,
@@ -451,70 +451,55 @@ export default function TokenTable({
       }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ 
+            <tr style={{
               background: 'rgba(255, 255, 255, 0.05)',
               borderBottom: '1px solid var(--glass-border)'
             }}>
-              <th style={{ 
-                textAlign: 'left', 
-                padding: '16px 12px', 
-                fontSize: 14, 
+              <th style={{
+                textAlign: 'left',
+                padding: '16px 12px',
+                fontSize: 14,
                 color: 'var(--light-font-color)',
                 fontWeight: 600,
                 letterSpacing: '0.5px'
               }}>Symbol</th>
-              <th style={{ 
-                textAlign: 'left', 
-                padding: '16px 12px', 
-                fontSize: 14, 
-                color: 'var(--light-font-color)',
-                fontWeight: 600,
-                letterSpacing: '0.5px'
-              }}>Name</th>
-              <th style={{ 
-                textAlign: 'left', 
-                padding: '16px 12px', 
-                fontSize: 14, 
-                color: 'var(--light-font-color)',
-                fontWeight: 600,
-                letterSpacing: '0.5px'
-              }}>Address</th>
-              <th style={{ 
-                textAlign: 'center', 
-                padding: '16px 12px', 
-                fontSize: 14, 
+            
+              <th style={{
+                textAlign: 'center',
+                padding: '16px 12px',
+                fontSize: 14,
                 color: 'var(--light-font-color)',
                 fontWeight: 600,
                 letterSpacing: '0.5px'
               }}>Pools</th>
-              <th style={{ 
-                textAlign: 'center', 
-                padding: '16px 12px', 
-                fontSize: 14, 
+              <th style={{
+                textAlign: 'center',
+                padding: '16px 12px',
+                fontSize: 14,
                 color: 'var(--light-font-color)',
                 fontWeight: 600,
                 letterSpacing: '0.5px'
               }}>Decimals</th>
-              <th style={{ 
-                textAlign: 'right', 
-                padding: '16px 12px', 
-                fontSize: 14, 
+              <th style={{
+                textAlign: 'right',
+                padding: '16px 12px',
+                fontSize: 14,
                 color: 'var(--light-font-color)',
                 fontWeight: 600,
                 letterSpacing: '0.5px'
               }}>Price (USD)</th>
-              <th style={{ 
-                textAlign: 'right', 
-                padding: '16px 12px', 
-                fontSize: 14, 
+              <th style={{
+                textAlign: 'right',
+                padding: '16px 12px',
+                fontSize: 14,
                 color: 'var(--light-font-color)',
                 fontWeight: 600,
                 letterSpacing: '0.5px'
               }}>24h Vol</th>
-              <th style={{ 
-                textAlign: 'center', 
-                padding: '16px 12px', 
-                fontSize: 14, 
+              <th style={{
+                textAlign: 'center',
+                padding: '16px 12px',
+                fontSize: 14,
                 color: 'var(--light-font-color)',
                 fontWeight: 600,
                 letterSpacing: '0.5px'
@@ -523,22 +508,22 @@ export default function TokenTable({
           </thead>
           <tbody>
             {tokens.map((token) => (
-              <tr key={token.address} style={{ 
+              <tr key={token.address} style={{
                 borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
                 transition: 'all 0.3s ease'
               }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.background = 'transparent';
-              }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                }}
               >
                 <td style={{ padding: '16px 12px' }}>
                   <button
                     onClick={() => handleTokenClick(token)}
-                    style={{ 
-                      color: 'var(--accent-color)', 
+                    style={{
+                      color: 'var(--accent-color)',
                       textDecoration: 'none',
                       background: 'none',
                       border: 'none',
@@ -556,72 +541,46 @@ export default function TokenTable({
                       e.currentTarget.style.transform = 'translateY(0)';
                     }}
                   >
-                    {token.symbol}
+                    {token.symbol}<span style={{
+                      color: 'var(--light-font-color)',
+                      fontWeight: 500,
+                    }}>
+                       / {token.name}
+                    </span>
                   </button>
                 </td>
-                <td style={{ 
-                  padding: '16px 12px', 
-                  fontSize: 14,
-                  color: 'var(--standard-font-color)',
-                  fontWeight: 500
-                }}>{token.name}</td>
-                <td style={{ 
-                  padding: '16px 12px', 
-                  fontFamily: 'monospace', 
-                  fontSize: 12,
-                  color: 'var(--light-font-color)'
-                }}>
-                  {CONFIG.EXPLORER_URL ? (
-                    <a 
-                      href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/contracts/${token.address}`} 
-                      target="_blank" 
-                      rel="noreferrer" 
-                      style={{ 
-                        color: 'var(--accent-color)', 
-                        textDecoration: 'none',
-                        transition: 'all 0.3s ease'
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.textDecoration = 'underline';
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.textDecoration = 'none';
-                      }}
-                    >
-                      {token.address}
-                    </a>
-                  ) : token.address}
-                </td>
-                <td style={{ 
-                  textAlign: 'center', 
-                  padding: '16px 12px', 
+
+               
+                <td style={{
+                  textAlign: 'center',
+                  padding: '16px 12px',
                   fontSize: 14,
                   color: 'var(--standard-font-color)',
                   fontWeight: 500
                 }}>
                   {token.pairs || 0}
                 </td>
-                <td style={{ 
-                  textAlign: 'center', 
-                  padding: '16px 12px', 
+                <td style={{
+                  textAlign: 'center',
+                  padding: '16px 12px',
                   fontSize: 14,
                   color: 'var(--standard-font-color)',
                   fontWeight: 500
                 }}>
                   {token.decimals}
                 </td>
-                <td style={{ 
-                  textAlign: 'right', 
-                  padding: '16px 12px', 
+                <td style={{
+                  textAlign: 'right',
+                  padding: '16px 12px',
                   fontSize: 14,
                   color: 'var(--standard-font-color)',
                   fontWeight: 500
                 }}>
                   {token.priceUsd != null ? `$${Number(token.priceUsd).toFixed(4)}` : '-'}
                 </td>
-                <td style={{ 
-                  textAlign: 'right', 
-                  padding: '16px 12px', 
+                <td style={{
+                  textAlign: 'right',
+                  padding: '16px 12px',
                   fontSize: 14,
                   color: 'var(--standard-font-color)',
                   fontWeight: 500
@@ -630,13 +589,13 @@ export default function TokenTable({
                 </td>
                 <td style={{ textAlign: 'center', padding: '16px 12px' }}>
                   <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-                    <button 
+                    <button
                       onClick={() => handleSwapClick(token)}
-                      style={{ 
-                        padding: '6px 12px', 
-                        borderRadius: 8, 
-                        border: '1px solid var(--glass-border)', 
-                        background: 'var(--glass-bg)', 
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: 8,
+                        border: '1px solid var(--glass-border)',
+                        background: 'var(--glass-bg)',
                         color: 'var(--standard-font-color)',
                         cursor: 'pointer',
                         fontSize: 12,
@@ -657,13 +616,13 @@ export default function TokenTable({
                     >
                       Swap
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleAddClick(token)}
-                      style={{ 
-                        padding: '6px 12px', 
-                        borderRadius: 8, 
-                        border: '1px solid var(--glass-border)', 
-                        background: 'var(--glass-bg)', 
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: 8,
+                        border: '1px solid var(--glass-border)',
+                        background: 'var(--glass-bg)',
                         color: 'var(--standard-font-color)',
                         cursor: 'pointer',
                         fontSize: 12,
@@ -693,8 +652,8 @@ export default function TokenTable({
       </div>
 
       {tokens.length === 0 && !loading && (
-        <div style={{ 
-          textAlign: 'center', 
+        <div style={{
+          textAlign: 'center',
           padding: 60,
           background: 'rgba(255, 255, 255, 0.02)',
           border: '1px solid var(--glass-border)',

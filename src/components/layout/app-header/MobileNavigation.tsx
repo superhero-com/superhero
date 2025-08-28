@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './MobileNavigation.scss';
-import SearchInput from '../SearchInput';
-import { HeaderLogo, IconSearch, IconMobileMenu } from '../../icons';
+import SearchInput from '../../SearchInput';
+import { HeaderLogo, IconSearch, IconMobileMenu } from '../../../icons';
+import HeaderWalletButton from './HeaderWalletButton';
 
 export default function MobileNavigation() {
   const [showOverlay, setShowOverlay] = useState(false);
@@ -57,36 +58,39 @@ export default function MobileNavigation() {
           </Link>
           <div className="separator" />
           
+
           <button
             className="button-plain"
             onClick={() => {
               const next = theme === 'dark' ? 'light' : 'dark';
               document.documentElement.dataset.theme = next;
-              try { localStorage.setItem('theme', next); } catch {}
+              try { localStorage.setItem('theme', next); } catch { }
               setTheme(next);
             }}
             aria-label="Toggle theme"
           >
             {theme === 'dark' ? '☀︎' : '☽'}
           </button>
-          
+
           {isOnFeed && (
-            <button 
-              className="button-plain" 
+            <button
+              className="button-plain"
               onClick={handleSearchToggle}
               aria-label="Search"
             >
               <IconSearch />
             </button>
           )}
-          
-          <button 
-            className="button-plain" 
+
+          <button
+            className="button-plain"
             onClick={handleMenuToggle}
             aria-label="Open Menu"
           >
             <IconMobileMenu />
           </button>
+          
+
         </div>
       )}
 
@@ -96,15 +100,15 @@ export default function MobileNavigation() {
           <div className="mobile-navigation-overlay" onClick={(e) => e.stopPropagation()}>
             <div className="overlay-header">
               <h2 className="overlay-title">Menu</h2>
-              <button 
-                className="close-button" 
+              <button
+                className="close-button"
                 onClick={() => setShowOverlay(false)}
                 aria-label="Close menu"
               >
                 ✕
               </button>
             </div>
-            
+
             <nav className="navigation">
               <Link to="/" onClick={handleNavigationClick} className="nav-item">
                 <span className="nav-icon">🏠</span>
@@ -126,9 +130,9 @@ export default function MobileNavigation() {
                 <span className="nav-icon">ℹ️</span>
                 <span className="nav-text">Info</span>
               </Link>
-              <a 
-                href="https://github.com/aeternity/superhero-ui" 
-                target="_blank" 
+              <a
+                href="https://github.com/aeternity/superhero-ui"
+                target="_blank"
                 rel="noreferrer"
                 className="nav-item"
                 onClick={handleNavigationClick}

@@ -7,7 +7,6 @@ import { routes } from './routes';
 import { consumeAuthCallback } from './auth/deeplink';
 import AppHeader from './components/layout/app-header';
 import CollectInvitationLinkCard from './components/Invitation/CollectInvitationLinkCard';
-import MobileNavigation from './components/layout/MobileNavigation';
 import ModalProvider from './components/ModalProvider';
 import GlobalNewAccountEducation from './components/GlobalNewAccountEducation';
 import './styles/mobile-optimizations.scss';
@@ -24,14 +23,14 @@ function useQuery() {
 }
 
 function useInit() {
-  const { 
-    address, 
-    setAddress, 
-    setChainNames, 
-    setGraylistedUrls, 
-    setTokenInfo, 
-    setVerifiedUrls, 
-    setWordRegistry 
+  const {
+    address,
+    setAddress,
+    setChainNames,
+    setGraylistedUrls,
+    setTokenInfo,
+    setVerifiedUrls,
+    setWordRegistry
   } = useWallet();
   const { initSdk } = useAeternity();
   const { setPrices, setStats } = useBackend();
@@ -52,7 +51,7 @@ function useInit() {
   }, []);
 
   async function reloadData() {
-    const [chainNames, verifiedUrls, graylistedUrls, tokenInfo, /* wordRegistry */ , price, stats] = await Promise.all([
+    const [chainNames, verifiedUrls, graylistedUrls, tokenInfo, /* wordRegistry */, price, stats] = await Promise.all([
       Backend.getCacheChainNames(),
       Backend.getVerifiedUrls(),
       Backend.getGrayListedUrls(),
@@ -71,7 +70,7 @@ function useInit() {
   }
 
   useEffect(() => {
-    const id = window.setInterval(() => { reloadData().catch(() => {}); }, 120 * 1000);
+    const id = window.setInterval(() => { reloadData().catch(() => { }); }, 120 * 1000);
     return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -94,18 +93,18 @@ export default function App() {
       <div className="app-content">
         <CollectInvitationLinkCard />
       </div>
-      <MobileNavigation />
       <GlobalNewAccountEducation />
       <Suspense fallback={<div className="loading-fallback" />}>
         <ModalProvider registry={{ 'post': PostModal, 'cookies-dialog': CookiesDialog, 'token-select': TokenSelectModal, 'image-gallery': ImageGallery, 'feed-item-menu': FeedItemMenu, 'alert': AlertModal }} />
       </Suspense>
-      <Suspense fallback={<div className="loading-fallback" />}> 
-        {/* @ts-expect-error: using RRv6 future flags not yet in Types */}
-        <Routes future={{ v7_startTransition: true, v7_relativeSplatPath: true } as any}>
-          {routes.map((r) => (
-            <Route key={r.path as string} path={r.path as string} element={r.element} />
-          ))}
-        </Routes>
+      <Suspense fallback={<div className="loading-fallback" />}>
+        <div style={{ paddingTop: '18px' }}>
+          <Routes future={{ v7_startTransition: true, v7_relativeSplatPath: true } as any}>
+            {routes.map((r) => (
+              <Route key={r.path as string} path={r.path as string} element={r.element} />
+            ))}
+          </Routes>
+        </div>
       </Suspense>
     </div>
   );

@@ -1,5 +1,5 @@
-@use '../../styles/variables.scss' as *;
-@use '../../styles/mixins.scss' as *;
+@use '../../../styles/variables.scss' as *;
+@use '../../../styles/mixins.scss' as *;
 
 .mobile-navigation-sticky {
   z-index: 101; 

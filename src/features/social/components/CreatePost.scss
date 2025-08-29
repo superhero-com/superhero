@@ -6,8 +6,16 @@
 .create-post-container {
   max-width: 680px;
   margin: 0 auto 1.25rem auto;
-  @include mobile { margin: 0 0.75rem 1rem 0.75rem; }
-  @include mobile-small { margin: 0 0.5rem 1rem 0.5rem; }
+  @include mobile { 
+    margin: 0 0.75rem 1rem 0.75rem;
+    // Add top margin to account for fixed SortControls on mobile
+    margin-top: calc(env(safe-area-inset-top) + 4rem);
+  }
+  @include mobile-small { 
+    margin: 0 0.5rem 1rem 0.5rem;
+    // Add top margin to account for fixed SortControls on mobile
+    margin-top: calc(env(safe-area-inset-top) + 4rem);
+  }
 }
 
 .create-post-box {

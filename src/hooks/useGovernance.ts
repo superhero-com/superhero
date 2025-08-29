@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { GovernanceApi } from '../api/backend';
+import { GovernanceApi } from '../api/governance';
 import { useAeSdk } from './useAeSdk';
 
 export const useGovernance = () => {

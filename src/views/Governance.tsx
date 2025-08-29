@@ -79,8 +79,6 @@ export default function Governance() {
 
   // Data is now loaded automatically by React Query hooks
 
-  const iframeSrc = CONFIG.GOVERNANCE_URL;
-  
   const handleSaveDelegation = () => {
     if (delegateAddress.trim()) {
       setDelegationMutation.mutate({ to: delegateAddress.trim() });
@@ -522,46 +520,34 @@ export default function Governance() {
 
   return (
     <Shell left={<LeftRail />} right={<RightRail />}> 
-      {iframeSrc ? (
-        <div className="governance-page">
-          <div className="gov-header mobile-header">
-            <IconGovernance className="gov-icon" />
-            <h2>Governance</h2>
-          </div>
-          <iframe title="Aeternity Governance" className="governance-iframe" src={iframeSrc} />
-        </div>
-      ) : (
-        <>
-          {/* Enhanced Tab Navigation */}
-          <div className="mobile-tab-navigation">
-            <AeButton 
-              onClick={() => setActiveTab('polls')}
-              className={`mobile-tab-btn ${activeTab === 'polls' ? 'active' : ''}`}
-            >
-              📊 Polls
-            </AeButton>
-            {pollId && (
-              <AeButton 
-                onClick={() => setActiveTab('vote')}
-                className={`mobile-tab-btn ${activeTab === 'vote' ? 'active' : ''}`}
-              >
-                🗳️ Vote
-              </AeButton>
-            )}
-            <AeButton 
-              onClick={() => setActiveTab('account')}
-              className={`mobile-tab-btn ${activeTab === 'account' ? 'active' : ''}`}
-            >
-              👤 My Account
-            </AeButton>
-          </div>
+      {/* Enhanced Tab Navigation */}
+      <div className="mobile-tab-navigation">
+        <AeButton 
+          onClick={() => setActiveTab('polls')}
+          className={`mobile-tab-btn ${activeTab === 'polls' ? 'active' : ''}`}
+        >
+          📊 Polls
+        </AeButton>
+        {pollId && (
+          <AeButton 
+            onClick={() => setActiveTab('vote')}
+            className={`mobile-tab-btn ${activeTab === 'vote' ? 'active' : ''}`}
+          >
+            🗳️ Vote
+          </AeButton>
+        )}
+        <AeButton 
+          onClick={() => setActiveTab('account')}
+          className={`mobile-tab-btn ${activeTab === 'account' ? 'active' : ''}`}
+        >
+          👤 My Account
+        </AeButton>
+      </div>
 
-          {/* Tab Content */}
-          {activeTab === 'polls' && renderPollsTab()}
-          {activeTab === 'vote' && renderVoteTab()}
-          {activeTab === 'account' && renderAccountTab()}
-        </>
-      )}
+      {/* Tab Content */}
+      {activeTab === 'polls' && renderPollsTab()}
+      {activeTab === 'vote' && renderVoteTab()}
+      {activeTab === 'account' && renderAccountTab()}
     </Shell>
   );
 }

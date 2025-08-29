@@ -23,8 +23,6 @@ export default function Governance() {
   // State for UI
   const [status, setStatus] = useState<string>('');
   const [search, setSearch] = useState<string>('');
-  const [page, setPage] = useState<number>(1);
-  const [pageSize] = useState<number>(20);
   
   // Hooks
   const { address } = useWallet();
@@ -45,7 +43,7 @@ export default function Governance() {
   } = useGovernance();
   
   // Queries
-  const { data: polls = [] } = usePolls({ page, pageSize, status, search });
+  const { data: polls = [] } = usePolls({ status, search });
   const { data: poll } = usePoll(pollId || '');
   const { data: results } = usePollResults(pollId || '');
   const { data: myVote } = useMyVote(pollId || '');
@@ -159,7 +157,6 @@ export default function Governance() {
             placeholder="Find polls by title or description..."
             value={search}
             onChange={(e) => { 
-              setPage(1); 
               setSearch(e.target.value); 
             }}
             variant="filled"
@@ -174,7 +171,6 @@ export default function Governance() {
             label="Filter by status"
             value={status}
             onChange={(e) => { 
-              setPage(1); 
               setStatus(e.target.value); 
             }}
             variant="filled"
@@ -230,24 +226,6 @@ export default function Governance() {
             ))}
           </div>
         )}
-      </div>
-
-      {/* Enhanced Pagination */}
-      <div className="mobile-pagination">
-        <AeButton 
-          onClick={() => setPage((p) => Math.max(1, p - 1))} 
-          disabled={page === 1}
-          className="mobile-pagination-btn"
-        >
-          ← Previous
-        </AeButton>
-        <span className="mobile-page-info">Page {page}</span>
-        <AeButton 
-          onClick={() => setPage((p) => p + 1)}
-          className="mobile-pagination-btn"
-        >
-          Next →
-        </AeButton>
       </div>
     </div>
   );

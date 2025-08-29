@@ -33,13 +33,8 @@ async function fetchJson(path: string, init?: RequestInit) {
 }
 
 export const GovernanceApi = {
-  // Note: endpoints based on aepp-governance server conventions
-  // List polls
-  getPolls: async (params: { page?: number; pageSize?: number; status?: string; search?: string } = {}) => {
-    const qp: Record<string, string> = {
-      page: String(params.page ?? 1),
-      pageSize: String(params.pageSize ?? 20),
-    };
+  getPolls: async (params: { status?: string; search?: string } = {}) => {
+    const qp: Record<string, string> = {};
     if (params.status) qp.status = String(params.status);
     if (params.search) qp.search = params.search;
     const query = new URLSearchParams(qp).toString();

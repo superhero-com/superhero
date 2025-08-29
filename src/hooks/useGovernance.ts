@@ -7,7 +7,7 @@ export const useGovernance = () => {
   const queryClient = useQueryClient();
 
   // Polls query
-  const usePolls = (params?: { page?: number; pageSize?: number; status?: string; search?: string }) => {
+  const usePolls = (params?: { status?: string; search?: string }) => {
     return useQuery({
       queryKey: ['governance', 'polls', params],
       queryFn: async () => {

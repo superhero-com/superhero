@@ -1,3 +1,5 @@
+import { Encoded } from "@aeternity/aepp-sdk";
+
 export type AppConfig = {
   BACKEND_URL: string;
   TRENDMINER_API_URL?: string;
@@ -17,6 +19,7 @@ export type AppConfig = {
   JITSI_DOMAIN: string;
   GOVERNANCE_URL: string;
   GOVERNANCE_API_URL: string;
+  GOVERNANCE_CONTRACT_ADDRESS: Encoded.ContractAddress;
   EXPLORER_URL?: string;
   IMGUR_API_CLIENT_ID?: string;
   GIPHY_API_KEY?: string;
@@ -41,6 +44,7 @@ const defaultConfig: AppConfig = {
   JITSI_DOMAIN: '',
   GOVERNANCE_URL: '',
   GOVERNANCE_API_URL: '',
+  GOVERNANCE_CONTRACT_ADDRESS: 'ct_ouZib4wT9cNwgRA1pxgA63XEUd8eQRrG8PcePDEYogBc1VYTq',
   DEX_BACKEND_URL: '',
   MAINNET_DEX_BACKEND_URL: '',
   TESTNET_DEX_BACKEND_URL: '',
@@ -83,6 +87,7 @@ function normalizeKeys(raw: Record<string, any>): Partial<AppConfig> {
     JITSI_DOMAIN: get('JITSI_DOMAIN', 'VUE_APP_JITSI_HOST', 'VITE_JITSI_DOMAIN') || '',
     GOVERNANCE_URL: get('GOVERNANCE_URL', 'VUE_APP_GOVERNANCE_URL', 'VITE_GOVERNANCE_URL') || '',
     GOVERNANCE_API_URL: get('GOVERNANCE_API_URL', 'VUE_APP_GOVERNANCE_API_URL', 'VITE_GOVERNANCE_API_URL') || '',
+    GOVERNANCE_CONTRACT_ADDRESS: raw['VITE_GOVERNANCE_CONTRACT_ADDRESS'],
     EXPLORER_URL: get('EXPLORER_URL', 'VUE_APP_EXPLORER_URL', 'VITE_EXPLORER_URL') || '',
     IMGUR_API_CLIENT_ID: get('IMGUR_API_CLIENT_ID', 'VUE_APP_IMGUR_API_CLIENT_ID', 'VITE_IMGUR_API_CLIENT_ID') || '',
     GIPHY_API_KEY: get('GIPHY_API_KEY', 'VUE_APP_GIPHY_API_KEY', 'VITE_GIPHY_API_KEY') || '',

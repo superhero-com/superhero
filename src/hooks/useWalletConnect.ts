@@ -7,9 +7,13 @@ import { useAtom } from "jotai";
 import { useAeSdk } from "./useAeSdk";
 import { IS_FRAMED_AEPP, IS_MOBILE, IS_SAFARI } from "../utils/constants";
 import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { WalletInfo } from "node_modules/@aeternity/aepp-sdk/es/aepp-wallet-communication/rpc/types";
 import { createDeepLinkUrl } from "../utils/url";
-import type { Wallet, Wallets } from "../utils/types";
+import { validateHash } from "../utils/address";
+import { TrendminerApi } from "../api/backend";
+import configs from "../configs";
+import type { Wallet, Wallets, NetworkId } from "../utils/types";
 import { walletInfoAtom } from "../atoms/walletAtoms";
 
 
@@ -19,47 +23,50 @@ export function useWalletConnect() {
     const [scanningForAccounts, setScanningForAccounts] = useState(false);
     const [connectingWallet, setConnectingWallet] = useState(false);
     const [walletConnected, setWalletConnected] = useState(false);
+    const [activeNetworkId, setActiveNetworkId] = useState<NetworkId | null>(null);
 
+    const location = useLocation();
+    const navigate = useNavigate();
     const { sdk, scanForAccounts, addStaticAccount, setActiveAccount, setAccounts, activeAccount } = useAeSdk();
 
-    //   watch(
-    //     () => route.query,
-    //     (query) => {
-    //       if (query.address && !activeAccount.value) {
-    //         const address = query.address as string;
-    //         if (!isAddressValid(address)) {
-    //           alert("Invalid Aeternity address");
-    //           router.push({ query: {} });
-    //           return;
-    //         }
-    //         if (networks.availableNetworks.length === 1) {
-    //           networks.activeNetworkId = networks.availableNetworks[0].networkId;
-    //         } else if (
-    //           query.networkId &&
-    //           networks.availableNetworks.some(
-    //             ({ networkId }) => networkId === query.networkId,
-    //           )
-    //         ) {
-    //           networks.activeNetworkId = query.networkId as NetworkId;
-    //         }
-    //         addStaticAccount(address);
-    //         getFactory();
-    //         router.push({ query: {} });
-    //       }
-    //     },
-    //     {
-    //       deep: true,
-    //       immediate: true,
-    //     },
-    //   );
+    // Get available networks from config
+    const availableNetworks = Object.values(configs.networks).filter(network => !network.disabled);
+
+    // React equivalent of Vue watch for route query parameters
+    useEffect(() => {
+        const query = Object.fromEntries(new URLSearchParams(location.search).entries());
+
+        // alert(JSON.stringify(query));
+
+        if (query.address && !activeAccount) {
+            const address = query.address as string;
+            const addressValidation = validateHash(address);
+            
+            if (!addressValidation.valid) {
+                alert("Invalid Aeternity address");
+                navigate({ search: '' });
+                return;
+            }
+
+            addStaticAccount(address);
+
+            // if (availableNetworks.length === 1) {
+            //     setActiveNetworkId(availableNetworks[0].networkId);
+            // } else if (query.networkId && availableNetworks.some(({ networkId }) => networkId === query.networkId)) {
+            //     setActiveNetworkId(query.networkId as NetworkId);
+            // }
+
+
+        }
+    }, [location.search]);
 
     useEffect(() => {
         const sdkAddresses = sdk?.addresses();
         console.log("[useWalletConnect] activeAccount", activeAccount, sdkAddresses);
-        if (activeAccount && sdkAddresses?.length === 0) {
+        if (activeAccount && walletInfo && sdkAddresses?.length === 0) {
             connectWallet()
         }
-    }, [activeAccount]);
+    }, [activeAccount, walletInfo]);
 
     async function subscribeAddress() {
         /*
@@ -120,7 +127,7 @@ export function useWalletConnect() {
         setConnectingWallet(true);
         wallet.current ??= await scanForWallets();
 
-        if (!wallet) {
+        if (!wallet.current) {
             setConnectingWallet(false);
             return !IS_FRAMED_AEPP ? deepLinkWalletConnect() : null;
         }
@@ -198,12 +205,14 @@ export function useWalletConnect() {
     return {
         walletInfo,
         checkWalletConnection,
-
         connectWallet,
         deepLinkWalletConnect,
         disconnectWallet,
         scanForWallets,
         connectingWallet,
         scanningForAccounts,
+        activeNetworkId,
+        setActiveNetworkId,
+        availableNetworks,
     };
 }

@@ -59,7 +59,13 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             },
         });
 
+        const _staticAeSdk = new AeSdk({
+            nodes,
+            onCompiler: new CompilerHttp(NETWORK_MAINNET.compilerUrl),
+        });
+
         setAeSdk(_aeSdk);
+        setStaticAeSdk(_staticAeSdk);
 
         if (activeAccount) {
             addStaticAccount(activeAccount);
@@ -77,7 +83,17 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
         });
     }
 
-    function addStaticAccount(address: any) {
+    async function addStaticAccount(address: any) {
+        // should wait till staticAeSdk is initialized
+        await new Promise(resolve => {
+            const interval = setInterval(() => {
+                if (staticAeSdk) {
+                    clearInterval(interval);
+                    resolve(true);
+                }
+            }, 100);
+        });
+
         setActiveAccount(address);
         staticAeSdk.addAccount(
             {

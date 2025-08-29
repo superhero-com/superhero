@@ -98,7 +98,7 @@ export default function App() {
         <ModalProvider registry={{ 'post': PostModal, 'cookies-dialog': CookiesDialog, 'token-select': TokenSelectModal, 'image-gallery': ImageGallery, 'feed-item-menu': FeedItemMenu, 'alert': AlertModal }} />
       </Suspense>
       <Suspense fallback={<div className="loading-fallback" />}>
-        <div style={{ paddingTop: '18px' }}>
+        <div className="app-routes-container">
           <Routes future={{ v7_startTransition: true, v7_relativeSplatPath: true } as any}>
             {routes.map((r) => (
               <Route key={r.path as string} path={r.path as string} element={r.element} />

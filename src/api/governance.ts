@@ -2,15 +2,7 @@ import { CONFIG } from '../config';
 
 // Governance API client (aepp-governance backend compatibility)
 async function fetchGovernance(path: string, init?: RequestInit) {
-  // Always route through Vite proxy in development to avoid CORS
-  const isDev = (import.meta as any).env?.MODE === 'development';
-  let raw = CONFIG.GOVERNANCE_API_URL;
-  if (isDev) raw = '/governance-api';
-  if (!raw) raw = 'https://governance.aeternity.com/api';
-  const base = /\/api(\/|$)/.test(raw) || raw.startsWith('/governance-api')
-    ? raw.replace(/\/$/, '')
-    : `${raw.replace(/\/$/, '')}/api`;
-  const res = await fetch(`${base}/${path}`, init);
+  const res = await fetch(`${CONFIG.GOVERNANCE_API_URL}/${path}`, init);
   if (!res.ok) throw new Error(`Governance request failed: ${res.status}`);
   return res.json();
 }

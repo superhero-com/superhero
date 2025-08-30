@@ -96,19 +96,6 @@ export const useGovernance = () => {
     });
   };
 
-  // Poll comments query
-  const usePollComments = (pollId: string) => {
-    return useQuery({
-      queryKey: ['governance', 'pollComments', pollId],
-      queryFn: async () => {
-        const comments = await GovernanceApi.getPollComments(pollId);
-        return Array.isArray(comments) ? comments : [];
-      },
-      enabled: !!pollId,
-      staleTime: 2 * 60 * 1000, // 2 minutes
-    });
-  };
-
   // Submit vote mutation
   const useSubmitVote = () => {
     return useMutation({
@@ -188,20 +175,6 @@ export const useGovernance = () => {
     });
   };
 
-  // Send poll comment mutation
-  const useSendPollComment = () => {
-    return useMutation({
-      mutationFn: async ({ pollId, text }: { pollId: string; text: string }) => {
-        if (!activeAccount) throw new Error('No wallet connected');
-        await GovernanceApi.sendPollComment(activeAccount, { pollId, text });
-      },
-      onSuccess: (_, { pollId }) => {
-        // Invalidate poll comments query
-        queryClient.invalidateQueries({ queryKey: ['governance', 'pollComments', pollId] });
-      },
-    });
-  };
-
   return {
     // Queries
     usePolls,
@@ -211,13 +184,11 @@ export const useGovernance = () => {
     useDelegation,
     useDelegators,
     useAccount,
-    usePollComments,
-
+    
     // Mutations
     useSubmitVote,
     useRevokeVote,
     useSetDelegation,
     useRevokeDelegation,
-    useSendPollComment,
   };
 };

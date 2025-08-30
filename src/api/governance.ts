@@ -15,23 +15,6 @@ async function fetchGovernance(path: string, init?: RequestInit) {
   return res.json();
 }
 
-// Helper function for regular backend API calls
-async function fetchJson(path: string, init?: RequestInit) {
-  const mode = (import.meta as any).env?.MODE;
-  const isDevLike = mode === 'development' || mode === 'test';
-  const base = (CONFIG.BACKEND_URL || '').replace(/\/$/, '');
-  if ((false || !base) && isDevLike) {
-    return Promise.resolve({});
-  }
-  const url = base ? `${base}/${path}` : `/${path}`;
-  const res = await fetch(url, init);
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`Request failed: ${res.status} ${body || ''}`.trim());
-  }
-  return res.json();
-}
-
 export const GovernanceApi = {
   getPolls: async (params: { status?: string; search?: string } = {}) => {
     const qp: Record<string, string> = {};
@@ -79,12 +62,5 @@ export const GovernanceApi = {
     method: 'post',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ author: address, ...payload }),
-  }),
-  // Comment endpoints for governance polls
-  getPollComments: (pollId: string) => fetchJson(`comment/api/poll/${encodeURIComponent(pollId)}`),
-  sendPollComment: (address: string, body: any) => fetchJson('comment/api/', {
-    method: 'post',
-    body: JSON.stringify({ ...body, author: address, type: 'poll' }),
-    headers: { 'Content-Type': 'application/json' },
   }),
 };

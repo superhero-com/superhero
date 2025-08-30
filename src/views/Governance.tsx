@@ -2,13 +2,12 @@ import React, { useEffect, useState } from 'react';
 import Shell from '../components/layout/Shell';
 import LeftRail from '../components/layout/LeftRail';
 import RightRail from '../components/layout/RightRail';
-import { CONFIG } from '../config';
 import './Governance.scss';
 import AeButton from '../components/AeButton';
 import MobileInput from '../components/MobileInput';
 import MobileCard from '../components/MobileCard';
 import { Link, useParams, useLocation } from 'react-router-dom';
-import { HeaderLogo as IconGovernance, IconComment } from '../icons';
+import { HeaderLogo as IconGovernance } from '../icons';
 
 import { useWallet, useGovernance } from '../hooks';
 type TabType = 'polls' | 'vote' | 'account';
@@ -34,12 +33,10 @@ export default function Governance() {
     useDelegation,
     useDelegators,
     useAccount,
-    usePollComments,
     useSubmitVote,
     useRevokeVote,
     useSetDelegation,
     useRevokeDelegation,
-    useSendPollComment
   } = useGovernance();
   
   // Queries
@@ -50,14 +47,12 @@ export default function Governance() {
   const { data: delegation = { to: null } } = useDelegation();
   const { data: delegators = [] } = useDelegators(address || '');
   const { data: account } = useAccount(address || '');
-  const { data: pollComments = [] } = usePollComments(pollId || '');
   
   // Mutations
   const submitVoteMutation = useSubmitVote();
   const revokeVoteMutation = useRevokeVote();
   const setDelegationMutation = useSetDelegation();
   const revokeDelegationMutation = useRevokeDelegation();
-  const sendCommentMutation = useSendPollComment();
   
   const [delegateAddress, setDelegateAddress] = useState<string>(delegation?.to || '');
 
@@ -129,10 +124,6 @@ export default function Governance() {
   const getVotePercentage = (votes: number, total: number) => {
     if (total === 0) return 0;
     return Math.round((votes / total) * 100);
-  };
-
-  const getCommentCount = (pollId: string) => {
-    return pollComments.length;
   };
 
   const renderPollsTab = () => (

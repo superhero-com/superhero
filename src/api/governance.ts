@@ -1,9 +1,10 @@
 import { CONFIG } from '../config';
 
 // Governance API client (aepp-governance backend compatibility)
-async function fetchGovernance(path: string, init?: RequestInit) {
+async function fetchGovernance(path: string, init?: RequestInit, ignoreOutput?: boolean): Promise<any> {
   const res = await fetch(`${CONFIG.GOVERNANCE_API_URL.replace(/\/$/, '')}/${path}`, init);
   if (!res.ok) throw new Error(`Governance request failed: ${res.status}`);
+  if (ignoreOutput) return;
   return res.json();
 }
 
@@ -28,7 +29,7 @@ export const GovernanceApi = {
     method: 'post',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ topic, poll }),
-  }),
+  }, true),
   
   // Get poll ordering (optionally for closed polls)
   getPollOrdering: (closed: boolean = false) => fetchGovernance(`pollOrdering?closed=${closed ? "true" : "false"}`),

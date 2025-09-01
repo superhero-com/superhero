@@ -15,22 +15,6 @@ export default defineConfig(({ mode }) => {
       // Expose all envs to process.env for broad compatibility
       'process.env': env,
     },
-    server: {
-      port: 5173,
-      fs: {
-        // allow importing icons from the parent Vue project's assets
-        allow: [path.resolve(__dirname, '..')],
-      },
-      proxy: {
-        // Proxy governance API to bypass CORS in dev
-        '/governance-api': {
-          target: 'https://governance.aeternity.com',
-          changeOrigin: true,
-          secure: true,
-          rewrite: (p) => p.replace(/^\/governance-api/, '/api'),
-        },
-      },
-    },
     build: {
       sourcemap: false,
       chunkSizeWarningLimit: 900,

@@ -46,6 +46,19 @@
 .gov-native .result-row .bar { background: #0f1117; border-radius: 6px; overflow: hidden; height: 10px; }
 .gov-native .result-row .bar span { display: block; height: 10px; background: #ec407a; }
 
+/* Ensure link-wrapped poll cards don't inherit global gradient-text link styles */
+.mobile-poll-link {
+  background: none !important;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: inherit;
+  color: inherit;
+}
+
+.mobile-poll-link::after {
+  display: none !important;
+}
+
 /* Mobile-optimized styles */
 @include mobile {
   /* Enhanced Tab Navigation */
@@ -342,46 +355,6 @@
       font-size: 14px;
       line-height: 1.5;
     }
-  }
-
-  /* Enhanced Pagination */
-  .mobile-pagination {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    padding: 24px 0;
-  }
-
-  .mobile-pagination-btn {
-    min-width: 100px;
-    height: 48px;
-    font-size: 14px;
-    font-weight: 600;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
-    
-    &:hover:not(:disabled) {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.15);
-      transform: translateY(-2px);
-    }
-    
-    &:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-  }
-
-  .mobile-page-info {
-    font-size: 14px;
-    color: $light_font_color;
-    min-width: 80px;
-    text-align: center;
-    font-weight: 500;
   }
 
   /* Enhanced Voting Section */
@@ -929,8 +902,7 @@
 @include mobile {
   /* Touch-friendly button sizes */
   .mobile-vote-option-btn,
-  .mobile-action-btn,
-  .mobile-pagination-btn {
+  .mobile-action-btn {
     min-height: 48px; /* Minimum touch target size */
     touch-action: manipulation; /* Optimize for touch */
     
@@ -963,8 +935,7 @@
   
   /* Enhanced focus states for accessibility */
   .mobile-vote-option-btn:focus,
-  .mobile-action-btn:focus,
-  .mobile-pagination-btn:focus {
+  .mobile-action-btn:focus {
     outline: 2px solid var(--accent-color);
     outline-offset: 2px;
   }
@@ -1148,11 +1119,6 @@
     animation: slideIn 0.5s ease-out 0.4s both;
   }
   
-  /* Enhanced pagination */
-  .mobile-pagination {
-    animation: fadeIn 0.5s ease-out 0.6s both;
-  }
-  
   /* Enhanced mobile section titles */
   .mobile-section-title {
     position: relative;
@@ -1255,8 +1221,7 @@
   
   /* Enhanced focus management */
   .mobile-vote-option-btn:focus-visible,
-  .mobile-action-btn:focus-visible,
-  .mobile-pagination-btn:focus-visible {
+  .mobile-action-btn:focus-visible {
     outline: 2px solid var(--accent-color);
     outline-offset: 2px;
     border-radius: 16px;

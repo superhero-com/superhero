@@ -6,7 +6,6 @@
   "WALLET_URL": "https://wallet.superhero.com",
   "MIDDLEWARE_URL": "https://mainnet.aeternity.io/mdw",
   "JITSI_DOMAIN": "meet.jit.si",
-  "GOVERNANCE_API_URL": "https://governance.aeternity.com/api",
   "EXPLORER_URL": "https://aescan.io",
   "IMGUR_API_CLIENT_ID": "",
   "GIPHY_API_KEY": "",

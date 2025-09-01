@@ -1,31 +1,62 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { GovernanceApi } from '../api/backend';
+import { Contract, Encoded } from '@aeternity/aepp-sdk';
+import { GovernanceApi } from '../api/governance';
 import { useAeSdk } from './useAeSdk';
+import { CONFIG } from '../config';
+import REGISTRY_WITH_EVENTS_ACI from '../api/GovernanceRegistryACI.json';
 
 export const useGovernance = () => {
   const { activeAccount, sdk } = useAeSdk();
   const queryClient = useQueryClient();
 
-  // Polls query
-  const usePolls = (params?: { page?: number; pageSize?: number; status?: string; search?: string }) => {
+  // Polls query (combined smart contract + backend ordering/metrics)
+  const usePolls = (params: { status: 'all' | 'open' | 'closed'; search?: string }) => {
     return useQuery({
       queryKey: ['governance', 'polls', params],
       queryFn: async () => {
-        const res = await GovernanceApi.getPolls(params || {});
-        const polls = (res && (
-          res.polls || res.items || res.data || res.results || (Array.isArray(res) ? res : null)
-        )) || [];
-        return polls;
+        const registry = await Contract.initialize<{
+          polls: () => Map<number, {
+            close_height: bigint;
+            is_listed: boolean;
+            title: string;
+            poll: Encoded.ContractAddress;
+          }>
+        }>({
+          ...sdk.getContext(),
+          aci: REGISTRY_WITH_EVENTS_ACI,
+          address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
+        });
+        const contractPolls = (await registry.polls()).decodedResult;
+        
+        const { data } = await GovernanceApi.getPollOrdering(params.status === 'closed');
+        if (params.status === 'all') data.push(...(await GovernanceApi.getPollOrdering(true)).data);
+
+        const height = await sdk.getHeight();
+        let merged = data.map(({ id, ...others }) => ({
+          id,
+          ...others,
+          title: contractPolls.get(BigInt(id)).title,
+          endDate: new Date(Date.now() + (others.closeHeight - height) * 3 * 60 * 1000),
+          status: (others.closeHeight == null || others.closeHeight > height
+            ? 'open' : 'closed') as 'open' | 'closed',
+        }));
+        
+        const search = params.search?.trim().toLowerCase();
+        if (search) {
+          merged = merged.filter((p) => p.title.toLowerCase().includes(search));
+        }
+
+        return merged;
       },
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };
 
   // Single poll query
-  const usePoll = (id: string) => {
+  const usePoll = (id?: Encoded.ContractAddress) => {
     return useQuery({
       queryKey: ['governance', 'poll', id],
-      queryFn: () => GovernanceApi.getPoll(id),
+      queryFn: () => id ? GovernanceApi.getPollOverview(id) : undefined,
       enabled: !!id,
       staleTime: 2 * 60 * 1000, // 2 minutes
     });
@@ -35,6 +66,7 @@ export const useGovernance = () => {
   const usePollResults = (id: string) => {
     return useQuery({
       queryKey: ['governance', 'pollResults', id],
+      // @ts-expect-error needs to integrate the right backend
       queryFn: () => GovernanceApi.getPollResults(id),
       enabled: !!id,
       staleTime: 1 * 60 * 1000, // 1 minute
@@ -47,6 +79,7 @@ export const useGovernance = () => {
       queryKey: ['governance', 'myVote', pollId, activeAccount],
       queryFn: async () => {
         if (!activeAccount) return null;
+        // @ts-expect-error needs to integrate the right backend
         return GovernanceApi.getMyVote(pollId, activeAccount);
       },
       enabled: !!pollId && !!activeAccount,
@@ -62,6 +95,7 @@ export const useGovernance = () => {
       queryFn: async () => {
         if (!targetAddress) return { to: null };
         try {
+          // @ts-expect-error needs to integrate the right backend
           return await GovernanceApi.getDelegation(targetAddress);
         } catch {
           return { to: null };
@@ -77,6 +111,7 @@ export const useGovernance = () => {
     return useQuery({
       queryKey: ['governance', 'delegators', to],
       queryFn: async () => {
+        // @ts-expect-error needs to integrate the right backend
         const res = await GovernanceApi.listDelegators(to);
         const list = (res && (res.delegators || res.items || res.data || (Array.isArray(res) ? res : null))) || [];
         return list;
@@ -90,22 +125,10 @@ export const useGovernance = () => {
   const useAccount = (accountAddress: string) => {
     return useQuery({
       queryKey: ['governance', 'account', accountAddress],
+      // @ts-expect-error needs to integrate the right backend
       queryFn: () => GovernanceApi.getAccount(accountAddress),
       enabled: !!accountAddress,
       staleTime: 5 * 60 * 1000, // 5 minutes
-    });
-  };
-
-  // Poll comments query
-  const usePollComments = (pollId: string) => {
-    return useQuery({
-      queryKey: ['governance', 'pollComments', pollId],
-      queryFn: async () => {
-        const comments = await GovernanceApi.getPollComments(pollId);
-        return Array.isArray(comments) ? comments : [];
-      },
-      enabled: !!pollId,
-      staleTime: 2 * 60 * 1000, // 2 minutes
     });
   };
 
@@ -116,9 +139,11 @@ export const useGovernance = () => {
         if (!activeAccount) throw new Error('No wallet connected');
 
         // First call may return challenge
+        // @ts-expect-error needs to integrate the right backend
         const first = await GovernanceApi.vote(activeAccount, { pollId, option });
         if (first?.challenge) {
           const signature = (await sdk.signMessage(first.challenge)).toString('hex');
+          // @ts-expect-error needs to integrate the right backend
           await GovernanceApi.vote(activeAccount, { pollId, option, challenge: first.challenge, signature });
         }
       },
@@ -136,9 +161,11 @@ export const useGovernance = () => {
       mutationFn: async (pollId: string) => {
         if (!activeAccount) throw new Error('No wallet connected');
 
+        // @ts-expect-error needs to integrate the right backend
         const first = await GovernanceApi.revokeVote(activeAccount, { pollId } as any);
         if ((first as any)?.challenge) {
           const signature = (await sdk.signMessage((first as any).challenge)).toString('hex');
+          // @ts-expect-error needs to integrate the right backend
           await GovernanceApi.revokeVote(activeAccount, { pollId, challenge: (first as any).challenge, signature });
         }
       },
@@ -156,9 +183,11 @@ export const useGovernance = () => {
       mutationFn: async ({ to }: { to: string }) => {
         if (!activeAccount) throw new Error('No wallet connected');
 
+        // @ts-expect-error needs to integrate the right backend
         const first = await GovernanceApi.setDelegation(activeAccount, { to });
         if (first?.challenge) {
           const signature = (await sdk.signMessage(first.challenge)).toString('hex');
+          // @ts-expect-error needs to integrate the right backend
           await GovernanceApi.setDelegation(activeAccount, { to, challenge: first.challenge, signature });
         }
       },
@@ -175,29 +204,17 @@ export const useGovernance = () => {
       mutationFn: async () => {
         if (!activeAccount) throw new Error('No wallet connected');
 
+        // @ts-expect-error needs to integrate the right backend
         const first = await GovernanceApi.revokeDelegation(activeAccount, {} as any);
         if ((first as any)?.challenge) {
           const signature = (await sdk.signMessage((first as any).challenge)).toString('hex');
+          // @ts-expect-error needs to integrate the right backend
           await GovernanceApi.revokeDelegation(activeAccount, { challenge: (first as any).challenge, signature });
         }
       },
       onSuccess: () => {
         // Invalidate delegation query
         queryClient.invalidateQueries({ queryKey: ['governance', 'delegation', activeAccount] });
-      },
-    });
-  };
-
-  // Send poll comment mutation
-  const useSendPollComment = () => {
-    return useMutation({
-      mutationFn: async ({ pollId, text }: { pollId: string; text: string }) => {
-        if (!activeAccount) throw new Error('No wallet connected');
-        await GovernanceApi.sendPollComment(activeAccount, { pollId, text });
-      },
-      onSuccess: (_, { pollId }) => {
-        // Invalidate poll comments query
-        queryClient.invalidateQueries({ queryKey: ['governance', 'pollComments', pollId] });
       },
     });
   };
@@ -211,13 +228,11 @@ export const useGovernance = () => {
     useDelegation,
     useDelegators,
     useAccount,
-    usePollComments,
-
+    
     // Mutations
     useSubmitVote,
     useRevokeVote,
     useSetDelegation,
     useRevokeDelegation,
-    useSendPollComment,
   };
 };

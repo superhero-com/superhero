@@ -46,6 +46,19 @@
 .gov-native .result-row .bar { background: #0f1117; border-radius: 6px; overflow: hidden; height: 10px; }
 .gov-native .result-row .bar span { display: block; height: 10px; background: #ec407a; }
 
+/* Ensure link-wrapped poll cards don't inherit global gradient-text link styles */
+.mobile-poll-link {
+  background: none !important;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: inherit;
+  color: inherit;
+}
+
+.mobile-poll-link::after {
+  display: none !important;
+}
+
 /* Mobile-optimized styles */
 @include mobile {
   /* Enhanced Tab Navigation */

@@ -201,6 +201,7 @@ export default function Governance() {
                           <span className="stat-icon">👥</span>
                           {p.totalVotes || 0} votes
                         </span>
+                        {' '}
                         {p.endDate && (
                           <span className="stat-item">
                             <span className="stat-icon">⏰</span>

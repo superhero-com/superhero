@@ -11,6 +11,7 @@
 .recent-activity-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   margin-bottom: 16px;
   padding-bottom: 12px;
@@ -28,6 +29,12 @@
   flex: 1;
 }
 
+.recent-activity-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .recent-activity-count {
   font-size: 12px;
   font-weight: 600;
@@ -36,6 +43,31 @@
   padding: 2px 8px;
   border-radius: 12px;
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+}
+
+.clear-all-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: rgba(255, 107, 107, 0.2);
+    border-color: rgba(255, 107, 107, 0.4);
+    transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
 }
 
 .recent-activity-empty {
@@ -122,10 +154,94 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-bottom: 4px;
   
   .activity-amount {
     font-weight: 600;
     color: var(--accent-color, #4caf50);
+  }
+}
+
+.activity-status {
+  margin-top: 2px;
+}
+
+.tx-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  
+  .status-text {
+    color: var(--light-font-color, #9aa);
+  }
+  
+  .block-number {
+    color: var(--light-font-color, #9aa);
+    opacity: 0.8;
+    margin-left: 4px;
+    font-size: 9px;
+  }
+  
+  &.confirmed {
+    .status-dot {
+      background-color: #4caf50;
+      box-shadow: 0 0 4px rgba(76, 175, 80, 0.4);
+    }
+    
+    .status-text {
+      color: #4caf50;
+    }
+  }
+  
+  &.pending {
+    .status-dot {
+      background-color: #ff9800;
+      animation: pulse 2s infinite;
+    }
+    
+    .status-text {
+      color: #ff9800;
+    }
+  }
+  
+  &.failed {
+    .status-dot {
+      background-color: #f44336;
+    }
+    
+    .status-text {
+      color: #f44336;
+    }
+  }
+  
+  &.unknown {
+    .status-dot {
+      background-color: #9e9e9e;
+    }
+    
+    .status-text {
+      color: #9e9e9e;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
   }
 }
 
@@ -180,6 +296,132 @@
   opacity: 0.8;
 }
 
+// Clear confirmation modal
+.clear-confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.clear-confirm-modal {
+  background: var(--glass-bg, rgba(26, 26, 35, 0.95));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: slideIn 0.3s ease-out;
+}
+
+.clear-confirm-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.clear-confirm-icon {
+  font-size: 24px;
+}
+
+.clear-confirm-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--standard-font-color, #ffffff);
+  margin: 0;
+}
+
+.clear-confirm-content {
+  margin-bottom: 24px;
+  
+  p {
+    font-size: 14px;
+    color: var(--light-font-color, #9aa);
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+    
+    &:last-child {
+      margin-bottom: 0;
+      font-weight: 600;
+      color: var(--standard-font-color, #ffffff);
+    }
+  }
+}
+
+.clear-confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.clear-confirm-cancel,
+.clear-confirm-delete {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.clear-confirm-cancel {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--light-font-color, #9aa);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--standard-font-color, #ffffff);
+  }
+}
+
+.clear-confirm-delete {
+  background: #ff4444;
+  color: white;
+  border: 1px solid #ff4444;
+  
+  &:hover {
+    background: #ff3333;
+    box-shadow: 0 4px 12px rgba(255, 68, 68, 0.4);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 // Mobile optimizations
 @media (max-width: 768px) {
   .recent-activity-container {
@@ -200,6 +442,34 @@
   .recent-activity-count {
     font-size: 10px;
     padding: 1px 6px;
+  }
+  
+  .clear-all-button {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+  
+  .clear-confirm-modal {
+    padding: 20px;
+    max-width: 320px;
+  }
+  
+  .clear-confirm-title {
+    font-size: 16px;
+  }
+  
+  .clear-confirm-content p {
+    font-size: 13px;
+  }
+  
+  .clear-confirm-actions {
+    gap: 8px;
+    
+    button {
+      padding: 6px 12px;
+      font-size: 13px;
+    }
   }
   
   .activity-item {
@@ -223,6 +493,22 @@
   .activity-tokens {
     font-size: 10px;
     gap: 4px;
+    margin-bottom: 3px;
+  }
+  
+  .tx-status {
+    font-size: 9px;
+    gap: 3px;
+    
+    .status-dot {
+      width: 5px;
+      height: 5px;
+    }
+    
+    .block-number {
+      font-size: 8px;
+      margin-left: 3px;
+    }
   }
   
   .activity-time {

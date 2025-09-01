@@ -1,15 +1,18 @@
 import { AeSdk, AeSdkAepp, CompilerHttp, Encoded, Node } from "@aeternity/aepp-sdk";
 import { useAtom } from "jotai";
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useRef, useState } from "react";
 import { activeAccountAtom } from "../atoms/accountAtoms";
+import { transactionsQueueAtom } from "../atoms/txQueueAtoms";
+import { useModal } from "../hooks/useModal";
 import configs from "../configs";
 import { NETWORK_MAINNET } from "../utils/constants";
 import { INetwork } from "../utils/types";
 import { createDeepLinkUrl } from "../utils/url";
 
 export const AeSdkContext = createContext<{
-    sdk: AeSdkAepp,
+    aeSdk: AeSdkAepp,
     staticAeSdk: AeSdk,
+    sdkInitialized: boolean,
     activeAccount: string,
     currentBlockHeight: number,
     activeNetwork: INetwork,
@@ -32,14 +35,21 @@ const nodes: { instance: Node; name: string }[] = Object.values(
 }));
 
 export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
-    const [aeSdk, setAeSdk] = useState<AeSdkAepp>();
-    const [staticAeSdk, setStaticAeSdk] = useState<AeSdk | null>(null);
+    const aeSdkRef = useRef<AeSdkAepp>();
+    const staticAeSdkRef = useRef<AeSdk | null>(null);
+    const [sdkInitialized, setSdkInitialized] = useState(false);
     const [activeAccount, setActiveAccount] = useAtom<string | undefined>(activeAccountAtom);
     const [accounts, setAccounts] = useState<string[]>([]);
     const [currentBlockHeight, setCurrentBlockHeight] = useState<number | null>(null);
-    const [activeNetwork, setActiveNetwork] = useState<INetwork | null>(null);
-    // TODO: should be an atom
-    const [transactionsQueue, setTransactionsQueue] = useState<Record<string, { status: string; tx: Encoded.Transaction; signUrl: string }>>({});
+    const [activeNetwork, setActiveNetwork] = useState<INetwork>(NETWORK_MAINNET);
+    const [transactionsQueue, setTransactionsQueue] = useAtom(transactionsQueueAtom);
+    const transactionsQueueRef = useRef(transactionsQueue);
+    const { openModal } = useModal();
+
+    // Keep the ref in sync with the atom value
+    useEffect(() => {
+        transactionsQueueRef.current = transactionsQueue;
+    }, [transactionsQueue]);
 
     async function initSdk() {
         console.log("[AeSdkProvider] initSdk activeAccount", activeAccount);
@@ -64,8 +74,8 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             onCompiler: new CompilerHttp(NETWORK_MAINNET.compilerUrl),
         });
 
-        setAeSdk(_aeSdk);
-        setStaticAeSdk(_staticAeSdk);
+        aeSdkRef.current = _aeSdk;
+        staticAeSdkRef.current = _staticAeSdk;
 
         if (activeAccount) {
             addStaticAccount(activeAccount);
@@ -75,10 +85,11 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             getCurrentGeneration(_aeSdk);
         }, 30000);
         getCurrentGeneration(_aeSdk);
+        setSdkInitialized(true);
     }
 
     function getCurrentGeneration(sdk?: AeSdkAepp) {
-        (sdk || aeSdk).getCurrentGeneration().then((result) => {
+        (sdk || aeSdkRef.current).getCurrentGeneration().then((result) => {
             setCurrentBlockHeight(result.keyBlock.height);
         });
     }
@@ -87,15 +98,17 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
         // should wait till staticAeSdk is initialized
         await new Promise(resolve => {
             const interval = setInterval(() => {
-                if (staticAeSdk) {
+                if (staticAeSdkRef.current) {
                     clearInterval(interval);
                     resolve(true);
                 }
             }, 100);
         });
 
+        console.log("[AeSdkProvider] addStaticAccount aeSdk", address, aeSdkRef.current);
+        console.log("[AeSdkProvider] addStaticAccount", address, staticAeSdkRef.current);
         setActiveAccount(address);
-        staticAeSdk.addAccount(
+        staticAeSdkRef.current.addAccount(
             {
                 address,
                 signTransaction: function (
@@ -129,49 +142,61 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                         "x-cancel": decodeURI(cancelUrl.href),
                     });
 
-                    transactionsQueue.value[uniqueId] = {
-                        status: "pending",
-                        tx,
-                        signUrl,
-                    };
+                    setTransactionsQueue({
+                        ...transactionsQueue,
+                        [uniqueId]: {
+                            status: "pending",
+                            tx,
+                            signUrl,
+                        }
+                    });
 
                     return new Promise((resolve, reject) => {
                         let newWindow: Window | null = null;
                         const windowFeatures =
                             "name=Superhero Wallet,width=362,height=594,toolbar=false,location=false,menubar=false,popup";
 
-                        alert("TODO: should open a modal to confirm the transaction");
-                        // transactionConfirmModal.openModal().then((confirmed: boolean) => {
-                        //     if (confirmed) {
-                        //         /**
-                        //          * By setting a name and width/height,
-                        //          * the extension is forced to open in a new window
-                        //          */
-                        //         newWindow = window.open(signUrl, "_blank", windowFeatures);
-                        //     } else {
-                        //         reject(new Error("Transaction cancelled"));
-                        //     }
-                        // });
+                        openModal({
+                            name: 'transaction-confirm',
+                            props: {
+                                transaction: tx,
+                                onConfirm: () => {
+                                    /**
+                                     * By setting a name and width/height,
+                                     * the extension is forced to open in a new window
+                                     */
+                                    newWindow = window.open(signUrl, "_blank", windowFeatures);
+                                },
+                                onCancel: () => {
+                                    reject(new Error("Transaction cancelled"));
+                                }
+                            }
+                        });
 
                         const interval = setInterval(() => {
-                            if (Object.keys(transactionsQueue.value).includes(uniqueId)) {
-                                if (transactionsQueue.value[uniqueId]?.status === "cancelled") {
+                            const currentQueue = transactionsQueueRef.current;
+                            if (Object.keys(currentQueue).includes(uniqueId)) {
+                                if (currentQueue[uniqueId]?.status === "cancelled") {
                                     clearInterval(interval);
                                     reject(new Error("Transaction cancelled"));
                                     newWindow?.close();
                                     // delete transaction from queue
-                                    delete transactionsQueue.value[uniqueId];
+                                    const newQueue = { ...currentQueue };
+                                    delete newQueue[uniqueId];
+                                    setTransactionsQueue(newQueue);
                                 }
 
                                 if (
-                                    transactionsQueue.value[uniqueId]?.status === "completed" &&
-                                    transactionsQueue.value[uniqueId]?.transaction
+                                    currentQueue[uniqueId]?.status === "completed" &&
+                                    currentQueue[uniqueId]?.transaction
                                 ) {
                                     clearInterval(interval);
-                                    resolve(transactionsQueue.value[uniqueId].transaction);
+                                    resolve(currentQueue[uniqueId].transaction);
                                     newWindow?.close();
                                     // delete transaction from queue
-                                    delete transactionsQueue.value[uniqueId];
+                                    const newQueue = { ...currentQueue };
+                                    delete newQueue[uniqueId];
+                                    setTransactionsQueue(newQueue);
                                 }
                             }
                         }, 500);
@@ -184,26 +209,25 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
 
     async function scanForAccounts() {
         const currentAddress = Object.keys(
-            aeSdk._accounts?.current || {},
+            aeSdkRef.current._accounts?.current || {},
         )[0] as any;
 
+        console.log("[AeSdkProvider] scanForAccounts currentAddress", currentAddress);
         setAccounts([currentAddress]);
 
         setActiveAccount(currentAddress);
     }
 
-    useEffect(() => {
-        initSdk();
-    }, []);
+    // useEffect(() => {
+    //     initSdk();
+    // }, []);
 
-    if (!aeSdk && !staticAeSdk) {
-        return null;
-    }
 
     return (
         <AeSdkContext.Provider value={{
-            sdk: aeSdk,
-            staticAeSdk,
+            aeSdk: aeSdkRef.current,
+            staticAeSdk: staticAeSdkRef.current,
+            sdkInitialized,
             activeAccount,
             currentBlockHeight,
             activeNetwork,

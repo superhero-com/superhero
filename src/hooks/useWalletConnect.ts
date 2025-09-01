@@ -27,7 +27,7 @@ export function useWalletConnect() {
 
     const location = useLocation();
     const navigate = useNavigate();
-    const { sdk, scanForAccounts, addStaticAccount, setActiveAccount, setAccounts, activeAccount } = useAeSdk();
+    const { sdk, aeSdk, scanForAccounts, addStaticAccount, setActiveAccount, setAccounts, activeAccount } = useAeSdk();
 
     // Get available networks from config
     const availableNetworks = Object.values(configs.networks).filter(network => !network.disabled);
@@ -60,13 +60,6 @@ export function useWalletConnect() {
         }
     }, [location.search]);
 
-    useEffect(() => {
-        const sdkAddresses = sdk?.addresses();
-        console.log("[useWalletConnect] activeAccount", activeAccount, sdkAddresses);
-        if (activeAccount && walletInfo && sdkAddresses?.length === 0) {
-            connectWallet()
-        }
-    }, [activeAccount, walletInfo]);
 
     async function subscribeAddress() {
         /*
@@ -83,7 +76,7 @@ export function useWalletConnect() {
 
             (async () => {
                 try {
-                    await sdk.subscribeAddress(
+                    await aeSdk.subscribeAddress(
                         SUBSCRIPTION_TYPES.subscribe,
                         "connected",
                     );
@@ -120,7 +113,7 @@ export function useWalletConnect() {
         setAccounts([]);
 
         try {
-            await sdk.disconnectWallet();
+            await aeSdk.disconnectWallet();
         } catch (error) {
             //
         }
@@ -133,8 +126,9 @@ export function useWalletConnect() {
         }
 
         try {
-            const _walletInfo = await sdk.connectToWallet(wallet.current.getConnection());
+            const _walletInfo = await aeSdk.connectToWallet(wallet.current.getConnection());
             setWalletInfo(_walletInfo);
+            console.log("[useWalletConnect] connectWallet _walletInfo", _walletInfo);
 
             await subscribeAddress();
             setWalletConnected(true);
@@ -153,7 +147,7 @@ export function useWalletConnect() {
         setActiveAccount(undefined);
         setAccounts([]);
         try {
-            await sdk.disconnectWallet();
+            await aeSdk.disconnectWallet();
         } catch (error) {
             //
         }
@@ -192,13 +186,23 @@ export function useWalletConnect() {
     }
 
     async function checkWalletConnection() {
+        if (connectingWallet) {
+            return;
+        }
+
+
+        console.log("[useWalletConnect] checkWalletConnection activeAccount", activeAccount, walletConnected);
+
         if (
             // route.name !== "tx-queue" &&
-            walletInfo &&
             activeAccount &&
             !walletConnected
         ) {
-            connectWallet();
+            if (walletInfo) {
+                connectWallet();
+            } else {
+                addStaticAccount(activeAccount);
+            }
         }
     }
 

@@ -104,11 +104,13 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
     try {
 
       const postMedia: string[] = [...mediaUrls];
+      console.log("[CreatePost] handleSubmit", sdk);
       const contract = await sdk.initializeContract({
         aci: TIPPING_V3_ACI as any,
         address: CONFIG.CONTRACT_V3_ADDRESS
       });
       const { decodedResult } = await contract.post_without_tip(trimmed, postMedia);
+      console.log("[CreatePost] handleSubmit", decodedResult);
       try {
         await PostsService.getById({
           id: `${decodedResult}_v3`

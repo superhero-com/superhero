@@ -142,11 +142,13 @@ export default function RemoveLiquidityForm() {
   const lpAmount = selectedPosition.balance ? Decimal.from(toAe(selectedPosition.balance)) : Decimal.from('0');
   const removeAmount = useCustomAmount 
     ? Decimal.from(customAmount || '0')
-    : lpAmount.mul(percentage).div(100);
+    : percentage === 100 
+      ? lpAmount  // Use exact balance for 100% to avoid precision loss
+      : lpAmount.mul(percentage).div(100);
   
   const estimatedValueUsd = selectedPosition.valueUsd 
     ? Decimal.from(selectedPosition.valueUsd).mul(useCustomAmount 
-        ? (Number(customAmount) / lpAmount.toNumber()) * 100 
+        ? (Number(customAmount) / Number(lpAmount.toString())) * 100 
         : percentage).div(100)
     : null;
 
@@ -283,7 +285,7 @@ export default function RemoveLiquidityForm() {
               </div>
               <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--accent-color)' }}>
                 {useCustomAmount 
-                  ? `${((Number(customAmount) / lpAmount.toNumber()) * 100).toFixed(1)}%`
+                  ? `${((Number(customAmount) / Number(lpAmount.toString())) * 100).toFixed(1)}%`
                   : `${percentage}%`
                 }
               </div>
@@ -728,7 +730,7 @@ export default function RemoveLiquidityForm() {
             </div>
             <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--accent-color)' }}>
               {useCustomAmount 
-                ? `${((Number(customAmount || '0') / lpAmount.toNumber()) * 100).toFixed(1)}%`
+                ? `${((Number(customAmount || '0') / Number(lpAmount.toString())) * 100).toFixed(1)}%`
                 : `${percentage}%`
               }
             </div>
@@ -795,7 +797,7 @@ export default function RemoveLiquidityForm() {
         }}
       >
         💧 Remove {useCustomAmount 
-          ? `${((Number(customAmount || '0') / lpAmount.toNumber()) * 100).toFixed(1)}%`
+          ? `${((Number(customAmount || '0') / Number(lpAmount.toString())) * 100).toFixed(1)}%`
           : `${percentage}%`
         } Liquidity
       </button>

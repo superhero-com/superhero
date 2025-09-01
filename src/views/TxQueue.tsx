@@ -26,11 +26,11 @@ export default function TxQueue() {
     }));
     
     // Close current tab after a short delay
-    // const timer = window.setTimeout(() => { 
-    //   window.close(); 
-    // }, 200);
+    const timer = window.setTimeout(() => { 
+      window.close(); 
+    }, 200);
     
-    // return () => window.clearTimeout(timer);
+    return () => window.clearTimeout(timer);
   }, [id, location.search, setTransactionsQueue]);
 
   return (

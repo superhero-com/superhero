@@ -1,15 +1,14 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useBackend, useWallet } from '../../hooks';
 import AeButton from '../AeButton';
-import { useWallet, useAeternity, useBackend } from '../../hooks';
 
 export default function PostModal({ onClose }: { onClose: () => void }) {
   const [title, setTitle] = useState('');
   const [media, setMedia] = useState('');
   const [loading, setLoading] = useState(false);
   const { address } = useWallet();
-  const { useSdkWallet } = useAeternity();
   const { callWithAuth } = useBackend();
-    return (
+  return (
     <div>
       <h3>Create Post</h3>
       <div style={{ display: 'grid', gap: 8 }}>

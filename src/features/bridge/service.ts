@@ -1,3 +1,4 @@
+import { AeSdk } from '@aeternity/aepp-sdk';
 import { bridgeEthToAe } from './ethereum';
 import { waitForAeEthDeposit, getAeEthBalance } from './aeternity';
 import { 
@@ -34,6 +35,7 @@ export class BridgeService {
    * Bridge ETH to AE with optional automatic swap
    */
   async bridgeEthToAe(
+    sdk: AeSdk,
     options: BridgeOptions,
     onProgress?: BridgeProgressCallback
   ): Promise<BridgeResult> {
@@ -59,14 +61,6 @@ export class BridgeService {
 
       updateStatus('connecting', 'Connecting to Ethereum wallet...');
 
-      // Record pre-bridge æETH balance
-      const sdk = (window as any).__aeSdk;
-      if (!sdk) {
-        throw new BridgeError(
-          BridgeErrorType.WALLET_NOT_CONNECTED,
-          'æternity SDK not available'
-        );
-      }
 
       const prevAeEthBalance = await getAeEthBalance(aeAccount);
       const expectedIncrease = BigInt(toAettos(amountEth, 18));
@@ -203,15 +197,12 @@ export class BridgeService {
   /**
    * Get bridge quote (estimate output amount)
    */
-  async getBridgeQuote(amountEth: string): Promise<string> {
+  async getBridgeQuote(sdk: AeSdk, amountEth: string): Promise<string> {
     if (!amountEth || Number(amountEth) <= 0) {
       return '0';
     }
 
     try {
-      const sdk = (window as any).__aeSdk;
-      if (!sdk) return '0';
-
       const { router } = await initDexContracts(sdk);
       const amountIn = toAettos(amountEth, 18);
       const path = [DEX_ADDRESSES.aeeth, DEX_ADDRESSES.wae];

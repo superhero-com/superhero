@@ -1,13 +1,13 @@
 import React from 'react';
+import { useWallet, useWalletConnect } from '../hooks';
 import Identicon from './Identicon';
-import { useWallet, useAeternity } from '../hooks';
 
 type Props = { block?: boolean } & React.HTMLAttributes<HTMLDivElement>;
 
 export default function MiniWalletInfo({ block, style, ...rest }: Props) {
+  const { disconnectWallet } = useWalletConnect()
   const { address, balance } = useWallet();
-  const { refreshAeBalance, logout } = useAeternity();
-  
+
   if (!address) return null;
 
   const short = `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -33,15 +33,15 @@ export default function MiniWalletInfo({ block, style, ...rest }: Props) {
         <div style={{ fontSize: 12, opacity: 0.8 }}>{Number(balance || 0).toLocaleString(undefined, { maximumFractionDigits: 6 })} AE</div>
       </div>
       <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
-        <button
+        {/* <button
           onClick={() => refreshAeBalance()}
           title="Refresh balance"
           style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'inherit' }}
         >
           Refresh
-        </button>
+        </button> */}
         <button
-          onClick={() => logout()}
+          onClick={() => disconnectWallet()}
           title="Logout"
           style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'inherit' }}
         >

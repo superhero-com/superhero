@@ -217,7 +217,7 @@
   contain: layout style;
   
   @include mobile {
-    padding-top: calc($mobile_navigation_height + env(safe-area-inset-top) + 3.5rem);
+    padding-top: 1rem; // Reduced padding since CreatePost now handles its own spacing
     padding-left: 0.75rem;
     padding-right: 0.75rem;
   }
@@ -417,7 +417,7 @@
     }
   }
   
-  .footer { 
+  .post-footer { 
     display: flex; 
     align-items: center; 
     color: $light_font_color; 

@@ -14,10 +14,10 @@ interface FeedItemProps {
 }
 
 // Component: Individual Feed Item
-const FeedItem = memo(({ 
-  item, 
-  commentCount, 
-  chainName, 
+const FeedItem = memo(({
+  item,
+  commentCount,
+  chainName,
   onItemClick
 }: FeedItemProps) => {
   const postId = item.id;
@@ -32,7 +32,7 @@ const FeedItem = memo(({
       {authorAddress && (
         <PostAvatar authorAddress={authorAddress} chainName={chainName} />
       )}
-      
+
       <div className="content" onClick={handleItemClick} style={{ cursor: 'pointer' }}>
         <div className="header">
           <div className="author-section">
@@ -44,16 +44,16 @@ const FeedItem = memo(({
             <span className="timestamp">{relativeTime(new Date(item.created_at))}</span>
           )}
         </div>
-        
+
         <div className="title">{linkify(item.content)}</div>
-        
+
         {item.media && Array.isArray(item.media) && item.media.length > 0 && (
           <div className="media-grid">
             {item.media.slice(0, 4).map((m: string, index: number) => (
-              <img 
-                key={`${postId}-${index}`} 
-                src={m} 
-                alt="media" 
+              <img
+                key={`${postId}-${index}`}
+                src={m}
+                alt="media"
                 className="media-item"
                 loading="lazy"
                 decoding="async"
@@ -61,13 +61,11 @@ const FeedItem = memo(({
             ))}
           </div>
         )}
-        
-        <div className="footer">
-          <div className="footer-left">
-            <span className="comment-count">
-              <IconComment /> {commentCount}
-            </span>
-          </div>
+
+        <div className="post-footer">
+          <span className="comment-count">
+            <IconComment /> {commentCount}
+          </span>
         </div>
       </div>
     </div>

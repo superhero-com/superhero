@@ -66,6 +66,7 @@ export const useGovernance = () => {
   const usePollResults = (id: string) => {
     return useQuery({
       queryKey: ['governance', 'pollResults', id],
+      // @ts-expect-error needs to integrate the right backend
       queryFn: () => GovernanceApi.getPollResults(id),
       enabled: !!id,
       staleTime: 1 * 60 * 1000, // 1 minute
@@ -78,6 +79,7 @@ export const useGovernance = () => {
       queryKey: ['governance', 'myVote', pollId, activeAccount],
       queryFn: async () => {
         if (!activeAccount) return null;
+        // @ts-expect-error needs to integrate the right backend
         return GovernanceApi.getMyVote(pollId, activeAccount);
       },
       enabled: !!pollId && !!activeAccount,
@@ -93,6 +95,7 @@ export const useGovernance = () => {
       queryFn: async () => {
         if (!targetAddress) return { to: null };
         try {
+          // @ts-expect-error needs to integrate the right backend
           return await GovernanceApi.getDelegation(targetAddress);
         } catch {
           return { to: null };
@@ -108,6 +111,7 @@ export const useGovernance = () => {
     return useQuery({
       queryKey: ['governance', 'delegators', to],
       queryFn: async () => {
+        // @ts-expect-error needs to integrate the right backend
         const res = await GovernanceApi.listDelegators(to);
         const list = (res && (res.delegators || res.items || res.data || (Array.isArray(res) ? res : null))) || [];
         return list;
@@ -121,6 +125,7 @@ export const useGovernance = () => {
   const useAccount = (accountAddress: string) => {
     return useQuery({
       queryKey: ['governance', 'account', accountAddress],
+      // @ts-expect-error needs to integrate the right backend
       queryFn: () => GovernanceApi.getAccount(accountAddress),
       enabled: !!accountAddress,
       staleTime: 5 * 60 * 1000, // 5 minutes
@@ -134,9 +139,11 @@ export const useGovernance = () => {
         if (!activeAccount) throw new Error('No wallet connected');
 
         // First call may return challenge
+        // @ts-expect-error needs to integrate the right backend
         const first = await GovernanceApi.vote(activeAccount, { pollId, option });
         if (first?.challenge) {
           const signature = (await sdk.signMessage(first.challenge)).toString('hex');
+          // @ts-expect-error needs to integrate the right backend
           await GovernanceApi.vote(activeAccount, { pollId, option, challenge: first.challenge, signature });
         }
       },
@@ -154,9 +161,11 @@ export const useGovernance = () => {
       mutationFn: async (pollId: string) => {
         if (!activeAccount) throw new Error('No wallet connected');
 
+        // @ts-expect-error needs to integrate the right backend
         const first = await GovernanceApi.revokeVote(activeAccount, { pollId } as any);
         if ((first as any)?.challenge) {
           const signature = (await sdk.signMessage((first as any).challenge)).toString('hex');
+          // @ts-expect-error needs to integrate the right backend
           await GovernanceApi.revokeVote(activeAccount, { pollId, challenge: (first as any).challenge, signature });
         }
       },
@@ -174,9 +183,11 @@ export const useGovernance = () => {
       mutationFn: async ({ to }: { to: string }) => {
         if (!activeAccount) throw new Error('No wallet connected');
 
+        // @ts-expect-error needs to integrate the right backend
         const first = await GovernanceApi.setDelegation(activeAccount, { to });
         if (first?.challenge) {
           const signature = (await sdk.signMessage(first.challenge)).toString('hex');
+          // @ts-expect-error needs to integrate the right backend
           await GovernanceApi.setDelegation(activeAccount, { to, challenge: first.challenge, signature });
         }
       },
@@ -193,9 +204,11 @@ export const useGovernance = () => {
       mutationFn: async () => {
         if (!activeAccount) throw new Error('No wallet connected');
 
+        // @ts-expect-error needs to integrate the right backend
         const first = await GovernanceApi.revokeDelegation(activeAccount, {} as any);
         if ((first as any)?.challenge) {
           const signature = (await sdk.signMessage((first as any).challenge)).toString('hex');
+          // @ts-expect-error needs to integrate the right backend
           await GovernanceApi.revokeDelegation(activeAccount, { challenge: (first as any).challenge, signature });
         }
       },

@@ -373,23 +373,6 @@ function PoolContent() {
                   >
                     Add Liquidity
                   </button>
-                  <button
-                    onClick={handleImportPool}
-                    style={{ 
-                      padding: '12px 24px', 
-                      borderRadius: 12, 
-                      border: '1px solid var(--glass-border)', 
-                      background: 'var(--glass-bg)', 
-                      color: 'var(--standard-font-color)',
-                      cursor: 'pointer',
-                      fontSize: 14,
-                      fontWeight: 600,
-                      backdropFilter: 'blur(10px)',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    Import Pool
-                  </button>
                 </div>
               ) : (
                 <ConnectWalletButton 
@@ -420,99 +403,6 @@ function PoolContent() {
             </div>
           )}
         </div>
-
-        {/* Quick Actions */}
-        {positions.length > 0 && (
-          <div style={{ 
-            padding: 20, 
-            borderRadius: 16, 
-            background: 'rgba(255, 255, 255, 0.05)', 
-            border: '1px solid var(--glass-border)',
-            backdropFilter: 'blur(10px)'
-          }}>
-            <h4 style={{ 
-              fontSize: 14, 
-              fontWeight: 600, 
-              color: 'var(--standard-font-color)', 
-              margin: '0 0 12px 0',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>
-              Quick Actions
-            </h4>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <button
-                onClick={handleAddNewLiquidity}
-                style={{ 
-                  padding: '8px 16px', 
-                  borderRadius: 8, 
-                  border: '1px solid var(--glass-border)', 
-                  background: 'var(--glass-bg)', 
-                  color: 'var(--standard-font-color)',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 500,
-                  backdropFilter: 'blur(10px)',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = 'var(--accent-color)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'var(--glass-bg)';
-                }}
-              >
-                Add Position
-              </button>
-              <button
-                onClick={handleImportPool}
-                style={{ 
-                  padding: '8px 16px', 
-                  borderRadius: 8, 
-                  border: '1px solid var(--glass-border)', 
-                  background: 'var(--glass-bg)', 
-                  color: 'var(--standard-font-color)',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 500,
-                  backdropFilter: 'blur(10px)',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = 'var(--accent-color)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'var(--glass-bg)';
-                }}
-              >
-                Import Pool
-              </button>
-              <button
-                onClick={handleCreatePool}
-                style={{ 
-                  padding: '8px 16px', 
-                  borderRadius: 8, 
-                  border: '1px solid var(--glass-border)', 
-                  background: 'var(--glass-bg)', 
-                  color: 'var(--standard-font-color)',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 500,
-                  backdropFilter: 'blur(10px)',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = 'var(--accent-color)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'var(--glass-bg)';
-                }}
-              >
-                Create Pool
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Add keyframes for spinner animation and responsive styles */}
         <style>{`

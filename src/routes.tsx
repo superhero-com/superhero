@@ -43,7 +43,6 @@ const FAQ = lazy(() => import('./views/FAQ'));
   const TokenDetail = lazy(() => import('./views/TokenDetail'));
   const PoolDetail = lazy(() => import('./views/PoolDetail'));
   const AddTokens = lazy(() => import('./views/AddTokens'));
-  const DeployPool = lazy(() => import('./views/DeployPool'));
 
 export const routes: RouteObject[] = [
   { path: '/', element: <FeedList /> },
@@ -78,7 +77,6 @@ export const routes: RouteObject[] = [
   { path: '/dex/pool/add', element: <DexLayout><PoolAdd /></DexLayout> },
   { path: '/dex/pool/remove/:id', element: <DexLayout><PoolRemove /></DexLayout> },
   { path: '/dex/pool/add-tokens', element: <DexLayout><AddTokens /></DexLayout> },
-  { path: '/dex/pool/deploy', element: <DexLayout><DeployPool /></DexLayout> },
   { path: '/dex/explore/tokens', element: <DexLayout><DexExploreTokens /></DexLayout> },
   { path: '/dex/explore/tokens/:id', element: <DexLayout><TokenDetail /></DexLayout> },
   { path: '/dex/explore/pools', element: <DexLayout><DexExplorePools /></DexLayout> },
@@ -95,7 +93,6 @@ export const routes: RouteObject[] = [
   { path: '/explore/tokens/:id', element: <TokenDetail /> },
   { path: '/explore/pools/:id', element: <PoolDetail /> },
   { path: '/pool/add-tokens', element: <AddTokens /> },
-  { path: '/pool/deploy', element: <DeployPool /> },
 
 
   { path: '/terms', element: <Terms /> },

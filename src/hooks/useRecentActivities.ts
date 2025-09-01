@@ -42,6 +42,26 @@ export const useRecentActivities = () => {
     });
   }, [setRecentActivities]);
 
+  const updateActivityStatus = useCallback((
+    account: string, 
+    txHash: string, 
+    status: RecentActivity['status']
+  ) => {
+    setRecentActivities(prev => {
+      const accountActivities = prev[account] || [];
+      const updatedActivities = accountActivities.map(activity => 
+        activity.hash === txHash 
+          ? { ...activity, status }
+          : activity
+      );
+      
+      return {
+        ...prev,
+        [account]: updatedActivities,
+      };
+    });
+  }, [setRecentActivities]);
+
   const clearAllActivities = useCallback(() => {
     setRecentActivities({});
   }, [setRecentActivities]);
@@ -51,6 +71,7 @@ export const useRecentActivities = () => {
     getActivitiesForAccount,
     clearActivitiesForAccount,
     clearAllActivities,
+    updateActivityStatus,
     recentActivities,
   };
 };

@@ -1,25 +1,22 @@
-import React, { useMemo, useState } from 'react';
-import { AeSdk } from '@aeternity/aepp-sdk';
 import {
-  BondingCurveTokenSale,
-  initAffiliationTokenGatingTokenSale,
-  toTokenDecimals,
+  initAffiliationTokenGatingTokenSale
 } from "bctsl-sdk";
+import { useMemo, useState } from 'react';
 
-import WalletConnectBtn from '../../components/WalletConnectBtn';
-import { useAeternity } from '../../hooks';
 import BigNumber from 'bignumber.js';
-import { calculateBuyPriceWithAffiliationFee, calculateSellReturn, calculateTokensFromAE, calculateTokensToSellFromAE, toDecimals, toAe } from '../../utils/bondingCurve';
+import WalletConnectBtn from '../../components/WalletConnectBtn';
+import { useAeSdk } from '../../hooks';
+import { calculateBuyPriceWithAffiliationFee, calculateSellReturn, calculateTokensFromAE, calculateTokensToSellFromAE, toAe, toDecimals } from '../../utils/bondingCurve';
 import './TradeCard.scss';
 
 type Props = { token: any };
 
 export default function TradeCard({ token }: Props) {
-  const {  initSdk, scanForWallets, getAeSdk } = useAeternity();
+  const { sdk } = useAeSdk();
   const [isBuying, setIsBuying] = useState(true);
   const [tokenA, setTokenA] = useState<number | ''>(''); // token amount
   const [tokenB, setTokenB] = useState<number | ''>(''); // ae amount
-  const [focused, setFocused] = useState<'A'|'B'|null>(null);
+  const [focused, setFocused] = useState<'A' | 'B' | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sdkReady, setSdkReady] = useState(false);
@@ -45,19 +42,12 @@ export default function TradeCard({ token }: Props) {
   async function submit() {
     setLoading(true);
     setError(null);
-    const sdk = getAeSdk();
-    await scanForWallets();
-    // if no wallet, connect
-    if (!sdk) {
-      // await initSdk();
-     
-    }
+
     try {
       if (!sdk) throw new Error('Wallet not connected');
       const saleAddress = token?.sale_address || token?.address;
       if (!saleAddress) throw new Error('Token sale address missing');
       console.log('saleAddress', saleAddress);
-      console.log('sdk', getAeSdk());
       const tokenSale = await initAffiliationTokenGatingTokenSale(sdk, saleAddress);
       const isBuy = isBuying;
       if (isBuy) {

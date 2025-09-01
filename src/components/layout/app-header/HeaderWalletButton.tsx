@@ -1,18 +1,15 @@
 import React from 'react';
-import { useWallet, useAeternity, useAccount } from '../../../hooks';
-import { deeplinkLogin } from '../../../auth/deeplink';
-import Identicon from '../../Identicon';
-import Favicon from '../../../svg/favicon.svg?react';
-import './HeaderWalletButton.scss';
-import { useWalletConnect } from '../../../hooks/useWalletConnect';
+import { useAccount } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
+import { useWalletConnect } from '../../../hooks/useWalletConnect';
+import Favicon from '../../../svg/favicon.svg?react';
+import Identicon from '../../Identicon';
+import './HeaderWalletButton.scss';
 
 export default function HeaderWalletButton() {
   const { activeAccount } = useAeSdk();
-  const { connectWallet, disconnectWallet, walletInfo} = useWalletConnect();
+  const { connectWallet, disconnectWallet, walletInfo } = useWalletConnect();
   const { decimalBalance } = useAccount();
-  // const { address, balance, chainNames } = useWallet();
-  // const { initSdk, scanForWallets, enableSdkWallet, logout } = useAeternity();
   const [loading, setLoading] = React.useState(false);
 
   async function handleConnect() {
@@ -91,10 +88,10 @@ export default function HeaderWalletButton() {
           </div>
         </div>
       )}
-      
+
       {showDropdown && (
-        <div 
-          className="dropdown-overlay" 
+        <div
+          className="dropdown-overlay"
           onClick={() => setShowDropdown(false)}
         />
       )}

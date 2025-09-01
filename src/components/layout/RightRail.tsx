@@ -5,7 +5,7 @@ import Sparkline from '../Trendminer/Sparkline';
 import TrendingSidebar from '../Trendminer/TrendingSidebar';
 import './RightRail.scss';
 
-import { useAeternity, useWallet } from '../../hooks';
+import { useWallet } from '../../hooks';
 interface SearchSuggestion {
   type: 'user' | 'token' | 'topic' | 'post' | 'dao' | 'pool' | 'transaction';
   id: string;
@@ -28,7 +28,6 @@ interface SearchFilter {
 
 export default function RightRail() {
   const toast = useToast();
-  const { refreshAeBalance } = useAeternity();
   const [trending, setTrending] = useState<Array<[string, any]>>([] as any);
   const [prices, setPrices] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,7 +57,7 @@ export default function RightRail() {
     trendminer: 'checking',
     dex: 'checking'
   });
-  
+
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   const [usdSpark, setUsdSpark] = useState<number[]>(() => {
@@ -71,7 +70,7 @@ export default function RightRail() {
       return [];
     }
   });
-  
+
   const [eurSpark, setEurSpark] = useState<number[]>(() => {
     try {
       const raw = sessionStorage.getItem('ae_spark_eur');
@@ -114,33 +113,33 @@ export default function RightRail() {
   // Enhanced search functionality with debouncing
   const handleSearch = (query: string) => {
     if (!query.trim()) return;
-    
+
     // Add to recent searches
     setRecentSearches(prev => {
       const filtered = prev.filter(s => s !== query);
       return [query, ...filtered].slice(0.10);
     });
-    
+
     // Navigate to search results with enhanced query
     const searchParams = new URLSearchParams();
     searchParams.set('search', query);
-    
+
     // Add filters to search params
     Object.entries(searchFilters).forEach(([key, value]) => {
       if (value) searchParams.set(`filter_${key}`, 'true');
     });
-    
+
     window.location.href = `/?${searchParams.toString()}`;
   };
 
   const handleSearchInputChange = async (value: string) => {
     setSearchQuery(value);
-    
+
     // Clear previous debounce
     if (searchDebounce) {
       clearTimeout(searchDebounce);
     }
-    
+
     if (value.length < 2) {
       setSearchSuggestions([]);
       setShowSearchSuggestions(false);
@@ -151,48 +150,48 @@ export default function RightRail() {
     const timeout = setTimeout(async () => {
       await performSearch(value);
     }, 300);
-    
+
     setSearchDebounce(timeout);
   };
 
   const performSearch = async (query: string) => {
     setIsSearching(true);
-    
+
     try {
       const suggestions: SearchSuggestion[] = [];
       const searchTerm = query.toLowerCase();
-      
+
       // Parallel API calls for better performance
       const searchPromises = [] as any[];
-      
+
       // Search users if filter is enabled
       if (searchFilters.users) {
         searchPromises.push(
           Backend.getProfile(query).catch(() => null)
         );
       }
-      
+
       // Search tokens if filter is enabled
       if (searchFilters.tokens) {
         searchPromises.push(
           TrendminerApi.listTokens({ search: query, limit: 5 }).catch(() => ({ items: [] }))
         );
       }
-      
+
       // Search topics if filter is enabled
       if (searchFilters.topics) {
         searchPromises.push(
           Backend.getTopics().catch(() => [])
         );
       }
-      
+
       // Search DAOs if filter is enabled
       if (searchFilters.daos) {
         searchPromises.push(
           TrendminerApi.listTokens({ search: query, limit: 3, collection: 'all' }).catch(() => ({ items: [] }))
         );
       }
-      
+
       // Search pools if filter is enabled
       if (searchFilters.pools) {
         searchPromises.push(
@@ -242,8 +241,8 @@ export default function RightRail() {
       if (searchFilters.topics && results[resultIndex]) {
         const topics = Array.isArray(results[resultIndex]) ? results[resultIndex] : [];
         topics.forEach((topic: any) => {
-          if (Array.isArray(topic) && topic[0] && typeof topic[0] === 'string' && 
-              topic[0].toLowerCase().includes(searchTerm)) {
+          if (Array.isArray(topic) && topic[0] && typeof topic[0] === 'string' &&
+            topic[0].toLowerCase().includes(searchTerm)) {
             const mentionCount = typeof topic[1] === 'number' ? topic[1] : 0;
             const relevance = calculateRelevance(searchTerm, topic[0]);
             suggestions.push({
@@ -313,10 +312,10 @@ export default function RightRail() {
   const calculateRelevance = (searchTerm: string, ...texts: string[]): number => {
     let relevance = 0;
     const term = searchTerm.toLowerCase();
-    
+
     texts.forEach(text => {
       const lowerText = text.toLowerCase();
-      
+
       // Exact match gets highest score
       if (lowerText === term) relevance += 10;
       // Starts with search term
@@ -326,14 +325,14 @@ export default function RightRail() {
       // Partial word match
       else if (term.split(' ').some(word => lowerText.includes(word))) relevance += 3;
     });
-    
+
     return relevance;
   };
 
   const handleSuggestionClick = (suggestion: SearchSuggestion) => {
     setSearchQuery(suggestion.title);
     setShowSearchSuggestions(false);
-    
+
     if (suggestion.url) {
       window.location.href = suggestion.url;
     } else {
@@ -343,12 +342,12 @@ export default function RightRail() {
 
   const handleSaveSearch = () => {
     if (!searchQuery.trim()) return;
-    
+
     setSavedSearches(prev => {
       const filtered = prev.filter(s => s !== searchQuery);
       return [searchQuery, ...filtered].slice(0, 5);
     });
-    
+
     toast.push(<>Search "{searchQuery}" saved!</>);
   };
 
@@ -402,10 +401,10 @@ export default function RightRail() {
     Backend.getTopics().then((t) => {
       try {
         const list = Array.isArray(t) ? t : [];
-        const filtered = list.filter((row: any) => 
-          Array.isArray(row) && 
-          row[0] !== '#test' && 
-          typeof row[0] === 'string' && 
+        const filtered = list.filter((row: any) =>
+          Array.isArray(row) &&
+          row[0] !== '#test' &&
+          typeof row[0] === 'string' &&
           typeof row[1] === 'number'
         );
         setTrending(filtered);
@@ -423,7 +422,7 @@ export default function RightRail() {
         const p = await Backend.getPrice();
         const a = p?.aeternity || null;
         setPrices(a);
-        
+
         if (a?.usd != null) {
           setUsdSpark((prev) => {
             const next = [...prev, Number(a.usd)].slice(-50);
@@ -431,7 +430,7 @@ export default function RightRail() {
             return next;
           });
         }
-        
+
         if (a?.eur != null) {
           setEurSpark((prev) => {
             const next = [...prev, Number(a.eur)].slice(-50);
@@ -443,17 +442,12 @@ export default function RightRail() {
         console.error('Failed to load price data:', error);
       }
     }
-    
+
     loadPrice();
     const t = window.setInterval(loadPrice, 30000);
     return () => { window.clearInterval(t); };
   }, []);
 
-  useEffect(() => {
-    if (address) {
-      refreshAeBalance();
-    }
-  }, [address]);
 
   // Load saved searches from localStorage
   useEffect(() => {
@@ -506,7 +500,7 @@ export default function RightRail() {
         <div className="card-header">
           <span className="card-icon">🔍</span>
           <h4>Smart Search</h4>
-          <button 
+          <button
             className="advanced-toggle"
             onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
             title="Advanced search options"
@@ -514,7 +508,7 @@ export default function RightRail() {
             ⚙️
           </button>
         </div>
-        
+
         <div className="search-container" ref={suggestionsRef}>
           <div className="search-input-wrapper">
             <input
@@ -534,7 +528,7 @@ export default function RightRail() {
               </div>
             )}
           </div>
-          
+
           {showSearchSuggestions && searchSuggestions.length > 0 && (
             <div className="search-suggestions">
               <div className="suggestions-header">
@@ -542,7 +536,7 @@ export default function RightRail() {
                 <span className="results-count">{searchSuggestions.length} found</span>
               </div>
               {searchSuggestions.map((suggestion, index) => (
-                <div 
+                <div
                   key={index}
                   className="suggestion-item"
                   onClick={() => handleSuggestionClick(suggestion)}
@@ -586,7 +580,7 @@ export default function RightRail() {
               <div className="history-header">
                 <h5>Recent Searches</h5>
                 {recentSearches.length > 0 && (
-                  <button 
+                  <button
                     className="clear-history-btn"
                     onClick={clearSearchHistory}
                     title="Clear search history"
@@ -597,7 +591,7 @@ export default function RightRail() {
               </div>
               <div className="search-tags">
                 {recentSearches.map((search, index) => (
-                  <button 
+                  <button
                     key={index}
                     className="search-tag"
                     onClick={() => handleSearch(search)}
@@ -610,12 +604,12 @@ export default function RightRail() {
                 )}
               </div>
             </div>
-            
+
             <div className="saved-searches">
               <h5>Saved Searches</h5>
               <div className="search-tags">
                 {savedSearches.map((search, index) => (
-                  <button 
+                  <button
                     key={index}
                     className="search-tag saved"
                     onClick={() => handleSearch(search)}
@@ -628,9 +622,9 @@ export default function RightRail() {
                 )}
               </div>
             </div>
-            
+
             {searchQuery && (
-              <button 
+              <button
                 className="save-search-btn"
                 onClick={handleSaveSearch}
               >
@@ -658,7 +652,7 @@ export default function RightRail() {
             ))}
           </div>
         </div>
-        
+
         <div className="price-content">
           <div className="price-row">
             <div className="price-info">
@@ -674,15 +668,15 @@ export default function RightRail() {
               </div>
             </div>
             <div className="price-chart">
-              <Sparkline 
-                points={selectedCurrency === 'usd' ? usdSpark : eurSpark} 
-                width={80} 
-                height={24} 
-                stroke={selectedCurrency === 'usd' ? "#66d19e" : "#5bb0ff"} 
+              <Sparkline
+                points={selectedCurrency === 'usd' ? usdSpark : eurSpark}
+                width={80}
+                height={24}
+                stroke={selectedCurrency === 'usd' ? "#66d19e" : "#5bb0ff"}
               />
             </div>
           </div>
-          
+
           <div className="price-stats">
             <div className="stat-item">
               <span className="stat-label">Market Cap</span>
@@ -705,7 +699,7 @@ export default function RightRail() {
         <div className="card-header">
           <span className="card-icon">🔥</span>
           <h4>Trending Topics</h4>
-          <button 
+          <button
             className="explore-btn"
             onClick={() => window.location.href = '/trending'}
             title="Explore all trends"
@@ -713,7 +707,7 @@ export default function RightRail() {
             🔍
           </button>
         </div>
-        
+
         <div className="trending-content">
           {topTrending.map((topic, index) => (
             <div key={index} className="trending-item">

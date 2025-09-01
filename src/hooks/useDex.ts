@@ -1,7 +1,7 @@
 import { useAtom } from 'jotai';
 import { useCallback } from 'react';
-import { slippagePctAtom, deadlineMinsAtom, providedLiquidityAtom, poolInfoAtom } from '../atoms/dexAtoms';
-import { ACI, DEX_ADDRESSES, getPairInfo, getPairAddress, getLpBalance } from '../libs/dex';
+import { deadlineMinsAtom, poolInfoAtom, providedLiquidityAtom, slippagePctAtom } from '../atoms/dexAtoms';
+import { ACI, DEX_ADDRESSES, getLpBalance, getPairAddress, getPairInfo } from '../libs/dex';
 import { getPairs } from '../libs/dexBackend';
 import { useAeSdk } from './useAeSdk';
 
@@ -15,17 +15,17 @@ export const useDex = () => {
   const setSlippage = useCallback((value: number) => {
     const clampedValue = Math.max(0, Math.min(50, value || 0));
     setSlippagePct(clampedValue);
-    try { 
-      localStorage.setItem('dex:slippage', String(clampedValue)); 
-    } catch {}
+    try {
+      localStorage.setItem('dex:slippage', String(clampedValue));
+    } catch { }
   }, [setSlippagePct]);
 
   const setDeadline = useCallback((value: number) => {
     const clampedValue = Math.max(1, Math.min(60, value || 10));
     setDeadlineMins(clampedValue);
-    try { 
-      localStorage.setItem('dex:deadline', String(clampedValue)); 
-    } catch {}
+    try {
+      localStorage.setItem('dex:deadline', String(clampedValue));
+    } catch { }
   }, [setDeadlineMins]);
 
   const resetAccountLiquidity = useCallback((address: string) => {
@@ -60,10 +60,9 @@ export const useDex = () => {
   }, [setProvidedLiquidity]);
 
   const loadPairInfo = useCallback(async ({ tokenA, tokenB }: { tokenA: string; tokenB: string }) => {
-    const sdk = (window as any).__aeSdk;
     const factory = await sdk.initializeContract({ aci: ACI.Factory, address: DEX_ADDRESSES.factory });
     const info = await getPairInfo(sdk, factory, tokenA, tokenB);
-    
+
     if (info) {
       setPoolInfo(prev => ({
         ...prev,
@@ -74,25 +73,24 @@ export const useDex = () => {
         },
       }));
     }
-    
+
     return info;
   }, [setPoolInfo]);
 
-  const loadAccountLp = useCallback(async ({ 
-    address, 
-    tokenA, 
-    tokenB 
-  }: { 
-    address: string; 
-    tokenA: string; 
+  const loadAccountLp = useCallback(async ({
+    address,
+    tokenA,
+    tokenB
+  }: {
+    address: string;
+    tokenA: string;
     tokenB: string;
   }) => {
-    const sdk = (window as any).__aeSdk;
     const factory = await sdk.initializeContract({ aci: ACI.Factory, address: DEX_ADDRESSES.factory });
     const pairAddr = await getPairAddress(sdk, factory, tokenA, tokenB);
     if (!pairAddr) return { pairId: null, balance: 0n };
     const bal = await getLpBalance(sdk, pairAddr, address);
-    
+
     // Update provided liquidity state
     if (bal && bal > 0n) {
       updateProvidedLiquidity({
@@ -101,14 +99,14 @@ export const useDex = () => {
         balance: bal.toString(),
       });
     }
-    
+
     return { pairId: pairAddr, balance: bal };
   }, [updateProvidedLiquidity]);
 
   const scanAccountLiquidity = useCallback(async (address: string) => {
     const pairs = await getPairs(false);
     const arr: any[] = pairs ? (Array.isArray(pairs) ? pairs : Object.values(pairs as any)) : [];
-    
+
     for (const p of arr) {
       const balance = await getLpBalance(sdk, p.address, address).catch(() => 0n);
       if (balance && balance > 0n) {
@@ -129,13 +127,13 @@ export const useDex = () => {
     deadlineMins,
     providedLiquidity,
     poolInfo,
-    
+
     // Actions
     setSlippage,
     setDeadline,
     resetAccountLiquidity,
     updateProvidedLiquidity,
-    
+
     // Async operations
     loadPairInfo,
     loadAccountLp,

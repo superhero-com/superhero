@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Backend, TrendminerApi } from '../../api/backend';
+import { useAeSdk } from '../../hooks';
 import WebSocketClient from '../../libs/WebSocketClient';
 import './LeftRail.scss';
 
@@ -29,10 +30,10 @@ interface LiveTransaction {
 }
 
 export default function LeftRail() {
+  const { sdk, currentBlockHeight } = useAeSdk();
   const navigate = useNavigate();
   const location = useLocation();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [currentBlockHeight, setCurrentBlockHeight] = useState<number | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showTips, setShowTips] = useState(false);
@@ -68,25 +69,6 @@ export default function LeftRail() {
     };
   }, []);
 
-  // Fetch current block height
-  useEffect(() => {
-    const fetchBlockHeight = async () => {
-      try {
-        const sdk = (window as any).__aeSdk;
-        if (sdk) {
-          const height = await sdk.getHeight();
-          setCurrentBlockHeight(height);
-        }
-      } catch (error) {
-        console.warn('Failed to fetch block height:', error);
-      }
-    };
-
-    fetchBlockHeight();
-    const blockHeightTimer = setInterval(fetchBlockHeight, 30000); // Update every 30 seconds
-
-    return () => clearInterval(blockHeightTimer);
-  }, []);
 
   // Enhanced time formatting with emoji and block height
   const formatTime = (date: Date) => {

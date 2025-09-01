@@ -1,15 +1,15 @@
+import BigNumber from 'bignumber.js';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import AeButton from '../components/AeButton';
 import DexTabs from '../components/dex/DexTabs';
-import { ACI, DEX_ADDRESSES, fromAettos, initDexContracts, getPairAddress } from '../libs/dex';
 import { useToast } from '../components/ToastProvider';
 import { CONFIG } from '../config';
-import { useNavigate } from 'react-router-dom';
-import BigNumber from 'bignumber.js';
-import AeButton from '../components/AeButton';
+import { ACI, DEX_ADDRESSES, fromAettos, getPairAddress, initDexContracts } from '../libs/dex';
 
-import { useWallet } from '../hooks';
+import { useAeSdk } from '../hooks';
 export default function AddTokens() {
-    const address = useWallet().address;
+  const { activeAccount, sdk } = useAeSdk();
   const toast = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -19,31 +19,26 @@ export default function AddTokens() {
   const [poolExists, setPoolExists] = useState<Record<string, boolean>>({});
   const scanSeqRef = React.useRef(0);
 
-  async function ensureWallet() {
-    await initSdk();
-    if (!address) await scanForWallets();
-  }
+
 
   async function discoverWalletTokens() {
     const mySeq = ++scanSeqRef.current;
     try {
       setLoading(true); setError(null);
-      await ensureWallet();
-      const sdk = (window as any).__aeSdk;
-      if (!sdk || !address) return;
+      if (!activeAccount) return;
       // Prefer authoritative balances from MDW; fallback to backend/pools scan
       const tokensFromMdw: Array<{ address: string; symbol?: string; name?: string; decimals?: number; balance: string }> = [];
       try {
         const base = (CONFIG.MIDDLEWARE_URL || '').replace(/\/$/, '');
         // Per mdw-swagger.json: /accounts/{accountId}/aex9/balances returns { data: Aex9BalanceResponse[] }
-        let cursor: string | null = `/v3/accounts/${address}/aex9/balances`;
+        let cursor: string | null = `/v3/accounts/${activeAccount}/aex9/balances`;
         let guard = 0;
         while (cursor && guard++ < 20) { // hard cap pages to avoid infinite loop
           const r = await fetch(`${base}${cursor.startsWith('/') ? '' : '/'}${cursor}`, { cache: 'no-cache' });
           if (!r.ok) {
             // Enhanced error logging for new accounts
             if (r.status === 404) {
-              console.info('[add-tokens] Account not found on middleware:', address);
+              console.info('[add-tokens] Account not found on middleware:', activeAccount);
               console.info('[add-tokens] This is normal for new accounts - user needs to bridge ETH first');
             } else {
               console.warn('[add-tokens] Failed to fetch account balances:', r.status, r.statusText);
@@ -94,7 +89,7 @@ export default function AddTokens() {
           console.info('[add-tokens] tokensFromMdw page summary', { count: tokensFromMdw.length });
           cursor = mdw?.next || null;
         }
-      } catch {}
+      } catch { }
 
       if (scanSeqRef.current === mySeq && !tokensFromMdw.length) {
         // Fallback: probe listed tokens and pool tokens with on-chain balance check
@@ -114,7 +109,7 @@ export default function AddTokens() {
         for (const t of candidates.values()) {
           try {
             const c = await sdk.initializeContract({ aci: ACI.AEX9, address: t.address });
-            const { decodedResult: bal } = await c.balance(address);
+            const { decodedResult: bal } = await c.balance(activeAccount);
             const bn = BigInt(bal ?? 0);
             if (bn > 0n) {
               // Enrich meta
@@ -128,10 +123,10 @@ export default function AddTokens() {
                   nm = meta?.name || nm;
                   dec = Number(meta?.decimals ?? dec) || 18;
                 }
-              } catch {}
+              } catch { }
               tokensFromMdw.push({ address: t.address, symbol: String(sym), name: String(nm), decimals: dec, balance: fromAettos(bn, dec) });
             }
-          } catch {}
+          } catch { }
         }
       }
 
@@ -168,7 +163,7 @@ export default function AddTokens() {
         const existsMap: Record<string, boolean> = {};
         for (const [k, v] of entries) existsMap[k] = v;
         if (scanSeqRef.current === mySeq) setPoolExists(existsMap);
-      } catch {}
+      } catch { }
     } catch (e: any) {
       setError(String(e?.message || e));
     } finally {
@@ -176,7 +171,7 @@ export default function AddTokens() {
     }
   }
 
-  useEffect(() => { if (address) void discoverWalletTokens(); }, [address]);
+  useEffect(() => { if (activeAccount) void discoverWalletTokens(); }, [activeAccount]);
 
   const filtered = useMemo(() => {
     const term = filter.trim().toLowerCase();

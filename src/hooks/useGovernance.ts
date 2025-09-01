@@ -53,10 +53,10 @@ export const useGovernance = () => {
   };
 
   // Single poll query
-  const usePoll = (id: string) => {
+  const usePoll = (id?: Encoded.ContractAddress) => {
     return useQuery({
       queryKey: ['governance', 'poll', id],
-      queryFn: () => GovernanceApi.getPoll(id),
+      queryFn: () => id ? GovernanceApi.getPollOverview(id) : undefined,
       enabled: !!id,
       staleTime: 2 * 60 * 1000, // 2 minutes
     });

@@ -34,30 +34,26 @@ export function useWalletConnect() {
 
     // React equivalent of Vue watch for route query parameters
     useEffect(() => {
-        const query = Object.fromEntries(new URLSearchParams(location.search).entries());
+        async function checkAddressWalletConnection() {
+            const query = Object.fromEntries(new URLSearchParams(location.search).entries());
 
-        // alert(JSON.stringify(query));
+            // alert(JSON.stringify(query));
 
-        if (query.address && !activeAccount) {
-            const address = query.address as string;
-            const addressValidation = validateHash(address);
-            
-            if (!addressValidation.valid) {
-                alert("Invalid Aeternity address");
+            if (query.address && !activeAccount) {
+                const address = query.address as string;
+                const addressValidation = validateHash(address);
+
+                if (!addressValidation.valid) {
+                    alert("Invalid Aeternity address");
+                    navigate({ search: '' });
+                    return;
+                }
+
+                await addStaticAccount(address);
                 navigate({ search: '' });
-                return;
             }
-
-            addStaticAccount(address);
-
-            // if (availableNetworks.length === 1) {
-            //     setActiveNetworkId(availableNetworks[0].networkId);
-            // } else if (query.networkId && availableNetworks.some(({ networkId }) => networkId === query.networkId)) {
-            //     setActiveNetworkId(query.networkId as NetworkId);
-            // }
-
-
         }
+        checkAddressWalletConnection()
     }, [location.search]);
 
 

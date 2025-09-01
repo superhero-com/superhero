@@ -1,35 +1,56 @@
-import { atom } from 'jotai';
+import { Encoded } from '@aeternity/aepp-sdk';
+import { atom, SetStateAction } from 'jotai';
 
-export type TxQueueEntry = Record<string, any>;
+export type TxQueueEntry = {
+  status: string;
+  tx: Encoded.Transaction;
+  signUrl: string;
+  transaction?: Encoded.Transaction;
+};
 
-// Transaction queue atom
-export const txQueueEntriesAtom = atom<Record<string, TxQueueEntry>>({});
+// atomWithBroadcast implementation for cross-tab communication
+function atomWithBroadcast<Value>(key: string, initialValue: Value) {
+  const baseAtom = atom(initialValue);
+  const listeners = new Set<(event: MessageEvent<any>) => void>();
+  const channel = new BroadcastChannel(key);
 
-// Actions atom for transaction queue operations
-export const txQueueActionsAtom = atom(
-  null,
-  (get, set, action: { type: 'upsert'; id: string; data: TxQueueEntry } | { type: 'clear'; id?: string }) => {
-    const currentEntries = get(txQueueEntriesAtom);
-    
-    switch (action.type) {
-      case 'upsert':
-        set(txQueueEntriesAtom, {
-          ...currentEntries,
-          [action.id]: {
-            ...(currentEntries[action.id] || {}),
-            ...action.data,
-          },
-        });
-        break;
-      case 'clear':
-        if (action.id) {
-          const newEntries = { ...currentEntries };
-          delete newEntries[action.id];
-          set(txQueueEntriesAtom, newEntries);
-        } else {
-          set(txQueueEntriesAtom, {});
-        }
-        break;
-    }
-  }
-);
+  channel.onmessage = (event) => {
+    console.log("[atomWithBroadcast] onmessage", event);
+    listeners.forEach((l) => l(event));
+  };
+
+  const broadcastAtom = atom(
+    (get) => get(baseAtom),
+    (get, set, update: { isEvent: boolean; value: SetStateAction<Value> }) => {
+      set(baseAtom, update.value);
+
+      if (!update.isEvent) {
+        channel.postMessage(get(baseAtom));
+      }
+    },
+  );
+
+  broadcastAtom.onMount = (setAtom) => {
+    const listener = (event: MessageEvent<any>) => {
+      setAtom({ isEvent: true, value: event.data });
+    };
+
+    listeners.add(listener);
+
+    return () => {
+      listeners.delete(listener);
+    };
+  };
+
+  const returnedAtom = atom(
+    (get) => get(broadcastAtom),
+    (_get, set, update: SetStateAction<Value>) => {
+      set(broadcastAtom, { isEvent: false, value: update });
+    },
+  );
+
+  return returnedAtom;
+}
+
+// Transaction queue atom with broadcast for cross-tab communication
+export const transactionsQueueAtom = atomWithBroadcast<Record<string, TxQueueEntry>>('txQueue:transactions', {});

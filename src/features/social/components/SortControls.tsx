@@ -10,24 +10,24 @@ interface SortControlsProps {
 const SortControls = memo(({ sortBy, onSortChange }: SortControlsProps) => (
   <div className="actions">
     <div className="row">
-      <AeButton 
+      <AeButton
         onClick={() => onSortChange('latest')}
         className={sortBy === 'latest' ? 'active' : ''}
       >
         Latest
       </AeButton>
-      <AeButton 
+      <AeButton
         onClick={() => onSortChange('hot')}
         className={sortBy === 'hot' ? 'active' : ''}
       >
         Most Popular
       </AeButton>
-      <AeButton 
+      {/* <AeButton 
         onClick={() => onSortChange('highest')}
         className={sortBy === 'highest' ? 'active' : ''}
       >
         Highest Rated
-      </AeButton>
+      </AeButton> */}
     </div>
   </div>
 ));

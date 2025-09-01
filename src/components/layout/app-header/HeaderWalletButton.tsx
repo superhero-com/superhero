@@ -36,7 +36,7 @@ export default function HeaderWalletButton() {
   const chainName = activeAccount ? activeAccount : undefined;
 
   // If not connected, show connect button
-  if (!walletInfo) {
+  if (!walletInfo && !activeAccount) {
     return (
       <button
         type="button"

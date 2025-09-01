@@ -11,7 +11,6 @@ export { useGovernance } from './useGovernance';
 
 // Re-export atoms for direct usage if needed
 export * from '../atoms/walletAtoms';
-export * from '../atoms/aeternityAtoms';
 export * from '../atoms/modalAtoms';
 export * from '../atoms/dexAtoms';
 export * from '../atoms/txQueueAtoms';

@@ -15,10 +15,12 @@ import { TrendminerApi } from "../api/backend";
 import configs from "../configs";
 import type { Wallet, Wallets, NetworkId } from "../utils/types";
 import { walletInfoAtom } from "../atoms/walletAtoms";
+import { useAccount } from "./useAccount";
 
 
 export function useWalletConnect() {
     const wallet = useRef<Wallet | undefined>(undefined);
+    const { loadAccountData } = useAccount();
     const [walletInfo, setWalletInfo] = useAtom<WalletInfo | undefined>(walletInfoAtom);
     const [scanningForAccounts, setScanningForAccounts] = useState(false);
     const [connectingWallet, setConnectingWallet] = useState(false);
@@ -195,10 +197,11 @@ export function useWalletConnect() {
             !walletConnected
         ) {
             if (walletInfo) {
-                connectWallet();
+                await connectWallet();
             } else {
-                addStaticAccount(activeAccount);
+                await addStaticAccount(activeAccount);
             }
+            loadAccountData()
         }
     }
 

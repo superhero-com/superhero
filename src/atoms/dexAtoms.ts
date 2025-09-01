@@ -1,7 +1,14 @@
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 
-type ProvidedLiquidity = Record<string, { balance: string; token0: string; token1: string } | undefined>;
+// Type for individual liquidity position data
+export type LiquidityPositionData = {
+  balance: string;
+  token0: string;
+  token1: string;
+  sharePct?: string;
+  valueUsd?: string;
+};
 
 // DEX settings with localStorage persistence
 export const slippagePctAtom = atomWithStorage<number>('dex:slippage', (() => {
@@ -23,5 +30,6 @@ export const deadlineMinsAtom = atomWithStorage<number>('dex:deadline', (() => {
 })());
 
 // DEX state atoms
-export const providedLiquidityAtom = atom<Record<string, ProvidedLiquidity>>({});
+// Structure: {[accountAddress]: {[pairAddress]: LiquidityPositionData}}
+export const providedLiquidityAtom = atom<Record<string, Record<string, LiquidityPositionData>>>({});
 export const poolInfoAtom = atom<Record<string, { totalSupply: string | null; reserveA: string; reserveB: string } | undefined>>({});

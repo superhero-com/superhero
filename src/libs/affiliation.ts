@@ -16,11 +16,9 @@ export async function getFactoryAddress(): Promise<string> {
  * Lazily initializes and returns the AffiliationTreasury contract instance using the
  * active aepp SDK instance connected through the wallet.
  */
-export async function getAffiliationTreasury(sdk?: AeSdk) {
-  const sdkInstance: AeSdk | undefined = sdk || (window as any).__aeSdk;
-  if (!sdkInstance) throw new Error('Connect your wallet first');
+export async function getAffiliationTreasury(sdk: AeSdk) {
   const factoryAddress = await getFactoryAddress();
-  const factory = await initCommunityFactory(sdkInstance as any, factoryAddress);
+  const factory = await initCommunityFactory(sdk as any, factoryAddress);
   return factory.affiliationTreasury();
 }
 

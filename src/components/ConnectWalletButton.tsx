@@ -1,6 +1,5 @@
 import React from 'react';
-import { deeplinkLogin } from '../auth/deeplink';
-import { useWallet, useAeternity } from '../hooks';
+import { useAeSdk, useWalletConnect } from '../hooks';
 import Favicon from '../svg/favicon.svg?react';
 
 type Props = {
@@ -11,33 +10,16 @@ type Props = {
 };
 
 export default function ConnectWalletButton({ label = 'Connect Wallet', block, style, className }: Props) {
-  const { address } = useWallet();
-  const { initSdk, scanForWallets, enableSdkWallet } = useAeternity();
-  const [loading, setLoading] = React.useState(false);
+  const { activeAccount } = useAeSdk()
+  const { connectWallet, connectingWallet } = useWalletConnect()
 
-  async function handleConnect() {
-    setLoading(true);
-    try {
-      try { await initSdk(); } catch {}
-      const addr = await scanForWallets().catch(() => null);
-      if (!addr) {
-        // fallback to deeplink connect if Web Wallet not detected
-        deeplinkLogin();
-      } else {
-        enableSdkWallet();
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
 
-  if (address) return null;
-
+  if (activeAccount) return null;
   return (
     <button
       type="button"
-      onClick={handleConnect}
-      disabled={loading}
+      onClick={() => connectWallet()}
+      disabled={connectingWallet}
       className={`connect-wallet-btn ${className || ''}`.trim()}
       style={{
         padding: '6px 12px',
@@ -58,7 +40,7 @@ export default function ConnectWalletButton({ label = 'Connect Wallet', block, s
       <span style={{ display: 'inline-grid', placeItems: 'center' }}>
         <Favicon style={{ width: 16, height: 16 }} />
       </span>
-      <span style={{ whiteSpace: 'nowrap' }}>{loading ? 'Connecting…' : label}</span>
+      <span style={{ whiteSpace: 'nowrap' }}>{connectingWallet ? 'Connecting…' : label}</span>
       <style>{`
         .connect-wallet-btn { transition: background-color .15s ease, box-shadow .15s ease, border-color .15s ease; line-height: 1; }
         .connect-wallet-btn:hover { background: var(--thumbnail-background-color-alt); box-shadow: 0 6px 16px rgba(0,0,0,0.12); }

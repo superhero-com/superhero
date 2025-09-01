@@ -1,32 +1,30 @@
+import { AeSdk } from '@aeternity/aepp-sdk';
 import { getTokenBalance, DEX_ADDRESSES } from '../../libs/dex';
 
 /**
  * Wait for æETH deposit to arrive on æternity network
  */
 export async function waitForAeEthDeposit(
+  sdk: AeSdk,
   aeAccount: string,
   prevAeEthBalance: bigint,
   expectedIncrease: bigint,
   timeoutMs: number = 300_000,
   pollIntervalMs: number = 6000
 ): Promise<boolean> {
-  const sdk = (window as any).__aeSdk;
-  if (!sdk) {
-    throw new Error('æternity SDK not available');
-  }
 
   const startTime = Date.now();
-  console.info('[Bridge] Waiting for æETH deposit…', { 
+  console.info('[Bridge] Waiting for æETH deposit…', {
     expectedIncrease: expectedIncrease.toString(),
-    account: aeAccount 
+    account: aeAccount
   });
 
   while (Date.now() - startTime < timeoutMs) {
     try {
       const currentBalance = await getTokenBalance(sdk, DEX_ADDRESSES.aeeth, aeAccount);
-      
-      console.info('[Bridge] æETH balance check', { 
-        previous: prevAeEthBalance.toString(), 
+
+      console.info('[Bridge] æETH balance check', {
+        previous: prevAeEthBalance.toString(),
         current: currentBalance.toString(),
         expectedIncrease: expectedIncrease.toString()
       });
@@ -34,7 +32,7 @@ export async function waitForAeEthDeposit(
       // Check if we received the expected amount (with some tolerance for precision)
       const actualIncrease = currentBalance - prevAeEthBalance;
       const tolerance = expectedIncrease / 1000n; // 0.1% tolerance
-      
+
       if (actualIncrease >= (expectedIncrease - tolerance)) {
         console.info('[Bridge] æETH deposit confirmed', {
           actualIncrease: actualIncrease.toString(),
@@ -58,8 +56,7 @@ export async function waitForAeEthDeposit(
 /**
  * Get current æETH balance for an account
  */
-export async function getAeEthBalance(aeAccount: string): Promise<bigint> {
-  const sdk = (window as any).__aeSdk;
+export async function getAeEthBalance(sdk: AeSdk, aeAccount: string): Promise<bigint> {
   if (!sdk) {
     throw new Error('æternity SDK not available');
   }
@@ -71,11 +68,12 @@ export async function getAeEthBalance(aeAccount: string): Promise<bigint> {
  * Check if account has sufficient æETH balance
  */
 export async function hasMinimumAeEthBalance(
-  aeAccount: string, 
+  sdk: AeSdk,
+  aeAccount: string,
   minAmount: bigint
 ): Promise<boolean> {
   try {
-    const balance = await getAeEthBalance(aeAccount);
+    const balance = await getAeEthBalance(sdk, aeAccount);
     return balance >= minAmount;
   } catch (error) {
     console.error('[Bridge] Error checking æETH balance:', error);

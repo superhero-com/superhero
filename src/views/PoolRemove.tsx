@@ -1,18 +1,18 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
-import { ACI, DEX_ADDRESSES, addSlippage, initDexContracts, removeLiquidity, removeLiquidityAe, toAettos, fromAettos, getPairAddress, ensurePairAllowanceForRouter, getPairInfo, subSlippage, getPairAllowanceToRouter } from '../libs/dex';
-import ConfirmLiquidityModal from '../components/dex/ConfirmLiquidityModal';
-import TokenSelector from '../components/dex/TokenSelector';
-import { errorToUserMessage } from '../libs/errorMessages';
-import DexSettings from '../components/dex/DexSettings';
-import { useToast } from '../components/ToastProvider';
 import AeButton from '../components/AeButton';
+import ConfirmLiquidityModal from '../components/dex/ConfirmLiquidityModal';
+import DexSettings from '../components/dex/DexSettings';
+import TokenSelector from '../components/dex/TokenSelector';
+import { useToast } from '../components/ToastProvider';
 import { CONFIG } from '../config';
+import { ACI, DEX_ADDRESSES, ensurePairAllowanceForRouter, fromAettos, getPairAddress, getPairAllowanceToRouter, getPairInfo, initDexContracts, removeLiquidity, removeLiquidityAe, subSlippage, toAettos } from '../libs/dex';
+import { errorToUserMessage } from '../libs/errorMessages';
 
-import { useWallet } from '../hooks';
+import { useAeSdk } from '../hooks';
 export default function PoolRemove() {
+  const { sdk, activeAccount } = useAeSdk();
   const { id } = useParams(); // expect pair address ct_...
-  const address = useWallet().address;
   const [percent, setPercent] = useState(0);
   const location = useLocation();
   const [slippage, setSlippage] = useState<number>(() => Number(localStorage.getItem('dex:slippage') || 5));
@@ -37,7 +37,6 @@ export default function PoolRemove() {
     (async () => {
       try {
         if (!tokenA || !tokenB) { setPreview(null); setMinHuman({}); return; }
-        const sdk = (window as any).__aeSdk;
         const { factory } = await initDexContracts(sdk);
         const aAddr = tokenA === 'AE' ? DEX_ADDRESSES.wae : tokenA;
         const bAddr = tokenB === 'AE' ? DEX_ADDRESSES.wae : tokenB;
@@ -66,8 +65,7 @@ export default function PoolRemove() {
 
   async function fetchTokenMeta(addr: string): Promise<{ decimals: number; symbol: string }> {
     if (!addr || addr === 'AE') return { decimals: 18, symbol: 'AE' };
-    const sdk = (window as any).__aeSdk;
-    const t = await sdk.initializeContract({ aci: ACI.AEX9, address: addr });
+    const t = await sdk.initializeContract({ aci: ACI.AEX9, address: addr as `ct_${string}` | `${string}.chain` });
     const { decodedResult } = await t.meta_info();
     return {
       decimals: Number(decodedResult.decimals ?? 18),
@@ -90,7 +88,6 @@ export default function PoolRemove() {
     if (!id) return;
     setLoading(true); setError(null);
     try {
-      const sdk = (window as any).__aeSdk;
       const { router } = await initDexContracts(sdk);
       const deadlineMs = Date.now() + Math.max(1, Math.min(60, deadline)) * 60_000;
       // naive: user inputs LP amount and token addresses
@@ -111,21 +108,21 @@ export default function PoolRemove() {
             minB = subSlippage(amountBExp, slippage);
           }
         }
-      } catch {}
+      } catch { }
       // Ensure LP allowance for router when removing
       try {
         const { factory } = await initDexContracts(sdk);
         if (tokenA && tokenB) {
           const pairAddr = await getPairAddress(sdk, factory, tokenA === 'AE' ? DEX_ADDRESSES.wae : tokenA, tokenB === 'AE' ? DEX_ADDRESSES.wae : tokenB);
-          if (pairAddr) await ensurePairAllowanceForRouter(sdk, pairAddr, address as string, lp);
+          if (pairAddr) await ensurePairAllowanceForRouter(sdk, pairAddr, activeAccount as string, lp);
           if (pairAddr) {
             try {
-              const cur = await getPairAllowanceToRouter(sdk, pairAddr, address as string);
+              const cur = await getPairAllowanceToRouter(sdk, pairAddr, activeAccount as string);
               setAllowanceInfo(`Approved LP: ${fromAettos(cur, 18)} LP`);
-            } catch {}
+            } catch { }
           }
         }
-      } catch {}
+      } catch { }
 
       let txHash: string | undefined;
       if ((tokenA === 'AE') || (tokenB === 'AE')) {
@@ -135,7 +132,7 @@ export default function PoolRemove() {
           liquidity: lp,
           minAmountToken: minA,
           minAmountAe: minB,
-          toAccount: address as string,
+          toAccount: activeAccount as string,
           deadlineMs,
         });
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
@@ -146,7 +143,7 @@ export default function PoolRemove() {
           liquidity: lp,
           minAmountA: minA,
           minAmountB: minB,
-          toAccount: address as string,
+          toAccount: activeAccount as string,
           deadlineMs,
         });
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
@@ -162,13 +159,13 @@ export default function PoolRemove() {
             )}
           </div>
         );
-      } catch {}
+      } catch { }
     } catch (e: any) {
       setError(errorToUserMessage(e, { action: 'remove-liquidity', slippagePct: slippage, deadlineMins: deadline }));
       try {
         const msg = errorToUserMessage(e, { action: 'remove-liquidity', slippagePct: slippage, deadlineMins: deadline });
         toast.push(<div><div>Remove liquidity failed</div><div style={{ opacity: 0.9 }}>{msg}</div></div>);
-      } catch {}
+      } catch { }
     } finally { setLoading(false); }
   }
 
@@ -200,7 +197,7 @@ export default function PoolRemove() {
         )}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <AeButton aria-label="open-settings" onClick={() => setShowSettings((v) => !v)} variant="secondary-dark" size="small">Settings</AeButton>
-          <AeButton onClick={() => setShowConfirm(true)} disabled={!address || !liquidity || !tokenA || !tokenB || loading} loading={loading} variant="secondary-dark" size="large">{loading ? 'Removing…' : (address ? 'Remove' : 'Connect wallet')}</AeButton>
+          <AeButton onClick={() => setShowConfirm(true)} disabled={!activeAccount || !liquidity || !tokenA || !tokenB || loading} loading={loading} variant="secondary-dark" size="large">{loading ? 'Removing…' : (activeAccount ? 'Remove' : 'Connect wallet')}</AeButton>
         </div>
         {showSettings && (<DexSettings />)}
       </div>

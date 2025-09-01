@@ -1,20 +1,20 @@
-import React, { useEffect, useMemo, useState } from 'react';
 import BigNumber from 'bignumber.js';
+import { useEffect, useMemo, useState } from 'react';
 import { TrendminerApi } from '../api/backend';
+import { DEX_ADDRESSES, ensureAllowanceForRouter, fromAettos, initDexContracts, subSlippage, toAettos } from '../libs/dex';
 import TradeCard from '../views/Trendminer/TradeCard';
-import MobileInput from './MobileInput';
 import AeButton from './AeButton';
 import MobileCard from './MobileCard';
-import { DEX_ADDRESSES, initDexContracts, toAettos, fromAettos, subSlippage, ensureAllowanceForRouter } from '../libs/dex';
+import MobileInput from './MobileInput';
 
-import { useWallet, useAeternity } from '../hooks';
+import { useAeSdk, useWalletConnect } from '../hooks';
 
 type TokenItem = any;
 
 export default function SwapCard() {
-  const { address } = useWallet();
-  const { sdk: sdkState, initSdk, scanForWallets } = useAeternity();
-  
+  const { sdk, activeAccount } = useAeSdk()
+  const { connectWallet } = useWalletConnect()
+
   const [tokens, setTokens] = useState<TokenItem[]>([]);
   const [selected, setSelected] = useState<TokenItem | null>(null);
   const [loading, setLoading] = useState(false);
@@ -53,23 +53,13 @@ export default function SwapCard() {
     return () => { ignore = true; };
   }, []);
 
-  // Initialize SDK and DEX contracts for ETH -> AE swap
-  useEffect(() => {
-    (async () => {
-      if (!sdkState) {
-        await initSdk();
-      }
-    })();
-  }, [initSdk, sdkState]);
 
   useEffect(() => {
     (async () => {
-      const sdk = (window as any).__aeSdk;
-      if (!sdk) return;
       const { router: r } = await initDexContracts(sdk);
       setRouter(r);
     })();
-  }, [sdkState]);
+  }, []);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -81,17 +71,8 @@ export default function SwapCard() {
     );
   }, [search, tokens]);
 
-  const connectWallet = async () => {
-    try {
-      await scanForWallets();
-    } catch (e: any) {
-      setSwapError(e?.message || 'Failed to connect wallet');
-    }
-  };
 
   async function quote() {
-    const sdk = (window as any).__aeSdk;
-    if (!router || !sdk) return;
     setQuoting(true);
     setSwapError(null);
     try {
@@ -108,24 +89,23 @@ export default function SwapCard() {
   }
 
   async function doSwap() {
-    const sdk = (window as any).__aeSdk;
-    if (!router || !sdk || !address) return;
+    if (!router || !sdk || !activeAccount) return;
     setSwapping(true);
     setSwapError(null);
     try {
       const deadline = Date.now() + 30 * 60_000;
       const ain = toAettos(amountIn, 18);
       const path = [DEX_ADDRESSES.aeeth, DEX_ADDRESSES.wae];
-      
+
       // Ensure allowance for aeETH
-      await ensureAllowanceForRouter(sdk, DEX_ADDRESSES.aeeth, address, ain);
-      
+      await ensureAllowanceForRouter(sdk, DEX_ADDRESSES.aeeth, activeAccount, ain);
+
       const { decodedResult } = await router.get_amounts_out(ain, path);
       const out = decodedResult[decodedResult.length - 1] as bigint;
       const minOut = subSlippage(out, slippage);
-      
-      await router.swap_exact_tokens_for_ae(ain, minOut, path, address, deadline, null);
-      
+
+      await router.swap_exact_tokens_for_ae(ain, minOut, path, activeAccount, deadline, null);
+
       setAmountIn('');
       setAmountOut('');
     } catch (e: any) {
@@ -137,8 +117,8 @@ export default function SwapCard() {
 
   const canSwap = useMemo(() => {
     const a = new BigNumber(amountIn);
-    return !!address && !!router && a.isFinite() && a.gt(0);
-  }, [address, router, amountIn]);
+    return !!activeAccount && !!router && a.isFinite() && a.gt(0);
+  }, [activeAccount, router, amountIn]);
 
   return (
     <div style={{ display: 'grid', gap: 12 }}>
@@ -179,9 +159,9 @@ export default function SwapCard() {
               </div>
             </div>
 
-            {!address ? (
-              <AeButton 
-                onClick={connectWallet} 
+            {!activeAccount ? (
+              <AeButton
+                onClick={connectWallet}
                 className="large block"
                 green
               >
@@ -189,7 +169,7 @@ export default function SwapCard() {
               </AeButton>
             ) : (
               <div style={{ fontSize: 12, opacity: 0.8, textAlign: 'center' }}>
-                Connected: {address.slice(0, 8)}...{address.slice(-6)}
+                Connected: {activeAccount.slice(0, 8)}...{activeAccount.slice(-6)}
               </div>
             )}
 
@@ -220,16 +200,16 @@ export default function SwapCard() {
 
             <div style={{ display: 'grid', gap: 8 }}>
               <div style={{ display: 'flex', gap: 8 }}>
-                <AeButton 
-                  onClick={quote} 
+                <AeButton
+                  onClick={quote}
                   disabled={!router || quoting || !amountIn}
                   className="large"
                   style={{ flex: 1 }}
                 >
                   {quoting ? 'Getting Quote...' : 'Get Quote'}
                 </AeButton>
-                <AeButton 
-                  onClick={doSwap} 
+                <AeButton
+                  onClick={doSwap}
                   disabled={!canSwap || swapping}
                   className="large"
                   green
@@ -242,32 +222,32 @@ export default function SwapCard() {
 
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
               <label htmlFor="slippage" style={{ fontSize: 12 }}>Slippage:</label>
-              <input 
-                id="slippage" 
-                name="slippage" 
-                type="number" 
-                min={0} 
-                max={100} 
-                step={0.1} 
-                value={slippage} 
-                onChange={(e) => setSlippage(Number(e.target.value))} 
-                style={{ 
-                  width: 80, 
-                  padding: '4px 8px', 
-                  borderRadius: 4, 
-                  border: '1px solid #3a3a4a', 
-                  background: '#1a1a23', 
+              <input
+                id="slippage"
+                name="slippage"
+                type="number"
+                min={0}
+                max={100}
+                step={0.1}
+                value={slippage}
+                onChange={(e) => setSlippage(Number(e.target.value))}
+                style={{
+                  width: 80,
+                  padding: '4px 8px',
+                  borderRadius: 4,
+                  border: '1px solid #3a3a4a',
+                  background: '#1a1a23',
                   color: '#fff',
                   fontSize: 12
-                }} 
+                }}
               />
               <span style={{ fontSize: 12 }}>%</span>
             </div>
 
             {swapError && (
-              <div style={{ 
-                color: '#ff6b6b', 
-                fontSize: 13, 
+              <div style={{
+                color: '#ff6b6b',
+                fontSize: 13,
                 textAlign: 'center',
                 padding: '8px',
                 background: 'rgba(255, 107, 107, 0.1)',
@@ -278,20 +258,20 @@ export default function SwapCard() {
               </div>
             )}
 
-            <div style={{ 
-              fontSize: 11, 
-              opacity: 0.6, 
+            <div style={{
+              fontSize: 11,
+              opacity: 0.6,
               textAlign: 'center',
               padding: '8px',
               background: 'rgba(255, 255, 255, 0.05)',
               borderRadius: 6
             }}>
               <div>💡 Need to bridge ETH first?</div>
-              <a 
-                href="https://swap.superhero.com" 
-                target="_blank" 
-                rel="noreferrer" 
-                style={{ 
+              <a
+                href="https://swap.superhero.com"
+                target="_blank"
+                rel="noreferrer"
+                style={{
                   textDecoration: 'underline',
                   color: '#4CAF50'
                 }}

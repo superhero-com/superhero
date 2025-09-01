@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useSwapExecution } from '../../../components/dex/hooks/useSwapExecution';
 import { BridgeService, BridgeStatus, BridgeOptions } from '../index';
 import { errorToUserMessage } from '../../../libs/errorMessages';
 import { useToast } from '../../../components/ToastProvider';
 import { CONFIG } from '../../../config';
 import ConnectWalletButton from '../../../components/ConnectWalletButton';
 
-import { useWallet, useDex, useAccount } from '../../../hooks';
+import { useDex, useAeSdk } from '../../../hooks';
 
 export default function EthBridgeWidget() {
-  const { activeAccount: address } = useAccount();
+  const { activeAccount, sdk } = useAeSdk();
   const slippagePct = useDex().slippagePct;
   const deadlineMins = useDex().deadlineMins;
-  const { ensureWallet } = useSwapExecution();
   const toast = useToast();
 
   const [ethBridgeIn, setEthBridgeIn] = useState('');
@@ -21,7 +19,7 @@ export default function EthBridgeWidget() {
   const [ethBridgeProcessing, setEthBridgeProcessing] = useState(false);
   const [ethBridgeError, setEthBridgeError] = useState<string | null>(null);
   const [ethBridgeStep, setEthBridgeStep] = useState<BridgeStatus>('idle');
-  
+
   const bridgeService = BridgeService.getInstance();
 
   // Automated ETH Bridge quoting
@@ -30,12 +28,12 @@ export default function EthBridgeWidget() {
       setEthBridgeOutAe('');
       return;
     }
-    
+
     const timer = setTimeout(async () => {
       try {
         setEthBridgeQuoting(true);
         setEthBridgeError(null);
-        const quote = await bridgeService.getBridgeQuote(ethBridgeIn);
+        const quote = await bridgeService.getBridgeQuote(sdk, ethBridgeIn);
         setEthBridgeOutAe(quote);
       } catch (e: any) {
         setEthBridgeError(errorToUserMessage(e, { action: 'quote' }));
@@ -51,11 +49,11 @@ export default function EthBridgeWidget() {
     try {
       setEthBridgeProcessing(true);
       setEthBridgeError(null);
-      await ensureWallet();
-      
+      if (!activeAccount) return;
+
       const bridgeOptions: BridgeOptions = {
         amountEth: ethBridgeIn,
-        aeAccount: address as string,
+        aeAccount: activeAccount,
         autoSwap: true,
         slippagePercent: slippagePct,
         deadlineMinutes: deadlineMins,
@@ -64,6 +62,7 @@ export default function EthBridgeWidget() {
       };
 
       const result = await bridgeService.bridgeEthToAe(
+        sdk,
         bridgeOptions,
         (status: BridgeStatus, message?: string) => {
           setEthBridgeStep(status);
@@ -75,11 +74,11 @@ export default function EthBridgeWidget() {
         // Show success notification
         try {
           const explorerUrl = CONFIG.EXPLORER_URL?.replace(/\/$/, '');
-          const ethTxUrl = result.ethTxHash && explorerUrl 
-            ? `https://etherscan.io/tx/${result.ethTxHash}` 
+          const ethTxUrl = result.ethTxHash && explorerUrl
+            ? `https://etherscan.io/tx/${result.ethTxHash}`
             : null;
-          const aeTxUrl = result.aeTxHash && explorerUrl 
-            ? `${explorerUrl}/transactions/${result.aeTxHash}` 
+          const aeTxUrl = result.aeTxHash && explorerUrl
+            ? `${explorerUrl}/transactions/${result.aeTxHash}`
             : null;
 
           toast.push(
@@ -123,7 +122,7 @@ export default function EthBridgeWidget() {
     setEthBridgeIn('0.1');
   };
 
-  const isDisabled = ethBridgeProcessing || !address || !ethBridgeIn || Number(ethBridgeIn) <= 0;
+  const isDisabled = ethBridgeProcessing || !activeAccount || !ethBridgeIn || Number(ethBridgeIn) <= 0;
 
   return (
     <div className="genz-card" style={{
@@ -254,7 +253,7 @@ export default function EthBridgeWidget() {
               fontFamily: 'inherit'
             }}
           />
-          
+
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -361,7 +360,7 @@ export default function EthBridgeWidget() {
           }}>
             {ethBridgeQuoting ? 'Quoting…' : (ethBridgeOutAe || '0.0')}
           </div>
-          
+
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -420,18 +419,18 @@ export default function EthBridgeWidget() {
               fontWeight: 600,
               color: ethBridgeStep === 'completed' ? 'var(--success-color)' :
                 ethBridgeStep === 'failed' ? 'var(--error-color)' :
-                'var(--warning-color)'
+                  'var(--warning-color)'
             }}>
               {ethBridgeStep === 'idle' ? 'Ready' :
-               ethBridgeStep === 'connecting' ? 'Connecting to wallets' :
-               ethBridgeStep === 'bridging' ? 'Bridging ETH → æETH' : 
-               ethBridgeStep === 'waiting' ? 'Waiting for æETH deposit' : 
-               ethBridgeStep === 'swapping' ? 'Swapping æETH → AE' : 
-               ethBridgeStep === 'completed' ? 'Completed successfully' :
-               ethBridgeStep === 'failed' ? 'Failed' : 'Processing'}
+                ethBridgeStep === 'connecting' ? 'Connecting to wallets' :
+                  ethBridgeStep === 'bridging' ? 'Bridging ETH → æETH' :
+                    ethBridgeStep === 'waiting' ? 'Waiting for æETH deposit' :
+                      ethBridgeStep === 'swapping' ? 'Swapping æETH → AE' :
+                        ethBridgeStep === 'completed' ? 'Completed successfully' :
+                          ethBridgeStep === 'failed' ? 'Failed' : 'Processing'}
             </span>
           </div>
-          
+
           {ethBridgeProcessing && (
             <div style={{
               width: '100%',
@@ -468,7 +467,7 @@ export default function EthBridgeWidget() {
       )}
 
       {/* Bridge Button */}
-      {address ? (
+      {activeAccount ? (
         <button
           onClick={handleEthBridge}
           disabled={isDisabled}
@@ -505,9 +504,9 @@ export default function EthBridgeWidget() {
                 animation: 'spin 1s linear infinite'
               }}></div>
               {ethBridgeStep === 'connecting' ? 'Connecting…' :
-               ethBridgeStep === 'bridging' ? 'Bridging…' : 
-               ethBridgeStep === 'waiting' ? 'Waiting for æETH…' : 
-               ethBridgeStep === 'swapping' ? 'Swapping…' : 'Processing…'}
+                ethBridgeStep === 'bridging' ? 'Bridging…' :
+                  ethBridgeStep === 'waiting' ? 'Waiting for æETH…' :
+                    ethBridgeStep === 'swapping' ? 'Swapping…' : 'Processing…'}
             </div>
           ) : 'Bridge & Swap'}
         </button>

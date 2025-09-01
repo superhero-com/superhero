@@ -35,7 +35,7 @@ const PROMPTS: string[] = [
 ];
 
 export default function CreatePost({ onClose, onSuccess, className = '', onTextChange }: CreatePostProps) {
-  const { sdk, } = useAeSdk();
+  const { sdk } = useAeSdk();
   const { activeAccount, chainNames } = useAccount();
 
   const [text, setText] = useState('');

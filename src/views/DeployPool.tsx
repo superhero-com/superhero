@@ -1,15 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import BigNumber from 'bignumber.js';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import AeButton from '../components/AeButton';
 import DexTabs from '../components/dex/DexTabs';
 import TokenSelector from '../components/dex/TokenSelector';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { DEX_ADDRESSES, getPairAddress, initDexContracts, fromAettos } from '../libs/dex';
 import { CONFIG } from '../config';
-import BigNumber from 'bignumber.js';
+import { DEX_ADDRESSES, fromAettos, getPairAddress, initDexContracts } from '../libs/dex';
 
-import { useWallet } from '../hooks';
+import { useAeSdk } from '../hooks';
 export default function DeployPool() {
-    const address = useWallet().address;
+  const { activeAccount, sdk } = useAeSdk();
   const [token, setToken] = useState('');
   const [tokenSymbol, setTokenSymbol] = useState('');
   const [amountAe, setAmountAe] = useState('');
@@ -32,7 +32,7 @@ export default function DeployPool() {
       if (t) setToken(t);
       if (a) setAmountAe(a);
       if (b) setAmountToken(b);
-    } catch {}
+    } catch { }
   }, [location.search]);
 
   async function scanWalletTokensWithoutPool() {
@@ -40,18 +40,18 @@ export default function DeployPool() {
     setScanSeq(mySeq);
     try {
       setLoading(true); setError(null);
-      if (!address) return;
+      if (!activeAccount) return;
       const base = (CONFIG.MIDDLEWARE_URL || '').replace(/\/$/, '');
       const collected: Array<{ address: string; symbol: string; name: string; decimals: number; balance: string }> = [];
       // Fetch all pages of AEX9 balances
-      let cursor: string | null = `/v3/accounts/${address}/aex9/balances`;
+      let cursor: string | null = `/v3/accounts/${activeAccount}/aex9/balances`;
       let guard = 0;
       while (cursor && guard++ < 20) {
         const r = await fetch(`${base}${cursor.startsWith('/') ? '' : '/'}${cursor}`, { cache: 'no-cache' });
         if (!r.ok) {
           // Enhanced error logging for new accounts
           if (r.status === 404) {
-            console.info('[deploy-pool] Account not found on middleware:', address);
+            console.info('[deploy-pool] Account not found on middleware:', activeAccount);
             console.info('[deploy-pool] This is normal for new accounts - user needs to bridge ETH first');
           } else {
             console.warn('[deploy-pool] Failed to fetch account balances:', r.status, r.statusText);
@@ -70,7 +70,7 @@ export default function DeployPool() {
             try {
               const bn = typeof bal === 'bigint' ? bal : BigInt(new BigNumber(String(bal)).integerValue(BigNumber.ROUND_DOWN).toFixed(0));
               if (bn > 0n) collected.push({ address: String(ct), symbol: sym, name: nm, decimals: decs, balance: fromAettos(bn, decs) });
-            } catch {}
+            } catch { }
           }
         }
         cursor = mdw?.next || null;
@@ -82,7 +82,6 @@ export default function DeployPool() {
       }
       const list = Array.from(map.values());
       // Check pool existence (token-WAE)
-      const sdk = (window as any).__aeSdk;
       const { factory } = await initDexContracts(sdk);
       const entries = await Promise.all(list.map(async (t) => {
         try {
@@ -99,7 +98,7 @@ export default function DeployPool() {
     }
   }
 
-  useEffect(() => { void scanWalletTokensWithoutPool(); }, [address]);
+  useEffect(() => { void scanWalletTokensWithoutPool(); }, [activeAccount]);
 
   const filtered = useMemo(() => {
     const term = filter.trim().toLowerCase();
@@ -163,11 +162,11 @@ export default function DeployPool() {
         />
         <AeButton
           onClick={() => navigate(`/pool/add?from=AE&to=${token}&amountA=${encodeURIComponent(amountAe)}&amountB=${encodeURIComponent(amountToken)}`)}
-          disabled={!address || !token || !amountAe || !amountToken}
+          disabled={!activeAccount || !token || !amountAe || !amountToken}
           variant="secondary-dark"
           size="large"
         >
-          {address ? 'Create pool & add liquidity' : 'Connect wallet'}
+          {activeAccount ? 'Create pool & add liquidity' : 'Connect wallet'}
         </AeButton>
       </div>
     </div>

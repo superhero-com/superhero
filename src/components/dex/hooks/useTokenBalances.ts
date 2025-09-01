@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { getTokenBalance, fromAettos, DEX_ADDRESSES } from '../../../libs/dex';
 import { Token, TokenBalance, WrapBalances } from '../types/dex';
-import { useWallet } from '../../../hooks';
+import { useAeSdk, useWallet } from '../../../hooks';
 
 export function useTokenBalances(tokenIn: Token | null, tokenOut: Token | null) {
-  const address = useWallet().address;
+  const { activeAccount, sdk } = useAeSdk()
   const [balances, setBalances] = useState<TokenBalance>({});
   const [wrapBalances, setWrapBalances] = useState<WrapBalances>({});
 
@@ -12,48 +12,50 @@ export function useTokenBalances(tokenIn: Token | null, tokenOut: Token | null) 
   useEffect(() => {
     (async () => {
       try {
-        const sdk = (window as any).__aeSdk;
-        if (!sdk || !address) return;
-        
+        if (!activeAccount) {
+          return;
+        }
+
         const inAddr = tokenIn?.isAe ? 'AE' : tokenIn?.contractId;
         const outAddr = tokenOut?.isAe ? 'AE' : tokenOut?.contractId;
-        
+
         if (!inAddr && !outAddr) return;
-        
+
         const [bin, bout] = await Promise.all([
-          inAddr ? getTokenBalance(sdk, inAddr as any, address) : Promise.resolve(null),
-          outAddr ? getTokenBalance(sdk, outAddr as any, address) : Promise.resolve(null),
+          inAddr ? getTokenBalance(sdk, inAddr as any, activeAccount) : Promise.resolve(null),
+          outAddr ? getTokenBalance(sdk, outAddr as any, activeAccount) : Promise.resolve(null),
         ]);
-        
+
         setBalances({
           in: bin != null ? fromAettos(bin as any, tokenIn?.decimals || 18) : undefined,
           out: bout != null ? fromAettos(bout as any, tokenOut?.decimals || 18) : undefined,
         });
-      } catch {}
+      } catch { }
     })();
-  }, [address, tokenIn, tokenOut]);
+  }, [activeAccount, tokenIn, tokenOut]);
 
   // Load AE/WAE balances for wrap box
   const refreshWrapBalances = async () => {
     try {
-      const sdk = (window as any).__aeSdk;
-      if (!sdk || !address) return;
-      
+      if (!activeAccount) {
+        return;
+      }
+
       const [aeBal, waeBal] = await Promise.all([
-        getTokenBalance(sdk, 'AE', address),
-        getTokenBalance(sdk, DEX_ADDRESSES.wae, address),
+        getTokenBalance(sdk, 'AE', activeAccount),
+        getTokenBalance(sdk, DEX_ADDRESSES.wae, activeAccount),
       ]);
-      
+
       setWrapBalances({
         ae: fromAettos(aeBal, 18),
         wae: fromAettos(waeBal, 18),
       });
-    } catch {}
+    } catch { }
   };
 
-  useEffect(() => { 
-    void refreshWrapBalances(); 
-  }, [address]);
+  useEffect(() => {
+    void refreshWrapBalances();
+  }, [activeAccount]);
 
   return { balances, wrapBalances, refreshWrapBalances };
 }

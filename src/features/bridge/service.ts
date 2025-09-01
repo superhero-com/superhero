@@ -1,17 +1,18 @@
+import { AeSdk } from '@aeternity/aepp-sdk';
 import { bridgeEthToAe } from './ethereum';
 import { waitForAeEthDeposit, getAeEthBalance } from './aeternity';
-import { 
-  BridgeOptions, 
-  BridgeResult, 
-  BridgeStatus, 
+import {
+  BridgeOptions,
+  BridgeResult,
+  BridgeStatus,
   BridgeProgressCallback,
   BridgeError,
-  BridgeErrorType 
+  BridgeErrorType
 } from './types';
-import { 
-  initDexContracts, 
-  toAettos, 
-  fromAettos, 
+import {
+  initDexContracts,
+  toAettos,
+  fromAettos,
   subSlippage,
   ensureAllowanceForRouter,
   DEX_ADDRESSES
@@ -34,6 +35,7 @@ export class BridgeService {
    * Bridge ETH to AE with optional automatic swap
    */
   async bridgeEthToAe(
+    sdk: AeSdk,
     options: BridgeOptions,
     onProgress?: BridgeProgressCallback
   ): Promise<BridgeResult> {
@@ -59,27 +61,20 @@ export class BridgeService {
 
       updateStatus('connecting', 'Connecting to Ethereum wallet...');
 
-      // Record pre-bridge æETH balance
-      const sdk = (window as any).__aeSdk;
-      if (!sdk) {
-        throw new BridgeError(
-          BridgeErrorType.WALLET_NOT_CONNECTED,
-          'æternity SDK not available'
-        );
-      }
 
-      const prevAeEthBalance = await getAeEthBalance(aeAccount);
+      const prevAeEthBalance = await getAeEthBalance(sdk, aeAccount);
       const expectedIncrease = BigInt(toAettos(amountEth, 18));
 
       updateStatus('bridging', 'Bridging ETH to æETH...');
 
       // 1. Bridge ETH to æETH on Ethereum
       const bridgeResult = await bridgeEthToAe({ amountEth, aeAccount });
-      
+
       updateStatus('waiting', 'Waiting for æETH deposit on æternity...');
 
       // 2. Wait for æETH to arrive on æternity
       const depositReceived = await waitForAeEthDeposit(
+        sdk,
         aeAccount,
         prevAeEthBalance,
         expectedIncrease,
@@ -101,6 +96,7 @@ export class BridgeService {
 
         try {
           swapTxHash = await this.swapAeEthToAe(
+            sdk,
             aeAccount,
             expectedIncrease,
             slippagePercent,
@@ -124,13 +120,13 @@ export class BridgeService {
       };
 
     } catch (error) {
-      const bridgeError = error instanceof BridgeError 
-        ? error 
+      const bridgeError = error instanceof BridgeError
+        ? error
         : new BridgeError(
-            BridgeErrorType.UNKNOWN_ERROR,
-            error instanceof Error ? error.message : 'Unknown error occurred',
-            error
-          );
+          BridgeErrorType.UNKNOWN_ERROR,
+          error instanceof Error ? error.message : 'Unknown error occurred',
+          error
+        );
 
       updateStatus('failed', bridgeError.message);
 
@@ -146,26 +142,26 @@ export class BridgeService {
    * Swap æETH to AE on æternity DEX
    */
   private async swapAeEthToAe(
+    sdk: AeSdk,
     aeAccount: string,
     amountAeEth: bigint,
     slippagePercent: number,
     deadlineMinutes: number
   ): Promise<string> {
-    const sdk = (window as any).__aeSdk;
     const { router } = await initDexContracts(sdk);
-    
+
     const path = [DEX_ADDRESSES.aeeth, DEX_ADDRESSES.wae];
-    
+
     // Ensure allowance for router
     await ensureAllowanceForRouter(sdk, DEX_ADDRESSES.aeeth, aeAccount, amountAeEth);
-    
+
     // Get expected output amount
     const { decodedResult } = await (router as any).get_amounts_out(amountAeEth, path);
     const expectedOut = BigInt(decodedResult[decodedResult.length - 1]);
     const minOut = subSlippage(expectedOut, slippagePercent);
-    
+
     const deadline = BigInt(Date.now() + Math.max(1, Math.min(60, deadlineMinutes)) * 60_000);
-    
+
     // Execute swap
     const result = await (router as any).swap_exact_tokens_for_ae(
       amountAeEth,
@@ -175,7 +171,7 @@ export class BridgeService {
       deadline,
       null
     );
-    
+
     return result?.hash || result?.tx?.hash || result?.transactionHash || '';
   }
 
@@ -203,22 +199,19 @@ export class BridgeService {
   /**
    * Get bridge quote (estimate output amount)
    */
-  async getBridgeQuote(amountEth: string): Promise<string> {
+  async getBridgeQuote(sdk: AeSdk, amountEth: string): Promise<string> {
     if (!amountEth || Number(amountEth) <= 0) {
       return '0';
     }
 
     try {
-      const sdk = (window as any).__aeSdk;
-      if (!sdk) return '0';
-
       const { router } = await initDexContracts(sdk);
       const amountIn = toAettos(amountEth, 18);
       const path = [DEX_ADDRESSES.aeeth, DEX_ADDRESSES.wae];
-      
+
       const { decodedResult } = await (router as any).get_amounts_out(amountIn, path);
       const amountOut = decodedResult[decodedResult.length - 1];
-      
+
       // Convert WAE to AE (1:1 unwrap)
       return fromAettos(amountOut, 18);
     } catch (error) {

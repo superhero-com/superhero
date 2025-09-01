@@ -95,6 +95,7 @@ export class BridgeService {
 
         try {
           swapTxHash = await this.swapAeEthToAe(
+            sdk,
             aeAccount,
             expectedIncrease,
             slippagePercent,
@@ -140,12 +141,12 @@ export class BridgeService {
    * Swap æETH to AE on æternity DEX
    */
   private async swapAeEthToAe(
+    sdk: AeSdk,
     aeAccount: string,
     amountAeEth: bigint,
     slippagePercent: number,
     deadlineMinutes: number
   ): Promise<string> {
-    const sdk = (window as any).__aeSdk;
     const { router } = await initDexContracts(sdk);
     
     const path = [DEX_ADDRESSES.aeeth, DEX_ADDRESSES.wae];

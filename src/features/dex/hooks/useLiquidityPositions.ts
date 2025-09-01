@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import BigNumber from 'bignumber.js';
 import { LiquidityPosition, PoolListState } from '../types/pool';
 import { useWallet, useDex, useAeSdk } from '../../../hooks';
 import {
@@ -16,6 +17,7 @@ import {
 export function useLiquidityPositions(): PoolListState & { 
   refreshPositions: () => Promise<void>;
   invalidateCache: () => void;
+  addOptimisticPosition: (position: LiquidityPosition) => void;
 } {
   const { activeAccount } = useAeSdk()
   const { providedLiquidity, scanAccountLiquidity } = useDex();
@@ -50,8 +52,8 @@ export function useLiquidityPositions(): PoolListState & {
       await scanAccountLiquidity(accountAddress);
 
       // Get positions from Jotai store
-      const providedRaw = providedLiquidity[accountAddress];
-      const provided = providedRaw || {};
+      const accountLiquidity = providedLiquidity[accountAddress] || {};
+      const provided = accountLiquidity;
 
       // Convert to our typed format
       const positions: LiquidityPosition[] = Object.entries(provided)
@@ -59,11 +61,11 @@ export function useLiquidityPositions(): PoolListState & {
           if (!info) return null;
           return {
             pairId,
-            token0: (info as any).token0,
-            token1: (info as any).token1,
-            balance: (info as any).balance,
-            sharePct: (info as any).sharePct,
-            valueUsd: (info as any).valueUsd,
+            token0: info.token0,
+            token1: info.token1,
+            balance: info.balance,
+            sharePct: info.sharePct,
+            valueUsd: info.valueUsd,
           };
         })
         .filter(Boolean) as LiquidityPosition[];
@@ -91,6 +93,40 @@ export function useLiquidityPositions(): PoolListState & {
     invalidatePositions(activeAccount);
   }, [activeAccount, invalidatePositions]);
 
+  // Add a new position optimistically (before blockchain confirmation)
+  const addOptimisticPosition = useCallback((newPosition: LiquidityPosition) => {
+    if (!activeAccount) return;
+    
+    // Get current positions and add the new one
+    const currentPositions = getPositionsForAccount(activeAccount);
+    
+    // Check if position already exists (by pairId)
+    const existingIndex = currentPositions.findIndex(p => p.pairId === newPosition.pairId);
+    
+    let updatedPositions: LiquidityPosition[];
+    if (existingIndex >= 0) {
+      // Update existing position by adding to balance
+      updatedPositions = [...currentPositions];
+      const existing = updatedPositions[existingIndex];
+      const existingBalance = new BigNumber(existing.balance || '0');
+      const newBalance = new BigNumber(newPosition.balance || '0');
+      const totalBalance = existingBalance.plus(newBalance);
+      
+      updatedPositions[existingIndex] = {
+        ...existing,
+        balance: totalBalance.toString(),
+        sharePct: newPosition.sharePct || existing.sharePct,
+        valueUsd: newPosition.valueUsd || existing.valueUsd,
+      };
+    } else {
+      // Add new position
+      updatedPositions = [...currentPositions, newPosition];
+    }
+    
+    // Update the positions in the store
+    setPositionsForAccount({ address: activeAccount, positions: updatedPositions });
+  }, [activeAccount, getPositionsForAccount, setPositionsForAccount]);
+
   // Load positions on mount or when address changes
   useEffect(() => {
     if (!activeAccount) return;
@@ -99,7 +135,7 @@ export function useLiquidityPositions(): PoolListState & {
     if (cachedPositions.length === 0 || shouldRefresh) {
       loadAndCachePositions(activeAccount);
     }
-  }, [activeAccount, cachedPositions.length, shouldRefresh, loadAndCachePositions]);
+  }, [activeAccount, cachedPositions.length, shouldRefresh]);
 
   return {
     positions: cachedPositions,
@@ -109,5 +145,6 @@ export function useLiquidityPositions(): PoolListState & {
     showCreate,
     refreshPositions,
     invalidateCache,
+    addOptimisticPosition,
   };
 }

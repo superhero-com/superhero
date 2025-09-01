@@ -5,12 +5,13 @@ import { useToast } from '../../../components/ToastProvider';
 import { CONFIG } from '../../../config';
 import ConnectWalletButton from '../../../components/ConnectWalletButton';
 
-import { useDex, useAeSdk } from '../../../hooks';
+import { useDex, useAeSdk, useRecentActivities } from '../../../hooks';
 
 export default function EthBridgeWidget() {
   const { activeAccount, sdk } = useAeSdk();
   const slippagePct = useDex().slippagePct;
   const deadlineMins = useDex().deadlineMins;
+  const { addActivity } = useRecentActivities();
   const toast = useToast();
 
   const [ethBridgeIn, setEthBridgeIn] = useState('');
@@ -80,6 +81,19 @@ export default function EthBridgeWidget() {
           const aeTxUrl = result.aeTxHash && explorerUrl
             ? `${explorerUrl}/transactions/${result.aeTxHash}`
             : null;
+
+          // Track the bridge activity
+          if (activeAccount && result.aeTxHash) {
+            addActivity({
+              type: 'bridge',
+              hash: result.aeTxHash,
+              account: activeAccount,
+              tokenIn: 'ETH',
+              tokenOut: 'AE',
+              amountIn: ethBridgeIn,
+              amountOut: ethBridgeOutAe,
+            });
+          }
 
           toast.push(
             React.createElement('div', {},

@@ -2,12 +2,12 @@
 
 
 // Swap specific styles
-// .dex-swap-content {
-//   display: grid;
-//   grid-template-columns: 1fr 300px;
-//   gap: 32px;
-//   align-items: start;
-// }
+.dex-swap-content {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
 
 .dex-swap-main {
   min-width: 0; // Prevent overflow
@@ -117,7 +117,7 @@
   
   .dex-swap-content {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 20px;
   }
   
   .dex-wrap-content,

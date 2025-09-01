@@ -11,6 +11,7 @@ import { ACI, DEX_ADDRESSES, MINIMUM_LIQUIDITY, addLiquidity, addLiquidityAe, en
 import { errorToUserMessage } from '../libs/errorMessages';
 
 import { useAeSdk, useDex } from '../hooks';
+import { createOptimisticPositionData } from '../features/dex/utils/positionUtils';
 export default function PoolAdd() {
   const { sdk, activeAccount } = useAeSdk();
   const [tokenA, setTokenA] = useState('');
@@ -34,12 +35,13 @@ export default function PoolAdd() {
   const [showSettings, setShowSettings] = useState(false);
   const toast = useToast();
   const [allowanceInfo, setAllowanceInfo] = useState<string | null>(null);
+  const { updateProvidedLiquidity } = useDex();
 
   const isAePair = tokenA === 'AE' || tokenB === 'AE';
 
   async function fetchTokenMeta(addr: string): Promise<{ decimals: number; symbol: string }> {
     if (!addr || addr === 'AE') return { decimals: 18, symbol: 'AE' };
-    const t = await sdk.initializeContract({ aci: ACI.AEX9, address: addr });
+    const t = await sdk.initializeContract({ aci: ACI.AEX9, address: addr as any });
     const { decodedResult } = await t.meta_info();
     return {
       decimals: Number(decodedResult.decimals ?? 18),
@@ -232,6 +234,38 @@ export default function PoolAdd() {
         });
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       }
+      
+      // Create and add optimistic position for immediate UI feedback
+      try {
+        const optimisticData = await createOptimisticPositionData({
+          sdk,
+          activeAccount: activeAccount as string,
+          tokenA,
+          tokenB,
+          symbolA,
+          symbolB,
+          amountA,
+          amountB,
+          pairPreview
+        });
+        
+        if (optimisticData) {
+          updateProvidedLiquidity({
+            accountAddress: activeAccount as string,
+            pairId: optimisticData.pairId,
+            balance: optimisticData.data.balance,
+            token0: { address: tokenA, symbol: optimisticData.data.token0 },
+            token1: { address: tokenB, symbol: optimisticData.data.token1 },
+            sharePct: optimisticData.data.sharePct,
+            valueUsd: optimisticData.data.valueUsd,
+          });
+          console.log('Added optimistic position to store:', optimisticData);
+        }
+      } catch (error) {
+        console.warn('Failed to create optimistic position:', error);
+        // Don't fail the whole operation if optimistic update fails
+      }
+      
       setAmountA(''); setAmountB('');
       try {
         const url = CONFIG.EXPLORER_URL ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${txHash || ''}` : '';
@@ -342,7 +376,7 @@ export default function PoolAdd() {
             Auto link amounts to pool ratio
           </label>
           <AeButton aria-label="open-settings" onClick={() => setShowSettings((v) => !v)} variant="secondary-dark" size="small">Settings</AeButton>
-          <AeButton onClick={() => setShowConfirm(true)} disabled={!address || !tokenA || !tokenB || !amountA || !amountB || loading} loading={loading} variant="secondary-dark" size="large">{loading ? 'Supplying…' : (address ? 'Supply' : 'Connect wallet')}</AeButton>
+          <AeButton onClick={() => setShowConfirm(true)} disabled={!activeAccount || !tokenA || !tokenB || !amountA || !amountB || loading} loading={loading} variant="secondary-dark" size="large">{loading ? 'Supplying…' : (activeAccount ? 'Supply' : 'Connect wallet')}</AeButton>
         </div>
         {showSettings && (<DexSettings />)}
       </div>

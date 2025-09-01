@@ -3,8 +3,10 @@ import { useCallback } from 'react';
 import { slippagePctAtom, deadlineMinsAtom, providedLiquidityAtom, poolInfoAtom } from '../atoms/dexAtoms';
 import { ACI, DEX_ADDRESSES, getPairInfo, getPairAddress, getLpBalance } from '../libs/dex';
 import { getPairs } from '../libs/dexBackend';
+import { useAeSdk } from './useAeSdk';
 
 export const useDex = () => {
+  const { sdk } = useAeSdk()
   const [slippagePct, setSlippagePct] = useAtom(slippagePctAtom);
   const [deadlineMins, setDeadlineMins] = useAtom(deadlineMinsAtom);
   const [providedLiquidity, setProvidedLiquidity] = useAtom(providedLiquidityAtom);
@@ -106,7 +108,6 @@ export const useDex = () => {
   const scanAccountLiquidity = useCallback(async (address: string) => {
     const pairs = await getPairs(false);
     const arr: any[] = pairs ? (Array.isArray(pairs) ? pairs : Object.values(pairs as any)) : [];
-    const sdk = (window as any).__aeSdk;
     
     for (const p of arr) {
       const balance = await getLpBalance(sdk, p.address, address).catch(() => 0n);

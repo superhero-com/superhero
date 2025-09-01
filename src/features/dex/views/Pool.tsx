@@ -8,7 +8,7 @@ import { PoolProvider, usePool } from '../context/PoolProvider';
 
 function PoolContent() {
   const navigate = useNavigate();
-  const { activeAccount: address } = useAccount();
+  const { activeAccount } = useAccount();
   const { positions, loading, error, refreshPositions, invalidateCache } = useLiquidityPositions();
   const { selectPositionForAdd, selectPositionForRemove, currentAction, setRefreshPositions } = usePool();
 
@@ -196,7 +196,7 @@ function PoolContent() {
                 Active Positions
               </h3>
               <div style={{ display: 'flex', gap: 8 }}>
-                {address && (
+                {activeAccount && (
                   <button
                     onClick={() => refreshPositions()}
                     style={{ 
@@ -223,7 +223,7 @@ function PoolContent() {
                     🔄 Refresh
                   </button>
                 )}
-                {address && positions.length > 0 && (
+                {activeAccount && positions.length > 0 && (
                   <button
                     onClick={handleAddNewLiquidity}
                     style={{ 
@@ -318,7 +318,7 @@ function PoolContent() {
               }}>
                 Start earning fees by providing liquidity to trading pairs
               </div>
-              {address ? (
+              {activeAccount ? (
                 <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
                   <button
                     onClick={handleAddNewLiquidity}

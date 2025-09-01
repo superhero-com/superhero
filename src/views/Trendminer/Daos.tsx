@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { TrendminerApi } from '../../api/backend';
-import './Daos.scss';
 import { AeSdk, Node } from '@aeternity/aepp-sdk';
-import { CONFIG } from '../../config';
+import { useEffect, useMemo, useState } from 'react';
+import { TrendminerApi } from '../../api/backend';
 import TokenMiniChart from '../../components/Trendminer/TokenMiniChart';
+import { CONFIG } from '../../config';
+import './Daos.scss';
 
-import { useWallet } from '../../hooks';
+import { useAeSdk } from '../../hooks';
 type TokenItem = {
   address: string;
   name: string;
@@ -18,13 +18,13 @@ type TokenItem = {
 };
 
 export default function Daos() {
+  const { sdk, activeAccount } = useAeSdk();
   const [items, setItems] = useState<TokenItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [sort, setSort] = useState<'market_cap'|'holders_count'|'created_at'>('market_cap');
+  const [sort, setSort] = useState<'market_cap' | 'holders_count' | 'created_at'>('market_cap');
   const [treasuryMap, setTreasuryMap] = useState<Record<string, number>>({});
-  const address = useWallet().address;
   const [ownedContracts, setOwnedContracts] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 30;
@@ -38,8 +38,6 @@ export default function Daos() {
   // Provide read-only SDK when wallet is not connected
   let cachedReadOnlySdk: AeSdk | null = null;
   async function getSdk(): Promise<AeSdk | null> {
-    const sdk: any = (window as any).__aeSdk as AeSdk | undefined;
-    if (sdk) return sdk as AeSdk;
     try {
       if (cachedReadOnlySdk) return cachedReadOnlySdk;
       if (!CONFIG.NODE_URL) return null;
@@ -85,11 +83,11 @@ export default function Daos() {
     let cancelled = false;
     async function loadBalances() {
       try {
-        if (!address) { if (!cancelled) setOwnedContracts(new Set()); return; }
+        if (!activeAccount) { if (!cancelled) setOwnedContracts(new Set()); return; }
         const base = (CONFIG.MIDDLEWARE_URL || '').replace(/\/$/, '');
         if (!base) { if (!cancelled) setOwnedContracts(new Set()); return; }
         const collected: string[] = [];
-        let cursor: string | null = `/v3/accounts/${address}/aex9/balances`;
+        let cursor: string | null = `/v3/accounts/${activeAccount}/aex9/balances`;
         let guard = 0;
         while (cursor && guard++ < 20) {
           const r = await fetch(`${base}${cursor.startsWith('/') ? '' : '/'}${cursor}`, { cache: 'no-cache' });
@@ -103,7 +101,7 @@ export default function Daos() {
               try {
                 const bn = typeof bal === 'bigint' ? bal : BigInt(String(bal));
                 if (bn > 0n) collected.push(String(ct).toLowerCase());
-              } catch {}
+              } catch { }
             }
           }
           cursor = mdw?.next || null;
@@ -117,7 +115,7 @@ export default function Daos() {
     }
     loadBalances();
     return () => { cancelled = true; };
-  }, [address]);
+  }, [activeAccount]);
 
   const ownedFirstItems = useMemo(() => {
     if (!items.length) return items;
@@ -203,39 +201,39 @@ export default function Daos() {
                 </div>
                 <a className="cta" href={`/trendminer/dao/${encodeURIComponent(t.sale_address || '')}`}>Open DAO</a>
               </div>
-            <div className="mini-chart">
-              <TokenMiniChart address={t.sale_address || t.address} width={140} height={32} stroke="#ff6d15" />
-            </div>
-            <div className="row stats">
-              <div>
-                <div className="label">Treasury</div>
-                <div className="value">{t.sale_address && treasuryMap[t.sale_address] != null ? `${treasuryMap[t.sale_address].toLocaleString()} AE` : '—'}</div>
+              <div className="mini-chart">
+                <TokenMiniChart address={t.sale_address || t.address} width={140} height={32} stroke="#ff6d15" />
               </div>
-              <div>
-                <div className="label">Holders</div>
-                <div className="value">{t.holders_count ?? 0}</div>
+              <div className="row stats">
+                <div>
+                  <div className="label">Treasury</div>
+                  <div className="value">{t.sale_address && treasuryMap[t.sale_address] != null ? `${treasuryMap[t.sale_address].toLocaleString()} AE` : '—'}</div>
+                </div>
+                <div>
+                  <div className="label">Holders</div>
+                  <div className="value">{t.holders_count ?? 0}</div>
+                </div>
+                <div>
+                  <div className="label">Created</div>
+                  <div className="value">{t.created_at ? new Date(t.created_at).toLocaleDateString() : '—'}</div>
+                </div>
+                <div>
+                  <div className="label">Market Cap</div>
+                  <div className="value">{t.market_cap != null ? `${(Number(t.market_cap) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 2 })} AE` : '—'}</div>
+                </div>
+                <div>
+                  <div className="label">Trending</div>
+                  <div className="value">{(t as any).trending_score != null ? Math.round(Number((t as any).trending_score)).toLocaleString() : '—'}</div>
+                </div>
               </div>
-              <div>
-                <div className="label">Created</div>
-                <div className="value">{t.created_at ? new Date(t.created_at).toLocaleDateString() : '—'}</div>
+              <div className="row addr">
+                <div className="label">Sale</div>
+                <div className="mono">{(t.sale_address || '').slice(0, 8)}…{(t.sale_address || '').slice(-6)}</div>
               </div>
-              <div>
-                <div className="label">Market Cap</div>
-                <div className="value">{t.market_cap != null ? `${(Number(t.market_cap) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 2 })} AE` : '—'}</div>
+              <div className="row links">
+                <a className="secondary" href={`/trendminer/tokens/${encodeURIComponent(t.sale_address || t.address)}`}>View token</a>
+                <a className="secondary" href={`https://aescan.io/contracts/${encodeURIComponent(t.sale_address || t.address)}?type=call-transactions`} target="_blank" rel="noopener noreferrer">æScan ↗</a>
               </div>
-              <div>
-                <div className="label">Trending</div>
-                <div className="value">{(t as any).trending_score != null ? Math.round(Number((t as any).trending_score)).toLocaleString() : '—'}</div>
-              </div>
-            </div>
-            <div className="row addr">
-              <div className="label">Sale</div>
-              <div className="mono">{(t.sale_address || '').slice(0, 8)}…{(t.sale_address || '').slice(-6)}</div>
-            </div>
-            <div className="row links">
-              <a className="secondary" href={`/trendminer/tokens/${encodeURIComponent(t.sale_address || t.address)}`}>View token</a>
-              <a className="secondary" href={`https://aescan.io/contracts/${encodeURIComponent(t.sale_address || t.address)}?type=call-transactions`} target="_blank" rel="noopener noreferrer">æScan ↗</a>
-            </div>
             </div>
           );
         })}

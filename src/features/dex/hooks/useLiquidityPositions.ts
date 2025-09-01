@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { LiquidityPosition, PoolListState } from '../types/pool';
-import { useWallet, useDex } from '../../../hooks';
+import { useWallet, useDex, useAeSdk } from '../../../hooks';
 import {
   getPositionsForAccountAtom,
   isLoadingForAccountAtom,
@@ -17,7 +17,7 @@ export function useLiquidityPositions(): PoolListState & {
   refreshPositions: () => Promise<void>;
   invalidateCache: () => void;
 } {
-  const { address } = useWallet();
+  const { activeAccount } = useAeSdk()
   const { providedLiquidity, scanAccountLiquidity } = useDex();
   
   // Jotai atoms
@@ -35,10 +35,10 @@ export function useLiquidityPositions(): PoolListState & {
   const [showCreate, setShowCreate] = useState(false);
 
   // Get cached positions or empty array
-  const cachedPositions = address ? getPositionsForAccount(address) : [];
-  const loading = address ? isLoadingForAccount(address) : false;
-  const error = address ? getErrorForAccount(address) : null;
-  const shouldRefresh = address ? shouldRefreshPositions(address) : false;
+  const cachedPositions = activeAccount ? getPositionsForAccount(activeAccount) : [];
+  const loading = activeAccount ? isLoadingForAccount(activeAccount) : false;
+  const error = activeAccount ? getErrorForAccount(activeAccount) : null;
+  const shouldRefresh = activeAccount ? shouldRefreshPositions(activeAccount) : false;
 
   // Function to load positions from the dex store and cache them
   const loadAndCachePositions = useCallback(async (accountAddress: string) => {
@@ -80,25 +80,26 @@ export function useLiquidityPositions(): PoolListState & {
 
   // Refresh positions manually
   const refreshPositions = useCallback(async () => {
-    if (!address) return;
-    await loadAndCachePositions(address);
-  }, [address, loadAndCachePositions]);
+    console.log("[useLiquidityPositions] refreshPositions->activeAccount", activeAccount);
+    if (!activeAccount) return;
+    await loadAndCachePositions(activeAccount);
+  }, [activeAccount, loadAndCachePositions]);
 
   // Invalidate cache manually
   const invalidateCache = useCallback(() => {
-    if (!address) return;
-    invalidatePositions(address);
-  }, [address, invalidatePositions]);
+    if (!activeAccount) return;
+    invalidatePositions(activeAccount);
+  }, [activeAccount, invalidatePositions]);
 
   // Load positions on mount or when address changes
   useEffect(() => {
-    if (!address) return;
+    if (!activeAccount) return;
 
     // Load positions if not cached or if they need refresh
     if (cachedPositions.length === 0 || shouldRefresh) {
-      loadAndCachePositions(address);
+      loadAndCachePositions(activeAccount);
     }
-  }, [address, cachedPositions.length, shouldRefresh, loadAndCachePositions]);
+  }, [activeAccount, cachedPositions.length, shouldRefresh, loadAndCachePositions]);
 
   return {
     positions: cachedPositions,

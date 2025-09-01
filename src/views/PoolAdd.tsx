@@ -1,18 +1,18 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ACI, DEX_ADDRESSES, MINIMUM_LIQUIDITY, addLiquidity, addLiquidityAe, ensureAllowanceForRouter, fromAettos, getPairInfo, initDexContracts, toAettos, getRouterTokenAllowance } from '../libs/dex';
-import { useLocation } from 'react-router-dom';
 import BigNumber from 'bignumber.js';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import AeButton from '../components/AeButton';
 import ConfirmLiquidityModal from '../components/dex/ConfirmLiquidityModal';
-import TokenSelector from '../components/dex/TokenSelector';
-import { errorToUserMessage } from '../libs/errorMessages';
 import DexSettings from '../components/dex/DexSettings';
+import TokenSelector from '../components/dex/TokenSelector';
 import { useToast } from '../components/ToastProvider';
 import { CONFIG } from '../config';
-import AeButton from '../components/AeButton';
+import { ACI, DEX_ADDRESSES, MINIMUM_LIQUIDITY, addLiquidity, addLiquidityAe, ensureAllowanceForRouter, fromAettos, getPairInfo, getRouterTokenAllowance, initDexContracts, toAettos } from '../libs/dex';
+import { errorToUserMessage } from '../libs/errorMessages';
 
-import { useWallet, useDex } from '../hooks';
+import { useAeSdk, useDex } from '../hooks';
 export default function PoolAdd() {
-    const address = useWallet().address;
+  const { sdk, activeAccount } = useAeSdk();
   const [tokenA, setTokenA] = useState('');
   const [tokenB, setTokenB] = useState('');
   const [symbolA, setSymbolA] = useState('');
@@ -39,7 +39,6 @@ export default function PoolAdd() {
 
   async function fetchTokenMeta(addr: string): Promise<{ decimals: number; symbol: string }> {
     if (!addr || addr === 'AE') return { decimals: 18, symbol: 'AE' };
-    const sdk = (window as any).__aeSdk;
     const t = await sdk.initializeContract({ aci: ACI.AEX9, address: addr });
     const { decodedResult } = await t.meta_info();
     return {
@@ -71,7 +70,7 @@ export default function PoolAdd() {
       if (to) setTokenB(to);
       if (aA) setAmountA(aA);
       if (aB) setAmountB(aB);
-    } catch {}
+    } catch { }
   }, [location.search]);
 
   // Compute current ratio and estimated pool share
@@ -79,7 +78,6 @@ export default function PoolAdd() {
     (async () => {
       try {
         if (!tokenA || !tokenB) { setPairPreview(null); return; }
-        const sdk = (window as any).__aeSdk;
         const { factory } = await initDexContracts(sdk);
         const aAddr = tokenA === 'AE' ? DEX_ADDRESSES.wae : tokenA;
         const bAddr = tokenB === 'AE' ? DEX_ADDRESSES.wae : tokenB;
@@ -138,14 +136,13 @@ export default function PoolAdd() {
         const aHuman = fromAettos(BigInt(aOpt.integerValue(BigNumber.ROUND_DOWN).toString()), decA);
         setAmountA(aHuman);
       }
-    } catch {}
+    } catch { }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkAmounts, pairExists, reserves, amountA, amountB, tokenA, tokenB, decA, decB]);
 
   async function doAdd() {
     setLoading(true); setError(null);
     try {
-      const sdk = (window as any).__aeSdk;
       const { router } = await initDexContracts(sdk);
       const deadlineMs = Date.now() + Math.max(1, Math.min(60, deadline)) * 60_000;
       let txHash: string | undefined;
@@ -157,13 +154,13 @@ export default function PoolAdd() {
         const amtT = toAettos(humanToken, decT);
         const amtAe = toAettos(humanAe, 18);
         if (amtT <= 0n || amtAe <= 0n) throw new Error('Amounts must be greater than zero');
-        await ensureAllowanceForRouter(sdk, token, address as string, amtT);
+        await ensureAllowanceForRouter(sdk, token, activeAccount as string, amtT);
         try {
-          const cur = await getRouterTokenAllowance(sdk, token, address as string);
+          const cur = await getRouterTokenAllowance(sdk, token, activeAccount as string);
           // Update allowance info for feedback
           const sym = token === tokenA ? (symbolA || 'TKN') : (symbolB || 'TKN');
           setAllowanceInfo(`Approved ${fromAettos(cur, decT)} ${sym}`);
-        } catch {}
+        } catch { }
         // If pool exists with reserves, enforce ratio match to avoid insufficient A/B errors
         try {
           const aAddr = tokenA === 'AE' ? DEX_ADDRESSES.wae : tokenA;
@@ -181,14 +178,14 @@ export default function PoolAdd() {
               throw new Error('Amounts do not match pool ratio. Enable auto-link or adjust amounts.');
             }
           }
-        } catch {}
+        } catch { }
         const res = await addLiquidityAe(sdk, router, {
           token,
           amountTokenDesired: amtT,
           amountAeDesired: amtAe,
           slippagePct: slippage,
           minimumLiquidity: MINIMUM_LIQUIDITY,
-          toAccount: address as string,
+          toAccount: activeAccount as string,
           deadlineMs,
         });
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
@@ -196,15 +193,15 @@ export default function PoolAdd() {
         const amtA = toAettos(amountA, decA);
         const amtB = toAettos(amountB, decB);
         if (amtA <= 0n || amtB <= 0n) throw new Error('Amounts must be greater than zero');
-        await ensureAllowanceForRouter(sdk, tokenA, address as string, amtA);
-        await ensureAllowanceForRouter(sdk, tokenB, address as string, amtB);
+        await ensureAllowanceForRouter(sdk, tokenA, activeAccount as string, amtA);
+        await ensureAllowanceForRouter(sdk, tokenB, activeAccount as string, amtB);
         try {
           const [curA, curB] = await Promise.all([
-            getRouterTokenAllowance(sdk, tokenA, address as string),
-            getRouterTokenAllowance(sdk, tokenB, address as string),
+            getRouterTokenAllowance(sdk, tokenA, activeAccount as string),
+            getRouterTokenAllowance(sdk, tokenB, activeAccount as string),
           ]);
           setAllowanceInfo(`Approved ${fromAettos(curA, decA)} ${symbolA || 'TKN A'} and ${fromAettos(curB, decB)} ${symbolB || 'TKN B'}`);
-        } catch {}
+        } catch { }
         // Enforce ratio if pool has reserves
         try {
           const aAddr = tokenA;
@@ -222,7 +219,7 @@ export default function PoolAdd() {
               throw new Error('Amounts do not match pool ratio. Enable auto-link or adjust amounts.');
             }
           }
-        } catch {}
+        } catch { }
         const res = await addLiquidity(sdk, router, {
           tokenA,
           tokenB,
@@ -230,7 +227,7 @@ export default function PoolAdd() {
           amountBDesired: amtB,
           slippagePct: slippage,
           minimumLiquidity: MINIMUM_LIQUIDITY,
-          toAccount: address as string,
+          toAccount: activeAccount as string,
           deadlineMs,
         });
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
@@ -246,13 +243,13 @@ export default function PoolAdd() {
             )}
           </div>
         );
-      } catch {}
+      } catch { }
     } catch (e: any) {
       setError(errorToUserMessage(e, { action: 'add-liquidity', slippagePct: slippage, deadlineMins: deadline }));
       try {
         const msg = errorToUserMessage(e, { action: 'add-liquidity', slippagePct: slippage, deadlineMins: deadline });
         toast.push(<div><div>Add liquidity failed</div><div style={{ opacity: 0.9 }}>{msg}</div></div>);
-      } catch {}
+      } catch { }
     } finally { setLoading(false); }
   }
 
@@ -314,8 +311,8 @@ export default function PoolAdd() {
               {' '}<a href="https://www.coinbase.com/learn/crypto-basics/what-is-impermanent-loss" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>Learn more</a>
             </div>
             <div style={{ marginTop: 6 }}>Rate</div>
-            <div>1 {symbolA || tokenA || 'A'} ≈ {(Number(amountB)||0)/(Number(amountA)||1)} {symbolB || tokenB || 'B'}</div>
-            <div>1 {symbolB || tokenB || 'B'} ≈ {(Number(amountA)||0)/(Number(amountB)||1)} {symbolA || tokenA || 'A'}</div>
+            <div>1 {symbolA || tokenA || 'A'} ≈ {(Number(amountB) || 0) / (Number(amountA) || 1)} {symbolB || tokenB || 'B'}</div>
+            <div>1 {symbolB || tokenB || 'B'} ≈ {(Number(amountA) || 0) / (Number(amountB) || 1)} {symbolA || tokenA || 'A'}</div>
           </div>
         ) : null}
         {pairPreview && (

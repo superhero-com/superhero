@@ -1,47 +1,28 @@
 import React, { useState } from 'react';
+import { CONFIG } from '../../../config';
+import { useAeSdk } from '../../../hooks';
 import {
-  initDexContracts,
-  toAettos,
-  fromAettos,
-  subSlippage,
   addSlippage,
   ensureAllowanceForRouter,
+  fromAettos,
   getRouterTokenAllowance,
-  DEX_ADDRESSES
+  initDexContracts,
+  subSlippage,
+  toAettos
 } from '../../../libs/dex';
 import { errorToUserMessage } from '../../../libs/errorMessages';
 import { useToast } from '../../ToastProvider';
-import { CONFIG } from '../../../config';
 import { SwapExecutionParams } from '../types/dex';
-import { useAeternity } from '../../../hooks';
 
 export function useSwapExecution() {
-  const { initSdk, scanForWallets, getAeSdk } = useAeternity();
+  const { sdk, activeAccount } = useAeSdk()
 
   const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [allowanceInfo, setAllowanceInfo] = useState<string | null>(null);
 
-  async function ensureWallet() {
-    // eslint-disable-next-line no-console
-    console.info('[dex] Ensuring wallet is connected…');
-    await initSdk();
-    await scanForWallets();
-    const address = (window as any).__aeSdk?.address;
-    console.log("[dex] ensureWallet::", address);
-    if (!address) {
-      // eslint-disable-next-line no-console
-      console.info('[dex] No address set, scanning for wallets…');
-      await scanForWallets();
-    }
-    // eslint-disable-next-line no-console
-    console.info('[dex] Wallet ensure complete');
-  }
-
   async function approveIfNeeded(amountAettos: bigint, tokenIn: any) {
     if (!tokenIn || tokenIn.isAe) return; // AE does not need allowance
-    const sdk = (window as any).__aeSdk;
-    const address = sdk?.address;
 
     // eslint-disable-next-line no-console
     console.info('[dex] Ensuring allowance for router…', {
@@ -49,10 +30,10 @@ export function useSwapExecution() {
       amount: amountAettos.toString()
     });
 
-    await ensureAllowanceForRouter(sdk, tokenIn.contractId, address, amountAettos);
+    await ensureAllowanceForRouter(sdk, tokenIn.contractId, activeAccount, amountAettos);
 
     try {
-      const current = await getRouterTokenAllowance(sdk, tokenIn.contractId, address);
+      const current = await getRouterTokenAllowance(sdk, tokenIn.contractId, activeAccount);
       setAllowanceInfo(`Allowance: ${fromAettos(current, tokenIn.decimals)} ${tokenIn.symbol}`);
     } catch { }
   }
@@ -60,19 +41,8 @@ export function useSwapExecution() {
   async function executeSwap(params: SwapExecutionParams): Promise<string | null> {
     setLoading(true);
     //
-
     try {
-      // eslint-disable-next-line no-console
-      console.info('[dex] Submitting swap…');
-      try {
-        await ensureWallet();
-      } catch (error) {
-        console.log('error', error);
-      }
-
-      const sdk = (window as any).__aeSdk;
       const { router } = await initDexContracts(sdk);
-      const address = sdk?.address;
 
       const p = params.path.length ? params.path : [];
       if (!p.length) throw new Error('No route found');
@@ -88,7 +58,6 @@ export function useSwapExecution() {
 
       // Router expects deadline in milliseconds since epoch (same as dex-ui)
       const deadline = BigInt(Date.now() + Math.max(1, Math.min(60, params.deadlineMins)) * 60_000);
-      const toAccount = address.replace('ak_', 'ak_');
 
       // Choose method based on AE involvement
       const isInAe = !!params.tokenIn?.isAe;
@@ -103,14 +72,14 @@ export function useSwapExecution() {
             amountInAettos: amountInAettos.toString(),
             minOutAettos: minOutAettos.toString(),
             path: p,
-            toAccount,
+            activeAccount,
             deadline: deadline.toString()
           });
           const res = await (router as any).swap_exact_tokens_for_tokens(
             amountInAettos,
             minOutAettos,
             p,
-            toAccount,
+            activeAccount,
             deadline,
             null,
           );
@@ -125,14 +94,14 @@ export function useSwapExecution() {
             amountOutAettos: amountOutAettos.toString(),
             maxIn: maxIn.toString(),
             path: p,
-            toAccount,
+            activeAccount,
             deadline: deadline.toString()
           });
           const res = await (router as any).swap_tokens_for_exact_tokens(
             amountOutAettos,
             maxIn,
             p,
-            toAccount,
+            activeAccount,
             deadline,
             null,
           );
@@ -144,14 +113,14 @@ export function useSwapExecution() {
           console.info('[dex] swap_exact_ae_for_tokens', {
             minOutAettos: minOutAettos.toString(),
             path: p,
-            toAccount,
+            activeAccount,
             deadline: deadline.toString(),
             amountInAettos: amountInAettos.toString()
           });
           const res = await (router as any).swap_exact_ae_for_tokens(
             minOutAettos,
             p,
-            toAccount,
+            activeAccount,
             deadline,
             null,
             { amount: amountInAettos },
@@ -166,13 +135,13 @@ export function useSwapExecution() {
             amountOutAettos: amountOutAettos.toString(),
             maxAe,
             path: p,
-            toAccount,
+            activeAccount,
             deadline: deadline.toString()
           });
           const res = await (router as any).swap_ae_for_exact_tokens(
             amountOutAettos,
             p,
-            toAccount,
+            activeAccount,
             deadline,
             null,
             { amount: maxAe },
@@ -186,14 +155,14 @@ export function useSwapExecution() {
             amountInAettos: amountInAettos.toString(),
             minOutAettos: minOutAettos.toString(),
             path: p,
-            toAccount,
+            activeAccount,
             deadline: deadline.toString()
           });
           const res = await (router as any).swap_exact_tokens_for_ae(
             amountInAettos,
             minOutAettos,
             p,
-            toAccount,
+            activeAccount,
             deadline,
             null,
           );
@@ -208,14 +177,14 @@ export function useSwapExecution() {
             amountOutAettos: amountOutAettos.toString(),
             maxIn: maxIn.toString(),
             path: p,
-            toAccount,
+            activeAccount,
             deadline: deadline.toString()
           });
           const res = await (router as any).swap_tokens_for_exact_ae(
             amountOutAettos,
             maxIn,
             p,
-            toAccount,
+            activeAccount,
             deadline,
             null,
           );
@@ -271,6 +240,5 @@ export function useSwapExecution() {
     loading,
     allowanceInfo,
     executeSwap,
-    ensureWallet
   };
 }

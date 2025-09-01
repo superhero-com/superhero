@@ -1,17 +1,18 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TrendminerApi } from '../../api/backend';
-import WalletConnectBtn from '../../components/WalletConnectBtn';
-import { getAffiliationTreasury, aeToAettos } from '../../libs/affiliation';
 import InvitationList from '../../components/Invitation/InvitationList';
-import { addGeneratedInvites } from '../../libs/invitation';
-import Shell from '../../components/layout/Shell';
 import LeftRail from '../../components/layout/LeftRail';
 import RightRail from '../../components/layout/RightRail';
+import Shell from '../../components/layout/Shell';
+import WalletConnectBtn from '../../components/WalletConnectBtn';
+import { getAffiliationTreasury } from '../../libs/affiliation';
+import { addGeneratedInvites } from '../../libs/invitation';
 import './Invite.scss';
 
-import { useWallet, useAeternity } from '../../hooks';
+import { useAeSdk, useWallet } from '../../hooks';
 import { Decimal } from '../../libs/decimal';
 export default function Invite() {
+  const { sdk, activeAccount } = useAeSdk();
   const [rows, setRows] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -29,7 +30,6 @@ export default function Invite() {
   const [uniqueInviteesCount, setUniqueInviteesCount] = useState<number>(0);
   const [withdrawing, setWithdrawing] = useState(false);
   const address = useWallet().address;
-  const { getAeSdk, scanForWallets } = useAeternity();
   const [showInfo, setShowInfo] = useState<boolean>(() => {
     try { return localStorage.getItem('invite_info_dismissed') !== '1'; } catch { return true; }
   });
@@ -73,8 +73,7 @@ export default function Invite() {
       if (!Number.isFinite(amt) || amt <= 0) throw new Error('Enter amount');
       if (!Number.isFinite(count) || count < 1) throw new Error('Enter count');
       setGenerating(true);
-      const sdk = await getAeSdk();
-      await scanForWallets();
+
       if (!sdk) throw new Error('Connect your wallet first');
       const treasury = await getAffiliationTreasury(sdk);
       // Generate in-memory keypairs via aepp-sdk
@@ -104,13 +103,11 @@ export default function Invite() {
   async function refreshRewards() {
     setError(null);
     try {
-      const sdk: any = (window as any).__aeSdk;
       if (!sdk) return;
-      const address = sdk.addresses?.()[0];
-      if (!address) return;
+      if (!activeAccount) return;
       const treasury = await getAffiliationTreasury(sdk);
-      const acc = await treasury.getAccumulatedRewards(address);
-      const uniq = await treasury.getUniqueInvitee(address).catch(() => null);
+      const acc = await treasury.getAccumulatedRewards(activeAccount);
+      const uniq = await treasury.getUniqueInvitee(activeAccount).catch(() => null);
       const ae = Number(acc) / 1e18;
       setAccumulatedRewardsAe(ae);
       const thresholdReached = !!(uniq && uniq.ThresholdReached);
@@ -127,8 +124,6 @@ export default function Invite() {
     setWithdrawing(true);
     setError(null);
     try {
-      const sdk: any = (window as any).__aeSdk;
-      if (!sdk) throw new Error('Connect your wallet first');
       const treasury = await getAffiliationTreasury(sdk);
       await treasury.withdraw();
       await refreshRewards();

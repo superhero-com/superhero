@@ -1,15 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
 import BigNumber from 'bignumber.js';
-import { DEX_ADDRESSES, initDexContracts, toAettos, fromAettos, subSlippage, addSlippage, ensureAllowanceForRouter } from '../libs/dex';
+import { useEffect, useMemo, useState } from 'react';
 import AeButton from '../components/AeButton';
+import { addSlippage, DEX_ADDRESSES, ensureAllowanceForRouter, fromAettos, initDexContracts, subSlippage, toAettos } from '../libs/dex';
 
-import { useWallet, useAeternity } from '../hooks';
+import { useAeSdk, useWalletConnect } from '../hooks';
 
 type TokenSelection = { address: string | 'native'; symbol: string; decimals: number };
 
 export default function Swap() {
-  const { address } = useWallet();
-  const { sdk: sdkState, initSdk } = useAeternity();
+  const { sdk, activeAccount } = useAeSdk();
+  const { connectWallet } = useWalletConnect();
   const [router, setRouter] = useState<any | null>(null);
   const [factory, setFactory] = useState<any | null>(null);
 
@@ -26,23 +26,14 @@ export default function Swap() {
   const [swapping, setSwapping] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      if (!sdkState) {
-        await initSdk();
-      }
-    })();
-  }, [initSdk, sdkState]);
 
   useEffect(() => {
     (async () => {
-      const sdk = (window as any).__aeSdk;
-      if (!sdk) return;
       const { router: r, factory: f } = await initDexContracts(sdk);
       setRouter(r);
       setFactory(f);
     })();
-  }, [sdkState]);
+  }, []);
 
   const path = useMemo(() => {
     const a = fromToken.address === 'native' ? DEX_ADDRESSES.wae : (fromToken.address as string);
@@ -50,16 +41,8 @@ export default function Swap() {
     return [a, b];
   }, [fromToken, toToken]);
 
-  const connectWallet = async () => {
-    try {
-      await dispatch<any>(scanForWallets());
-    } catch (e: any) {
-      setError(e?.message || 'Failed to connect wallet');
-    }
-  };
 
   async function quote() {
-    const sdk = (window as any).__aeSdk;
     if (!router || !sdk) return;
     setQuoting(true);
     setError(null);
@@ -83,8 +66,7 @@ export default function Swap() {
   }
 
   async function doSwap() {
-    const sdk = (window as any).__aeSdk;
-    if (!router || !sdk || !address) return;
+    if (!router || !sdk || !activeAccount) return;
     setSwapping(true);
     setError(null);
     try {
@@ -94,23 +76,23 @@ export default function Swap() {
       if (isExactIn) {
         const ain = toAettos(amountIn, fromToken.decimals);
         if (!isAEIn) {
-          await ensureAllowanceForRouter(sdk, fromToken.address as string, address, ain);
+          await ensureAllowanceForRouter(sdk, fromToken.address as string, activeAccount, ain);
         }
         if (isAEIn) {
           const { decodedResult } = await router.get_amounts_out(ain, path);
           const out = decodedResult[decodedResult.length - 1] as bigint;
           const minOut = subSlippage(out, slippage);
-          await router.swap_exact_ae_for_tokens(minOut, path, address, deadline, null, { amount: ain.toString() });
+          await router.swap_exact_ae_for_tokens(minOut, path, activeAccount, deadline, null, { amount: ain.toString() });
         } else if (isAEOut) {
           const { decodedResult } = await router.get_amounts_out(ain, path);
           const out = decodedResult[decodedResult.length - 1] as bigint;
           const minOut = subSlippage(out, slippage);
-          await router.swap_exact_tokens_for_ae(ain, minOut, path, address, deadline, null);
+          await router.swap_exact_tokens_for_ae(ain, minOut, path, activeAccount, deadline, null);
         } else {
           const { decodedResult } = await router.get_amounts_out(ain, path);
           const out = decodedResult[decodedResult.length - 1] as bigint;
           const minOut = subSlippage(out, slippage);
-          await router.swap_exact_tokens_for_tokens(ain, minOut, path, address, deadline, null);
+          await router.swap_exact_tokens_for_tokens(ain, minOut, path, activeAccount, deadline, null);
         }
       } else {
         const aout = toAettos(amountOut, toToken.decimals);
@@ -118,19 +100,19 @@ export default function Swap() {
           const { decodedResult } = await router.get_amounts_in(aout, path);
           const ain = decodedResult[0] as bigint;
           const maxIn = addSlippage(ain, slippage);
-          await ensureAllowanceForRouter(sdk, fromToken.address as string, address, maxIn);
-          await router.swap_tokens_for_exact_ae(aout, maxIn, path, address, deadline, null);
+          await ensureAllowanceForRouter(sdk, fromToken.address as string, activeAccount, maxIn);
+          await router.swap_tokens_for_exact_ae(aout, maxIn, path, activeAccount, deadline, null);
         } else if (isAEIn) {
           const { decodedResult } = await router.get_amounts_in(aout, path);
           const ain = decodedResult[0] as bigint;
           const maxAe = addSlippage(ain, slippage).toString();
-          await router.swap_ae_for_exact_tokens(aout, path, address, deadline, null, { amount: maxAe });
+          await router.swap_ae_for_exact_tokens(aout, path, activeAccount, deadline, null, { amount: maxAe });
         } else {
           const { decodedResult } = await router.get_amounts_in(aout, path);
           const ain = decodedResult[0] as bigint;
           const maxIn = addSlippage(ain, slippage);
-          await ensureAllowanceForRouter(sdk, fromToken.address as string, address, maxIn);
-          await router.swap_tokens_for_exact_tokens(aout, maxIn, path, address, deadline, null);
+          await ensureAllowanceForRouter(sdk, fromToken.address as string, activeAccount, maxIn);
+          await router.swap_tokens_for_exact_tokens(aout, maxIn, path, activeAccount, deadline, null);
         }
       }
       setAmountIn('');
@@ -144,8 +126,8 @@ export default function Swap() {
 
   const canSwap = useMemo(() => {
     const a = new BigNumber(isExactIn ? amountIn : amountOut);
-    return !!address && !!router && a.isFinite() && a.gt(0);
-  }, [address, router, amountIn, amountOut, isExactIn]);
+    return !!activeAccount && !!router && a.isFinite() && a.gt(0);
+  }, [activeAccount, router, amountIn, amountOut, isExactIn]);
 
   return (
     <div className="container" style={{ padding: '16px 0', maxWidth: 560 }}>
@@ -155,10 +137,10 @@ export default function Swap() {
           Bridge and exit from Ethereum to æternity. Swap bridged aeETH to native AE quickly. For trading other tokens on æternity, use the DEX.{' '}
           <a href="https://swap.superhero.com" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>Learn more</a>
         </p>
-        {!address ? (
+        {!activeAccount ? (
           <AeButton onClick={connectWallet} size="large">Connect Wallet</AeButton>
         ) : (
-          <div style={{ fontSize: 12, opacity: 0.8 }}>Address: {address}</div>
+          <div style={{ fontSize: 12, opacity: 0.8 }}>Address: {activeAccount}</div>
         )}
 
         <div style={{ display: 'grid', gap: 8, border: '1px solid #3a3a4a', borderRadius: 8, padding: 12 }}>

@@ -1,18 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
-import { 
-  initDexContracts, 
-  toAettos, 
-  fromAettos, 
-  subSlippage, 
-  addSlippage,
+import { useRef, useState } from 'react';
+import { useAeSdk } from '../../../hooks';
+import {
+  DEX_ADDRESSES,
   fetchPairReserves,
-  DEX_ADDRESSES
+  fromAettos,
+  initDexContracts,
+  toAettos
 } from '../../../libs/dex';
-import { getPriceImpactForRoute } from '../../../libs/swapUtils';
 import { errorToUserMessage } from '../../../libs/errorMessages';
-import { SwapQuoteParams, RouteInfo } from '../types/dex';
+import { getPriceImpactForRoute } from '../../../libs/swapUtils';
+import { RouteInfo, SwapQuoteParams } from '../types/dex';
 
 export function useSwapQuote() {
+  const { sdk } = useAeSdk()
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [routeInfo, setRouteInfo] = useState<RouteInfo>({ path: [] });
@@ -21,29 +21,28 @@ export function useSwapQuote() {
 
   async function buildBestPath(tokenIn: any, tokenOut: any): Promise<string[] | null> {
     try {
-      const sdk = (window as any).__aeSdk;
       if (!tokenIn || !tokenOut) return null;
-      
+
       const tokenInAddr = tokenIn.isAe ? DEX_ADDRESSES.wae : tokenIn.contractId;
       const tokenOutAddr = tokenOut.isAe ? DEX_ADDRESSES.wae : tokenOut.contractId;
-      
+
       if (!tokenInAddr || !tokenOutAddr) return null;
-      
+
       // eslint-disable-next-line no-console
-      console.info('[dex] Building best path', { 
-        from: tokenIn.symbol, 
-        to: tokenOut.symbol, 
-        fromAddr: tokenInAddr, 
-        toAddr: tokenOutAddr 
+      console.info('[dex] Building best path', {
+        from: tokenIn.symbol,
+        to: tokenOut.symbol,
+        fromAddr: tokenInAddr,
+        toAddr: tokenOutAddr
       });
-      
+
       // Prefer dex-backend route discovery
       try {
         const { getSwapRoutes } = await import('../../../libs/dexBackend');
         // eslint-disable-next-line no-console
         console.info('[dex] Querying dex-backend for routes…');
         const routes = await getSwapRoutes(tokenInAddr, tokenOutAddr);
-        
+
         const first = routes?.[0];
         if (first && first.length >= 1) {
           const hops = [tokenInAddr];
@@ -63,7 +62,7 @@ export function useSwapQuote() {
         // eslint-disable-next-line no-console
         console.warn('[dex] Backend route discovery failed, falling back to on-chain', e);
       }
-      
+
       // Fallback via contracts
       if (!sdk) return null;
       const { factory } = await initDexContracts(sdk);
@@ -73,7 +72,7 @@ export function useSwapQuote() {
         console.info('[dex] Direct pair found');
         return [tokenInAddr, tokenOutAddr];
       }
-      
+
       if (tokenInAddr !== DEX_ADDRESSES.wae && tokenOutAddr !== DEX_ADDRESSES.wae) {
         const legA = await fetchPairReserves(sdk, factory, tokenInAddr, DEX_ADDRESSES.wae);
         const legB = await fetchPairReserves(sdk, factory, DEX_ADDRESSES.wae, tokenOutAddr);
@@ -83,7 +82,7 @@ export function useSwapQuote() {
           return [tokenInAddr, DEX_ADDRESSES.wae, tokenOutAddr];
         }
       }
-      
+
       // eslint-disable-next-line no-console
       console.info('[dex] No route found');
       return null;
@@ -100,27 +99,26 @@ export function useSwapQuote() {
     if (!drivingAmount || Number(drivingAmount) <= 0 || !params.tokenIn || !params.tokenOut) {
       return { path: [] };
     }
-    
+
     const seq = ++quoteSeqRef.current;
     setQuoteLoading(true);
-    
+
     try {
       // eslint-disable-next-line no-console
-      console.info('[dex] Quoting amount out…', { 
-        amountIn: params.amountIn, 
-        tokenIn: params.tokenIn.symbol, 
-        tokenOut: params.tokenOut.symbol 
+      console.info('[dex] Quoting amount out…', {
+        amountIn: params.amountIn,
+        tokenIn: params.tokenIn.symbol,
+        tokenOut: params.tokenOut.symbol
       });
-      
-      const sdk = (window as any).__aeSdk;
+
       const { router } = await initDexContracts(sdk);
       const p = await buildBestPath(params.tokenIn, params.tokenOut);
-      
+
       if (!p) throw new Error('No route found');
-      
+
       let amountOut: string | undefined;
       let amountIn: string | undefined;
-      
+
       if (params.isExactIn) {
         // AE side uses WAE in path for quoting
         const amountInAettos = toAettos(params.amountIn, params.tokenIn.decimals);
@@ -133,7 +131,7 @@ export function useSwapQuote() {
         const inAettos = decodedResult[0];
         amountIn = fromAettos(inAettos, params.tokenIn.decimals);
       }
-      
+
       // Compute price impact when backend provided reserves
       let priceImpact: number | undefined;
       try {
@@ -142,18 +140,18 @@ export function useSwapQuote() {
           const amountInAettosNum = toAettos(params.amountIn, params.tokenIn.decimals);
           priceImpact = getPriceImpactForRoute(route as any, p[0], amountInAettosNum);
         }
-      } catch { 
-        priceImpact = undefined; 
+      } catch {
+        priceImpact = undefined;
       }
-      
+
       // eslint-disable-next-line no-console
       console.info('[dex] Quote result', { path: p, amountIn: params.amountIn, amountOut });
-      
+
       if (seq === quoteSeqRef.current) {
         setRouteInfo({ path: p, priceImpact });
         onQuoteResult?.({ amountOut, amountIn, path: p, priceImpact });
       }
-      
+
       return { amountOut, amountIn, path: p, priceImpact };
     } catch (e: any) {
       // eslint-disable-next-line no-console
@@ -169,8 +167,8 @@ export function useSwapQuote() {
 
   const debouncedQuote = (params: SwapQuoteParams, onQuoteResult?: (result: { amountOut?: string; amountIn?: string; path: string[]; priceImpact?: number }) => void, delay = 300) => {
     if (quoteTimerRef.current) window.clearTimeout(quoteTimerRef.current);
-    quoteTimerRef.current = window.setTimeout(() => { 
-      void refreshQuote(params, onQuoteResult); 
+    quoteTimerRef.current = window.setTimeout(() => {
+      void refreshQuote(params, onQuoteResult);
     }, delay);
   };
 

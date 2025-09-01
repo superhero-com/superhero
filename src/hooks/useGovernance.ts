@@ -1,11 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { GovernanceApi } from '../api/backend';
-import { useWallet } from './useWallet';
+import { useAeSdk } from './useAeSdk';
 
 export const useGovernance = () => {
+  const { activeAccount, sdk } = useAeSdk();
   const queryClient = useQueryClient();
-  const { address } = useWallet();
 
   // Polls query
   const usePolls = (params?: { page?: number; pageSize?: number; status?: string; search?: string }) => {
@@ -45,19 +44,19 @@ export const useGovernance = () => {
   // My vote query
   const useMyVote = (pollId: string) => {
     return useQuery({
-      queryKey: ['governance', 'myVote', pollId, address],
+      queryKey: ['governance', 'myVote', pollId, activeAccount],
       queryFn: async () => {
-        if (!address) return null;
-        return GovernanceApi.getMyVote(pollId, address);
+        if (!activeAccount) return null;
+        return GovernanceApi.getMyVote(pollId, activeAccount);
       },
-      enabled: !!pollId && !!address,
+      enabled: !!pollId && !!activeAccount,
       staleTime: 1 * 60 * 1000, // 1 minute
     });
   };
 
   // Delegation query
   const useDelegation = (userAddress?: string) => {
-    const targetAddress = userAddress || address;
+    const targetAddress = userAddress || activeAccount;
     return useQuery({
       queryKey: ['governance', 'delegation', targetAddress],
       queryFn: async () => {
@@ -114,20 +113,19 @@ export const useGovernance = () => {
   const useSubmitVote = () => {
     return useMutation({
       mutationFn: async ({ pollId, option }: { pollId: string; option: string }) => {
-        if (!address) throw new Error('No wallet connected');
-        
+        if (!activeAccount) throw new Error('No wallet connected');
+
         // First call may return challenge
-        const first = await GovernanceApi.vote(address, { pollId, option });
+        const first = await GovernanceApi.vote(activeAccount, { pollId, option });
         if (first?.challenge) {
-          const sdk = (window as any).__aeSdk;
           const signature = (await sdk.signMessage(first.challenge)).toString('hex');
-          await GovernanceApi.vote(address, { pollId, option, challenge: first.challenge, signature });
+          await GovernanceApi.vote(activeAccount, { pollId, option, challenge: first.challenge, signature });
         }
       },
       onSuccess: (_, { pollId }) => {
         // Invalidate related queries
         queryClient.invalidateQueries({ queryKey: ['governance', 'pollResults', pollId] });
-        queryClient.invalidateQueries({ queryKey: ['governance', 'myVote', pollId, address] });
+        queryClient.invalidateQueries({ queryKey: ['governance', 'myVote', pollId, activeAccount] });
       },
     });
   };
@@ -136,13 +134,12 @@ export const useGovernance = () => {
   const useRevokeVote = () => {
     return useMutation({
       mutationFn: async (pollId: string) => {
-        if (!address) throw new Error('No wallet connected');
-        
-        const first = await GovernanceApi.revokeVote(address, { pollId } as any);
+        if (!activeAccount) throw new Error('No wallet connected');
+
+        const first = await GovernanceApi.revokeVote(activeAccount, { pollId } as any);
         if ((first as any)?.challenge) {
-          const sdk = (window as any).__aeSdk;
           const signature = (await sdk.signMessage((first as any).challenge)).toString('hex');
-          await GovernanceApi.revokeVote(address, { pollId, challenge: (first as any).challenge, signature });
+          await GovernanceApi.revokeVote(activeAccount, { pollId, challenge: (first as any).challenge, signature });
         }
       },
       onSuccess: (_, pollId) => {
@@ -157,13 +154,12 @@ export const useGovernance = () => {
   const useSetDelegation = () => {
     return useMutation({
       mutationFn: async ({ to }: { to: string }) => {
-        if (!address) throw new Error('No wallet connected');
-        
-        const first = await GovernanceApi.setDelegation(address, { to });
+        if (!activeAccount) throw new Error('No wallet connected');
+
+        const first = await GovernanceApi.setDelegation(activeAccount, { to });
         if (first?.challenge) {
-          const sdk = (window as any).__aeSdk;
           const signature = (await sdk.signMessage(first.challenge)).toString('hex');
-          await GovernanceApi.setDelegation(address, { to, challenge: first.challenge, signature });
+          await GovernanceApi.setDelegation(activeAccount, { to, challenge: first.challenge, signature });
         }
       },
       onSuccess: () => {
@@ -177,18 +173,17 @@ export const useGovernance = () => {
   const useRevokeDelegation = () => {
     return useMutation({
       mutationFn: async () => {
-        if (!address) throw new Error('No wallet connected');
-        
-        const first = await GovernanceApi.revokeDelegation(address, {} as any);
+        if (!activeAccount) throw new Error('No wallet connected');
+
+        const first = await GovernanceApi.revokeDelegation(activeAccount, {} as any);
         if ((first as any)?.challenge) {
-          const sdk = (window as any).__aeSdk;
           const signature = (await sdk.signMessage((first as any).challenge)).toString('hex');
-          await GovernanceApi.revokeDelegation(address, { challenge: (first as any).challenge, signature });
+          await GovernanceApi.revokeDelegation(activeAccount, { challenge: (first as any).challenge, signature });
         }
       },
       onSuccess: () => {
         // Invalidate delegation query
-        queryClient.invalidateQueries({ queryKey: ['governance', 'delegation', address] });
+        queryClient.invalidateQueries({ queryKey: ['governance', 'delegation', activeAccount] });
       },
     });
   };
@@ -197,8 +192,8 @@ export const useGovernance = () => {
   const useSendPollComment = () => {
     return useMutation({
       mutationFn: async ({ pollId, text }: { pollId: string; text: string }) => {
-        if (!address) throw new Error('No wallet connected');
-        await GovernanceApi.sendPollComment(address, { pollId, text });
+        if (!activeAccount) throw new Error('No wallet connected');
+        await GovernanceApi.sendPollComment(activeAccount, { pollId, text });
       },
       onSuccess: (_, { pollId }) => {
         // Invalidate poll comments query
@@ -217,7 +212,7 @@ export const useGovernance = () => {
     useDelegators,
     useAccount,
     usePollComments,
-    
+
     // Mutations
     useSubmitVote,
     useRevokeVote,

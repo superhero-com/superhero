@@ -6,6 +6,7 @@ import { TrendminerApi } from '../../api/backend';
 import AeButton from '../../components/AeButton';
 import BigNumber from 'bignumber.js';
 import { calculateBuyPriceWithAffiliationFee, calculateTokensFromAE, toAe, toDecimals } from '../../utils/bondingCurve';
+import { useAeSdk } from '../../hooks';
 
 function useQuery() {
   const { search } = useLocation();
@@ -13,6 +14,7 @@ function useQuery() {
 }
 
 export default function CreateToken() {
+  const { sdk } = useAeSdk();
   const query = useQuery();
   const [name, setName] = useState('');
   // Symbol is always same as name (unified input)
@@ -212,8 +214,6 @@ export default function CreateToken() {
     setSuccess(null);
     try {
       // Preconditions
-      const sdk: any = (window as any).__aeSdk as AeSdk;
-      if (!sdk) throw new Error('Connect your wallet first');
       if (!name) throw new Error('Name is required');
       const vol = Number(initialBuyVolume || 0);
       if (isNaN(vol) || vol < 0) throw new Error('Invalid initial buy volume');

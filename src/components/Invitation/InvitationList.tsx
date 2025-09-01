@@ -1,20 +1,22 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { AeSdk } from '@aeternity/aepp-sdk';
+import { useEffect, useMemo, useState } from 'react';
+import { useAeSdk } from '../../hooks';
 import { getAffiliationTreasury } from '../../libs/affiliation';
-import AeButton from '../AeButton';
 import { getActiveAccountInviteList, getSecretKeyByInvitee, prepareInviteLink, removeStoredInvite } from '../../libs/invitation';
+import AeButton from '../AeButton';
 
 type Tx = { tx?: { function?: string; arguments?: any[] }; hash?: string; microTime?: number };
 
-type Props = { activeAddress: string };
 
-export default function InvitationList({ activeAddress }: Props) {
+export default function InvitationList() {
+  const { sdk, activeAccount } = useAeSdk();
   const [transactions, setTransactions] = useState<Tx[]>([]);
   const [claimedMap, setClaimedMap] = useState<Record<string, boolean>>({});
   const [revoking, setRevoking] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showLinks, setShowLinks] = useState(false);
 
-  const list = useMemo(() => getActiveAccountInviteList(activeAddress), [activeAddress]);
+  const list = useMemo(() => getActiveAccountInviteList(activeAccount), [activeAccount]);
 
   const invitations = useMemo(() => {
     const result: Array<{
@@ -25,7 +27,7 @@ export default function InvitationList({ activeAddress }: Props) {
       const invitees = tx.tx.arguments?.[0]?.value?.map((x: any) => x.value) || [];
       const amount = Number(tx.tx.arguments?.[2]?.value || 0) / 1e18;
       for (const invitee of invitees) {
-        const secret = getSecretKeyByInvitee(activeAddress, invitee);
+        const secret = getSecretKeyByInvitee(activeAccount, invitee);
         const revoked = Boolean(transactions.find((t) => t?.tx?.function === 'revoke_invitation_code' && t?.tx?.arguments?.[0]?.value === invitee));
         const claimed = Boolean(claimedMap[invitee]);
         const status: 'created' | 'claimed' | 'revoked' = claimed ? 'claimed' : (revoked ? 'revoked' : 'created');
@@ -33,18 +35,18 @@ export default function InvitationList({ activeAddress }: Props) {
       }
     }
     return result;
-  }, [transactions, activeAddress, claimedMap]);
+  }, [transactions, activeAccount, claimedMap]);
 
   useEffect(() => {
     let stop = false;
     async function loadTx() {
-      if (!activeAddress) return;
+      if (!activeAccount) return;
       setLoading(true);
       try {
         // middleware v3 query compatible with vue impl
         const { CONFIG } = await import('../../config');
         const contract = 'ct_2GG42rs2FDPTXuUCWHMn98bu5Ab6mgNxY7KdGAKUNsrLqutNxZ';
-        const url = `${CONFIG.MIDDLEWARE_URL}/v3/transactions?contract=${contract}&caller_id=${activeAddress}`;
+        const url = `${CONFIG.MIDDLEWARE_URL}/v3/transactions?contract=${contract}&caller_id=${activeAccount}`;
         const res = await fetch(url);
         const json = await res.json();
         const data: Tx[] = Array.isArray(json?.data) ? json.data : [];
@@ -57,14 +59,13 @@ export default function InvitationList({ activeAddress }: Props) {
     }
     loadTx();
     return () => { stop = true; };
-  }, [activeAddress]);
+  }, [activeAccount]);
 
   useEffect(() => {
     let cancelled = false;
     async function markClaimed() {
       try {
-        const sdk: any = (window as any).__aeSdk;
-        if (!sdk || !activeAddress) return;
+        if (!sdk || !activeAccount) return;
         const treasury = await getAffiliationTreasury(sdk);
         const map: Record<string, boolean> = {};
         // For each item, check invitee history by trying to find redeem tx through middleware-lite approach
@@ -82,20 +83,18 @@ export default function InvitationList({ activeAddress }: Props) {
           } catch { map[invitee] = false; }
         }));
         if (!cancelled) setClaimedMap(map);
-      } catch {}
+      } catch { }
     }
     if (transactions.length) markClaimed();
     return () => { cancelled = true; };
-  }, [transactions, activeAddress]);
+  }, [transactions, activeAccount]);
 
   async function revoke(invitee: string) {
     setRevoking(invitee);
     try {
-      const sdk: any = (window as any).__aeSdk;
-      if (!sdk) throw new Error('Connect your wallet first');
-      const treasury = await getAffiliationTreasury(sdk);
-      await treasury.revokeInvitationCode(invitee);
-      removeStoredInvite(activeAddress, invitee);
+      const treasury = await getAffiliationTreasury(sdk as AeSdk);
+      await (treasury as any).revokeInvitationCode(invitee);
+      removeStoredInvite(activeAccount, invitee);
       // soft update status
       setClaimedMap((m) => ({ ...m, [invitee]: true }));
     } catch (e) {
@@ -105,7 +104,7 @@ export default function InvitationList({ activeAddress }: Props) {
     }
   }
 
-  if (!activeAddress) return null;
+  if (!activeAccount) return null;
 
   return (
     <div style={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 8 }}>
@@ -116,7 +115,7 @@ export default function InvitationList({ activeAddress }: Props) {
         </AeButton>
       </div>
       <div style={{ padding: '0 12px 8px', fontSize: 12, opacity: 0.75 }}>
-        Inviter: <span style={{ fontFamily: 'monospace' }}>{activeAddress}</span>
+        Inviter: <span style={{ fontFamily: 'monospace' }}>{activeAccount}</span>
       </div>
       {loading && <div style={{ padding: 12 }}>Loading…</div>}
       {!loading && invitations.length === 0 && (

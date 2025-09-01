@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { AeSdk } from '@aeternity/aepp-sdk';
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { TrendminerApi } from '../../api/backend';
-import { AeSdk, Node } from '@aeternity/aepp-sdk';
-import { CONFIG } from '../../config';
-import './Dao.scss';
 import AeButton from '../../components/AeButton';
+import { useAeSdk } from '../../hooks';
+import './Dao.scss';
 
 let bctsl: any;
 async function ensureBctsl() {
@@ -13,6 +13,7 @@ async function ensureBctsl() {
 }
 
 export default function Dao() {
+  const { sdk } = useAeSdk();
   const { saleAddress } = useParams();
   const [token, setToken] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -24,19 +25,7 @@ export default function Dao() {
 
   // Read-only SDK fallback so we can display DAO info without wallet
   let cachedReadOnlySdk: AeSdk | null = null;
-  async function getSdk(): Promise<AeSdk | null> {
-    const sdk: any = (window as any).__aeSdk as AeSdk | undefined;
-    if (sdk) return sdk as AeSdk;
-    try {
-      if (cachedReadOnlySdk) return cachedReadOnlySdk;
-      if (!CONFIG.NODE_URL) return null;
-      const node = new Node(CONFIG.NODE_URL);
-      cachedReadOnlySdk = new AeSdk({ nodes: [{ name: 'read', instance: node }] });
-      return cachedReadOnlySdk;
-    } catch {
-      return null;
-    }
-  }
+
 
   useEffect(() => {
     let cancel = false;
@@ -61,8 +50,6 @@ export default function Dao() {
   async function refreshDao() {
     if (!saleAddress) return;
     try {
-      const sdk = await getSdk();
-      if (!sdk) return;
       const { initFallBack } = await ensureBctsl();
       const factory = await initFallBack(sdk, saleAddress);
       const dao = await factory.checkAndGetDAO();
@@ -81,7 +68,6 @@ export default function Dao() {
     if (!saleAddress) return;
     setCreating(true);
     try {
-      const sdk: any = (window as any).__aeSdk as AeSdk;
       const { initFallBack } = await ensureBctsl();
       const factory = await initFallBack(sdk, saleAddress);
       const dao = await factory.checkAndGetDAO();
@@ -104,7 +90,7 @@ export default function Dao() {
   return (
     <div className="dao-view">
       {token && (
-        <div className="token-title">{token.name || token.symbol} [DAO]</div>  
+        <div className="token-title">{token.name || token.symbol} [DAO]</div>
       )}
       <div className="topbar">
         <Link to={`/trendminer/tokens/${encodeURIComponent(saleAddress || '')}`}>← Back to token sale</Link>
@@ -156,13 +142,13 @@ export default function Dao() {
 }
 
 function DaoVoteItem({ saleAddress, vote, id, onChanged }: { saleAddress: string; vote: any; id: number; onChanged: () => void }) {
+  const { sdk } = useAeSdk();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function action(fn: (dao: any) => Promise<any>) {
     setLoading(true); setError(null);
     try {
-      const sdk: any = (window as any).__aeSdk as AeSdk;
       const { initFallBack } = await ensureBctsl();
       const factory = await initFallBack(sdk, saleAddress);
       const dao = await factory.checkAndGetDAO();

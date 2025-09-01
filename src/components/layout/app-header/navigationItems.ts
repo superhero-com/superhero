@@ -31,12 +31,12 @@ export const navigationItems: NavigationItem[] = [
     //     path: '/trendminer/invite',
     //     icon: '🎁',
     // },
-    // {
-    //     id: 'governance',
-    //     label: 'Governance & Voting',
-    //     path: '/voting',
-    //     icon: '🗳️',
-    // },
+    {
+        id: 'governance',
+        label: 'Governance & Voting',
+        path: '/voting',
+        icon: '🗳️',
+    },
     // {
     //     id: 'landing',
     //     label: 'Info',

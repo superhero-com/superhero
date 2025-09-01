@@ -1,21 +1,52 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Contract, Encoded } from '@aeternity/aepp-sdk';
 import { GovernanceApi } from '../api/governance';
 import { useAeSdk } from './useAeSdk';
+import { CONFIG } from '../config';
+import REGISTRY_WITH_EVENTS_ACI from '../api/GovernanceRegistryACI.json';
 
 export const useGovernance = () => {
   const { activeAccount, sdk } = useAeSdk();
   const queryClient = useQueryClient();
 
-  // Polls query
-  const usePolls = (params?: { status?: string; search?: string }) => {
+  // Polls query (combined smart contract + backend ordering/metrics)
+  const usePolls = (params: { status: 'all' | 'open' | 'closed'; search?: string }) => {
     return useQuery({
       queryKey: ['governance', 'polls', params],
       queryFn: async () => {
-        const res = await GovernanceApi.getPolls(params || {});
-        const polls = (res && (
-          res.polls || res.items || res.data || res.results || (Array.isArray(res) ? res : null)
-        )) || [];
-        return polls;
+        const registry = await Contract.initialize<{
+          polls: () => Map<number, {
+            close_height: bigint;
+            is_listed: boolean;
+            title: string;
+            poll: Encoded.ContractAddress;
+          }>
+        }>({
+          ...sdk.getContext(),
+          aci: REGISTRY_WITH_EVENTS_ACI,
+          address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
+        });
+        const contractPolls = (await registry.polls()).decodedResult;
+        
+        const { data } = await GovernanceApi.getPollOrdering(params.status === 'closed');
+        if (params.status === 'all') data.push(...(await GovernanceApi.getPollOrdering(true)).data);
+
+        const height = await sdk.getHeight();
+        let merged = data.map(({ id, ...others }) => ({
+          id,
+          ...others,
+          title: contractPolls.get(BigInt(id)).title,
+          endDate: new Date(Date.now() + (others.closeHeight - height) * 3 * 60 * 1000),
+          status: (others.closeHeight == null || others.closeHeight > height
+            ? 'open' : 'closed') as 'open' | 'closed',
+        }));
+        
+        const search = params.search?.trim().toLowerCase();
+        if (search) {
+          merged = merged.filter((p) => p.title.toLowerCase().includes(search));
+        }
+
+        return merged;
       },
       staleTime: 5 * 60 * 1000, // 5 minutes
     });

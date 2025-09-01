@@ -6,7 +6,7 @@ import { errorToUserMessage } from '../../../libs/errorMessages';
 import { useToast } from '../../../components/ToastProvider';
 import { AddLiquidityState, LiquidityExecutionParams, RemoveLiquidityExecutionParams } from '../types/pool';
 
-import { providedLiquidityAtom, useAccount, useAeSdk, useDex } from '../../../hooks';
+import { providedLiquidityAtom, useAccount, useAeSdk, useDex, useRecentActivities } from '../../../hooks';
 import { useAtom } from 'jotai';
 import { Decimal } from '../../../libs/decimal';
 
@@ -16,6 +16,7 @@ export function useAddLiquidity() {
   const { sdk } = useAeSdk();
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
+  const { addActivity } = useRecentActivities();
   const toast = useToast();
 
   const [state, setState] = useState<AddLiquidityState>({
@@ -328,6 +329,19 @@ export function useAddLiquidity() {
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       }
 
+      // Track the add liquidity activity
+      if (address && txHash) {
+        addActivity({
+          type: 'add_liquidity',
+          hash: txHash,
+          account: address,
+          tokenIn: state.symbolA || params.tokenA,
+          tokenOut: state.symbolB || params.tokenB,
+          amountIn: params.amountA,
+          amountOut: params.amountB,
+        });
+      }
+
       // Show success toast
       const url = CONFIG.EXPLORER_URL ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${txHash}` : '';
       toast.push(
@@ -544,6 +558,18 @@ export function useAddLiquidity() {
       setState(prev => ({ ...prev, loading: false }));
 
       if (txHash) {
+        // Track the remove liquidity activity
+        if (address) {
+          addActivity({
+            type: 'remove_liquidity',
+            hash: txHash,
+            account: address,
+            tokenIn: state.symbolA || params.tokenA,
+            tokenOut: state.symbolB || params.tokenB,
+            amountIn: params.liquidity,
+          });
+        }
+
         toast.push(React.createElement('div', {},
           React.createElement('div', {}, 'Remove liquidity successful'),
           React.createElement('div', { style: { opacity: 0.9 } }, `Transaction: ${txHash.slice(0, 8)}...${txHash.slice(-8)}`)

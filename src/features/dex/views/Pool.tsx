@@ -5,6 +5,7 @@ import ConnectWalletButton from '../../../components/ConnectWalletButton';
 import { AddLiquidityForm, RemoveLiquidityForm, LiquidityPositionCard } from '../components';
 import { useLiquidityPositions } from '../hooks';
 import { PoolProvider, usePool } from '../context/PoolProvider';
+import RecentActivity from '../../../components/dex/supporting/RecentActivity';
 
 function PoolContent() {
   const navigate = useNavigate();
@@ -537,6 +538,8 @@ function PoolContent() {
         ) : (
           <AddLiquidityForm />
         )}
+        
+        <RecentActivity />
       </div>
     </div>
   );

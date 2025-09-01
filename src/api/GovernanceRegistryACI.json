@@ -1,0 +1,262 @@
+[
+  {
+    "namespace": {
+      "name": "ListInternal",
+      "typedefs": []
+    }
+  },
+  {
+    "namespace": {
+      "name": "List",
+      "typedefs": []
+    }
+  },
+  {
+    "namespace": {
+      "name": "Pair",
+      "typedefs": []
+    }
+  },
+  {
+    "contract": {
+      "functions": [
+        {
+          "arguments": [],
+          "name": "title",
+          "payable": false,
+          "returns": "string",
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "close_height",
+          "payable": false,
+          "returns": {
+            "option": [
+              "int"
+            ]
+          },
+          "stateful": false
+        }
+      ],
+      "kind": "contract_interface",
+      "name": "Poll",
+      "payable": false,
+      "typedefs": []
+    }
+  },
+  {
+    "contract": {
+      "event": {
+        "variant": [
+          {
+            "AddPoll": [
+              "Poll",
+              "int"
+            ]
+          },
+          {
+            "Delegation": [
+              "address",
+              "address"
+            ]
+          },
+          {
+            "RevokeDelegation": [
+              "address"
+            ]
+          }
+        ]
+      },
+      "functions": [
+        {
+          "arguments": [],
+          "name": "init",
+          "payable": false,
+          "returns": "Registry.state",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "poll",
+              "type": "Poll"
+            },
+            {
+              "name": "is_listed",
+              "type": "bool"
+            }
+          ],
+          "name": "add_poll",
+          "payable": false,
+          "returns": "int",
+          "stateful": true
+        },
+        {
+          "arguments": [
+            {
+              "name": "delegatee",
+              "type": "address"
+            }
+          ],
+          "name": "delegate",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [],
+          "name": "revoke_delegation",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [],
+          "name": "created_height",
+          "payable": false,
+          "returns": "int",
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "delegations",
+          "payable": false,
+          "returns": "Registry.delegations",
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "polls",
+          "payable": false,
+          "returns": "Registry.polls",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "poll_id",
+              "type": "int"
+            }
+          ],
+          "name": "poll",
+          "payable": false,
+          "returns": "Registry.poll_data",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "account",
+              "type": "address"
+            }
+          ],
+          "name": "delegatee",
+          "payable": false,
+          "returns": {
+            "option": [
+              "address"
+            ]
+          },
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "account",
+              "type": "address"
+            }
+          ],
+          "name": "delegators",
+          "payable": false,
+          "returns": "Registry.delegations",
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "version",
+          "payable": false,
+          "returns": "int",
+          "stateful": false
+        }
+      ],
+      "kind": "contract_main",
+      "name": "Registry",
+      "payable": false,
+      "state": {
+        "record": [
+          {
+            "name": "polls",
+            "type": "Registry.polls"
+          },
+          {
+            "name": "seq_id",
+            "type": "int"
+          },
+          {
+            "name": "delegations",
+            "type": "Registry.delegations"
+          },
+          {
+            "name": "created_height",
+            "type": "int"
+          }
+        ]
+      },
+      "typedefs": [
+        {
+          "name": "poll_data",
+          "typedef": {
+            "record": [
+              {
+                "name": "poll",
+                "type": "Poll"
+              },
+              {
+                "name": "is_listed",
+                "type": "bool"
+              },
+              {
+                "name": "title",
+                "type": "string"
+              },
+              {
+                "name": "close_height",
+                "type": {
+                  "option": [
+                    "int"
+                  ]
+                }
+              }
+            ]
+          },
+          "vars": []
+        },
+        {
+          "name": "polls",
+          "typedef": {
+            "map": [
+              "int",
+              "Registry.poll_data"
+            ]
+          },
+          "vars": []
+        },
+        {
+          "name": "delegations",
+          "typedef": {
+            "map": [
+              "address",
+              "address"
+            ]
+          },
+          "vars": []
+        }
+      ]
+    }
+  }
+]

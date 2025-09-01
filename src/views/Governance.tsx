@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { Encoding, isAddressValid } from '@aeternity/aepp-sdk';
 import Shell from '../components/layout/Shell';
 import LeftRail from '../components/layout/LeftRail';
 import RightRail from '../components/layout/RightRail';
-import { CONFIG } from '../config';
 import './Governance.scss';
 import AeButton from '../components/AeButton';
 import MobileInput from '../components/MobileInput';
 import MobileCard from '../components/MobileCard';
 import { Link, useParams, useLocation } from 'react-router-dom';
-import { HeaderLogo as IconGovernance, IconComment } from '../icons';
+import { HeaderLogo as IconGovernance } from '../icons';
 
 import { useWallet, useGovernance } from '../hooks';
 type TabType = 'polls' | 'vote' | 'account';
@@ -21,10 +21,8 @@ export default function Governance() {
   const [isVoting, setIsVoting] = useState(false);
   
   // State for UI
-  const [status, setStatus] = useState<string>('');
+  const [status, setStatus] = useState<'all' | 'open' | 'closed'>('open');
   const [search, setSearch] = useState<string>('');
-  const [page, setPage] = useState<number>(1);
-  const [pageSize] = useState<number>(20);
   
   // Hooks
   const { address } = useWallet();
@@ -36,30 +34,28 @@ export default function Governance() {
     useDelegation,
     useDelegators,
     useAccount,
-    usePollComments,
     useSubmitVote,
     useRevokeVote,
     useSetDelegation,
     useRevokeDelegation,
-    useSendPollComment
   } = useGovernance();
   
   // Queries
-  const { data: polls = [] } = usePolls({ page, pageSize, status, search });
-  const { data: poll } = usePoll(pollId || '');
+  const { data: polls = [] } = usePolls({ status, search });
+  const { data: poll } = usePoll(
+    isAddressValid(pollId, Encoding.ContractAddress) ? pollId : undefined
+  );
   const { data: results } = usePollResults(pollId || '');
   const { data: myVote } = useMyVote(pollId || '');
   const { data: delegation = { to: null } } = useDelegation();
   const { data: delegators = [] } = useDelegators(address || '');
   const { data: account } = useAccount(address || '');
-  const { data: pollComments = [] } = usePollComments(pollId || '');
   
   // Mutations
   const submitVoteMutation = useSubmitVote();
   const revokeVoteMutation = useRevokeVote();
   const setDelegationMutation = useSetDelegation();
   const revokeDelegationMutation = useRevokeDelegation();
-  const sendCommentMutation = useSendPollComment();
   
   const [delegateAddress, setDelegateAddress] = useState<string>(delegation?.to || '');
 
@@ -81,8 +77,6 @@ export default function Governance() {
 
   // Data is now loaded automatically by React Query hooks
 
-  const iframeSrc = CONFIG.GOVERNANCE_URL;
-  
   const handleSaveDelegation = () => {
     if (delegateAddress.trim()) {
       setDelegationMutation.mutate({ to: delegateAddress.trim() });
@@ -119,7 +113,7 @@ export default function Governance() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: 'open' | 'closed') => {
     switch (status?.toLowerCase()) {
       case 'open':
         return 'status-open';
@@ -133,10 +127,6 @@ export default function Governance() {
   const getVotePercentage = (votes: number, total: number) => {
     if (total === 0) return 0;
     return Math.round((votes / total) * 100);
-  };
-
-  const getCommentCount = (pollId: string) => {
-    return pollComments.length;
   };
 
   const renderPollsTab = () => (
@@ -159,7 +149,6 @@ export default function Governance() {
             placeholder="Find polls by title or description..."
             value={search}
             onChange={(e) => { 
-              setPage(1); 
               setSearch(e.target.value); 
             }}
             variant="filled"
@@ -174,14 +163,16 @@ export default function Governance() {
             label="Filter by status"
             value={status}
             onChange={(e) => { 
-              setPage(1); 
+              if (e.target.value !== 'all' && e.target.value !== 'open' && e.target.value !== 'closed') {
+                throw new Error('Invalid status');
+              }
               setStatus(e.target.value); 
             }}
             variant="filled"
             size="large"
             className="enhanced-filter"
           >
-            <option value="">All polls</option>
+            <option value="all">All polls</option>
             <option value="open">🟢 Open polls</option>
             <option value="closed">🔴 Closed polls</option>
           </MobileInput>
@@ -200,12 +191,12 @@ export default function Governance() {
           </MobileCard>
         ) : (
           <div className="mobile-polls-grid">
-            {polls.map((p: any) => (
-              <Link to={`/voting/p/${p.id}`} key={p.id} className="mobile-poll-link">
+            {polls.map((p) => (
+              <Link to={`/voting/p/${p.poll}`} key={p.id} className="mobile-poll-link">
                 <MobileCard variant="elevated" padding="medium" clickable className="enhanced-poll-card">
                   <div className="mobile-poll-card">
                     <div className="poll-header">
-                      <div className="mobile-poll-title">{p.title || p.name || p.id}</div>
+                      <div className="mobile-poll-title">{p.title}</div>
                       <div className={`mobile-poll-status ${getStatusColor(p.status)}`}>
                         {p.status || 'Unknown'}
                       </div>
@@ -214,14 +205,13 @@ export default function Governance() {
                       <div className="poll-stats">
                         <span className="stat-item">
                           <span className="stat-icon">👥</span>
-                          {p.totalVotes || 0} votes
+                          {p.voteCount} votes
                         </span>
-                        {p.endDate && (
-                          <span className="stat-item">
-                            <span className="stat-icon">⏰</span>
-                            {new Date(p.endDate).toLocaleDateString()}
-                          </span>
-                        )}
+                        {' '}
+                        <span className="stat-item">
+                          <span className="stat-icon">⏰</span>
+                          {new Date(p.endDate).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -231,24 +221,6 @@ export default function Governance() {
           </div>
         )}
       </div>
-
-      {/* Enhanced Pagination */}
-      <div className="mobile-pagination">
-        <AeButton 
-          onClick={() => setPage((p) => Math.max(1, p - 1))} 
-          disabled={page === 1}
-          className="mobile-pagination-btn"
-        >
-          ← Previous
-        </AeButton>
-        <span className="mobile-page-info">Page {page}</span>
-        <AeButton 
-          onClick={() => setPage((p) => p + 1)}
-          className="mobile-pagination-btn"
-        >
-          Next →
-        </AeButton>
-      </div>
     </div>
   );
 
@@ -256,11 +228,8 @@ export default function Governance() {
     <div className="gov-native mobile-container">
       <div className="gov-header mobile-header">
         <div className="header-content">
-          <div className="header-icon-wrapper">
-            <IconGovernance className="gov-icon" />
-          </div>
           <div className="header-text">
-            <h2>{poll?.title || poll?.name || 'Poll'}</h2>
+            <h2>{poll?.pollState.metadata.title || 'Poll'}</h2>
             <p className="header-subtitle">Cast your vote and make your voice heard</p>
           </div>
         </div>
@@ -277,8 +246,8 @@ export default function Governance() {
         <MobileCard variant="elevated" padding="large" className="voting-card">
           <div className="voting-header">
             <h3 className="mobile-section-title">🗳️ Cast Your Vote</h3>
-            {poll?.description && (
-              <p className="poll-description">{poll.description}</p>
+            {poll?.pollState.metadata.description && (
+              <p className="poll-description">{poll.pollState.metadata.description}</p>
             )}
           </div>
           
@@ -298,9 +267,9 @@ export default function Governance() {
           )}
 
           <div className="mobile-voting-options">
-            {(poll?.options || []).map((opt: any) => {
-              const val = opt.value || opt;
-              const lbl = opt.label || opt;
+            {(Object.values(poll?.pollState.vote_options ?? {})).map((opt, idx) => {
+              const val = idx.toString();
+              const lbl = opt;
               const isSelected = selectedVote === val;
               const isVotingThis = isVoting && isSelected;
               
@@ -544,46 +513,34 @@ export default function Governance() {
 
   return (
     <Shell left={<LeftRail />} right={<RightRail />}> 
-      {iframeSrc ? (
-        <div className="governance-page">
-          <div className="gov-header mobile-header">
-            <IconGovernance className="gov-icon" />
-            <h2>Governance</h2>
-          </div>
-          <iframe title="Aeternity Governance" className="governance-iframe" src={iframeSrc} />
-        </div>
-      ) : (
-        <>
-          {/* Enhanced Tab Navigation */}
-          <div className="mobile-tab-navigation">
-            <AeButton 
-              onClick={() => setActiveTab('polls')}
-              className={`mobile-tab-btn ${activeTab === 'polls' ? 'active' : ''}`}
-            >
-              📊 Polls
-            </AeButton>
-            {pollId && (
-              <AeButton 
-                onClick={() => setActiveTab('vote')}
-                className={`mobile-tab-btn ${activeTab === 'vote' ? 'active' : ''}`}
-              >
-                🗳️ Vote
-              </AeButton>
-            )}
-            <AeButton 
-              onClick={() => setActiveTab('account')}
-              className={`mobile-tab-btn ${activeTab === 'account' ? 'active' : ''}`}
-            >
-              👤 My Account
-            </AeButton>
-          </div>
+      {/* Enhanced Tab Navigation */}
+      <div className="mobile-tab-navigation">
+        <AeButton 
+          onClick={() => setActiveTab('polls')}
+          className={`mobile-tab-btn ${activeTab === 'polls' ? 'active' : ''}`}
+        >
+          📊 Polls
+        </AeButton>
+        {pollId && (
+          <AeButton 
+            onClick={() => setActiveTab('vote')}
+            className={`mobile-tab-btn ${activeTab === 'vote' ? 'active' : ''}`}
+          >
+            🗳️ Vote
+          </AeButton>
+        )}
+        <AeButton 
+          onClick={() => setActiveTab('account')}
+          className={`mobile-tab-btn ${activeTab === 'account' ? 'active' : ''}`}
+        >
+          👤 My Account
+        </AeButton>
+      </div>
 
-          {/* Tab Content */}
-          {activeTab === 'polls' && renderPollsTab()}
-          {activeTab === 'vote' && renderVoteTab()}
-          {activeTab === 'account' && renderAccountTab()}
-        </>
-      )}
+      {/* Tab Content */}
+      {activeTab === 'polls' && renderPollsTab()}
+      {activeTab === 'vote' && renderVoteTab()}
+      {activeTab === 'account' && renderAccountTab()}
     </Shell>
   );
 }

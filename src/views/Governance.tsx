@@ -20,7 +20,7 @@ export default function Governance() {
   const [isVoting, setIsVoting] = useState(false);
   
   // State for UI
-  const [status, setStatus] = useState<string>('');
+  const [status, setStatus] = useState<'all' | 'open' | 'closed'>('open');
   const [search, setSearch] = useState<string>('');
   
   // Hooks
@@ -110,7 +110,7 @@ export default function Governance() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: 'open' | 'closed') => {
     switch (status?.toLowerCase()) {
       case 'open':
         return 'status-open';
@@ -160,13 +160,16 @@ export default function Governance() {
             label="Filter by status"
             value={status}
             onChange={(e) => { 
+              if (e.target.value !== 'all' && e.target.value !== 'open' && e.target.value !== 'closed') {
+                throw new Error('Invalid status');
+              }
               setStatus(e.target.value); 
             }}
             variant="filled"
             size="large"
             className="enhanced-filter"
           >
-            <option value="">All polls</option>
+            <option value="all">All polls</option>
             <option value="open">🟢 Open polls</option>
             <option value="closed">🔴 Closed polls</option>
           </MobileInput>
@@ -185,12 +188,12 @@ export default function Governance() {
           </MobileCard>
         ) : (
           <div className="mobile-polls-grid">
-            {polls.map((p: any) => (
+            {polls.map((p) => (
               <Link to={`/voting/p/${p.id}`} key={p.id} className="mobile-poll-link">
                 <MobileCard variant="elevated" padding="medium" clickable className="enhanced-poll-card">
                   <div className="mobile-poll-card">
                     <div className="poll-header">
-                      <div className="mobile-poll-title">{p.title || p.name || p.id}</div>
+                      <div className="mobile-poll-title">{p.title}</div>
                       <div className={`mobile-poll-status ${getStatusColor(p.status)}`}>
                         {p.status || 'Unknown'}
                       </div>
@@ -199,15 +202,13 @@ export default function Governance() {
                       <div className="poll-stats">
                         <span className="stat-item">
                           <span className="stat-icon">👥</span>
-                          {p.totalVotes || 0} votes
+                          {p.voteCount} votes
                         </span>
                         {' '}
-                        {p.endDate && (
-                          <span className="stat-item">
-                            <span className="stat-icon">⏰</span>
-                            {new Date(p.endDate).toLocaleDateString()}
-                          </span>
-                        )}
+                        <span className="stat-item">
+                          <span className="stat-icon">⏰</span>
+                          {new Date(p.endDate).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
                   </div>

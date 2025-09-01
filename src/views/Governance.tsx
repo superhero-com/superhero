@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Encoding, isAddressValid } from '@aeternity/aepp-sdk';
 import Shell from '../components/layout/Shell';
 import LeftRail from '../components/layout/LeftRail';
 import RightRail from '../components/layout/RightRail';
@@ -41,7 +42,9 @@ export default function Governance() {
   
   // Queries
   const { data: polls = [] } = usePolls({ status, search });
-  const { data: poll } = usePoll(pollId || '');
+  const { data: poll } = usePoll(
+    isAddressValid(pollId, Encoding.ContractAddress) ? pollId : undefined
+  );
   const { data: results } = usePollResults(pollId || '');
   const { data: myVote } = useMyVote(pollId || '');
   const { data: delegation = { to: null } } = useDelegation();
@@ -189,7 +192,7 @@ export default function Governance() {
         ) : (
           <div className="mobile-polls-grid">
             {polls.map((p) => (
-              <Link to={`/voting/p/${p.id}`} key={p.id} className="mobile-poll-link">
+              <Link to={`/voting/p/${p.poll}`} key={p.id} className="mobile-poll-link">
                 <MobileCard variant="elevated" padding="medium" clickable className="enhanced-poll-card">
                   <div className="mobile-poll-card">
                     <div className="poll-header">
@@ -225,11 +228,8 @@ export default function Governance() {
     <div className="gov-native mobile-container">
       <div className="gov-header mobile-header">
         <div className="header-content">
-          <div className="header-icon-wrapper">
-            <IconGovernance className="gov-icon" />
-          </div>
           <div className="header-text">
-            <h2>{poll?.title || poll?.name || 'Poll'}</h2>
+            <h2>{poll?.pollState.metadata.title || 'Poll'}</h2>
             <p className="header-subtitle">Cast your vote and make your voice heard</p>
           </div>
         </div>
@@ -246,8 +246,8 @@ export default function Governance() {
         <MobileCard variant="elevated" padding="large" className="voting-card">
           <div className="voting-header">
             <h3 className="mobile-section-title">🗳️ Cast Your Vote</h3>
-            {poll?.description && (
-              <p className="poll-description">{poll.description}</p>
+            {poll?.pollState.metadata.description && (
+              <p className="poll-description">{poll.pollState.metadata.description}</p>
             )}
           </div>
           
@@ -267,9 +267,9 @@ export default function Governance() {
           )}
 
           <div className="mobile-voting-options">
-            {(poll?.options || []).map((opt: any) => {
-              const val = opt.value || opt;
-              const lbl = opt.label || opt;
+            {(Object.values(poll?.pollState.vote_options ?? {})).map((opt, idx) => {
+              const val = idx.toString();
+              const lbl = opt;
               const isSelected = selectedVote === val;
               const isVotingThis = isVoting && isSelected;
               

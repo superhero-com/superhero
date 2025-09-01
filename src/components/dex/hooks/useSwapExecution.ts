@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CONFIG } from '../../../config';
-import { useAeSdk } from '../../../hooks';
+import { useAeSdk, useRecentActivities } from '../../../hooks';
 import {
   addSlippage,
   ensureAllowanceForRouter,
@@ -16,6 +16,7 @@ import { SwapExecutionParams } from '../types/dex';
 
 export function useSwapExecution() {
   const { sdk, activeAccount } = useAeSdk()
+  const { addActivity } = useRecentActivities();
 
   const toast = useToast();
   const [loading, setLoading] = useState(false);
@@ -197,6 +198,19 @@ export function useSwapExecution() {
 
       // eslint-disable-next-line no-console
       console.info('[dex] Swap submitted', { txHash });
+
+      // Track the swap activity
+      if (activeAccount && txHash) {
+        addActivity({
+          type: 'swap',
+          hash: txHash,
+          account: activeAccount,
+          tokenIn: params.tokenIn?.symbol || params.tokenIn?.contractId,
+          tokenOut: params.tokenOut?.symbol || params.tokenOut?.contractId,
+          amountIn: params.amountIn,
+          amountOut: params.amountOut,
+        });
+      }
 
       try {
         const url = CONFIG.EXPLORER_URL ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${txHash || ''}` : '';

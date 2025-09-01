@@ -5,6 +5,7 @@ import ConnectWalletButton from '../../../components/ConnectWalletButton';
 import { AddLiquidityForm, RemoveLiquidityForm, LiquidityPositionCard } from '../components';
 import { useLiquidityPositions } from '../hooks';
 import { PoolProvider, usePool } from '../context/PoolProvider';
+import RecentActivity from '../../../components/dex/supporting/RecentActivity';
 
 function PoolContent() {
   const navigate = useNavigate();
@@ -12,10 +13,10 @@ function PoolContent() {
   const { positions, loading, error, refreshPositions, invalidateCache } = useLiquidityPositions();
   const { selectPositionForAdd, selectPositionForRemove, currentAction, setRefreshPositions } = usePool();
 
-  // Connect refresh function to context
-  React.useEffect(() => {
-    setRefreshPositions(() => refreshPositions);
-  }, [refreshPositions, setRefreshPositions]);
+  // // Connect refresh function to context
+  // React.useEffect(() => {
+  //   setRefreshPositions(() => refreshPositions);
+  // }, [refreshPositions, setRefreshPositions]);
 
   const handleRemoveLiquidity = (pairId: string) => {
     const position = positions.find(p => p.pairId === pairId);
@@ -187,40 +188,75 @@ function PoolContent() {
               alignItems: 'center', 
               marginBottom: 16 
             }}>
-              <h3 style={{ 
-                fontSize: 16, 
-                fontWeight: 600, 
-                color: 'var(--standard-font-color)', 
-                margin: 0 
-              }}>
-                Active Positions
-              </h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <h3 style={{ 
+                  fontSize: 16, 
+                  fontWeight: 600, 
+                  color: 'var(--standard-font-color)', 
+                  margin: 0 
+                }}>
+                  Active Positions
+                </h3>
+                {loading && positions.length > 0 && (
+                  <div style={{
+                    width: 16,
+                    height: 16,
+                    border: '2px solid rgba(255,255,255,0.1)',
+                    borderTop: '2px solid var(--accent-color)',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                )}
+              </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {activeAccount && (
                   <button
                     onClick={() => refreshPositions()}
+                    disabled={loading}
                     style={{ 
                       padding: '8px 16px', 
                       borderRadius: 12, 
                       border: '1px solid var(--glass-border)', 
-                      background: 'var(--glass-bg)', 
-                      color: 'var(--standard-font-color)',
-                      cursor: 'pointer',
+                      background: loading ? 'rgba(255,255,255,0.1)' : 'var(--glass-bg)', 
+                      color: loading ? 'var(--light-font-color)' : 'var(--standard-font-color)',
+                      cursor: loading ? 'not-allowed' : 'pointer',
                       fontSize: 12,
                       fontWeight: 600,
                       transition: 'all 0.3s ease',
-                      backdropFilter: 'blur(10px)'
+                      backdropFilter: 'blur(10px)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      opacity: loading ? 0.6 : 1
                     }}
                     onMouseOver={(e) => {
-                      e.currentTarget.style.background = 'var(--accent-color)';
-                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      if (!loading) {
+                        e.currentTarget.style.background = 'var(--accent-color)';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                      }
                     }}
                     onMouseOut={(e) => {
-                      e.currentTarget.style.background = 'var(--glass-bg)';
-                      e.currentTarget.style.transform = 'translateY(0)';
+                      if (!loading) {
+                        e.currentTarget.style.background = 'var(--glass-bg)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }
                     }}
                   >
-                    🔄 Refresh
+                    {loading ? (
+                      <>
+                        <div style={{
+                          width: 12,
+                          height: 12,
+                          border: '2px solid rgba(255,255,255,0.3)',
+                          borderTop: '2px solid currentColor',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite'
+                        }}></div>
+                        Refreshing...
+                      </>
+                    ) : (
+                      <>🔄 Refresh</>
+                    )}
                   </button>
                 )}
                 {activeAccount && positions.length > 0 && (
@@ -254,7 +290,7 @@ function PoolContent() {
               </div>
             </div>
 
-          {loading ? (
+          {loading && positions.length === 0 ? (
             <div style={{ 
               textAlign: 'center', 
               padding: 40, 
@@ -502,6 +538,8 @@ function PoolContent() {
         ) : (
           <AddLiquidityForm />
         )}
+        
+        <RecentActivity />
       </div>
     </div>
   );

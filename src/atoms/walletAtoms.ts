@@ -15,6 +15,7 @@ export const selectedCurrencyAtom = atomWithStorage<'eur' | 'usd' | 'cny'>('wall
 export const tokenBalancesAtom = atomWithStorage<TokenBalance[]>('wallet:tokenBalances', []);
 export const tokenPricesAtom = atomWithStorage<Record<string, string>>('wallet:tokenPrices', {});
 export const cookiesConsentAtom = atomWithStorage<Record<string, boolean>>('wallet:cookiesConsent', {});
+export const aex9BalancesAtom = atomWithStorage<Record<string, any[]>>('wallet:aex9Balances', {});
 
 // Non-persisted wallet state
 export const profileAtom = atom<Record<string, any>>({});

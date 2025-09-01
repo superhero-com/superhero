@@ -1,21 +1,20 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { LiquidityPosition, PoolListState } from '../types/pool';
-import { useWallet, useDex, useAeSdk } from '../../../hooks';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { useCallback, useEffect, useState } from 'react';
+import { useAeSdk, useDex } from '../../../hooks';
 import {
-  getPositionsForAccountAtom,
-  isLoadingForAccountAtom,
   getErrorForAccountAtom,
-  setPositionsForAccountAtom,
-  setLoadingForAccountAtom,
+  getPositionsForAccountAtom,
+  invalidatePositionsAtom,
+  isLoadingForAccountAtom,
   setErrorForAccountAtom,
-  shouldRefreshPositionsAtom,
-  invalidatePositionsAtom
+  setLoadingForAccountAtom,
+  setPositionsForAccountAtom,
+  shouldRefreshPositionsAtom
 } from '../atoms/positionsAtoms';
+import { LiquidityPosition, PoolListState } from '../types/pool';
 
 export function useLiquidityPositions(): PoolListState & { 
   refreshPositions: () => Promise<void>;
-  invalidateCache: () => void;
 } {
   const { activeAccount } = useAeSdk()
   const { providedLiquidity, scanAccountLiquidity } = useDex();
@@ -50,8 +49,8 @@ export function useLiquidityPositions(): PoolListState & {
       await scanAccountLiquidity(accountAddress);
 
       // Get positions from Jotai store
-      const providedRaw = providedLiquidity[accountAddress];
-      const provided = providedRaw || {};
+      const accountLiquidity = providedLiquidity[accountAddress] || {};
+      const provided = accountLiquidity;
 
       // Convert to our typed format
       const positions: LiquidityPosition[] = Object.entries(provided)
@@ -59,11 +58,11 @@ export function useLiquidityPositions(): PoolListState & {
           if (!info) return null;
           return {
             pairId,
-            token0: (info as any).token0,
-            token1: (info as any).token1,
-            balance: (info as any).balance,
-            sharePct: (info as any).sharePct,
-            valueUsd: (info as any).valueUsd,
+            token0: info.token0,
+            token1: info.token1,
+            balance: info.balance,
+            sharePct: info.sharePct,
+            valueUsd: info.valueUsd,
           };
         })
         .filter(Boolean) as LiquidityPosition[];
@@ -85,12 +84,6 @@ export function useLiquidityPositions(): PoolListState & {
     await loadAndCachePositions(activeAccount);
   }, [activeAccount, loadAndCachePositions]);
 
-  // Invalidate cache manually
-  const invalidateCache = useCallback(() => {
-    if (!activeAccount) return;
-    invalidatePositions(activeAccount);
-  }, [activeAccount, invalidatePositions]);
-
   // Load positions on mount or when address changes
   useEffect(() => {
     if (!activeAccount) return;
@@ -99,7 +92,7 @@ export function useLiquidityPositions(): PoolListState & {
     if (cachedPositions.length === 0 || shouldRefresh) {
       loadAndCachePositions(activeAccount);
     }
-  }, [activeAccount, cachedPositions.length, shouldRefresh, loadAndCachePositions]);
+  }, [activeAccount, cachedPositions.length, shouldRefresh]);
 
   return {
     positions: cachedPositions,
@@ -108,6 +101,5 @@ export function useLiquidityPositions(): PoolListState & {
     showImport,
     showCreate,
     refreshPositions,
-    invalidateCache,
   };
 }

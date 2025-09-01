@@ -56,9 +56,25 @@ export interface WrapState {
   wrapping: boolean;
 }
 
+export interface TransactionStatus {
+  confirmed: boolean;
+  blockNumber?: number;
+  confirmations?: number;
+  pending?: boolean;
+  failed?: boolean;
+}
+
 export interface RecentActivity {
-  type: 'swap' | 'wrap' | 'unwrap';
+  type: 'swap' | 'wrap' | 'unwrap' | 'bridge' | 'add_liquidity' | 'remove_liquidity';
   hash?: string;
+  timestamp: number;
+  tokenIn?: string;
+  tokenOut?: string;
+  amountIn?: string;
+  amountOut?: string;
+  pairAddress?: string; // For liquidity operations
+  account: string; // User account address
+  status?: TransactionStatus; // Transaction confirmation status
 }
 
 export interface SwapQuoteParams {

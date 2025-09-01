@@ -14,7 +14,7 @@ export default function DexSwap() {
         </div>
 
         <div className="dex-swap-sidebar">
-          <RecentActivity recent={[]} />
+          <RecentActivity />
         </div>
       </div>
       {/* New Account Education */}

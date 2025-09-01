@@ -1,12 +1,14 @@
 import { useAtom } from 'jotai';
 import { useCallback } from 'react';
-import { deadlineMinsAtom, poolInfoAtom, providedLiquidityAtom, slippagePctAtom } from '../atoms/dexAtoms';
+import { deadlineMinsAtom, poolInfoAtom, providedLiquidityAtom, slippagePctAtom, LiquidityPositionData } from '../atoms/dexAtoms';
 import { ACI, DEX_ADDRESSES, getLpBalance, getPairAddress, getPairInfo } from '../libs/dex';
 import { getPairs } from '../libs/dexBackend';
 import { useAeSdk } from './useAeSdk';
+import { useAccount } from './useAccount';
 
 export const useDex = () => {
-  const { sdk } = useAeSdk()
+  const { sdk, activeAccount } = useAeSdk()
+  const { aex9Balances, loadAccountData } = useAccount()
   const [slippagePct, setSlippagePct] = useAtom(slippagePctAtom);
   const [deadlineMins, setDeadlineMins] = useAtom(deadlineMinsAtom);
   const [providedLiquidity, setProvidedLiquidity] = useAtom(providedLiquidityAtom);
@@ -28,39 +30,43 @@ export const useDex = () => {
     } catch { }
   }, [setDeadlineMins]);
 
-  const resetAccountLiquidity = useCallback((address: string) => {
+  const resetAccountLiquidity = useCallback((accountAddress: string) => {
     setProvidedLiquidity(prev => ({
       ...prev,
-      [address]: {},
+      [accountAddress]: {}
     }));
   }, [setProvidedLiquidity]);
 
   const updateProvidedLiquidity = useCallback((params: {
-    address: string;
+    accountAddress: string;
     pairId: string;
     balance: string;
     token0?: { address: string; symbol?: string };
     token1?: { address: string; symbol?: string };
+    sharePct?: string;
+    valueUsd?: string;
   }) => {
-    const { address, pairId, balance, token0, token1 } = params;
+    const { accountAddress, pairId, balance, token0, token1, sharePct, valueUsd } = params;
     setProvidedLiquidity(prev => {
-      if (!prev[address]) prev[address] = {};
+      const accountLiquidity = prev[accountAddress] || {};
       return {
         ...prev,
-        [address]: {
-          ...prev[address],
+        [accountAddress]: {
+          ...accountLiquidity,
           [pairId]: {
             balance,
             token0: token0?.symbol || token0?.address || '',
             token1: token1?.symbol || token1?.address || '',
-          },
+            sharePct,
+            valueUsd,
+          } as LiquidityPositionData,
         },
       };
     });
   }, [setProvidedLiquidity]);
 
   const loadPairInfo = useCallback(async ({ tokenA, tokenB }: { tokenA: string; tokenB: string }) => {
-    const factory = await sdk.initializeContract({ aci: ACI.Factory, address: DEX_ADDRESSES.factory });
+    const factory = await sdk.initializeContract({ aci: ACI.Factory, address: DEX_ADDRESSES.factory as any });
     const info = await getPairInfo(sdk, factory, tokenA, tokenB);
 
     if (info) {
@@ -78,23 +84,23 @@ export const useDex = () => {
   }, [setPoolInfo]);
 
   const loadAccountLp = useCallback(async ({
-    address,
+    accountAddress,
     tokenA,
     tokenB
   }: {
-    address: string;
+    accountAddress: string;
     tokenA: string;
     tokenB: string;
   }) => {
-    const factory = await sdk.initializeContract({ aci: ACI.Factory, address: DEX_ADDRESSES.factory });
+    const factory = await sdk.initializeContract({ aci: ACI.Factory, address: DEX_ADDRESSES.factory as any });
     const pairAddr = await getPairAddress(sdk, factory, tokenA, tokenB);
     if (!pairAddr) return { pairId: null, balance: 0n };
-    const bal = await getLpBalance(sdk, pairAddr, address);
+    const bal = await getLpBalance(sdk, pairAddr, accountAddress);
 
     // Update provided liquidity state
     if (bal && bal > 0n) {
       updateProvidedLiquidity({
-        address,
+        accountAddress,
         pairId: pairAddr,
         balance: bal.toString(),
       });
@@ -103,15 +109,21 @@ export const useDex = () => {
     return { pairId: pairAddr, balance: bal };
   }, [updateProvidedLiquidity]);
 
-  const scanAccountLiquidity = useCallback(async (address: string) => {
+  // TODO: should improve this, it should come from a cached API
+  const scanAccountLiquidity = useCallback(async (accountAddress: string) => {
+    await loadAccountData();
     const pairs = await getPairs(false);
+    console.log("[useDex] scanAccountLiquidity pairs", pairs);
     const arr: any[] = pairs ? (Array.isArray(pairs) ? pairs : Object.values(pairs as any)) : [];
 
     for (const p of arr) {
-      const balance = await getLpBalance(sdk, p.address, address).catch(() => 0n);
+      // this should get from user balances.
+      // const balance = await getLpBalance(sdk, p.address, accountAddress).catch(() => 0n);
+      const balance = aex9Balances.find(b => b.contract_id === p.address)?.amount || 0;
       if (balance && balance > 0n) {
+        console.log("[useDex] scanAccountLiquidity balance", balance, p.address);
         updateProvidedLiquidity({
-          address,
+          accountAddress,
           pairId: p.address,
           balance: balance.toString(),
           token0: { address: p.token0 || p.token0Address, symbol: p.token0Symbol || p.token0?.symbol },
@@ -119,7 +131,7 @@ export const useDex = () => {
         });
       }
     }
-  }, [updateProvidedLiquidity]);
+  }, [updateProvidedLiquidity, loadAccountData, aex9Balances]);
 
   return {
     // State

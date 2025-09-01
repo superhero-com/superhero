@@ -1,14 +1,21 @@
 import React from 'react';
 import './DexViews.scss';
 import { EthBridgeWidget } from '../../bridge';
+import RecentActivity from '../../../components/dex/supporting/RecentActivity';
 
-// For now, we'll use the existing Swap component as a placeholder for the bridge
-// This can be replaced with a proper ETH bridge component later
 export default function DexBridge() {
   return (
     <div className="dex-bridge-container">
       {/* Main Content */}
-      <EthBridgeWidget />
+      <div className="dex-swap-content">
+        <div className="dex-swap-main">
+          <EthBridgeWidget />
+        </div>
+        
+        <div className="dex-swap-sidebar">
+          <RecentActivity />
+        </div>
+      </div>
     </div>
   );
 }

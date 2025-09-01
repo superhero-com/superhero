@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTokenBalances } from '../../components/dex/hooks/useTokenBalances';
 import { DEX_ADDRESSES, fromAettos } from '../../libs/dex';
 import { errorToUserMessage } from '../../libs/errorMessages';
-import { useAccount, useAeSdk } from '../../hooks';
+import { useAccount, useAeSdk, useRecentActivities } from '../../hooks';
 import { Decimal } from '../../libs/decimal';
 import ConnectWalletButton from '../../components/ConnectWalletButton';
 import waeACI from 'dex-contracts-v2/build/WAE.aci.json';
@@ -15,6 +15,7 @@ interface WrapUnwrapWidgetProps {
 export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
   const { sdk } = useAeSdk();
   const { activeAccount } = useAccount();
+  const { addActivity } = useRecentActivities();
   const { wrapBalances, refreshWrapBalances } = useTokenBalances(null, null);
   
   const [wrapAmount, setWrapAmount] = useState<string>('');
@@ -66,7 +67,21 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
         address: DEX_ADDRESSES.wae as `ct_${string}`
       });
       const aettos = Decimal.from(amountAe).bigNumber;
-      await wae.deposit({ amount: aettos });
+      const result = await wae.deposit({ amount: aettos });
+      
+      // Track the wrap activity
+      if (activeAccount && result?.hash) {
+        addActivity({
+          type: 'wrap',
+          hash: result.hash,
+          account: activeAccount,
+          tokenIn: 'AE',
+          tokenOut: 'WAE',
+          amountIn: amountAe,
+          amountOut: amountAe, // 1:1 wrap ratio
+        });
+      }
+      
       setWrapAmount('');
       void refreshWrapBalances();
     } catch (e: any) {
@@ -85,7 +100,21 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
         address: DEX_ADDRESSES.wae as `ct_${string}`
       });
       const aettos = Decimal.from(amountWae).bigNumber;
-      await wae.withdraw(aettos, null);
+      const result = await wae.withdraw(aettos, null);
+      
+      // Track the unwrap activity
+      if (activeAccount && result?.hash) {
+        addActivity({
+          type: 'unwrap',
+          hash: result.hash,
+          account: activeAccount,
+          tokenIn: 'WAE',
+          tokenOut: 'AE',
+          amountIn: amountWae,
+          amountOut: amountWae, // 1:1 unwrap ratio
+        });
+      }
+      
       setUnwrapAmount('');
       void refreshWrapBalances();
     } catch (e: any) {

@@ -9,6 +9,7 @@ export { useDex } from './useDex';
 export { useBackend } from './useBackend';
 export { useGovernance } from './useGovernance';
 export { useRecentActivities } from './useRecentActivities';
+export { useTransactionStatus, useMultipleTransactionStatus } from './useTransactionStatus';
 
 // Re-export atoms for direct usage if needed
 export * from '../atoms/walletAtoms';

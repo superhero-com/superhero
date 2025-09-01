@@ -6,9 +6,13 @@ import { errorToUserMessage } from '../../../libs/errorMessages';
 import { useToast } from '../../../components/ToastProvider';
 import { AddLiquidityState, LiquidityExecutionParams, RemoveLiquidityExecutionParams } from '../types/pool';
 
-import { useAccount, useAeSdk, useDex } from '../../../hooks';
+import { providedLiquidityAtom, useAccount, useAeSdk, useDex } from '../../../hooks';
+import { useAtom } from 'jotai';
+import { Decimal } from '../../../libs/decimal';
 
 export function useAddLiquidity() {
+  const [providedLiquidity, setProvidedLiquidity] = useAtom(providedLiquidityAtom);
+
   const { sdk } = useAeSdk();
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
@@ -319,6 +323,8 @@ export function useAddLiquidity() {
           minimumLiquidity,
           BigInt(Date.now() + params.deadlineMins * 60 * 1000),
         );
+        console.log('[useAddLiquidity] add_liquidity res::', providedLiquidity);
+        console.log('[useAddLiquidity] add_liquidity res::', res);
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       }
 
@@ -470,6 +476,7 @@ export function useAddLiquidity() {
           BigInt(Date.now() + params.deadlineMins * 60 * 1000)
         );
         
+        console.log('[useAddLiquidity] remove_liquidity_ae res::', res);
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       } else {
         // Handle token-token pair removal
@@ -530,6 +537,7 @@ export function useAddLiquidity() {
           BigInt(Date.now() + params.deadlineMins * 60 * 1000)
         );
         
+        console.log('[useAddLiquidity] remove_liquidity res::', res);
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       }
 

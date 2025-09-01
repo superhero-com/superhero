@@ -1,23 +1,20 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import BigNumber from 'bignumber.js';
-import { LiquidityPosition, PoolListState } from '../types/pool';
-import { useWallet, useDex, useAeSdk } from '../../../hooks';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { useCallback, useEffect, useState } from 'react';
+import { useAeSdk, useDex } from '../../../hooks';
 import {
-  getPositionsForAccountAtom,
-  isLoadingForAccountAtom,
   getErrorForAccountAtom,
-  setPositionsForAccountAtom,
-  setLoadingForAccountAtom,
+  getPositionsForAccountAtom,
+  invalidatePositionsAtom,
+  isLoadingForAccountAtom,
   setErrorForAccountAtom,
-  shouldRefreshPositionsAtom,
-  invalidatePositionsAtom
+  setLoadingForAccountAtom,
+  setPositionsForAccountAtom,
+  shouldRefreshPositionsAtom
 } from '../atoms/positionsAtoms';
+import { LiquidityPosition, PoolListState } from '../types/pool';
 
 export function useLiquidityPositions(): PoolListState & { 
   refreshPositions: () => Promise<void>;
-  invalidateCache: () => void;
-  addOptimisticPosition: (position: LiquidityPosition) => void;
 } {
   const { activeAccount } = useAeSdk()
   const { providedLiquidity, scanAccountLiquidity } = useDex();
@@ -87,46 +84,6 @@ export function useLiquidityPositions(): PoolListState & {
     await loadAndCachePositions(activeAccount);
   }, [activeAccount, loadAndCachePositions]);
 
-  // Invalidate cache manually
-  const invalidateCache = useCallback(() => {
-    if (!activeAccount) return;
-    invalidatePositions(activeAccount);
-  }, [activeAccount, invalidatePositions]);
-
-  // Add a new position optimistically (before blockchain confirmation)
-  const addOptimisticPosition = useCallback((newPosition: LiquidityPosition) => {
-    if (!activeAccount) return;
-    
-    // Get current positions and add the new one
-    const currentPositions = getPositionsForAccount(activeAccount);
-    
-    // Check if position already exists (by pairId)
-    const existingIndex = currentPositions.findIndex(p => p.pairId === newPosition.pairId);
-    
-    let updatedPositions: LiquidityPosition[];
-    if (existingIndex >= 0) {
-      // Update existing position by adding to balance
-      updatedPositions = [...currentPositions];
-      const existing = updatedPositions[existingIndex];
-      const existingBalance = new BigNumber(existing.balance || '0');
-      const newBalance = new BigNumber(newPosition.balance || '0');
-      const totalBalance = existingBalance.plus(newBalance);
-      
-      updatedPositions[existingIndex] = {
-        ...existing,
-        balance: totalBalance.toString(),
-        sharePct: newPosition.sharePct || existing.sharePct,
-        valueUsd: newPosition.valueUsd || existing.valueUsd,
-      };
-    } else {
-      // Add new position
-      updatedPositions = [...currentPositions, newPosition];
-    }
-    
-    // Update the positions in the store
-    setPositionsForAccount({ address: activeAccount, positions: updatedPositions });
-  }, [activeAccount, getPositionsForAccount, setPositionsForAccount]);
-
   // Load positions on mount or when address changes
   useEffect(() => {
     if (!activeAccount) return;
@@ -144,7 +101,5 @@ export function useLiquidityPositions(): PoolListState & {
     showImport,
     showCreate,
     refreshPositions,
-    invalidateCache,
-    addOptimisticPosition,
   };
 }

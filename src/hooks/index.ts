@@ -7,7 +7,6 @@ export { useWallet } from './useWallet';
 export { useAeternity } from './useAeternity';
 export { useModal } from './useModal';
 export { useDex } from './useDex';
-export { useTxQueue } from './useTxQueue';
 export { useBackend } from './useBackend';
 export { useGovernance } from './useGovernance';
 

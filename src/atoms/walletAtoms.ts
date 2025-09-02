@@ -10,7 +10,7 @@ export interface TokenBalance {
 
 // Core wallet state atoms with persistence
 export const addressAtom = atomWithStorage<string | null>('wallet:address', null);
-export const balanceAtom = atomWithStorage<string | number>('wallet:balance', 0);
+export const balanceAtom = atomWithStorage<Record<string, number>>('wallet:balance', {});
 export const selectedCurrencyAtom = atomWithStorage<'eur' | 'usd' | 'cny'>('wallet:currency', 'eur');
 export const tokenBalancesAtom = atomWithStorage<TokenBalance[]>('wallet:tokenBalances', []);
 export const tokenPricesAtom = atomWithStorage<Record<string, string>>('wallet:tokenPrices', {});

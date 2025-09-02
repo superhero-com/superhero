@@ -483,7 +483,7 @@ export default function TokenSelector({
                     {
                       token.isAe ?
                         Decimal.from(toAe(balance)).prettify() :
-                        Decimal.from(aex9Balances.find(b => b.contract_id === token.contractId)?.amount || 0).div(10 ** token.decimals).prettify()
+                        Decimal.from(aex9Balances.find(b => b?.contract_id === token.contractId)?.amount || 0).div(10 ** token.decimals).prettify()
                     }
                   </div>
                   <div style={{

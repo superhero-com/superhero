@@ -80,7 +80,7 @@ export default function SwapConfirmation({
             overflowY: 'auto',
             backdropFilter: 'blur(20px)',
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)',
-            zIndex: 1001,
+            zIndex: 1000,
             outline: 'none'
           }}
         >

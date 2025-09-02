@@ -6,7 +6,7 @@ import { useTokenList } from '../../../components/dex/hooks/useTokenList';
 import { useTokenBalances } from '../../../components/dex/hooks/useTokenBalances';
 import { Token } from '../../../components/dex/types/dex';
 import TokenInput from '../../../components/dex/core/TokenInput';
-import LiquiditySettings from './LiquiditySettings';
+import DexSettings from './DexSettings';
 import LiquidityConfirmation from './LiquidityConfirmation';
 import LiquidityPreview from './LiquidityPreview';
 import LiquiditySuccessNotification from '../../../components/dex/core/LiquiditySuccessNotification';
@@ -250,7 +250,7 @@ export default function AddLiquidityForm() {
             </button>
           )}
 
-          <LiquiditySettings>
+          <DexSettings title="Liquidity Settings">
           <button
             aria-label="open-settings"
             style={{
@@ -276,7 +276,7 @@ export default function AddLiquidityForm() {
           >
             ⚙️ Settings
           </button>
-                  </LiquiditySettings>
+                  </DexSettings>
         </div>
       </div>
 

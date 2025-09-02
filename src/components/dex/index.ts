@@ -3,7 +3,7 @@ export { default as SwapForm } from './core/SwapForm';
 export { default as SwapTabSwitcher } from './core/SwapTabSwitcher';
 export { default as TokenInput } from './core/TokenInput';
 export { default as TokenSelector } from './core/TokenSelector';
-export { default as SwapSettings } from './core/SwapSettings';
+// Note: SwapSettings has been replaced by DexSettings from features/dex/components
 export { default as SwapRouteInfo } from './core/SwapRouteInfo';
 export { default as SwapConfirmation } from './core/SwapConfirmation';
 

@@ -30,7 +30,7 @@ function PoolContent() {
     if (position) {
       selectPositionForAdd(position);
     }
-    
+
     // Focus on the forms section
     const formsSection = document.getElementById('liquidity-forms-section');
     if (formsSection) {
@@ -38,22 +38,10 @@ function PoolContent() {
     }
   };
 
-  const handleImportPool = () => {
-    navigate('/pool/import');
-  };
-
-  const handleCreatePool = () => {
-    navigate('/pool/deploy');
-  };
-
-  const handleAddNewLiquidity = () => {
-    navigate('/pool/add');
-  };
-
   return (
-    <div className="pool-layout" style={{ 
-      maxWidth: 1200, 
-      margin: '0 auto', 
+    <div className="pool-layout" style={{
+      maxWidth: 1200,
+      margin: '0 auto',
       padding: '20px',
       display: 'grid',
       gridTemplateColumns: '1fr 480px',
@@ -74,10 +62,10 @@ function PoolContent() {
       }}>
         {/* Header */}
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ 
-            fontSize: 28, 
-            fontWeight: 700, 
-            color: 'var(--standard-font-color)', 
+          <h1 style={{
+            fontSize: 28,
+            fontWeight: 700,
+            color: 'var(--standard-font-color)',
             margin: '0 0 8px 0',
             background: 'var(--primary-gradient)',
             WebkitBackgroundClip: 'text',
@@ -86,33 +74,33 @@ function PoolContent() {
           }}>
             Your Liquidity Positions
           </h1>
-          <p style={{ 
-            fontSize: 14, 
-            color: 'var(--light-font-color)', 
-            margin: 0, 
-            lineHeight: 1.5 
+          <p style={{
+            fontSize: 14,
+            color: 'var(--light-font-color)',
+            margin: 0,
+            lineHeight: 1.5
           }}>
             Manage your liquidity positions and track earnings
           </p>
         </div>
 
         {/* Stats Overview */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
-          gap: 16, 
-          marginBottom: 24 
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+          gap: 16,
+          marginBottom: 24
         }}>
-          <div style={{ 
-            padding: 16, 
-            borderRadius: 16, 
-            background: 'rgba(255, 255, 255, 0.05)', 
+          <div style={{
+            padding: 16,
+            borderRadius: 16,
+            background: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid var(--glass-border)',
             backdropFilter: 'blur(10px)'
           }}>
-            <div style={{ 
-              fontSize: 12, 
-              color: 'var(--light-font-color)', 
+            <div style={{
+              fontSize: 12,
+              color: 'var(--light-font-color)',
               marginBottom: 4,
               fontWeight: 500,
               textTransform: 'uppercase',
@@ -120,24 +108,24 @@ function PoolContent() {
             }}>
               Positions
             </div>
-            <div style={{ 
-              fontSize: 20, 
-              fontWeight: 700, 
-              color: 'var(--standard-font-color)' 
+            <div style={{
+              fontSize: 20,
+              fontWeight: 700,
+              color: 'var(--standard-font-color)'
             }}>
               {positions.length}
             </div>
           </div>
-          <div style={{ 
-            padding: 16, 
-            borderRadius: 16, 
-            background: 'rgba(255, 255, 255, 0.05)', 
+          <div style={{
+            padding: 16,
+            borderRadius: 16,
+            background: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid var(--glass-border)',
             backdropFilter: 'blur(10px)'
           }}>
-            <div style={{ 
-              fontSize: 12, 
-              color: 'var(--light-font-color)', 
+            <div style={{
+              fontSize: 12,
+              color: 'var(--light-font-color)',
               marginBottom: 4,
               fontWeight: 500,
               textTransform: 'uppercase',
@@ -145,24 +133,24 @@ function PoolContent() {
             }}>
               Total Value
             </div>
-            <div style={{ 
-              fontSize: 20, 
-              fontWeight: 700, 
-              color: 'var(--success-color)' 
+            <div style={{
+              fontSize: 20,
+              fontWeight: 700,
+              color: 'var(--success-color)'
             }}>
               ${positions.reduce((sum, pos) => sum + (Number(pos.valueUsd) || 0), 0).toLocaleString()}
             </div>
           </div>
-          <div style={{ 
-            padding: 16, 
-            borderRadius: 16, 
-            background: 'rgba(255, 255, 255, 0.05)', 
+          <div style={{
+            padding: 16,
+            borderRadius: 16,
+            background: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid var(--glass-border)',
             backdropFilter: 'blur(10px)'
           }}>
-            <div style={{ 
-              fontSize: 12, 
-              color: 'var(--light-font-color)', 
+            <div style={{
+              fontSize: 12,
+              color: 'var(--light-font-color)',
               marginBottom: 4,
               fontWeight: 500,
               textTransform: 'uppercase',
@@ -170,10 +158,10 @@ function PoolContent() {
             }}>
               Fees Earned
             </div>
-            <div style={{ 
-              fontSize: 20, 
-              fontWeight: 700, 
-              color: 'var(--accent-color)' 
+            <div style={{
+              fontSize: 20,
+              fontWeight: 700,
+              color: 'var(--accent-color)'
             }}>
               $0.00
             </div>
@@ -182,118 +170,90 @@ function PoolContent() {
 
         {/* Positions List */}
         <div style={{ marginBottom: 24 }}>
-                      <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              marginBottom: 16 
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <h3 style={{ 
-                  fontSize: 16, 
-                  fontWeight: 600, 
-                  color: 'var(--standard-font-color)', 
-                  margin: 0 
-                }}>
-                  Active Positions
-                </h3>
-                {loading && positions.length > 0 && (
-                  <div style={{
-                    width: 16,
-                    height: 16,
-                    border: '2px solid rgba(255,255,255,0.1)',
-                    borderTop: '2px solid var(--accent-color)',
-                    borderRadius: '50%',
-                    animation: 'spin 1s linear infinite'
-                  }}></div>
-                )}
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {activeAccount && (
-                  <button
-                    onClick={() => refreshPositions()}
-                    disabled={loading}
-                    style={{ 
-                      padding: '8px 16px', 
-                      borderRadius: 12, 
-                      border: '1px solid var(--glass-border)', 
-                      background: loading ? 'rgba(255,255,255,0.1)' : 'var(--glass-bg)', 
-                      color: loading ? 'var(--light-font-color)' : 'var(--standard-font-color)',
-                      cursor: loading ? 'not-allowed' : 'pointer',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      transition: 'all 0.3s ease',
-                      backdropFilter: 'blur(10px)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      opacity: loading ? 0.6 : 1
-                    }}
-                    onMouseOver={(e) => {
-                      if (!loading) {
-                        e.currentTarget.style.background = 'var(--accent-color)';
-                        e.currentTarget.style.transform = 'translateY(-1px)';
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      if (!loading) {
-                        e.currentTarget.style.background = 'var(--glass-bg)';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                      }
-                    }}
-                  >
-                    {loading ? (
-                      <>
-                        <div style={{
-                          width: 12,
-                          height: 12,
-                          border: '2px solid rgba(255,255,255,0.3)',
-                          borderTop: '2px solid currentColor',
-                          borderRadius: '50%',
-                          animation: 'spin 1s linear infinite'
-                        }}></div>
-                        Refreshing...
-                      </>
-                    ) : (
-                      <>🔄 Refresh</>
-                    )}
-                  </button>
-                )}
-                {activeAccount && positions.length > 0 && (
-                  <button
-                    onClick={handleAddNewLiquidity}
-                    style={{ 
-                      padding: '8px 16px', 
-                      borderRadius: 12, 
-                      border: '1px solid var(--success-color)', 
-                      background: 'var(--success-color)', 
-                      color: 'white',
-                      cursor: 'pointer',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      transition: 'all 0.3s ease',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-1px)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(76, 175, 80, 0.3)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  >
-                    + Add New
-                  </button>
-                )}
-              </div>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 16
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <h3 style={{
+                fontSize: 16,
+                fontWeight: 600,
+                color: 'var(--standard-font-color)',
+                margin: 0
+              }}>
+                Active Positions
+              </h3>
+              {loading && positions.length > 0 && (
+                <div style={{
+                  width: 16,
+                  height: 16,
+                  border: '2px solid rgba(255,255,255,0.1)',
+                  borderTop: '2px solid var(--accent-color)',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite'
+                }}></div>
+              )}
             </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {activeAccount && (
+                <button
+                  onClick={() => refreshPositions()}
+                  disabled={loading}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: 12,
+                    border: '1px solid var(--glass-border)',
+                    background: loading ? 'rgba(255,255,255,0.1)' : 'var(--glass-bg)',
+                    color: loading ? 'var(--light-font-color)' : 'var(--standard-font-color)',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    transition: 'all 0.3s ease',
+                    backdropFilter: 'blur(10px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    opacity: loading ? 0.6 : 1
+                  }}
+                  onMouseOver={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.background = 'var(--accent-color)';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.background = 'var(--glass-bg)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }
+                  }}
+                >
+                  {loading ? (
+                    <>
+                      <div style={{
+                        width: 12,
+                        height: 12,
+                        border: '2px solid rgba(255,255,255,0.3)',
+                        borderTop: '2px solid currentColor',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }}></div>
+                      Refreshing...
+                    </>
+                  ) : (
+                    <>🔄 Refresh</>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
 
           {loading && positions.length === 0 ? (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: 40, 
+            <div style={{
+              textAlign: 'center',
+              padding: 40,
               color: 'var(--light-font-color)',
               display: 'flex',
               flexDirection: 'column',
@@ -311,11 +271,11 @@ function PoolContent() {
               Loading your positions...
             </div>
           ) : error ? (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: 20, 
-              color: 'var(--error-color)', 
-              background: 'rgba(255, 107, 107, 0.1)', 
+            <div style={{
+              textAlign: 'center',
+              padding: 20,
+              color: 'var(--error-color)',
+              background: 'rgba(255, 107, 107, 0.1)',
               borderRadius: 16,
               border: '1px solid rgba(255, 107, 107, 0.2)',
               backdropFilter: 'blur(10px)'
@@ -323,65 +283,45 @@ function PoolContent() {
               {error}
             </div>
           ) : positions.length === 0 ? (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: 40, 
-              background: 'rgba(255, 255, 255, 0.03)', 
+            <div style={{
+              textAlign: 'center',
+              padding: 40,
+              background: 'rgba(255, 255, 255, 0.03)',
               borderRadius: 16,
               border: '1px solid var(--glass-border)',
               backdropFilter: 'blur(10px)'
             }}>
-              <div style={{ 
-                fontSize: 48, 
+              <div style={{
+                fontSize: 48,
                 marginBottom: 16,
                 opacity: 0.3
               }}>
                 💧
               </div>
-              <div style={{ 
-                fontSize: 16, 
-                fontWeight: 600, 
+              <div style={{
+                fontSize: 16,
+                fontWeight: 600,
                 marginBottom: 8,
                 color: 'var(--standard-font-color)'
               }}>
                 No liquidity positions found
               </div>
-              <div style={{ 
-                fontSize: 14, 
-                color: 'var(--light-font-color)', 
+              <div style={{
+                fontSize: 14,
+                color: 'var(--light-font-color)',
                 marginBottom: 20,
                 lineHeight: 1.5
               }}>
                 Start earning fees by providing liquidity to trading pairs
               </div>
-              {activeAccount ? (
-                <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <button
-                    onClick={handleAddNewLiquidity}
-                    style={{ 
-                      padding: '12px 24px', 
-                      borderRadius: 12, 
-                      border: 'none', 
-                      background: 'var(--button-gradient)', 
-                      color: 'white',
-                      cursor: 'pointer',
-                      fontSize: 14,
-                      fontWeight: 600,
-                      transition: 'all 0.3s ease',
-                      boxShadow: 'var(--button-shadow)'
-                    }}
-                  >
-                    Add Liquidity
-                  </button>
-                </div>
-              ) : (
-                <ConnectWalletButton 
+              {!activeAccount && (
+                <ConnectWalletButton
                   label="Connect Wallet to Start"
-                  style={{ 
-                    padding: '12px 24px', 
-                    borderRadius: 12, 
-                    border: 'none', 
-                    background: 'var(--button-gradient)', 
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: 12,
+                    border: 'none',
+                    background: 'var(--button-gradient)',
                     color: 'white',
                     fontSize: 14,
                     fontWeight: 600,
@@ -428,7 +368,7 @@ function PoolContent() {
         ) : (
           <AddLiquidityForm />
         )}
-        
+
         <RecentActivity />
       </div>
     </div>

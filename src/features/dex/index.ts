@@ -11,7 +11,7 @@ export { default as AddLiquidityForm } from './components/AddLiquidityForm';
 export { default as RemoveLiquidityForm } from './components/RemoveLiquidityForm';
 export { default as LiquidityPreview } from './components/LiquidityPreview';
 export { default as LiquidityConfirmation } from './components/LiquidityConfirmation';
-export { default as LiquiditySettings } from './components/LiquiditySettings';
+export { default as DexSettings } from './components/DexSettings';
 export { WrapUnwrapWidget } from './WrapUnwrapWidget';
 
 // Hooks

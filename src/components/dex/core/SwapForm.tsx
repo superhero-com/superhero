@@ -8,7 +8,7 @@ import { useTokenList } from '../hooks/useTokenList';
 import { SwapQuoteParams, Token } from '../types/dex';
 import SwapConfirmation from './SwapConfirmation';
 import SwapRouteInfo from './SwapRouteInfo';
-import SwapSettings from './SwapSettings';
+import DexSettings from '../../../features/dex/components/DexSettings';
 import TokenInput from './TokenInput';
 
 import { useAccount, useDex } from '../../../hooks';
@@ -185,7 +185,7 @@ export default function SwapForm() {
           Swap Tokens
         </h2>
 
-        <SwapSettings>
+        <DexSettings title="Swap Settings">
           <button
             aria-label="open-settings"
             style={{
@@ -211,7 +211,7 @@ export default function SwapForm() {
           >
             ⚙️ Settings
           </button>
-        </SwapSettings>
+        </DexSettings>
       </div>
 
       {/* Token Input From */}

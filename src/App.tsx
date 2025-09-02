@@ -4,7 +4,7 @@ import GlobalNewAccountEducation from './components/GlobalNewAccountEducation';
 import CollectInvitationLinkCard from './components/Invitation/CollectInvitationLinkCard';
 import AppHeader from './components/layout/app-header';
 import ModalProvider from './components/ModalProvider';
-import { useAeSdk, useWalletConnect } from './hooks';
+import { useAeSdk, useAccount, useWalletConnect } from './hooks';
 import { routes } from './routes';
 import './styles/genz-components.scss';
 import './styles/mobile-optimizations.scss';
@@ -18,7 +18,8 @@ const TransactionConfirmModal = React.lazy(() => import('./components/modals/Tra
 
 
 export default function App() {
-  const { initSdk, sdkInitialized } = useAeSdk();
+  const { initSdk, sdkInitialized, activeAccount } = useAeSdk();
+  const { loadAccountData } = useAccount();
   const { checkWalletConnection } = useWalletConnect();
   useEffect(() => {
     initSdk();
@@ -29,6 +30,16 @@ export default function App() {
       checkWalletConnection();
     }
   }, [sdkInitialized]);
+
+  // setup intervals
+  useEffect(() => {
+    if (!activeAccount) return;
+    loadAccountData();
+    const interval = setInterval(() => {
+      loadAccountData();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [activeAccount]);
 
   if (!sdkInitialized) {
     return <div className="loading-fallback" />;

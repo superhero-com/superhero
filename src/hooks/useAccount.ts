@@ -4,13 +4,15 @@ import { useAeSdk } from "./useAeSdk";
 import { useEffect, useMemo } from "react";
 import { Decimal } from "../libs/decimal";
 import { toAe } from "@aeternity/aepp-sdk";
+import { DEX_ADDRESSES, getTokenBalance } from "../libs/dex";
 
 export const useAccount = () => {
     const { sdk, activeAccount, activeNetwork } = useAeSdk();
     const [chainNames, setChainNames] = useAtom(chainNamesAtom);
-    const [balance, setBalance] = useAtom(balanceAtom);
+    const [_balance, setBalance] = useAtom(balanceAtom);
     const [_aex9Balances, setAex9Balances] = useAtom(aex9BalancesAtom);
 
+    const balance = useMemo(() => _balance[activeAccount] || 0, [_balance, activeAccount]);
     const decimalBalance = useMemo(() => Decimal.from((toAe(balance ?? 0))), [balance]);
 
     const aex9Balances = useMemo(() => _aex9Balances[activeAccount] || [], [_aex9Balances, activeAccount]);
@@ -18,10 +20,7 @@ export const useAccount = () => {
     async function getAccountBalance() {
         if (!activeAccount) return;
         const balance = await sdk?.getBalance(activeAccount);
-        setBalance(balance);
-        console.log('========================')
-        console.log('balance::', balance)
-        console.log('========================')
+        setBalance(prev => ({ ...prev, [activeAccount]: balance }));
     }
 
     const _loadAex9DataFromMdw = async (url, items = []) => {
@@ -38,13 +37,15 @@ export const useAccount = () => {
         const url = `/v3/accounts/${activeAccount}/aex9/balances?limit=100`;
 
         const balances = await _loadAex9DataFromMdw(url, []);
-        setAex9Balances(prev => ({ ...prev, [activeAccount]: balances }));
-        // if (!activeAccount) return;
-        // const balances = await sdk?.getAex9Balances(activeAccount);
-        // setAex9Balances(balances);
-        console.log('========================')
-        console.log('aex9Balances::', balances)
-        console.log('========================')
+        const waeBalances = await getTokenBalance(sdk, DEX_ADDRESSES.wae, activeAccount);
+
+        setAex9Balances(prev => ({ ...prev, [activeAccount]: balances.concat({
+            contract_id: DEX_ADDRESSES.wae,
+            amount: waeBalances.toString(),
+            decimals: 18,
+            name: 'Wrapped AE',
+            symbol: 'WAE',
+        }) }));
     }
 
     async function loadAccountData() {

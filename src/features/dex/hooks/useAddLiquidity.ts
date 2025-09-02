@@ -178,7 +178,7 @@ export function useAddLiquidity() {
     }
   }
 
-  async function executeAddLiquidity(params: LiquidityExecutionParams) {
+  async function executeAddLiquidity(params: LiquidityExecutionParams, options?: { suppressToast?: boolean }) {
     if (!address) {
       throw new Error('Wallet not connected');
     }
@@ -342,19 +342,22 @@ export function useAddLiquidity() {
         });
       }
 
-      // Show success toast
-      const url = CONFIG.EXPLORER_URL ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${txHash}` : '';
-      toast.push(
-        React.createElement('div', {},
-          React.createElement('div', {}, 'Liquidity added successfully'),
-          txHash && CONFIG.EXPLORER_URL && React.createElement('a', {
-            href: url,
-            target: '_blank',
-            rel: 'noreferrer',
-            style: { color: '#8bc9ff', textDecoration: 'underline' }
-          }, 'View on explorer')
-        )
-      );
+      // Show success toast only if not suppressed (for backward compatibility)
+      if (!options?.suppressToast) {
+        const url = CONFIG.EXPLORER_URL ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${txHash}` : '';
+        toast.push(
+          React.createElement('div', {},
+            React.createElement('div', { style: { fontWeight: 600, marginBottom: 4 } }, 'Liquidity added successfully! 🎉'),
+            React.createElement('div', { style: { fontSize: 13, opacity: 0.9, marginBottom: 8 } }, 'Your new position will appear in Active Positions within a few seconds'),
+            txHash && CONFIG.EXPLORER_URL && React.createElement('a', {
+              href: url,
+              target: '_blank',
+              rel: 'noreferrer',
+              style: { color: '#8bc9ff', textDecoration: 'underline', fontSize: 13 }
+            }, 'View transaction on explorer')
+          )
+        );
+      }
 
       // Reset form
       setState(prev => ({

@@ -9,6 +9,7 @@ import TokenInput from '../../../components/dex/core/TokenInput';
 import LiquiditySettings from './LiquiditySettings';
 import LiquidityConfirmation from './LiquidityConfirmation';
 import LiquidityPreview from './LiquidityPreview';
+import LiquiditySuccessNotification from '../../../components/dex/core/LiquiditySuccessNotification';
 
 import { useAccount, useDex } from '../../../hooks';
 import { usePool } from '../context/PoolProvider';
@@ -35,6 +36,9 @@ export default function AddLiquidityForm() {
 
   // UI state
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successTxHash, setSuccessTxHash] = useState<string>('');
+  const [successAmounts, setSuccessAmounts] = useState<{ amountA: string; amountB: string }>({ amountA: '', amountB: '' });
 
   // Helper function to find token by symbol or contract address
   const findToken = (identifier: string): Token | null => {
@@ -153,9 +157,14 @@ export default function AddLiquidityForm() {
         slippagePct,
         deadlineMins,
         isAePair: tokenA.contractId === 'AE' || tokenB.contractId === 'AE' || tokenA.isAe || tokenB.isAe || false,
-      });
+      }, { suppressToast: true }); // Suppress toast since we're using the custom success notification
 
       if (txHash) {
+        // Capture amounts before clearing form
+        setSuccessAmounts({ amountA, amountB });
+        setSuccessTxHash(txHash);
+        setShowSuccess(true);
+        
         // Clear form
         setAmountA('');
         setAmountB('');
@@ -450,6 +459,17 @@ export default function AddLiquidityForm() {
         deadlineMins={deadlineMins}
         pairPreview={state.pairPreview}
         loading={state.loading}
+      />
+
+      {/* Success Notification */}
+      <LiquiditySuccessNotification
+        show={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        tokenA={tokenA}
+        tokenB={tokenB}
+        amountA={successAmounts.amountA}
+        amountB={successAmounts.amountB}
+        txHash={successTxHash}
       />
 
       {/* Add keyframes for spinner animation */}

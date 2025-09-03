@@ -3,10 +3,11 @@ import { usePairList } from '../../../components/explore/hooks/usePairList';
 import { CONFIG } from '../../../config';
 import './DexViews.scss';
 import { TokenChip } from '../../../components/TokenChip';
+import { useNavigate } from 'react-router-dom';
 
 export default function DexExplorePools() {
   const pairList = usePairList();
-
+  const navigate = useNavigate();
   return (
     <div className="dex-explore-pools-container">
       {/* Main Content Card */}
@@ -367,7 +368,7 @@ export default function DexExplorePools() {
                     color: 'var(--light-font-color)',
                     fontWeight: 600,
                     letterSpacing: '0.5px'
-                  }}>24h Vol</th>
+                  }}>Volume</th>
                   <th style={{ 
                     textAlign: 'center', 
                     padding: '16px 12px', 
@@ -384,6 +385,7 @@ export default function DexExplorePools() {
                     borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
                     transition: 'all 0.3s ease'
                   }}
+                  onClick={() => navigate(`/dex/explore/pools/${pair.address}`)}
                   onMouseOver={(e) => {
                     e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
                   }}
@@ -393,7 +395,7 @@ export default function DexExplorePools() {
                   >
                     <td style={{ padding: '16px 12px', display: 'flex', alignItems: 'center', gap: 2 }}>
                       <button
-                        onClick={() => window.location.href = `/dex/explore/tokens/${pair.token0 || pair.token0Address}`}
+                        onClick={() => navigate(`/dex/explore/tokens/${pair.token0}`)}
                         style={{ 
                           color: 'var(--accent-color)', 
                           textDecoration: 'none',
@@ -421,7 +423,7 @@ export default function DexExplorePools() {
                         fontSize: 14
                       }}>/</span>
                       <button
-                        onClick={() => window.location.href = `/dex/explore/tokens/${pair.token1 || pair.token1Address}`}
+                        onClick={() => navigate(`/dex/explore/tokens/${pair.token1}`)}
                         style={{ 
                           color: 'var(--accent-color)', 
                           textDecoration: 'none',
@@ -469,12 +471,12 @@ export default function DexExplorePools() {
                       color: 'var(--standard-font-color)',
                       fontWeight: 500
                     }}>
-                      {pair.volume24h != null ? `$${Number(pair.volume24h).toLocaleString()}` : '-'}
+                      {pair.volumeUsdAll != null ? `$${Number(pair.volumeUsdAll).toLocaleString()}` : '-'}
                     </td>
                     <td style={{ textAlign: 'center', padding: '16px 12px' }}>
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
                         <button 
-                          onClick={() => window.location.href = `/dex/swap?from=${pair.token0 || pair.token0Address}&to=${pair.token1 || pair.token1Address}`}
+                          onClick={() => navigate(`/dex/swap?from=${pair.token0}&to=${pair.token1}`)}
                           style={{ 
                             padding: '6px 12px', 
                             borderRadius: 8, 
@@ -501,7 +503,7 @@ export default function DexExplorePools() {
                           Swap
                         </button>
                         <button 
-                          onClick={() => window.location.href = `/dex/pool/add?from=${pair.token0 || pair.token0Address}&to=${pair.token1 || pair.token1Address}`}
+                          onClick={() => navigate(`/dex/pool/add?from=${pair.token0}&to=${pair.token1}`)}
                           style={{ 
                             padding: '6px 12px', 
                             borderRadius: 8, 

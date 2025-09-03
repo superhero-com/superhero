@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AddressChip } from '../components/AddressChip';
 import AeButton from '../components/AeButton';
@@ -7,6 +7,7 @@ import { TokenPricePerformance } from '../features/dex/components';
 import { useAeSdk } from '../hooks';
 import { Decimal } from '../libs/decimal';
 import { getHistory, getPairsByTokenUsd, getTokenWithUsd } from '../libs/dexBackend';
+import moment from 'moment';
 
 interface TokenData {
   address: string;
@@ -49,13 +50,27 @@ interface PairData {
 
 interface TransactionData {
   hash: string;
-  type: string;
-  timestamp: number;
-  tokenIn?: string;
-  tokenOut?: string;
-  amountIn?: string;
-  amountOut?: string;
-  valueUsd?: number;
+  type: 'SwapTokens' | 'CreatePair' | 'PairMint';
+  pairAddress?: string;
+  senderAccount?: string;
+  reserve0?: string;
+  reserve1?: string;
+  deltaReserve0?: string;
+  deltaReserve1?: string;
+  token0AePrice?: string;
+  token1AePrice?: string;
+  aeUsdPrice?: string;
+  height?: number;
+  microBlockHash?: string;
+  microBlockTime?: string;
+  transactionHash?: string;
+  transactionIndex?: string;
+  logIndex?: number;
+  reserve0Usd?: string;
+  reserve1Usd?: string;
+  delta0UsdValue?: string;
+  delta1UsdValue?: string;
+  txUsdFee?: string;
 }
 
 export default function TokenDetail() {
@@ -69,6 +84,7 @@ export default function TokenDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'pools' | 'transactions'>('pools');
+  const [tokenSymbolCache, setTokenSymbolCache] = useState<Record<string, string>>({});
 
 
   async function getTokenMetaData(_tokenAddress: string) {
@@ -76,6 +92,73 @@ export default function TokenDetail() {
     const data = await result.json();
     return data;
   }
+
+  // Function to get token symbol with caching
+  const getTokenSymbol = useCallback(async (address: string): Promise<string> => {
+    if (address === 'AE' || !address) return 'AE';
+    
+    // Check cache first
+    if (tokenSymbolCache[address]) {
+      return tokenSymbolCache[address];
+    }
+
+    try {
+      const metadata = await getTokenMetaData(address);
+      const symbol = metadata?.symbol || address.slice(0, 6);
+      
+      // Update cache
+      setTokenSymbolCache(prev => ({
+        ...prev,
+        [address]: symbol
+      }));
+      
+      return symbol;
+    } catch (error) {
+      // Fallback to shortened address
+      const fallback = address.slice(0, 6);
+      setTokenSymbolCache(prev => ({
+        ...prev,
+        [address]: fallback
+      }));
+      return fallback;
+    }
+  }, [activeNetwork.middlewareUrl, tokenSymbolCache]);
+
+  // Get token symbol from cache (synchronous)
+  const getCachedTokenSymbol = useCallback((address: string): string => {
+    if (address === 'AE' || !address) return 'AE';
+    return tokenSymbolCache[address] || address.slice(0, 6);
+  }, [tokenSymbolCache]);
+
+  // Get token symbols for a transaction based on pair address
+  const getTransactionTokens = useCallback((tx: TransactionData): { token0Symbol: string, token1Symbol: string, token0Address: string, token1Address: string } => {
+    if (!tx.pairAddress) {
+      return {
+        token0Symbol: 'Token A',
+        token1Symbol: 'Token B',
+        token0Address: '',
+        token1Address: ''
+      };
+    }
+
+    // Find the pair that matches this transaction
+    const pair = pairsUsd.find(p => p.address === tx.pairAddress);
+    if (pair) {
+      return {
+        token0Symbol: getCachedTokenSymbol(pair.token0),
+        token1Symbol: getCachedTokenSymbol(pair.token1),
+        token0Address: pair.token0,
+        token1Address: pair.token1
+      };
+    }
+
+    return {
+      token0Symbol: 'Token A',
+      token1Symbol: 'Token B', 
+      token0Address: '',
+      token1Address: ''
+    };
+  }, [pairsUsd, getCachedTokenSymbol]);
 
   useEffect(() => {
     (async () => {
@@ -95,6 +178,56 @@ export default function TokenDetail() {
         setPairsUsd(pUsd || []);
         setHistory(hist || []);
         setTokenMetaData(metaData);
+
+        // Pre-populate token symbol cache with current token and AE
+        const initialCache: Record<string, string> = {
+          'AE': 'AE',
+        };
+        
+        if (metaData?.symbol) {
+          initialCache[tokenAddress] = metaData.symbol;
+        }
+        
+        // Add symbols from pairs data
+        if (pUsd) {
+          for (const pair of pUsd) {
+            // We know one token is the current token, try to identify the other
+            if (pair.token0 === tokenAddress && metaData?.symbol) {
+              initialCache[pair.token0] = metaData.symbol;
+            } else if (pair.token1 === tokenAddress && metaData?.symbol) {
+              initialCache[pair.token1] = metaData.symbol;
+            }
+          }
+        }
+        
+        setTokenSymbolCache(initialCache);
+
+        // Asynchronously fetch symbols for other tokens in pairs
+        if (pUsd) {
+          pUsd.forEach(async (pair) => {
+            const addresses = [pair.token0, pair.token1].filter(addr => 
+              addr !== tokenAddress && addr !== 'AE' && !initialCache[addr]
+            );
+            
+            for (const addr of addresses) {
+              try {
+                const tokenMeta = await getTokenMetaData(addr);
+                if (tokenMeta?.symbol) {
+                  setTokenSymbolCache(prev => ({
+                    ...prev,
+                    [addr]: tokenMeta.symbol
+                  }));
+                }
+              } catch (error) {
+                // Fallback to shortened address
+                setTokenSymbolCache(prev => ({
+                  ...prev,
+                  [addr]: addr.slice(0, 6)
+                }));
+              }
+            }
+          });
+        }
       } catch (e: any) {
         setError(e.message || 'Failed to load token data');
       } finally {
@@ -863,98 +996,513 @@ export default function TokenDetail() {
                 </div>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {history.slice(0, 10).map((tx, index) => (
                   <div
                     key={tx.hash || index}
                     style={{
-                      padding: 12,
-                      borderRadius: 12,
-                      background: 'rgba(255, 255, 255, 0.02)',
+                      padding: 16,
+                      borderRadius: 16,
+                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
                       border: '1px solid var(--glass-border)',
                       backdropFilter: 'blur(10px)',
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.3s ease',
+                      position: 'relative',
+                      overflow: 'hidden'
                     }}
                     onMouseOver={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 255, 157, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 255, 157, 0.15)';
                     }}
                     onMouseOut={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                      e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)';
                       e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
                     }}
                   >
+                    {/* Transaction Header */}
                     <div style={{
                       display: 'flex',
                       justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: 4
+                      alignItems: 'flex-start',
+                      marginBottom: 12
                     }}>
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 8
+                        gap: 12
                       }}>
-                        <span style={{ fontSize: 16 }}>
-                          {tx.type === 'swap' ? '🔄' : tx.type === 'add_liquidity' ? '💧' : tx.type === 'remove_liquidity' ? '💧' : '📊'}
-                        </span>
+                        <div style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          background: tx.type === 'SwapTokens' ? 'linear-gradient(135deg, #00ff9d, #00d4aa)' :
+                                     tx.type === 'PairMint' ? 'linear-gradient(135deg, #4ade80, #22c55e)' :
+                                     tx.type === 'CreatePair' ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)' :
+                                     'linear-gradient(135deg, #6b7280, #4b5563)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 18,
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                        }}>
+                          {tx.type === 'SwapTokens' ? '🔄' : 
+                           tx.type === 'PairMint' ? '💧' : 
+                           tx.type === 'CreatePair' ? '⚡' : 
+                           '📊'}
+                        </div>
                         <div>
                           <div style={{
-                            fontSize: 13,
-                            fontWeight: 600,
+                            fontSize: 16,
+                            fontWeight: 700,
                             color: 'var(--standard-font-color)',
-                            textTransform: 'capitalize'
+                            marginBottom: 2
                           }}>
-                            {tx.type?.replace('_', ' ') || 'Transaction'}
+                                                          {(() => {
+                                const { token0Symbol, token1Symbol } = getTransactionTokens(tx);
+                                
+                                if (tx.type === 'SwapTokens') {
+                                  return `Swap ${token0Symbol} → ${token1Symbol}`;
+                                } else if (tx.type === 'PairMint') {
+                                  return `Add Liquidity ${token0Symbol} / ${token1Symbol}`;
+                                } else if (tx.type === 'CreatePair') {
+                                  return `Create ${token0Symbol} / ${token1Symbol} Pool`;
+                                }
+                                return tx.type || 'Transaction';
+                              })()}
                           </div>
-                          {tx.tokenIn && tx.tokenOut && (
+                          {tx.senderAccount && (
                             <div style={{
                               fontSize: 11,
-                              color: 'var(--light-font-color)'
+                              color: 'var(--light-font-color)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4
                             }}>
-                              {tx.tokenIn} → {tx.tokenOut}
+                              👤 {tx.senderAccount.slice(0, 8)}...{tx.senderAccount.slice(-6)}
                             </div>
                           )}
                         </div>
                       </div>
+                      
                       <div style={{ textAlign: 'right' }}>
+                        {/* {tx.microBlockTime && (
+                          <div style={{
+                            fontSize: 11,
+                            color: 'var(--light-font-color)',
+                            marginBottom: 4
+                          }}>
+                            {moment(tx.microBlockTime).fromNow()} v : {tx.microBlockTime}
+                          </div>
+                        )} */}
+                        {tx.height && (
+                          <div style={{
+                            fontSize: 10,
+                            color: 'var(--accent-color)',
+                            fontWeight: 600,
+                            background: 'rgba(0, 255, 157, 0.1)',
+                            padding: '2px 6px',
+                            borderRadius: 6,
+                            border: '1px solid rgba(0, 255, 157, 0.2)'
+                          }}>
+                            Block #{tx.height}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Transaction Details */}
+                    {tx.type === 'SwapTokens' && (
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr auto 1fr',
+                        gap: 12,
+                        alignItems: 'center',
+                        padding: 12,
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        borderRadius: 12,
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        marginBottom: 8
+                      }}>
+                        {/* Token In */}
+                        <div style={{ textAlign: 'left' }}>
+                          <div style={{
+                            fontSize: 11,
+                            color: 'var(--light-font-color)',
+                            marginBottom: 2,
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4
+                          }}>
+                            FROM {getTransactionTokens(tx).token0Symbol}
+                          </div>
+                          <div style={{
+                            fontSize: 16,
+                            fontWeight: 700,
+                            color: 'var(--error-color)',
+                            fontFamily: 'monospace',
+                            marginBottom: 4
+                          }}>
+                            -{tx.deltaReserve0 ? formatNumber(Math.abs(Number(tx.deltaReserve0)) / 1e18, 6) : '—'}
+                          </div>
+                          <div style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: 'var(--standard-font-color)',
+                            background: 'rgba(255, 107, 107, 0.1)',
+                            padding: '2px 6px',
+                            borderRadius: 6,
+                            display: 'inline-block'
+                          }}>
+                            {getTransactionTokens(tx).token0Symbol}
+                          </div>
+                          {tx.delta0UsdValue && (
+                            <div style={{
+                              fontSize: 10,
+                              color: 'var(--light-font-color)',
+                              marginTop: 2
+                            }}>
+                              ≈ ${formatNumber(Number(tx.delta0UsdValue), 2)}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Swap Arrow */}
+                        <div style={{
+                          fontSize: 20,
+                          color: 'var(--accent-color)'
+                        }}>
+                          →
+                        </div>
+
+                        {/* Token Out */}
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{
+                            fontSize: 11,
+                            color: 'var(--light-font-color)',
+                            marginBottom: 2,
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'flex-end',
+                            gap: 4
+                          }}>
+                            TO {getTransactionTokens(tx).token1Symbol}
+                          </div>
+                          <div style={{
+                            fontSize: 16,
+                            fontWeight: 700,
+                            color: 'var(--success-color)',
+                            fontFamily: 'monospace',
+                            marginBottom: 4
+                          }}>
+                            +{tx.deltaReserve1 ? formatNumber(Math.abs(Number(tx.deltaReserve1)) / 1e18, 6) : '—'}
+                          </div>
+                          <div style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: 'var(--standard-font-color)',
+                            background: 'rgba(0, 255, 157, 0.1)',
+                            padding: '2px 6px',
+                            borderRadius: 6,
+                            display: 'inline-block'
+                          }}>
+                            {getTransactionTokens(tx).token1Symbol}
+                          </div>
+                          {tx.delta1UsdValue && (
+                            <div style={{
+                              fontSize: 10,
+                              color: 'var(--light-font-color)',
+                              marginTop: 2
+                            }}>
+                              ≈ ${formatNumber(Number(tx.delta1UsdValue), 2)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {tx.type === 'PairMint' && (
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: 12,
+                        padding: 12,
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        borderRadius: 12,
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        marginBottom: 8
+                      }}>
+                        {/* Reserve 0 */}
+                        <div>
+                          <div style={{
+                            fontSize: 11,
+                            color: 'var(--light-font-color)',
+                            marginBottom: 2,
+                            fontWeight: 600
+                          }}>
+                            {getTransactionTokens(tx).token0Symbol} ADDED
+                          </div>
+                          <div style={{
+                            fontSize: 16,
+                            fontWeight: 700,
+                            color: 'var(--success-color)',
+                            fontFamily: 'monospace',
+                            marginBottom: 4
+                          }}>
+                            +{tx.deltaReserve0 ? formatNumber(Math.abs(Number(tx.deltaReserve0)) / 1e18, 6) : '—'}
+                          </div>
+                          <div style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: 'var(--standard-font-color)',
+                            background: 'rgba(0, 255, 157, 0.1)',
+                            padding: '2px 6px',
+                            borderRadius: 6,
+                            display: 'inline-block',
+                            marginBottom: 2
+                          }}>
+                            {getTransactionTokens(tx).token0Symbol}
+                          </div>
+                          {tx.reserve0 && (
+                            <div style={{
+                              fontSize: 10,
+                              color: 'var(--light-font-color)'
+                            }}>
+                              Pool: {formatNumber(Number(tx.reserve0) / 1e18, 2)}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Reserve 1 */}
+                        <div>
+                          <div style={{
+                            fontSize: 11,
+                            color: 'var(--light-font-color)',
+                            marginBottom: 2,
+                            fontWeight: 600
+                          }}>
+                            {getTransactionTokens(tx).token1Symbol} ADDED
+                          </div>
+                          <div style={{
+                            fontSize: 16,
+                            fontWeight: 700,
+                            color: 'var(--success-color)',
+                            fontFamily: 'monospace',
+                            marginBottom: 4
+                          }}>
+                            +{tx.deltaReserve1 ? formatNumber(Math.abs(Number(tx.deltaReserve1)) / 1e18, 6) : '—'}
+                          </div>
+                          <div style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: 'var(--standard-font-color)',
+                            background: 'rgba(0, 255, 157, 0.1)',
+                            padding: '2px 6px',
+                            borderRadius: 6,
+                            display: 'inline-block',
+                            marginBottom: 2
+                          }}>
+                            {getTransactionTokens(tx).token1Symbol}
+                          </div>
+                          {tx.reserve1 && (
+                            <div style={{
+                              fontSize: 10,
+                              color: 'var(--light-font-color)'
+                            }}>
+                              Pool: {formatNumber(Number(tx.reserve1) / 1e18, 2)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Create Pair Details */}
+                    {tx.type === 'CreatePair' && (
+                      <div style={{
+                        padding: 12,
+                        background: 'linear-gradient(135deg, rgba(138, 43, 226, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                        borderRadius: 12,
+                        border: '1px solid rgba(138, 43, 226, 0.2)',
+                        marginBottom: 8
+                      }}>
                         <div style={{
                           fontSize: 12,
                           fontWeight: 600,
-                          color: 'var(--standard-font-color)'
+                          color: 'var(--accent-color)',
+                          marginBottom: 8,
+                          textAlign: 'center'
                         }}>
-                          {tx.valueUsd ? `$${formatNumber(tx.valueUsd)}` : (tx.amountIn ? formatNumber(tx.amountIn, 4) : '—')}
+                          🎉 New Trading Pair Created
                         </div>
                         <div style={{
-                          fontSize: 10,
-                          color: 'var(--light-font-color)'
+                          display: 'grid',
+                          gridTemplateColumns: '1fr auto 1fr',
+                          gap: 12,
+                          alignItems: 'center'
                         }}>
-                          {tx.timestamp ? new Date(tx.timestamp).toLocaleTimeString() : '—'}
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{
+                              fontSize: 14,
+                              fontWeight: 700,
+                              color: 'var(--standard-font-color)',
+                              background: 'rgba(138, 43, 226, 0.15)',
+                              padding: '4px 8px',
+                              borderRadius: 8,
+                              display: 'inline-block'
+                            }}>
+                              {getTransactionTokens(tx).token0Symbol}
+                            </div>
+                            {tx.reserve0 && (
+                              <div style={{
+                                fontSize: 11,
+                                color: 'var(--light-font-color)',
+                                marginTop: 4
+                              }}>
+                                {formatNumber(Number(tx.reserve0) / 1e18, 4)}
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div style={{
+                            fontSize: 16,
+                            color: 'var(--accent-color)',
+                            fontWeight: 700
+                          }}>
+                            ⚡
+                          </div>
+                          
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{
+                              fontSize: 14,
+                              fontWeight: 700,
+                              color: 'var(--standard-font-color)',
+                              background: 'rgba(138, 43, 226, 0.15)',
+                              padding: '4px 8px',
+                              borderRadius: 8,
+                              display: 'inline-block'
+                            }}>
+                              {getTransactionTokens(tx).token1Symbol}
+                            </div>
+                            {tx.reserve1 && (
+                              <div style={{
+                                fontSize: 11,
+                                color: 'var(--light-font-color)',
+                                marginTop: 4
+                              }}>
+                                {formatNumber(Number(tx.reserve1) / 1e18, 4)}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    {tx.hash && (
+                    )}
+
+                    {/* Total Transaction Value */}
+                    {(tx.delta0UsdValue || tx.delta1UsdValue || tx.txUsdFee) && (
                       <div style={{
-                        fontSize: 10,
-                        color: 'var(--light-font-color)',
-                        fontFamily: 'monospace',
-                        marginTop: 4
+                        padding: 8,
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        borderRadius: 8,
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        marginBottom: 8,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
                       }}>
-                        {tx.hash.slice(0, 12)}...{tx.hash.slice(-8)}
+                        <div style={{
+                          fontSize: 11,
+                          color: 'var(--light-font-color)',
+                          fontWeight: 600
+                        }}>
+                          Transaction Value:
+                        </div>
+                        <div style={{
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: 'var(--accent-color)',
+                          fontFamily: 'monospace'
+                        }}>
+                          ${formatNumber((Number(tx.delta0UsdValue || 0) + Number(tx.delta1UsdValue || 0)), 2)}
+                          {tx.txUsdFee && (
+                            <span style={{
+                              fontSize: 10,
+                              color: 'var(--light-font-color)',
+                              marginLeft: 8
+                            }}>
+                              (Fee: ${formatNumber(Number(tx.txUsdFee), 4)})
+                            </span>
+                          )}
+                        </div>
                       </div>
                     )}
+
+                    {/* Transaction Footer */}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      paddingTop: 8,
+                      borderTop: '1px solid rgba(255, 255, 255, 0.05)'
+                    }}>
+                      {tx.hash && (
+                        <div 
+                          style={{
+                            fontSize: 10,
+                            color: 'var(--accent-color)',
+                            fontFamily: 'monospace',
+                            cursor: 'pointer',
+                            padding: '4px 8px',
+                            borderRadius: 6,
+                            background: 'rgba(0, 255, 157, 0.05)',
+                            border: '1px solid rgba(0, 255, 157, 0.1)',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onClick={() => {
+                            if (activeNetwork?.explorerUrl) {
+                              window.open(`${activeNetwork.explorerUrl}/transactions/${tx.hash}`, '_blank');
+                            }
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.background = 'rgba(0, 255, 157, 0.1)';
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.background = 'rgba(0, 255, 157, 0.05)';
+                          }}
+                        >
+                          📋 {tx.hash.slice(0, 8)}...{tx.hash.slice(-6)}
+                        </div>
+                      )}
+                      
+                      {tx.pairAddress && (
+                        <div style={{
+                          fontSize: 10,
+                          color: 'var(--light-font-color)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4
+                        }}>
+                          🏊 Pool: {tx.pairAddress.slice(0, 6)}...{tx.pairAddress.slice(-4)}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
                 {history.length > 10 && (
                   <div style={{
                     textAlign: 'center',
-                    padding: 8,
-                    fontSize: 11,
+                    padding: 12,
+                    fontSize: 12,
                     color: 'var(--light-font-color)',
-                    fontWeight: 500,
-                    opacity: 0.8
+                    fontWeight: 600,
+                    opacity: 0.8,
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderRadius: 12,
+                    border: '1px dashed var(--glass-border)'
                   }}>
-                    +{history.length - 10} more transactions
+                    📈 +{history.length - 10} more transactions
                   </div>
                 )}
               </div>

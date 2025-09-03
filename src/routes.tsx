@@ -80,7 +80,7 @@ export const routes: RouteObject[] = [
   { path: '/dex/explore/tokens', element: <DexLayout><DexExploreTokens /></DexLayout> },
   { path: '/dex/explore/tokens/:tokenAddress', element: <DexLayout><TokenDetail /></DexLayout> },
   { path: '/dex/explore/pools', element: <DexLayout><DexExplorePools /></DexLayout> },
-  { path: '/dex/explore/pools/:id', element: <DexLayout><PoolDetail /></DexLayout> },
+  { path: '/dex/pools/:poolAddress', element: <DexLayout><PoolDetail /></DexLayout> },
   { path: '/dex/explore/transactions', element: <DexLayout><DexExploreTransactions /></DexLayout> },
 
   // Legacy DEX Routes (for backward compatibility)

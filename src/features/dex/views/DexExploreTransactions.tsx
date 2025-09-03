@@ -1,10 +1,41 @@
 import React from 'react';
 import { useTransactionList } from '../../../components/explore/hooks/useTransactionList';
+import { TransactionCard } from '../../../components/TransactionCard';
 import { CONFIG } from '../../../config';
 import './DexViews.scss';
 
 export default function DexExploreTransactions() {
   const transactionList = useTransactionList();
+
+  // Convert explore Transaction to TransactionData format for TransactionCard
+  const convertToTransactionData = (tx: any): any => ({
+    hash: tx.transactionHash || tx.txHash || '',
+    type: tx.type === 'swap' ? 'SwapTokens' as const : 
+          tx.type === 'add' ? 'PairMint' as const :
+          tx.type === 'create' ? 'CreatePair' as const : 'SwapTokens' as const,
+    pairAddress: tx.pairAddress,
+    senderAccount: tx.senderAccount,
+    reserve0: tx.reserve0,
+    reserve1: tx.reserve1,
+    deltaReserve0: tx.deltaReserve0,
+    deltaReserve1: tx.deltaReserve1,
+    height: tx.height,
+    microBlockHash: tx.microBlockHash,
+    microBlockTime: tx.microBlockTime,
+    transactionHash: tx.transactionHash,
+    transactionIndex: tx.transactionIndex,
+    logIndex: tx.logIndex,
+    // Add any missing USD value fields if available
+    delta0UsdValue: tx.delta0UsdValue,
+    delta1UsdValue: tx.delta1UsdValue,
+    txUsdFee: tx.txUsdFee
+  });
+
+  // Get transaction token symbols from the transaction data
+  const getTransactionTokens = (tx: any) => ({
+    token0Symbol: tx.tokenInSymbol || tx.token0Symbol || 'Token A',
+    token1Symbol: tx.tokenOutSymbol || tx.token1Symbol || 'Token B'
+  });
 
   return (
     <div className="dex-explore-transactions-container">
@@ -266,147 +297,15 @@ export default function DexExploreTransactions() {
             </div>
           </div>
 
-          {/* Enhanced Transactions Table */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid var(--glass-border)',
-            borderRadius: 16,
-            overflow: 'hidden',
-            backdropFilter: 'blur(10px)'
-          }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ 
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  borderBottom: '1px solid var(--glass-border)'
-                }}>
-                  <th style={{ 
-                    textAlign: 'left', 
-                    padding: '16px 12px', 
-                    fontSize: 14, 
-                    color: 'var(--light-font-color)',
-                    fontWeight: 600,
-                    letterSpacing: '0.5px'
-                  }}>Type</th>
-                  <th style={{ 
-                    textAlign: 'left', 
-                    padding: '16px 12px', 
-                    fontSize: 14, 
-                    color: 'var(--light-font-color)',
-                    fontWeight: 600,
-                    letterSpacing: '0.5px'
-                  }}>Pair</th>
-                  <th style={{ 
-                    textAlign: 'right', 
-                    padding: '16px 12px', 
-                    fontSize: 14, 
-                    color: 'var(--light-font-color)',
-                    fontWeight: 600,
-                    letterSpacing: '0.5px'
-                  }}>Amount In</th>
-                  <th style={{ 
-                    textAlign: 'right', 
-                    padding: '16px 12px', 
-                    fontSize: 14, 
-                    color: 'var(--light-font-color)',
-                    fontWeight: 600,
-                    letterSpacing: '0.5px'
-                  }}>Amount Out</th>
-                  <th style={{ 
-                    textAlign: 'left', 
-                    padding: '16px 12px', 
-                    fontSize: 14, 
-                    color: 'var(--light-font-color)',
-                    fontWeight: 600,
-                    letterSpacing: '0.5px'
-                  }}>Transaction</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactionList.transactions.map((tx, i) => (
-                  <tr key={i} style={{ 
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                  }}
-                  >
-                    <td style={{ padding: '16px 12px', fontSize: 14 }}>
-                      <span style={{ 
-                        padding: '4px 8px', 
-                        borderRadius: 8, 
-                        fontSize: 11,
-                        fontWeight: 600,
-                        background: tx.type === 'swap' ? 'var(--accent-color)' : tx.type === 'add' ? '#2196f3' : '#ff9800',
-                        color: 'white',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-                      }}>
-                        {tx.type || tx.event || '-'}
-                      </span>
-                    </td>
-                    <td style={{ 
-                      padding: '16px 12px', 
-                      fontSize: 14,
-                      color: 'var(--standard-font-color)',
-                      fontWeight: 500
-                    }}>
-                      {tx.tokenInSymbol || tx.token0Symbol} / {tx.tokenOutSymbol || tx.token1Symbol}
-                    </td>
-                    <td style={{ 
-                      textAlign: 'right', 
-                      padding: '16px 12px', 
-                      fontSize: 14,
-                      color: 'var(--standard-font-color)',
-                      fontWeight: 500
-                    }}>
-                      {tx.amountIn || '-'}
-                    </td>
-                    <td style={{ 
-                      textAlign: 'right', 
-                      padding: '16px 12px', 
-                      fontSize: 14,
-                      color: 'var(--standard-font-color)',
-                      fontWeight: 500
-                    }}>
-                      {tx.amountOut || '-'}
-                    </td>
-                    <td style={{ 
-                      padding: '16px 12px', 
-                      fontFamily: 'monospace', 
-                      fontSize: 12,
-                      color: 'var(--light-font-color)'
-                    }}>
-                      {tx.txHash && CONFIG.EXPLORER_URL ? (
-                        <a 
-                          href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${tx.txHash}`} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          style={{ 
-                            color: 'var(--accent-color)', 
-                            textDecoration: 'none',
-                            transition: 'all 0.3s ease'
-                          }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.textDecoration = 'underline';
-                          }}
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.textDecoration = 'none';
-                          }}
-                        >
-                          {tx.txHash}
-                        </a>
-                      ) : (tx.txHash || '-')}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Transaction Cards */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {transactionList.transactions.map((tx, i) => (
+              <TransactionCard
+                key={tx.transactionHash || i}
+                transaction={convertToTransactionData(tx)}
+                getTransactionTokens={getTransactionTokens}
+              />
+            ))}
           </div>
 
           {transactionList.transactions.length === 0 && !transactionList.loading && (

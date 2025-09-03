@@ -165,7 +165,7 @@ export default function TokenPricePerformance({
     const minTime = timeFrameHours === Infinity ? 0 : now - (timeFrameHours * 3600);
 
     // Convert data format - TradingView expects Unix timestamps in seconds
-    const formattedData = chartData.labels
+    const rawData = chartData.labels
       .map((timestamp, index) => {
         // Ensure timestamp is in seconds (not milliseconds)
         const timeInSeconds = timestamp > 1e10 ? Math.floor(timestamp / 1000) : timestamp;
@@ -177,7 +177,36 @@ export default function TokenPricePerformance({
       .filter((item) => timeFrameHours === Infinity || item.time >= minTime)
       .sort((a, b) => a.time - b.time); // Ensure data is sorted by time
 
+    // Remove duplicate timestamps and ensure strict ascending order
+    const formattedData: typeof rawData = [];
+    let lastTime = 0;
+    
+    for (const item of rawData) {
+      if (item.time > lastTime) {
+        formattedData.push(item);
+        lastTime = item.time;
+      } else if (item.time === lastTime && formattedData.length > 0) {
+        // If timestamp is the same, update the value of the last item
+        formattedData[formattedData.length - 1].value = item.value;
+      } else if (item.time === lastTime) {
+        // If it's the first item with this timestamp, add a small increment
+        formattedData.push({
+          time: (lastTime + 1) as any,
+          value: item.value
+        });
+        lastTime = lastTime + 1;
+      }
+    }
+
     if (formattedData.length > 0) {
+      console.log('[TokenPricePerformance] Setting chart data:', {
+        originalLength: rawData.length,
+        filteredLength: formattedData.length,
+        firstTime: formattedData[0]?.time,
+        lastTime: formattedData[formattedData.length - 1]?.time,
+        sampleData: formattedData.slice(0, 3)
+      });
+      
       seriesRef.current.setData(formattedData);
       
       // Fit content

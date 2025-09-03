@@ -23,7 +23,7 @@ interface AddressChipProps {
   onClick?: () => void;
 }
 
-export default function AddressChip({
+export function AddressChip({
   address,
   hideAvatar = false,
   copyable = false,
@@ -184,3 +184,6 @@ export default function AddressChip({
     </div>
   );
 }
+
+
+export default AddressChip;

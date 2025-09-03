@@ -16,14 +16,11 @@ export interface Pair {
   address: string;
   token0: string;
   token1: string;
-  token0Symbol: string;
-  token1Symbol: string;
-  token0Address: string;
-  token1Address: string;
   tvlUsd?: string;
-  tvl?: string;
-  volume24h?: string;
+  volumeUsdYear?: string;
+  volumeUsdAll?: string;
   transactions?: number;
+  synchronized?: boolean;
 }
 
 export interface Transaction {

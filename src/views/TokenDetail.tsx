@@ -1,13 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { getTokenWithUsd, getPairsByToken, getPairsByTokenUsd, getHistory, getGraph } from '../libs/dexBackend';
-import { TrendminerApi } from '../api/backend';
-import AeButton from '../components/AeButton';
-import TvCandles from '../components/Trendminer/TvCandles';
-import { useAccount, useAeSdk } from '../hooks';
-import { Decimal } from '../libs/decimal';
-import { TokenChip } from '../components/TokenChip';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { AddressChip } from '../components/AddressChip';
+import AeButton from '../components/AeButton';
+import { TokenChip } from '../components/TokenChip';
+import { TokenPricePerformance } from '../features/dex/components';
+import { useAeSdk } from '../hooks';
+import { Decimal } from '../libs/decimal';
+import { getHistory, getPairsByTokenUsd, getTokenWithUsd } from '../libs/dexBackend';
 
 interface TokenData {
   address: string;
@@ -63,13 +62,10 @@ export default function TokenDetail() {
   const { activeNetwork } = useAeSdk()
   const { tokenAddress } = useParams();
   const navigate = useNavigate();
-  const { activeAccount } = useAccount();
   const [token, setToken] = useState<TokenData | null>(null);
   const [tokenMetaData, setTokenMetaData] = useState<any | null>(null);
   const [pairsUsd, setPairsUsd] = useState<PairData[]>([]);
   const [history, setHistory] = useState<TransactionData[]>([]);
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [performance, setPerformance] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'pools' | 'transactions'>('pools');
@@ -99,37 +95,6 @@ export default function TokenDetail() {
         setPairsUsd(pUsd || []);
         setHistory(hist || []);
         setTokenMetaData(metaData);
-
-        // TODO: (remove)
-        // Try to get additional data from Trendminer API for enhanced details
-        try {
-          const [trendminerToken, tokenPerf, tokenHistory] = await Promise.all([
-            TrendminerApi.getToken(tokenAddress).catch(() => null),
-            TrendminerApi.getTokenPerformance(tokenAddress).catch(() => null),
-            TrendminerApi.getTokenHistory(tokenAddress, { interval: 3600, convertTo: 'usd', limit: 100 }).catch(() => null)
-          ]);
-
-          if (trendminerToken) {
-            setToken(prev => ({ ...prev, ...trendminerToken }));
-          }
-          setPerformance(tokenPerf);
-
-          // Format chart data
-          if (tokenHistory) {
-            const items = Array.isArray(tokenHistory?.pages) ? tokenHistory.pages.flat() : (Array.isArray(tokenHistory) ? tokenHistory : []);
-            const chartCandles = items.map((item: any) => ({
-              time: new Date(item.timeClose || item.timestamp).getTime(),
-              open: Number(item.quote?.open || item.open || 0),
-              high: Number(item.quote?.high || item.high || 0),
-              low: Number(item.quote?.low || item.low || 0),
-              close: Number(item.quote?.close || item.close || item.price || 0),
-              volume: Number(item.quote?.volume || item.volume || 0),
-            })).sort((a: any, b: any) => a.time - b.time);
-            setChartData(chartCandles);
-          }
-        } catch (e) {
-          console.warn('Could not load enhanced token data:', e);
-        }
       } catch (e: any) {
         setError(e.message || 'Failed to load token data');
       } finally {
@@ -224,10 +189,9 @@ export default function TokenDetail() {
       flexDirection: 'column',
       gap: 24
     }}>
-      {/* First Row - Two Cards */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
+        display: 'flex',
+        flexDirection: 'column',
         gap: 24
       }}>
         {/* Token Detail Card */}
@@ -559,59 +523,21 @@ export default function TokenDetail() {
             }}>
               Price Performance
             </h3>
-            {performance && (
-              <div style={{ display: 'flex', gap: 12, fontSize: 12 }}>
-                <span style={{ color: Number(performance.price_change_24h || 0) >= 0 ? 'var(--success-color)' : 'var(--error-color)' }}>
-                  24h: {Number(performance.price_change_24h || 0).toFixed(2)}%
-                </span>
-                <span style={{ color: Number(performance.price_change_7d || 0) >= 0 ? 'var(--success-color)' : 'var(--error-color)' }}>
-                  7d: {Number(performance.price_change_7d || 0).toFixed(2)}%
-                </span>
-              </div>
-            )}
           </div>
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.02)',
-            borderRadius: 16,
-            border: '1px solid var(--glass-border)',
-            overflow: 'hidden',
-            minHeight: 300
-          }}>
-            {chartData.length > 0 ? (
-              <TvCandles candles={chartData} height={300} />
-            ) : (
-              <div style={{
-                height: 300,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                color: 'var(--light-font-color)'
-              }}>
-                <div style={{
-                  fontSize: 48,
-                  marginBottom: 16,
-                  opacity: 0.3
-                }}>
-                  📈
-                </div>
-                <div style={{
-                  fontSize: 16,
-                  fontWeight: 600,
-                  marginBottom: 8,
-                  color: 'var(--standard-font-color)'
-                }}>
-                  No chart data available
-                </div>
-                <div style={{
-                  fontSize: 14,
-                  lineHeight: 1.5,
-                  textAlign: 'center'
-                }}>
-                  Price history will appear here when trading activity begins
-                </div>
-              </div>
-            )}
+
+          <div style={{ marginTop: 8 }}>
+            <TokenPricePerformance
+              availableGraphTypes={[
+                { type: 'Price', text: 'Price' },
+                { type: 'Volume', text: 'Volume' },
+                { type: 'TVL', text: 'Total Value Locked' },
+                { type: 'Fees', text: 'Fees' }
+              ]}
+              initialChart={{ type: 'Price', text: 'Price' }}
+              initialTimeFrame="1Y"
+              tokenId={tokenAddress}
+              className="token-detail-chart"
+            />
           </div>
         </div>
       </div>

@@ -780,7 +780,7 @@ export default function TokenDetail() {
                       position: 'relative',
                       overflow: 'hidden'
                     }}
-                    onClick={() => navigate(`/dex/pools/${pair.address}`)}
+                    onClick={() => navigate(`/dex/explore/pools/${pair.address}`)}
                     onMouseOver={(e) => {
                       e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%)';
                       e.currentTarget.style.transform = 'translateY(-3px)';

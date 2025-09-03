@@ -24,16 +24,19 @@ export interface Pair {
 }
 
 export interface Transaction {
-  txHash: string;
-  type: 'swap' | 'add' | 'remove';
-  event?: string;
-  tokenInSymbol?: string;
-  tokenOutSymbol?: string;
-  token0Symbol?: string;
-  token1Symbol?: string;
-  amountIn?: string;
-  amountOut?: string;
-  timestamp?: number;
+  transactionHash: string;
+  type: string;
+  pairAddress: string;
+  senderAccount: string;
+  reserve0: string;
+  reserve1: string;
+  deltaReserve0: string;
+  deltaReserve1: string;
+  height: number;
+  microBlockHash: string;
+  microBlockTime: string;
+  transactionIndex: string;
+  logIndex: number;
 }
 
 export interface ExploreState {

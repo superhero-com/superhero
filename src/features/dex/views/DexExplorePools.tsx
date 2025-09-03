@@ -2,6 +2,7 @@ import React from 'react';
 import { usePairList } from '../../../components/explore/hooks/usePairList';
 import { CONFIG } from '../../../config';
 import './DexViews.scss';
+import { TokenChip } from '../../../components/TokenChip';
 
 export default function DexExplorePools() {
   const pairList = usePairList();
@@ -342,14 +343,7 @@ export default function DexExplorePools() {
                     fontWeight: 600,
                     letterSpacing: '0.5px'
                   }}>Pair</th>
-                  <th style={{ 
-                    textAlign: 'left', 
-                    padding: '16px 12px', 
-                    fontSize: 14, 
-                    color: 'var(--light-font-color)',
-                    fontWeight: 600,
-                    letterSpacing: '0.5px'
-                  }}>Address</th>
+
                   <th style={{ 
                     textAlign: 'center', 
                     padding: '16px 12px', 
@@ -397,7 +391,7 @@ export default function DexExplorePools() {
                     e.currentTarget.style.background = 'transparent';
                   }}
                   >
-                    <td style={{ padding: '16px 12px' }}>
+                    <td style={{ padding: '16px 12px', display: 'flex', alignItems: 'center', gap: 2 }}>
                       <button
                         onClick={() => window.location.href = `/dex/explore/tokens/${pair.token0 || pair.token0Address}`}
                         style={{ 
@@ -419,7 +413,7 @@ export default function DexExplorePools() {
                           e.currentTarget.style.transform = 'translateY(0)';
                         }}
                       >
-                        {pair.token0Symbol}
+                        <TokenChip address={pair.token0} />
                       </button>
                       <span style={{ 
                         color: 'var(--light-font-color)', 
@@ -447,57 +441,8 @@ export default function DexExplorePools() {
                           e.currentTarget.style.transform = 'translateY(0)';
                         }}
                       >
-                        {pair.token1Symbol}
+                        <TokenChip address={pair.token1} />
                       </button>
-                    </td>
-                    <td style={{ 
-                      padding: '16px 12px', 
-                      fontFamily: 'monospace', 
-                      fontSize: 12,
-                      color: 'var(--light-font-color)'
-                    }}>
-                      <button
-                        onClick={() => window.location.href = `/dex/explore/pools/${pair.address}`}
-                        style={{ 
-                          color: 'var(--accent-color)', 
-                          textDecoration: 'none',
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          marginRight: 8,
-                          fontSize: 12,
-                          transition: 'all 0.3s ease'
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.textDecoration = 'underline';
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.textDecoration = 'none';
-                        }}
-                      >
-                        {pair.address}
-                      </button>
-                      {CONFIG.EXPLORER_URL && (
-                        <a 
-                          href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/contracts/${pair.address}`} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          style={{ 
-                            color: 'var(--accent-color)', 
-                            textDecoration: 'none',
-                            fontSize: 12,
-                            transition: 'all 0.3s ease'
-                          }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.textDecoration = 'underline';
-                          }}
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.textDecoration = 'none';
-                          }}
-                        >
-                          View
-                        </a>
-                      )}
                     </td>
                     <td style={{ 
                       textAlign: 'center', 

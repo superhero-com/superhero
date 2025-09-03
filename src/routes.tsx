@@ -78,7 +78,7 @@ export const routes: RouteObject[] = [
   { path: '/dex/pool/remove/:id', element: <DexLayout><PoolRemove /></DexLayout> },
   { path: '/dex/pool/add-tokens', element: <DexLayout><AddTokens /></DexLayout> },
   { path: '/dex/explore/tokens', element: <DexLayout><DexExploreTokens /></DexLayout> },
-  { path: '/dex/explore/tokens/:id', element: <DexLayout><TokenDetail /></DexLayout> },
+  { path: '/dex/explore/tokens/:tokenAddress', element: <DexLayout><TokenDetail /></DexLayout> },
   { path: '/dex/explore/pools', element: <DexLayout><DexExplorePools /></DexLayout> },
   { path: '/dex/explore/pools/:id', element: <DexLayout><PoolDetail /></DexLayout> },
   { path: '/dex/explore/transactions', element: <DexLayout><DexExploreTransactions /></DexLayout> },

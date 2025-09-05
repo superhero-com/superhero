@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { DEX_ADDRESSES } from '../../../libs/dex';
 import ConnectWalletButton from '../../ConnectWalletButton';
 import { useSwapExecution } from '../hooks/useSwapExecution';
@@ -12,10 +13,14 @@ import DexSettings from '../../../features/dex/components/DexSettings';
 import TokenInput from './TokenInput';
 
 import { useAccount, useDex } from '../../../hooks';
+import { useAeSdk } from '../../../hooks/useAeSdk';
 
 export default function SwapForm() {
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
+  const { activeNetwork } = useAeSdk();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Token list and balances
   const { tokens, loading: tokensLoading } = useTokenList();
@@ -46,11 +51,122 @@ export default function SwapForm() {
   // UI state
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Initialize default tokens
+  // Function to fetch token metadata from middleware
+  const fetchTokenFromMiddleware = useCallback(async (address: string): Promise<Token | null> => {
+    try {
+      const response = await fetch(`${activeNetwork.middlewareUrl}/v3/aex9/${address}`);
+      if (!response.ok) return null;
+      
+      const metadata = await response.json();
+      return {
+        contractId: address,
+        symbol: metadata?.symbol || metadata?.name || 'TKN',
+        decimals: Number(metadata?.decimals || 18),
+        isAe: false
+      };
+    } catch (error) {
+      console.warn('[SwapForm] Failed to fetch token from middleware:', address, error);
+      return null;
+    }
+  }, [activeNetwork.middlewareUrl]);
+
+  // Helper function to find token by address or symbol
+  const findTokenByAddressOrSymbol = useCallback(async (identifier: string): Promise<Token | null> => {
+    if (!identifier) return null;
+    
+    // If identifier is 'AE', find the AE token
+    if (identifier === 'AE') {
+      return tokens.find(t => t.isAe) || null;
+    }
+    
+    // First, try to find in the local token list
+    const localToken = tokens.find(t => t.contractId === identifier);
+    if (localToken) return localToken;
+    
+    // If not found locally and it looks like a contract address, fetch from middleware
+    if (identifier.startsWith('ct_')) {
+      return await fetchTokenFromMiddleware(identifier);
+    }
+    
+    return null;
+  }, [tokens, fetchTokenFromMiddleware]);
+
+  // Function to update URL parameters based on current token selection
+  const updateUrlParams = useCallback((newTokenIn: Token | null, newTokenOut: Token | null) => {
+    const searchParams = new URLSearchParams(location.search);
+    
+    // Update or remove 'from' parameter
+    if (newTokenIn) {
+      const fromValue = newTokenIn.isAe ? 'AE' : newTokenIn.contractId;
+      searchParams.set('from', fromValue);
+    } else {
+      searchParams.delete('from');
+    }
+    
+    // Update or remove 'to' parameter
+    if (newTokenOut) {
+      const toValue = newTokenOut.isAe ? 'AE' : newTokenOut.contractId;
+      searchParams.set('to', toValue);
+    } else {
+      searchParams.delete('to');
+    }
+    
+    // Update the URL without causing a page reload
+    const newUrl = `${location.pathname}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    navigate(newUrl, { replace: true });
+  }, [location.pathname, location.search, navigate]);
+
+  // Initialize tokens from URL parameters or defaults
   useEffect(() => {
-    if (!tokenIn && tokens.length) setTokenIn(tokens[2]);
-    if (!tokenOut && tokens.length) setTokenOut(tokens[0] || null);
-  }, [tokens, tokenIn, tokenOut]);
+    if (!tokens.length) return;
+
+    let cancelled = false;
+
+    const initializeTokens = async () => {
+      const searchParams = new URLSearchParams(location.search);
+      const fromParam = searchParams.get('from');
+      const toParam = searchParams.get('to');
+
+      // Set tokenIn based on URL param or default
+      if (fromParam && !tokenIn) {
+        const foundToken = await findTokenByAddressOrSymbol(fromParam);
+        if (foundToken && !cancelled) {
+          setTokenIn(foundToken);
+        }
+      } else if (!tokenIn && !fromParam) {
+        // Default to tokens[2] if no URL param and no current selection
+        setTokenIn(tokens[2] || null);
+      }
+
+      // Set tokenOut based on URL param or default
+      if (toParam && !tokenOut) {
+        const foundToken = await findTokenByAddressOrSymbol(toParam);
+        if (foundToken && !cancelled) {
+          setTokenOut(foundToken);
+        }
+      } else if (!tokenOut && !toParam) {
+        // Default to tokens[0] if no URL param and no current selection
+        setTokenOut(tokens[0] || null);
+      }
+    };
+
+    initializeTokens();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tokens, location.search, tokenIn, tokenOut, findTokenByAddressOrSymbol]);
+
+  // Update URL parameters when tokens change (after initial load)
+  useEffect(() => {
+    // Skip URL updates during initial load or when tokens are being set from URL params
+    if (!tokens.length || (!tokenIn && !tokenOut)) return;
+    
+    // Only update URL if we have at least one token selected and tokens are loaded
+    if (tokenIn || tokenOut) {
+      updateUrlParams(tokenIn, tokenOut);
+    }
+  }, [tokenIn, tokenOut, tokens.length, updateUrlParams]);
 
   // Quote for exact-in mode when amountIn or tokens change
   useEffect(() => {
@@ -148,6 +264,9 @@ export default function SwapForm() {
     setTokenOut(tempToken);
     setAmountIn(amountOut);
     setAmountOut(tempAmount);
+    
+    // Update URL parameters to reflect the swapped tokens
+    updateUrlParams(tokenOut, tempToken);
   };
 
   const isSwapDisabled = swapLoading || !amountIn || Number(amountIn) <= 0 || !amountOut || !tokenIn || !tokenOut;

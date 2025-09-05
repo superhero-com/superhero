@@ -22,7 +22,7 @@ interface PoolData {
     listed: boolean;
   };
   token1: {
-    address: string; 
+    address: string;
     symbol: string;
     name: string;
     decimals: number;
@@ -69,7 +69,7 @@ export default function PoolDetail() {
   const { activeNetwork } = useAeSdk()
   const { poolAddress } = useParams(); // Changed from tokenAddress to poolAddress
   const navigate = useNavigate();
-  
+
   // Pool-specific state (modified from token state)
   const [pool, setPool] = useState<PoolData | null>(null); // Changed from token to pool
   const [token0Data, setToken0Data] = useState<any | null>(null); // New: token0 metadata
@@ -91,7 +91,7 @@ export default function PoolDetail() {
   const getTokenSymbol = useCallback(async (address: string): Promise<string> => {
     if (!address || address === '' || address === 'AE') return 'AE';
     if (typeof address !== 'string') return 'Unknown';
-    
+
     // Check cache first
     if (tokenSymbolCache[address]) {
       return tokenSymbolCache[address];
@@ -100,13 +100,13 @@ export default function PoolDetail() {
     try {
       const metadata = await getTokenMetaData(address);
       const symbol = metadata?.symbol || address.slice(0, 6);
-      
+
       // Update cache
       setTokenSymbolCache(prev => ({
         ...prev,
         [address]: symbol
       }));
-      
+
       return symbol;
     } catch (error) {
       // Fallback to shortened address
@@ -145,7 +145,7 @@ export default function PoolDetail() {
         // Get pool details and history
         const [poolData, hist] = await Promise.all([
           getPairDetails(poolAddress),
-          getHistory({ pairAddress: poolAddress }),
+          getHistory({ pairAddress: poolAddress, order: 'desc' }),
         ]);
 
         if (!poolData) {
@@ -153,7 +153,7 @@ export default function PoolDetail() {
         }
 
         setPool(poolData);
-      setHistory(hist || []);
+        setHistory(hist || []);
 
         // Get token data for both tokens in the pool
         const [token0Info, token1Info] = await Promise.all([
@@ -177,7 +177,7 @@ export default function PoolDetail() {
         if (poolData.token1?.symbol) {
           initialCache[poolData.token1.address] = poolData.token1.symbol;
         }
-        
+
         setTokenSymbolCache(initialCache);
       } catch (e: any) {
         setError(e.message || 'Failed to load pool data');
@@ -213,7 +213,7 @@ export default function PoolDetail() {
     const reserve1 = Number(pool.liquidityInfo.reserve1) / 1e18;
     const token0Price = token0Data?.priceUsd ? Number(token0Data.priceUsd) : 0;
     const token1Price = token1Data?.priceUsd ? Number(token1Data.priceUsd) : 0;
-    
+
     const ratio0to1 = reserve1 > 0 ? reserve0 / reserve1 : 0;
     const ratio1to0 = reserve0 > 0 ? reserve1 / reserve0 : 0;
 
@@ -455,10 +455,10 @@ export default function PoolDetail() {
             <div style={{
               padding: 20,
               borderRadius: 16,
-              background: pool?.synchronized 
+              background: pool?.synchronized
                 ? 'linear-gradient(135deg, rgba(0, 255, 127, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)'
                 : 'linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-              border: pool?.synchronized 
+              border: pool?.synchronized
                 ? '1px solid rgba(0, 255, 127, 0.2)'
                 : '1px solid rgba(255, 107, 107, 0.2)',
               backdropFilter: 'blur(10px)',
@@ -655,7 +655,7 @@ export default function PoolDetail() {
               }}>
                 Pool Composition
               </h3>
-              
+
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: '1fr auto 1fr',

@@ -207,6 +207,17 @@ export default function SwapForm() {
   const handleSwap = async () => {
     if (!tokenIn || !tokenOut || !amountIn || !amountOut) return;
 
+    // Additional validation before executing swap
+    if (routeInfo.path.length === 0) {
+      console.error('No valid route found for swap');
+      return;
+    }
+
+    if (error) {
+      console.error('Cannot execute swap with existing quote error:', error);
+      return;
+    }
+
     try {
       const txHash = await executeSwap({
         amountIn,

@@ -2,6 +2,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { getPairs } from '../../../libs/dexBackend';
 import { Pair, PairListState } from '../types/explore';
 
+/**
+ * @deprecated Use useQuery from @tanstack/react-query instead
+ */
 export function usePairList(): PairListState {
   const [pairs, setPairs] = useState<Pair[]>([]);
   const [search, setSearch] = useState('');

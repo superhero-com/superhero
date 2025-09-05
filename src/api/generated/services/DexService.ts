@@ -12,7 +12,7 @@ import { request as __request } from '../core/request';
 export class DexService {
     /**
      * Get all pairs
-     * Retrieve a paginated list of all DEX pairs with optional sorting
+     * Retrieve a paginated list of all DEX pairs with optional sorting and search by token name or symbol
      * @returns any
      * @throws ApiError
      */
@@ -21,11 +21,16 @@ export class DexService {
         orderDirection,
         limit,
         page,
+        search,
     }: {
         orderBy?: 'transactions_count' | 'created_at',
         orderDirection?: 'ASC' | 'DESC',
         limit?: number,
         page?: number,
+        /**
+         * Search pairs by token name or symbol
+         */
+        search?: string,
     }): CancelablePromise<Pagination> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -35,6 +40,7 @@ export class DexService {
                 'order_direction': orderDirection,
                 'limit': limit,
                 'page': page,
+                'search': search,
             },
         });
     }

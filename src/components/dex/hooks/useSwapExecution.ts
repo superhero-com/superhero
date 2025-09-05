@@ -43,6 +43,31 @@ export function useSwapExecution() {
     setLoading(true);
     //
     try {
+      // Pre-execution validation
+      if (!sdk) {
+        throw new Error('SDK not initialized. Please connect your wallet and try again.');
+      }
+      
+      if (!activeAccount) {
+        throw new Error('No active account. Please connect your wallet and try again.');
+      }
+
+      if (!params.tokenIn || !params.tokenOut) {
+        throw new Error('Please select both input and output tokens.');
+      }
+
+      if (!params.amountIn || Number(params.amountIn) <= 0) {
+        throw new Error('Please enter a valid amount to swap.');
+      }
+
+      if (!params.amountOut || Number(params.amountOut) <= 0) {
+        throw new Error('No output amount calculated. Please try selecting different tokens or amounts.');
+      }
+
+      if (params.tokenIn.contractId === params.tokenOut.contractId) {
+        throw new Error('Cannot swap the same token. Please select different tokens.');
+      }
+
       const { router } = await initDexContracts(sdk);
 
       const p = params.path.length ? params.path : [];
@@ -230,7 +255,25 @@ export function useSwapExecution() {
       return txHash || null;
     } catch (e: any) {
       // eslint-disable-next-line no-console
-      console.warn('[dex] Swap failed', e);
+      console.error('[dex] Swap failed - Full error details:', {
+        error: e,
+        message: e?.message,
+        stack: e?.stack,
+        name: e?.name,
+        code: e?.code,
+        data: e?.data,
+        params: {
+          tokenIn: params.tokenIn?.symbol || params.tokenIn?.contractId,
+          tokenOut: params.tokenOut?.symbol || params.tokenOut?.contractId,
+          amountIn: params.amountIn,
+          amountOut: params.amountOut,
+          path: params.path,
+          slippagePct: params.slippagePct,
+          deadlineMins: params.deadlineMins,
+          isExactIn: params.isExactIn
+        }
+      });
+      
       const errorMsg = errorToUserMessage(e, {
         action: 'swap',
         slippagePct: params.slippagePct,

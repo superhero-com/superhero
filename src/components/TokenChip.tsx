@@ -2,9 +2,11 @@ import React, { useState, useCallback } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { useAeSdk } from "../hooks";
 import { copyToClipboard } from '../utils/address';
+import { DexTokenDto } from '../api/generated';
 
 interface TokenChipProps {
-    address: string;
+    address?: string;
+    token?: DexTokenDto;
     copyable?: boolean;
     large?: boolean;
     className?: string;
@@ -15,6 +17,7 @@ interface TokenChipProps {
 
 export const TokenChip = ({ 
     address, 
+    token,
     copyable = false,
     large = false,
     className = '',
@@ -28,7 +31,10 @@ export const TokenChip = ({
     const { data, isLoading } = useQuery({
         queryKey: ['token', address],
         queryFn: () => fetch(`${activeNetwork.middlewareUrl}/v3/aex9/${address}`).then(res => res.json()),
+        enabled: !!address,
     });
+
+    const tokenData = token || data || null;
 
     const handleChipClick = useCallback(async () => {
         if (onClick) {
@@ -37,13 +43,13 @@ export const TokenChip = ({
         }
         
         if (copyable) {
-            const success = await copyToClipboard(address);
+            const success = await copyToClipboard(tokenData.address);
             if (success) {
                 setTextCopied(true);
                 setTimeout(() => setTextCopied(false), 1000);
             }
         }
-    }, [address, copyable, onClick]);
+    }, [tokenData.address, copyable, onClick]);
 
     const chipStyle: React.CSSProperties = {
         display: 'inline-flex',
@@ -100,11 +106,11 @@ export const TokenChip = ({
                 fontWeight: 600,
                 letterSpacing: '0.25px'
             }}>
-                {isLoading ? '...' : (data?.symbol || 'TOKEN')}
+                {isLoading ? '...' : (tokenData?.symbol || 'TOKEN')}
             </span>
 
             {/* Token Name (if different from symbol) */}
-            {data?.name && data.name !== data.symbol && (
+            {tokenData?.name && tokenData.name !== tokenData.symbol && (
                 <span style={{
                     fontSize: large ? 12 : 10,
                     fontWeight: 400,
@@ -114,7 +120,7 @@ export const TokenChip = ({
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap'
                 }}>
-                    ({data.name})
+                    ({tokenData.name})
                 </span>
             )}
             
@@ -126,7 +132,7 @@ export const TokenChip = ({
                     opacity: 0.6,
                     fontFamily: 'monospace'
                 }}>
-                    {formatAddress(address, large ? 4 : 3)}
+                    {formatAddress(tokenData.address, large ? 4 : 3)}
                 </span>
             )}
             

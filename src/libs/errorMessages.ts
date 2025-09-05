@@ -13,6 +13,18 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
   const raw = String((err as any)?.message || String(err || ''));
   const lc = raw.toLowerCase();
 
+  // Enhanced logging for debugging
+  if (process.env.NODE_ENV === 'development') {
+    console.debug('[errorToUserMessage] Processing error:', {
+      raw,
+      lc,
+      context: ctx,
+      errorType: typeof err,
+      errorName: (err as any)?.name,
+      errorCode: (err as any)?.code
+    });
+  }
+
   // User cancelled in wallet
   if (lc.includes('rejected by user') || lc.includes('user rejected')) {
     return 'Transaction was rejected in your wallet.';
@@ -64,6 +76,26 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
     return 'Not enough balance to complete this operation.';
   }
 
+  // Network/connection issues
+  if (lc.includes('network error') || lc.includes('connection failed') || lc.includes('timeout')) {
+    return 'Network connection issue. Please check your connection and try again.';
+  }
+
+  // Contract/SDK issues
+  if (lc.includes('contract not found') || lc.includes('invalid contract') || lc.includes('contract error')) {
+    return 'Contract interaction failed. Please try again or contact support if the issue persists.';
+  }
+
+  // Gas/fee issues
+  if (lc.includes('out of gas') || lc.includes('gas limit') || lc.includes('insufficient fee')) {
+    return 'Transaction failed due to insufficient gas. Please try again with higher gas settings.';
+  }
+
+  // Invalid amounts
+  if (lc.includes('invalid amount') || lc.includes('amount cannot be zero') || lc.includes('negative amount')) {
+    return 'Invalid amount entered. Please enter a valid positive amount.';
+  }
+
   // Generic invocation failure with reason
   const m = raw.match(/Invocation failed: ["']([^"']+)["']/i);
   if (m && m[1]) {
@@ -98,7 +130,9 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
     case 'quote':
       return 'Unable to get a price quote. Try again in a moment.';
     case 'swap':
-      return 'Swap failed. Please review your amounts and settings and try again.';
+      // In development, include the raw error for debugging
+      const debugInfo = process.env.NODE_ENV === 'development' && raw ? ` (Debug: ${raw.slice(0, 100)})` : '';
+      return `Swap failed. Please review your amounts and settings and try again.${debugInfo}`;
     case 'add-liquidity':
       return 'Adding liquidity failed. Check amounts and try again.';
     case 'remove-liquidity':

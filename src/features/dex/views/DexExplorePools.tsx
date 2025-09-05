@@ -1,13 +1,42 @@
-import React from 'react';
-import { usePairList } from '../../../components/explore/hooks/usePairList';
+import React, { useState } from 'react';
 import { CONFIG } from '../../../config';
 import './DexViews.scss';
 import { TokenChip } from '../../../components/TokenChip';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { DexService, PairDto } from '../../../api/generated';
+
+// Define the actual API response structure
+interface PaginatedResponse<T> {
+  items: T[];
+  meta: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+  };
+}
 
 export default function DexExplorePools() {
-  const pairList = usePairList();
   const navigate = useNavigate();
+
+  const [sort, setSort] = useState<'transactions_count' | 'created_at'>('transactions_count');
+  const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC'>('DESC');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState('');
+  const { data, isLoading } = useQuery({
+    queryFn: async () => {
+      const result = await DexService.listAllPairs({
+        page: page,
+        limit: limit,
+        orderBy: sort,
+        orderDirection: sortDirection,
+        search,
+      });
+      return result as unknown as PaginatedResponse<PairDto>;
+    },
+    queryKey: ['DexService.listAllPairs', sort, sortDirection, search, page, limit],
+  })
   return (
     <div className="dex-explore-pools-container">
       {/* Main Content Card */}
@@ -98,7 +127,7 @@ export default function DexExplorePools() {
                     Filter & Sort
                   </span>
                 </div>
-                
+
                 {/* Enhanced Dropdown Container */}
                 <div style={{
                   position: 'relative',
@@ -110,17 +139,17 @@ export default function DexExplorePools() {
                     position: 'relative',
                     display: 'inline-block'
                   }}>
-                    <select 
-                      value={pairList.sort.key} 
-                      onChange={(e) => pairList.toggleSort(e.target.value as any)}
-                      style={{ 
+                    <select
+                      value={sort}
+                      onChange={(e) => setSort(e.target.value as any)}
+                      style={{
                         appearance: 'none',
                         WebkitAppearance: 'none',
                         MozAppearance: 'none',
-                        padding: '6px 28px 6px 12px', 
-                        borderRadius: 8, 
-                        background: 'var(--glass-bg)', 
-                        color: 'var(--standard-font-color)', 
+                        padding: '6px 28px 6px 12px',
+                        borderRadius: 8,
+                        background: 'var(--glass-bg)',
+                        color: 'var(--standard-font-color)',
                         border: '1px solid var(--glass-border)',
                         backdropFilter: 'blur(10px)',
                         fontSize: 13,
@@ -140,9 +169,8 @@ export default function DexExplorePools() {
                         e.currentTarget.style.boxShadow = 'none';
                       }}
                     >
-                      <option value="transactions">Tx count</option>
-                      <option value="pair">Pair</option>
-                      <option value="address">Address</option>
+                      <option value="transactions_count">Tx count</option>
+                      <option value="created_at">Created at</option>
                     </select>
                     {/* Custom Dropdown Arrow */}
                     <div style={{
@@ -166,15 +194,15 @@ export default function DexExplorePools() {
                       ▼
                     </div>
                   </div>
-                  
-                  <button 
-                    onClick={() => pairList.toggleSort(pairList.sort.key)}
-                    style={{ 
-                      padding: '6px 8px', 
-                      borderRadius: 6, 
-                      border: '1px solid var(--glass-border)', 
-                      background: pairList.sort.asc ? 'var(--accent-color)' : 'var(--glass-bg)', 
-                      color: pairList.sort.asc ? 'white' : 'var(--standard-font-color)',
+
+                  <button
+                    onClick={() => setSortDirection(sortDirection === 'ASC' ? 'DESC' : 'ASC')}
+                    style={{
+                      padding: '6px 8px',
+                      borderRadius: 6,
+                      border: '1px solid var(--glass-border)',
+                      background: sortDirection === 'ASC' ? 'var(--accent-color)' : 'var(--glass-bg)',
+                      color: sortDirection === 'ASC' ? 'white' : 'var(--standard-font-color)',
                       cursor: 'pointer',
                       backdropFilter: 'blur(10px)',
                       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -188,7 +216,7 @@ export default function DexExplorePools() {
                       outline: 'none'
                     }}
                     onMouseOver={(e) => {
-                      if (!pairList.sort.asc) {
+                      if (sortDirection !== 'ASC') {
                         e.currentTarget.style.background = 'var(--accent-color)';
                         e.currentTarget.style.color = 'white';
                       }
@@ -196,16 +224,16 @@ export default function DexExplorePools() {
                       e.currentTarget.style.boxShadow = '0 3px 8px rgba(76, 175, 80, 0.3)';
                     }}
                     onMouseOut={(e) => {
-                      if (!pairList.sort.asc) {
+                      if (sortDirection !== 'ASC') {
                         e.currentTarget.style.background = 'var(--glass-bg)';
                         e.currentTarget.style.color = 'var(--standard-font-color)';
                       }
                       e.currentTarget.style.transform = 'translateY(0) scale(1)';
                       e.currentTarget.style.boxShadow = 'none';
                     }}
-                    title={pairList.sort.asc ? 'Sort Ascending' : 'Sort Descending'}
+                    title={sortDirection === 'ASC' ? 'Sort Ascending' : 'Sort Descending'}
                   >
-                    {pairList.sort.asc ? '↑' : '↓'}
+                    {sortDirection === 'ASC' ? '↑' : '↓'}
                   </button>
                 </div>
               </div>
@@ -225,16 +253,16 @@ export default function DexExplorePools() {
                 }}>
                   🔍
                 </div>
-                <input 
-                  placeholder="Search pools..." 
-                  value={pairList.search} 
-                  onChange={(e) => pairList.setSearch(e.target.value)}
-                  style={{ 
+                <input
+                  placeholder="Search pools..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  style={{
                     width: '100%',
-                    padding: '8px 12px 8px 32px', 
-                    borderRadius: 8, 
-                    background: 'var(--glass-bg)', 
-                    color: 'var(--standard-font-color)', 
+                    padding: '8px 12px 8px 32px',
+                    borderRadius: 8,
+                    background: 'var(--glass-bg)',
+                    color: 'var(--standard-font-color)',
                     border: '1px solid var(--glass-border)',
                     backdropFilter: 'blur(10px)',
                     fontSize: 13,
@@ -254,9 +282,9 @@ export default function DexExplorePools() {
                     e.currentTarget.style.background = 'var(--glass-bg)';
                   }}
                 />
-                {pairList.search && (
+                {search && (
                   <button
-                    onClick={() => pairList.setSearch('')}
+                    onClick={() => setSearch('')}
                     style={{
                       position: 'absolute',
                       right: 6,
@@ -293,6 +321,84 @@ export default function DexExplorePools() {
                 )}
               </div>
 
+              {/* Center Right: Items per page */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                flexShrink: 0
+              }}>
+                <span style={{
+                  fontSize: 13,
+                  color: 'var(--light-font-color)',
+                  fontWeight: 500
+                }}>
+                  Show:
+                </span>
+                <div style={{
+                  position: 'relative',
+                  display: 'inline-block'
+                }}>
+                  <select
+                    value={limit}
+                    onChange={(e) => {
+                      setLimit(Number(e.target.value));
+                      setPage(1); // Reset to first page when changing limit
+                    }}
+                    style={{
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'none',
+                      padding: '6px 28px 6px 12px',
+                      borderRadius: 8,
+                      background: 'var(--glass-bg)',
+                      color: 'var(--standard-font-color)',
+                      border: '1px solid var(--glass-border)',
+                      backdropFilter: 'blur(10px)',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      outline: 'none',
+                      minWidth: 70,
+                      backgroundImage: 'none'
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--accent-color)';
+                      e.currentTarget.style.boxShadow = '0 0 0 2px rgba(76, 175, 80, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--glass-border)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    <option value={10}>10</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  <div style={{
+                    position: 'absolute',
+                    right: 8,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    pointerEvents: 'none',
+                    color: 'var(--light-font-color)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 16,
+                    height: 16,
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: 4,
+                    transition: 'all 0.3s ease'
+                  }}>
+                    ▼
+                  </div>
+                </div>
+              </div>
+
               {/* Right: Results Counter */}
               <div style={{
                 display: 'flex',
@@ -316,7 +422,7 @@ export default function DexExplorePools() {
                   color: 'var(--accent-color)',
                   fontWeight: 600
                 }}>
-                  {pairList.pairs.length} {pairList.pairs.length === 1 ? 'pool' : 'pools'}
+                  {data?.meta.totalItems} {data?.meta.totalItems === 1 ? 'pool' : 'pools'}
                 </span>
               </div>
             </div>
@@ -332,47 +438,47 @@ export default function DexExplorePools() {
           }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ 
+                <tr style={{
                   background: 'rgba(255, 255, 255, 0.05)',
                   borderBottom: '1px solid var(--glass-border)'
                 }}>
-                  <th style={{ 
-                    textAlign: 'left', 
-                    padding: '16px 12px', 
-                    fontSize: 14, 
+                  <th style={{
+                    textAlign: 'left',
+                    padding: '16px 12px',
+                    fontSize: 14,
                     color: 'var(--light-font-color)',
                     fontWeight: 600,
                     letterSpacing: '0.5px'
                   }}>Pair</th>
 
-                  <th style={{ 
-                    textAlign: 'center', 
-                    padding: '16px 12px', 
-                    fontSize: 14, 
+                  <th style={{
+                    textAlign: 'center',
+                    padding: '16px 12px',
+                    fontSize: 14,
                     color: 'var(--light-font-color)',
                     fontWeight: 600,
                     letterSpacing: '0.5px'
                   }}>Tx</th>
-                  <th style={{ 
-                    textAlign: 'right', 
-                    padding: '16px 12px', 
-                    fontSize: 14, 
+                  <th style={{
+                    textAlign: 'right',
+                    padding: '16px 12px',
+                    fontSize: 14,
                     color: 'var(--light-font-color)',
                     fontWeight: 600,
                     letterSpacing: '0.5px'
                   }}>TVL (USD)</th>
-                  <th style={{ 
-                    textAlign: 'right', 
-                    padding: '16px 12px', 
-                    fontSize: 14, 
+                  <th style={{
+                    textAlign: 'right',
+                    padding: '16px 12px',
+                    fontSize: 14,
                     color: 'var(--light-font-color)',
                     fontWeight: 600,
                     letterSpacing: '0.5px'
                   }}>Volume</th>
-                  <th style={{ 
-                    textAlign: 'center', 
-                    padding: '16px 12px', 
-                    fontSize: 14, 
+                  <th style={{
+                    textAlign: 'center',
+                    padding: '16px 12px',
+                    fontSize: 14,
                     color: 'var(--light-font-color)',
                     fontWeight: 600,
                     letterSpacing: '0.5px'
@@ -380,24 +486,24 @@ export default function DexExplorePools() {
                 </tr>
               </thead>
               <tbody>
-                {pairList.pairs.map((pair) => (
-                  <tr key={pair.address} style={{ 
+                {data?.items.map((pair: PairDto) => (
+                  <tr key={pair.address} style={{
                     borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
                     transition: 'all 0.3s ease'
                   }}
-                  onClick={() => navigate(`/dex/explore/pools/${pair.address}`)}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                  }}
+                    onClick={() => navigate(`/dex/explore/pools/${pair.address}`)}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                    }}
                   >
                     <td style={{ padding: '16px 12px', display: 'flex', alignItems: 'center', gap: 2 }}>
                       <button
                         onClick={() => navigate(`/dex/explore/tokens/${pair.token0}`)}
-                        style={{ 
-                          color: 'var(--accent-color)', 
+                        style={{
+                          color: 'var(--accent-color)',
                           textDecoration: 'none',
                           background: 'none',
                           border: 'none',
@@ -415,17 +521,17 @@ export default function DexExplorePools() {
                           e.currentTarget.style.transform = 'translateY(0)';
                         }}
                       >
-                        <TokenChip address={pair.token0} />
+                        <TokenChip token={pair.token0} />
                       </button>
-                      <span style={{ 
-                        color: 'var(--light-font-color)', 
+                      <span style={{
+                        color: 'var(--light-font-color)',
                         margin: '0 4px',
                         fontSize: 14
                       }}>/</span>
                       <button
                         onClick={() => navigate(`/dex/explore/tokens/${pair.token1}`)}
-                        style={{ 
-                          color: 'var(--accent-color)', 
+                        style={{
+                          color: 'var(--accent-color)',
                           textDecoration: 'none',
                           background: 'none',
                           border: 'none',
@@ -443,45 +549,45 @@ export default function DexExplorePools() {
                           e.currentTarget.style.transform = 'translateY(0)';
                         }}
                       >
-                        <TokenChip address={pair.token1} />
+                        <TokenChip token={pair.token1} />
                       </button>
                     </td>
-                    <td style={{ 
-                      textAlign: 'center', 
-                      padding: '16px 12px', 
+                    <td style={{
+                      textAlign: 'center',
+                      padding: '16px 12px',
                       fontSize: 14,
                       color: 'var(--standard-font-color)',
                       fontWeight: 500
                     }}>
-                      {pair.transactions || 0}
+                      {pair.transactions_count || 0}
                     </td>
-                    <td style={{ 
-                      textAlign: 'right', 
-                      padding: '16px 12px', 
+                    <td style={{
+                      textAlign: 'right',
+                      padding: '16px 12px',
                       fontSize: 14,
                       color: 'var(--standard-font-color)',
                       fontWeight: 500
                     }}>
-                      {pair.tvlUsd != null ? `$${Number(pair.tvlUsd).toLocaleString()}` : (pair.tvl != null ? `$${Number(pair.tvl).toLocaleString()}` : '-')}
+                      -
                     </td>
-                    <td style={{ 
-                      textAlign: 'right', 
-                      padding: '16px 12px', 
+                    <td style={{
+                      textAlign: 'right',
+                      padding: '16px 12px',
                       fontSize: 14,
                       color: 'var(--standard-font-color)',
                       fontWeight: 500
                     }}>
-                      {pair.volumeUsdAll != null ? `$${Number(pair.volumeUsdAll).toLocaleString()}` : '-'}
+                      -
                     </td>
                     <td style={{ textAlign: 'center', padding: '16px 12px' }}>
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-                        <button 
-                          onClick={() => navigate(`/dex/swap?from=${pair.token0}&to=${pair.token1}`)}
-                          style={{ 
-                            padding: '6px 12px', 
-                            borderRadius: 8, 
-                            border: '1px solid var(--glass-border)', 
-                            background: 'var(--glass-bg)', 
+                        <button
+                          onClick={() => navigate(`/dex/swap?from=${pair.token0.address}&to=${pair.token1.address}`)}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: 8,
+                            border: '1px solid var(--glass-border)',
+                            background: 'var(--glass-bg)',
                             color: 'var(--standard-font-color)',
                             cursor: 'pointer',
                             fontSize: 12,
@@ -502,13 +608,13 @@ export default function DexExplorePools() {
                         >
                           Swap
                         </button>
-                        <button 
-                          onClick={() => navigate(`/dex/pool/add?from=${pair.token0}&to=${pair.token1}`)}
-                          style={{ 
-                            padding: '6px 12px', 
-                            borderRadius: 8, 
-                            border: '1px solid var(--glass-border)', 
-                            background: 'var(--glass-bg)', 
+                        <button
+                          onClick={() => navigate(`/dex/pool/add?from=${pair.token0.address}&to=${pair.token1.address}`)}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: 8,
+                            border: '1px solid var(--glass-border)',
+                            background: 'var(--glass-bg)',
                             color: 'var(--standard-font-color)',
                             cursor: 'pointer',
                             fontSize: 12,
@@ -537,9 +643,220 @@ export default function DexExplorePools() {
             </table>
           </div>
 
-          {pairList.pairs.length === 0 && !pairList.loading && (
-            <div style={{ 
-              textAlign: 'center', 
+          {/* Pagination Controls */}
+          {data && data.meta.totalItems > 0 && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginTop: 20,
+              padding: '16px 20px',
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid var(--glass-border)',
+              borderRadius: 16,
+              backdropFilter: 'blur(10px)'
+            }}>
+              {/* Left: Pagination Info */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                <span style={{
+                  fontSize: 14,
+                  color: 'var(--light-font-color)',
+                  fontWeight: 500
+                }}>
+                  Showing {((page - 1) * limit) + 1}-{Math.min(page * limit, data.meta.totalItems)} of {data.meta.totalItems} pools
+                </span>
+              </div>
+
+              {/* Right: Pagination Buttons */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                {/* First Page Button */}
+                <button
+                  onClick={() => setPage(1)}
+                  disabled={page === 1}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: '1px solid var(--glass-border)',
+                    background: page === 1 ? 'rgba(255, 255, 255, 0.05)' : 'var(--glass-bg)',
+                    color: page === 1 ? 'var(--light-font-color)' : 'var(--standard-font-color)',
+                    cursor: page === 1 ? 'not-allowed' : 'pointer',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    backdropFilter: 'blur(10px)',
+                    transition: 'all 0.3s ease',
+                    outline: 'none',
+                    opacity: page === 1 ? 0.5 : 1
+                  }}
+                  onMouseOver={(e) => {
+                    if (page !== 1) {
+                      e.currentTarget.style.background = 'var(--accent-color)';
+                      e.currentTarget.style.color = 'white';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (page !== 1) {
+                      e.currentTarget.style.background = 'var(--glass-bg)';
+                      e.currentTarget.style.color = 'var(--standard-font-color)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }
+                  }}
+                  title="First page"
+                >
+                  ⇤ First
+                </button>
+
+                {/* Previous Page Button */}
+                <button
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: '1px solid var(--glass-border)',
+                    background: page === 1 ? 'rgba(255, 255, 255, 0.05)' : 'var(--glass-bg)',
+                    color: page === 1 ? 'var(--light-font-color)' : 'var(--standard-font-color)',
+                    cursor: page === 1 ? 'not-allowed' : 'pointer',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    backdropFilter: 'blur(10px)',
+                    transition: 'all 0.3s ease',
+                    outline: 'none',
+                    opacity: page === 1 ? 0.5 : 1
+                  }}
+                  onMouseOver={(e) => {
+                    if (page !== 1) {
+                      e.currentTarget.style.background = 'var(--accent-color)';
+                      e.currentTarget.style.color = 'white';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (page !== 1) {
+                      e.currentTarget.style.background = 'var(--glass-bg)';
+                      e.currentTarget.style.color = 'var(--standard-font-color)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }
+                  }}
+                  title="Previous page"
+                >
+                  ← Prev
+                </button>
+
+                {/* Page Number Display */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '0 12px'
+                }}>
+                  <span style={{
+                    fontSize: 14,
+                    color: 'var(--standard-font-color)',
+                    fontWeight: 600,
+                    background: 'rgba(76, 175, 80, 0.1)',
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                    border: '1px solid rgba(76, 175, 80, 0.2)'
+                  }}>
+                    {page}
+                  </span>
+                  <span style={{
+                    fontSize: 14,
+                    color: 'var(--light-font-color)'
+                  }}>
+                    of {Math.ceil(data.meta.totalItems / limit)}
+                  </span>
+                </div>
+
+                {/* Next Page Button */}
+                <button
+                  onClick={() => setPage(page + 1)}
+                  disabled={page >= Math.ceil(data.meta.totalItems / limit)}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: '1px solid var(--glass-border)',
+                    background: page >= Math.ceil(data.meta.totalItems / limit) ? 'rgba(255, 255, 255, 0.05)' : 'var(--glass-bg)',
+                    color: page >= Math.ceil(data.meta.totalItems / limit) ? 'var(--light-font-color)' : 'var(--standard-font-color)',
+                    cursor: page >= Math.ceil(data.meta.totalItems / limit) ? 'not-allowed' : 'pointer',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    backdropFilter: 'blur(10px)',
+                    transition: 'all 0.3s ease',
+                    outline: 'none',
+                    opacity: page >= Math.ceil(data.meta.totalItems / limit) ? 0.5 : 1
+                  }}
+                  onMouseOver={(e) => {
+                    if (page < Math.ceil(data.meta.totalItems / limit)) {
+                      e.currentTarget.style.background = 'var(--accent-color)';
+                      e.currentTarget.style.color = 'white';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (page < Math.ceil(data.meta.totalItems / limit)) {
+                      e.currentTarget.style.background = 'var(--glass-bg)';
+                      e.currentTarget.style.color = 'var(--standard-font-color)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }
+                  }}
+                  title="Next page"
+                >
+                  Next →
+                </button>
+
+                {/* Last Page Button */}
+                <button
+                  onClick={() => setPage(Math.ceil(data.meta.totalItems / limit))}
+                  disabled={page >= Math.ceil(data.meta.totalItems / limit)}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: '1px solid var(--glass-border)',
+                    background: page >= Math.ceil(data.meta.totalItems / limit) ? 'rgba(255, 255, 255, 0.05)' : 'var(--glass-bg)',
+                    color: page >= Math.ceil(data.meta.totalItems / limit) ? 'var(--light-font-color)' : 'var(--standard-font-color)',
+                    cursor: page >= Math.ceil(data.meta.totalItems / limit) ? 'not-allowed' : 'pointer',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    backdropFilter: 'blur(10px)',
+                    transition: 'all 0.3s ease',
+                    outline: 'none',
+                    opacity: page >= Math.ceil(data.meta.totalItems / limit) ? 0.5 : 1
+                  }}
+                  onMouseOver={(e) => {
+                    if (page < Math.ceil(data.meta.totalItems / limit)) {
+                      e.currentTarget.style.background = 'var(--accent-color)';
+                      e.currentTarget.style.color = 'white';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (page < Math.ceil(data.meta.totalItems / limit)) {
+                      e.currentTarget.style.background = 'var(--glass-bg)';
+                      e.currentTarget.style.color = 'var(--standard-font-color)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }
+                  }}
+                  title="Last page"
+                >
+                  Last ⇥
+                </button>
+              </div>
+            </div>
+          )}
+
+          {data?.items.length === 0 && !isLoading && (
+            <div style={{
+              textAlign: 'center',
               padding: 60,
               background: 'rgba(255, 255, 255, 0.02)',
               border: '1px solid var(--glass-border)',

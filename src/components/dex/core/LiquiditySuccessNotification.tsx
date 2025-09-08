@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Token } from '../types/dex';
+import { useEffect, useState } from 'react';
+import { DexTokenDto } from '../../../api/generated';
 import { CONFIG } from '../../../config';
 
 interface LiquiditySuccessNotificationProps {
   show: boolean;
   onClose: () => void;
-  tokenA: Token | null;
-  tokenB: Token | null;
+  tokenA: DexTokenDto | null;
+  tokenB: DexTokenDto | null;
   amountA: string;
   amountB: string;
   txHash?: string;
@@ -53,14 +53,14 @@ export default function LiquiditySuccessNotification({
 
   if (!tokenA || !tokenB) return null;
 
-  const explorerUrl = txHash && CONFIG.EXPLORER_URL 
+  const explorerUrl = txHash && CONFIG.EXPLORER_URL
     ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${txHash}`
     : null;
 
   return (
     <Dialog.Root open={show} onOpenChange={onClose}>
       <Dialog.Portal>
-        <Dialog.Overlay 
+        <Dialog.Overlay
           style={{
             position: 'fixed',
             inset: 0,
@@ -177,7 +177,7 @@ export default function LiquiditySuccessNotification({
                 {Number(amountA).toFixed(6)}
               </span>
             </div>
-            
+
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
@@ -285,7 +285,7 @@ export default function LiquiditySuccessNotification({
                 View on Explorer
               </a>
             )}
-            
+
             <button
               onClick={onClose}
               style={{
@@ -334,7 +334,7 @@ export default function LiquiditySuccessNotification({
           </div>
         </Dialog.Content>
       </Dialog.Portal>
-      
+
       {/* Animations */}
       <style>{`
         @keyframes fadeIn {

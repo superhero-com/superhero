@@ -5,6 +5,7 @@ import NewAccountEducation from '../../../components/dex/widgets/NewAccountEduca
 import './DexViews.scss';
 
 export default function DexSwap() {
+  // todo get selected pool address
   return (
     <div>
       {/* Main Content */}

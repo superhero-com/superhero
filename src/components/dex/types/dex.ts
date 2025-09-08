@@ -1,10 +1,3 @@
-export interface Token {
-  contractId: string | 'AE';
-  symbol: string;
-  decimals: number;
-  isAe?: boolean;
-}
-
 export interface TokenBalance {
   in?: string;
   out?: string;

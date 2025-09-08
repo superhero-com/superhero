@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { DexService, DexTokenDto } from '../../../api/generated';
+import DexSettings from '../../../features/dex/components/DexSettings';
 import { DEX_ADDRESSES } from '../../../libs/dex';
 import ConnectWalletButton from '../../ConnectWalletButton';
 import { useSwapExecution } from '../hooks/useSwapExecution';
 import { useSwapQuote } from '../hooks/useSwapQuote';
 import { useTokenBalances } from '../hooks/useTokenBalances';
 import { useTokenList } from '../hooks/useTokenList';
-import { SwapQuoteParams, Token } from '../types/dex';
+import { SwapQuoteParams } from '../types/dex';
 import SwapConfirmation from './SwapConfirmation';
 import SwapRouteInfo from './SwapRouteInfo';
-import DexSettings from '../../../features/dex/components/DexSettings';
 import TokenInput from './TokenInput';
 
 import { useAccount, useDex } from '../../../hooks';
@@ -24,8 +25,8 @@ export default function SwapForm() {
 
   // Token list and balances
   const { tokens, loading: tokensLoading } = useTokenList();
-  const [tokenIn, setTokenIn] = useState<Token | null>(null);
-  const [tokenOut, setTokenOut] = useState<Token | null>(null);
+  const [tokenIn, setTokenIn] = useState<DexTokenDto | null>(null);
+  const [tokenOut, setTokenOut] = useState<DexTokenDto | null>(null);
   const { balances } = useTokenBalances(tokenIn, tokenOut);
 
   // Amounts and swap state
@@ -52,18 +53,10 @@ export default function SwapForm() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   // Function to fetch token metadata from middleware
-  const fetchTokenFromMiddleware = useCallback(async (address: string): Promise<Token | null> => {
+  const fetchTokenFromMiddleware = useCallback(async (address: string): Promise<DexTokenDto | null> => {
     try {
-      const response = await fetch(`${activeNetwork.middlewareUrl}/v3/aex9/${address}`);
-      if (!response.ok) return null;
-      
-      const metadata = await response.json();
-      return {
-        contractId: address,
-        symbol: metadata?.symbol || metadata?.name || 'TKN',
-        decimals: Number(metadata?.decimals || 18),
-        isAe: false
-      };
+      const _token = DexService.getDexTokenByAddress({ address });
+      return _token;
     } catch (error) {
       console.warn('[SwapForm] Failed to fetch token from middleware:', address, error);
       return null;
@@ -71,46 +64,46 @@ export default function SwapForm() {
   }, [activeNetwork.middlewareUrl]);
 
   // Helper function to find token by address or symbol
-  const findTokenByAddressOrSymbol = useCallback(async (identifier: string): Promise<Token | null> => {
+  const findTokenByAddressOrSymbol = useCallback(async (identifier: string): Promise<DexTokenDto | null> => {
     if (!identifier) return null;
-    
+
     // If identifier is 'AE', find the AE token
     if (identifier === 'AE') {
-      return tokens.find(t => t.isAe) || null;
+      return tokens.find(t => t.is_ae) || null;
     }
-    
+
     // First, try to find in the local token list
     const localToken = tokens.find(t => t.contractId === identifier);
     if (localToken) return localToken;
-    
+
     // If not found locally and it looks like a contract address, fetch from middleware
     if (identifier.startsWith('ct_')) {
       return await fetchTokenFromMiddleware(identifier);
     }
-    
+
     return null;
   }, [tokens, fetchTokenFromMiddleware]);
 
   // Function to update URL parameters based on current token selection
-  const updateUrlParams = useCallback((newTokenIn: Token | null, newTokenOut: Token | null) => {
+  const updateUrlParams = useCallback((newTokenIn: DexTokenDto | null, newTokenOut: DexTokenDto | null) => {
     const searchParams = new URLSearchParams(location.search);
-    
+
     // Update or remove 'from' parameter
     if (newTokenIn) {
-      const fromValue = newTokenIn.isAe ? 'AE' : newTokenIn.contractId;
+      const fromValue = newTokenIn.is_ae ? 'AE' : newTokenIn.address;
       searchParams.set('from', fromValue);
     } else {
       searchParams.delete('from');
     }
-    
+
     // Update or remove 'to' parameter
     if (newTokenOut) {
-      const toValue = newTokenOut.isAe ? 'AE' : newTokenOut.contractId;
+      const toValue = newTokenOut.is_ae ? 'AE' : newTokenOut.address;
       searchParams.set('to', toValue);
     } else {
       searchParams.delete('to');
     }
-    
+
     // Update the URL without causing a page reload
     const newUrl = `${location.pathname}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
     navigate(newUrl, { replace: true });
@@ -161,7 +154,7 @@ export default function SwapForm() {
   useEffect(() => {
     // Skip URL updates during initial load or when tokens are being set from URL params
     if (!tokens.length || (!tokenIn && !tokenOut)) return;
-    
+
     // Only update URL if we have at least one token selected and tokens are loaded
     if (tokenIn || tokenOut) {
       updateUrlParams(tokenIn, tokenOut);
@@ -242,12 +235,12 @@ export default function SwapForm() {
 
   const filteredInTokens = useMemo(() => {
     const term = searchIn.trim().toLowerCase();
-    const matches = (t: Token) =>
-      !term || t.symbol.toLowerCase().includes(term) || (t.contractId || '').toLowerCase().includes(term);
-    const ae = tokens.find((t) => t.isAe);
-    const wae = tokens.find((t) => t.contractId === DEX_ADDRESSES.wae);
+    const matches = (t: DexTokenDto) =>
+      !term || t.symbol.toLowerCase().includes(term) || (t.address || '').toLowerCase().includes(term);
+    const ae = tokens.find((t) => t.is_ae);
+    const wae = tokens.find((t) => t.address === DEX_ADDRESSES.wae);
     const rest = tokens.filter((t) => t !== ae && t !== wae).filter(matches);
-    const out: Token[] = [];
+    const out: DexTokenDto[] = [];
     if (ae && matches(ae)) out.push(ae);
     if (wae && matches(wae)) out.push(wae);
     out.push(...rest);
@@ -256,12 +249,12 @@ export default function SwapForm() {
 
   const filteredOutTokens = useMemo(() => {
     const term = searchOut.trim().toLowerCase();
-    const matches = (t: Token) =>
-      !term || t.symbol.toLowerCase().includes(term) || (t.contractId || '').toLowerCase().includes(term);
-    const ae = tokens.find((t) => t.isAe);
-    const wae = tokens.find((t) => t.contractId === DEX_ADDRESSES.wae);
+    const matches = (t: DexTokenDto) =>
+      !term || t.symbol.toLowerCase().includes(term) || (t.address || '').toLowerCase().includes(term);
+    const ae = tokens.find((t) => t.is_ae);
+    const wae = tokens.find((t) => t.address === DEX_ADDRESSES.wae);
     const rest = tokens.filter((t) => t !== ae && t !== wae).filter(matches);
-    const out: Token[] = [];
+    const out: DexTokenDto[] = [];
     if (ae && matches(ae)) out.push(ae);
     if (wae && matches(wae)) out.push(wae);
     out.push(...rest);
@@ -275,7 +268,7 @@ export default function SwapForm() {
     setTokenOut(tempToken);
     setAmountIn(amountOut);
     setAmountOut(tempAmount);
-    
+
     // Update URL parameters to reflect the swapped tokens
     updateUrlParams(tokenOut, tempToken);
   };
@@ -459,7 +452,7 @@ export default function SwapForm() {
             </div>
           )}
 
-          {allowanceInfo && !tokenIn?.isAe && (
+          {allowanceInfo && !tokenIn?.is_ae && (
             <div style={{
               fontSize: 12,
               color: 'var(--light-font-color)',

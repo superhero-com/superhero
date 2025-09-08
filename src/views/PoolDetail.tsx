@@ -8,6 +8,7 @@ import { useAeSdk } from '../hooks';
 import { Decimal } from '../libs/decimal';
 import { getPairDetails, getHistory, getTokenWithUsd } from '../libs/dexBackend';
 import moment from 'moment';
+import { PoolCandlestickChart } from '../features/dex/components/charts/PoolCandlestickChart';
 
 // Pool-specific data interface (modified from TokenData)
 interface PoolData {
@@ -580,6 +581,11 @@ export default function PoolDetail() {
             </div>
           </div>
         </div>
+
+        <PoolCandlestickChart
+          pairAddress={pool?.address || ''}
+          height={400}
+        />
       </div>
 
       {/* Tabbed Card (modified from TokenDetail) */}

@@ -2,9 +2,21 @@ import React from 'react';
 import TokenTable from '../../../components/explore/core/TokenTable';
 import { useTokenList } from '../../../components/explore/hooks/useTokenList';
 import './DexViews.scss';
+import { useQuery } from '@tanstack/react-query';
+import { DexService } from '../../../api/generated';
 
 export default function DexExploreTokens() {
   const tokenList = useTokenList();
+  const { data, isLoading } = useQuery({
+    queryKey: ['tokens'],
+    queryFn: () => DexService.listAllDexTokens({
+      page: 1,
+      limit: 100,
+      orderBy: 'market_cap',
+      orderDirection: 'DESC',
+      search: '',
+    }),
+  });
 
   return (
     <div className="dex-explore-tokens-container">
@@ -50,13 +62,18 @@ export default function DexExploreTokens() {
           </p>
         </div>
         <TokenTable
-          tokens={tokenList.tokens}
+          tokens={data?.items ?? []}
           sort={tokenList.sort}
           onSortChange={tokenList.toggleSort}
           search={tokenList.search}
           onSearchChange={tokenList.setSearch}
           loading={tokenList.loading}
         />
+        <pre>
+          {
+            JSON.stringify(data, null, 2)
+          }
+        </pre>
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ export { useBackend } from './useBackend';
 export { useGovernance } from './useGovernance';
 export { useRecentActivities } from './useRecentActivities';
 export { useTransactionStatus, useMultipleTransactionStatus } from './useTransactionStatus';
+export { useChart } from './useChart';
 
 // Re-export atoms for direct usage if needed
 export * from '../atoms/walletAtoms';

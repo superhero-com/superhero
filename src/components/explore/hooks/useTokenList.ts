@@ -2,6 +2,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { getAllTokens } from '../../../libs/dexBackend';
 import { Token, TokenListState } from '../types/explore';
 
+/**
+ * @deprecated Use useQuery from @tanstack/react-query instead
+ */
 export function useTokenList(): TokenListState {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [search, setSearch] = useState('');

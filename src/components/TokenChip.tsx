@@ -37,6 +37,7 @@ export const TokenChip = ({
     const tokenData = token || data || null;
 
     const handleChipClick = useCallback(async () => {
+        if (!tokenData) return;
         if (onClick) {
             onClick();
             return;
@@ -49,7 +50,7 @@ export const TokenChip = ({
                 setTimeout(() => setTextCopied(false), 1000);
             }
         }
-    }, [tokenData.address, copyable, onClick]);
+    }, [tokenData?.address, copyable, onClick]);
 
     const chipStyle: React.CSSProperties = {
         display: 'inline-flex',
@@ -81,6 +82,8 @@ export const TokenChip = ({
         if (addr.length <= length * 2) return addr;
         return `${addr.slice(0, length)}...${addr.slice(-length)}`;
     };
+
+    if (!tokenData) return null;
 
     return (
         <div

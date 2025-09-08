@@ -21,12 +21,17 @@ export class DexService {
         orderDirection,
         limit,
         page,
+        tokenAddress,
         search,
     }: {
         orderBy?: 'transactions_count' | 'created_at',
         orderDirection?: 'ASC' | 'DESC',
         limit?: number,
         page?: number,
+        /**
+         * Search by token address
+         */
+        tokenAddress?: string,
         /**
          * Search pairs by token name or symbol
          */
@@ -40,6 +45,7 @@ export class DexService {
                 'order_direction': orderDirection,
                 'limit': limit,
                 'page': page,
+                'token_address': tokenAddress,
                 'search': search,
             },
         });
@@ -63,6 +69,43 @@ export class DexService {
             url: '/api/dex/pairs/{address}',
             path: {
                 'address': address,
+            },
+        });
+    }
+    /**
+     * @returns any
+     * @throws ApiError
+     */
+    public static getPaginatedHistory({
+        address,
+        interval,
+        convertTo,
+        limit,
+        page,
+    }: {
+        /**
+         * Token address or name
+         */
+        address: string,
+        /**
+         * Interval type in seconds, default is 3600 (1 hour)
+         */
+        interval?: number,
+        convertTo?: 'ae' | 'usd' | 'eur' | 'aud' | 'brl' | 'cad' | 'chf' | 'gbp' | 'xau',
+        limit?: number,
+        page?: number,
+    }): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/dex/pairs/{address}/history',
+            path: {
+                'address': address,
+            },
+            query: {
+                'interval': interval,
+                'convertTo': convertTo,
+                'limit': limit,
+                'page': page,
             },
         });
     }
@@ -117,6 +160,28 @@ export class DexService {
         });
     }
     /**
+     * Get DEX token price
+     * Retrieve a specific DEX token by its contract address
+     * @returns DexTokenDto
+     * @throws ApiError
+     */
+    public static getTokenPrice({
+        address,
+    }: {
+        /**
+         * Token contract address
+         */
+        address: string,
+    }): CancelablePromise<DexTokenDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/dex/tokens/{address}/price',
+            path: {
+                'address': address,
+            },
+        });
+    }
+    /**
      * Get all pair transactions
      * Retrieve a paginated list of all DEX pair transactions with optional filtering and sorting
      * @returns any
@@ -127,6 +192,7 @@ export class DexService {
         orderDirection,
         pairAddress,
         txType,
+        accountAddress,
         limit,
         page,
     }: {
@@ -140,6 +206,10 @@ export class DexService {
          * Filter by transaction type
          */
         txType?: string,
+        /**
+         * Filter by account address
+         */
+        accountAddress?: string,
         limit?: number,
         page?: number,
     }): CancelablePromise<Pagination> {
@@ -151,6 +221,7 @@ export class DexService {
                 'order_direction': orderDirection,
                 'pair_address': pairAddress,
                 'tx_type': txType,
+                'account_address': accountAddress,
                 'limit': limit,
                 'page': page,
             },

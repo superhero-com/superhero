@@ -3,18 +3,21 @@
 
 // Swap specific styles
 .dex-swap-content {
-  display: grid;
-  grid-template-columns: 1fr 320px;
+  display: flex;
   gap: 24px;
   align-items: start;
+  width: 100%;
 }
 
 .dex-swap-main {
   min-width: 0; // Prevent overflow
+  max-width: 480px; // Set max width for swap form
+  flex-shrink: 0; // Prevent shrinking below max-width
 }
 
-.dex-swap-sidebar {
-  min-width: 0; // Prevent overflow
+.dex-swap-chart {
+  flex: 1; // Take remaining width
+  min-width: 0; // Allow shrinking if needed
 }
 
 // Wrap specific styles
@@ -116,8 +119,16 @@
   }
   
   .dex-swap-content {
-    grid-template-columns: 1fr;
+    flex-direction: column;
     gap: 20px;
+  }
+  
+  .dex-swap-main {
+    max-width: none; // Remove max width on mobile
+  }
+  
+  .dex-swap-chart {
+    width: 100%; // Full width on mobile
   }
   
   .dex-wrap-content,

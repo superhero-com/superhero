@@ -73,6 +73,34 @@ export class DexService {
         });
     }
     /**
+     * Get pair by from token and to token
+     * Retrieve a specific pair by its contract address
+     * @returns PairDto
+     * @throws ApiError
+     */
+    public static getPairByFromTokenAndToToken({
+        fromToken,
+        toToken,
+    }: {
+        /**
+         * Token address
+         */
+        fromToken: string,
+        /**
+         * Token address
+         */
+        toToken: string,
+    }): CancelablePromise<PairDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/dex/pairs/from/{from_token}/to/{to_token}',
+            path: {
+                'from_token': fromToken,
+                'to_token': toToken,
+            },
+        });
+    }
+    /**
      * @returns any
      * @throws ApiError
      */

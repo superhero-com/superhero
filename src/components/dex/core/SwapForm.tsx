@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { DexService, DexTokenDto } from '../../../api/generated';
+import { DexService, DexTokenDto, PairDto } from '../../../api/generated';
 import DexSettings from '../../../features/dex/components/DexSettings';
 import { DEX_ADDRESSES } from '../../../libs/dex';
 import ConnectWalletButton from '../../ConnectWalletButton';
@@ -15,8 +15,14 @@ import TokenInput from './TokenInput';
 
 import { useAccount, useDex } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
+import { useQuery } from '@tanstack/react-query';
 
-export default function SwapForm() {
+export interface SwapFormProps {
+  onPairSelected?: (pair: PairDto) => void;
+  onFromTokenSelected?: (token: DexTokenDto) => void;
+}
+
+export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFormProps) {
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
   const { activeNetwork } = useAeSdk();
@@ -28,6 +34,28 @@ export default function SwapForm() {
   const [tokenIn, setTokenIn] = useState<DexTokenDto | null>(null);
   const [tokenOut, setTokenOut] = useState<DexTokenDto | null>(null);
   const { balances } = useTokenBalances(tokenIn, tokenOut);
+
+  const {data: pair} = useQuery({
+    queryKey: ['DexService.getPairByFromTokenAndToToken', tokenIn?.address, tokenOut?.address],
+    queryFn: () => {
+      if (!tokenIn || !tokenOut) return null;
+      return DexService.getPairByFromTokenAndToToken({ fromToken: tokenIn.address, toToken: tokenOut.address });
+    },
+    enabled: !!tokenIn && !!tokenOut,
+  })
+
+  useEffect(() => {
+    if (pair) {
+      console.log('[SwapForm] Pair found:', pair);
+      onPairSelected?.(pair);
+    }
+  }, [pair, onPairSelected]);
+
+  useEffect(() => {
+    if (tokenIn) {
+      onFromTokenSelected?.(tokenIn);
+    }
+  }, [tokenIn, onFromTokenSelected]);
 
   // Amounts and swap state
   const [amountIn, setAmountIn] = useState<string>('');

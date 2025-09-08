@@ -15,6 +15,7 @@ import { Decimal } from '../../../../libs/decimal';
 
 interface PoolCandlestickChartProps {
   pairAddress: string;
+  fromTokenAddress?: string;
   height?: number;
   className?: string;
 }
@@ -46,6 +47,7 @@ export function PoolCandlestickChart({
   pairAddress,
   height = 600,
   className = '',
+  fromTokenAddress,
 }: PoolCandlestickChartProps) {
   const { data: pair } = useQuery({
     queryKey: ['pair', pairAddress],
@@ -70,6 +72,12 @@ export function PoolCandlestickChart({
     useCurrentCurrency ? 'usd' : 'ae',
     [useCurrentCurrency]
   );
+
+  useEffect(() => {
+    if (fromTokenAddress) {
+      setFromToken(fromTokenAddress === pair?.token0?.address ? 'token0' : 'token1');
+    }
+  }, [fromTokenAddress, pair]);
 
   const currentCandleMovePercentage = useMemo(() => {
     if (!currentCandlePrice) return '0.00';
@@ -103,11 +111,7 @@ export function PoolCandlestickChart({
         fromToken: fromToken,
       });
 
-      if (result && Array.isArray(result)) {
-        updateSeriesData([result]);
-      } else {
-        setHasError(true);
-      }
+      updateSeriesData([result]);
     } catch (error) {
       console.error('Failed to fetch historical data:', error);
       setHasError(true);

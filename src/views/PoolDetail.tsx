@@ -582,10 +582,12 @@ export default function PoolDetail() {
           </div>
         </div>
 
-        <PoolCandlestickChart
-          pairAddress={pool?.address || ''}
-          height={400}
-        />
+        {pool?.address && (
+          <PoolCandlestickChart
+            pairAddress={pool.address}
+            height={400}
+          />
+        )}
       </div>
 
       {/* Tabbed Card (modified from TokenDetail) */}

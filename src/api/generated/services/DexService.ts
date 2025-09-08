@@ -79,6 +79,7 @@ export class DexService {
     public static getPaginatedHistory({
         address,
         interval,
+        fromToken,
         convertTo,
         limit,
         page,
@@ -91,6 +92,7 @@ export class DexService {
          * Interval type in seconds, default is 3600 (1 hour)
          */
         interval?: number,
+        fromToken?: 'token0' | 'token1',
         convertTo?: 'ae' | 'usd' | 'eur' | 'aud' | 'brl' | 'cad' | 'chf' | 'gbp' | 'xau',
         limit?: number,
         page?: number,
@@ -103,6 +105,7 @@ export class DexService {
             },
             query: {
                 'interval': interval,
+                'from_token': fromToken,
                 'convertTo': convertTo,
                 'limit': limit,
                 'page': page,

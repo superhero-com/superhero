@@ -1,17 +1,17 @@
 import React from 'react';
 import TokenSelector from './TokenSelector';
-import { Token } from '../types/dex';
+import { DexTokenDto } from '../../../api/generated';
 import { Decimal } from '../../../libs/decimal';
 
 interface TokenInputProps {
   label: string;
-  token: Token | null;
+  token: DexTokenDto | null;
   amount: string;
   balance?: string;
-  onTokenChange: (token: Token) => void;
+  onTokenChange: (token: DexTokenDto) => void;
   onAmountChange: (amount: string) => void;
-  tokens: Token[];
-  excludeTokens?: Token[];
+  tokens: DexTokenDto[];
+  excludeTokens?: DexTokenDto[];
   disabled?: boolean;
   loading?: boolean;
   readOnly?: boolean;

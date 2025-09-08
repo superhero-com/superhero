@@ -1,14 +1,13 @@
-import React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Token } from '../types/dex';
-import { fromAettos, toAettos, subSlippage, addSlippage } from '../../../libs/dex';
+import { DexTokenDto } from '../../../api/generated';
+import { addSlippage, fromAettos, subSlippage, toAettos } from '../../../libs/dex';
 
 interface SwapConfirmationProps {
   show: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  tokenIn: Token | null;
-  tokenOut: Token | null;
+  tokenIn: DexTokenDto | null;
+  tokenOut: DexTokenDto | null;
   amountIn: string;
   amountOut: string;
   isExactIn: boolean;
@@ -54,7 +53,7 @@ export default function SwapConfirmation({
   return (
     <Dialog.Root open={show} onOpenChange={onClose}>
       <Dialog.Portal>
-        <Dialog.Overlay 
+        <Dialog.Overlay
           style={{
             position: 'fixed',
             inset: 0,
@@ -85,14 +84,14 @@ export default function SwapConfirmation({
           }}
         >
           {/* Header */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             marginBottom: 24
           }}>
-            <Dialog.Title style={{ 
-              fontWeight: 700, 
+            <Dialog.Title style={{
+              fontWeight: 700,
               fontSize: 20,
               margin: 0,
               background: 'var(--primary-gradient)',
@@ -103,9 +102,9 @@ export default function SwapConfirmation({
               Confirm Swap
             </Dialog.Title>
             <Dialog.Close asChild>
-              <button 
-                style={{ 
-                  padding: '8px 12px', 
+              <button
+                style={{
+                  padding: '8px 12px',
                   borderRadius: 12,
                   background: 'rgba(255, 255, 255, 0.05)',
                   border: '1px solid var(--glass-border)',
@@ -127,7 +126,7 @@ export default function SwapConfirmation({
             padding: 20,
             marginBottom: 20
           }}>
-            <div style={{ 
+            <div style={{
               fontSize: 14,
               fontWeight: 600,
               color: 'var(--light-font-color)',
@@ -136,7 +135,7 @@ export default function SwapConfirmation({
             }}>
               You will swap
             </div>
-            
+
             {/* Token In */}
             <div style={{
               display: 'flex',
@@ -171,15 +170,15 @@ export default function SwapConfirmation({
                   <div style={{ fontWeight: 600, fontSize: 16 }}>
                     {tokenIn.symbol}
                   </div>
-                  <div style={{ 
-                    fontSize: 12, 
-                    color: 'var(--light-font-color)' 
+                  <div style={{
+                    fontSize: 12,
+                    color: 'var(--light-font-color)'
                   }}>
                     From
                   </div>
                 </div>
               </div>
-              <div style={{ 
+              <div style={{
                 fontWeight: 700,
                 fontSize: 18,
                 color: 'var(--standard-font-color)'
@@ -241,15 +240,15 @@ export default function SwapConfirmation({
                   <div style={{ fontWeight: 600, fontSize: 16 }}>
                     {tokenOut.symbol}
                   </div>
-                  <div style={{ 
-                    fontSize: 12, 
-                    color: 'var(--light-font-color)' 
+                  <div style={{
+                    fontSize: 12,
+                    color: 'var(--light-font-color)'
                   }}>
                     To
                   </div>
                 </div>
               </div>
-              <div style={{ 
+              <div style={{
                 fontWeight: 700,
                 fontSize: 18,
                 color: 'var(--success-color)'
@@ -309,9 +308,9 @@ export default function SwapConfirmation({
                   color: 'var(--light-font-color)'
                 }}>
                   <span>Price Impact</span>
-                  <span style={{ 
-                    color: priceImpactPct > 10 ? 'var(--error-color)' : 
-                           priceImpactPct > 5 ? '#ffb86b' : 'var(--success-color)',
+                  <span style={{
+                    color: priceImpactPct > 10 ? 'var(--error-color)' :
+                      priceImpactPct > 5 ? '#ffb86b' : 'var(--success-color)',
                     fontWeight: 600
                   }}>
                     {priceImpactPct.toFixed(2)}%
@@ -356,7 +355,7 @@ export default function SwapConfirmation({
                   alignItems: 'flex-start'
                 }}>
                   <span>Route</span>
-                  <span style={{ 
+                  <span style={{
                     color: 'var(--standard-font-color)',
                     textAlign: 'right',
                     maxWidth: '60%',
@@ -371,13 +370,13 @@ export default function SwapConfirmation({
 
           {/* High Price Impact Warning */}
           {priceImpactPct != null && priceImpactPct > 10 && (
-            <div style={{ 
-              color: 'var(--error-color)', 
-              background: 'rgba(255, 107, 107, 0.1)', 
-              border: '1px solid var(--error-color)', 
+            <div style={{
+              color: 'var(--error-color)',
+              background: 'rgba(255, 107, 107, 0.1)',
+              border: '1px solid var(--error-color)',
               borderRadius: 12,
-              padding: 16, 
-              fontSize: 13, 
+              padding: 16,
+              fontSize: 13,
               marginBottom: 20,
               display: 'flex',
               alignItems: 'center',
@@ -449,8 +448,8 @@ export default function SwapConfirmation({
                 padding: '16px 24px',
                 borderRadius: 16,
                 border: 'none',
-                background: loading ? 
-                  'rgba(255, 255, 255, 0.1)' : 
+                background: loading ?
+                  'rgba(255, 255, 255, 0.1)' :
                   'var(--button-gradient)',
                 color: 'white',
                 fontSize: 16,
@@ -480,7 +479,7 @@ export default function SwapConfirmation({
           </div>
         </Dialog.Content>
       </Dialog.Portal>
-      
+
       {/* Add keyframes for spinner animation */}
       <style>{`
         @keyframes spin {

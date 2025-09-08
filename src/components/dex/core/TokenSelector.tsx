@@ -1,20 +1,20 @@
-import React, { useState, useMemo } from 'react';
+import { toAe } from '@aeternity/aepp-sdk';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Token } from '../types/dex';
+import { useMemo, useState } from 'react';
+import { DexTokenDto } from '../../../api/generated';
 import { useAccount } from '../../../hooks/useAccount';
 import { Decimal } from '../../../libs/decimal';
-import { toAe } from '@aeternity/aepp-sdk';
 
 interface TokenSelectorProps {
   label?: string;
-  selected?: Token | null;
-  onSelect: (token: Token) => void;
-  exclude?: Token[];
+  selected?: DexTokenDto | null;
+  onSelect: (token: DexTokenDto) => void;
+  exclude?: DexTokenDto[];
   disabled?: boolean;
   loading?: boolean;
   searchValue?: string;
   onSearchChange?: (value: string) => void;
-  tokens: Token[];
+  tokens: DexTokenDto[];
 }
 
 export default function TokenSelector({
@@ -32,22 +32,21 @@ export default function TokenSelector({
   const [customAddress, setCustomAddress] = useState('');
   const { aex9Balances, balance } = useAccount();
 
-  const selectedLabel = selected?.symbol ? `#${selected.symbol}` : 'Select token';
 
   const filteredTokens = useMemo(() => {
     const term = searchValue.trim().toLowerCase();
-    const excludeIds = exclude.map(t => t.contractId);
+    const excludeIds = exclude.map(t => t.address);
 
     return tokens.filter((token) => {
       const matchesSearch = !term ||
         token.symbol.toLowerCase().includes(term) ||
-        (token.contractId || '').toLowerCase().includes(term);
-      const notExcluded = !excludeIds.includes(token.contractId);
+        (token.address || '').toLowerCase().includes(term);
+      const notExcluded = !excludeIds.includes(token.address);
       return matchesSearch && notExcluded;
     });
   }, [tokens, searchValue, exclude]);
 
-  const handleSelect = (token: Token) => {
+  const handleSelect = (token: DexTokenDto) => {
     onSelect(token);
     setOpen(false);
     setCustomAddress('');
@@ -61,11 +60,14 @@ export default function TokenSelector({
     if (!customAddress.trim()) return;
 
     // Create a custom token object - you may need to adjust this based on your Token type
-    const customToken: Token = {
-      contractId: customAddress.trim(),
+    const customToken: DexTokenDto = {
+      address: customAddress.trim(),
       symbol: 'CUSTOM', // You might want to fetch this from the blockchain
       decimals: 18, // Default decimals, might want to fetch this too
-      isAe: false
+      is_ae: false,
+      pairs_count: 0,
+      name: 'CUSTOM',
+      created_at: new Date().toISOString(),
     };
 
     onSelect(customToken);
@@ -298,7 +300,7 @@ export default function TokenSelector({
               }}>
                 {tokens.slice(0, 4).map((token) => (
                   <button
-                    key={token.contractId}
+                    key={token.address}
                     onClick={() => handleSelect(token)}
                     style={{
                       padding: '12px 16px',
@@ -356,11 +358,14 @@ export default function TokenSelector({
               </div>
               <button
                 onClick={() => {
-                  const customToken: Token = {
-                    contractId: searchValue.trim(),
+                  const customToken: DexTokenDto = {
+                    address: searchValue.trim(),
                     symbol: 'CUSTOM',
+                    name: 'CUSTOM',
+                    pairs_count: 0,
                     decimals: 18,
-                    isAe: false
+                    is_ae: false,
+                    created_at: new Date().toISOString(),
                   };
                   handleSelect(customToken);
                 }}
@@ -428,7 +433,7 @@ export default function TokenSelector({
           }}>
             {filteredTokens.map((token) => (
               <button
-                key={token.contractId}
+                key={token.address}
                 onClick={() => handleSelect(token)}
                 style={{
                   display: 'flex',
@@ -469,7 +474,7 @@ export default function TokenSelector({
                     color: 'var(--light-font-color)',
                     opacity: 0.8
                   }}>
-                    {token.isAe ? 'Native Token' : 'Token'}
+                    {token.is_ae ? 'Native Token' : 'Token'}
                   </div>
                 </div>
 
@@ -481,9 +486,9 @@ export default function TokenSelector({
                     marginBottom: 2
                   }}>
                     {
-                      token.isAe ?
+                      token.is_ae ?
                         Decimal.from(toAe(balance)).prettify() :
-                        Decimal.from(aex9Balances.find(b => b?.contract_id === token.contractId)?.amount || 0).div(10 ** token.decimals).prettify()
+                        Decimal.from(aex9Balances.find(b => b?.contract_id === token.address)?.amount || 0).div(10 ** token.decimals).prettify()
                     }
                   </div>
                   <div style={{
@@ -496,9 +501,9 @@ export default function TokenSelector({
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap'
                   }}>
-                    {token.contractId.length > 15
-                      ? `${token.contractId.slice(0, 6)}...${token.contractId.slice(-6)}`
-                      : token.contractId
+                    {token.address.length > 15
+                      ? `${token.address.slice(0, 6)}...${token.address.slice(-6)}`
+                      : token.address
                     }
                   </div>
                 </div>

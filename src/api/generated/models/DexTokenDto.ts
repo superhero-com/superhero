@@ -27,5 +27,9 @@ export type DexTokenDto = {
      * Token creation timestamp
      */
     created_at: string;
+    /**
+     * Token is AE
+     */
+    is_ae: boolean;
 };
 

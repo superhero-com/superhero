@@ -53,6 +53,7 @@ export function PoolCandlestickChart({
   })
   const [intervalBy, setIntervalBy] = useState<Interval>(intervals[3]); // Default to 1h
   const [useCurrentCurrency, setUseCurrentCurrency] = useState(false);
+  const [fromToken, setFromToken] = useState<'token0' | 'token1'>('token0');
   const [currentCandlePrice, setCurrentCandlePrice] = useState<CandlePrice | null>(null);
   const [currentCandleVolume, setCurrentCandleVolume] = useState<number>(0);
   const [currentCandleMarketCap, setCurrentCandleMarketCap] = useState<number>(0);
@@ -98,6 +99,7 @@ export function PoolCandlestickChart({
         convertTo: convertTo as any,
         limit: 100,
         page: 1,
+        fromToken: fromToken,
       });
 
       if (result && Array.isArray(result)) {
@@ -111,7 +113,7 @@ export function PoolCandlestickChart({
     } finally {
       setIsLoading(false);
     }
-  }, [pairAddress, intervalBy.value, convertTo]);
+  }, [pairAddress, intervalBy.value, convertTo, fromToken]);
 
   // Helper function to safely clamp large numbers for lightweight-charts
   const clampValue = (value: number): number => {
@@ -254,7 +256,8 @@ export function PoolCandlestickChart({
           type: 'custom',
           minMove: 0.00000001,
           formatter: (price: number) => {
-            return `${price.toFixed(6)} ${convertTo.toUpperCase()}`;
+            const baseToken = fromToken === 'token0' ? pair?.token1?.symbol : pair?.token0?.symbol;
+            return `${price.toFixed(6)} ${baseToken || convertTo.toUpperCase()}`;
           },
         },
       });
@@ -344,6 +347,10 @@ export function PoolCandlestickChart({
     setUseCurrentCurrency(!useCurrentCurrency);
   };
 
+  const handleFlipPair = () => {
+    setFromToken(fromToken === 'token0' ? 'token1' : 'token0');
+  };
+
   // Fetch data when dependencies change
   useEffect(() => {
     fetchHistoricalData();
@@ -428,7 +435,7 @@ export function PoolCandlestickChart({
     return () => {
       subscription.current?.();
     };
-  }, [pairAddress, intervalBy.value, convertTo]);
+  }, [pairAddress, intervalBy.value, convertTo, fromToken]);
 
   if (hasError) {
     return (
@@ -494,11 +501,39 @@ export function PoolCandlestickChart({
               alignItems: 'center',
               gap: 8
             }}>
-              {pair?.token0?.symbol || 'Token'}<span style={{ 
-                fontSize: 20, 
-                color: 'var(--light-font-color)',
-                fontWeight: 400 
-              }}>/</span>{pair?.token1?.symbol || 'AE'}
+              {fromToken === 'token0' 
+                ? `${pair?.token0?.symbol || 'Token'}/${pair?.token1?.symbol || 'AE'}`
+                : `${pair?.token1?.symbol || 'AE'}/${pair?.token0?.symbol || 'Token'}`
+              }
+              <button
+                onClick={handleFlipPair}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid var(--glass-border)',
+                  borderRadius: 8,
+                  padding: '4px 8px',
+                  color: 'var(--light-font-color)',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  backdropFilter: 'blur(10px)',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                title="Flip trading pair"
+              >
+                🔄
+              </button>
             </div>
             <div style={{
               display: 'flex',

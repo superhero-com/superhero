@@ -10,6 +10,7 @@ import AeButton from '../../../../components/AeButton';
 import { DexService } from '../../../../api/generated/services/DexService';
 import WebSocketClient from '../../../../libs/WebSocketClient';
 import moment from 'moment';
+import { useQuery } from '@tanstack/react-query';
 
 interface PoolCandlestickChartProps {
   pairAddress: string;
@@ -42,9 +43,14 @@ const intervals: Interval[] = [
 
 export function PoolCandlestickChart({
   pairAddress,
-  height = 400,
+  height = 600,
   className = '',
 }: PoolCandlestickChartProps) {
+  const { data: pair } = useQuery({
+    queryKey: ['pair', pairAddress],
+    queryFn: () => DexService.getPairByAddress({ address: pairAddress }),
+    enabled: !!pairAddress,
+  })
   const [intervalBy, setIntervalBy] = useState<Interval>(intervals[3]); // Default to 1h
   const [useCurrentCurrency, setUseCurrentCurrency] = useState(false);
   const [currentCandlePrice, setCurrentCandlePrice] = useState<CandlePrice | null>(null);
@@ -52,22 +58,22 @@ export function PoolCandlestickChart({
   const [currentCandleMarketCap, setCurrentCandleMarketCap] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
-  
+
   const candlestickSeries = useRef<ISeriesApi<'Candlestick'> | null>(null);
   const volumeSeries = useRef<ISeriesApi<'Histogram'> | null>(null);
   const marketCapSeries = useRef<ISeriesApi<'Histogram'> | null>(null);
   const subscription = useRef<(() => void) | null>(null);
 
-  const convertTo = useMemo(() => 
+  const convertTo = useMemo(() =>
     useCurrentCurrency ? 'usd' : 'ae',
     [useCurrentCurrency]
   );
 
   const currentCandleMovePercentage = useMemo(() => {
     if (!currentCandlePrice) return '0.00';
-    const percentage = 
+    const percentage =
       Number((currentCandlePrice.close - currentCandlePrice.open) / currentCandlePrice.open) * 100;
-    
+
     if (Math.abs(percentage) < 0.01) {
       return percentage.toFixed(3);
     }
@@ -81,10 +87,10 @@ export function PoolCandlestickChart({
 
   const fetchHistoricalData = useCallback(async () => {
     if (!pairAddress) return;
-    
+
     setIsLoading(true);
     setHasError(false);
-    
+
     try {
       const result = await DexService.getPaginatedHistory({
         address: pairAddress,
@@ -92,9 +98,9 @@ export function PoolCandlestickChart({
         convertTo: convertTo as any,
         limit: 100,
         page: 1,
-        });
+      });
 
-        if (result && Array.isArray(result)) {
+      if (result && Array.isArray(result)) {
         updateSeriesData([result]);
       } else {
         setHasError(true);
@@ -119,10 +125,10 @@ export function PoolCandlestickChart({
   // Helper function to format large numbers for display
   const formatLargeNumber = (value: number): string => {
     if (!isFinite(value) || isNaN(value)) return '0';
-    
+
     const absValue = Math.abs(value);
     const sign = value < 0 ? '-' : '';
-    
+
     if (absValue >= 1e18) {
       return `${sign}${(absValue / 1e18).toFixed(2)}E`;
     } else if (absValue >= 1e15) {
@@ -145,12 +151,12 @@ export function PoolCandlestickChart({
 
     // Merge pages arrays
     const newData = pages.reduce((acc, page) => [...acc, ...page], []);
-    
+
     const formattedData = newData
       .map((item: any) => {
         const volume = Number(item.quote?.volume || item.volume || 0);
         const marketCap = Number(item.quote?.market_cap || item.market_cap || 0);
-        
+
         return {
           time: moment(item.timeClose).unix(),
           open: Number(item.quote?.open || item.open || 0),
@@ -207,7 +213,7 @@ export function PoolCandlestickChart({
     // Set current candle data with original values for display
     if (formattedData.length > 0) {
       const lastCandle = formattedData[formattedData.length - 1];
-      
+
       setCurrentCandlePrice({
         open: lastCandle.open,
         high: lastCandle.high,
@@ -355,7 +361,7 @@ export function PoolCandlestickChart({
         const currentData = candlestickSeries.current.data();
         const currentVolumeData = volumeSeries.current.data();
         const currentMarketCapData = marketCapSeries.current.data();
-        
+
         const latestCandle = currentData.length ? currentData[currentData.length - 1] : null;
         const latestVolume = currentVolumeData.length ? currentVolumeData[currentVolumeData.length - 1] : null;
         const latestMarketCap = currentMarketCapData.length ? currentMarketCapData[currentMarketCapData.length - 1] : null;
@@ -380,7 +386,7 @@ export function PoolCandlestickChart({
 
           const newVolume = clampValue((latestVolume as any).value + parseInt(tx.data?.volume || '0'));
           const newMarketCap = clampValue(Number(tx.data?.market_cap?.[convertTo] || 0));
-          const isGreen = !currentData.length || currentData.length < 2 || 
+          const isGreen = !currentData.length || currentData.length < 2 ||
             (currentData[currentData.length - 2] as any).close < currentPrice;
 
           volumeSeries.current.update({
@@ -426,13 +432,34 @@ export function PoolCandlestickChart({
 
   if (hasError) {
     return (
-      <div className={`bg-gray-900 rounded-lg p-8 text-center ${className}`} style={{ height }}>
-        <p className="text-red-400">Failed to load chart data</p>
+      <div className={`genz-card ${className}`} style={{
+        background: 'var(--glass-bg)',
+        border: '1px solid var(--glass-border)',
+        backdropFilter: 'blur(20px)',
+        borderRadius: 24,
+        padding: 32,
+        boxShadow: 'var(--glass-shadow)',
+        position: 'relative',
+        overflow: 'hidden',
+        height,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center'
+      }}>
+        <div style={{
+          fontSize: 16,
+          color: 'var(--error-color)',
+          marginBottom: 16,
+          fontWeight: 500
+        }}>
+          Failed to load chart data
+        </div>
         <AeButton
           variant="primary"
-          size="small"
+          size="medium"
           onClick={fetchHistoricalData}
-          className="mt-4"
         >
           Retry
         </AeButton>
@@ -441,15 +468,45 @@ export function PoolCandlestickChart({
   }
 
   return (
-    <div className={`bg-gray-900 rounded-lg overflow-hidden ${className}`}>
+    <div className={`genz-card ${className}`} style={{
+      background: 'var(--glass-bg)',
+      border: '1px solid var(--glass-border)',
+      backdropFilter: 'blur(20px)',
+      borderRadius: 24,
+      padding: 0,
+      boxShadow: 'var(--glass-shadow)',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
       <div className="relative" style={{ height }}>
         {/* Chart Info Overlay */}
-        <div className="absolute top-0 left-0 right-24 z-20 p-4 bg-gradient-to-b from-gray-900 via-gray-900/75 to-transparent">
+        <div className="absolute top-0 left-0 right-24 z-20" style={{
+          padding: 20,
+          background: 'linear-gradient(180deg, rgba(var(--glass-bg-rgb), 0.95) 0%, rgba(var(--glass-bg-rgb), 0.75) 47.5%, rgba(var(--glass-bg-rgb), 0) 100%)',
+          backdropFilter: 'blur(10px)'
+        }}>
           <div className="flex flex-wrap items-end gap-1 mb-2">
-            <div className="text-lg font-bold">
-              Pool<span className="mx-1 text-xl font-normal">/</span>AE
+            <div style={{
+              fontSize: 18,
+              fontWeight: 700,
+              color: 'var(--standard-font-color)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8
+            }}>
+              {pair?.token0?.symbol || 'Token'}<span style={{ 
+                fontSize: 20, 
+                color: 'var(--light-font-color)',
+                fontWeight: 400 
+              }}>/</span>{pair?.token1?.symbol || 'AE'}
             </div>
-            <div className="flex gap-1 pb-1 text-sm text-gray-400">
+            <div style={{
+              display: 'flex',
+              gap: 4,
+              paddingBottom: 4,
+              fontSize: 12,
+              color: 'var(--light-font-color)'
+            }}>
               <span>on</span>
               <span>Aeternity</span>
               <span>·</span>
@@ -458,38 +515,63 @@ export function PoolCandlestickChart({
           </div>
 
           {currentCandlePrice && (
-            <div className="text-sm">
-              <div className="flex gap-4 flex-wrap mb-1">
-                <div className="flex gap-2">
-                  <span>
+            <div style={{ fontSize: 14 }}>
+              <div style={{ 
+                display: 'flex', 
+                gap: 16, 
+                flexWrap: 'wrap', 
+                marginBottom: 8 
+              }}>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <span style={{ color: 'var(--light-font-color)' }}>
                     O{' '}
-                    <span className={isTrendingUp ? 'text-green-400' : 'text-red-400'}>
+                    <span style={{ 
+                      color: isTrendingUp ? 'var(--success-color)' : 'var(--error-color)',
+                      fontWeight: 600,
+                      fontFamily: 'monospace'
+                    }}>
                       {currentCandlePrice.open.toFixed(6)}
                     </span>
                   </span>
-                  <span>
+                  <span style={{ color: 'var(--light-font-color)' }}>
                     H{' '}
-                    <span className={isTrendingUp ? 'text-green-400' : 'text-red-400'}>
+                    <span style={{ 
+                      color: isTrendingUp ? 'var(--success-color)' : 'var(--error-color)',
+                      fontWeight: 600,
+                      fontFamily: 'monospace'
+                    }}>
                       {currentCandlePrice.high.toFixed(6)}
                     </span>
                   </span>
                 </div>
-                <div className="flex gap-2">
-                  <span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <span style={{ color: 'var(--light-font-color)' }}>
                     L{' '}
-                    <span className={isTrendingUp ? 'text-green-400' : 'text-red-400'}>
+                    <span style={{ 
+                      color: isTrendingUp ? 'var(--success-color)' : 'var(--error-color)',
+                      fontWeight: 600,
+                      fontFamily: 'monospace'
+                    }}>
                       {currentCandlePrice.low.toFixed(6)}
                     </span>
                   </span>
-                  <span>
+                  <span style={{ color: 'var(--light-font-color)' }}>
                     C{' '}
-                    <span className={isTrendingUp ? 'text-green-400' : 'text-red-400'}>
+                    <span style={{ 
+                      color: isTrendingUp ? 'var(--success-color)' : 'var(--error-color)',
+                      fontWeight: 600,
+                      fontFamily: 'monospace'
+                    }}>
                       {currentCandlePrice.close.toFixed(6)}
                     </span>
                   </span>
                 </div>
-                <div className="pl-2">
-                  <span className={isTrendingUp ? 'text-green-400' : 'text-red-400'}>
+                <div style={{ paddingLeft: 8 }}>
+                  <span style={{ 
+                    color: isTrendingUp ? 'var(--success-color)' : 'var(--error-color)',
+                    fontWeight: 700,
+                    fontFamily: 'monospace'
+                  }}>
                     {isTrendingUp ? '+' : ''}
                     {(currentCandlePrice.close - currentCandlePrice.open).toFixed(6)} (
                     {isTrendingUp ? '+' : ''}
@@ -497,16 +579,24 @@ export function PoolCandlestickChart({
                   </span>
                 </div>
               </div>
-              <div className="flex gap-4">
-                <div>
+              <div style={{ display: 'flex', gap: 16 }}>
+                <div style={{ color: 'var(--light-font-color)' }}>
                   Vol{' '}
-                  <span className={isTrendingUp ? 'text-green-400' : 'text-red-400'}>
+                  <span style={{ 
+                    color: isTrendingUp ? 'var(--success-color)' : 'var(--error-color)',
+                    fontWeight: 600,
+                    fontFamily: 'monospace'
+                  }}>
                     {formatLargeNumber(currentCandleVolume)}
                   </span>
                 </div>
-                <div>
+                <div style={{ color: 'var(--light-font-color)' }}>
                   MCap{' '}
-                  <span className={isTrendingUp ? 'text-green-400' : 'text-red-400'}>
+                  <span style={{ 
+                    color: isTrendingUp ? 'var(--success-color)' : 'var(--error-color)',
+                    fontWeight: 600,
+                    fontFamily: 'monospace'
+                  }}>
                     {formatLargeNumber(currentCandleMarketCap)}
                   </span>
                 </div>
@@ -520,44 +610,84 @@ export function PoolCandlestickChart({
 
         {/* Loading Overlay */}
         {isLoading && (
-          <div className="absolute inset-0 bg-gray-900/50 flex items-center justify-center">
-            <div className="text-white">Loading...</div>
+          <div className="absolute inset-0 flex items-center justify-center" style={{
+            background: 'rgba(var(--glass-bg-rgb), 0.8)',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <div style={{
+              color: 'var(--standard-font-color)',
+              fontSize: 16,
+              fontWeight: 500
+            }}>
+              Loading chart data...
+            </div>
           </div>
         )}
       </div>
 
       {/* Chart Controls */}
-      <div className="flex items-center justify-between p-2 border-t border-gray-700">
-        <div className="flex flex-wrap items-center">
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '16px 20px',
+        borderTop: '1px solid var(--glass-border)',
+        background: 'rgba(255, 255, 255, 0.02)',
+        backdropFilter: 'blur(10px)'
+      }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
           {intervals.map((interval) => (
             <AeButton
               key={interval.value}
-              variant={intervalBy.value === interval.value ? 'primary' : 'secondary'}
+              variant={intervalBy.value === interval.value ? 'primary' : 'secondary-dark'}
               size="small"
               onClick={() => handleIntervalChange(interval)}
-              className="mr-1"
+              style={{
+                minWidth: 40,
+                fontSize: 12,
+                fontWeight: 600
+              }}
             >
               {interval.label}
             </AeButton>
           ))}
         </div>
-        
-        <div className="flex items-center gap-2">
-          <div className="text-gray-400 text-sm">
+
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 12 
+        }}>
+          <div style={{
+            color: 'var(--light-font-color)',
+            fontSize: 12,
+            fontFamily: 'monospace',
+            fontWeight: 500
+          }}>
             {moment().format('HH:mm:ss')}
           </div>
-          <div className="text-gray-400">|</div>
+          <div style={{ color: 'var(--glass-border)' }}>|</div>
           <AeButton
-            variant="secondary"
+            variant="secondary-dark"
             size="small"
             onClick={handleCurrencyToggle}
-            className="text-sm uppercase"
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              textTransform: 'uppercase'
+            }}
           >
-            <span className={!useCurrentCurrency ? 'text-blue-400 font-bold' : ''}>
+            <span style={{ 
+              color: !useCurrentCurrency ? 'var(--accent-color)' : 'var(--light-font-color)',
+              fontWeight: !useCurrentCurrency ? 700 : 500
+            }}>
               AE
             </span>
-            /
-            <span className={useCurrentCurrency ? 'text-blue-400 font-bold' : ''}>
+            <span style={{ margin: '0 4px', color: 'var(--light-font-color)' }}>/</span>
+            <span style={{ 
+              color: useCurrentCurrency ? 'var(--accent-color)' : 'var(--light-font-color)',
+              fontWeight: useCurrentCurrency ? 700 : 500
+            }}>
               USD
             </span>
           </AeButton>

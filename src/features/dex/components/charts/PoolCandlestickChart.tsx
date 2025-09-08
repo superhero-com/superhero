@@ -208,10 +208,11 @@ export function PoolCandlestickChart({
     const volumeData = formattedData.map((item, index) => {
       const previousItem = index > 0 ? formattedData[index - 1] : item;
       const isGreen = item.close > previousItem.close || item.close === item.open;
+      const safeValue = safeParseNumber(item.volume, 0);
 
       return {
         time: item.time,
-        value: item.volume, // Already clamped
+        value: safeValue,
         color: index === 0 || isGreen ? '#2BCC61' : '#F5274E',
       };
     });
@@ -222,10 +223,11 @@ export function PoolCandlestickChart({
     const marketCapData = formattedData.map((item, index) => {
       const previousItem = index > 0 ? formattedData[index - 1] : item;
       const isGreen = item.close > previousItem.close || item.close === item.open;
+      const safeValue = safeParseNumber(item.market_cap, 0);
 
       return {
         time: item.time,
-        value: item.market_cap, // Already clamped
+        value: safeValue,
         color: index === 0 || isGreen ? '#2BCC61' : '#F5274E',
       };
     });
@@ -432,7 +434,7 @@ export function PoolCandlestickChart({
         const latestVolume = currentVolumeData.length ? currentVolumeData[currentVolumeData.length - 1] : null;
         const latestMarketCap = currentMarketCapData.length ? currentMarketCapData[currentMarketCapData.length - 1] : null;
 
-        const currentPrice = Number(tx.data?.buy_price?.[convertTo] || 0);
+        const currentPrice = safeParseNumber(tx.data?.buy_price?.[convertTo], 0);
         const currentTime = Math.floor(Date.now() / 1000);
 
         if (
@@ -442,18 +444,24 @@ export function PoolCandlestickChart({
           currentTime - (latestCandle as any).time < intervalBy.value
         ) {
           // Update existing candle
+          const safeOpen = safeParseNumber((latestCandle as any).open, 0);
+          const safeHigh = safeParseNumber((latestCandle as any).high, 0);
+          const safeLow = safeParseNumber((latestCandle as any).low, 0);
+
           candlestickSeries.current.update({
             time: (latestCandle as any).time as any,
-            open: (latestCandle as any).open,
+            open: safeOpen,
             close: currentPrice,
-            high: Math.max((latestCandle as any).high, currentPrice),
-            low: Math.min((latestCandle as any).low, currentPrice),
+            high: Math.max(safeHigh, currentPrice),
+            low: Math.min(safeLow, currentPrice),
           });
 
-          const newVolume = (latestVolume as any).value + parseVolume(tx.data?.volume || '0');
-          const newMarketCap = Number(tx.data?.market_cap?.[convertTo] || 0);
+          const currentVolumeValue = safeParseNumber((latestVolume as any).value, 0);
+          const additionalVolume = parseVolume(tx.data?.volume || '0');
+          const newVolume = safeParseNumber(currentVolumeValue + additionalVolume, 0);
+          const newMarketCap = safeParseNumber(tx.data?.market_cap?.[convertTo], 0);
           const isGreen = !currentData.length || currentData.length < 2 ||
-            (currentData[currentData.length - 2] as any).close < currentPrice;
+            safeParseNumber((currentData[currentData.length - 2] as any).close, 0) < currentPrice;
 
           volumeSeries.current.update({
             time: (latestVolume as any).time as any,
@@ -468,9 +476,11 @@ export function PoolCandlestickChart({
           });
         } else {
           // Create new candle
+          const openPrice = latestCandle ? safeParseNumber((latestCandle as any).close, 0) : currentPrice;
+          
           candlestickSeries.current.update({
             time: currentTime as any,
-            open: latestCandle ? (latestCandle as any).close : currentPrice,
+            open: openPrice,
             close: currentPrice,
             high: currentPrice,
             low: currentPrice,
@@ -484,7 +494,7 @@ export function PoolCandlestickChart({
 
           marketCapSeries.current.update({
             time: currentTime as any,
-            value: Number(tx.data?.market_cap?.[convertTo] || 0),
+            value: safeParseNumber(tx.data?.market_cap?.[convertTo], 0),
             color: '#2BCC61',
           });
         }

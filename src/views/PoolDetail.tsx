@@ -229,40 +229,6 @@ export default function PoolDetail() {
     };
   }, [pool, token0Data, token1Data]);
 
-  // Loading state (modified from TokenDetail)
-  if (loading) {
-    return (
-      <div className="pool-detail-layout" style={{
-        maxWidth: 1200,
-        margin: '0 auto',
-        padding: '20px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '400px'
-      }}>
-        <div style={{
-          textAlign: 'center',
-          color: 'var(--light-font-color)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 16
-        }}>
-          <div style={{
-            width: 32,
-            height: 32,
-            border: '3px solid rgba(255,255,255,0.1)',
-            borderTop: '3px solid var(--accent-color)',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
-          Loading pool details...
-        </div>
-      </div>
-    );
-  }
-
   // Error state (modified from TokenDetail)
   if (error) {
     return (

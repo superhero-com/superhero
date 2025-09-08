@@ -122,7 +122,25 @@ export function PoolCandlestickChart({
 
   // Helper function to safely clamp large numbers for lightweight-charts
   const parseVolume = (value: string): number => {
-    return Number(Decimal.from(value).div(Decimal.from(10 ** 18)).prettify());
+    try {
+      if (!value || value === 'undefined' || value === 'null') {
+        return 0;
+      }
+      const parsed = Number(Decimal.from(value).div(Decimal.from(10 ** 18)).prettify());
+      return isFinite(parsed) && !isNaN(parsed) ? parsed : 0;
+    } catch (error) {
+      console.warn('Error parsing volume:', value, error);
+      return 0;
+    }
+  };
+
+  // Helper function to safely parse and validate numeric values
+  const safeParseNumber = (value: any, fallback: number = 0): number => {
+    if (value === null || value === undefined || value === '' || value === 'undefined' || value === 'null') {
+      return fallback;
+    }
+    const parsed = Number(value);
+    return isFinite(parsed) && !isNaN(parsed) ? parsed : fallback;
   };
 
   // Helper function to format large numbers for display
@@ -157,15 +175,16 @@ export function PoolCandlestickChart({
 
     const formattedData = newData
       .map((item: any) => {
-        const volume = parseVolume(item.quote?.volume || item.volume || 0);
-        const marketCap = Number(item.quote?.market_cap || item.market_cap || 0);
+        const volumeString = item.quote?.volume || item.volume || '0';
+        const volume = parseVolume(volumeString);
+        const marketCap = safeParseNumber(item.quote?.market_cap || item.market_cap, 0);
 
         return {
           time: moment(item.timeClose).unix(),
-          open: Number(item.quote?.open || item.open || 0),
-          close: Number(item.quote?.close || item.close || 0),
-          high: Number(item.quote?.high || item.high || 0),
-          low: Number(item.quote?.low || item.low || 0),
+          open: safeParseNumber(item.quote?.open || item.open, 0),
+          close: safeParseNumber(item.quote?.close || item.close, 0),
+          high: safeParseNumber(item.quote?.high || item.high, 0),
+          low: safeParseNumber(item.quote?.low || item.low, 0),
           volume,
           market_cap: marketCap,
           originalVolume: volume, // Keep original for display

@@ -11,6 +11,7 @@ import { DexService } from '../../../../api/generated/services/DexService';
 import WebSocketClient from '../../../../libs/WebSocketClient';
 import moment from 'moment';
 import { useQuery } from '@tanstack/react-query';
+import { Decimal } from '../../../../libs/decimal';
 
 interface PoolCandlestickChartProps {
   pairAddress: string;
@@ -116,12 +117,8 @@ export function PoolCandlestickChart({
   }, [pairAddress, intervalBy.value, convertTo, fromToken]);
 
   // Helper function to safely clamp large numbers for lightweight-charts
-  const clampValue = (value: number): number => {
-    const MAX_SAFE_VALUE = 90071992547409.91;
-    if (!isFinite(value) || isNaN(value)) return 0;
-    if (value > MAX_SAFE_VALUE) return MAX_SAFE_VALUE;
-    if (value < -MAX_SAFE_VALUE) return -MAX_SAFE_VALUE;
-    return value;
+  const parseVolume = (value: string): number => {
+    return Number(Decimal.from(value).div(Decimal.from(10 ** 18)).prettify());
   };
 
   // Helper function to format large numbers for display
@@ -156,7 +153,7 @@ export function PoolCandlestickChart({
 
     const formattedData = newData
       .map((item: any) => {
-        const volume = Number(item.quote?.volume || item.volume || 0);
+        const volume = parseVolume(item.quote?.volume || item.volume || 0);
         const marketCap = Number(item.quote?.market_cap || item.market_cap || 0);
 
         return {
@@ -165,8 +162,8 @@ export function PoolCandlestickChart({
           close: Number(item.quote?.close || item.close || 0),
           high: Number(item.quote?.high || item.high || 0),
           low: Number(item.quote?.low || item.low || 0),
-          volume: clampValue(volume),
-          market_cap: clampValue(marketCap),
+          volume,
+          market_cap: marketCap,
           originalVolume: volume, // Keep original for display
           originalMarketCap: marketCap, // Keep original for display
         };
@@ -225,7 +222,7 @@ export function PoolCandlestickChart({
       setCurrentCandleVolume(lastCandle.originalVolume || 0);
       setCurrentCandleMarketCap(lastCandle.originalMarketCap || 0);
     }
-  }, [clampValue]);
+  }, []);
 
   const { chartContainer, chart } = useChart({
     height,
@@ -245,99 +242,131 @@ export function PoolCandlestickChart({
       },
     },
     onChartReady: (chartInstance) => {
-      // Add candlestick series
-      const candlestickSeriesInstance = chartInstance.addSeries(CandlestickSeries, {
-        upColor: '#2BCC61',
-        downColor: '#F5274E',
-        borderVisible: false,
-        wickUpColor: '#2BCC61',
-        wickDownColor: '#F5274E',
-        priceFormat: {
-          type: 'custom',
-          minMove: 0.00000001,
-          formatter: (price: number) => {
-            const baseToken = fromToken === 'token0' ? pair?.token1?.symbol : pair?.token0?.symbol;
-            return `${price.toFixed(6)} ${baseToken || convertTo.toUpperCase()}`;
-          },
-        },
-      });
-
-      // Add volume series
-      const volumeSeriesInstance = chartInstance.addSeries(HistogramSeries, {
-        priceFormat: {
-          type: 'custom',
-          formatter: () => '',
-        },
-        priceScaleId: 'volume',
-      });
-
-      // Add market cap series
-      const marketCapSeriesInstance = chartInstance.addSeries(HistogramSeries, {
-        visible: false,
-        priceFormat: {
-          type: 'custom',
-          formatter: () => '',
-        },
-        priceScaleId: 'marketCap',
-      });
-
-      // Configure price scales
-      chartInstance.priceScale('right').applyOptions({
-        visible: true,
-        borderColor: 'rgba(255,255,255, 0)',
-      });
-
-      chartInstance.timeScale().applyOptions({
-        borderColor: 'rgba(255,255,255, 0.2)',
-        rightOffset: 5,
-        minBarSpacing: 10,
-        timeVisible: true,
-        secondsVisible: true,
-      });
-
-      volumeSeriesInstance.priceScale().applyOptions({
-        visible: false,
-        scaleMargins: {
-          top: 0.9,
-          bottom: 0,
-        },
-      });
-
-      marketCapSeriesInstance.priceScale().applyOptions({
-        visible: false,
-        scaleMargins: {
-          top: 0.2,
-          bottom: 0.2,
-        },
-      });
-
-      candlestickSeriesInstance.priceScale().applyOptions({
-        scaleMargins: {
-          top: 0.2,
-          bottom: 0.2,
-        },
-      });
-
-      // Subscribe to crosshair moves
-      chartInstance.subscribeCrosshairMove((param) => {
-        if (param.time) {
-          const candleData = param.seriesData.get(candlestickSeriesInstance) as any;
-          const volumeData = param.seriesData.get(volumeSeriesInstance) as any;
-          const marketCapData = param.seriesData.get(marketCapSeriesInstance) as any;
-
-          if (candleData) {
-            setCurrentCandlePrice(candleData);
-          }
-          setCurrentCandleVolume(volumeData?.value || 0);
-          setCurrentCandleMarketCap(marketCapData?.value || 0);
-        }
-      });
-
-      candlestickSeries.current = candlestickSeriesInstance;
-      volumeSeries.current = volumeSeriesInstance;
-      marketCapSeries.current = marketCapSeriesInstance;
+      initializeSeries(chartInstance, false); // false = don't remove existing series
     },
   });
+
+  const initializeSeries = useCallback((chartInstance: any, shouldRemoveExisting = true) => {
+    // Clear existing series only if we're reinitializing and they exist
+    if (shouldRemoveExisting) {
+      if (candlestickSeries.current) {
+        try {
+          chartInstance.removeSeries(candlestickSeries.current);
+          candlestickSeries.current = null;
+        } catch (error) {
+          console.warn('Error removing candlestick series:', error);
+        }
+      }
+      if (volumeSeries.current) {
+        try {
+          chartInstance.removeSeries(volumeSeries.current);
+          volumeSeries.current = null;
+        } catch (error) {
+          console.warn('Error removing volume series:', error);
+        }
+      }
+      if (marketCapSeries.current) {
+        try {
+          chartInstance.removeSeries(marketCapSeries.current);
+          marketCapSeries.current = null;
+        } catch (error) {
+          console.warn('Error removing market cap series:', error);
+        }
+      }
+    }
+
+    // Add candlestick series
+    const candlestickSeriesInstance = chartInstance.addSeries(CandlestickSeries, {
+      upColor: '#2BCC61',
+      downColor: '#F5274E',
+      borderVisible: false,
+      wickUpColor: '#2BCC61',
+      wickDownColor: '#F5274E',
+      priceFormat: {
+        type: 'custom',
+        minMove: 0.00000001,
+        formatter: (price: number) => {
+          const baseToken = fromToken === 'token0' ? pair?.token1?.symbol : pair?.token0?.symbol;
+          return `${price.toFixed(6)} ${baseToken || convertTo.toUpperCase()}`;
+        },
+      },
+    });
+
+    // Add volume series
+    const volumeSeriesInstance = chartInstance.addSeries(HistogramSeries, {
+      priceFormat: {
+        type: 'custom',
+        formatter: () => '',
+      },
+      priceScaleId: 'volume',
+    });
+
+    // Add market cap series
+    const marketCapSeriesInstance = chartInstance.addSeries(HistogramSeries, {
+      visible: false,
+      priceFormat: {
+        type: 'custom',
+        formatter: () => '',
+      },
+      priceScaleId: 'marketCap',
+    });
+
+    // Configure price scales
+    chartInstance.priceScale('right').applyOptions({
+      visible: true,
+      borderColor: 'rgba(255,255,255, 0)',
+    });
+
+    chartInstance.timeScale().applyOptions({
+      borderColor: 'rgba(255,255,255, 0.2)',
+      rightOffset: 5,
+      minBarSpacing: 10,
+      timeVisible: true,
+      secondsVisible: true,
+    });
+
+    volumeSeriesInstance.priceScale().applyOptions({
+      visible: false,
+      scaleMargins: {
+        top: 0.9,
+        bottom: 0,
+      },
+    });
+
+    marketCapSeriesInstance.priceScale().applyOptions({
+      visible: false,
+      scaleMargins: {
+        top: 0.2,
+        bottom: 0.2,
+      },
+    });
+
+    candlestickSeriesInstance.priceScale().applyOptions({
+      scaleMargins: {
+        top: 0.2,
+        bottom: 0.2,
+      },
+    });
+
+    // Subscribe to crosshair moves
+    chartInstance.subscribeCrosshairMove((param) => {
+      if (param.time) {
+        const candleData = param.seriesData.get(candlestickSeriesInstance) as any;
+        const volumeData = param.seriesData.get(volumeSeriesInstance) as any;
+        const marketCapData = param.seriesData.get(marketCapSeriesInstance) as any;
+
+        if (candleData) {
+          setCurrentCandlePrice(candleData);
+        }
+        setCurrentCandleVolume(volumeData?.value || 0);
+        setCurrentCandleMarketCap(marketCapData?.value || 0);
+      }
+    });
+
+    candlestickSeries.current = candlestickSeriesInstance;
+    volumeSeries.current = volumeSeriesInstance;
+    marketCapSeries.current = marketCapSeriesInstance;
+  }, [fromToken, pair, convertTo]);
 
   const handleIntervalChange = (interval: Interval) => {
     setIntervalBy(interval);
@@ -350,6 +379,13 @@ export function PoolCandlestickChart({
   const handleFlipPair = () => {
     setFromToken(fromToken === 'token0' ? 'token1' : 'token0');
   };
+
+  // Reinitialize chart series when fromToken or pair changes
+  useEffect(() => {
+    if (chart) {
+      initializeSeries(chart, true); // true = remove existing series before creating new ones
+    }
+  }, [chart, initializeSeries]);
 
   // Fetch data when dependencies change
   useEffect(() => {
@@ -391,8 +427,8 @@ export function PoolCandlestickChart({
             low: Math.min((latestCandle as any).low, currentPrice),
           });
 
-          const newVolume = clampValue((latestVolume as any).value + parseInt(tx.data?.volume || '0'));
-          const newMarketCap = clampValue(Number(tx.data?.market_cap?.[convertTo] || 0));
+          const newVolume = (latestVolume as any).value + parseVolume(tx.data?.volume || '0');
+          const newMarketCap = Number(tx.data?.market_cap?.[convertTo] || 0);
           const isGreen = !currentData.length || currentData.length < 2 ||
             (currentData[currentData.length - 2] as any).close < currentPrice;
 
@@ -419,13 +455,13 @@ export function PoolCandlestickChart({
 
           volumeSeries.current.update({
             time: currentTime as any,
-            value: clampValue(parseInt(tx.data?.volume || '0')),
+            value: parseVolume(tx.data?.volume || '0'),
             color: '#2BCC61',
           });
 
           marketCapSeries.current.update({
             time: currentTime as any,
-            value: clampValue(Number(tx.data?.market_cap?.[convertTo] || 0)),
+            value: Number(tx.data?.market_cap?.[convertTo] || 0),
             color: '#2BCC61',
           });
         }
@@ -488,7 +524,7 @@ export function PoolCandlestickChart({
       <div className="relative" style={{ height }}>
         {/* Chart Info Overlay */}
         <div className="absolute top-0 left-0 right-24 z-20" style={{
-          padding: 20,
+          padding: '10px 20px',
           background: 'linear-gradient(180deg, rgba(var(--glass-bg-rgb), 0.95) 0%, rgba(var(--glass-bg-rgb), 0.75) 47.5%, rgba(var(--glass-bg-rgb), 0) 100%)',
           backdropFilter: 'blur(10px)'
         }}>

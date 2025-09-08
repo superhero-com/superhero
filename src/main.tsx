@@ -14,7 +14,8 @@ import { OpenAPI } from './api/generated';
 import { AeSdkProvider } from './context/AeSdkProvider';
 
 // TODO: should be based on the active network
-OpenAPI.BASE = `https://api.dev.tokensale.org`;
+OpenAPI.BASE = `http://localhost:3000`;
+// OpenAPI.BASE = `https://api.dev.tokensale.org`;
 
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 

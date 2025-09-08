@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { Token } from '../types/explore';
+import { DexTokenDto } from '../../../api/generated';
 
 interface TokenTableProps {
-  tokens: Token[];
+  tokens: DexTokenDto[];
   sort: { key: 'name' | 'pairs' | 'priceUsd' | 'tvlUsd' | 'priceChangeDay' | 'volumeUsdDay' | 'volumeUsdAll'; asc: boolean };
   onSortChange: (key: 'name' | 'pairs' | 'priceUsd' | 'tvlUsd' | 'priceChangeDay' | 'volumeUsdDay' | 'volumeUsdAll') => void;
   search: string;
@@ -581,7 +582,7 @@ export default function TokenTable({
                   color: 'var(--standard-font-color)',
                   fontWeight: 500
                 }}>
-                  {token.pairs || 0}
+                  {token.pairs_count || 0}
                 </td>
 
                 {/* Price Column */}

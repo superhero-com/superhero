@@ -27,14 +27,14 @@ export function useSwapExecution() {
 
     // eslint-disable-next-line no-console
     console.info('[dex] Ensuring allowance for router…', {
-      token: tokenIn.contractId,
+      token: tokenIn.address,
       amount: amountAettos.toString()
     });
 
-    await ensureAllowanceForRouter(sdk, tokenIn.contractId, activeAccount, amountAettos);
+    await ensureAllowanceForRouter(sdk, tokenIn.address, activeAccount, amountAettos);
 
     try {
-      const current = await getRouterTokenAllowance(sdk, tokenIn.contractId, activeAccount);
+      const current = await getRouterTokenAllowance(sdk, tokenIn.address, activeAccount);
       setAllowanceInfo(`Allowance: ${fromAettos(current, tokenIn.decimals)} ${tokenIn.symbol}`);
     } catch { }
   }
@@ -64,7 +64,7 @@ export function useSwapExecution() {
         throw new Error('No output amount calculated. Please try selecting different tokens or amounts.');
       }
 
-      if (params.tokenIn.contractId === params.tokenOut.contractId) {
+      if (params.tokenIn.address === params.tokenOut.address) {
         throw new Error('Cannot swap the same token. Please select different tokens.');
       }
 
@@ -86,8 +86,8 @@ export function useSwapExecution() {
       const deadline = BigInt(Date.now() + Math.max(1, Math.min(60, params.deadlineMins)) * 60_000);
 
       // Choose method based on AE involvement
-      const isInAe = !!params.tokenIn?.isAe;
-      const isOutAe = !!params.tokenOut?.isAe;
+      const isInAe = !!params.tokenIn?.is_ae;
+      const isOutAe = !!params.tokenOut?.is_ae;
 
       let txHash: string | undefined;
 
@@ -230,8 +230,8 @@ export function useSwapExecution() {
           type: 'swap',
           hash: txHash,
           account: activeAccount,
-          tokenIn: params.tokenIn?.symbol || params.tokenIn?.contractId,
-          tokenOut: params.tokenOut?.symbol || params.tokenOut?.contractId,
+          tokenIn: params.tokenIn?.symbol || params.tokenIn?.address,
+          tokenOut: params.tokenOut?.symbol || params.tokenOut?.address,
           amountIn: params.amountIn,
           amountOut: params.amountOut,
         });
@@ -263,8 +263,8 @@ export function useSwapExecution() {
         code: e?.code,
         data: e?.data,
         params: {
-          tokenIn: params.tokenIn?.symbol || params.tokenIn?.contractId,
-          tokenOut: params.tokenOut?.symbol || params.tokenOut?.contractId,
+          tokenIn: params.tokenIn?.symbol || params.tokenIn?.address,
+          tokenOut: params.tokenOut?.symbol || params.tokenOut?.address,
           amountIn: params.amountIn,
           amountOut: params.amountOut,
           path: params.path,

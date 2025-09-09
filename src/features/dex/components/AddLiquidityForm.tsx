@@ -123,7 +123,7 @@ export default function AddLiquidityForm() {
     const matches = (t: DexTokenDto) =>
       !term || t.symbol.toLowerCase().includes(term) || (t.address || '').toLowerCase().includes(term);
     const ae = tokens.find((t) => t.is_ae);
-    const wae = tokens.find((t) => t.contractId === DEX_ADDRESSES.wae);
+    const wae = tokens.find((t) => t.address === DEX_ADDRESSES.wae);
     const rest = tokens.filter((t) => t !== ae && t !== wae).filter(matches);
     const out: DexTokenDto[] = [];
     if (ae && matches(ae)) out.push(ae);
@@ -137,7 +137,7 @@ export default function AddLiquidityForm() {
     const matches = (t: DexTokenDto) =>
       !term || t.symbol.toLowerCase().includes(term) || (t.address || '').toLowerCase().includes(term);
     const ae = tokens.find((t) => t.is_ae);
-    const wae = tokens.find((t) => t.contractId === DEX_ADDRESSES.wae);
+    const wae = tokens.find((t) => t.address === DEX_ADDRESSES.wae);
     const rest = tokens.filter((t) => t !== ae && t !== wae).filter(matches);
     const out: DexTokenDto[] = [];
     if (ae && matches(ae)) out.push(ae);

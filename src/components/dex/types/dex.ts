@@ -1,3 +1,5 @@
+import { DexTokenDto } from "../../../api/generated";
+
 export interface TokenBalance {
   in?: string;
   out?: string;
@@ -9,8 +11,8 @@ export interface WrapBalances {
 }
 
 export interface SwapState {
-  tokenIn: Token | null;
-  tokenOut: Token | null;
+  tokenIn: DexTokenDto | null;
+  tokenOut: DexTokenDto | null;
   amountIn: string;
   amountOut: string;
   isExactIn: boolean;
@@ -73,16 +75,16 @@ export interface RecentActivity {
 export interface SwapQuoteParams {
   amountIn: string;
   amountOut: string;
-  tokenIn: Token | null;
-  tokenOut: Token | null;
+  tokenIn: DexTokenDto | null;
+  tokenOut: DexTokenDto | null;
   isExactIn: boolean;
 }
 
 export interface SwapExecutionParams {
   amountIn: string;
   amountOut: string;
-  tokenIn: Token | null;
-  tokenOut: Token | null;
+  tokenIn: DexTokenDto | null;
+  tokenOut: DexTokenDto | null;
   path: string[];
   slippagePct: number;
   deadlineMins: number;
@@ -90,8 +92,7 @@ export interface SwapExecutionParams {
 }
 
 export interface TokenListState {
-  tokens: Token[];
-  loading: boolean;
+  tokens: DexTokenDto[];
 }
 
 export interface SwapSettings {

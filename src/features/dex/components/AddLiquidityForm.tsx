@@ -4,7 +4,7 @@ import ConnectWalletButton from '../../../components/ConnectWalletButton';
 import { useAddLiquidity } from '../hooks';
 import { useTokenList } from '../../../components/dex/hooks/useTokenList';
 import { useTokenBalances } from '../../../components/dex/hooks/useTokenBalances';
-import { Token } from '../../../components/dex/types/dex';
+import { DexTokenDto } from '../../../api/generated';
 import TokenInput from '../../../components/dex/core/TokenInput';
 import DexSettings from './DexSettings';
 import LiquidityConfirmation from './LiquidityConfirmation';
@@ -21,8 +21,8 @@ export default function AddLiquidityForm() {
 
   // Token list and balances
   const { tokens, loading: tokensLoading } = useTokenList();
-  const [tokenA, setTokenA] = useState<Token | null>(null);
-  const [tokenB, setTokenB] = useState<Token | null>(null);
+  const [tokenA, setTokenA] = useState<DexTokenDto | null>(null);
+  const [tokenB, setTokenB] = useState<DexTokenDto | null>(null);
   const { balances } = useTokenBalances(tokenA, tokenB);
 
   // Amounts and liquidity state
@@ -41,7 +41,7 @@ export default function AddLiquidityForm() {
   const [successAmounts, setSuccessAmounts] = useState<{ amountA: string; amountB: string }>({ amountA: '', amountB: '' });
 
   // Helper function to find token by symbol or contract address
-  const findToken = (identifier: string): Token | null => {
+  const findToken = (identifier: string): DexTokenDto | null => {
     if (!identifier || !tokens.length) return null;
     
     // First try to find by symbol (case insensitive)
@@ -52,13 +52,13 @@ export default function AddLiquidityForm() {
     
     // Then try to find by contract address
     const byAddress = tokens.find(t => 
-      t.contractId === identifier || t.contractId === identifier.toLowerCase()
+      t.address === identifier || t.address === identifier.toLowerCase()
     );
     if (byAddress) return byAddress;
     
     // For AE, check if it's the native token
     if (identifier.toLowerCase() === 'ae') {
-      const aeToken = tokens.find(t => t.isAe);
+      const aeToken = tokens.find(t => t.is_ae);
       if (aeToken) return aeToken;
     }
     
@@ -99,8 +99,8 @@ export default function AddLiquidityForm() {
   useEffect(() => {
     setState(prev => ({
       ...prev,
-      tokenA: tokenA?.contractId || '',
-      tokenB: tokenB?.contractId || '',
+      tokenA: tokenA?.address || '',
+      tokenB: tokenB?.address || '',
       symbolA: tokenA?.symbol || '',
       symbolB: tokenB?.symbol || '',
       decA: tokenA?.decimals || 18,
@@ -119,12 +119,12 @@ export default function AddLiquidityForm() {
 
   const filteredTokensA = useMemo(() => {
     const term = searchA.trim().toLowerCase();
-    const matches = (t: Token) =>
-      !term || t.symbol.toLowerCase().includes(term) || (t.contractId || '').toLowerCase().includes(term);
-    const ae = tokens.find((t) => t.isAe);
+    const matches = (t: DexTokenDto) =>
+      !term || t.symbol.toLowerCase().includes(term) || (t.address || '').toLowerCase().includes(term);
+    const ae = tokens.find((t) => t.is_ae);
     const wae = tokens.find((t) => t.contractId === DEX_ADDRESSES.wae);
     const rest = tokens.filter((t) => t !== ae && t !== wae).filter(matches);
-    const out: Token[] = [];
+    const out: DexTokenDto[] = [];
     if (ae && matches(ae)) out.push(ae);
     if (wae && matches(wae)) out.push(wae);
     out.push(...rest);
@@ -133,12 +133,12 @@ export default function AddLiquidityForm() {
 
   const filteredTokensB = useMemo(() => {
     const term = searchB.trim().toLowerCase();
-    const matches = (t: Token) =>
-      !term || t.symbol.toLowerCase().includes(term) || (t.contractId || '').toLowerCase().includes(term);
-    const ae = tokens.find((t) => t.isAe);
+    const matches = (t: DexTokenDto) =>
+      !term || t.symbol.toLowerCase().includes(term) || (t.address || '').toLowerCase().includes(term);
+    const ae = tokens.find((t) => t.is_ae);
     const wae = tokens.find((t) => t.contractId === DEX_ADDRESSES.wae);
     const rest = tokens.filter((t) => t !== ae && t !== wae).filter(matches);
-    const out: Token[] = [];
+    const out: DexTokenDto[] = [];
     if (ae && matches(ae)) out.push(ae);
     if (wae && matches(wae)) out.push(wae);
     out.push(...rest);
@@ -150,13 +150,13 @@ export default function AddLiquidityForm() {
 
     try {
       const txHash = await executeAddLiquidity({
-        tokenA: tokenA.contractId,
-        tokenB: tokenB.contractId,
+        tokenA: tokenA.address,
+        tokenB: tokenB.address,
         amountA,
         amountB,
         slippagePct,
         deadlineMins,
-        isAePair: tokenA.contractId === 'AE' || tokenB.contractId === 'AE' || tokenA.isAe || tokenB.isAe || false,
+        isAePair: tokenA.address === 'AE' || tokenB.address === 'AE' || tokenA.is_ae || tokenB.is_ae || false,
       }, { suppressToast: true }); // Suppress toast since we're using the custom success notification
 
       if (txHash) {

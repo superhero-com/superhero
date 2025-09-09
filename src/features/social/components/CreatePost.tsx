@@ -202,10 +202,10 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
 
             <div className="form-footer">
               <div className="footer-left">
-                <button type="button" className="media-button" onClick={() => fileInputRef.current?.click()} disabled={mediaFiles.length >= 4}><IconImage /><span>Media</span></button>
+                {/* <button type="button" className="media-button" onClick={() => fileInputRef.current?.click()} disabled={mediaFiles.length >= 4}><IconImage /><span>Media</span></button> */}
                 <button type="button" className="link-button" title="Emoji" ref={emojiBtnRef} onClick={() => { setShowEmoji(s => !s); setShowGif(false); }}><IconSmile /><span>Emoji</span></button>
                 <button type="button" className="link-button" title="GIF" ref={gifBtnRef} onClick={() => { setShowGif(s => !s); setShowEmoji(false); }}><IconGif /><span>GIF</span></button>
-                <input ref={fileInputRef} type="file" accept="image/*,video/*" multiple onChange={handleFileSelect} style={{ display: 'none' }} />
+                {/* <input ref={fileInputRef} type="file" accept="image/*,video/*" multiple onChange={handleFileSelect} style={{ display: 'none' }} /> */}
                 {showEmoji && (
                   <div className="popover emoji-popover">
                     <div className="emoji-grid">{DEFAULT_EMOJIS.map((e) => (<button key={e} type="button" className="emoji-btn" onClick={() => insertAtCursor(e)}>{e}</button>))}</div>

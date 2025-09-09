@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { HeaderLogo } from '../../../icons';
 import HeaderWalletButton from './HeaderWalletButton';
@@ -19,6 +19,13 @@ export default function WebAppHeader() {
     try { localStorage.setItem('theme', next); } catch { }
     setTheme(next);
   }, [theme]);
+
+  useEffect(() => {
+    // force theme to be dark
+    document.documentElement.dataset.theme = 'dark';
+    localStorage.setItem('theme', 'dark');
+    setTheme('dark');
+  }, []);
 
   const isActiveRoute = (path: string) => {
     if (path === '/') return pathname === '/';

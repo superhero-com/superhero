@@ -8,7 +8,7 @@ interface Token {
   address: string;
   symbol: string;
   decimals: number;
-  isAe?: boolean;
+  is_ae?: boolean;
 }
 
 interface MobileSwapFormProps {

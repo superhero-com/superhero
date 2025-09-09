@@ -93,6 +93,7 @@ export interface SwapExecutionParams {
 
 export interface TokenListState {
   tokens: DexTokenDto[];
+  loading: boolean;
 }
 
 export interface SwapSettings {

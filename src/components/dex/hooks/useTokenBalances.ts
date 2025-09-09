@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { getTokenBalance, fromAettos, DEX_ADDRESSES } from '../../../libs/dex';
 import { DexTokenDto } from '../../../api/generated';
+import { useAeSdk } from '../../../hooks';
+import { DEX_ADDRESSES, fromAettos, getTokenBalance } from '../../../libs/dex';
 import { TokenBalance, WrapBalances } from '../types/dex';
-import { useAeSdk, useWallet } from '../../../hooks';
 
 export function useTokenBalances(tokenIn: DexTokenDto | null, tokenOut: DexTokenDto | null) {
   const { activeAccount, sdk } = useAeSdk()

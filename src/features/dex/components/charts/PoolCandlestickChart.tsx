@@ -12,6 +12,7 @@ import WebSocketClient from '../../../../libs/WebSocketClient';
 import moment from 'moment';
 import { useQuery } from '@tanstack/react-query';
 import { Decimal } from '../../../../libs/decimal';
+import { TokenChip } from '../../../../components/TokenChip';
 
 interface PoolCandlestickChartProps {
   pairAddress: string;
@@ -556,17 +557,20 @@ export function PoolCandlestickChart({
               alignItems: 'center',
               gap: 8
             }}>
-              {fromToken === 'token0'
-                ? `${pair?.token0?.symbol || 'Token'}/${pair?.token1?.symbol || 'AE'}`
-                : `${pair?.token1?.symbol || 'AE'}/${pair?.token0?.symbol || 'Token'}`
-              }
+              <TokenChip
+                token={fromToken === 'token0' ? pair?.token0 : pair?.token1}
+              />
+              <span>/</span>
+              <TokenChip
+                token={fromToken === 'token0' ? pair?.token1 : pair?.token0}
+              />
               <button
                 onClick={handleFlipPair}
                 style={{
                   background: 'rgba(255, 255, 255, 0.1)',
                   border: '1px solid var(--glass-border)',
                   borderRadius: 8,
-                  padding: '4px 8px',
+                  padding: '0px 8px',
                   color: 'var(--light-font-color)',
                   fontSize: 12,
                   fontWeight: 500,
@@ -594,13 +598,14 @@ export function PoolCandlestickChart({
               display: 'flex',
               gap: 4,
               paddingBottom: 4,
+              paddingLeft: 8,
               fontSize: 12,
               color: 'var(--light-font-color)'
             }}>
-              <span>on</span>
-              <span>Aeternity</span>
-              <span>·</span>
-              <span>{intervalBy.label}</span>
+              <div>on</div>
+              <div>Aeternity</div>
+              <div>·</div>
+              <div>{intervalBy.label}</div>
             </div>
           </div>
 
@@ -757,7 +762,7 @@ export function PoolCandlestickChart({
             {moment().format('HH:mm:ss')}
           </div>
           <div style={{ color: 'var(--glass-border)' }}>|</div>
-          <AeButton
+          {/* <AeButton
             variant="secondary-dark"
             size="small"
             onClick={handleCurrencyToggle}
@@ -780,7 +785,7 @@ export function PoolCandlestickChart({
             }}>
               USD
             </span>
-          </AeButton>
+          </AeButton> */}
         </div>
       </div>
     </div>

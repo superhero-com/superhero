@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { DexService } from '../../../api/generated';
+import { DexService, DexTokenDto } from '../../../api/generated';
 import { TokenListState } from '../types/dex';
+import { DEX_ADDRESSES } from '../../../libs/dex';
 
 export function useTokenList(): TokenListState {
   const { data, isLoading } = useQuery({
@@ -17,8 +18,13 @@ export function useTokenList(): TokenListState {
   })
 
   const tokens = useMemo(() => [
-    { address: 'AE', symbol: 'AE', name: 'AE', decimals: 18, is_ae: true },
-    ...(data?.items ?? [])
+    ...(data?.items ?? []).map((t) => {
+      if (t.address === DEX_ADDRESSES.wae) {
+        return { ...t, symbol: 'AE', name: 'AE' };
+      }
+
+      return t
+    })
   ], [data]);
 
 

@@ -41,10 +41,11 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       if (!tokenIn || !tokenOut) return null;
       return DexService.getPairByFromTokenAndToToken({ fromToken: tokenIn.address, toToken: tokenOut.address });
     },
-    enabled: !!tokenIn && !!tokenOut,
+    enabled: !!tokenIn?.address && !!tokenOut?.address,
   })
 
   useEffect(() => {
+    console.log('[SwapForm] Pair found:', pair, tokenIn?.address, tokenOut?.address);
     if (pair) {
       console.log('[SwapForm] Pair found:', pair);
       onPairSelected?.(pair);
@@ -144,6 +145,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     let cancelled = false;
 
     const initializeTokens = async () => {
+      console.log('[SwapForm] Initialize tokens');
       const searchParams = new URLSearchParams(location.search);
       const fromParam = searchParams.get('from');
       const toParam = searchParams.get('to');

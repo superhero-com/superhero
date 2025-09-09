@@ -136,35 +136,21 @@ export function PoolCandlestickChart({
 
   // Helper function to safely parse and validate numeric values
   const safeParseNumber = (value: any, fallback: number = 0): number => {
+    // return Number(Decimal.from(value).prettify()) ?? 0;
     if (value === null || value === undefined || value === '' || value === 'undefined' || value === 'null') {
       return fallback;
     }
     const parsed = Number(value);
-    return isFinite(parsed) && !isNaN(parsed) ? parsed : fallback;
+    const rsult = isFinite(parsed) && !isNaN(parsed) ? parsed : fallback;
+    if (rsult > 90071992547409) {
+      return 90071992547409;
+    }
+    return rsult;
   };
 
   // Helper function to format large numbers for display
   const formatLargeNumber = (value: number): string => {
-    if (!isFinite(value) || isNaN(value)) return '0';
-
-    const absValue = Math.abs(value);
-    const sign = value < 0 ? '-' : '';
-
-    if (absValue >= 1e18) {
-      return `${sign}${(absValue / 1e18).toFixed(2)}E`;
-    } else if (absValue >= 1e15) {
-      return `${sign}${(absValue / 1e15).toFixed(2)}P`;
-    } else if (absValue >= 1e12) {
-      return `${sign}${(absValue / 1e12).toFixed(2)}T`;
-    } else if (absValue >= 1e9) {
-      return `${sign}${(absValue / 1e9).toFixed(2)}B`;
-    } else if (absValue >= 1e6) {
-      return `${sign}${(absValue / 1e6).toFixed(2)}M`;
-    } else if (absValue >= 1e3) {
-      return `${sign}${(absValue / 1e3).toFixed(2)}K`;
-    } else {
-      return value.toLocaleString();
-    }
+    return Decimal.from(value || '0').shorten();
   };
 
   const updateSeriesData = useCallback((pages: any[]) => {
@@ -477,7 +463,7 @@ export function PoolCandlestickChart({
         } else {
           // Create new candle
           const openPrice = latestCandle ? safeParseNumber((latestCandle as any).close, 0) : currentPrice;
-          
+
           candlestickSeries.current.update({
             time: currentTime as any,
             open: openPrice,
@@ -570,7 +556,7 @@ export function PoolCandlestickChart({
               alignItems: 'center',
               gap: 8
             }}>
-              {fromToken === 'token0' 
+              {fromToken === 'token0'
                 ? `${pair?.token0?.symbol || 'Token'}/${pair?.token1?.symbol || 'AE'}`
                 : `${pair?.token1?.symbol || 'AE'}/${pair?.token0?.symbol || 'Token'}`
               }
@@ -620,16 +606,16 @@ export function PoolCandlestickChart({
 
           {currentCandlePrice && (
             <div style={{ fontSize: 14 }}>
-              <div style={{ 
-                display: 'flex', 
-                gap: 16, 
-                flexWrap: 'wrap', 
-                marginBottom: 8 
+              <div style={{
+                display: 'flex',
+                gap: 16,
+                flexWrap: 'wrap',
+                marginBottom: 8
               }}>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <span style={{ color: 'var(--light-font-color)' }}>
                     O{' '}
-                    <span style={{ 
+                    <span style={{
                       color: isTrendingUp ? 'var(--success-color)' : 'var(--error-color)',
                       fontWeight: 600,
                       fontFamily: 'monospace'
@@ -639,7 +625,7 @@ export function PoolCandlestickChart({
                   </span>
                   <span style={{ color: 'var(--light-font-color)' }}>
                     H{' '}
-                    <span style={{ 
+                    <span style={{
                       color: isTrendingUp ? 'var(--success-color)' : 'var(--error-color)',
                       fontWeight: 600,
                       fontFamily: 'monospace'
@@ -651,7 +637,7 @@ export function PoolCandlestickChart({
                 <div style={{ display: 'flex', gap: 8 }}>
                   <span style={{ color: 'var(--light-font-color)' }}>
                     L{' '}
-                    <span style={{ 
+                    <span style={{
                       color: isTrendingUp ? 'var(--success-color)' : 'var(--error-color)',
                       fontWeight: 600,
                       fontFamily: 'monospace'
@@ -661,7 +647,7 @@ export function PoolCandlestickChart({
                   </span>
                   <span style={{ color: 'var(--light-font-color)' }}>
                     C{' '}
-                    <span style={{ 
+                    <span style={{
                       color: isTrendingUp ? 'var(--success-color)' : 'var(--error-color)',
                       fontWeight: 600,
                       fontFamily: 'monospace'
@@ -671,7 +657,7 @@ export function PoolCandlestickChart({
                   </span>
                 </div>
                 <div style={{ paddingLeft: 8 }}>
-                  <span style={{ 
+                  <span style={{
                     color: isTrendingUp ? 'var(--success-color)' : 'var(--error-color)',
                     fontWeight: 700,
                     fontFamily: 'monospace'
@@ -686,7 +672,7 @@ export function PoolCandlestickChart({
               <div style={{ display: 'flex', gap: 16 }}>
                 <div style={{ color: 'var(--light-font-color)' }}>
                   Vol{' '}
-                  <span style={{ 
+                  <span style={{
                     color: isTrendingUp ? 'var(--success-color)' : 'var(--error-color)',
                     fontWeight: 600,
                     fontFamily: 'monospace'
@@ -696,7 +682,7 @@ export function PoolCandlestickChart({
                 </div>
                 <div style={{ color: 'var(--light-font-color)' }}>
                   MCap{' '}
-                  <span style={{ 
+                  <span style={{
                     color: isTrendingUp ? 'var(--success-color)' : 'var(--error-color)',
                     fontWeight: 600,
                     fontFamily: 'monospace'
@@ -757,10 +743,10 @@ export function PoolCandlestickChart({
           ))}
         </div>
 
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 12 
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12
         }}>
           <div style={{
             color: 'var(--light-font-color)',
@@ -781,14 +767,14 @@ export function PoolCandlestickChart({
               textTransform: 'uppercase'
             }}
           >
-            <span style={{ 
+            <span style={{
               color: !useCurrentCurrency ? 'var(--accent-color)' : 'var(--light-font-color)',
               fontWeight: !useCurrentCurrency ? 700 : 500
             }}>
               AE
             </span>
             <span style={{ margin: '0 4px', color: 'var(--light-font-color)' }}>/</span>
-            <span style={{ 
+            <span style={{
               color: useCurrentCurrency ? 'var(--accent-color)' : 'var(--light-font-color)',
               fontWeight: useCurrentCurrency ? 700 : 500
             }}>

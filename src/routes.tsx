@@ -35,10 +35,7 @@ const FAQ = lazy(() => import('./views/FAQ'));
   
   // Legacy DEX components (for backward compatibility)
   const Swap = lazy(() => import('./views/Swap'));
-  const Dex = lazy(() => import('./views/Dex'));
   const PoolImport = lazy(() => import('./views/PoolImport'));
-  const PoolAdd = lazy(() => import('./views/PoolAdd'));
-  const PoolRemove = lazy(() => import('./views/PoolRemove'));
   const Explore = lazy(() => import('./views/Explore'));
   const TokenDetail = lazy(() => import('./views/TokenDetail'));
   const PoolDetail = lazy(() => import('./views/PoolDetail'));
@@ -74,8 +71,6 @@ export const routes: RouteObject[] = [
   { path: '/dex/bridge', element: <DexLayout><DexBridge /></DexLayout> },
   { path: '/dex/pool', element: <DexLayout><Pool /></DexLayout> },
   { path: '/dex/pool/import', element: <DexLayout><PoolImport /></DexLayout> },
-  { path: '/dex/pool/add', element: <DexLayout><PoolAdd /></DexLayout> },
-  { path: '/dex/pool/remove/:id', element: <DexLayout><PoolRemove /></DexLayout> },
   { path: '/dex/pool/add-tokens', element: <DexLayout><AddTokens /></DexLayout> },
   { path: '/dex/explore/tokens', element: <DexLayout><DexExploreTokens /></DexLayout> },
   { path: '/dex/explore/tokens/:tokenAddress', element: <DexLayout><TokenDetail /></DexLayout> },
@@ -87,8 +82,6 @@ export const routes: RouteObject[] = [
   { path: '/swap', element: <Swap /> },
   { path: '/pool', element: <Pool /> },
   { path: '/pool/import', element: <PoolImport /> },
-  { path: '/pool/add', element: <PoolAdd /> },
-  { path: '/pool/remove/:id', element: <PoolRemove /> },
   { path: '/explore', element: <Explore /> },
   { path: '/explore/tokens/:id', element: <TokenDetail /> },
   { path: '/explore/pools/:id', element: <PoolDetail /> },

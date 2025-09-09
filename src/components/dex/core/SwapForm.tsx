@@ -12,6 +12,7 @@ import { SwapQuoteParams } from '../types/dex';
 import SwapConfirmation from './SwapConfirmation';
 import SwapRouteInfo from './SwapRouteInfo';
 import TokenInput from './TokenInput';
+import { Decimal } from '../../../libs/decimal';
 
 import { useAccount, useDex } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
@@ -303,7 +304,17 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     updateUrlParams(tokenOut, tempToken);
   };
 
-  const isSwapDisabled = swapLoading || !amountIn || Number(amountIn) <= 0 || !amountOut || !tokenIn || !tokenOut;
+  // Balance validation
+  const hasInsufficientBalance = useMemo(() => {
+    if (!amountIn || !balances.in || Number(amountIn) <= 0) return false;
+    try {
+      return Decimal.from(amountIn).gt(Decimal.from(balances.in));
+    } catch {
+      return false;
+    }
+  }, [amountIn, balances.in]);
+
+  const isSwapDisabled = swapLoading || !amountIn || Number(amountIn) <= 0 || !amountOut || !tokenIn || !tokenOut || hasInsufficientBalance;
 
   return (
     <div className="genz-card" style={{
@@ -382,6 +393,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
           loading={tokensLoading}
           searchValue={searchIn}
           onSearchChange={setSearchIn}
+          hasInsufficientBalance={hasInsufficientBalance}
         />
       </div>
 
@@ -518,6 +530,22 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
           textAlign: 'center'
         }}>
           {error}
+        </div>
+      )}
+
+      {/* Insufficient Balance Warning */}
+      {hasInsufficientBalance && (
+        <div style={{
+          color: 'var(--error-color)',
+          fontSize: 14,
+          padding: '12px 16px',
+          background: 'rgba(255, 107, 107, 0.1)',
+          border: '1px solid rgba(255, 107, 107, 0.2)',
+          borderRadius: 12,
+          marginBottom: 20,
+          textAlign: 'center'
+        }}>
+          Insufficient {tokenIn?.symbol} balance. You need {amountIn} but only have {balances.in ? Decimal.from(balances.in).prettify() : '0'}
         </div>
       )}
 

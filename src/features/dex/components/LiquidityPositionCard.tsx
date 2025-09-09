@@ -1,10 +1,9 @@
-import React from 'react';
-import { LiquidityPosition } from '../types/pool';
-import { CONFIG } from '../../../config';
-import { Decimal } from '../../../libs/decimal';
 import { toAe } from '@aeternity/aepp-sdk';
 import AddressChip from '../../../components/AddressChip';
+import { TokenChip } from '../../../components/TokenChip';
+import { Decimal } from '../../../libs/decimal';
 import { usePool } from '../context/PoolProvider';
+import { LiquidityPosition } from '../types/pool';
 
 interface LiquidityPositionCardProps {
   position: LiquidityPosition;
@@ -48,19 +47,11 @@ export default function LiquidityPositionCard({
             alignItems: 'center',
             gap: 4
           }}>
-            <AddressChip
-              address={position.token0}
-              linkToExplorer
-              style={{ fontSize: 10 }}
-            />
+            <TokenChip address={position.token0} />
             <span style={{ fontSize: 18, color: 'var(--light-font-color)' }}>
               /
             </span>
-            <AddressChip
-              address={position.token1}
-              linkToExplorer
-              style={{ fontSize: 10 }}
-            />
+            <TokenChip address={position.token1} />
           </div>
           {position.valueUsd && (
             <div style={{

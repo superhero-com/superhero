@@ -23,8 +23,8 @@ export function useSwapQuote() {
     try {
       if (!tokenIn || !tokenOut) return null;
 
-      const tokenInAddr = tokenIn.isAe ? DEX_ADDRESSES.wae : tokenIn.contractId;
-      const tokenOutAddr = tokenOut.isAe ? DEX_ADDRESSES.wae : tokenOut.contractId;
+      const tokenInAddr = tokenIn.is_ae ? DEX_ADDRESSES.wae : tokenIn.address;
+      const tokenOutAddr = tokenOut.is_ae ? DEX_ADDRESSES.wae : tokenOut.address;
 
       if (!tokenInAddr || !tokenOutAddr) return null;
 

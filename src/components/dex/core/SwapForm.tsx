@@ -102,7 +102,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     }
 
     // First, try to find in the local token list
-    const localToken = tokens.find(t => t.contractId === identifier);
+    const localToken = tokens.find(t => t.address === identifier);
     if (localToken) return localToken;
 
     // If not found locally and it looks like a contract address, fetch from middleware

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAeSdk } from "../hooks";
 import { copyToClipboard } from '../utils/address';
 import { DexTokenDto } from '../api/generated';
+import { DEX_ADDRESSES } from '../libs/dex';
 
 interface TokenChipProps {
     address?: string;
@@ -13,21 +14,23 @@ interface TokenChipProps {
     style?: React.CSSProperties;
     onClick?: () => void;
     showAddress?: boolean;
+    showName?: boolean;
 }
 
-export const TokenChip = ({ 
-    address, 
+export const TokenChip = ({
+    address,
     token,
     copyable = false,
     large = false,
     className = '',
     style = {},
     onClick,
-    showAddress = false
+    showAddress = false,
+    showName = true
 }: TokenChipProps) => {
     const { activeNetwork } = useAeSdk();
     const [textCopied, setTextCopied] = useState(false);
-    
+
     const { data, isLoading } = useQuery({
         queryKey: ['token', address],
         queryFn: () => fetch(`${activeNetwork.middlewareUrl}/v3/aex9/${address}`).then(res => res.json()),
@@ -42,7 +45,7 @@ export const TokenChip = ({
             onClick();
             return;
         }
-        
+
         if (copyable) {
             const success = await copyToClipboard(tokenData.address);
             if (success) {
@@ -104,16 +107,22 @@ export const TokenChip = ({
             title={copyable ? 'Click to copy token address' : data?.name || address}
         >
             {/* Token Symbol */}
-            <span style={{ 
+            <span style={{
                 fontSize: large ? 14 : 12,
                 fontWeight: 600,
                 letterSpacing: '0.25px'
             }}>
-                {isLoading ? '...' : (tokenData?.symbol || 'TOKEN')}
+                {isLoading
+                    ? '...' :
+                    (
+                        (tokenData?.address == DEX_ADDRESSES.wae || tokenData?.is_ae || address == DEX_ADDRESSES.wae)
+                            ? 'AE'
+                            : tokenData?.symbol
+                            || 'TOKEN')}
             </span>
 
             {/* Token Name (if different from symbol) */}
-            {tokenData?.name && tokenData.name !== tokenData.symbol && (
+            {showName && tokenData?.name && tokenData.name !== tokenData.symbol && (
                 <span style={{
                     fontSize: large ? 12 : 10,
                     fontWeight: 400,
@@ -126,7 +135,7 @@ export const TokenChip = ({
                     ({tokenData.name})
                 </span>
             )}
-            
+
             {/* Address (optional) */}
             {showAddress && (
                 <span style={{
@@ -138,7 +147,7 @@ export const TokenChip = ({
                     {formatAddress(tokenData.address, large ? 4 : 3)}
                 </span>
             )}
-            
+
             {/* Copy icon */}
             {copyable && (
                 <div style={{
@@ -152,7 +161,7 @@ export const TokenChip = ({
                     📋
                 </div>
             )}
-            
+
             {/* Copied feedback */}
             {textCopied && (
                 <div style={{
@@ -174,7 +183,7 @@ export const TokenChip = ({
                     Copied!
                 </div>
             )}
-            
+
             <style>{`
                 @keyframes fadeInOut {
                     0% { opacity: 0; transform: scale(0.8); }

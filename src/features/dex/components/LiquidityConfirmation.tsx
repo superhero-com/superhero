@@ -1,13 +1,12 @@
-import React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Token } from '../../../components/dex/types/dex';
+import { DexTokenDto } from '../../../api/generated';
 
 interface LiquidityConfirmationProps {
   show: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  tokenA: Token | null;
-  tokenB: Token | null;
+  tokenA: DexTokenDto | null;
+  tokenB: DexTokenDto | null;
   amountA: string;
   amountB: string;
   slippagePct: number;

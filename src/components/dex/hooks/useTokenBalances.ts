@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { getTokenBalance, fromAettos, DEX_ADDRESSES } from '../../../libs/dex';
-import { Token, TokenBalance, WrapBalances } from '../types/dex';
+import { DexTokenDto } from '../../../api/generated';
+import { TokenBalance, WrapBalances } from '../types/dex';
 import { useAeSdk, useWallet } from '../../../hooks';
 
-export function useTokenBalances(tokenIn: Token | null, tokenOut: Token | null) {
+export function useTokenBalances(tokenIn: DexTokenDto | null, tokenOut: DexTokenDto | null) {
   const { activeAccount, sdk } = useAeSdk()
   const [balances, setBalances] = useState<TokenBalance>({});
   const [wrapBalances, setWrapBalances] = useState<WrapBalances>({});
@@ -16,8 +17,8 @@ export function useTokenBalances(tokenIn: Token | null, tokenOut: Token | null) 
           return;
         }
 
-        const inAddr = tokenIn?.isAe ? 'AE' : tokenIn?.contractId;
-        const outAddr = tokenOut?.isAe ? 'AE' : tokenOut?.contractId;
+        const inAddr = tokenIn?.is_ae ? 'AE' : tokenIn?.address;
+        const outAddr = tokenOut?.is_ae ? 'AE' : tokenOut?.address;
 
         if (!inAddr && !outAddr) return;
 

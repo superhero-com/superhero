@@ -1,5 +1,4 @@
-import React from 'react';
-import { Token } from '../../../components/dex/types/dex';
+import { DexTokenDto } from '../../../api/generated';
 
 interface LiquidityPreviewProps {
   preview: {
@@ -10,8 +9,8 @@ interface LiquidityPreviewProps {
     suggestedAmountA?: string;
     suggestedAmountB?: string;
   };
-  tokenA: Token | null;
-  tokenB: Token | null;
+  tokenA: DexTokenDto | null;
+  tokenB: DexTokenDto | null;
   pairExists: boolean;
   hasError?: boolean;
   onSuggestedAmountA?: (amount: string) => void;

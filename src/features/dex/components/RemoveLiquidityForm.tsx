@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { usePool } from '../context/PoolProvider';
-import { useAccount, useDex } from '../../../hooks';
-import { useTokenList } from '../../../components/dex/hooks/useTokenList';
-import { useAddLiquidity } from '../hooks/useAddLiquidity';
-import ConnectWalletButton from '../../../components/ConnectWalletButton';
-import AddressChip from '../../../components/AddressChip';
-import { Decimal } from '../../../libs/decimal';
 import { toAe } from '@aeternity/aepp-sdk';
+import { useEffect, useState } from 'react';
+import AddressChip from '../../../components/AddressChip';
+import ConnectWalletButton from '../../../components/ConnectWalletButton';
+import { useTokenList } from '../../../components/dex/hooks/useTokenList';
+import { useAccount, useDex } from '../../../hooks';
+import { Decimal } from '../../../libs/decimal';
+import { usePool } from '../context/PoolProvider';
+import { useAddLiquidity } from '../hooks/useAddLiquidity';
 
 export default function RemoveLiquidityForm() {
   const { selectedPosition, clearSelection, onPositionUpdated } = usePool();
@@ -34,8 +34,8 @@ export default function RemoveLiquidityForm() {
     if (!identifier || !tokens.length) return null;
     return tokens.find(t => 
       t.symbol.toLowerCase() === identifier.toLowerCase() ||
-      t.contractId === identifier ||
-      (identifier.toLowerCase() === 'ae' && t.isAe)
+      t.address === identifier ||
+      (identifier.toLowerCase() === 'ae' && t.is_ae)
     );
   };
 

@@ -7,7 +7,7 @@ type TokenItem = {
   address: string; 
   symbol: string; 
   decimals: number; 
-  isAe?: boolean;
+  is_ae?: boolean;
   logo?: string;
 };
 
@@ -42,7 +42,7 @@ export default function MobileTokenSelector({
         const { getListedTokens } = await import('../../libs/dexBackend');
         const tokens = await getListedTokens();
         const base: TokenItem[] = [
-          { address: 'AE', symbol: 'AE', decimals: 18, isAe: true },
+          { address: 'AE', symbol: 'AE', decimals: 18, is_ae: true },
           { address: DEX_ADDRESSES.wae, symbol: 'WAE', decimals: 18 },
           ...((tokens || []).map((t: any) => ({ 
             address: t.address, 
@@ -60,7 +60,7 @@ export default function MobileTokenSelector({
       } catch (error) {
         console.warn('Failed to load tokens, using defaults', error);
         setList([
-          { address: 'AE', symbol: 'AE', decimals: 18, isAe: true },
+          { address: 'AE', symbol: 'AE', decimals: 18, is_ae: true },
           { address: DEX_ADDRESSES.wae, symbol: 'WAE', decimals: 18 },
         ]);
       } finally {

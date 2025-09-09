@@ -4,7 +4,7 @@ import { DexService } from '../../../api/generated';
 import { TokenListState } from '../types/dex';
 
 export function useTokenList(): TokenListState {
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['DexService.listAllDexTokens'],
     queryFn: () => {
       return DexService.listAllDexTokens({
@@ -22,5 +22,5 @@ export function useTokenList(): TokenListState {
   ], [data]);
 
 
-  return { tokens };
+  return { tokens, loading: isLoading };
 }

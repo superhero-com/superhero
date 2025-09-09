@@ -23,7 +23,7 @@ export function useSwapExecution() {
   const [allowanceInfo, setAllowanceInfo] = useState<string | null>(null);
 
   async function approveIfNeeded(amountAettos: bigint, tokenIn: any) {
-    if (!tokenIn || tokenIn.isAe) return; // AE does not need allowance
+    if (!tokenIn || tokenIn.is_ae) return; // AE does not need allowance
 
     // eslint-disable-next-line no-console
     console.info('[dex] Ensuring allowance for router…', {
@@ -40,6 +40,8 @@ export function useSwapExecution() {
   }
 
   async function executeSwap(params: SwapExecutionParams): Promise<string | null> {
+    console.log('[dex] executeSwap->params::', params);
+
     setLoading(true);
     //
     try {
@@ -90,6 +92,7 @@ export function useSwapExecution() {
       const isOutAe = !!params.tokenOut?.is_ae;
 
       let txHash: string | undefined;
+
 
       if (!isInAe && !isOutAe) {
         if (params.isExactIn) {

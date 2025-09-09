@@ -1,28 +1,44 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import AeButton from '../components/AeButton';
+import { Backend } from '../api/backend';
+import { deeplinkTip } from '../auth/deeplink';
 import AeAmountFiat from '../components/AeAmountFiat';
-import Shell from '../components/layout/Shell';
+import AeButton from '../components/AeButton';
+import Identicon from '../components/Identicon';
 import LeftRail from '../components/layout/LeftRail';
 import RightRail from '../components/layout/RightRail';
+import Shell from '../components/layout/Shell';
 import UserBadge from '../components/UserBadge';
-import { IconComment } from '../icons';
-import Identicon from '../components/Identicon';
-import { linkify } from '../utils/linkify';
-import { relativeTime } from '../utils/time';
-import { Backend } from '../api/backend';
 import CreatePost from '../features/social/components/CreatePost';
-import { deeplinkTip } from '../auth/deeplink';
 
-import { useWallet, useBackend, useModal } from '../hooks';
-
-const EMPTY_LIST: any[] = [];
+import { useWallet, useModal } from '../hooks';
+import { useQuery } from '@tanstack/react-query';
+import { PostsService } from '../api/generated';
+import { PostApiResponse } from '../features/social/types';
+import FeedItem from '../features/social/components/FeedItem';
+import '../features/social/views/FeedList.scss';
+import { useAccountBalances } from '../hooks/useAccountBalances';
 
 export default function UserProfile() {
   const navigate = useNavigate();
   const { address } = useParams();
-  const { chainNames, balance, address: myAddress } = useWallet();
+  const { chainNames, address: myAddress } = useWallet();
+  const { decimalBalance, loadAccountData } = useAccountBalances(address);
+  const { openModal } = useModal();
   
+  const { data } = useQuery({
+    queryKey: ['PostsService.listAll', address],
+    queryFn: () => PostsService.listAll({
+      limit: 100,
+      page: 1,
+      orderBy: 'created_at',
+      orderDirection: 'DESC',
+      search: '',
+      accountAddress: address,
+    }) as unknown as Promise<PostApiResponse>,
+    enabled: !!address,
+  })
+
   const [profile, setProfile] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
   const [tab, setTab] = useState<'feed'>('feed');
@@ -30,42 +46,16 @@ export default function UserProfile() {
   const [tipAmount, setTipAmount] = useState<string>('0.1');
   const [tipMessage, setTipMessage] = useState<string>('');
 
-  // Load user's posts - simplified since we're removing Redux backend
-  const [list, setList] = useState(EMPTY_LIST);
-  const [endReached, setEndReached] = useState(false);
-  const [loadingNext, setLoadingNext] = useState(false);
-  
-  // Comment counts state - simplified
-  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
-  const [commentCountsLoading, setCommentCountsLoading] = useState<Record<string, boolean>>({});
+  // Get posts from the query data
+  const posts = data?.items || [];
 
   useEffect(() => {
     if (!address) return;
-    // Load user posts - simplified implementation
-    
+    loadAccountData()
     // Load profile and stats
-    Backend.getProfile(address).then(setProfile).catch(() => {});
-    Backend.getSenderStats(address).then(setStats).catch(() => {});
+    Backend.getProfile(address).then(setProfile).catch(() => { });
+    Backend.getSenderStats(address).then(setStats).catch(() => { });
   }, [address]);
-
-  // Load comment counts for posts when the list changes
-  useEffect(() => {
-    if (list.length > 0) {
-      const postIds = list
-        .map(item => item.id || item._id)
-        .filter(Boolean)
-        .filter(postId => !commentCounts[postId] && !commentCountsLoading[postId]);
-      
-      if (postIds.length > 0) {
-        // Load comment counts - simplified implementation
-      }
-    }
-  }, [list, commentCounts, commentCountsLoading]);
-
-  // Helper function to get comment count for a post
-  const getCommentCount = (postId: string) => {
-    return commentCounts[postId] ?? 0;
-  };
 
   const chainName = chainNames?.[address];
 
@@ -99,15 +89,15 @@ export default function UserProfile() {
             </div>
             <div>
               {address && (
-                <UserBadge 
-                  address={address} 
+                <UserBadge
+                  address={address}
                   showAvatar={false}
                   chainName={chainName}
                 />
               )}
               <div style={{ marginTop: 6, fontSize: 14 }}>
                 <span style={{ color: '#c3c3c7' }}>Balance: </span>
-                <AeAmountFiat amount={balance || 0} />
+                {decimalBalance.prettify()} AE
               </div>
               {profile?.createdAt && (
                 <div style={{ marginTop: 6, fontSize: 14 }}>
@@ -129,7 +119,7 @@ export default function UserProfile() {
           {/* Channel / Activity controls (visual only) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
             <AeButton>Channel</AeButton>
-            <AeButton green>Activity</AeButton>
+            <AeButton>Activity</AeButton>
             {address && myAddress !== address && (
               <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input
@@ -162,7 +152,10 @@ export default function UserProfile() {
                   const amt = parseFloat(tipAmount || '0');
                   if (!Number.isFinite(amt) || amt <= 0) return;
                   const text = tipMessage.trim();
-                  deeplinkTip({ to: address, amount: amt, text });
+                  if (address) {
+                    deeplinkTip();
+                    console.log('Tip:', { to: address, amount: amt, text });
+                  }
                 }}
               >Send Tip</AeButton>
             </div>
@@ -176,110 +169,35 @@ export default function UserProfile() {
         </div>
 
         {tab === 'feed' && (
-          <div style={{ display: 'grid', gap: 8 }}>
-            {list.length === 0 && (
-              <div style={{ background: '#242430', borderRadius: 8, padding: 12 }}>No items found.</div>
-            )}
-            {list.map((item: any) => {
-              const postId = item.id || item._id;
-              const commentCount = getCommentCount(postId);
-              const itemChainName = chainNames?.[item.address];
-              
-              return (
-                <div className="feed-item" key={postId}>
-                  <div className="avatar-container">
-                    {item.address && (
-                      <div className="avatar-stack">
-                        {/* Chain avatar (bigger) if available */}
-                        {itemChainName && itemChainName !== 'Legend' && (
-                          <div className="chain-avatar">
-                            <Identicon address={item.address} size={48} name={itemChainName} />
-                          </div>
-                        )}
-                        {/* Address avatar (smaller) if no chain name, or as overlay */}
-                        {(!itemChainName || itemChainName === 'Legend') && (
-                          <div className="address-avatar">
-                            <Identicon address={item.address} size={48} />
-                          </div>
-                        )}
-                        {/* Overlay avatar for chain names */}
-                        {itemChainName && itemChainName !== 'Legend' && (
-                          <div className="address-avatar-overlay">
-                            <Identicon address={item.address} size={24} />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div className="content" onClick={() => navigate(`/post/${postId}`)} style={{ cursor: 'pointer' }}>
-                    <div className="header">
-                      <div className="author-section">
-                        {item.address && (
-                          <UserBadge 
-                            address={item.address} 
-                            showAvatar={false}
-                            chainName={itemChainName}
-                          />
-                        )}
-                      </div>
-                      {item.timestamp && (
-                        <span className="timestamp">
-                          {relativeTime(new Date(item.timestamp))}
-                        </span>
-                      )}
-                    </div>
-                    <div className="title">{linkify(item.title)}</div>
-                    <div className="url">{linkify(item.url)}</div>
-                    {item.media && Array.isArray(item.media) && item.media.length > 0 && (
-                      <div className="media-grid">
-                        {item.media.slice(0, 4).map((m: string) => (
-                          <img key={m} src={m} alt="media" className="media-item" />
-                        ))}
-                      </div>
-                    )}
-                    <div className="footer">
-                      <div className="footer-left">
-                        <span>
-                          <AeAmountFiat amount={item.amount || 0} />
-                        </span>
-                      </div>
-                      <div className="footer-right">
-                        <span className="comment-count">
-                          <IconComment /> {commentCountsLoading[postId] ? '...' : commentCount}
-                        </span>
-                        <AeButton 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            openModal({ 
-                              name: 'feed-item-menu', 
-                              props: { postId: postId, url: item.url, author: item.address } 
-                            }); 
-                          }}
-                        >
-                          •••
-                        </AeButton>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            {!endReached && (
-              <div className="load-more" style={{ textAlign: 'center', padding: 12 }}>
-                <AeButton
-                  loading={loadingNext}
-                  onClick={() => { /* Load more posts - simplified */ }}
-                >Load more</AeButton>
+          <div className="feed">
+            {posts.length === 0 && (
+              <div className="feed-item empty-state">
+                <div>No posts found.</div>
+                <div className="subtitle">This user hasn't posted anything yet.</div>
               </div>
             )}
+            {posts.map((item: any) => {
+              const postId = item.id;
+              const authorAddress = item.sender_address;
+              const commentCount = item.total_comments ?? 0;
+              const itemChainName = chainNames?.[authorAddress];
+
+              return (
+                <FeedItem
+                  key={postId}
+                  item={item}
+                  commentCount={commentCount}
+                  chainName={itemChainName}
+                  onItemClick={(id: string) => navigate(`/post/${id}`)}
+                />
+              );
+            })}
           </div>
         )}
 
         {/* User comments list removed in unified posts model */}
       </div>
-      
+
       <style>{`
         .profile-avatar-container {
           position: relative;

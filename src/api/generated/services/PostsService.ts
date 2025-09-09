@@ -18,6 +18,7 @@ export class PostsService {
         orderBy,
         orderDirection,
         search,
+        accountAddress,
         limit,
         page,
     }: {
@@ -27,6 +28,10 @@ export class PostsService {
          * Search term to filter posts by content or topics
          */
         search?: string,
+        /**
+         * Filter posts by account address
+         */
+        accountAddress?: string,
         limit?: number,
         page?: number,
     }): CancelablePromise<Pagination> {
@@ -37,6 +42,7 @@ export class PostsService {
                 'order_by': orderBy,
                 'order_direction': orderDirection,
                 'search': search,
+                'account_address': accountAddress,
                 'limit': limit,
                 'page': page,
             },

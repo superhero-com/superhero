@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Backend } from '../api/backend';
-import { deeplinkTip } from '../auth/deeplink';
-import AeAmountFiat from '../components/AeAmountFiat';
 import AeButton from '../components/AeButton';
 import Identicon from '../components/Identicon';
 import LeftRail from '../components/layout/LeftRail';
 import RightRail from '../components/layout/RightRail';
 import Shell from '../components/layout/Shell';
 import UserBadge from '../components/UserBadge';
-import CreatePost from '../features/social/components/CreatePost';
 
 import { useWallet, useModal } from '../hooks';
 import { useQuery } from '@tanstack/react-query';
@@ -40,11 +37,7 @@ export default function UserProfile() {
   })
 
   const [profile, setProfile] = useState<any>(null);
-  const [stats, setStats] = useState<any>(null);
   const [tab, setTab] = useState<'feed'>('feed');
-  const [showTipBox, setShowTipBox] = useState(false);
-  const [tipAmount, setTipAmount] = useState<string>('0.1');
-  const [tipMessage, setTipMessage] = useState<string>('');
 
   // Get posts from the query data
   const posts = data?.items || [];
@@ -52,115 +45,66 @@ export default function UserProfile() {
   useEffect(() => {
     if (!address) return;
     loadAccountData()
-    // Load profile and stats
+    // Load profile
     Backend.getProfile(address).then(setProfile).catch(() => { });
-    Backend.getSenderStats(address).then(setStats).catch(() => { });
-  }, [address]);
+  }, [address, loadAccountData]);
 
   const chainName = chainNames?.[address];
 
   return (
     <Shell left={<LeftRail />} right={<RightRail />}>
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '0.5rem 1rem' }}>
-        {/* Profile header */}
-        <div style={{ background: '#242430', borderRadius: 12, padding: 20, marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        {/* Compact Profile header */}
+        <div className="profile-header">
+          <div className="profile-content">
             <div className="profile-avatar-container">
               <div className="avatar-stack">
                 {/* Chain avatar (bigger) if available */}
                 {chainName && chainName !== 'Legend' && (
                   <div className="chain-avatar">
-                    <Identicon address={address} size={64} name={chainName} />
+                    <Identicon address={address} size={56} name={chainName} />
                   </div>
                 )}
                 {/* Address avatar (smaller) if no chain name, or as overlay */}
                 {(!chainName || chainName === 'Legend') && (
                   <div className="address-avatar">
-                    <Identicon address={address} size={64} />
+                    <Identicon address={address} size={56} />
                   </div>
                 )}
                 {/* Overlay avatar for chain names */}
                 {chainName && chainName !== 'Legend' && (
                   <div className="address-avatar-overlay">
-                    <Identicon address={address} size={32} />
+                    <Identicon address={address} size={24} />
                   </div>
                 )}
               </div>
             </div>
-            <div>
+            <div className="profile-info">
               {address && (
-                <UserBadge
-                  address={address}
-                  showAvatar={false}
-                  chainName={chainName}
-                />
+                <div className="profile-name">
+                  <UserBadge
+                    address={address}
+                    showAvatar={false}
+                    chainName={chainName}
+                  />
+                </div>
               )}
-              <div style={{ marginTop: 6, fontSize: 14 }}>
-                <span style={{ color: '#c3c3c7' }}>Balance: </span>
-                {decimalBalance.prettify()} AE
+              <div className="profile-balance">
+                <div className="balance-label">Balance</div>
+                <div className="balance-amount">{decimalBalance.prettify()} AE</div>
               </div>
               {profile?.createdAt && (
-                <div style={{ marginTop: 6, fontSize: 14 }}>
-                  <span style={{ color: '#c3c3c7' }}>Joined </span>
-                  {new Date(profile.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                <div className="profile-joined">
+                  <span className="joined-label">Joined </span>
+                  <span className="joined-date">
+                    {new Date(profile.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </span>
                 </div>
               )}
             </div>
           </div>
-
-          {/* Stats row */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 12, fontSize: 14 }}>
-            <div><strong>{stats?.totalTipsLength ?? 0}</strong> Tips Sent</div>
-            <div><strong>{stats?.receivedTipsLength ?? 0}</strong> Tips Received</div>
-            <div><strong>{stats?.commentsLength ?? 0}</strong> Replies</div>
-            <div><strong>{stats?.urlsLength ?? 0}</strong> URLs</div>
-          </div>
-
-          {/* Channel / Activity controls (visual only) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
-            <AeButton>Channel</AeButton>
-            <AeButton>Activity</AeButton>
-            {address && myAddress !== address && (
-              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <input
-                  value={tipAmount}
-                  onChange={(e) => setTipAmount(e.target.value)}
-                  inputMode="decimal"
-                  pattern="[0-9]*[.]?[0-9]*"
-                  style={{ width: 90, background: '#1c1c24', color: '#fff', border: '1px solid #2f2f3b', borderRadius: 6, padding: '6px 8px' }}
-                  placeholder="Amount"
-                  aria-label="Tip amount in AE"
-                />
-                <AeButton onClick={() => setShowTipBox((v) => !v)}>{showTipBox ? 'Cancel' : 'Tip'}</AeButton>
-              </div>
-            )}
-          </div>
         </div>
 
-        {showTipBox && address && myAddress !== address && (
-          <div style={{ background: '#242430', borderRadius: 12, padding: 12, marginBottom: 16 }}>
-            <div style={{ marginBottom: 8, fontSize: 14, opacity: 0.9 }}>Send a tip with a message</div>
-            <CreatePost
-              className="compact"
-              onSuccess={() => setShowTipBox(false)}
-              onClose={() => setShowTipBox(false)}
-              onTextChange={setTipMessage}
-            />
-            <div style={{ textAlign: 'right', marginTop: 8 }}>
-              <AeButton
-                onClick={() => {
-                  const amt = parseFloat(tipAmount || '0');
-                  if (!Number.isFinite(amt) || amt <= 0) return;
-                  const text = tipMessage.trim();
-                  if (address) {
-                    deeplinkTip();
-                    console.log('Tip:', { to: address, amount: amt, text });
-                  }
-                }}
-              >Send Tip</AeButton>
-            </div>
-          </div>
-        )}
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 16, borderBottom: '1px solid #2f2f3b', padding: '0 4px' }}>
@@ -199,10 +143,48 @@ export default function UserProfile() {
       </div>
 
       <style>{`
+        .profile-header {
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.1) 100%);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 16px;
+          padding: 20px;
+          margin-bottom: 16px;
+          position: relative;
+          overflow: hidden;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .profile-header::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+          pointer-events: none;
+        }
+        
+        .profile-header:hover {
+          border-color: rgba(255, 255, 255, 0.2);
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+          transform: translateY(-2px);
+        }
+        
+        .profile-content {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          position: relative;
+          z-index: 1;
+        }
+        
         .profile-avatar-container {
           position: relative;
-          width: 64px;
-          height: 64px;
+          width: 56px;
+          height: 56px;
           flex-shrink: 0;
         }
         
@@ -218,8 +200,17 @@ export default function UserProfile() {
           left: 0;
           width: 100%;
           height: 100%;
-          border-radius: 8px;
+          border-radius: 16px;
           overflow: hidden;
+          border: 3px solid rgba(255, 255, 255, 0.15);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+          transition: all 0.3s ease;
+        }
+        
+        .chain-avatar:hover {
+          border-color: rgba(255, 255, 255, 0.3);
+          transform: scale(1.05);
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
         }
         
         .address-avatar {
@@ -228,20 +219,145 @@ export default function UserProfile() {
           left: 0;
           width: 100%;
           height: 100%;
-          border-radius: 8px;
+          border-radius: 16px;
           overflow: hidden;
+          border: 3px solid rgba(255, 255, 255, 0.15);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+          transition: all 0.3s ease;
+        }
+        
+        .address-avatar:hover {
+          border-color: rgba(255, 255, 255, 0.3);
+          transform: scale(1.05);
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
         }
         
         .address-avatar-overlay {
           position: absolute;
           bottom: -4px;
           right: -4px;
-          width: 32px;
-          height: 32px;
+          width: 24px;
+          height: 24px;
           border-radius: 6px;
           overflow: hidden;
           border: 2px solid #1c1c24;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .profile-info {
+          flex: 1;
+          min-width: 0;
+        }
+        
+        .profile-name {
+          margin-bottom: 8px;
+        }
+        
+        .profile-balance {
+          margin-bottom: 6px;
+        }
+        
+        .balance-label {
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 0.75rem;
+          font-weight: 500;
+          margin-bottom: 2px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        
+        .balance-amount {
+          color: #fff;
+          font-size: 1.375rem;
+          font-weight: 700;
+          background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.8) 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+          line-height: 1.2;
+        }
+        
+        .profile-joined {
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 0.8rem;
+          font-weight: 500;
+        }
+        
+        .joined-label {
+          opacity: 0.8;
+        }
+        
+        .joined-date {
+          color: rgba(255, 255, 255, 0.9);
+          font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+          .profile-header {
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 14px;
+          }
+          
+          .profile-content {
+            gap: 12px;
+          }
+          
+          .profile-avatar-container {
+            width: 48px;
+            height: 48px;
+          }
+          
+          .chain-avatar,
+          .address-avatar {
+            border-radius: 10px;
+            border-width: 2px;
+          }
+          
+          .address-avatar-overlay {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+            bottom: -3px;
+            right: -3px;
+          }
+          
+          .balance-amount {
+            font-size: 1.25rem;
+          }
+          
+          .balance-label {
+            font-size: 0.7rem;
+          }
+          
+          .profile-joined {
+            font-size: 0.75rem;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .profile-header {
+            padding: 14px;
+          }
+          
+          .profile-content {
+            flex-direction: column;
+            text-align: center;
+            gap: 12px;
+          }
+          
+          .profile-info {
+            width: 100%;
+          }
+          
+          .profile-name {
+            margin-bottom: 6px;
+          }
+          
+          .profile-balance {
+            margin-bottom: 4px;
+          }
         }
       `}</style>
     </Shell>

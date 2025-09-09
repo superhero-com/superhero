@@ -10,6 +10,7 @@ import DexSettings from './DexSettings';
 import LiquidityConfirmation from './LiquidityConfirmation';
 import LiquidityPreview from './LiquidityPreview';
 import LiquiditySuccessNotification from '../../../components/dex/core/LiquiditySuccessNotification';
+import { Decimal } from '../../../libs/decimal';
 
 import { useAccount, useDex } from '../../../hooks';
 import { usePool } from '../context/PoolProvider';
@@ -183,7 +184,28 @@ export default function AddLiquidityForm() {
     }
   };
 
-  const isAddDisabled = state.loading || !amountA || Number(amountA) <= 0 || !amountB || Number(amountB) <= 0 || !tokenA || !tokenB || !!state.error;
+  // Balance validation
+  const hasInsufficientBalanceA = useMemo(() => {
+    if (!amountA || !balances.in || Number(amountA) <= 0) return false;
+    try {
+      return Decimal.from(amountA).gt(Decimal.from(balances.in));
+    } catch {
+      return false;
+    }
+  }, [amountA, balances.in]);
+
+  const hasInsufficientBalanceB = useMemo(() => {
+    if (!amountB || !balances.out || Number(amountB) <= 0) return false;
+    try {
+      return Decimal.from(amountB).gt(Decimal.from(balances.out));
+    } catch {
+      return false;
+    }
+  }, [amountB, balances.out]);
+
+  const hasInsufficientBalance = hasInsufficientBalanceA || hasInsufficientBalanceB;
+
+  const isAddDisabled = state.loading || !amountA || Number(amountA) <= 0 || !amountB || Number(amountB) <= 0 || !tokenA || !tokenB || !!state.error || hasInsufficientBalance;
 
   return (
     <div className="genz-card" style={{
@@ -305,6 +327,7 @@ export default function AddLiquidityForm() {
           loading={tokensLoading}
           searchValue={searchA}
           onSearchChange={setSearchA}
+          hasInsufficientBalance={hasInsufficientBalanceA}
         />
       </div>
 
@@ -352,6 +375,7 @@ export default function AddLiquidityForm() {
           loading={tokensLoading}
           searchValue={searchB}
           onSearchChange={setSearchB}
+          hasInsufficientBalance={hasInsufficientBalanceB}
         />
       </div>
 
@@ -381,6 +405,28 @@ export default function AddLiquidityForm() {
           textAlign: 'center'
         }}>
           {state.error}
+        </div>
+      )}
+
+      {/* Insufficient Balance Warning */}
+      {(hasInsufficientBalanceA || hasInsufficientBalanceB) && (
+        <div style={{
+          color: 'var(--error-color)',
+          fontSize: 14,
+          padding: '12px 16px',
+          background: 'rgba(255, 107, 107, 0.1)',
+          border: '1px solid rgba(255, 107, 107, 0.2)',
+          borderRadius: 12,
+          marginBottom: 20,
+          textAlign: 'center'
+        }}>
+          {hasInsufficientBalanceA && hasInsufficientBalanceB ? (
+            <>Insufficient balance for both {tokenA?.symbol} and {tokenB?.symbol}</>
+          ) : hasInsufficientBalanceA ? (
+            <>Insufficient {tokenA?.symbol} balance. You need {amountA} but only have {balances.in ? Decimal.from(balances.in).prettify() : '0'}</>
+          ) : (
+            <>Insufficient {tokenB?.symbol} balance. You need {amountB} but only have {balances.out ? Decimal.from(balances.out).prettify() : '0'}</>
+          )}
         </div>
       )}
 

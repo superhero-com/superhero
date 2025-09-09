@@ -18,6 +18,7 @@ interface TokenInputProps {
   placeholder?: string;
   searchValue?: string;
   onSearchChange?: (value: string) => void;
+  hasInsufficientBalance?: boolean;
 }
 
 export default function TokenInput({
@@ -34,7 +35,8 @@ export default function TokenInput({
   readOnly = false,
   placeholder = "0.0",
   searchValue = "",
-  onSearchChange
+  onSearchChange,
+  hasInsufficientBalance = false
 }: TokenInputProps) {
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/,/g, '.');
@@ -50,7 +52,7 @@ export default function TokenInput({
   return (
     <div style={{
       background: 'rgba(255, 255, 255, 0.03)',
-      border: '1px solid var(--glass-border)',
+      border: hasInsufficientBalance ? '1px solid var(--error-color)' : '1px solid var(--glass-border)',
       borderRadius: 16,
       padding: 16,
       backdropFilter: 'blur(10px)',
@@ -224,6 +226,21 @@ export default function TokenInput({
           />
         </div>
       </div>
+
+      {/* Insufficient Balance Warning */}
+      {hasInsufficientBalance && balance && amount && Number(amount) > 0 && (
+        <div style={{
+          marginTop: 8,
+          fontSize: 12,
+          color: 'var(--error-color)',
+          fontWeight: 500,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4
+        }}>
+          ⚠️ Insufficient {token?.symbol} balance. You need {amount} but only have {Decimal.from(balance).prettify()}
+        </div>
+      )}
     </div>
   );
 }

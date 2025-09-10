@@ -169,7 +169,6 @@ export default function UserProfile() {
         
         .profile-content {
           display: flex;
-          align-items: center;
           gap: 16px;
           position: relative;
           z-index: 1;
@@ -330,17 +329,7 @@ export default function UserProfile() {
           }
         }
         
-        @media (max-width: 480px) {
-          .profile-header {
-            padding: 14px;
-          }
-          
-          .profile-content {
-            flex-direction: column;
-            text-align: center;
-            gap: 12px;
-          }
-          
+        @media (max-width: 768px) {
           .profile-info {
             width: 100%;
           }

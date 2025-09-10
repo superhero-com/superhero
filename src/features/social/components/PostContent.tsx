@@ -8,7 +8,9 @@ interface PostContentProps {
 // Component: Post Content Display
 const PostContent = memo(({ post }: PostContentProps) => (
   <>
-    <h2 className="post-title">{post.title}</h2>
+    <div>
+      <div className="post-title">{post.title}</div>
+    </div>
     {post.url && (
       <a href={post.url} target="_blank" rel="noreferrer" className="post-url">
         {post.url}
@@ -18,10 +20,10 @@ const PostContent = memo(({ post }: PostContentProps) => (
       <a href={post.url} target="_blank" rel="noreferrer" className="link-preview">
         <div className="preview-content">
           {post.linkPreview.image && (
-            <img 
-              src={Backend.getTipPreviewUrl(post.linkPreview.image)} 
-              alt="preview" 
-              className="preview-image" 
+            <img
+              src={Backend.getTipPreviewUrl(post.linkPreview.image)}
+              alt="preview"
+              className="preview-image"
             />
           )}
           <div className="preview-text">

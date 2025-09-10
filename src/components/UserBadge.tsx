@@ -1,21 +1,20 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Identicon from './Identicon';
 import { Backend } from '../api/backend';
+import Identicon from './Identicon';
 
-import { useWallet } from '../hooks';
+import { formatAddress } from '../utils/address';
 export default function UserBadge(
-  { address, showAvatar = true, linkTo = 'profile', shortAddress = false, chainName }: { 
-    address: string; 
-    showAvatar?: boolean; 
-    linkTo?: 'profile' | 'account'; 
+  { address, showAvatar = true, linkTo = 'profile', shortAddress = false, chainName }: {
+    address: string;
+    showAvatar?: boolean;
+    linkTo?: 'profile' | 'account';
     shortAddress?: boolean;
     chainName?: string;
   }
 ) {
   const navigate = useNavigate();
-  const chainNames = useWallet().chainNames as any;
-  const name = chainName || chainNames?.[address] || 'Legend';
+  const name = chainName || 'Fellow superhero';
   const [profile, setProfile] = useState<any>(null);
   const [hover, setHover] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -30,7 +29,7 @@ export default function UserBadge(
 
   useEffect(() => {
     if (!visible || !address) return;
-    Backend.getProfile(address).then(setProfile).catch(() => {});
+    Backend.getProfile(address).then(setProfile).catch(() => { });
   }, [visible, address]);
 
   useEffect(() => {
@@ -62,25 +61,25 @@ export default function UserBadge(
           <span className="chain-name" style={{ fontSize: 14, fontWeight: 800 }}>{name}</span>
           <span
             className="address"
-            style={{ 
-              fontSize: 8, 
-              color: 'rgba(195, 195, 199, 0.4)', 
+            style={{
+              fontSize: 8,
+              color: 'rgba(195, 195, 199, 0.4)',
               fontFamily: 'monospace',
               letterSpacing: '0.5px',
               textDecoration: 'underline',
               textDecorationColor: 'rgba(195, 195, 199, 0.2)',
               textDecorationThickness: '1px',
               textUnderlineOffset: '2px',
-              whiteSpace: 'nowrap', 
-              overflow: 'hidden', 
-              textOverflow: 'ellipsis', 
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
               maxWidth: 200,
               minWidth: 0,
               flexShrink: 1
             }}
             title={address} // Show full address on hover
           >
-            {address}
+            {formatAddress(address)}
           </span>
         </div>
       </a>

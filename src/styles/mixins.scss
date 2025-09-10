@@ -232,7 +232,7 @@
 @mixin avatar-overlay($size: 20px, $border-radius: 6px) {
   position: absolute;
   bottom: -8px;
-  right: -8px;
+  right: -4px;
   width: $size;
   height: $size;
   border-radius: $border-radius;

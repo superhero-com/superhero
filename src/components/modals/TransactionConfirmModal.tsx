@@ -1,6 +1,7 @@
 import React from 'react';
 import { Encoded } from '@aeternity/aepp-sdk';
 import AeButton from '../AeButton';
+import { IconWallet } from '../../icons';
 
 interface TransactionConfirmModalProps {
   transaction: Encoded.Transaction;
@@ -26,38 +27,55 @@ export default function TransactionConfirmModal({
   };
 
   return (
-    <div>
-      <h3>Confirm Transaction</h3>
-      <div style={{ marginBottom: '16px' }}>
-        <p>Please confirm this transaction to proceed:</p>
-        <div style={{ 
-          background: '#2f2f3b', 
-          padding: '12px', 
-          borderRadius: '4px', 
-          marginTop: '8px',
-          fontFamily: 'monospace',
-          fontSize: '12px',
-          wordBreak: 'break-all'
-        }}>
-          {transaction}
-        </div>
-      </div>
+    <div style={{ textAlign: 'center', padding: '20px' }}>
       <div style={{ 
         display: 'flex', 
-        gap: '8px', 
-        justifyContent: 'flex-end' 
+        justifyContent: 'center', 
+        marginBottom: '20px' 
+      }}>
+        <IconWallet style={{ 
+          width: '48px', 
+          height: '48px', 
+          color: '#6366f1' 
+        }} />
+      </div>
+      
+      <h3 style={{ 
+        marginBottom: '16px', 
+        fontSize: '20px',
+        fontWeight: '600'
+      }}>
+        Confirm Transaction
+      </h3>
+      
+      <div style={{ 
+        marginBottom: '24px',
+        color: '#6b7280',
+        lineHeight: '1.5'
+      }}>
+        <p style={{ marginBottom: '12px' }}>
+          Please check your wallet and confirm the transaction to proceed.
+        </p>
+      </div>
+      
+      <div style={{ 
+        display: 'flex', 
+        gap: '12px', 
+        justifyContent: 'center' 
       }}>
         <AeButton 
           variant="secondary" 
           onClick={handleCancel}
+          size="md"
         >
           Cancel
         </AeButton>
         <AeButton 
           variant="primary" 
           onClick={handleConfirm}
+          size="md"
         >
-          Confirm
+          Open Wallet
         </AeButton>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { IconClose, IconGif, IconImage, IconSmile } from '../../../icons';
 import AeButton from '../../../components/AeButton';
+import ConnectWalletButton from '../../../components/ConnectWalletButton';
 import './CreatePost.scss';
 import Identicon from '../../../components/Identicon';
 // @ts-ignore
@@ -40,7 +41,6 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
 
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [showEmoji, setShowEmoji] = useState(false);
@@ -54,11 +54,6 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
   const gifBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => { setPromptIndex(Math.floor(Math.random() * PROMPTS.length)); }, []);
-  useEffect(() => {
-    if (isExpanded) return;
-    const id = window.setInterval(() => { setPromptIndex((i) => (i + 1) % PROMPTS.length); }, 8000);
-    return () => window.clearInterval(id);
-  }, [isExpanded]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -69,7 +64,7 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
 
   useEffect(() => { onTextChange?.(text); }, [text, onTextChange]);
 
-  useEffect(() => { if (isExpanded && textareaRef.current) textareaRef.current.focus(); }, [isExpanded]);
+  useEffect(() => { if (textareaRef.current) textareaRef.current.focus(); }, []);
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -148,88 +143,75 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
   };
 
   const removeMedia = (index: number) => { setMediaFiles(prev => prev.filter((_, i) => i !== index)); setMediaUrls(prev => prev.filter((_, i) => i !== index)); };
-  const handleExpand = () => { if (!isExpanded) setIsExpanded(true); };
-  const handleClose = () => { if (isExpanded) { setIsExpanded(false); setText(''); setMediaFiles([]); setMediaUrls([]); } onClose?.(); };
+  const handleClose = () => { setText(''); setMediaFiles([]); setMediaUrls([]); onClose?.(); };
 
-  if (!activeAccount) {
-    return (
-      <div className={`create-post-container ${className}`}>
-        <div className="create-post-box">
-          <div className="create-post-placeholder">
-            <div className="placeholder-icon">✍️</div>
-            <div className="placeholder-text">Connect your wallet to start posting</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const chainName = chainNames?.[activeAccount || ''];
-  const currentPrompt = PROMPTS[promptIndex];
+  const currentPrompt = activeAccount ? PROMPTS[promptIndex] : 'Connect your wallet to start posting ✍️';
 
   return (
     <div className={`create-post-container ${className}`}>
-      <div className={`create-post-box ${isExpanded ? 'expanded' : ''}`}>
-        {!isExpanded ? (
-          <div className="create-post-trigger" onClick={handleExpand}>
-            <div className="trigger-avatar"><Identicon address={activeAccount} size={40} name={chainName} /></div>
-            <div className="trigger-text">{currentPrompt}</div>
-            <div className="trigger-actions">
-              <button className="action-button" title="Add image"><IconImage /></button>
+      <div className="create-post-box expanded">
+        <form onSubmit={handleSubmit} className="create-post-form">
+          <div className="form-header">
+            <div className="form-avatar">
+              {activeAccount ? (
+                <Identicon address={activeAccount} size={48} name={chainName} />
+              ) : (
+                <div className="placeholder-avatar">✍️</div>
+              )}
             </div>
+            <button type="button" className="close-button" onClick={handleClose} title="Close"><IconClose /></button>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="create-post-form">
-            <div className="form-header">
-              <div className="form-avatar"><Identicon address={activeAccount} size={48} name={chainName} /></div>
-              <button type="button" className="close-button" onClick={handleClose} title="Close"><IconClose /></button>
-            </div>
 
-            <div className="form-content">
-              <textarea ref={textareaRef} placeholder={currentPrompt} value={text} onChange={(e) => setText(e.target.value)} className="text-input" rows={1} maxLength={280} />
+          <div className="form-content">
+            <textarea ref={textareaRef} placeholder={currentPrompt} value={text} onChange={(e) => setText(e.target.value)} className="text-input" rows={1} maxLength={280} />
 
-              {mediaUrls.length > 0 && (
-                <div className="media-preview">
-                  {mediaUrls.map((url, index) => (
-                    <div key={index} className="media-item">
-                      {/.mp4$|.webm$|.mov$/i.test(url) ? (<video src={url} controls />) : (<img src={url} alt="media" />)}
-                      <button type="button" className="remove-media" onClick={() => removeMedia(index)}><IconClose /></button>
-                    </div>
-                  ))}
+            {mediaUrls.length > 0 && (
+              <div className="media-preview">
+                {mediaUrls.map((url, index) => (
+                  <div key={index} className="media-item">
+                    {/.mp4$|.webm$|.mov$/i.test(url) ? (<video src={url} controls />) : (<img src={url} alt="media" />)}
+                    <button type="button" className="remove-media" onClick={() => removeMedia(index)}><IconClose /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="form-footer">
+            <div className="footer-left">
+              {/* <button type="button" className="media-button" onClick={() => fileInputRef.current?.click()} disabled={mediaFiles.length >= 4}><IconImage /><span>Media</span></button> */}
+              <button type="button" className="link-button" title="Emoji" ref={emojiBtnRef} onClick={() => { setShowEmoji(s => !s); setShowGif(false); }}><IconSmile /><span>Emoji</span></button>
+              <button type="button" className="link-button" title="GIF" ref={gifBtnRef} onClick={() => { setShowGif(s => !s); setShowEmoji(false); }}><IconGif /><span>GIF</span></button>
+              {/* <input ref={fileInputRef} type="file" accept="image/*,video/*" multiple onChange={handleFileSelect} style={{ display: 'none' }} /> */}
+              {showEmoji && (
+                <div className="popover emoji-popover">
+                  <div className="emoji-grid">{DEFAULT_EMOJIS.map((e) => (<button key={e} type="button" className="emoji-btn" onClick={() => insertAtCursor(e)}>{e}</button>))}</div>
+                  <div className="emoji-hint">More soon…</div>
+                </div>
+              )}
+              {showGif && (
+                <div className="popover gif-popover">
+                  <div className="gif-title">Add a GIF</div>
+                  <input type="url" placeholder="Paste GIF/Video URL" value={gifInput} onChange={(e) => setGifInput(e.target.value)} className="gif-input" />
+                  <div className="gif-actions">
+                    <button type="button" className="gif-cancel" onClick={() => setShowGif(false)}>Cancel</button>
+                    <button type="button" className="gif-add" onClick={addGifFromUrl}>Add</button>
+                  </div>
                 </div>
               )}
             </div>
-
-            <div className="form-footer">
-              <div className="footer-left">
-                {/* <button type="button" className="media-button" onClick={() => fileInputRef.current?.click()} disabled={mediaFiles.length >= 4}><IconImage /><span>Media</span></button> */}
-                <button type="button" className="link-button" title="Emoji" ref={emojiBtnRef} onClick={() => { setShowEmoji(s => !s); setShowGif(false); }}><IconSmile /><span>Emoji</span></button>
-                <button type="button" className="link-button" title="GIF" ref={gifBtnRef} onClick={() => { setShowGif(s => !s); setShowEmoji(false); }}><IconGif /><span>GIF</span></button>
-                {/* <input ref={fileInputRef} type="file" accept="image/*,video/*" multiple onChange={handleFileSelect} style={{ display: 'none' }} /> */}
-                {showEmoji && (
-                  <div className="popover emoji-popover">
-                    <div className="emoji-grid">{DEFAULT_EMOJIS.map((e) => (<button key={e} type="button" className="emoji-btn" onClick={() => insertAtCursor(e)}>{e}</button>))}</div>
-                    <div className="emoji-hint">More soon…</div>
-                  </div>
-                )}
-                {showGif && (
-                  <div className="popover gif-popover">
-                    <div className="gif-title">Add a GIF</div>
-                    <input type="url" placeholder="Paste GIF/Video URL" value={gifInput} onChange={(e) => setGifInput(e.target.value)} className="gif-input" />
-                    <div className="gif-actions">
-                      <button type="button" className="gif-cancel" onClick={() => setShowGif(false)}>Cancel</button>
-                      <button type="button" className="gif-add" onClick={addGifFromUrl}>Add</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="footer-right">
-                <div className="character-count">{text.length}/280</div>
+            <div className="footer-right">
+              <div className="character-count">{text.length}/280</div>
+              {activeAccount ? (
                 <AeButton type="submit" loading={isSubmitting} disabled={!text.trim()} className="submit-button">{isSubmitting ? 'Posting…' : 'Post'}</AeButton>
-              </div>
+              ) : (
+                <ConnectWalletButton />
+              )}
             </div>
-          </form>
-        )}
+          </div>
+        </form>
       </div>
     </div>
   );

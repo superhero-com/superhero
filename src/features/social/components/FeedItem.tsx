@@ -1,7 +1,8 @@
-import React, { memo, useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import { PostDto } from '../../../api/generated';
-import { IconComment } from '../../../icons';
 import UserBadge from '../../../components/UserBadge';
+import { useChainName } from '../../../hooks/useChainName';
+import { IconComment } from '../../../icons';
 import { linkify } from '../../../utils/linkify';
 import { relativeTime } from '../../../utils/time';
 import PostAvatar from './PostAvatar';
@@ -9,7 +10,6 @@ import PostAvatar from './PostAvatar';
 interface FeedItemProps {
   item: PostDto;
   commentCount: number;
-  chainName?: string;
   onItemClick: (postId: string) => void;
 }
 
@@ -17,9 +17,9 @@ interface FeedItemProps {
 const FeedItem = memo(({
   item,
   commentCount,
-  chainName,
   onItemClick
 }: FeedItemProps) => {
+  const { chainName } = useChainName(item.sender_address);
   const postId = item.id;
   const authorAddress = item.sender_address;
 

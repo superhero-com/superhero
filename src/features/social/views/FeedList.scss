@@ -277,12 +277,15 @@
   
   .chain-avatar {
     position: absolute;
+    display: flex;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     border-radius: 12px;
     overflow: hidden;
+    align-items: center;
+    justify-content: center;
     border: 2px solid rgba(255, 255, 255, 0.1);
     transition: all 0.2s ease;
     
@@ -294,6 +297,9 @@
   
   .address-avatar {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     top: 0;
     left: 0;
     width: 100%;
@@ -311,14 +317,15 @@
   
   .address-avatar-overlay {
     position: absolute;
-    bottom: -6px;
-    right: -6px;
+    display: flex;
+    bottom: -20px;
+    right: -20px;
     width: 32px;
     height: 32px;
     border-radius: 8px;
     overflow: hidden;
-    border: 3px solid $background_color;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    // border: 3px solid $background_color;
+    // box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   }
   
   .content { 

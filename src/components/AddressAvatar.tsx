@@ -5,16 +5,18 @@ interface AddressAvatarProps {
   size?: number;
   className?: string;
   style?: React.CSSProperties;
+  borderRadius?: string;
 }
 
 export default function AddressAvatar({ 
   address, 
   size = 24, 
   className = '',
+  borderRadius = '50%',
   style = {}
 }: AddressAvatarProps) {
   // Using a simple avatar service - you can replace this with your preferred service
-  const avatarUrl = `https://api.multiavatar.com/${address}.svg`;
+  const avatarUrl = `https://avatars.superherowallet.com/${address}`;
   
   return (
     <div 
@@ -22,7 +24,7 @@ export default function AddressAvatar({
       style={{
         width: size,
         height: size,
-        borderRadius: '50%',
+        borderRadius: borderRadius,
         overflow: 'hidden',
         display: 'flex',
         alignItems: 'center',

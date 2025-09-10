@@ -126,7 +126,6 @@ export default function FeedList() {
           key={postId}
           item={item}
           commentCount={commentCount}
-          chainName={chainName}
           onItemClick={handleItemClick}
         />
       );

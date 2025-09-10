@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Backend } from '../api/backend';
 import Identicon from './Identicon';
 
 import { formatAddress } from '../utils/address';
@@ -27,10 +26,6 @@ export default function UserBadge(
     return () => window.clearTimeout(id);
   }, [hover]);
 
-  useEffect(() => {
-    if (!visible || !address) return;
-    Backend.getProfile(address).then(setProfile).catch(() => { });
-  }, [visible, address]);
 
   useEffect(() => {
     function handleDocClick(e: MouseEvent) {

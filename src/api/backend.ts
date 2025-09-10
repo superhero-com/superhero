@@ -226,7 +226,6 @@ export const Backend = {
     headers: { 'Content-Type': 'application/json' },
   }),
   getPinnedItems: (address: string) => fetchJson(`pin/${address}`),
-  getProfile: (address: string) => fetchJson(`profile/${address}`),
   sendProfileData: (address: string, postParam: any) => fetchJson(`profile/${address}`, {
     method: 'post',
     body: postParam instanceof FormData ? postParam : JSON.stringify(postParam),

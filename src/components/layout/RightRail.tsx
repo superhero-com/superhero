@@ -164,12 +164,6 @@ export default function RightRail() {
       // Parallel API calls for better performance
       const searchPromises = [] as any[];
 
-      // Search users if filter is enabled
-      if (searchFilters.users) {
-        searchPromises.push(
-          Backend.getProfile(query).catch(() => null)
-        );
-      }
 
       // Search tokens if filter is enabled
       if (searchFilters.tokens) {

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Backend } from '../api/backend';
 import AeButton from '../components/AeButton';
 import Identicon from '../components/Identicon';
 import LeftRail from '../components/layout/LeftRail';
@@ -8,21 +7,22 @@ import RightRail from '../components/layout/RightRail';
 import Shell from '../components/layout/Shell';
 import UserBadge from '../components/UserBadge';
 
-import { useWallet, useModal } from '../hooks';
 import { useQuery } from '@tanstack/react-query';
 import { PostsService } from '../api/generated';
-import { PostApiResponse } from '../features/social/types';
 import FeedItem from '../features/social/components/FeedItem';
+import { PostApiResponse } from '../features/social/types';
 import '../features/social/views/FeedList.scss';
 import { useAccountBalances } from '../hooks/useAccountBalances';
+import { useChainName } from '../hooks/useChainName';
+
+import AddressAvatar from '../components/AddressAvatar';
 
 export default function UserProfile() {
   const navigate = useNavigate();
   const { address } = useParams();
-  const { chainNames, address: myAddress } = useWallet();
   const { decimalBalance, loadAccountData } = useAccountBalances(address);
-  const { openModal } = useModal();
-  
+  const { chainName } = useChainName(address);
+
   const { data } = useQuery({
     queryKey: ['PostsService.listAll', address],
     queryFn: () => PostsService.listAll({
@@ -46,10 +46,7 @@ export default function UserProfile() {
     if (!address) return;
     loadAccountData()
     // Load profile
-    Backend.getProfile(address).then(setProfile).catch(() => { });
-  }, [address, loadAccountData]);
-
-  const chainName = chainNames?.[address];
+  }, [address]);
 
   return (
     <Shell left={<LeftRail />} right={<RightRail />}>
@@ -60,21 +57,21 @@ export default function UserProfile() {
             <div className="profile-avatar-container">
               <div className="avatar-stack">
                 {/* Chain avatar (bigger) if available */}
-                {chainName && chainName !== 'Legend' && (
+                {chainName && (
                   <div className="chain-avatar">
-                    <Identicon address={address} size={56} name={chainName} />
+                    <Identicon address={address} size={50} name={chainName} />
                   </div>
                 )}
                 {/* Address avatar (smaller) if no chain name, or as overlay */}
-                {(!chainName || chainName === 'Legend') && (
+                {(!chainName) && (
                   <div className="address-avatar">
-                    <Identicon address={address} size={56} />
+                    <AddressAvatar address={address} size={56} />
                   </div>
                 )}
                 {/* Overlay avatar for chain names */}
-                {chainName && chainName !== 'Legend' && (
+                {chainName && (
                   <div className="address-avatar-overlay">
-                    <Identicon address={address} size={24} />
+                    <AddressAvatar address={address} size={24} />
                   </div>
                 )}
               </div>
@@ -122,16 +119,13 @@ export default function UserProfile() {
             )}
             {posts.map((item: any) => {
               const postId = item.id;
-              const authorAddress = item.sender_address;
               const commentCount = item.total_comments ?? 0;
-              const itemChainName = chainNames?.[authorAddress];
 
               return (
                 <FeedItem
                   key={postId}
                   item={item}
                   commentCount={commentCount}
-                  chainName={itemChainName}
                   onItemClick={(id: string) => navigate(`/post/${id}`)}
                 />
               );

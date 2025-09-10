@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Identicon from '../Identicon';
-import { Backend } from '../../api/backend';
 
 export default function UserPopup({ address, onClose }: { address: string; onClose: () => void }) {
   const [profile, setProfile] = useState<any>(null);
-  useEffect(() => { Backend.getProfile(address).then(setProfile).catch(() => {}); }, [address]);
   return (
     <div>
       <div style={{ display: 'flex', gap: 12 }}>

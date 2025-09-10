@@ -5,11 +5,13 @@ import { useWalletConnect } from '../../../hooks/useWalletConnect';
 import Favicon from '../../../svg/favicon.svg?react';
 import Identicon from '../../Identicon';
 import './HeaderWalletButton.scss';
+import { formatAddress } from '../../../utils/address';
+import AddressAvatar from '../../../components/AddressAvatar';
 
 export default function HeaderWalletButton() {
   const { activeAccount } = useAeSdk();
   const { connectWallet, disconnectWallet, walletInfo } = useWalletConnect();
-  const { decimalBalance } = useAccount();
+  const { decimalBalance, chainName } = useAccount();
   const [loading, setLoading] = React.useState(false);
 
   async function handleConnect() {
@@ -29,8 +31,6 @@ export default function HeaderWalletButton() {
     setShowDropdown(false);
   };
 
-  const shortAddress = activeAccount ? `${activeAccount.slice(0, 6)}...${activeAccount.slice(-4)}` : '';
-  const chainName = activeAccount ? activeAccount : undefined;
 
   // If not connected, show connect button
   if (!walletInfo && !activeAccount) {
@@ -61,7 +61,7 @@ export default function HeaderWalletButton() {
           <Identicon address={activeAccount} size={32} name={chainName} />
         </div>
         <div className="wallet-info">
-          <div className="address">{shortAddress}</div>
+          <div className="address">{chainName ?? formatAddress(activeAccount)}</div>
           <div className="balance">{decimalBalance.prettify()} AE</div>
         </div>
       </button>
@@ -73,8 +73,19 @@ export default function HeaderWalletButton() {
               <Identicon address={activeAccount} size={40} name={chainName} />
             </div>
             <div className="user-info">
-              <div className="chain-name">{chainName || 'My Wallet'}</div>
-              <div className="full-address">{activeAccount}</div>
+              {
+                chainName && (
+                  <div className="chain-name">{chainName}</div>
+                )
+              }
+              <div className="full-address" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {
+                  chainName && (
+                    <AddressAvatar address={activeAccount} size={24} />
+                  )
+                }
+                {formatAddress(activeAccount)}
+              </div>
             </div>
           </div>
           <div className="dropdown-balance">

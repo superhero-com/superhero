@@ -18,13 +18,8 @@ export function useTokenList(): TokenListState {
   })
 
   const tokens = useMemo(() => [
-    ...(data?.items ?? []).map((t) => {
-      if (t.address === DEX_ADDRESSES.wae) {
-        return { ...t, symbol: 'AE', name: 'AE' };
-      }
-
-      return t
-    })
+    { address: 'ae', symbol: 'AE', name: 'AE', decimals: 18, is_ae: true },
+    ...(data?.items ?? [])
   ], [data]);
 
 

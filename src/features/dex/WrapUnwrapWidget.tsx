@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import waeACI from 'dex-contracts-v2/build/WAE.aci.json';
+import React, { useEffect, useState } from 'react';
+import ConnectWalletButton from '../../components/ConnectWalletButton';
 import { useTokenBalances } from '../../components/dex/hooks/useTokenBalances';
-import { DEX_ADDRESSES, fromAettos } from '../../libs/dex';
-import { errorToUserMessage } from '../../libs/errorMessages';
 import { useAccount, useAeSdk, useRecentActivities } from '../../hooks';
 import { Decimal } from '../../libs/decimal';
-import ConnectWalletButton from '../../components/ConnectWalletButton';
-import waeACI from 'dex-contracts-v2/build/WAE.aci.json';
+import { DEX_ADDRESSES } from '../../libs/dex';
+import { errorToUserMessage } from '../../libs/errorMessages';
 
 interface WrapUnwrapWidgetProps {
   className?: string;
@@ -14,10 +14,10 @@ interface WrapUnwrapWidgetProps {
 
 export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
   const { sdk } = useAeSdk();
-  const { activeAccount } = useAccount();
+  const { activeAccount, loadAccountData } = useAccount();
   const { addActivity } = useRecentActivities();
-  const { wrapBalances, refreshWrapBalances } = useTokenBalances(null, null);
-  
+  const { wrapBalances } = useTokenBalances(null, null);
+
   const [wrapAmount, setWrapAmount] = useState<string>('');
   const [unwrapAmount, setUnwrapAmount] = useState<string>('');
   const [wrapping, setWrapping] = useState(false);
@@ -68,7 +68,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
       });
       const aettos = Decimal.from(amountAe).bigNumber;
       const result = await wae.deposit({ amount: aettos });
-      
+
       // Track the wrap activity
       if (activeAccount && result?.hash) {
         addActivity({
@@ -81,9 +81,9 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
           amountOut: amountAe, // 1:1 wrap ratio
         });
       }
-      
+
       setWrapAmount('');
-      void refreshWrapBalances();
+      void loadAccountData();
     } catch (e: any) {
       setError(errorToUserMessage(e, { action: 'wrap' }));
     } finally {
@@ -95,13 +95,13 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
     try {
       setUnwrapping(true);
       setError(null);
-      const wae = await sdk.initializeContract({ 
-        aci: waeACI, 
+      const wae = await sdk.initializeContract({
+        aci: waeACI,
         address: DEX_ADDRESSES.wae as `ct_${string}`
       });
       const aettos = Decimal.from(amountWae).bigNumber;
       const result = await wae.withdraw(aettos, null);
-      
+
       // Track the unwrap activity
       if (activeAccount && result?.hash) {
         addActivity({
@@ -114,9 +114,9 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
           amountOut: amountWae, // 1:1 unwrap ratio
         });
       }
-      
+
       setUnwrapAmount('');
-      void refreshWrapBalances();
+      void loadAccountData();
     } catch (e: any) {
       setError(errorToUserMessage(e, { action: 'unwrap' }));
     } finally {
@@ -126,7 +126,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
 
   const handleExecute = async () => {
     if (!currentAmount || Number(currentAmount) <= 0) return;
-    
+
     if (mode === 'wrap') {
       await wrapAeToWae(currentAmount);
     } else {
@@ -137,8 +137,8 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
   const isExecuteDisabled = isLoading || !currentAmount || Number(currentAmount) <= 0;
 
   return (
-    <div 
-      className={`genz-card ${className || ''}`} 
+    <div
+      className={`genz-card ${className || ''}`}
       style={{
         maxWidth: 480,
         margin: '0 auto',
@@ -253,14 +253,14 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
               {wrapBalances.ae ? Decimal.from(wrapBalances.ae).prettify() : '…'}
             </div>
           </div>
-          
+
           <div style={{
             width: 2,
             height: 40,
             background: 'var(--glass-border)',
             borderRadius: 1
           }} />
-          
+
           <div style={{ textAlign: 'center', flex: 1 }}>
             <div style={{
               fontSize: 12,
@@ -308,7 +308,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
           }}>
             Amount to {mode}
           </label>
-          
+
           {currentBalance && (
             <div style={{
               display: 'flex',
@@ -328,7 +328,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
                   {Decimal.from(currentBalance).prettify()}
                 </span>
               </div>
-              
+
               {/* Balance buttons */}
               <div style={{ display: 'flex', gap: 6 }}>
                 <button
@@ -359,7 +359,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
                 >
                   50%
                 </button>
-                
+
                 <button
                   onClick={handleMaxClick}
                   disabled={isLoading || !currentBalance || Number(currentBalance) === 0}
@@ -411,7 +411,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
           }}>
             {mode === 'wrap' ? 'AE →' : 'WAE →'}
           </div>
-          
+
           <input
             type="text"
             inputMode="decimal"
@@ -432,7 +432,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
             }}
             aria-label={`${mode}-amount`}
           />
-          
+
           <div style={{
             fontSize: 18,
             fontWeight: 700,

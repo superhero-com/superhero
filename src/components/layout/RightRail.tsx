@@ -495,146 +495,6 @@ export default function RightRail() {
 
   return (
     <div className="right-rail">
-      {/* Enhanced Search Section */}
-      <div className="genz-card search-section">
-        <div className="card-header">
-          <span className="card-icon">🔍</span>
-          <h4>Smart Search</h4>
-          <button
-            className="advanced-toggle"
-            onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
-            title="Advanced search options"
-          >
-            ⚙️
-          </button>
-        </div>
-
-        <div className="search-container" ref={suggestionsRef}>
-          <div className="search-input-wrapper">
-            <input
-              className="enhanced-search-input"
-              value={searchQuery}
-              onChange={(e) => handleSearchInputChange(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleSearch(searchQuery);
-                }
-              }}
-              placeholder="Search users, tokens, topics, DAOs..."
-            />
-            {isSearching && (
-              <div className="search-spinner">
-                <div className="spinner"></div>
-              </div>
-            )}
-          </div>
-
-          {showSearchSuggestions && searchSuggestions.length > 0 && (
-            <div className="search-suggestions">
-              <div className="suggestions-header">
-                <span>Search Results</span>
-                <span className="results-count">{searchSuggestions.length} found</span>
-              </div>
-              {searchSuggestions.map((suggestion, index) => (
-                <div
-                  key={index}
-                  className="suggestion-item"
-                  onClick={() => handleSuggestionClick(suggestion)}
-                >
-                  <span className="suggestion-icon">{suggestion.icon}</span>
-                  <div className="suggestion-content">
-                    <div className="suggestion-title">{suggestion.title}</div>
-                    {suggestion.subtitle && (
-                      <div className="suggestion-subtitle">{suggestion.subtitle}</div>
-                    )}
-                  </div>
-                  <span className="suggestion-type">{suggestion.type}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {showAdvancedSearch && (
-          <div className="advanced-search">
-            {/* Search Filters */}
-            <div className="search-filters">
-              <h5>Search Filters</h5>
-              <div className="filter-grid">
-                {Object.entries(searchFilters).map(([key, value]) => (
-                  <label key={key} className="filter-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={value}
-                      onChange={() => handleFilterToggle(key as keyof SearchFilter)}
-                    />
-                    <span className="filter-label">
-                      {key.charAt(0).toUpperCase() + key.slice(1)}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="search-history">
-              <div className="history-header">
-                <h5>Recent Searches</h5>
-                {recentSearches.length > 0 && (
-                  <button
-                    className="clear-history-btn"
-                    onClick={clearSearchHistory}
-                    title="Clear search history"
-                  >
-                    🗑️
-                  </button>
-                )}
-              </div>
-              <div className="search-tags">
-                {recentSearches.map((search, index) => (
-                  <button
-                    key={index}
-                    className="search-tag"
-                    onClick={() => handleSearch(search)}
-                  >
-                    {search}
-                  </button>
-                ))}
-                {recentSearches.length === 0 && (
-                  <span className="empty-state">No recent searches</span>
-                )}
-              </div>
-            </div>
-
-            <div className="saved-searches">
-              <h5>Saved Searches</h5>
-              <div className="search-tags">
-                {savedSearches.map((search, index) => (
-                  <button
-                    key={index}
-                    className="search-tag saved"
-                    onClick={() => handleSearch(search)}
-                  >
-                    {search}
-                  </button>
-                ))}
-                {savedSearches.length === 0 && (
-                  <span className="empty-state">No saved searches</span>
-                )}
-              </div>
-            </div>
-
-            {searchQuery && (
-              <button
-                className="save-search-btn"
-                onClick={handleSaveSearch}
-              >
-                💾 Save Search
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
       {/* Enhanced Price Section */}
       <div className="genz-card price-section">
         <div className="card-header">
@@ -695,7 +555,7 @@ export default function RightRail() {
       </div>
 
       {/* Enhanced Trending Section */}
-      <div className="genz-card trending-section">
+      {/* <div className="genz-card trending-section">
         <div className="card-header">
           <span className="card-icon">🔥</span>
           <h4>Trending Topics</h4>
@@ -721,7 +581,7 @@ export default function RightRail() {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* Explore Trends Sidebar (replaced with Trending sidebar) */}
       <TrendingSidebar />

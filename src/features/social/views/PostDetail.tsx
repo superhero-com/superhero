@@ -124,7 +124,7 @@ export default function PostDetail() {
         <div className="author-section">
           {authorAddress && (
             <div className="author-display">
-              <PostAvatar authorAddress={authorAddress} chainName={chainName} size={56} overlaySize={28} />
+              <PostAvatar authorAddress={authorAddress} chainName={chainName} size={40} overlaySize={22} />
               <UserBadge
                 address={authorAddress}
                 showAvatar={false}

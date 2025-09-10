@@ -236,8 +236,8 @@
   margin-bottom: 16px;
   position: relative;
   display: grid;
-  grid-template-columns: 56px 1fr;
-  gap: 16px;
+  grid-template-columns: 40px 1fr;
+  gap: 12px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid rgba(255, 255, 255, 0.08);
   
@@ -264,68 +264,30 @@
   }
   
   .avatar-container {
-    position: relative;
-    width: 56px;
-    height: 56px;
+    @include avatar-container(40px);
   }
   
   .avatar-stack {
-    position: relative;
-    width: 100%;
-    height: 100%;
+    @include avatar-stack;
   }
   
   .chain-avatar {
-    position: absolute;
+    @include avatar-base(10px);
     display: flex;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 12px;
-    overflow: hidden;
     align-items: center;
     justify-content: center;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.2s ease;
-    
-    &:hover {
-      border-color: rgba(255, 255, 255, 0.2);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-    }
   }
   
   .address-avatar {
-    position: absolute;
+    @include avatar-base(10px);
     display: flex;
     align-items: center;
     justify-content: center;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.2s ease;
-    
-    &:hover {
-      border-color: rgba(255, 255, 255, 0.2);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-    }
   }
   
   .address-avatar-overlay {
-    position: absolute;
+    @include avatar-overlay(22px, 8px);
     display: flex;
-    bottom: -20px;
-    right: -20px;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    overflow: hidden;
-    // border: 3px solid $background_color;
-    // box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   }
   
   .content { 
@@ -551,21 +513,17 @@
 // Mobile optimizations for ellipsis and layout
 @include mobile {
   .feed-item {
-    grid-template-columns: 48px 1fr;
-    gap: 12px;
+    grid-template-columns: 40px 1fr;
+    gap: 10px;
     padding: 16px;
     border-radius: 14px;
     
     .avatar-container {
-      width: 48px;
-      height: 48px;
+      @include avatar-container(40px);
     }
     
     .address-avatar-overlay {
-      width: 26px;
-      height: 26px;
-      bottom: -4px;
-      right: -4px;
+      @include avatar-overlay(20px, 6px);
     }
     
     .header {
@@ -619,21 +577,17 @@
 
 @include mobile-small {
   .feed-item {
-    grid-template-columns: 42px 1fr;
-    gap: 10px;
+    grid-template-columns: 40px 1fr;
+    gap: 8px;
     padding: 14px;
     border-radius: 12px;
     
     .avatar-container {
-      width: 42px;
-      height: 42px;
+      @include avatar-container(40px);
     }
     
     .address-avatar-overlay {
-      width: 22px;
-      height: 22px;
-      bottom: -3px;
-      right: -3px;
+      @include avatar-overlay(18px, 5px);
     }
     
     .header {

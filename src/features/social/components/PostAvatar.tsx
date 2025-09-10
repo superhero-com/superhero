@@ -1,5 +1,6 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import Identicon from '../../../components/Identicon';
+import AddressAvatar from '../../../components/AddressAvatar';
 
 interface PostAvatarProps {
   authorAddress: string;
@@ -9,11 +10,11 @@ interface PostAvatarProps {
 }
 
 // Component: Post Avatar with chain name support
-const PostAvatar = memo(({ 
-  authorAddress, 
-  chainName, 
-  size = 48, 
-  overlaySize = 24 
+const PostAvatar = memo(({
+  authorAddress,
+  chainName,
+  size = 48,
+  overlaySize = 24
 }: PostAvatarProps) => (
   <div className="avatar-container">
     <div className="avatar-stack">
@@ -22,22 +23,22 @@ const PostAvatar = memo(({
           <Identicon address={authorAddress} size={size} name={chainName} />
         </div>
       )}
-      {(!chainName || chainName === 'Legend') && (
+      {(!chainName) && (
         <div className="address-avatar">
-          <Identicon address={authorAddress} size={size} />
+          <AddressAvatar address={authorAddress} size={size} borderRadius="10px" />
         </div>
       )}
-      {chainName && chainName !== 'Legend' && (
+      {chainName && (
         <div className="address-avatar-overlay">
-          <Identicon address={authorAddress} size={overlaySize} />
+          <AddressAvatar address={authorAddress} size={overlaySize} borderRadius="10px" />
         </div>
       )}
     </div>
   </div>
 ), (prevProps, nextProps) => {
   // Custom comparison for better performance
-  return prevProps.authorAddress === nextProps.authorAddress && 
-         prevProps.chainName === nextProps.chainName;
+  return prevProps.authorAddress === nextProps.authorAddress &&
+    prevProps.chainName === nextProps.chainName;
 });
 
 PostAvatar.displayName = 'PostAvatar';

@@ -36,11 +36,14 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   const [tokenOut, setTokenOut] = useState<DexTokenDto | null>(null);
   const { balances } = useTokenBalances(tokenIn, tokenOut);
 
-  const {data: pair} = useQuery({
+  const { data: pair } = useQuery({
     queryKey: ['DexService.getPairByFromTokenAndToToken', tokenIn?.address, tokenOut?.address],
     queryFn: () => {
       if (!tokenIn || !tokenOut) return null;
-      return DexService.getPairByFromTokenAndToToken({ fromToken: tokenIn.address, toToken: tokenOut.address });
+      return DexService.getPairByFromTokenAndToToken({
+        fromToken: tokenIn.address == 'ae' ? DEX_ADDRESSES.wae : tokenIn.address,
+        toToken: tokenOut.address == 'ae' ? DEX_ADDRESSES.wae : tokenOut.address
+      });
     },
     enabled: !!tokenIn?.address && !!tokenOut?.address,
   })

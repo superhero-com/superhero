@@ -21,7 +21,7 @@ export default function FeedList() {
   const navigate = useNavigate();
   const urlQuery = useUrlQuery();
   const { chainNames } = useWallet();
-  
+
   // Comment counts are now provided directly by the API in post.total_comments
 
   // URL parameters
@@ -41,17 +41,17 @@ export default function FeedList() {
     isFetchingNextPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['posts', { limit: 5, sortBy, search, filterBy }],
-    queryFn: ({ pageParam = 1 }) => PostsService.listAll({ 
-      limit: 5, 
+    queryKey: ['posts', { limit: 10, sortBy, search, filterBy }],
+    queryFn: ({ pageParam = 1 }) => PostsService.listAll({
+      limit: 10,
       page: pageParam,
       orderBy: sortBy === 'latest' ? 'created_at' : sortBy === 'hot' ? 'total_comments' : 'created_at',
       orderDirection: 'DESC',
       search: localSearch,
     }) as unknown as Promise<PostApiResponse>,
     getNextPageParam: (lastPage) => {
-      if (lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && 
-          lastPage.meta.currentPage < lastPage.meta.totalPages) {
+      if (lastPage?.meta?.currentPage && lastPage?.meta?.totalPages &&
+        lastPage.meta.currentPage < lastPage.meta.totalPages) {
         return lastPage.meta.currentPage + 1;
       }
       return undefined;
@@ -60,25 +60,25 @@ export default function FeedList() {
   });
 
   // Derived state
-  const list = useMemo(() => 
-    data?.pages?.flatMap(page => page?.items ?? []) ?? [], 
+  const list = useMemo(() =>
+    data?.pages?.flatMap(page => page?.items ?? []) ?? [],
     [data]
   );
 
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {
     let filtered = [...list];
-    
+
     if (localSearch.trim()) {
       const searchTerm = localSearch.toLowerCase();
-      filtered = filtered.filter(item => 
+      filtered = filtered.filter(item =>
         (item.content && item.content.toLowerCase().includes(searchTerm)) ||
         (item.topics && item.topics.some(topic => topic.toLowerCase().includes(searchTerm))) ||
         (item.sender_address && item.sender_address.toLowerCase().includes(searchTerm)) ||
         (chainNames?.[item.sender_address] && chainNames[item.sender_address].toLowerCase().includes(searchTerm))
       );
     }
-    
+
     if (filterBy === 'withMedia') {
       filtered = filtered.filter(item => item.media && Array.isArray(item.media) && item.media.length > 0);
     } else if (filterBy === 'withComments') {
@@ -86,7 +86,7 @@ export default function FeedList() {
         return (item.total_comments ?? 0) > 0;
       });
     }
-    
+
     return filtered;
   }, [list, localSearch, filterBy, chainNames]);
 
@@ -136,7 +136,7 @@ export default function FeedList() {
     <Shell left={<LeftRail />} right={<RightRail />}>
       <div className="tips-list">
         <CreatePost onSuccess={refetch} />
-        
+
         <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
 
         <div className="feed">
@@ -146,8 +146,8 @@ export default function FeedList() {
 
         {hasNextPage && filteredAndSortedList.length > 0 && (
           <div className="load-more">
-            <AeButton 
-              loading={isFetchingNextPage} 
+            <AeButton
+              loading={isFetchingNextPage}
               onClick={() => fetchNextPage()}
             >
               Load more

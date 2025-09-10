@@ -37,7 +37,8 @@ const FeedItem = memo(({
         <div className="header">
           <div className="author-section">
             {authorAddress && (
-              <UserBadge address={authorAddress} showAvatar={false} chainName={chainName} />
+              <UserBadge
+                address={authorAddress} showAvatar={false} chainName={chainName} />
             )}
           </div>
           {item.created_at && (

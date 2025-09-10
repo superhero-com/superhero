@@ -153,19 +153,12 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
     <div className={`create-post-container ${className}`}>
       <div className="create-post-box expanded">
         <form onSubmit={handleSubmit} className="create-post-form">
-          <div className="form-header">
-            <div className="form-avatar">
-              {activeAccount ? (
-                <Identicon address={activeAccount} size={48} name={chainName} />
-              ) : (
-                <div className="placeholder-avatar">✍️</div>
-              )}
-            </div>
-            <button type="button" className="close-button" onClick={handleClose} title="Close"><IconClose /></button>
-          </div>
-
+    
           <div className="form-content">
-            <textarea ref={textareaRef} placeholder={currentPrompt} value={text} onChange={(e) => setText(e.target.value)} className="text-input" rows={1} maxLength={280} />
+            <div className="textarea-container">
+              <textarea ref={textareaRef} placeholder={currentPrompt} value={text} onChange={(e) => setText(e.target.value)} className="text-input" rows={3} maxLength={280} />
+              <div className="character-counter">{text.length}/280</div>
+            </div>
 
             {mediaUrls.length > 0 && (
               <div className="media-preview">
@@ -182,8 +175,12 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
           <div className="form-footer">
             <div className="footer-left">
               {/* <button type="button" className="media-button" onClick={() => fileInputRef.current?.click()} disabled={mediaFiles.length >= 4}><IconImage /><span>Media</span></button> */}
-              <button type="button" className="link-button" title="Emoji" ref={emojiBtnRef} onClick={() => { setShowEmoji(s => !s); setShowGif(false); }}><IconSmile /><span>Emoji</span></button>
-              <button type="button" className="link-button" title="GIF" ref={gifBtnRef} onClick={() => { setShowGif(s => !s); setShowEmoji(false); }}><IconGif /><span>GIF</span></button>
+              <button type="button" className="link-button" title="Emoji" ref={emojiBtnRef} onClick={() => { setShowEmoji(s => !s); setShowGif(false); }}>
+                <IconSmile /><span>Emoji</span>
+              </button>
+              <button type="button" className="link-button" title="GIF" ref={gifBtnRef} onClick={() => { setShowGif(s => !s); setShowEmoji(false); }}>
+                <IconGif /><span>GIF</span>
+              </button>
               {/* <input ref={fileInputRef} type="file" accept="image/*,video/*" multiple onChange={handleFileSelect} style={{ display: 'none' }} /> */}
               {showEmoji && (
                 <div className="popover emoji-popover">
@@ -203,7 +200,6 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
               )}
             </div>
             <div className="footer-right">
-              <div className="character-count">{text.length}/280</div>
               {activeAccount ? (
                 <AeButton type="submit" loading={isSubmitting} disabled={!text.trim()} className="submit-button">{isSubmitting ? 'Posting…' : 'Post'}</AeButton>
               ) : (

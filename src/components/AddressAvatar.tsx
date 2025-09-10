@@ -2,7 +2,7 @@ import React from 'react';
 
 interface AddressAvatarProps {
   address: string;
-  size?: number;
+  size?: number | string;
   className?: string;
   style?: React.CSSProperties;
   borderRadius?: string;

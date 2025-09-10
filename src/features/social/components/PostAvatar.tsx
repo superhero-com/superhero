@@ -13,8 +13,8 @@ interface PostAvatarProps {
 const PostAvatar = memo(({
   authorAddress,
   chainName,
-  size = 48,
-  overlaySize = 24
+  size = 36,
+  overlaySize = 18
 }: PostAvatarProps) => (
   <div className="avatar-container">
     <div className="avatar-stack">
@@ -30,7 +30,7 @@ const PostAvatar = memo(({
       )}
       {chainName && (
         <div className="address-avatar-overlay">
-          <AddressAvatar address={authorAddress} size={overlaySize} borderRadius="10px" />
+          <AddressAvatar address={authorAddress} size='100%' borderRadius="2px" />
         </div>
       )}
     </div>

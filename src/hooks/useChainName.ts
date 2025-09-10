@@ -17,7 +17,8 @@ export function useChainName(accountAddress: string) {
         const response = await fetch(fetchUrl);
         const data = await response.json();
         if (data?.data?.length > 0) {
-            const latestUpdatedChainName = data.data[0]?.tx?.name;
+            const forCurrentAccount = data.data.find((tx: any) => tx.tx.account_id === accountAddress);
+            const latestUpdatedChainName = forCurrentAccount?.tx?.name;
             setChainNames(prev => ({ ...prev, [accountAddress]: latestUpdatedChainName }));
         }
     }

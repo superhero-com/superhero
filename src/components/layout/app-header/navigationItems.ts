@@ -19,24 +19,24 @@ export const navigationItems: NavigationItem[] = [
         path: '/dex/swap',
         icon: '💱',
     },
-    {
-        id: 'trending',
-        label: 'Trends',
-        path: '/trending',
-        icon: '📈',
-    },
-    {
-        id: 'invite',
-        label: 'Invite & Earn',
-        path: '/trendminer/invite',
-        icon: '🎁',
-    },
-    {
-        id: 'governance',
-        label: 'Governance & Voting',
-        path: '/voting',
-        icon: '🗳️',
-    },
+    // {
+    //     id: 'trending',
+    //     label: 'Trends',
+    //     path: '/trending',
+    //     icon: '📈',
+    // },
+    // {
+    //     id: 'invite',
+    //     label: 'Invite & Earn',
+    //     path: '/trendminer/invite',
+    //     icon: '🎁',
+    // },
+    // {
+    //     id: 'governance',
+    //     label: 'Governance & Voting',
+    //     path: '/voting',
+    //     icon: '🗳️',
+    // },
     // {
     //     id: 'landing',
     //     label: 'Info',

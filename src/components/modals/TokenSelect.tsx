@@ -20,7 +20,7 @@ export default function TokenSelect({ open, onSelect, onClose }: TokenSelectProp
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-[var(--secondary-color)] border-white/20">
+      <DialogContent className="w-[95vw] max-w-md mx-auto bg-[var(--secondary-color)] border-white/20">
         <DialogHeader>
           <DialogTitle className="text-white">Select Token</DialogTitle>
         </DialogHeader>

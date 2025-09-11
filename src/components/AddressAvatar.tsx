@@ -18,15 +18,14 @@ export default function AddressAvatar({
   // Using a simple avatar service - you can replace this with your preferred service
   const avatarUrl = `https://avatars.superherowallet.com/${address}`;
   
-  const sizeClass = typeof size === 'number' ? `w-[${size}px] h-[${size}px]` : '';
   const radiusClass = borderRadius === '50%' ? 'rounded-full' : borderRadius.includes('px') ? `rounded-[${borderRadius}]` : 'rounded-lg';
   
   return (
     <div 
-      className={`${sizeClass} ${radiusClass} overflow-hidden flex items-center justify-center bg-white/5 border border-white/10 backdrop-blur-sm flex-shrink-0 ${className}`}
+      className={`${radiusClass} overflow-hidden flex items-center justify-center bg-white/5 border border-white/10 backdrop-blur-sm flex-shrink-0 ${className}`}
       style={{
-        width: typeof size === 'string' ? size : undefined,
-        height: typeof size === 'string' ? size : undefined,
+        width: typeof size === 'string' ? size : `${size}px`,
+        height: typeof size === 'string' ? size : `${size}px`,
         borderRadius: borderRadius !== '50%' && !borderRadius.includes('px') ? borderRadius : undefined,
         ...style
       }}
@@ -41,9 +40,20 @@ export default function AddressAvatar({
           target.style.display = 'none';
           const parent = target.parentElement;
           if (parent) {
-            const sizeNum = typeof size === 'number' ? size : 24;
+            // Calculate font size based on actual rendered size for percentage values
+            let fontSize = '12px';
+            if (typeof size === 'number') {
+              fontSize = `${size * 0.4}px`;
+            } else if (typeof size === 'string' && size.includes('%')) {
+              // For percentage sizes, use a relative font size
+              fontSize = '0.4em';
+            } else if (typeof size === 'string' && size.includes('px')) {
+              const pxValue = parseInt(size.replace('px', ''));
+              fontSize = `${pxValue * 0.4}px`;
+            }
+            
             parent.style.background = `hsl(${address.charCodeAt(0) * 137.508}deg, 70%, 50%)`;
-            parent.innerHTML = `<span class="text-white font-semibold" style="font-size: ${sizeNum * 0.4}px;">${address.slice(0, 2).toUpperCase()}</span>`;
+            parent.innerHTML = `<span class="text-white font-semibold" style="font-size: ${fontSize};">${address.slice(0, 2).toUpperCase()}</span>`;
           }
         }}
       />

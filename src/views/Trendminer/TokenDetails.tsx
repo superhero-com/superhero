@@ -10,7 +10,6 @@ import TvCandles from '../../components/Trendminer/TvCandles';
 import { QualiChatService, type QualiMessage } from '../../libs/QualiChatService';
 import MobileCard from '../../components/MobileCard';
 import MobileInput from '../../components/MobileInput';
-import './TokenDetails.scss';
 
 export default function TokenDetails() {
   const params = useParams();
@@ -271,110 +270,124 @@ export default function TokenDetails() {
   }, [data?.sale_address, intervalSec]);
 
   if (loading) return (
-    <div className="token-details-loading">
-      <div className="loading-spinner" />
-      <span>Loading token details...</span>
+    <div className="flex flex-col items-center justify-center min-h-48 p-10 text-center">
+      <div className="w-8 h-8 border-3 border-purple-300 border-t-purple-600 rounded-full animate-spin mb-4" />
+      <span className="text-white/80">Loading token details...</span>
     </div>
   );
   
   if (error) return (
-    <div className="token-details-error">
+    <div className="flex flex-col items-center justify-center min-h-48 p-10 text-center text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl">
       {error}
     </div>
   );
   
   if (!data) return (
-    <div className="token-details-not-found">
+    <div className="flex flex-col items-center justify-center min-h-48 p-10 text-center text-white/80">
       Token not found
     </div>
   );
 
   return (
-    <div className="token-details mobile-container tw-container">
+    <div className="max-w-6xl mx-auto p-5 md:p-8 lg:p-10 text-white">
       {/* Header */}
-      <div className="token-header">
-        <div className="token-title-section">
-          <h1 className="token-name">#{data.name || data.symbol} {data.symbol ? <span style={{ opacity: 0.7, fontWeight: 500 }}>(#{data.symbol})</span> : null}</h1>
-          <div className="token-rank">
+      <div className="mb-6">
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white m-0">
+            #{data.name || data.symbol} {data.symbol ? (
+              <span className="opacity-70 font-medium text-white/70">(#{data.symbol})</span>
+            ) : null}
+          </h1>
+          <div className="text-xs px-2 py-1 rounded-md bg-black/20 text-white/80 font-semibold">
             MC RANK {mcRank != null ? `#${mcRank}` : '—'}
           </div>
         </div>
         {featuredMessage?.content?.body && (
-          <div className="token-first-message">
-            <div className="first-message-body">{featuredMessage.content.body}</div>
-            <div className="first-message-meta">
-              <span className="first-message-author">{featuredMessage.sender || 'user'}</span>
-              <span className="first-message-time">{new Date(featuredMessage.origin_server_ts || Date.now()).toLocaleString()}</span>
+          <div className="mt-2 border-t border-white/10 pt-2.5">
+            <div className="text-sm font-semibold leading-snug text-purple-400 mb-1.5">
+              {featuredMessage.content.body}
+            </div>
+            <div className="flex gap-2 text-xs opacity-70 text-white/70">
+              <span>{featuredMessage.sender || 'user'}</span>
+              <span>{new Date(featuredMessage.origin_server_ts || Date.now()).toLocaleString()}</span>
             </div>
           </div>
         )}
       </div>
 
-      <div className="token-content">
+      <div className="flex flex-col gap-5 min-w-0">
         {/* Trade Card */}
-        <div className="trade-section">
+        <div className="w-full min-w-0">
           <TradeCard token={data} />
         </div>
 
         {/* Token Details Card */}
-        <MobileCard variant="elevated" padding="medium" className="token-details-card">
-          <div className="token-details-header">
-            <h3 className="token-details-title">Token Information</h3>
+        <MobileCard variant="elevated" padding="medium" className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl">
+          <div className="mb-5">
+            <h3 className="text-lg font-bold text-white m-0">
+              Token Information
+            </h3>
           </div>
           
-          <div className="token-details-grid">
-            <div className="detail-item">
-              <label className="detail-label">Price</label>
-              <div className="detail-value">{formatAe(Number(data.price ?? 0))}</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-white/70 opacity-70 font-medium">Price</label>
+              <div className="text-base font-bold text-white">{formatAe(Number(data.price ?? 0))}</div>
             </div>
-            <div className="detail-item">
-              <label className="detail-label">Market Cap</label>
-              <div className="detail-value">{formatAe(Number(data.market_cap ?? 0), 6)}</div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-white/70 opacity-70 font-medium">Market Cap</label>
+              <div className="text-base font-bold text-white">{formatAe(Number(data.market_cap ?? 0), 6)}</div>
             </div>
-            <div className="detail-item">
-              <label className="detail-label">Total Supply</label>
-              <div className="detail-value">{formatTokenAmount(Number(data.total_supply ?? 0), Number(data.decimals ?? 18), 0)} Tokens</div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-white/70 opacity-70 font-medium">Total Supply</label>
+              <div className="text-base font-bold text-white">{formatTokenAmount(Number(data.total_supply ?? 0), Number(data.decimals ?? 18), 0)} Tokens</div>
             </div>
-            <div className="detail-item">
-              <label className="detail-label">Holders</label>
-              <div className="detail-value">{data?.holders_count ?? holders?.length ?? 0}</div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-white/70 opacity-70 font-medium">Holders</label>
+              <div className="text-base font-bold text-white">{data?.holders_count ?? holders?.length ?? 0}</div>
             </div>
           </div>
 
-          <div className="token-addresses">
-            <div className="address-item">
-              <label className="address-label">Contract Address</label>
-              <div className="address-value">
+          <div className="flex flex-col gap-3 mb-4">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-white/70 opacity-70 font-medium">Contract Address</label>
+              <div className="font-mono text-sm text-white bg-black/20 px-2 py-1.5 rounded-md">
                 {(data.address || data.contract_address || '').slice(0, 8)}…{(data.address || data.contract_address || '').slice(-6)}
               </div>
             </div>
-            <div className="address-item">
-              <label className="address-label">Sale Address</label>
-              <div className="address-value">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-white/70 opacity-70 font-medium">Sale Address</label>
+              <div className="font-mono text-sm text-white bg-black/20 px-2 py-1.5 rounded-md">
                 {(data.sale_address || '').slice(0, 8)}…{(data.sale_address || '').slice(-6)}
               </div>
             </div>
           </div>
 
-          <div className="token-description prose prose-invert">
+          <div className="text-sm text-white/75 opacity-75 leading-relaxed mb-5">
             This token uses a bonding curve: buying mints new tokens at a higher price; selling burns tokens and returns AE along the curve.
             A portion of trades feeds the token's DAO treasury for proposals and payouts.
           </div>
 
-          <div className="token-actions">
+          <div className="flex gap-3 flex-wrap">
             {data.sale_address && (
-              <a href={`/trendminer/dao/${encodeURIComponent(data.sale_address)}`} className="action-btn primary">
+              <a 
+                href={`/trendminer/dao/${encodeURIComponent(data.sale_address)}`} 
+                className="inline-flex items-center justify-center px-4 py-3 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-purple-700 no-underline transition-all duration-200 min-h-11 hover:-translate-y-0.5"
+              >
                 Open DAO
               </a>
             )}
-            <a href="/trendminer/invite" className="action-btn secondary">
+            <a 
+              href="/trendminer/invite" 
+              className="inline-flex items-center justify-center px-4 py-3 rounded-lg text-sm font-semibold text-white border border-white/20 no-underline transition-all duration-200 min-h-11 hover:border-white/40 hover:-translate-y-0.5"
+            >
               Invite & Earn
             </a>
             <a
               href={`https://aescan.io/contracts/${encodeURIComponent((data.sale_address || data.address || '') as string)}?type=call-transactions`}
               target="_blank"
               rel="noopener noreferrer"
-              className="action-btn secondary"
+              className="inline-flex items-center justify-center px-4 py-3 rounded-lg text-sm font-semibold text-white border border-white/20 no-underline transition-all duration-200 min-h-11 hover:border-white/40 hover:-translate-y-0.5"
             >
               View on æScan ↗
             </a>
@@ -382,19 +395,21 @@ export default function TokenDetails() {
         </MobileCard>
 
         {/* Chart Section */}
-        <MobileCard variant="elevated" padding="medium" className="chart-section">
-          <div className="chart-header">
-            <div className="chart-title">#{data.symbol}/AE on aeternity blockchain</div>
+        <MobileCard variant="elevated" padding="medium" className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl">
+          <div className="mb-4">
+            <div className="font-mono text-xs opacity-80 text-white/80">
+              #{data.symbol}/AE on aeternity blockchain
+            </div>
           </div>
           
           {/* Featured comment moved to header */}
           
-          <div className="chart-container">
+          <div className="mb-4 overflow-hidden rounded-xl">
             <TvCandles candles={candleSeries as any} height={300} />
           </div>
           
-          <div className="chart-controls">
-            <div className="interval-buttons">
+          <div>
+            <div className="flex gap-2 flex-wrap">
               {[
                 ['1m', 60],
                 ['5m', 5 * 60],
@@ -408,7 +423,11 @@ export default function TokenDetails() {
                 <button 
                   key={label as string} 
                   onClick={() => setIntervalSec(sec as number)} 
-                  className={`interval-btn ${intervalSec === sec ? 'active' : ''}`}
+                  className={`px-2.5 py-1.5 rounded-2xl border text-xs font-medium cursor-pointer transition-all duration-200 min-h-8 ${
+                    intervalSec === sec 
+                      ? 'bg-blue-500/15 border-blue-500 text-blue-500' 
+                      : 'border-white/20 bg-white text-white hover:border-white/40'
+                  }`}
                 >
                   {label as string}
                 </button>
@@ -418,32 +437,44 @@ export default function TokenDetails() {
         </MobileCard>
 
         {/* Tabs Section */}
-        <MobileCard variant="elevated" padding="medium" className="tabs-section">
-          <div className="tabs-header">
+        <MobileCard variant="elevated" padding="medium" className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl">
+          <div className="flex gap-4 mb-5 border-b border-white/10">
             <button 
               onClick={() => setActiveTab('chat')} 
-              className={`tab-btn ${activeTab === 'chat' ? 'active' : ''}`}
+              className={`border-0 bg-transparent font-normal border-b-2 border-transparent px-0 py-2 text-sm cursor-pointer transition-all duration-200 min-h-11 ${
+                activeTab === 'chat' 
+                  ? 'font-bold border-b-blue-500 text-white' 
+                  : 'text-white/70 hover:text-white'
+              }`}
             >
               Chat
             </button>
             <button 
               onClick={() => setActiveTab('tx')} 
-              className={`tab-btn ${activeTab === 'tx' ? 'active' : ''}`}
+              className={`border-0 bg-transparent font-normal border-b-2 border-transparent px-0 py-2 text-sm cursor-pointer transition-all duration-200 min-h-11 ${
+                activeTab === 'tx' 
+                  ? 'font-bold border-b-blue-500 text-white' 
+                  : 'text-white/70 hover:text-white'
+              }`}
             >
               Transactions
             </button>
             <button 
               onClick={() => setActiveTab('holders')} 
-              className={`tab-btn ${activeTab === 'holders' ? 'active' : ''}`}
+              className={`border-0 bg-transparent font-normal border-b-2 border-transparent px-0 py-2 text-sm cursor-pointer transition-all duration-200 min-h-11 ${
+                activeTab === 'holders' 
+                  ? 'font-bold border-b-blue-500 text-white' 
+                  : 'text-white/70 hover:text-white'
+              }`}
             >
               Holders ({data?.holders_count ?? holders?.length ?? 0})
             </button>
           </div>
           
-          <div className="tab-content">
+          <div>
             {activeTab === 'chat' && (
-              <div className="chat-tab">
-                <div className="chat-description">
+              <div>
+                <div className="text-xs opacity-80 mb-3 text-white/80">
                   Comments are powered by Quali.chat. Click "Add comment" to post in the public room; messages appear here shortly after.
                 </div>
                 <TokenChat token={{ name: data.name, address: data.address || data.contract_address }} />
@@ -451,19 +482,30 @@ export default function TokenDetails() {
             )}
             
             {activeTab === 'tx' && (
-              <div className="transactions-tab">
-                <div className="transactions-list">
+              <div>
+                <div className="flex flex-col gap-2 mb-4">
                   {transactions.map((tx, idx) => (
-                    <div key={tx.tx_hash || tx.id || idx} className="transaction-item">
-                      <div className="tx-hash">{(tx.tx_hash || '').slice(0, 8)}…{(tx.tx_hash || '').slice(-6)}</div>
-                      <div className="tx-type">{tx.tx_type || 'TX'}</div>
-                      <div className="tx-time">{new Date(tx.created_at || Date.now()).toLocaleString()}</div>
+                    <div key={tx.tx_hash || tx.id || idx} className="flex justify-between text-xs opacity-85 py-2 border-b border-white/10">
+                      <div className="font-mono max-w-48 overflow-hidden text-ellipsis whitespace-nowrap">
+                        {(tx.tx_hash || '').slice(0, 8)}…{(tx.tx_hash || '').slice(-6)}
+                      </div>
+                      <div className="font-medium">{tx.tx_type || 'TX'}</div>
+                      <div className="text-white/70 text-xs">
+                        {new Date(tx.created_at || Date.now()).toLocaleString()}
+                      </div>
                     </div>
                   ))}
                 </div>
-                {!transactions.length && <div className="empty-state">No transactions</div>}
+                {!transactions.length && (
+                  <div className="text-white/60 text-sm text-center py-5">
+                    No transactions
+                  </div>
+                )}
                 {!txEnd && (
-                  <button onClick={loadMoreTx} className="load-more-btn">
+                  <button 
+                    onClick={loadMoreTx} 
+                    className="w-full px-4 py-2.5 rounded-lg border border-white/20 text-white text-sm font-medium cursor-pointer transition-all duration-200 min-h-11 hover:border-white/40"
+                  >
                     Load more
                   </button>
                 )}
@@ -471,18 +513,29 @@ export default function TokenDetails() {
             )}
             
             {activeTab === 'holders' && (
-              <div className="holders-tab">
-                <div className="holders-list">
+              <div>
+                <div className="flex flex-col gap-2 mb-4">
                   {holders.map((h, idx) => (
-                    <div key={h.address || h.account_address || idx} className="holder-item">
-                      <div className="holder-address">{h.address || h.account_address}</div>
-                      <div className="holder-balance">{formatTokenAmount(Number(h.balance ?? 0), Number(data.decimals ?? 18), 6)}</div>
+                    <div key={h.address || h.account_address || idx} className="flex justify-between text-xs opacity-85 py-2 border-b border-white/10">
+                      <div className="font-mono max-w-48 overflow-hidden text-ellipsis whitespace-nowrap">
+                        {h.address || h.account_address}
+                      </div>
+                      <div className="font-medium">
+                        {formatTokenAmount(Number(h.balance ?? 0), Number(data.decimals ?? 18), 6)}
+                      </div>
                     </div>
                   ))}
                 </div>
-                {!holders.length && <div className="empty-state">No holders</div>}
+                {!holders.length && (
+                  <div className="text-white/60 text-sm text-center py-5">
+                    No holders
+                  </div>
+                )}
                 {!holdersEnd && (
-                  <button onClick={loadMoreHolders} className="load-more-btn">
+                  <button 
+                    onClick={loadMoreHolders} 
+                    className="w-full px-4 py-2.5 rounded-lg border border-white/20 text-white text-sm font-medium cursor-pointer transition-all duration-200 min-h-11 hover:border-white/40"
+                  >
                     Load more
                   </button>
                 )}
@@ -492,24 +545,26 @@ export default function TokenDetails() {
         </MobileCard>
 
         {/* Performance Section */}
-        <div className="performance-section">
-          <MobileCard variant="elevated" padding="medium" className="performance-card">
-            <h3 className="performance-title">Performance</h3>
-            <div className="performance-stats">
-              <div className="perf-stat">
-                <span className="perf-label">24h:</span>
-                <span className="perf-value">{Number(performance?.price_change_24h ?? 0).toFixed(2)}%</span>
+        <div>
+          <MobileCard variant="elevated" padding="medium" className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl">
+            <h3 className="text-base font-bold m-0 mb-4 text-white">
+              Performance
+            </h3>
+            <div className="flex flex-col gap-2 mb-4">
+              <div className="flex justify-between text-sm opacity-85">
+                <span className="text-white/70">24h:</span>
+                <span className="font-semibold text-white">{Number(performance?.price_change_24h ?? 0).toFixed(2)}%</span>
               </div>
-              <div className="perf-stat">
-                <span className="perf-label">7d:</span>
-                <span className="perf-value">{Number(performance?.price_change_7d ?? 0).toFixed(2)}%</span>
+              <div className="flex justify-between text-sm opacity-85">
+                <span className="text-white/70">7d:</span>
+                <span className="font-semibold text-white">{Number(performance?.price_change_7d ?? 0).toFixed(2)}%</span>
               </div>
-              <div className="perf-stat">
-                <span className="perf-label">30d:</span>
-                <span className="perf-value">{Number(performance?.price_change_30d ?? 0).toFixed(2)}%</span>
+              <div className="flex justify-between text-sm opacity-85">
+                <span className="text-white/70">30d:</span>
+                <span className="font-semibold text-white">{Number(performance?.price_change_30d ?? 0).toFixed(2)}%</span>
               </div>
             </div>
-            <div className="performance-chart">
+            <div className="flex justify-center">
               <Sparkline points={perfSeries} width={280} height={64} />
             </div>
           </MobileCard>

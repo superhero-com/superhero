@@ -244,66 +244,115 @@ export default function CreateToken() {
   }
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '1rem' }}>
-      <h2 style={{ marginBottom: 8 }}>Create Your Trend (Token)</h2>
-      <p style={{ opacity: 0.8, marginTop: 0 }}>Launch your trend token on the æternity blockchain with a bonding curve. You will deploy from your own wallet.</p>
-      <div style={{ margin: '8px 0' }}>
+    <div className="max-w-3xl mx-auto p-4">
+      <h2 className="text-3xl font-bold text-white mb-2">Create Your Trend (Token)</h2>
+      <p className="opacity-80 text-white/80 mt-0 mb-4 leading-relaxed">Launch your trend token on the æternity blockchain with a bonding curve. You will deploy from your own wallet.</p>
+      <div className="my-2">
         <WalletConnectBtn />
       </div>
-      <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
+      <div className="grid gap-3 mt-3">
         <div>
-          <div style={{ fontSize: 12, opacity: 0.7 }}>FACTORY</div>
-          <div style={{ fontSize: 12 }}>{factoryAddr || 'Loading…'}</div>
+          <div className="text-xs opacity-70 text-white/70 uppercase tracking-wide font-semibold">FACTORY</div>
+          <div className="text-xs text-white/90 font-mono">{factoryAddr || 'Loading…'}</div>
         </div>
         <div>
-          <div style={{ fontSize: 12, opacity: 0.7 }}>TREND NAME</div>
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="YOUR-TREND" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(0,0,0,0.12)' }} />
+          <div className="text-xs opacity-70 text-white/70 uppercase tracking-wide font-semibold mb-2">TREND NAME</div>
+          <input 
+            value={name} 
+            onChange={(e) => setName(e.target.value)} 
+            placeholder="YOUR-TREND" 
+            className="w-full px-3 py-2.5 rounded-lg border border-white/20 bg-black/30 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200" 
+          />
         </div>
         <div>
-          <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 6 }}>INITIAL BUY</div>
-          <div style={{ display: 'grid', gap: 8 }}>
-            <label style={{ display: 'grid', gap: 6 }}>
-              <span style={{ fontSize: 12, opacity: 0.7 }}>AE to spend</span>
-              <input type="number" min="0" step="any" value={initialBuyVolume} onChange={(e) => setInitialBuyVolume(e.target.value === '' ? '' : Number(e.target.value))} placeholder="0.0" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(0,0,0,0.12)' }} />
+          <div className="text-xs opacity-70 text-white/70 uppercase tracking-wide font-semibold mb-3">INITIAL BUY</div>
+          <div className="grid gap-2">
+            <label className="grid gap-1.5">
+              <span className="text-xs opacity-70 text-white/70 font-medium">AE to spend</span>
+              <input 
+                type="number" 
+                min="0" 
+                step="any" 
+                value={initialBuyVolume} 
+                onChange={(e) => setInitialBuyVolume(e.target.value === '' ? '' : Number(e.target.value))} 
+                placeholder="0.0" 
+                className="w-full px-3 py-2.5 rounded-lg border border-white/20 bg-black/30 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200" 
+              />
             </label>
-            <label style={{ display: 'grid', gap: 6 }}>
-              <span style={{ fontSize: 12, opacity: 0.7 }}>Estimated {symbol || 'TOKEN'} amount</span>
-              <input type="number" min="0" step="any" value={estimatedTokens} onChange={(e) => onChangeEstimatedTokens(e.target.value)} placeholder="0.0" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(0,0,0,0.12)' }} />
+            <label className="grid gap-1.5">
+              <span className="text-xs opacity-70 text-white/70 font-medium">Estimated {symbol || 'TOKEN'} amount</span>
+              <input 
+                type="number" 
+                min="0" 
+                step="any" 
+                value={estimatedTokens} 
+                onChange={(e) => onChangeEstimatedTokens(e.target.value)} 
+                placeholder="0.0" 
+                className="w-full px-3 py-2.5 rounded-lg border border-white/20 bg-black/30 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200" 
+              />
             </label>
           </div>
         </div>
       </div>
-      {error && <div style={{ color: 'tomato', marginTop: 8 }}>{error}</div>}
-      {success && <div style={{ color: 'green', marginTop: 8 }}>{success}</div>}
-      <div style={{ marginTop: 16 }}>
-        <AeButton onClick={submit} disabled={busy} loading={busy} variant="primary" size="large">{busy ? 'Deploying…' : 'Create trend (token)'}</AeButton>
-        <a href="/trendminer/invite" style={{ marginLeft: 8, padding: '10px 16px', borderRadius: 999, border: '1px solid rgba(0,0,0,0.12)', background: '#fff', color: '#111', textDecoration: 'none' }}>Invite & Earn</a>
+      {error && <div className="text-red-400 mt-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">{error}</div>}
+      {success && <div className="text-green-400 mt-2 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">{success}</div>}
+      <div className="mt-4 flex flex-wrap gap-2">
+        <AeButton 
+          onClick={submit} 
+          disabled={busy} 
+          loading={busy} 
+          variant="primary" 
+          size="large"
+        >
+          {busy ? 'Deploying…' : 'Create trend (token)'}
+        </AeButton>
+        <a 
+          href="/trendminer/invite" 
+          className="ml-2 px-4 py-2.5 rounded-full border border-white/20 bg-white text-gray-900 no-underline hover:bg-gray-100 transition-colors duration-200 font-medium"
+        >
+          Invite & Earn
+        </a>
       </div>
-      <div style={{ marginTop: 24 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Top posts from X</div>
-        {!name && <div style={{ opacity: 0.7 }}>Enter a trend name to see popular posts.</div>}
+      <div className="mt-6">
+        <div className="text-sm font-semibold mb-2 text-white">Top posts from X</div>
+        {!name && <div className="opacity-70 text-white/70">Enter a trend name to see popular posts.</div>}
         {!!name && (
-          <div style={{ display: 'grid', gap: 10 }}>
+          <div className="grid gap-2.5">
             {xPosts.length === 0 && (
-              <div style={{ opacity: 0.8 }}>
-                Unable to load posts. Check them directly on <a href={`https://x.com/search?q=${encodeURIComponent(name)}&f=top`} target="_blank" rel="noreferrer">X search</a>.
+              <div className="opacity-80 text-white/80">
+                Unable to load posts. Check them directly on{' '}
+                <a 
+                  href={`https://x.com/search?q=${encodeURIComponent(name)}&f=top`} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                >
+                  X search
+                </a>.
               </div>
             )}
             {xPosts.map((p, i) => (
-              <div key={i} style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(0,0,0,0.08)', background: 'rgba(0,0,0,0.02)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <div style={{ fontWeight: 600, fontSize: 13 }}>{p.author || 'Post'}</div>
-                  {p.handle && <div style={{ opacity: 0.7, fontSize: 12 }}>{p.handle}</div>}
-                  {p.time && <div style={{ marginLeft: 'auto', opacity: 0.6, fontSize: 12 }}>{p.time}</div>}
+              <div key={i} className="p-3.5 rounded-xl border border-white/10 bg-black/20 backdrop-blur-lg">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="font-semibold text-sm text-white">{p.author || 'Post'}</div>
+                  {p.handle && <div className="opacity-70 text-xs text-white/70">{p.handle}</div>}
+                  {p.time && <div className="ml-auto opacity-60 text-xs text-white/60">{p.time}</div>}
                 </div>
-                <div style={{ fontSize: 14, lineHeight: 1.4 }}>{p.text}</div>
+                <div className="text-sm leading-relaxed text-white/90">{p.text}</div>
                 {p.url && (
-                  <div style={{ marginTop: 8 }}>
-                    <a href={p.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, opacity: 0.8 }}>View on X</a>
+                  <div className="mt-2">
+                    <a 
+                      href={p.url} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="text-xs opacity-80 text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                    >
+                      View on X
+                    </a>
                   </div>
                 )}
               </div>
-            ))}
+            ))
           </div>
         )}
       </div>

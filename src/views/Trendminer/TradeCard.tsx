@@ -7,7 +7,6 @@ import BigNumber from 'bignumber.js';
 import WalletConnectBtn from '../../components/WalletConnectBtn';
 import { useAeSdk } from '../../hooks';
 import { calculateBuyPriceWithAffiliationFee, calculateSellReturn, calculateTokensFromAE, calculateTokensToSellFromAE, toAe, toDecimals } from '../../utils/bondingCurve';
-import './TradeCard.scss';
 
 type Props = { token: any };
 
@@ -181,58 +180,104 @@ export default function TradeCard({ token }: Props) {
   }, [isBuying, tokenB]);
 
   return (
-    <div className="trade-card">
-      <div className="tabs">
-        <button className={`tab ${isBuying ? 'active buy' : ''}`} onClick={() => setIsBuying(true)}>Buy</button>
-        <button className={`tab ${!isBuying ? 'active sell' : ''}`} onClick={() => setIsBuying(false)}>Sell</button>
+    <div className="bg-gradient-to-b from-black/65 to-black/45 border border-white/15 rounded-xl p-4 text-white shadow-xl hover:shadow-2xl transition-shadow duration-300">
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <button 
+          className={`px-3 py-2.5 rounded-lg border font-bold transition-all duration-150 ${
+            isBuying 
+              ? 'bg-green-500 text-white border-transparent' 
+              : 'bg-black/20 border-black/20 text-white/90 hover:brightness-95'
+          }`} 
+          onClick={() => setIsBuying(true)}
+        >
+          Buy
+        </button>
+        <button 
+          className={`px-3 py-2.5 rounded-lg border font-bold transition-all duration-150 ${
+            !isBuying 
+              ? 'bg-red-500 text-white border-transparent' 
+              : 'bg-black/20 border-black/20 text-white/90 hover:brightness-95'
+          }`} 
+          onClick={() => setIsBuying(false)}
+        >
+          Sell
+        </button>
       </div>
 
-      <div className="inputs">
-        <label>
-          <span className="label">{token?.symbol} amount</span>
-          <input type="number" min="0" step="any" value={tokenA} onChange={(e) => onChangeA(e.target.value)} onFocus={() => setFocused('A')} placeholder="0.0" />
+      <div className="grid gap-2.5">
+        <label className="grid gap-1.5">
+          <span className="text-xs text-white/90">{token?.symbol} amount</span>
+          <input 
+            type="number" 
+            min="0" 
+            step="any" 
+            value={tokenA} 
+            onChange={(e) => onChangeA(e.target.value)} 
+            onFocus={() => setFocused('A')} 
+            placeholder="0.0"
+            className="w-full px-3 py-3 rounded-xl border border-white/25 bg-white/10 text-white outline-none transition-all duration-150 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.15)] focus:border-white/40"
+          />
         </label>
-        <label>
-          <span className="label">{isBuying ? 'AE to spend' : 'AE to receive'}</span>
-          <input type="number" min="0" step="any" value={tokenB} onChange={(e) => onChangeB(e.target.value)} onFocus={() => setFocused('B')} placeholder="0.0" />
+        <label className="grid gap-1.5">
+          <span className="text-xs text-white/90">{isBuying ? 'AE to spend' : 'AE to receive'}</span>
+          <input 
+            type="number" 
+            min="0" 
+            step="any" 
+            value={tokenB} 
+            onChange={(e) => onChangeB(e.target.value)} 
+            onFocus={() => setFocused('B')} 
+            placeholder="0.0"
+            className="w-full px-3 py-3 rounded-xl border border-white/25 bg-white/10 text-white outline-none transition-all duration-150 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.15)] focus:border-white/40"
+          />
         </label>
       </div>
 
-      <div className="summary">
+      <div className="grid gap-1.5 mt-2.5 text-sm">
         {!!averagePrice && (
-          <div className="row">
+          <div className="flex justify-between">
             <div>Avg. token price</div>
             <div>{averagePrice.toFixed(6)} AE</div>
           </div>
         )}
         {priceImpact != null && (
-          <div className="row">
+          <div className="flex justify-between">
             <div>Price impact</div>
-            <div className={`impact ${isBuying ? 'pos' : 'neg'}`}>{priceImpact.toFixed(2)}%</div>
+            <div className={isBuying ? 'text-green-500' : 'text-red-500'}>{priceImpact.toFixed(2)}%</div>
           </div>
         )}
       </div>
 
-      <div className="details">
-        <button className="toggle" onClick={() => setShowDetails((v) => !v)}>{showDetails ? 'Hide details' : 'Show details'}</button>
+      <div className="mt-2">
+        <button 
+          className="border-0 bg-transparent text-white/95 p-0 cursor-pointer underline text-sm hover:text-white transition-colors"
+          onClick={() => setShowDetails((v) => !v)}
+        >
+          {showDetails ? 'Hide details' : 'Show details'}
+        </button>
         {showDetails && (
-          <div className="panel">
-            <div className="row">
+          <div className="mt-2 grid gap-2 text-sm text-white/90">
+            <div className="flex justify-between items-center">
               <div>How trading works</div>
-              <div style={{ textAlign: 'right', fontSize: 12, opacity: 0.8, maxWidth: 360 }}>
+              <div className="text-right text-xs opacity-80 max-w-[360px]">
                 Trades happen on a bonding curve. The more you buy in a single order, the higher the average price.
                 Slippage limits the worst-case price; your order reverts if price moves beyond it.
               </div>
             </div>
-            <div className="row">
+            <div className="flex justify-between items-center">
               <div>Allowed slippage</div>
-              <div className="slippage">
+              <div className="inline-flex items-center gap-2">
                 {slippage.toFixed(2)}%
-                <button className="gear" onClick={() => setSlippage((s) => Math.min(50, Math.max(0, Number(prompt('Set slippage %', String(s)) || s))))}>⚙</button>
+                <button 
+                  className="border-0 bg-transparent cursor-pointer text-sm hover:opacity-80 transition-opacity"
+                  onClick={() => setSlippage((s) => Math.min(50, Math.max(0, Number(prompt('Set slippage %', String(s)) || s))))}
+                >
+                  ⚙
+                </button>
               </div>
             </div>
             {protocolDaoReward != null && (
-              <div className="row">
+              <div className="flex justify-between items-center">
                 <div>Protocol token reward</div>
                 <div>~{protocolDaoReward}</div>
               </div>
@@ -241,12 +286,18 @@ export default function TradeCard({ token }: Props) {
         )}
       </div>
 
-      <div className="actions">
+      <div className="grid gap-2 mt-2.5">
         <WalletConnectBtn block />
-        <button className="submit" onClick={submit} disabled={disabled || loading}>{loading ? 'Confirm in wallet…' : 'Place Order'}</button>
+        <button 
+          className="px-4 py-3 rounded-full border-0 bg-gray-900 text-white transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black active:translate-y-px"
+          onClick={submit} 
+          disabled={disabled || loading}
+        >
+          {loading ? 'Confirm in wallet…' : 'Place Order'}
+        </button>
       </div>
 
-      {error && <div className="error">{error}</div>}
+      {error && <div className="text-red-400 mt-2 text-sm">{error}</div>}
     </div>
   );
 }

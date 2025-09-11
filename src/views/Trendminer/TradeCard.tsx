@@ -180,23 +180,38 @@ export default function TradeCard({ token }: Props) {
   }, [isBuying, tokenB]);
 
   return (
-    <div className="bg-gradient-to-b from-black/65 to-black/45 border border-white/15 rounded-xl p-4 text-white shadow-xl hover:shadow-2xl transition-shadow duration-300">
-      <div className="grid grid-cols-2 gap-2 mb-3">
+    <div className="max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+          Trade {token?.symbol}
+        </h2>
+        <button
+          aria-label="open-settings"
+          className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#4ecdc4] hover:-translate-y-0.5 active:translate-y-0"
+          onClick={() => setShowDetails((v) => !v)}
+        >
+          ⚙️ {showDetails ? 'Hide' : 'Details'}
+        </button>
+      </div>
+
+      {/* Buy/Sell Toggle */}
+      <div className="grid grid-cols-2 gap-2 mb-6">
         <button 
-          className={`px-3 py-2.5 rounded-lg border font-bold transition-all duration-150 ${
+          className={`px-4 py-3 rounded-xl border font-bold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isBuying 
-              ? 'bg-green-500 text-white border-transparent' 
-              : 'bg-black/20 border-black/20 text-white/90 hover:brightness-95'
+              ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-transparent shadow-[0_4px_12px_rgba(34,197,94,0.3)] hover:shadow-[0_8px_24px_rgba(34,197,94,0.4)] hover:-translate-y-0.5' 
+              : 'bg-white/[0.05] border-white/10 text-white/90 hover:bg-white/[0.08] hover:border-white/20'
           }`} 
           onClick={() => setIsBuying(true)}
         >
           Buy
         </button>
         <button 
-          className={`px-3 py-2.5 rounded-lg border font-bold transition-all duration-150 ${
+          className={`px-4 py-3 rounded-xl border font-bold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             !isBuying 
-              ? 'bg-red-500 text-white border-transparent' 
-              : 'bg-black/20 border-black/20 text-white/90 hover:brightness-95'
+              ? 'bg-gradient-to-r from-red-500 to-rose-500 text-white border-transparent shadow-[0_4px_12px_rgba(239,68,68,0.3)] hover:shadow-[0_8px_24px_rgba(239,68,68,0.4)] hover:-translate-y-0.5' 
+              : 'bg-white/[0.05] border-white/10 text-white/90 hover:bg-white/[0.08] hover:border-white/20'
           }`} 
           onClick={() => setIsBuying(false)}
         >
@@ -204,9 +219,13 @@ export default function TradeCard({ token }: Props) {
         </button>
       </div>
 
-      <div className="grid gap-2.5">
-        <label className="grid gap-1.5">
-          <span className="text-xs text-white/90">{token?.symbol} amount</span>
+      {/* Token Input From */}
+      <div className="mb-2">
+        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-white/60 font-medium">From</span>
+            <span className="text-xs text-white/40">{token?.symbol}</span>
+          </div>
           <input 
             type="number" 
             min="0" 
@@ -215,11 +234,18 @@ export default function TradeCard({ token }: Props) {
             onChange={(e) => onChangeA(e.target.value)} 
             onFocus={() => setFocused('A')} 
             placeholder="0.0"
-            className="w-full px-3 py-3 rounded-xl border border-white/25 bg-white/10 text-white outline-none transition-all duration-150 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.15)] focus:border-white/40"
+            className="w-full bg-transparent text-white text-xl font-semibold outline-none placeholder:text-white/30"
           />
-        </label>
-        <label className="grid gap-1.5">
-          <span className="text-xs text-white/90">{isBuying ? 'AE to spend' : 'AE to receive'}</span>
+        </div>
+      </div>
+
+      {/* Token Input To */}
+      <div className="mb-5">
+        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-white/60 font-medium">To</span>
+            <span className="text-xs text-white/40">AE</span>
+          </div>
           <input 
             type="number" 
             min="0" 
@@ -228,76 +254,106 @@ export default function TradeCard({ token }: Props) {
             onChange={(e) => onChangeB(e.target.value)} 
             onFocus={() => setFocused('B')} 
             placeholder="0.0"
-            className="w-full px-3 py-3 rounded-xl border border-white/25 bg-white/10 text-white outline-none transition-all duration-150 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.15)] focus:border-white/40"
+            className="w-full bg-transparent text-white text-xl font-semibold outline-none placeholder:text-white/30"
           />
-        </label>
+          <div className="text-xs text-white/40 mt-1">
+            {isBuying ? 'AE to spend' : 'AE to receive'}
+          </div>
+        </div>
       </div>
 
-      <div className="grid gap-1.5 mt-2.5 text-sm">
-        {!!averagePrice && (
-          <div className="flex justify-between">
-            <div>Avg. token price</div>
-            <div>{averagePrice.toFixed(6)} AE</div>
-          </div>
-        )}
-        {priceImpact != null && (
-          <div className="flex justify-between">
-            <div>Price impact</div>
-            <div className={isBuying ? 'text-green-500' : 'text-red-500'}>{priceImpact.toFixed(2)}%</div>
-          </div>
-        )}
-      </div>
-
-      <div className="mt-2">
-        <button 
-          className="border-0 bg-transparent text-white/95 p-0 cursor-pointer underline text-sm hover:text-white transition-colors"
-          onClick={() => setShowDetails((v) => !v)}
-        >
-          {showDetails ? 'Hide details' : 'Show details'}
-        </button>
-        {showDetails && (
-          <div className="mt-2 grid gap-2 text-sm text-white/90">
+      {/* Trading Info Panel */}
+      {(averagePrice || priceImpact != null) && (
+        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 mb-5 backdrop-blur-[10px]">
+          {!!averagePrice && (
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-white/60">
+                Avg. token price
+              </span>
+              <span className="text-sm font-semibold text-white">
+                {averagePrice.toFixed(6)} AE
+              </span>
+            </div>
+          )}
+          {priceImpact != null && (
             <div className="flex justify-between items-center">
-              <div>How trading works</div>
-              <div className="text-right text-xs opacity-80 max-w-[360px]">
+              <span className="text-sm text-white/60">
+                Price Impact
+              </span>
+              <span className={`text-sm font-semibold ${
+                priceImpact > 10 ? 'text-red-400' :
+                priceImpact > 5 ? 'text-yellow-400' :
+                'text-green-400'
+              }`}>
+                {priceImpact.toFixed(2)}%
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Details Section */}
+      {showDetails && (
+        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 mb-5 backdrop-blur-[10px]">
+          <div className="grid gap-3 text-sm">
+            <div className="flex justify-between items-start">
+              <span className="text-white/60 font-medium">How trading works</span>
+              <div className="text-right text-xs text-white/40 max-w-[280px] ml-4">
                 Trades happen on a bonding curve. The more you buy in a single order, the higher the average price.
                 Slippage limits the worst-case price; your order reverts if price moves beyond it.
               </div>
             </div>
             <div className="flex justify-between items-center">
-              <div>Allowed slippage</div>
+              <span className="text-white/60 font-medium">Allowed slippage</span>
               <div className="inline-flex items-center gap-2">
-                {slippage.toFixed(2)}%
+                <span className="text-white font-semibold">{slippage.toFixed(2)}%</span>
                 <button 
-                  className="border-0 bg-transparent cursor-pointer text-sm hover:opacity-80 transition-opacity"
+                  className="px-2 py-1 rounded-lg bg-white/[0.05] border border-white/10 text-white/80 hover:text-white hover:bg-white/[0.08] transition-all duration-200 text-xs"
                   onClick={() => setSlippage((s) => Math.min(50, Math.max(0, Number(prompt('Set slippage %', String(s)) || s))))}
                 >
-                  ⚙
+                  ⚙️
                 </button>
               </div>
             </div>
             {protocolDaoReward != null && (
               <div className="flex justify-between items-center">
-                <div>Protocol token reward</div>
-                <div>~{protocolDaoReward}</div>
+                <span className="text-white/60 font-medium">Protocol token reward</span>
+                <span className="text-white font-semibold">~{protocolDaoReward}</span>
               </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      <div className="grid gap-2 mt-2.5">
+      {/* Error Display */}
+      {error && (
+        <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
+          {error}
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="grid gap-3">
         <WalletConnectBtn block />
         <button 
-          className="px-4 py-3 rounded-full border-0 bg-gray-900 text-white transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black active:translate-y-px"
           onClick={submit} 
           disabled={disabled || loading}
+          className={`w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            disabled || loading
+              ? 'bg-white/10 cursor-not-allowed opacity-60'
+              : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0'
+          }`}
         >
-          {loading ? 'Confirm in wallet…' : 'Place Order'}
+          {loading ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              Confirm in wallet…
+            </div>
+          ) : (
+            `${isBuying ? 'Buy' : 'Sell'} ${token?.symbol}`
+          )}
         </button>
       </div>
-
-      {error && <div className="text-red-400 mt-2 text-sm">{error}</div>}
     </div>
   );
 }

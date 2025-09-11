@@ -34,7 +34,7 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
   const words = useMemo(() => tags.map((t) => ({ text: t.tag, value: t.score })), [tags]);
 
   const cloud = (
-    <div style={{ border: '1px dashed rgba(0,0,0,0.12)', borderRadius: 12, marginTop: embedded ? 0 : 12, padding: 8 }}>
+    <div className={`border border-dashed border-white/20 rounded-xl p-2 ${embedded ? 'mt-0' : 'mt-3'} bg-black/10 backdrop-blur-sm`}>
       <Wordcloud
         words={words}
         width={width}
@@ -54,8 +54,8 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
                 transform={`translate(${w.x}, ${w.y}) rotate(${w.rotate || 0})`}
                 fontSize={w.size}
                 textAnchor="middle"
-                fill={['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728'][i % 4]}
-                style={{ cursor: 'pointer', fontWeight: 800 }}
+                fill={['#3b82f6', '#f59e0b', '#10b981', '#ef4444'][i % 4]}
+                className="cursor-pointer font-extrabold hover:opacity-80 transition-opacity duration-200"
                 onClick={() => window.location.assign(`/trendminer/create?new=${encodeURIComponent(w.text)}`)}
               >
                 {w.text}
@@ -70,21 +70,34 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
   if (embedded) return cloud;
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '1rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div className="max-w-6xl mx-auto p-4">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <div style={{ fontSize: 28, fontWeight: 800 }}>TrendCloud (visx)</div>
-          <div style={{ fontSize: 12, opacity: 0.75 }}>Alternative layout powered by visx wordcloud.</div>
+          <div className="text-3xl font-extrabold text-white">TrendCloud (visx)</div>
+          <div className="text-xs opacity-75 text-white/75">Alternative layout powered by visx wordcloud.</div>
         </div>
-        <a href="/trendminer" style={{ padding: '8px 12px', borderRadius: 999, border: '1px solid rgba(0,0,0,0.12)', background: 'white', textDecoration: 'none' }}>Switch to default</a>
+        <a 
+          href="/trendminer" 
+          className="px-3 py-2 rounded-full border border-white/20 bg-white text-black no-underline hover:bg-gray-100 transition-colors duration-200 text-sm font-medium"
+        >
+          Switch to default
+        </a>
       </div>
 
-      {loading && <div style={{ padding: 12 }}>Loading…</div>}
-      {error && <div style={{ padding: 12, color: 'tomato' }}>{error}</div>}
+      {loading && <div className="p-3 text-white/80">Loading…</div>}
+      {error && <div className="p-3 text-red-400">{error}</div>}
 
       {cloud}
-      <div style={{ marginTop: 8, fontSize: 12, opacity: 0.7 }}>
-        Powered by visx wordcloud: <a href="https://airbnb.io/visx/wordcloud" target="_blank" rel="noopener noreferrer">visx/wordcloud</a>.
+      <div className="mt-2 text-xs opacity-70 text-white/70 text-center">
+        Powered by visx wordcloud:{' '}
+        <a 
+          href="https://airbnb.io/visx/wordcloud" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
+        >
+          visx/wordcloud
+        </a>.
       </div>
     </div>
   );

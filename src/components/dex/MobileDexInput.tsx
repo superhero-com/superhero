@@ -1,7 +1,6 @@
 import React, { forwardRef } from 'react';
-import './MobileDexInput.scss';
 
-interface MobileDexInputProps {
+interface DexInputProps {
   label?: string;
   placeholder?: string;
   value: string;
@@ -26,7 +25,7 @@ interface MobileDexInputProps {
   inputMode?: 'none' | 'text' | 'tel' | 'url' | 'email' | 'numeric' | 'decimal' | 'search';
 }
 
-const MobileDexInput = forwardRef<HTMLInputElement, MobileDexInputProps>(({
+const DexInput = forwardRef<HTMLInputElement, DexInputProps>(({
   label,
   placeholder,
   value,
@@ -50,17 +49,44 @@ const MobileDexInput = forwardRef<HTMLInputElement, MobileDexInputProps>(({
   className = '',
   inputMode,
 }, ref) => {
-  const inputClasses = [
-    'mobile-dex-input',
-    `mobile-dex-input--${variant}`,
-    `mobile-dex-input--${size}`,
-    disabled ? 'mobile-dex-input--disabled' : '',
-    loading ? 'mobile-dex-input--loading' : '',
-    error ? 'mobile-dex-input--error' : '',
-    leftIcon ? 'mobile-dex-input--with-left-icon' : '',
-    rightIcon ? 'mobile-dex-input--with-right-icon' : '',
-    className,
-  ].filter(Boolean).join(' ');
+  // Base container classes
+  const containerClasses = `flex flex-col gap-2 ${disabled ? 'opacity-50 pointer-events-none' : ''} ${className}`.trim();
+  
+  // Input field classes based on variant, size, and state
+  const getInputClasses = () => {
+    const baseClasses = 'w-full rounded-xl font-medium transition-all duration-200 outline-none touch-auto';
+    
+    // Size-based classes
+    const sizeClasses = {
+      small: `px-3 py-2 text-sm min-h-[40px] ${leftIcon ? 'pl-12' : ''} ${rightIcon ? 'pr-10' : ''}`,
+      medium: `px-4 py-3 text-base min-h-[48px] sm:min-h-[52px] ${leftIcon ? 'pl-14' : ''} ${rightIcon ? 'pr-12' : ''}`,
+      large: `px-5 py-4 text-lg min-h-[56px] sm:min-h-[60px] ${leftIcon ? 'pl-16' : ''} ${rightIcon ? 'pr-14' : ''}`
+    };
+    
+    // Variant-based styling
+    let variantStyles = '';
+    if (variant === 'filled') {
+      variantStyles = 'border border-[rgba(var(--primary-color-rgb),0.2)]';
+    } else if (variant === 'outlined') {
+      variantStyles = 'bg-transparent border';
+    } else {
+      variantStyles = 'border';
+    }
+    
+    // State-based styling
+    let stateStyles = '';
+    if (error) {
+      stateStyles = 'border-[var(--error-color)] focus:border-[var(--error-color)] focus:shadow-[0_0_0_3px_rgba(var(--error-color-rgb),0.1)]';
+    } else {
+      stateStyles = 'focus:border-[var(--primary-color)] focus:shadow-[0_0_0_3px_rgba(var(--primary-color-rgb),0.1)]';
+    }
+    
+    if (disabled || loading) {
+      stateStyles += ' opacity-50 cursor-not-allowed';
+    }
+    
+    return `${baseClasses} ${sizeClasses[size]} ${variantStyles} ${stateStyles}`.trim();
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!disabled && !loading) {
@@ -76,17 +102,19 @@ const MobileDexInput = forwardRef<HTMLInputElement, MobileDexInputProps>(({
   };
 
   return (
-    <div className={inputClasses}>
+    <div className={containerClasses}>
       {label && (
-        <label className="mobile-dex-input__label">
+        <label className="text-sm font-medium text-[var(--light-font-color)] m-0 sm:text-[13px]">
           {label}
         </label>
       )}
       
-      <div className="mobile-dex-input__wrapper">
+      <div className="relative flex items-center">
         {leftIcon && (
-          <div className="mobile-dex-input__left-icon">
-            {leftIcon}
+          <div className="absolute left-3 flex items-center justify-center text-[var(--secondary-font-color)] pointer-events-none z-10 w-6 h-6">
+            <div className="w-5 h-5 flex items-center justify-center">
+              {leftIcon}
+            </div>
           </div>
         )}
         
@@ -106,24 +134,34 @@ const MobileDexInput = forwardRef<HTMLInputElement, MobileDexInputProps>(({
           step={step}
           autoFocus={autoFocus}
           inputMode={inputMode}
-          className="mobile-dex-input__field"
+          className={getInputClasses()}
+          style={{
+            backgroundColor: variant === 'filled' ? 'rgba(var(--primary-color-rgb), 0.05)' : 
+                           variant === 'outlined' ? 'transparent' : 'var(--card-bg-color)',
+            borderColor: error ? 'var(--error-color)' : 
+                        variant === 'filled' ? 'rgba(var(--primary-color-rgb), 0.2)' : 'var(--border-color)',
+            color: 'var(--light-font-color)',
+            fontSize: size === 'small' ? '14px' : size === 'large' ? '18px' : '16px'
+          }}
         />
         
         {rightIcon && (
-          <div className="mobile-dex-input__right-icon">
-            {rightIcon}
+          <div className="absolute right-3 flex items-center justify-center text-[var(--secondary-font-color)] pointer-events-none w-6 h-6">
+            <div className="w-5 h-5 flex items-center justify-center">
+              {rightIcon}
+            </div>
           </div>
         )}
         
         {loading && (
-          <div className="mobile-dex-input__loading-indicator">
-            <div className="mobile-dex-input__spinner"></div>
+          <div className="absolute right-3 flex items-center justify-center pointer-events-none">
+            <div className="w-4 h-4 border-2 border-transparent border-t-[var(--primary-color)] rounded-full animate-spin"></div>
           </div>
         )}
       </div>
       
       {(error || helperText) && (
-        <div className={`mobile-dex-input__message ${error ? 'mobile-dex-input__message--error' : 'mobile-dex-input__message--helper'}`}>
+        <div className={`text-xs m-0 sm:text-[11px] ${error ? 'text-[var(--error-color)]' : 'text-[var(--secondary-font-color)]'}`}>
           {error || helperText}
         </div>
       )}
@@ -131,6 +169,6 @@ const MobileDexInput = forwardRef<HTMLInputElement, MobileDexInputProps>(({
   );
 });
 
-MobileDexInput.displayName = 'MobileDexInput';
+DexInput.displayName = 'DexInput';
 
-export default MobileDexInput;
+export default DexInput;

@@ -2,6 +2,9 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PostsService } from '../../../api/generated';
 import { PostDto } from '../../../api/generated';
+import { AeButton } from '../../../components/ui/ae-button';
+import { AeCard, AeCardContent } from '../../../components/ui/ae-card';
+import { cn } from '@/lib/utils';
 import CommentItem from './CommentItem';
 import { useWallet } from '../../../hooks';
 
@@ -41,29 +44,63 @@ export default function PostCommentsList({ id, onCommentAdded }: PostCommentsLis
   };
 
   if (isLoading) {
-    return <div className="comments-loading">Loading comments...</div>;
+    return (
+      <AeCard variant="glass" className="mt-6">
+        <AeCardContent className="p-6 text-center">
+          <div className="text-lg">⏳</div>
+          <p className="text-sm text-muted-foreground mt-2">Loading comments...</p>
+        </AeCardContent>
+      </AeCard>
+    );
   }
 
   if (error) {
     return (
-      <div className="comments-error">
-        Error loading comments.
-        <button onClick={() => refetchComments()}>Retry</button>
-      </div>
+      <AeCard variant="glass" className="mt-6">
+        <AeCardContent className="p-6 text-center space-y-4">
+          <div className="text-lg">⚠️</div>
+          <p className="text-sm text-muted-foreground">Error loading comments.</p>
+          <AeButton 
+            onClick={() => refetchComments()} 
+            variant="outline" 
+            size="sm"
+          >
+            Retry
+          </AeButton>
+        </AeCardContent>
+      </AeCard>
     );
   }
 
   return (
-    <div className="comments-section">
-      <h3 className="comments-title">Comments ({comments.length})</h3>
-      {comments.map((comment) => (
-        <CommentItem
-          key={comment.id}
-          comment={comment}
-          chainNames={chainNames}
-          onCommentAdded={handleCommentAdded}
-        />
-      ))}
+    <div className="mt-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-foreground">
+          Comments ({comments.length})
+        </h3>
+      </div>
+      
+      {comments.length === 0 ? (
+        <AeCard variant="glass">
+          <AeCardContent className="p-8 text-center">
+            <div className="text-2xl opacity-60 mb-2">💬</div>
+            <p className="text-sm text-muted-foreground">
+              No comments yet. Be the first to comment!
+            </p>
+          </AeCardContent>
+        </AeCard>
+      ) : (
+        <div className="space-y-4">
+          {comments.map((comment) => (
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              chainNames={chainNames}
+              onCommentAdded={handleCommentAdded}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

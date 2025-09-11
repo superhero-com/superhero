@@ -27,6 +27,31 @@ export default function AeButtonExamples() {
         </div>
       </section>
 
+      {/* Primary Color Utilities Demo */}
+      <section style={{ marginBottom: '2rem' }}>
+        <h2>Primary Color Utilities (Tailwind)</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="bg-primary text-white px-4 py-2 rounded">bg-primary</div>
+            <div className="text-primary font-semibold">text-primary</div>
+            <div className="border-2 border-primary px-4 py-2 rounded">border-primary</div>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="bg-primary-100 text-primary-900 px-4 py-2 rounded">bg-primary-100</div>
+            <div className="bg-primary-200 text-primary-900 px-4 py-2 rounded">bg-primary-200</div>
+            <div className="bg-primary-300 text-primary-900 px-4 py-2 rounded">bg-primary-300</div>
+            <div className="bg-primary-400 text-white px-4 py-2 rounded">bg-primary-400</div>
+            <div className="bg-primary-500 text-white px-4 py-2 rounded">bg-primary-500</div>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="bg-primary-600 text-white px-4 py-2 rounded">bg-primary-600</div>
+            <div className="bg-primary-700 text-white px-4 py-2 rounded">bg-primary-700</div>
+            <div className="bg-primary-800 text-white px-4 py-2 rounded">bg-primary-800</div>
+            <div className="bg-primary-900 text-white px-4 py-2 rounded">bg-primary-900</div>
+          </div>
+        </div>
+      </section>
+
       {/* Size Variants */}
       <section style={{ marginBottom: '2rem' }}>
         <h2>Size Variants</h2>

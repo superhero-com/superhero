@@ -179,39 +179,96 @@ export default function AddTokens() {
   }, [walletTokens, filter]);
 
   return (
-    <div className="container" style={{ maxWidth: 900, margin: '0 auto', padding: '16px 0' }}>
+    <div className="max-w-[900px] mx-auto py-4 px-4">
       <DexTabs />
-      <h2>Add tokens from your wallet</h2>
-      <p style={{ margin: '6px 0 12px', fontSize: 13, opacity: 0.8 }}>
+      <h2 className="text-2xl font-bold text-white mb-2">Add tokens from your wallet</h2>
+      <p className="text-sm text-white/80 mb-3 leading-relaxed">
         Detect AEX-9 tokens held by your wallet and quickly create pools or add liquidity for them on the DEX.
       </p>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-        <input placeholder="Filter by symbol/address" value={filter} onChange={(e) => setFilter(e.target.value)} style={{ flex: 1, padding: '6px 8px', borderRadius: 6, background: '#1a1a23', color: 'white', border: '1px solid #3a3a4a' }} />
-        <AeButton onClick={() => void discoverWalletTokens()} disabled={loading} loading={loading} variant="secondary-dark" size="small">{loading ? 'Scanning…' : 'Rescan'}</AeButton>
+      <div className="flex gap-2 items-center mb-2">
+        <input 
+          placeholder="Filter by symbol/address" 
+          value={filter} 
+          onChange={(e) => setFilter(e.target.value)} 
+          className="flex-1 px-2 py-1.5 rounded bg-[#1a1a23] text-white border border-gray-600 text-sm focus:outline-none focus:border-purple-400"
+        />
+        <AeButton 
+          onClick={() => void discoverWalletTokens()} 
+          disabled={loading} 
+          loading={loading} 
+          variant="secondary-dark" 
+          size="small"
+        >
+          {loading ? 'Scanning…' : 'Rescan'}
+        </AeButton>
       </div>
-      {error && <div style={{ color: '#ff6b6b', marginBottom: 8 }}>{error}</div>}
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead><tr><th style={{ textAlign: 'left' }}>Token</th><th>Address</th><th>Balance</th><th>AE Pool</th><th>Actions</th></tr></thead>
+      {error && <div className="text-red-400 mb-2 p-2 bg-red-500/10 rounded border border-red-500/20">{error}</div>}
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse bg-white/5 rounded-lg overflow-hidden">
+          <thead>
+            <tr className="bg-white/10">
+              <th className="text-left p-3 text-sm font-semibold text-white/80">Token</th>
+              <th className="text-left p-3 text-sm font-semibold text-white/80">Address</th>
+              <th className="text-right p-3 text-sm font-semibold text-white/80">Balance</th>
+              <th className="text-center p-3 text-sm font-semibold text-white/80">AE Pool</th>
+              <th className="text-right p-3 text-sm font-semibold text-white/80">Actions</th>
+            </tr>
+          </thead>
           <tbody>
             {filtered.map((t) => (
-              <tr key={t.address}>
-                <td>{t.symbol} <span style={{ opacity: 0.75, fontSize: 12 }}>({t.name})</span></td>
-                <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{t.address}</td>
-                <td style={{ textAlign: 'right' }}>{t.balance}</td>
-                <td style={{ textAlign: 'center' }}>{poolExists[t.address] ? 'Exists' : 'Not found'}</td>
-                <td style={{ textAlign: 'right' }}>
-                  {poolExists[t.address] ? (
-                    <AeButton onClick={() => navigate(`/pool/add?from=AE&to=${t.address}`)} variant="secondary-dark" size="small" style={{ marginRight: 8 }}>Add liquidity</AeButton>
-                  ) : (
-                    <AeButton onClick={() => navigate(`/pool/deploy?token=${t.address}`)} title="Create new pool and add liquidity" variant="secondary-dark" size="small" style={{ marginRight: 8 }}>Create pool</AeButton>
-                  )}
-                  <AeButton onClick={() => navigate(`/swap?from=AE&to=${t.address}`)} variant="secondary-dark" size="small">Swap</AeButton>
+              <tr key={t.address} className="border-b border-white/10 hover:bg-white/5">
+                <td className="p-3">
+                  <span className="text-white font-medium">{t.symbol}</span>{' '}
+                  <span className="text-white/60 text-xs">({t.name})</span>
+                </td>
+                <td className="p-3 font-mono text-xs text-white/80">{t.address}</td>
+                <td className="text-right p-3 text-white">{t.balance}</td>
+                <td className="text-center p-3">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    poolExists[t.address] 
+                      ? 'bg-green-500/20 text-green-400' 
+                      : 'bg-gray-500/20 text-gray-400'
+                  }`}>
+                    {poolExists[t.address] ? 'Exists' : 'Not found'}
+                  </span>
+                </td>
+                <td className="text-right p-3">
+                  <div className="flex gap-1 justify-end">
+                    {poolExists[t.address] ? (
+                      <AeButton 
+                        onClick={() => navigate(`/pool/add?from=AE&to=${t.address}`)} 
+                        variant="secondary-dark" 
+                        size="small"
+                      >
+                        Add liquidity
+                      </AeButton>
+                    ) : (
+                      <AeButton 
+                        onClick={() => navigate(`/pool/deploy?token=${t.address}`)} 
+                        title="Create new pool and add liquidity" 
+                        variant="secondary-dark" 
+                        size="small"
+                      >
+                        Create pool
+                      </AeButton>
+                    )}
+                    <AeButton 
+                      onClick={() => navigate(`/swap?from=AE&to=${t.address}`)} 
+                      variant="secondary-dark" 
+                      size="small"
+                    >
+                      Swap
+                    </AeButton>
+                  </div>
                 </td>
               </tr>
             ))}
             {(!filtered.length && !loading) && (
-              <tr><td colSpan={4} style={{ opacity: 0.8, padding: 10 }}>No tokens with balance found in your wallet.</td></tr>
+              <tr>
+                <td colSpan={5} className="text-white/60 p-6 text-center">
+                  No tokens with balance found in your wallet.
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

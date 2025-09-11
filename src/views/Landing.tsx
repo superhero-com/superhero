@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import AeAmountFiat from '../components/AeAmountFiat';
-import './Landing.scss';
 
 // Assets
 import votingSvg from '../svg/landing/voting.svg';
@@ -20,82 +19,123 @@ export default function Landing() {
   const stats = null; // TODO: Replace with useBackend hook
 
   return (
-    <div className="landing-page-container">
+    <div className="text-white">
       {/* Hero */}
-      <section className="main-banner">
-        <div className="banner-caption">
-          <div className="sh-container">
-            <h3>OWN YOUR ONLINE IDENTITY</h3>
-            <h1>
+      <section className="min-h-screen flex items-center relative bg-gradient-to-br from-[#0a0a0f] via-[#0f0f23] to-[#1a1a2e]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,107,107,0.15)_0%,transparent_50%),radial-gradient(circle_at_80%_20%,rgba(78,205,196,0.15)_0%,transparent_50%),radial-gradient(circle_at_40%_40%,rgba(69,183,209,0.1)_0%,transparent_50%)]" />
+        <div className="relative z-10 w-full">
+          <div className="max-w-[1180px] mx-auto px-4 py-32">
+            <h3 className="text-sm font-semibold tracking-wider uppercase mb-3 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+              OWN YOUR ONLINE IDENTITY
+            </h3>
+            <h1 className="text-5xl md:text-6xl font-extrabold leading-tight mb-6 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent tracking-tight">
               Your social, your wallet, your rules — a <b>decentralized</b> network for everyone
             </h1>
-            <p>
+            <p className="text-lg md:text-xl text-slate-300 leading-relaxed mb-10 max-w-4xl">
               Sign in with your wallet and keep one portable identity across apps. Post on-chain when
-              you want verifiable, timestamped ideas — and tip creators instantly. It’s simple,
+              you want verifiable, timestamped ideas — and tip creators instantly. It's simple,
               friendly, and powered by the æternity blockchain.
             </p>
-            <Link to="/" className="sh-btn-blue">Get started</Link>
-            <div className="banner-img">
-              {/* <img src={bannerImg} alt="Superhero app preview" /> */}
-              <div style={{ background: '#333', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>Superhero App Preview</div>
+            <Link 
+              to="/" 
+              className="inline-block bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-lg px-8 py-4 rounded-2xl uppercase tracking-wide transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/30 relative overflow-hidden group"
+            >
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+              Get started
+            </Link>
+            <div className="mt-16">
+              <div className="bg-gray-800 h-80 flex items-center justify-center text-white rounded-2xl shadow-2xl">
+                Superhero App Preview
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Story + Decentralization */}
-      <section className="superhero-story">
-        <div className="sh-container">
-          <div className="sh-row">
-            <div className="sh-col-6 left-share">
-              <div className="share-history">
-                <div className="top-title">
-                  <span>Privacy First</span>
-                  <h2>Share your story — </h2>
-                  <p>and keep your identity</p>
+      <section className="bg-black/20 backdrop-blur-2xl border-t border-white/10 py-24">
+        <div className="max-w-[1180px] mx-auto px-4">
+          <div className="flex flex-wrap -mx-4 mb-16">
+            <div className="w-full md:w-1/2 px-4 mb-8 md:mb-0">
+              <div className="pl-0 md:pl-40">
+                <div className="mb-8">
+                  <span className="text-teal-400 text-base font-semibold">Privacy First</span>
+                  <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
+                    Share your story — 
+                  </h2>
+                  <p className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
+                    and keep your identity
+                  </p>
                 </div>
               </div>
             </div>
-            <div className="sh-col-6 right-share-text">
-              <p>
+            <div className="w-full md:w-1/2 px-4">
+              <p className="text-lg text-slate-300 leading-relaxed mt-6">
                 With wallet-based identity you decide what to share and what to keep. Your handle and
                 reputation are portable across the æternity ecosystem, and your posts can live on-chain
                 when you want proof of authorship and permanence — or off-chain when you prefer speed
-                and lightness. You’re in control either way.
+                and lightness. You're in control either way.
               </p>
             </div>
           </div>
 
-          <div className="sh-row">
-            <div className="sh-col-3 left-voting-box">
-              <div className="inner-left-voting-box">
-                <img src={votingSvg} alt="Decentralized" />
-                <h4>Fully decentralized</h4>
-                <p>
+          <div className="flex flex-wrap -mx-4">
+            <div className="w-full lg:w-1/4 px-4 mb-8 lg:mb-0">
+              <div className="bg-black/20 backdrop-blur-2xl border border-white/10 rounded-2xl p-8 h-full min-w-[280px] lg:min-w-0">
+                <img 
+                  src={votingSvg} 
+                  alt="Decentralized" 
+                  className="max-h-16 max-w-16 mb-8 drop-shadow-[0_0_10px_rgba(255,107,107,0.7)]" 
+                />
+                <h4 className="text-teal-400 text-xl font-bold mb-6">
+                  Fully decentralized
+                </h4>
+                <p className="text-slate-300 text-base leading-relaxed">
                   Peer-to-peer by design. Nothing stands between you and the people you follow. Your
                   identity and posts can be on-chain, so value flows directly to creators.
                 </p>
               </div>
             </div>
-            <div className="sh-col-9 voting-img">
-              {/* <img src={postPng} alt="Decentralized posting" /> */}
-              <div style={{ background: '#f0f0f0', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Decentralized Posting</div>
+            <div className="w-full lg:w-3/4 px-4">
+              <div className="bg-black/20 backdrop-blur-2xl border border-white/10 rounded-2xl p-5 h-full">
+                <div className="bg-gray-200 h-48 flex items-center justify-center rounded-xl text-gray-600">
+                  Decentralized Posting
+                </div>
+              </div>
             </div>
           </div>
 
-              {stats && (
-            <div className="sh-row stats-row">
-              <div className="sh-col-3 sm-text-box">
-                <h4>{stats.totalTipsLength}</h4>
-                <p>Tips aggregated</p>
+          {stats && (
+            <div className="flex flex-wrap -mx-4 mt-12">
+              <div className="w-full md:w-1/3 px-4 mb-6">
+                <div className="bg-black/20 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-xl hover:shadow-pink-500/20">
+                  <h4 className="text-pink-400 text-2xl font-bold mb-2 text-shadow-[0_0_10px_rgba(255,107,107,0.7)]">
+                    {stats.totalTipsLength}
+                  </h4>
+                  <p className="text-slate-300 text-base leading-relaxed">
+                    Tips aggregated
+                  </p>
+                </div>
               </div>
-              <div className="sh-col-3 sm-text-box">
-                <h4><AeAmountFiat amount={stats.totalAmount} /></h4>
-                <p>Total Tips Value</p>
+              <div className="w-full md:w-1/3 px-4 mb-6">
+                <div className="bg-black/20 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-xl hover:shadow-pink-500/20">
+                  <h4 className="text-pink-400 text-2xl font-bold mb-2 text-shadow-[0_0_10px_rgba(255,107,107,0.7)]">
+                    <AeAmountFiat amount={stats.totalAmount} />
+                  </h4>
+                  <p className="text-slate-300 text-base leading-relaxed">
+                    Total Tips Value
+                  </p>
+                </div>
               </div>
-              <div className="sh-col-3 sm-text-box">
-                <h4>{stats.sendersLength}</h4>
-                <p>Unique Tip Senders</p>
+              <div className="w-full md:w-1/3 px-4 mb-6">
+                <div className="bg-black/20 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-xl hover:shadow-pink-500/20">
+                  <h4 className="text-pink-400 text-2xl font-bold mb-2 text-shadow-[0_0_10px_rgba(255,107,107,0.7)]">
+                    {stats.sendersLength}
+                  </h4>
+                  <p className="text-slate-300 text-base leading-relaxed">
+                    Unique Tip Senders
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -103,120 +143,159 @@ export default function Landing() {
       </section>
 
       {/* Value Proposition vs. Centralized Social Media */}
-      <section className="superhero-tokenization">
-        <div className="sh-container">
-          <div className="top-title">
-            <span>WHY ON‑CHAIN IDENTITY AND POSTS?</span>
-            <h2>
+      <section className="bg-cover bg-center py-24" style={{ backgroundImage: 'url("../../src/assets/landing/bg-black.png")' }}>
+        <div className="max-w-[1180px] mx-auto px-4">
+          <div className="text-center mb-12">
+            <span className="text-gray-400 text-base font-semibold uppercase tracking-wide">
+              WHY ON‑CHAIN IDENTITY AND POSTS?
+            </span>
+            <h2 className="text-4xl md:text-5xl font-normal text-white mt-4">
               Wallet login makes your identity <b>portable</b>. On‑chain posts are <b>provable</b>
               and <b>remixable</b>.
             </h2>
           </div>
-          <ul className="custom-list">
-            <li>Sign in with your wallet — one identity across apps</li>
-            <li>Own your social graph and portable reputation</li>
-            <li>Verifiable, timestamped posts (on‑chain option)</li>
-            <li>Open source and community‑driven</li>
+          <ul className="list-none mt-8 space-y-3 max-w-2xl mx-auto">
+            <li className="text-lg text-gray-200 pl-6 relative before:content-['•'] before:absolute before:left-0 before:text-pink-400">
+              Sign in with your wallet — one identity across apps
+            </li>
+            <li className="text-lg text-gray-200 pl-6 relative before:content-['•'] before:absolute before:left-0 before:text-pink-400">
+              Own your social graph and portable reputation
+            </li>
+            <li className="text-lg text-gray-200 pl-6 relative before:content-['•'] before:absolute before:left-0 before:text-pink-400">
+              Verifiable, timestamped posts (on‑chain option)
+            </li>
+            <li className="text-lg text-gray-200 pl-6 relative before:content-['•'] before:absolute before:left-0 before:text-pink-400">
+              Open source and community‑driven
+            </li>
           </ul>
         </div>
       </section>
 
       {/* Tipping + Wallet downloads */}
-      <section className="superhero-tips">
-        <div className="sh-container">
-          <div className="sh-row">
-            <div className="sh-col-6 left-tips">
-              <div className="top-title">
-                <h3>TIPPING</h3>
-                <p><b>Sending crypto</b> has never been <b>easier</b></p>
+      <section className="bg-black/20 backdrop-blur-2xl border-t border-white/10 py-24">
+        <div className="max-w-[1180px] mx-auto px-4">
+          <div className="flex flex-wrap -mx-4 items-center">
+            <div className="w-full lg:w-1/2 px-4 mb-12 lg:mb-0">
+              <div className="mb-8">
+                <h3 className="text-sm font-semibold tracking-wider uppercase mb-3 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+                  TIPPING
+                </h3>
+                <p className="text-3xl md:text-4xl font-bold text-white">
+                  <b>Sending crypto</b> has never been <b>easier</b>
+                </p>
               </div>
-              <div className="desc">
-                <p>
-                  Superhero’s native wallet integrates seamlessly into your daily life and allows you
+              <div className="space-y-6">
+                <p className="text-lg text-slate-300 leading-relaxed">
+                  Superhero's native wallet integrates seamlessly into your daily life and allows you
                   to tip content and creators instantaneously – at virtually no cost.
                 </p>
-                <p>
+                <p className="text-lg text-slate-300 leading-relaxed">
                   Create invitation links, track your history, and more –
                   all in one place.
                 </p>
-                <div className="desc-hero">
+                <div className="flex items-center justify-center lg:justify-start gap-4 pt-3">
                   <a href="https://apps.apple.com/app/superhero-wallet/id1502786641" target="_blank" rel="noreferrer">
-                    <img src={appStoreSvg} alt="Download on the App Store" />
+                    <img src={appStoreSvg} alt="Download on the App Store" className="h-12 hover:opacity-80 transition-opacity" />
                   </a>
                   <a href="https://play.google.com/store/apps/details?id=com.superhero.cordova" target="_blank" rel="noreferrer">
-                    <img src={googlePlaySvg} alt="Get it on Google Play" />
+                    <img src={googlePlaySvg} alt="Get it on Google Play" className="h-12 hover:opacity-80 transition-opacity" />
                   </a>
                 </div>
               </div>
             </div>
-            <div className="sh-col-6 left-tips-img">
-              {/* <img src={mockupPng} alt="Superhero wallet mockup" /> */}
-              <div style={{ background: '#f0f0f0', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Wallet Mockup</div>
+            <div className="w-full lg:w-1/2 px-4">
+              <div className="bg-gray-200 h-80 flex items-center justify-center rounded-2xl shadow-2xl">
+                Wallet Mockup
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section className="superhero-crypto">
-        <div className="sh-container">
-          <div className="custom-title">
-            <h2>Full of <b>powerful features</b></h2>
-            <p>
+      <section className="bg-gray-950 py-24">
+        <div className="max-w-[1180px] mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-normal text-white mb-4">
+              Full of <b>powerful features</b>
+            </h2>
+            <p className="text-lg text-gray-400 leading-relaxed max-w-4xl mx-auto">
               Tip what you value, meet with your community, vote on what matters, and embed tipping
               everywhere with the Superhero Button.
             </p>
           </div>
-          <div className="sh-row">
-            <div className="sh-col-4 crypto-box">
-              {/* <img src={meetPng} alt="Superhero Meet" /> */}
-              <div style={{ background: '#e0e0e0', width: '60px', height: '60px', borderRadius: '50%' }}></div>
-              <h4>Superhero Meet</h4>
-              <p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center mt-16">
+              <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-8"></div>
+              <h4 className="text-white text-xl font-semibold mb-5">
+                Superhero Meet
+              </h4>
+              <p className="text-gray-400 text-base leading-relaxed pr-0 md:pr-12">
                 Spin up a conference room in seconds – no account required – and even live-stream to
                 YouTube with real-time decentralized tipping.
               </p>
             </div>
-            <div className="sh-col-4 crypto-box">
-              {/* <img src={votingIconPng} alt="Superhero Voting" /> */}
-              <div style={{ background: '#e0e0e0', width: '60px', height: '60px', borderRadius: '50%' }}></div>
-              <h4>Superhero Voting</h4>
-              <p>
+            <div className="text-center mt-16">
+              <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-8"></div>
+              <h4 className="text-white text-xl font-semibold mb-5">
+                Superhero Voting
+              </h4>
+              <p className="text-gray-400 text-base leading-relaxed pr-0 md:pr-12">
                 Create polls, vote, delegate, and collect voting power from the community. Every vote
                 counts.
               </p>
             </div>
-            <div className="sh-col-4 crypto-box">
-              {/* <img src={leagueIconPng} alt="Superhero Button" /> */}
-              <h4>Superhero Button</h4>
-              <p>
+            <div className="text-center mt-16">
+              <h4 className="text-white text-xl font-semibold mb-5">
+                Superhero Button
+              </h4>
+              <p className="text-gray-400 text-base leading-relaxed pr-0 md:pr-12 mb-6">
                 Add a simple, customizable tip button to your website or blog and let people reward
                 your work.
               </p>
-              <a className="sh-btn-blue" href="https://github.com/aeternity/superhero-utils" target="_blank" rel="noreferrer">Learn More</a>
+              <a 
+                className="inline-block bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-base px-8 py-4 rounded-2xl uppercase tracking-wide transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/30"
+                href="https://github.com/aeternity/superhero-utils" 
+                target="_blank" 
+                rel="noreferrer"
+              >
+                Learn More
+              </a>
             </div>
           </div>
         </div>
       </section>
 
       {/* Open Source */}
-      <section className="superhero-sendTrips">
-        <div className="sh-container">
-          <div className="sh-row">
-            <div className="sh-col-6 empty-div" />
-            <div className="sh-col-6 left-tips">
-              <div className="top-title">
-                <span>OPEN SOURCE</span>
-                <h2>Superhero</h2>
-                <p>is open-source</p>
+      <section className="bg-gray-200 bg-cover bg-left py-24" style={{ backgroundImage: 'url("../../src/assets/landing/github.jpg")', backgroundSize: '700px 100%' }}>
+        <div className="max-w-[1180px] mx-auto px-4">
+          <div className="flex flex-wrap -mx-4">
+            <div className="w-full lg:w-1/2 px-4" />
+            <div className="w-full lg:w-1/2 px-4 pl-8 lg:pl-20">
+              <div className="mb-8">
+                <span className="text-gray-600 text-base font-semibold uppercase tracking-wide">
+                  OPEN SOURCE
+                </span>
+                <h2 className="text-4xl md:text-5xl font-normal text-gray-900 mt-2">
+                  Superhero
+                </h2>
+                <p className="text-4xl md:text-5xl font-normal text-gray-900">
+                  is open-source
+                </p>
               </div>
-              <div className="desc">
-                <p>
+              <div>
+                <p className="text-lg text-gray-700 leading-relaxed mb-8">
                   Dive under the hood, use the code, fork it, or run it locally. Join a global
                   community pushing the ecosystem forward.
                 </p>
-                <a className="sh-btn-blue" href="https://github.com/aeternity/superhero-ui/" target="_blank" rel="noreferrer">
-                  <img src={githubSvg} alt="GitHub" /> Contribute on GitHub
+                <a 
+                  className="inline-flex items-center gap-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-base px-8 py-4 rounded-2xl uppercase tracking-wide transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/30"
+                  href="https://github.com/aeternity/superhero-ui/" 
+                  target="_blank" 
+                  rel="noreferrer"
+                >
+                  <img src={githubSvg} alt="GitHub" className="w-5 h-5" /> 
+                  Contribute on GitHub
                 </a>
               </div>
             </div>
@@ -225,9 +304,14 @@ export default function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="superhero-cta button-left-section">
-        <div className="sh-join">
-          <Link to="/" className="sh-btn-blue">Become a Superhero Today</Link>
+      <section className="bg-black py-10">
+        <div className="max-w-[570px] mx-auto text-center px-4">
+          <Link 
+            to="/" 
+            className="inline-block bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-lg px-8 py-4 rounded-2xl uppercase tracking-wide transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/30"
+          >
+            Become a Superhero Today
+          </Link>
         </div>
       </section>
     </div>

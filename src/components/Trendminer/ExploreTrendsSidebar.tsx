@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { cn } from '../../lib/utils';
 import { TrendminerApi } from '../../api/backend';
 import MobileInput from '../MobileInput';
 import MobileCard from '../MobileCard';
-import './ExploreTrendsSidebar.scss';
 
 type TokenItem = {
   address: string;
@@ -87,14 +87,16 @@ export default function ExploreTrendsSidebar() {
   }
 
   return (
-    <div className="explore-trends-sidebar mobile-container">
-      <div className="explore-trends-header">
-        <h2 className="explore-trends-title">Explore Trends</h2>
+    <div className="flex flex-col gap-5 w-full max-w-md sm:max-w-full sm:gap-4 xs:gap-3">
+      <div className="flex flex-col gap-4 sm:gap-3">
+        <h2 className="text-2xl font-bold text-[var(--primary-color)] m-0 sm:text-xl xs:text-lg">
+          Explore Trends
+        </h2>
         
-        <div className="explore-trends-controls">
+        <div className="flex flex-col gap-3 sm:gap-2.5 md:flex-row md:items-center">
           <select
             aria-label="Order by"
-            className="explore-trends-select"
+            className="px-4 py-3 rounded-xl border border-black/12 bg-[var(--background-color)] text-[var(--primary-color)] text-sm font-medium cursor-pointer transition-all duration-200 focus:outline-none focus:border-blue-500 focus:shadow-[0_0_0_2px_rgba(59,130,246,0.2)] hover:border-black/20 sm:py-3.5 sm:text-base md:w-auto md:min-w-35"
             value={orderBy}
             onChange={(e) => setOrderBy(e.target.value as any)}
           >
@@ -108,25 +110,25 @@ export default function ExploreTrendsSidebar() {
             onChange={(e) => setSearch(e.target.value)}
             size="medium"
             variant="filled"
-            className="explore-trends-search"
+            className="w-full md:flex-1"
           />
         </div>
       </div>
 
       {loading && (
-        <div className="explore-trends-loading">
-          <div className="loading-spinner" />
+        <div className="flex items-center justify-center gap-3 p-5 text-[var(--light-font-color)] text-sm">
+          <div className="w-5 h-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
           <span>Loading trends...</span>
         </div>
       )}
       
       {error && (
-        <div className="explore-trends-error">
+        <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-sm text-center">
           {error}
         </div>
       )}
 
-      <div className="explore-trends-list">
+      <div className="flex flex-col gap-3 sm:gap-2.5">
         {filtered.slice(0, 12).map((it) => {
           const tok = tagTokenMap[it.tag];
           return (
@@ -135,23 +137,25 @@ export default function ExploreTrendsSidebar() {
               variant="elevated"
               padding="medium"
               clickable
-              className="trend-item-card"
+              className="transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] active:translate-y-0"
             >
-              <div className="trend-item-header">
-                <h3 className="trend-item-tag">{it.tag.toUpperCase()}</h3>
-                <div className="trend-item-score">
-                  <span className="score-icon">↑</span>
-                  <span className="score-value">{it.score.toLocaleString()}</span>
+              <div className="flex justify-between items-center mb-3 sm:mb-2.5">
+                <h3 className="text-base font-bold text-[var(--primary-color)] m-0 sm:text-[15px]">
+                  {it.tag.toUpperCase()}
+                </h3>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 rounded-full text-xs font-semibold text-green-500 sm:px-3 sm:py-2 sm:text-xs">
+                  <span className="text-sm">↑</span>
+                  <span>{it.score.toLocaleString()}</span>
                 </div>
               </div>
 
-              <div className="trend-item-details">
+              <div className="flex flex-col gap-2 sm:gap-1.5">
                 {it.source && (
                   <a
                     href={`https://x.com/search?q=${encodeURIComponent('#' + it.tag)}&src=typed_query`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="trend-item-source"
+                    className="text-xs text-[var(--light-font-color)] no-underline opacity-75 transition-opacity duration-200 hover:opacity-100"
                     onClick={(e) => e.stopPropagation()}
                   >
                     via {it.source}
@@ -159,16 +163,16 @@ export default function ExploreTrendsSidebar() {
                 )}
                 
                 {tok ? (
-                  <div className="trend-item-token-info">
-                    <div className="token-price">
+                  <div className="flex flex-col gap-1.5 pt-2 border-t border-black/8 sm:gap-1 sm:pt-1.5">
+                    <div className="text-xs text-[var(--light-font-color)] sm:text-xs">
                       Price: {normalizeAe(Number(tok.price ?? 0)).toFixed(6)} AE
                     </div>
-                    <div className="token-holders">
+                    <div className="text-xs text-[var(--light-font-color)] sm:text-xs">
                       Holders: {tok.holders_count ?? 0}
                     </div>
                     <a 
                       href={`/trendminer/tokens/${encodeURIComponent(tok.name || tok.address)}`} 
-                      className="trend-item-view-btn"
+                      className="inline-block px-4 py-2 bg-blue-500 text-white no-underline rounded-lg text-xs font-semibold text-center transition-all duration-200 mt-1 hover:bg-blue-600 hover:-translate-y-0.25 active:translate-y-0 sm:px-4 sm:py-2.5 sm:text-sm sm:min-h-11 sm:flex sm:items-center sm:justify-center"
                     >
                       View Token
                     </a>
@@ -177,7 +181,7 @@ export default function ExploreTrendsSidebar() {
                   <a
                     href={`/trendminer/create?new=${encodeURIComponent(it.tag)}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="trend-item-tokenize-btn"
+                    className="inline-block px-4 py-2 bg-transparent text-blue-500 no-underline border border-blue-500/30 rounded-lg text-xs font-semibold text-center transition-all duration-200 mt-1 hover:bg-blue-500/10 hover:border-blue-500 hover:-translate-y-0.25 active:translate-y-0 sm:px-4 sm:py-2.5 sm:text-sm sm:min-h-11 sm:flex sm:items-center sm:justify-center"
                   >
                     Create Token
                   </a>

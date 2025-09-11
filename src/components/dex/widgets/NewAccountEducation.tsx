@@ -21,82 +21,22 @@ export default function NewAccountEducation() {
   }
 
   return (
-    <div style={{ 
-      marginBottom: 20, 
-      borderRadius: 20, 
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)', 
-      padding: 3,
-      position: 'relative',
-      overflow: 'hidden',
-      boxShadow: '0 20px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1)'
-    }}>
+    <div className="mb-5 rounded-[20px] bg-gradient-to-r from-indigo-400 via-purple-500 via-pink-400 via-red-400 to-blue-400 p-[3px] relative overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.3),_0_0_0_1px_rgba(255,255,255,0.1)]">
       {/* Animated background elements */}
-      <div style={{
-        position: 'absolute',
-        top: -50,
-        right: -50,
-        width: 100,
-        height: 100,
-        background: 'radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%)',
-        borderRadius: '50%',
-        animation: 'pulse 3s ease-in-out infinite'
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: -30,
-        left: -30,
-        width: 80,
-        height: 80,
-        background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)',
-        borderRadius: '50%',
-        animation: 'pulse 4s ease-in-out infinite reverse'
-      }} />
+      <div className="absolute -top-12 -right-12 w-25 h-25 bg-radial-gradient from-white/20 to-transparent rounded-full animate-pulse" />
+      <div className="absolute -bottom-8 -left-8 w-20 h-20 bg-radial-gradient from-white/15 to-transparent rounded-full animate-pulse" style={{ animationDirection: 'reverse', animationDuration: '4s' }} />
       
-      <div style={{ 
-        background: 'linear-gradient(145deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%)',
-        borderRadius: 17,
-        padding: 24,
-        position: 'relative',
-        zIndex: 1,
-        border: '1px solid rgba(255,255,255,0.1)'
-      }}>
+      <div className="bg-gradient-to-br from-[#0f0f23] via-[#1a1a2e] to-[#16213e] rounded-[17px] p-6 relative z-10 border border-white/10">
         {/* Header with emoji and gradient text */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
-          <div style={{
-            width: 56,
-            height: 56,
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 50%, #ff9ff3 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 28,
-            boxShadow: '0 8px 20px rgba(255,107,107,0.3)',
-            border: '2px solid rgba(255,255,255,0.2)'
-          }}>
+        <div className="flex items-center gap-4 mb-5">
+          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#ff6b6b] via-[#ee5a24] to-[#ff9ff3] flex items-center justify-center text-3xl shadow-[0_8px_20px_rgba(255,107,107,0.3)] border-2 border-white/20">
             🚀
           </div>
           <div>
-            <h3 style={{ 
-              margin: 0, 
-              fontSize: 24, 
-              fontWeight: 800, 
-              background: 'linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              marginBottom: 6,
-              letterSpacing: '-0.5px'
-            }}>
+            <h3 className="m-0 text-2xl font-extrabold bg-gradient-to-r from-[#ff6b6b] via-[#4ecdc4] to-[#45b7d1] bg-clip-text text-transparent mb-1.5 tracking-tight">
               Welcome to æternity! ✨
             </h3>
-            <p style={{ 
-              margin: 0, 
-              fontSize: 16, 
-              color: '#b8c5d6',
-              lineHeight: 1.4,
-              fontWeight: 500
-            }}>
+            <p className="m-0 text-base text-[#b8c5d6] leading-normal font-medium">
               Your account is fresh and ready to explore! Let's get you some AE to start trading 🎯
             </p>
           </div>
@@ -321,12 +261,6 @@ export default function NewAccountEducation() {
         </div>
       </div>
 
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); opacity: 0.7; }
-          50% { transform: scale(1.1); opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 }

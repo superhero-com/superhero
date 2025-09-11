@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { Input } from './ui/input';
+import { cn } from '@/lib/utils';
 
 export default function SearchInput() {
   const navigate = useNavigate();
@@ -15,37 +17,15 @@ export default function SearchInput() {
         if (q) next.set('search', q); else next.delete('search');
         navigate({ pathname: '/', search: `?${next.toString()}` });
       }}
-      style={{ 
-        width: '100%',
-        maxWidth: '100%'
-      }}
+      className="w-full max-w-full"
     >
-      <input
+      <Input
         id="global-search"
         name="search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Search Superhero"
-        style={{ 
-          background: 'var(--secondary-color)', 
-          border: '1px solid var(--search-nav-border-color)', 
-          borderRadius: '8px', 
-          color: 'var(--standard-font-color)', 
-          padding: '8px 12px',
-          width: '100%',
-          fontSize: '14px',
-          outline: 'none',
-          transition: 'all 0.2s ease',
-          
-          '&:focus': {
-            borderColor: 'var(--custom-links-color)',
-            boxShadow: '0 0 0 2px rgba(0, 255, 157, 0.2)'
-          },
-          
-          '&::placeholder': {
-            color: 'var(--light-font-color)'
-          }
-        }}
+        className="w-full bg-secondary border-border text-foreground focus:border-accent focus:ring-accent/20 placeholder:text-muted-foreground"
       />
     </form>
   );

@@ -1,7 +1,7 @@
 import React from 'react';
 import { shiftDecimalPlaces } from '../utils/number';
 import { useWallet, useBackend } from '../hooks';
-import './FiatValue.scss';
+import { cn } from '@/lib/utils';
 
 interface Props {
   amount?: string | number;
@@ -9,6 +9,7 @@ interface Props {
   noParentheses?: boolean;
   noSymbol?: boolean;
   currency?: string | null;
+  className?: string;
 }
 
 export default function FiatValue({
@@ -17,6 +18,7 @@ export default function FiatValue({
   noParentheses,
   noSymbol,
   currency = null,
+  className,
 }: Props) {
   const { selectedCurrency, tokenInfo, tokenPrices } = useWallet();
   const { prices } = useBackend();
@@ -38,7 +40,7 @@ export default function FiatValue({
     : valueNumber.toLocaleString('en-US', { style: 'currency', currency: showCurrency.toUpperCase() });
 
   return (
-    <span className="fiat-value">
+    <span className={cn("text-sm text-muted-foreground font-mono", className)}>
       {noParentheses ? `≈ ${formatted}` : `(≈ ${formatted})`}
     </span>
   );

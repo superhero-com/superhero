@@ -60,70 +60,17 @@ export default function LiquiditySuccessNotification({
   return (
     <Dialog.Root open={show} onOpenChange={onClose}>
       <Dialog.Portal>
-        <Dialog.Overlay
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.6)',
-            backdropFilter: 'blur(8px)',
-            zIndex: 1000,
-            animation: show ? 'fadeIn 0.3s ease-out' : 'fadeOut 0.3s ease-out'
-          }}
-        />
-        <Dialog.Content
-          style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: 'rgba(20, 20, 28, 0.95)',
-            color: 'var(--standard-font-color)',
-            border: '1px solid var(--glass-border)',
-            borderRadius: 24,
-            padding: 32,
-            width: 420,
-            maxWidth: '90vw',
-            backdropFilter: 'blur(20px)',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)',
-            zIndex: 1001,
-            outline: 'none',
-            animation: show ? 'slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1)' : 'slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
-          }}
-        >
+        <Dialog.Overlay className={`fixed inset-0 bg-black/60 backdrop-blur-lg z-[1000] ${show ? 'animate-in fade-in duration-300' : 'animate-out fade-out duration-300'}`} />
+        <Dialog.Content className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(20,20,28,0.95)] text-white border border-white/10 rounded-3xl p-8 w-[420px] max-w-[90vw] backdrop-blur-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-[1001] outline-none ${show ? 'animate-in slide-in-from-top-4 duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]' : 'animate-out slide-out-to-bottom-4 duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]'}`}>
           {/* Success Icon */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginBottom: 20
-          }}>
-            <div style={{
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              background: 'var(--success-gradient, linear-gradient(135deg, #10b981, #059669))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 36,
-              color: 'white',
-              boxShadow: '0 8px 32px rgba(16, 185, 129, 0.4)',
-              animation: 'successPulse 0.6s ease-out'
-            }}>
+          <div className="flex justify-center mb-5">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-4xl text-white shadow-[0_8px_32px_rgba(16,185,129,0.4)] animate-in zoom-in duration-600 ease-out">
               ✓
             </div>
           </div>
 
           {/* Title */}
-          <Dialog.Title style={{
-            fontSize: 24,
-            fontWeight: 700,
-            textAlign: 'center',
-            margin: '0 0 8px 0',
-            background: 'var(--primary-gradient)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>
+          <Dialog.Title className="text-2xl font-bold text-center m-0 mb-2 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
             Liquidity Added Successfully!
           </Dialog.Title>
 
@@ -335,54 +282,6 @@ export default function LiquiditySuccessNotification({
         </Dialog.Content>
       </Dialog.Portal>
 
-      {/* Animations */}
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        @keyframes fadeOut {
-          from { opacity: 1; }
-          to { opacity: 0; }
-        }
-        
-        @keyframes slideUp {
-          from { 
-            opacity: 0;
-            transform: translate(-50%, -40%);
-          }
-          to { 
-            opacity: 1;
-            transform: translate(-50%, -50%);
-          }
-        }
-        
-        @keyframes slideDown {
-          from { 
-            opacity: 1;
-            transform: translate(-50%, -50%);
-          }
-          to { 
-            opacity: 0;
-            transform: translate(-50%, -60%);
-          }
-        }
-        
-        @keyframes successPulse {
-          0% { 
-            transform: scale(0.8);
-            opacity: 0;
-          }
-          50% { 
-            transform: scale(1.1);
-          }
-          100% { 
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-      `}</style>
     </Dialog.Root>
   );
 }

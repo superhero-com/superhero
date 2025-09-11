@@ -1,11 +1,12 @@
 @use './variables.scss' as *;
 @use './mixins.scss' as *;
 @use './mobile-optimizations.scss' as *;
+@import './tailwind.css';
 
 :root {
   color-scheme: dark;
   /* Gen Z Ultra Modern Dark Theme */
-  --primary-color: #ff6b6b;
+  --primary-color: #4ecdc4;
   --background-color: #0a0a0f;
   --secondary-color: #1a1a2e;
   --search-nav-border-color: #2d2d44;
@@ -57,7 +58,7 @@
 :root[data-theme='light'] {
   color-scheme: light;
   /* Gen Z Ultra Modern Light Theme */
-  --primary-color: #ff6b6b;
+  --primary-color: #4ecdc4;
   --background-color: #fafafa;
   --secondary-color: #ffffff;
   --search-nav-border-color: #e2e8f0;

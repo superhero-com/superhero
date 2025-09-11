@@ -38,172 +38,55 @@ export default function LiquidityConfirmation({
   return (
     <Dialog.Root open={show} onOpenChange={onClose}>
       <Dialog.Portal>
-        <Dialog.Overlay 
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.9)',
-            backdropFilter: 'blur(12px)',
-            zIndex: 1000
-          }}
-        />
-        <Dialog.Content
-          style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: 'rgba(20, 20, 28, 0.98)',
-            color: 'var(--standard-font-color)',
-            border: '1px solid var(--glass-border)',
-            borderRadius: 24,
-            padding: 24,
-            width: 480,
-            maxWidth: '90vw',
-            maxHeight: '85vh',
-            overflowY: 'auto',
-            backdropFilter: 'blur(20px)',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)',
-            zIndex: 1001,
-            outline: 'none'
-          }}
-        >
+        <Dialog.Overlay className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[1000]" />
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(20,20,28,0.98)] text-standard-font-color border border-glass-border rounded-3xl p-6 w-[480px] max-w-[90vw] max-h-[85vh] overflow-y-auto backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-[1001] outline-none">
           {/* Header */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            marginBottom: 24
-          }}>
-            <Dialog.Title style={{ 
-              fontWeight: 700, 
-              fontSize: 20,
-              margin: 0,
-              background: 'var(--primary-gradient)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
-            }}>
+          <div className="flex justify-between items-center mb-6">
+            <Dialog.Title className="font-bold text-xl m-0 bg-primary-gradient bg-clip-text text-transparent">
               Confirm Add Liquidity
             </Dialog.Title>
             <Dialog.Close asChild>
-              <button 
-                style={{ 
-                  padding: '8px 12px', 
-                  borderRadius: 12,
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--glass-border)',
-                  color: 'var(--standard-font-color)',
-                  cursor: 'pointer',
-                  fontSize: 16
-                }}
-              >
+              <button className="px-3 py-2 rounded-xl bg-white/5 border border-glass-border text-standard-font-color cursor-pointer text-base">
                 ✕
               </button>
             </Dialog.Close>
           </div>
 
           {/* Token Amounts */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid var(--glass-border)',
-            borderRadius: 16,
-            padding: 20,
-            marginBottom: 20
-          }}>
-            <div style={{ 
-              fontSize: 14,
-              fontWeight: 600,
-              color: 'var(--light-font-color)',
-              marginBottom: 16,
-              textAlign: 'center'
-            }}>
+          <div className="bg-white/[0.05] border border-glass-border rounded-2xl p-5 mb-5">
+            <div className="text-sm font-semibold text-light-font-color mb-4 text-center">
               You will deposit
             </div>
             
-            <div style={{ display: 'grid', gap: 12 }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '12px 16px',
-                background: 'rgba(255, 255, 255, 0.03)',
-                borderRadius: 12,
-                border: '1px solid rgba(255, 255, 255, 0.1)'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12
-                }}>
-                  <div style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    background: 'var(--button-gradient)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: 'white'
-                  }}>
+            <div className="grid gap-3">
+              <div className="flex justify-between items-center px-4 py-3 bg-white/[0.03] rounded-xl border border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-button-gradient flex items-center justify-center text-sm font-bold text-white">
                     {tokenA.symbol.charAt(0)}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 16 }}>
+                    <div className="font-semibold text-base">
                       {tokenA.symbol}
                     </div>
                   </div>
                 </div>
-                <div style={{ 
-                  fontWeight: 700,
-                  fontSize: 18,
-                  color: 'var(--standard-font-color)'
-                }}>
+                <div className="font-bold text-lg text-standard-font-color">
                   {Number(amountA).toFixed(6)}
                 </div>
               </div>
 
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '12px 16px',
-                background: 'rgba(255, 255, 255, 0.03)',
-                borderRadius: 12,
-                border: '1px solid rgba(255, 255, 255, 0.1)'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12
-                }}>
-                  <div style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    background: 'var(--button-gradient)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: 'white'
-                  }}>
+              <div className="flex justify-between items-center px-4 py-3 bg-white/[0.03] rounded-xl border border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-button-gradient flex items-center justify-center text-sm font-bold text-white">
                     {tokenB.symbol.charAt(0)}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 16 }}>
+                    <div className="font-semibold text-base">
                       {tokenB.symbol}
                     </div>
                   </div>
                 </div>
-                <div style={{ 
-                  fontWeight: 700,
-                  fontSize: 18,
-                  color: 'var(--standard-font-color)'
-                }}>
+                <div className="font-bold text-lg text-standard-font-color">
                   {Number(amountB).toFixed(6)}
                 </div>
               </div>
@@ -212,60 +95,34 @@ export default function LiquidityConfirmation({
 
           {/* Pool Info */}
           {pairPreview && (
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid var(--glass-border)',
-              borderRadius: 16,
-              padding: 16,
-              marginBottom: 20
-            }}>
-              <div style={{
-                fontSize: 14,
-                fontWeight: 600,
-                color: 'var(--light-font-color)',
-                marginBottom: 12
-              }}>
+            <div className="bg-white/[0.05] border border-glass-border rounded-2xl p-4 mb-5">
+              <div className="text-sm font-semibold text-light-font-color mb-3">
                 Pool Details
               </div>
 
-              <div style={{ display: 'grid', gap: 8 }}>
+              <div className="grid gap-2">
                 {pairPreview.ratioAinB && pairPreview.ratioAinB !== '-' && (
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: 13,
-                    color: 'var(--light-font-color)'
-                  }}>
+                  <div className="flex justify-between text-xs text-light-font-color">
                     <span>Exchange Rate</span>
-                    <span style={{ color: 'var(--standard-font-color)' }}>
+                    <span className="text-standard-font-color">
                       1 {tokenA.symbol} = {pairPreview.ratioAinB} {tokenB.symbol}
                     </span>
                   </div>
                 )}
 
                 {pairPreview.sharePct && Number(pairPreview.sharePct) > 0 && (
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: 13,
-                    color: 'var(--light-font-color)'
-                  }}>
+                  <div className="flex justify-between text-xs text-light-font-color">
                     <span>Your Pool Share</span>
-                    <span style={{ color: 'var(--accent-color)', fontWeight: 600 }}>
+                    <span className="text-accent-color font-semibold">
                       {Number(pairPreview.sharePct).toFixed(6)}%
                     </span>
                   </div>
                 )}
 
                 {pairPreview.lpMintEstimate && (
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: 13,
-                    color: 'var(--light-font-color)'
-                  }}>
+                  <div className="flex justify-between text-xs text-light-font-color">
                     <span>LP Tokens to Receive</span>
-                    <span style={{ color: 'var(--standard-font-color)' }}>
+                    <span className="text-standard-font-color">
                       {Number(pairPreview.lpMintEstimate).toFixed(8)}
                     </span>
                   </div>
@@ -275,85 +132,40 @@ export default function LiquidityConfirmation({
           )}
 
           {/* Settings */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.03)',
-            borderRadius: 12,
-            padding: 16,
-            marginBottom: 24
-          }}>
-            <div style={{ display: 'grid', gap: 8, fontSize: 13 }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                color: 'var(--light-font-color)'
-              }}>
+          <div className="bg-white/[0.03] rounded-xl p-4 mb-6">
+            <div className="grid gap-2 text-xs">
+              <div className="flex justify-between text-light-font-color">
                 <span>Slippage Tolerance</span>
-                <span style={{ color: 'var(--standard-font-color)' }}>{slippagePct}%</span>
+                <span className="text-standard-font-color">{slippagePct}%</span>
               </div>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                color: 'var(--light-font-color)'
-              }}>
+              <div className="flex justify-between text-light-font-color">
                 <span>Transaction Deadline</span>
-                <span style={{ color: 'var(--standard-font-color)' }}>{deadlineMins} minutes</span>
+                <span className="text-standard-font-color">{deadlineMins} minutes</span>
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div className="flex gap-3">
             <button
               onClick={onClose}
               disabled={loading}
-              style={{
-                flex: 1,
-                padding: '16px 24px',
-                borderRadius: 16,
-                border: '1px solid var(--glass-border)',
-                background: 'rgba(255, 255, 255, 0.05)',
-                color: 'var(--standard-font-color)',
-                fontSize: 16,
-                fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.5 : 1,
-                transition: 'all 0.3s ease'
-              }}
+              className={`flex-1 px-6 py-4 rounded-2xl border border-glass-border bg-white/5 text-standard-font-color text-base font-semibold transition-all duration-300 ${
+                loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+              }`}
             >
               Cancel
             </button>
             <button
               onClick={onConfirm}
               disabled={loading}
-              style={{
-                flex: 2,
-                padding: '16px 24px',
-                borderRadius: 16,
-                border: 'none',
-                background: loading ? 
-                  'rgba(255, 255, 255, 0.1)' : 
-                  'var(--button-gradient)',
-                color: 'white',
-                fontSize: 16,
-                fontWeight: 700,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.3s ease',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8
-              }}
+              className={`flex-[2] px-6 py-4 rounded-2xl border-none text-white text-base font-bold cursor-pointer transition-all duration-300 flex items-center justify-center gap-2 ${
+                loading ? 'bg-white/10 cursor-not-allowed' : 'bg-button-gradient'
+              }`}
             >
               {loading ? (
                 <>
-                  <div style={{
-                    width: 16,
-                    height: 16,
-                    border: '2px solid rgba(255,255,255,0.3)',
-                    borderTop: '2px solid white',
-                    borderRadius: '50%',
-                    animation: 'spin 1s linear infinite'
-                  }}></div>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   Adding Liquidity...
                 </>
               ) : 'Confirm Add Liquidity'}
@@ -362,13 +174,6 @@ export default function LiquidityConfirmation({
         </Dialog.Content>
       </Dialog.Portal>
       
-      {/* Add keyframes for spinner animation */}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </Dialog.Root>
   );
 }

@@ -84,19 +84,12 @@ export default function TokenSelector({
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <div>
         {label && (
-          <div style={{
-            fontSize: 12,
-            color: 'var(--light-font-color)',
-            fontWeight: 600,
-            marginBottom: 6,
-            textTransform: 'none',
-            letterSpacing: '0.5px'
-          }}>
+          <div className="text-xs text-white/60 font-semibold mb-1.5 normal-case tracking-wide">
             {label}
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="flex gap-2">
           <Dialog.Trigger asChild>
             <button
               disabled={disabled || loading}
@@ -107,48 +100,22 @@ export default function TokenSelector({
                 }
                 setCustomAddress('');
               }}
-              style={{
-                minWidth: 120,
-                padding: '10px 16px',
-                borderRadius: 12,
-                background: selected ? 'var(--button-gradient)' : 'rgba(255, 255, 255, 0.05)',
-                color: 'var(--standard-font-color)',
-                border: '1px solid var(--glass-border)',
-                fontSize: '14px',
-                fontWeight: 600,
-                cursor: disabled || loading ? 'not-allowed' : 'pointer',
-                backdropFilter: 'blur(10px)',
-                transition: 'all 0.3s ease',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                textTransform: 'none'
-              }}
-              onMouseOver={(e) => {
-                if (!disabled && !loading) {
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 107, 0.3)';
-                }
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
+              className={`min-w-[120px] py-2.5 px-4 rounded-xl border border-white/10 text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 ease-out flex items-center justify-center gap-2 normal-case ${
+                disabled || loading
+                  ? 'cursor-not-allowed opacity-50'
+                  : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,107,107,0.3)]'
+              } ${
+                selected
+                  ? 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white'
+                  : 'bg-white/[0.05] text-white'
+              }`}
             >
               {loading ? (
-                <div style={{
-                  width: 14,
-                  height: 14,
-                  border: '2px solid rgba(255,255,255,0.3)',
-                  borderTop: '2px solid var(--standard-font-color)',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite',
-                }}></div>
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               ) : (
                 <>
                   {selected ? `${selected.symbol}` : 'Select Token'}
-                  <span style={{ opacity: 0.7 }}>▼</span>
+                  <span className="opacity-70">▼</span>
                 </>
               )}
             </button>
@@ -157,147 +124,41 @@ export default function TokenSelector({
       </div>
 
       <Dialog.Portal>
-        <Dialog.Overlay
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.9)',
-            backdropFilter: 'blur(12px)',
-            zIndex: 1000,
-            animation: 'fadeIn 150ms ease-out'
-          }}
-        />
-        <Dialog.Content
-          style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: 'rgba(20, 20, 28, 0.98)',
-            color: 'var(--standard-font-color)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: 24,
-            padding: 24,
-            width: 520,
-            maxWidth: '90vw',
-            maxHeight: '85vh',
-            overflowY: 'auto',
-            backdropFilter: 'blur(20px)',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6), 0 8px 32px rgba(255, 107, 107, 0.2)',
-            zIndex: 1001,
-            animation: 'slideInFromTop 200ms ease-out',
-            outline: 'none'
-          }}
-        >
+        <Dialog.Overlay className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[1000] animate-in fade-in duration-150" />
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(20,20,28,0.98)] text-white border border-white/10 rounded-3xl p-4 sm:p-6 w-[95vw] max-w-md sm:max-w-[520px] max-h-[85vh] overflow-y-auto backdrop-blur-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.6),_0_8px_32px_rgba(255,107,107,0.2)] z-[1001] animate-in slide-in-from-top-4 duration-200 outline-none">
           {/* Header */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 20
-          }}>
-            <Dialog.Title style={{
-              fontWeight: 700,
-              fontSize: 20,
-              margin: 0,
-              background: 'var(--primary-gradient)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
-            }}>
+          <div className="flex justify-between items-center mb-4 sm:mb-5">
+            <Dialog.Title className="font-bold text-lg sm:text-xl m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
               Select a token
             </Dialog.Title>
             <Dialog.Close asChild>
-              <button
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: 12,
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: 'var(--standard-font-color)',
-                  cursor: 'pointer',
-                  backdropFilter: 'blur(10px)',
-                  transition: 'all 0.3s ease',
-                  fontSize: 16,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 36,
-                  height: 36
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = 'var(--error-color)';
-                  e.currentTarget.style.transform = 'scale(1.1)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
-              >
+              <button className="p-2 rounded-xl bg-white/[0.05] border border-white/10 text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-base flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 hover:bg-red-400 hover:scale-110">
                 ✕
               </button>
             </Dialog.Close>
           </div>
 
           {/* Search Input */}
-          <div style={{ position: 'relative', marginBottom: 20 }}>
+          <div className="relative mb-4 sm:mb-5">
             <input
               placeholder="Search by token or paste address"
               value={searchValue}
               onChange={(e) => onSearchChange?.(e.target.value)}
               autoFocus
-              style={{
-                width: '100%',
-                padding: '14px 50px 14px 16px',
-                borderRadius: 16,
-                background: 'rgba(255, 255, 255, 0.08)',
-                color: 'var(--standard-font-color)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                fontSize: '15px',
-                backdropFilter: 'blur(10px)',
-                transition: 'all 0.3s ease',
-                boxSizing: 'border-box'
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = 'var(--accent-color)';
-                e.currentTarget.style.boxShadow = '0 0 0 2px rgba(78, 205, 196, 0.2)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
+              className="w-full py-3.5 pr-12 pl-4 rounded-2xl bg-white/[0.08] text-white border border-white/15 text-base backdrop-blur-[10px] transition-all duration-300 ease-out box-border focus:border-[#4ecdc4] focus:shadow-[0_0_0_2px_rgba(78,205,196,0.2)] focus:outline-none"
             />
-            <div style={{
-              position: 'absolute',
-              right: 16,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: 'var(--light-font-color)',
-              fontSize: 18
-            }}>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">
               🔍
             </div>
           </div>
 
           {/* Popular Tokens */}
           {!searchValue && (
-            <div style={{ marginBottom: 24 }}>
-              <h4 style={{
-                fontSize: 14,
-                fontWeight: 600,
-                color: 'var(--light-font-color)',
-                marginBottom: 12,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
-              }}>
+            <div className="mb-4 sm:mb-6">
+              <h4 className="text-xs sm:text-sm font-semibold text-white/60 mb-2 sm:mb-3 uppercase tracking-wide">
                 Popular tokens
               </h4>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
-                gap: 12,
-                marginBottom: 20
-              }}>
+              <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-2 sm:gap-3 mb-5">
                 {tokens.slice(0, 4).map((token) => (
                   <button
                     key={token.address}
@@ -573,29 +434,6 @@ export default function TokenSelector({
         </Dialog.Content>
       </Dialog.Portal>
 
-      {/* Add keyframes for animations */}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        @keyframes slideInFromTop {
-          from { 
-            opacity: 0;
-            transform: translate(-50%, -60%) scale(0.95);
-          }
-          to { 
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-          }
-        }
-      `}</style>
     </Dialog.Root>
   );
 }

@@ -14,7 +14,6 @@ import MobileTrendingControls from '../components/Trendminer/MobileTrendingContr
 import MobileTrendingTokenCard from '../components/Trendminer/MobileTrendingTokenCard';
 import MobileTrendingTagCard from '../components/Trendminer/MobileTrendingTagCard';
 import MobileTrendingPagination from '../components/Trendminer/MobileTrendingPagination';
-import './Trending.scss';
 
 type TokenItem = {
   address: string;
@@ -91,18 +90,9 @@ export default function Trending() {
     return (
       <button
         onClick={() => toggleSort(keyName)}
-        style={{ 
-          border: 0, 
-          background: 'transparent', 
-          textAlign: 'left', 
-          padding: 0, 
-          fontSize: 12, 
-          opacity: active ? 1 : 0.7, 
-          fontWeight: active ? 700 as any : 500,
-          color: 'inherit',
-          cursor: 'pointer',
-          transition: 'all 0.2s ease'
-        }}
+        className={`border-0 bg-transparent text-left p-0 text-xs cursor-pointer transition-all duration-200 text-white hover:text-white/90 ${
+          active ? 'opacity-100 font-bold' : 'opacity-70 font-medium'
+        }`}
         aria-label={`Sort by ${label}`}
       >
         {label} {arrow}
@@ -283,55 +273,59 @@ export default function Trending() {
 
   // Desktop layout
   return (
-    <div className="trending-page">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
       {/* Banner */}
-      <div className="trending-banner">
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 36, fontWeight: 700, lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis' }}>Tokenize Trends.<br/>Own the Hype.<br/>Build Communities.</div>
-            <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
-              <AeButton 
-                variant="primary" 
-                size="md" 
-                rounded
-                onClick={() => window.location.href = '/trendminer/create'}
-              >
-                Tokenize a Trend
-              </AeButton>
-              <AeButton 
-                variant="secondary" 
-                size="md" 
-                rounded
-                outlined
-                onClick={() => window.open('https://wallet.superhero.com', '_blank')}
-              >
-                Get Superhero Wallet ↘
-              </AeButton>
-              <AeButton 
-                variant="accent" 
-                size="md" 
-                rounded
-                onClick={() => window.location.href = '/trendminer/daos'}
-              >
-                Explore DAOs
-              </AeButton>
-              <AeButton 
-                variant="ghost" 
-                size="md" 
-                rounded
-                onClick={() => window.location.href = '/trendminer/invite'}
-              >
-                Invite & Earn
-              </AeButton>
-              <WalletConnectBtn />
+      <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border-b border-white/10 backdrop-blur-xl">
+        <div className="max-w-[1400px] mx-auto p-6">
+          <div className="flex gap-4 items-center justify-between flex-wrap">
+            <div className="min-w-0 flex-1">
+              <div className="text-4xl font-bold leading-tight overflow-hidden text-ellipsis bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600 bg-clip-text text-transparent">
+                Tokenize Trends.<br/>Own the Hype.<br/>Build Communities.
+              </div>
+              <div className="flex gap-3 mt-4 flex-wrap">
+                <AeButton 
+                  variant="primary" 
+                  size="md" 
+                  rounded
+                  onClick={() => window.location.href = '/trendminer/create'}
+                >
+                  Tokenize a Trend
+                </AeButton>
+                <AeButton 
+                  variant="secondary" 
+                  size="md" 
+                  rounded
+                  outlined
+                  onClick={() => window.open('https://wallet.superhero.com', '_blank')}
+                >
+                  Get Superhero Wallet ↘
+                </AeButton>
+                <AeButton 
+                  variant="accent" 
+                  size="md" 
+                  rounded
+                  onClick={() => window.location.href = '/trendminer/daos'}
+                >
+                  Explore DAOs
+                </AeButton>
+                <AeButton 
+                  variant="ghost" 
+                  size="md" 
+                  rounded
+                  onClick={() => window.location.href = '/trendminer/invite'}
+                >
+                  Invite & Earn
+                </AeButton>
+                <WalletConnectBtn />
+              </div>
+              <div className="text-sm text-white/75 mt-2.5 max-w-[720px] overflow-hidden text-ellipsis leading-relaxed">
+                Tokenized trends are community tokens launched on a bonding curve. Price moves with buys/sells, no order books.
+                Each token mints a DAO treasury that can fund initiatives via on-chain votes. Connect your wallet to trade and participate.
+              </div>
             </div>
-            <div style={{ fontSize: 13, opacity: 0.75, marginTop: 10, maxWidth: 720, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              Tokenized trends are community tokens launched on a bonding curve. Price moves with buys/sells, no order books.
-              Each token mints a DAO treasury that can fund initiatives via on-chain votes. Connect your wallet to trade and participate.
+            <div className="min-w-[300px] flex-shrink-0">
+              <GlobalStatsAnalytics />
             </div>
-          </div>
-          <div style={{ minWidth: 300, flex: '0 0 auto' }}>
-            <GlobalStatsAnalytics />
           </div>
         </div>
       </div>
@@ -341,70 +335,80 @@ export default function Trending() {
       <TrendingPillsCarousel tagTokenMap={tagTokenMap} />
 
       {/* Main content */}
-      <div className="trending-main-content">
-        {/* Left: Tokenized Trends */}
-        <div style={{ minWidth: 0 }}>
-          <div className="trending-controls">
-            <div className="controls-title">Tokenized Trends</div>
-            <div className="controls-buttons">
-              <select className="flat-select" value={selectValue as any} onChange={(e) => setSortFromSelect(e.target.value)}>
-                <option value="trending_score">Hot</option>
-                <option value="market_cap">Market Cap</option>
-                <option value="newest">Newest</option>
-                <option value="oldest">Oldest</option>
-                <option value="holders_count">Holders</option>
-              </select>
-              <input id="trend-search" name="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search" style={{ padding: '8px 12px', minWidth: 200, maxWidth: 280, borderRadius: 8, border: '1px solid var(--search-nav-border-color)' }} />
-              <select className="flat-select" value={timeframe} onChange={(e) => setTimeframe(e.target.value as any)}>
-                <option value="30D">30D</option>
-                <option value="7D">7D</option>
-                <option value="1D">1D</option>
-              </select>
+      <div className="max-w-[1400px] mx-auto p-6">
+        <div className="grid grid-cols-[1fr_320px] gap-6 lg:grid-cols-1">
+          {/* Left: Tokenized Trends */}
+          <div className="min-w-0">
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+              <div className="text-2xl font-bold text-white">Tokenized Trends</div>
+              <div className="flex gap-3 flex-wrap">
+                <select 
+                  className="px-3 py-2 bg-gray-800 text-white border border-gray-600 rounded-lg text-sm focus:outline-none focus:border-purple-400" 
+                  value={selectValue as any} 
+                  onChange={(e) => setSortFromSelect(e.target.value)}
+                >
+                  <option value="trending_score">Hot</option>
+                  <option value="market_cap">Market Cap</option>
+                  <option value="newest">Newest</option>
+                  <option value="oldest">Oldest</option>
+                  <option value="holders_count">Holders</option>
+                </select>
+                <input 
+                  id="trend-search" 
+                  name="search" 
+                  value={search} 
+                  onChange={(e) => setSearch(e.target.value)} 
+                  placeholder="Search" 
+                  className="px-3 py-2 min-w-[200px] max-w-[280px] bg-gray-800 text-white border border-gray-600 rounded-lg text-sm focus:outline-none focus:border-purple-400 placeholder-white/50"
+                />
+                <select 
+                  className="px-3 py-2 bg-gray-800 text-white border border-gray-600 rounded-lg text-sm focus:outline-none focus:border-purple-400" 
+                  value={timeframe} 
+                  onChange={(e) => setTimeframe(e.target.value as any)}
+                >
+                  <option value="30D">30D</option>
+                  <option value="7D">7D</option>
+                  <option value="1D">1D</option>
+                </select>
+              </div>
             </div>
-          </div>
 
-          <div className="trending-table-container">
-            <div className="trending-table">
-              <div>
-                <SortHeader label="Rank" keyName="market_cap" />
+            <div className="bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl overflow-hidden">
+              {/* Table Header */}
+              <div className="grid grid-cols-[60px_1fr_100px_120px_80px_120px] gap-4 p-4 bg-white/10 border-b border-white/10 text-sm font-semibold text-white/80">
+                <div><SortHeader label="Rank" keyName="market_cap" /></div>
+                <div><SortHeader label="# Token" keyName="name" /></div>
+                <div><SortHeader label="Price" keyName="price" /></div>
+                <div><SortHeader label="Market Cap" keyName="market_cap" /></div>
+                <div><SortHeader label="Holders" keyName="holders_count" /></div>
+                <div><SortHeader label="Mini Chart" keyName="trending_score" /></div>
               </div>
-              <div>
-                <SortHeader label="# Token" keyName="name" />
-              </div>
-              <div>
-                <SortHeader label="Price" keyName="price" />
-              </div>
-              <div>
-                <SortHeader label="Market Cap" keyName="market_cap" />
-              </div>
-              <div>
-                <SortHeader label="Holders" keyName="holders_count" />
-              </div>
-              <div>
-                <SortHeader label="Mini Chart" keyName="trending_score" />
-              </div>
-            </div>
-            <div style={{ display: 'grid', gap: 4, minWidth: 'fit-content' }}>
-              {tokens.map((t, idx) => (
-                <a key={t.address} href={`/trendminer/tokens/${encodeURIComponent(t.name || t.address)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <div className="trending-table-row">
-                    <div className="table-rank">{(page - 1) * PAGE_SIZE + idx + 1}</div>
-                    <div className="table-name">#{t.name || t.symbol} {t.symbol ? <span style={{ opacity: 0.7 }}>({`#${t.symbol}`})</span> : null}</div>
-                    <div className="table-price">{normalizeAe(Number(t.price ?? 0)).toFixed(6)} AE</div>
-                    <div className="table-market-cap">{normalizeAe(Number(t.market_cap ?? 0)).toLocaleString()} AE</div>
-                    <div className="table-holders">{t.holders_count ?? 0}</div>
-                    <div className="table-chart">
-                      <TokenMiniChart address={t.sale_address || t.address} width={120} height={28} stroke="#ff6d15" timeframe={timeframe} />
+              
+              {/* Table Body */}
+              <div className="grid gap-1 min-w-fit">
+                {tokens.map((t, idx) => (
+                  <a key={t.address} href={`/trendminer/tokens/${encodeURIComponent(t.name || t.address)}`} className="no-underline text-white hover:bg-white/5 transition-colors">
+                    <div className="grid grid-cols-[60px_1fr_100px_120px_80px_120px] gap-4 p-4 items-center border-b border-white/5 hover:border-white/10">
+                      <div className="text-sm font-medium text-white/90">{(page - 1) * PAGE_SIZE + idx + 1}</div>
+                      <div className="text-sm font-semibold text-white">
+                        #{t.name || t.symbol} {t.symbol ? <span className="opacity-70">({`#${t.symbol}`})</span> : null}
+                      </div>
+                      <div className="text-sm font-mono text-white/90">{normalizeAe(Number(t.price ?? 0)).toFixed(6)} AE</div>
+                      <div className="text-sm font-mono text-white/90">{normalizeAe(Number(t.market_cap ?? 0)).toLocaleString()} AE</div>
+                      <div className="text-sm text-white/90">{t.holders_count ?? 0}</div>
+                      <div className="flex justify-center">
+                        <TokenMiniChart address={t.sale_address || t.address} width={120} height={28} stroke="#ff6d15" timeframe={timeframe} />
+                      </div>
                     </div>
-                  </div>
-                </a>
-              ))}
-              {loading && <div style={{ padding: 12 }}>Loading…</div>}
-              {error && <div style={{ padding: 12, color: 'tomato' }}>{error}</div>}
+                  </a>
+                ))}
+                {loading && <div className="p-3 text-center text-white/70">Loading…</div>}
+                {error && <div className="p-3 text-center text-red-400">{error}</div>}
+              </div>
             </div>
 
             {/* Pagination */}
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'center', marginTop: 12 }}>
+            <div className="flex gap-3 items-center justify-center mt-3">
               <AeButton 
                 variant="ghost" 
                 size="sm" 
@@ -414,7 +418,7 @@ export default function Trending() {
               >
                 Prev
               </AeButton>
-              <span style={{ fontSize: 12, opacity: 0.8 }}>Page {page} of {totalPages}</span>
+              <span className="text-xs text-white/80">Page {page} of {totalPages}</span>
               <AeButton 
                 variant="ghost" 
                 size="sm" 
@@ -426,70 +430,76 @@ export default function Trending() {
               </AeButton>
             </div>
           </div>
-        </div>
 
-        {/* Right: Explore Trends */}
-        <div className="trending-sidebar">
-          <div className="sidebar-title">Explore Trends</div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-            <select style={{ padding: '6px 10px', borderRadius: 999 }} defaultValue={'Most Trending'}>
-              <option>Most Trending</option>
-              <option>Latest</option>
-            </select>
-            <input id="explore-search" name="search" placeholder="Search" style={{ padding: '8px 12px', flex: 1, borderRadius: 999, border: '1px solid rgba(0,0,0,0.12)' }} />
-          </div>
-          <div style={{ display: 'grid', gap: 6 }}>
-            {tags.slice(0, 12).map((it) => {
-              const tok = tagTokenMap[it.tag];
-              return (
-                <div key={it.tag} className="sidebar-item">
-                  <div className="item-name">#{it.tag.toUpperCase()}</div>
-                  <div className="item-details">
-                    {!tok && (
-                      <>
-                        <span>↑ {it.score.toLocaleString()}</span>
-                        {it.source && (
-                          <a
-                            href={`https://x.com/search?q=${encodeURIComponent('#' + it.tag)}&src=typed_query`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ textDecoration: 'none' }}
-                            onClick={(e) => e.stopPropagation()}
+          {/* Right: Explore Trends */}
+          <div className="bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl p-6 h-fit lg:mt-6">
+            <div className="text-xl font-bold text-white mb-4">Explore Trends</div>
+            <div className="flex gap-2 mb-2">
+              <select className="px-2.5 py-1.5 bg-gray-800 text-white border border-gray-600 rounded-full text-sm focus:outline-none focus:border-purple-400" defaultValue={'Most Trending'}>
+                <option>Most Trending</option>
+                <option>Latest</option>
+              </select>
+              <input 
+                id="explore-search" 
+                name="search" 
+                placeholder="Search" 
+                className="px-3 py-2 flex-1 bg-gray-800 text-white border border-gray-600 rounded-full text-sm focus:outline-none focus:border-purple-400 placeholder-white/50"
+              />
+            </div>
+            <div className="grid gap-1.5">
+              {tags.slice(0, 12).map((it) => {
+                const tok = tagTokenMap[it.tag];
+                return (
+                  <div key={it.tag} className="p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
+                    <div className="font-semibold text-white mb-2">#{it.tag.toUpperCase()}</div>
+                    <div className="flex items-center justify-between flex-wrap gap-2 text-sm">
+                      {!tok && (
+                        <>
+                          <span className="text-green-400 font-medium">↑ {it.score.toLocaleString()}</span>
+                          {it.source && (
+                            <a
+                              href={`https://x.com/search?q=${encodeURIComponent('#' + it.tag)}&src=typed_query`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-400 hover:text-blue-300 no-underline text-xs"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              via {it.source}
+                            </a>
+                          )}
+                        </>
+                      )}
+                      {tok ? (
+                        <>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-white/90 font-mono">{normalizeAe(Number(tok.price ?? 0)).toFixed(6)} AE</span>
+                            <span className="text-white/70 text-xs">Holders: {tok.holders_count ?? 0}</span>
+                          </div>
+                          <AeButton 
+                            variant="accent" 
+                            size="xs" 
+                            outlined
+                            onClick={() => window.location.href = `/trendminer/tokens/${encodeURIComponent(tok.name || tok.address)}`}
                           >
-                            via {it.source}
-                          </a>
-                        )}
-                      </>
-                    )}
-                    {tok ? (
-                      <>
-                        <span>{normalizeAe(Number(tok.price ?? 0)).toFixed(6)} AE</span>
-                        <span>Holders: {tok.holders_count ?? 0}</span>
-                        <AeButton 
+                            View
+                          </AeButton>
+                        </>
+                      ) : (
+                         <AeButton 
                           variant="accent" 
-                          size="xs" 
-                          outlined
-                          onClick={() => window.location.href = `/trendminer/tokens/${encodeURIComponent(tok.name || tok.address)}`}
-                          style={{ marginLeft: 8 }}
+                           size="xs" 
+                          rounded
+                          onClick={() => window.location.href = `/trendminer/create?new=${encodeURIComponent(it.tag)}`}
+                          className="px-2 py-1 rounded-full text-xs"
                         >
-                          View
+                          Tokenize
                         </AeButton>
-                      </>
-                    ) : (
-                       <AeButton 
-                        variant="accent" 
-                         size="xs" 
-                        rounded
-                        onClick={() => window.location.href = `/trendminer/create?new=${encodeURIComponent(it.tag)}`}
-                         style={{ marginLeft: 8, padding: '2px 8px', borderRadius: 999, fontSize: 10 }}
-                      >
-                        Tokenize
-                      </AeButton>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

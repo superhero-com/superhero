@@ -320,61 +320,17 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   const isSwapDisabled = swapLoading || !amountIn || Number(amountIn) <= 0 || !amountOut || !tokenIn || !tokenOut || hasInsufficientBalance;
 
   return (
-    <div className="genz-card" style={{
-      maxWidth: 480,
-      margin: '0 auto',
-      background: 'var(--glass-bg)',
-      border: '1px solid var(--glass-border)',
-      backdropFilter: 'blur(20px)',
-      borderRadius: 24,
-      padding: 24,
-      boxShadow: 'var(--glass-shadow)',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
+    <div className="max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 24
-      }}>
-        <h2 style={{
-          fontSize: 20,
-          fontWeight: 700,
-          color: 'var(--standard-font-color)',
-          margin: 0,
-          background: 'var(--primary-gradient)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text'
-        }}>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
           Swap Tokens
         </h2>
 
         <DexSettings title="Swap Settings">
           <button
             aria-label="open-settings"
-            style={{
-              padding: '8px 12px',
-              borderRadius: 12,
-              border: '1px solid var(--glass-border)',
-              background: 'var(--glass-bg)',
-              color: 'var(--standard-font-color)',
-              cursor: 'pointer',
-              backdropFilter: 'blur(10px)',
-              transition: 'all 0.3s ease',
-              fontSize: 12,
-              fontWeight: 500
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = 'var(--accent-color)';
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = 'var(--glass-bg)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
+            className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#4ecdc4] hover:-translate-y-0.5 active:translate-y-0"
           >
             ⚙️ Settings
           </button>
@@ -382,7 +338,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       </div>
 
       {/* Token Input From */}
-      <div style={{ marginBottom: 8 }}>
+      <div className="mb-2">
         <TokenInput
           label="From"
           token={tokenIn}
@@ -401,50 +357,18 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       </div>
 
       {/* Swap Arrow Button */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        margin: '16px 0',
-        position: 'relative'
-      }}>
+      <div className="flex justify-center my-4 relative">
         <button
           onClick={handleTokenSwap}
           disabled={swapLoading || !tokenIn || !tokenOut}
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: '50%',
-            background: 'var(--button-gradient)',
-            border: '2px solid var(--glass-border)',
-            color: 'white',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 20,
-            fontWeight: 600,
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: '0 4px 12px rgba(255, 107, 107, 0.3)',
-            zIndex: 2,
-            position: 'relative'
-          }}
-          onMouseOver={(e) => {
-            if (!swapLoading && tokenIn && tokenOut) {
-              e.currentTarget.style.transform = 'translateY(-2px) rotate(180deg)';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 107, 107, 0.4)';
-            }
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'translateY(0) rotate(0deg)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 107, 0.3)';
-          }}
+          className="w-12 h-12 rounded-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] border-2 border-white/10 text-white cursor-pointer flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(255,107,107,0.3)] z-[2] relative hover:shadow-[0_8px_24px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 hover:rotate-180 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:rotate-0"
         >
           ↕️
         </button>
       </div>
 
       {/* Token Input To */}
-      <div style={{ marginBottom: 20 }}>
+      <div className="mb-5">
         <TokenInput
           label="To"
           token={tokenOut}
@@ -467,45 +391,24 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
 
       {/* Trading Info Panel */}
       {(routeInfo.priceImpact != null || allowanceInfo) && (
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid var(--glass-border)',
-          borderRadius: 16,
-          padding: 16,
-          marginBottom: 20,
-          backdropFilter: 'blur(10px)'
-        }}>
+        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 mb-5 backdrop-blur-[10px]">
           {routeInfo.priceImpact != null && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: allowanceInfo ? 8 : 0
-            }}>
-              <span style={{ fontSize: 14, color: 'var(--light-font-color)' }}>
+            <div className={`flex justify-between items-center ${allowanceInfo ? 'mb-2' : ''}`}>
+              <span className="text-sm text-white/60">
                 Price Impact
               </span>
-              <span style={{
-                fontSize: 14,
-                fontWeight: 600,
-                color: routeInfo.priceImpact > 10 ? 'var(--error-color)' :
-                  routeInfo.priceImpact > 5 ? 'var(--warning-color)' :
-                    'var(--success-color)'
-              }}>
+              <span className={`text-sm font-semibold ${
+                routeInfo.priceImpact > 10 ? 'text-red-400' :
+                routeInfo.priceImpact > 5 ? 'text-yellow-400' :
+                'text-green-400'
+              }`}>
                 {routeInfo.priceImpact.toFixed(2)}%
               </span>
             </div>
           )}
 
           {allowanceInfo && !tokenIn?.is_ae && (
-            <div style={{
-              fontSize: 12,
-              color: 'var(--light-font-color)',
-              padding: '8px 12px',
-              background: 'rgba(255, 107, 107, 0.1)',
-              borderRadius: 8,
-              border: '1px solid rgba(255, 107, 107, 0.2)'
-            }}>
+            <div className="text-xs text-white/60 py-2 px-3 bg-red-400/10 rounded-lg border border-red-400/20">
               {allowanceInfo}
             </div>
           )}
@@ -522,32 +425,14 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
 
       {/* Error Display */}
       {error && (
-        <div style={{
-          color: 'var(--error-color)',
-          fontSize: 14,
-          padding: '12px 16px',
-          background: 'rgba(255, 107, 107, 0.1)',
-          border: '1px solid rgba(255, 107, 107, 0.2)',
-          borderRadius: 12,
-          marginBottom: 20,
-          textAlign: 'center'
-        }}>
+        <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
           {error}
         </div>
       )}
 
       {/* Insufficient Balance Warning */}
       {hasInsufficientBalance && (
-        <div style={{
-          color: 'var(--error-color)',
-          fontSize: 14,
-          padding: '12px 16px',
-          background: 'rgba(255, 107, 107, 0.1)',
-          border: '1px solid rgba(255, 107, 107, 0.2)',
-          borderRadius: 12,
-          marginBottom: 20,
-          textAlign: 'center'
-        }}>
+        <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
           Insufficient {tokenIn?.symbol} balance. You need {amountIn} but only have {balances.in ? Decimal.from(balances.in).prettify() : '0'}
         </div>
       )}
@@ -557,38 +442,15 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <button
           onClick={() => setShowConfirm(true)}
           disabled={isSwapDisabled}
-          className="genz-btn"
-          style={{
-            width: '100%',
-            padding: '16px 24px',
-            borderRadius: 16,
-            border: 'none',
-            background: isSwapDisabled ?
-              'rgba(255, 255, 255, 0.1)' :
-              'var(--button-gradient)',
-            color: 'white',
-            cursor: isSwapDisabled ? 'not-allowed' : 'pointer',
-            fontSize: 16,
-            fontWeight: 700,
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: isSwapDisabled ?
-              'none' :
-              'var(--button-shadow)',
-            opacity: isSwapDisabled ? 0.6 : 1
-          }}
+          className={`w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            isSwapDisabled
+              ? 'bg-white/10 cursor-not-allowed opacity-60'
+              : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0'
+          }`}
         >
           {swapLoading ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <div style={{
-                width: 16,
-                height: 16,
-                border: '2px solid rgba(255,255,255,0.3)',
-                borderTop: '2px solid white',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
-              }}></div>
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               Confirm in wallet…
             </div>
           ) : 'Swap Tokens'}
@@ -597,20 +459,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <ConnectWalletButton
           label="Connect Wallet to Swap"
           block
-          style={{
-            width: '100%',
-            padding: '16px 24px',
-            borderRadius: 16,
-            border: 'none',
-            background: 'var(--button-gradient)',
-            color: 'white',
-            fontSize: 16,
-            fontWeight: 700,
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase',
-            boxShadow: 'var(--button-shadow)',
-            cursor: 'pointer'
-          }}
+          className="w-full py-4 px-6 rounded-2xl border-none bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(255,107,107,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
         />
       )}
 
@@ -631,13 +480,6 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         loading={swapLoading}
       />
 
-      {/* Add keyframes for spinner animation */}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }

@@ -1,21 +1,14 @@
 import React from 'react';
-import './AeButton.scss';
+import { AeButton as ShadcnAeButton, type AeButtonProps as ShadcnAeButtonProps } from './ui/ae-button';
+import { cn } from '@/lib/utils';
 
-export interface AeButtonProps {
+export interface AeButtonProps extends Omit<ShadcnAeButtonProps, 'variant' | 'size'> {
   children: React.ReactNode;
   variant?: 'primary' | 'secondary' | 'accent' | 'success' | 'warning' | 'error' | 'ghost' | 'secondary-dark' | 'tab' | 'utility' | 'disabled-token';
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'small' | 'medium' | 'large';
-  disabled?: boolean;
-  loading?: boolean;
-  fullWidth?: boolean;
   rounded?: boolean;
   outlined?: boolean;
   gradient?: boolean;
-  glow?: boolean;
-  active?: boolean;
-  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  type?: 'button' | 'submit' | 'reset';
-  className?: string;
   style?: React.CSSProperties;
 }
 
@@ -35,62 +28,60 @@ export default function AeButton({
   type = 'button',
   className = '',
   style = {},
+  ...props
 }: AeButtonProps) {
-  const baseClass = 'ae-button';
-  const variantClass = `ae-button--${variant}`;
-  const sizeClass = `ae-button--${size}`;
-  const stateClass = disabled ? 'ae-button--disabled' : '';
-  const loadingClass = loading ? 'ae-button--loading' : '';
-  const fullWidthClass = fullWidth ? 'ae-button--full-width' : '';
-  const roundedClass = rounded ? 'ae-button--rounded' : '';
-  const outlinedClass = outlined ? 'ae-button--outlined' : '';
-  const gradientClass = gradient ? 'ae-button--gradient' : '';
-  const glowClass = glow ? 'ae-button--glow' : '';
-  const activeClass = active ? 'ae-button--active' : '';
-
-  const combinedClassName = [
-    baseClass,
-    variantClass,
-    sizeClass,
-    stateClass,
-    loadingClass,
-    fullWidthClass,
-    roundedClass,
-    outlinedClass,
-    gradientClass,
-    glowClass,
-    activeClass,
-    className
-  ].filter(Boolean).join(' ');
-
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!disabled && !loading && onClick) {
-      onClick(e);
-    }
+  // Map legacy variants to new shadcn variants
+  const variantMap: Record<string, ShadcnAeButtonProps['variant']> = {
+    'primary': 'default',
+    'secondary': 'secondary',
+    'accent': 'accent',
+    'success': 'success',
+    'warning': 'warning',
+    'error': 'error',
+    'ghost': 'ghost',
+    'secondary-dark': 'secondary',
+    'tab': 'tab',
+    'utility': 'utility',
+    'disabled-token': 'outline',
   };
 
+  // Map legacy sizes to new shadcn sizes
+  const sizeMap: Record<string, ShadcnAeButtonProps['size']> = {
+    'xs': 'xs',
+    'sm': 'sm',
+    'md': 'default',
+    'lg': 'lg',
+    'xl': 'xl',
+    'small': 'sm',
+    'medium': 'default',
+    'large': 'lg',
+  };
+
+  const shadcnVariant = variantMap[variant] || 'default';
+  const shadcnSize = sizeMap[size] || 'default';
+
   return (
-    <button
+    <ShadcnAeButton
+      variant={shadcnVariant}
+      size={shadcnSize}
+      disabled={disabled}
+      loading={loading}
+      fullWidth={fullWidth}
+      glow={glow}
+      active={active}
+      onClick={onClick}
       type={type}
-      className={combinedClassName}
-      disabled={disabled || loading}
-      onClick={handleClick}
-      style={style}
-    >
-      {loading && (
-        <span className="ae-button__loader">
-          <svg className="ae-button__spinner" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeDasharray="31.416" strokeDashoffset="31.416">
-              <animate attributeName="stroke-dasharray" dur="2s" values="0 31.416;15.708 15.708;0 31.416" repeatCount="indefinite" />
-              <animate attributeName="stroke-dashoffset" dur="2s" values="0;-15.708;-31.416" repeatCount="indefinite" />
-            </circle>
-          </svg>
-        </span>
+      className={cn(
+        rounded && 'rounded-full',
+        outlined && 'border-2',
+        gradient && 'bg-gradient-to-r',
+        className
       )}
-      <span className="ae-button__content">
-        {children}
-      </span>
-    </button>
+      style={style}
+      {...props}
+    >
+      {children}
+    </ShadcnAeButton>
   );
 }
 

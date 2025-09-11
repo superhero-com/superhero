@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { TrendminerApi } from '../../api/backend';
 import TokenMiniChart from '../../components/Trendminer/TokenMiniChart';
 import { CONFIG } from '../../config';
-import './Daos.scss';
 
 import { useAeSdk } from '../../hooks';
 type TokenItem = {
@@ -172,12 +171,23 @@ export default function Daos() {
   }, [items, ownedContracts]);
 
   return (
-    <div className="daos-view">
-      <div className="header">
-        <div className="title">DAOs</div>
-        <div className="controls">
-          <input placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
-          <select className="flat-select" value={sort} onChange={(e) => setSort(e.target.value as any)}>
+    <div className="max-w-6xl mx-auto p-4 text-white">
+      <div className="flex justify-between items-center gap-3 flex-wrap mb-4">
+        <div className="text-3xl font-extrabold text-white">
+          DAOs
+        </div>
+        <div className="flex gap-2">
+          <input 
+            placeholder="Search" 
+            value={search} 
+            onChange={(e) => setSearch(e.target.value)} 
+            className="px-4 py-2.5 rounded-2xl border border-white/20 bg-gradient-to-b from-white/8 to-white/4 text-white backdrop-blur-lg shadow-lg placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
+          />
+          <select 
+            className="px-4 py-2.5 rounded-2xl border border-white/20 bg-gradient-to-b from-white/8 to-white/4 text-white backdrop-blur-lg shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50" 
+            value={sort} 
+            onChange={(e) => setSort(e.target.value as any)}
+          >
             <option value="market_cap">Market Cap</option>
             <option value="holders_count">Holders</option>
             <option value="created_at">Newest</option>
@@ -185,64 +195,134 @@ export default function Daos() {
         </div>
       </div>
 
-      {loading && <div className="loading">Loading…</div>}
-      {error && <div className="error">{error}</div>}
+      {loading && <div className="text-center py-8 text-white/80">Loading…</div>}
+      {error && <div className="text-center py-8 text-red-400">{error}</div>}
 
-      <div className="subtitle">DAOs hold protocol fees collected from trades. Each card shows the treasury balance for that token, along with basic stats.</div>
-      <div className="grid">
+      <div className="text-sm opacity-80 mt-2 mb-4 text-white/85">
+        DAOs hold protocol fees collected from trades. Each card shows the treasury balance for that token, along with basic stats.
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
         {visibleItems.map((t) => {
           const isOwned = ownedContracts.has(String(t.address).toLowerCase());
           return (
-            <div className={`card${isOwned ? ' owned' : ''}`} key={t.address}>
-              <div className="row title-row">
-                <div className="title-col">
-                  <div className="name">{t.symbol}</div>
-                  {isOwned && <div className="owned-badge">Owned</div>}
+            <div 
+              className={`border rounded-2xl p-4 bg-gradient-to-b from-gray-800/85 to-gray-900/70 text-white shadow-lg transition-all duration-150 hover:-translate-y-1 hover:shadow-2xl ${
+                isOwned ? 'border-purple-500/50 shadow-purple-500/25 relative' : 'border-black/20'
+              }`} 
+              key={t.address}
+            >
+              <div className="flex justify-between items-start gap-2 mb-2">
+                <div className="flex flex-col gap-1.5">
+                  <div className="font-black text-white text-lg tracking-wide">{t.symbol}</div>
+                  {isOwned && (
+                    <div className="text-xs px-2 py-1 rounded-full bg-purple-500/25 border border-purple-500/50 text-white w-fit">
+                      Owned
+                    </div>
+                  )}
                 </div>
-                <a className="cta" href={`/trendminer/dao/${encodeURIComponent(t.sale_address || '')}`}>Open DAO</a>
+                <a 
+                  className="px-4 py-2.5 rounded-xl text-white no-underline border-0 bg-gradient-to-r from-purple-600 to-purple-700 shadow-lg shadow-purple-600/35 transition-all duration-120 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-purple-600/45" 
+                  href={`/trendminer/dao/${encodeURIComponent(t.sale_address || '')}`}
+                >
+                  Open DAO
+                </a>
               </div>
-              <div className="mini-chart">
+              
+              <div className="mt-2 flex justify-end">
                 <TokenMiniChart address={t.sale_address || t.address} width={140} height={32} stroke="#ff6d15" />
               </div>
-              <div className="row stats">
+              
+              <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <div className="label">Treasury</div>
-                  <div className="value">{t.sale_address && treasuryMap[t.sale_address] != null ? `${treasuryMap[t.sale_address].toLocaleString()} AE` : '—'}</div>
+                  <div className="text-xs opacity-80 text-white/80">Treasury</div>
+                  <div className="font-bold text-white">
+                    {t.sale_address && treasuryMap[t.sale_address] != null 
+                      ? `${treasuryMap[t.sale_address].toLocaleString()} AE` 
+                      : '—'
+                    }
+                  </div>
                 </div>
                 <div>
-                  <div className="label">Holders</div>
-                  <div className="value">{t.holders_count ?? 0}</div>
+                  <div className="text-xs opacity-80 text-white/80">Holders</div>
+                  <div className="font-bold text-white">{t.holders_count ?? 0}</div>
                 </div>
                 <div>
-                  <div className="label">Created</div>
-                  <div className="value">{t.created_at ? new Date(t.created_at).toLocaleDateString() : '—'}</div>
+                  <div className="text-xs opacity-80 text-white/80">Created</div>
+                  <div className="font-bold text-white">
+                    {t.created_at ? new Date(t.created_at).toLocaleDateString() : '—'}
+                  </div>
                 </div>
                 <div>
-                  <div className="label">Market Cap</div>
-                  <div className="value">{t.market_cap != null ? `${(Number(t.market_cap) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 2 })} AE` : '—'}</div>
+                  <div className="text-xs opacity-80 text-white/80">Market Cap</div>
+                  <div className="font-bold text-white">
+                    {t.market_cap != null 
+                      ? `${(Number(t.market_cap) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 2 })} AE` 
+                      : '—'
+                    }
+                  </div>
                 </div>
                 <div>
-                  <div className="label">Trending</div>
-                  <div className="value">{(t as any).trending_score != null ? Math.round(Number((t as any).trending_score)).toLocaleString() : '—'}</div>
+                  <div className="text-xs opacity-80 text-white/80">Trending</div>
+                  <div className="font-bold text-white">
+                    {(t as any).trending_score != null 
+                      ? Math.round(Number((t as any).trending_score)).toLocaleString() 
+                      : '—'
+                    }
+                  </div>
                 </div>
               </div>
-              <div className="row addr">
-                <div className="label">Sale</div>
-                <div className="mono">{(t.sale_address || '').slice(0, 8)}…{(t.sale_address || '').slice(-6)}</div>
+              
+              <div className="flex justify-between items-center gap-2 mt-2">
+                <div className="text-xs opacity-80 text-white/80">Sale</div>
+                <div className="font-mono text-xs opacity-90 text-white/90">
+                  {(t.sale_address || '').slice(0, 8)}…{(t.sale_address || '').slice(-6)}
+                </div>
               </div>
-              <div className="row links">
-                <a className="secondary" href={`/trendminer/tokens/${encodeURIComponent(t.sale_address || t.address)}`}>View token</a>
-                <a className="secondary" href={`https://aescan.io/contracts/${encodeURIComponent(t.sale_address || t.address)}?type=call-transactions`} target="_blank" rel="noopener noreferrer">æScan ↗</a>
+              
+              <div className="flex justify-between items-center gap-2 mt-2">
+                <a 
+                  className="text-xs opacity-95 text-white no-underline px-3 py-2 rounded-xl border-0 bg-white/5 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all duration-150" 
+                  href={`/trendminer/tokens/${encodeURIComponent(t.sale_address || t.address)}`}
+                >
+                  View token
+                </a>
+                <a 
+                  className="text-xs opacity-95 text-white no-underline px-3 py-2 rounded-xl border-0 bg-white/5 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all duration-150" 
+                  href={`https://aescan.io/contracts/${encodeURIComponent(t.sale_address || t.address)}?type=call-transactions`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  æScan ↗
+                </a>
               </div>
             </div>
           );
         })}
-        {!loading && !items.length && <div className="empty">No DAOs found.</div>}
+        {!loading && !items.length && (
+          <div className="col-span-full text-center py-8 opacity-80 text-white/85">
+            No DAOs found.
+          </div>
+        )}
       </div>
-      <div className="pagination">
-        <button className="page-btn" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</button>
-        <span className="page-info">Page {page} / {totalPages}</span>
-        <button className="page-btn" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Next</button>
+      
+      <div className="flex items-center justify-center gap-3 mt-4">
+        <button 
+          className="px-3 py-2 rounded-lg border border-white/20 bg-gradient-to-b from-white/8 to-white/4 text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-all duration-150" 
+          disabled={page <= 1} 
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+        >
+          Prev
+        </button>
+        <span className="opacity-85 text-white/90">
+          Page {page} / {totalPages}
+        </span>
+        <button 
+          className="px-3 py-2 rounded-lg border border-white/20 bg-gradient-to-b from-white/8 to-white/4 text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-all duration-150" 
+          disabled={page >= totalPages} 
+          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

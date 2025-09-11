@@ -15,7 +15,6 @@ import PostContent from '../components/PostContent';
 import CommentForm from '../components/CommentForm';
 import PostCommentsList from '../components/PostCommentsList';
 import { PostDto } from '../../../api/generated';
-import './PostDetail.scss';
 
 export default function PostDetail() {
   const { postId } = useParams();
@@ -102,11 +101,11 @@ export default function PostDetail() {
 
   // Render helpers
   const renderLoadingState = () => (
-    <div className="loading-state">Loading…</div>
+    <div className="text-center py-8 text-light-font-color">Loading…</div>
   );
 
   const renderErrorState = () => (
-    <div className="error-state">
+    <div className="text-center py-8 text-light-font-color">
       Error loading post.
       <AeButton variant="ghost" size="sm" onClick={() => {
         refetchPost();
@@ -120,10 +119,10 @@ export default function PostDetail() {
     const { authorAddress, chainName } = getAuthorInfo(displayPost);
 
     return (
-      <header className="post-header">
-        <div className="author-section">
+      <header className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
           {authorAddress && (
-            <div className="author-display">
+            <div className="flex items-center gap-4">
               <PostAvatar authorAddress={authorAddress} chainName={chainName} size={40} overlaySize={22} />
               <UserBadge
                 address={authorAddress}
@@ -135,9 +134,9 @@ export default function PostDetail() {
             </div>
           )}
         </div>
-        <div className="post-actions">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {displayPost?.timestamp && (
-            <div className="timestamp">
+            <div className="text-light-font-color text-xs font-medium">
               {relativeTime(new Date(displayPost.timestamp))}
             </div>
           )}
@@ -148,8 +147,8 @@ export default function PostDetail() {
 
   return (
     <Shell left={<LeftRail />} right={<RightRail />}>
-      <div className="post-detail-container">
-        <div className="back-button-container">
+      <div className="max-w-[min(680px,100%)] mx-auto py-2 px-2 sm:px-3 md:px-4">
+        <div className="mb-4">
           <AeButton onClick={() => navigate(-1)} variant="ghost" size="sm">
             ← Back
           </AeButton>
@@ -159,14 +158,14 @@ export default function PostDetail() {
         {error && renderErrorState()}
 
         {post && (
-          <article className="post-detail">
+          <article className="grid gap-4">
             {renderPostHeader(post)}
 
             <PostContent post={post} />
 
             {/* Comment form */}
             {postId && (
-              <div className="comment-form-section">
+              <div className="mt-8 pt-6 border-t border-white/10">
                 <CommentForm
                   postId={postId}
                   onCommentAdded={handleCommentAdded}

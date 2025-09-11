@@ -41,109 +41,40 @@ export default function DexSettings({ children, title = 'DEX Settings' }: DexSet
       </Dialog.Trigger>
 
       <Dialog.Portal>
-        <Dialog.Overlay 
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.8)',
-            backdropFilter: 'blur(8px)',
-            zIndex: 1000
-          }}
-        />
-        <Dialog.Content
-          style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: 'rgba(20, 20, 28, 0.98)',
-            color: 'var(--standard-font-color)',
-            border: '1px solid var(--glass-border)',
-            borderRadius: 20,
-            padding: 24,
-            width: 400,
-            maxWidth: '90vw',
-            backdropFilter: 'blur(20px)',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)',
-            zIndex: 1001,
-            outline: 'none'
-          }}
-        >
+        <Dialog.Overlay className="fixed inset-0 bg-black/80 backdrop-blur-lg z-[1000]" />
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(20,20,28,0.98)] text-standard-font-color border border-glass-border rounded-2xl p-6 w-[400px] max-w-[90vw] backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-[1001] outline-none">
           {/* Header */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            marginBottom: 24
-          }}>
-            <Dialog.Title style={{ 
-              fontWeight: 700, 
-              fontSize: 18,
-              margin: 0,
-              color: 'var(--standard-font-color)'
-            }}>
+          <div className="flex justify-between items-center mb-6">
+            <Dialog.Title className="font-bold text-lg m-0 text-standard-font-color">
               {title}
             </Dialog.Title>
             <Dialog.Close asChild>
-              <button 
-                style={{ 
-                  padding: '6px 10px', 
-                  borderRadius: 8,
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid var(--glass-border)',
-                  color: 'var(--standard-font-color)',
-                  cursor: 'pointer',
-                  fontSize: 14
-                }}
-              >
+              <button className="px-2.5 py-1.5 rounded-lg bg-white/10 border border-glass-border text-standard-font-color cursor-pointer text-sm">
                 ✕
               </button>
             </Dialog.Close>
           </div>
 
           {/* Slippage Setting */}
-          <div style={{ marginBottom: 24 }}>
-            <label style={{
-              display: 'block',
-              fontSize: 14,
-              fontWeight: 600,
-              color: 'var(--standard-font-color)',
-              marginBottom: 8
-            }}>
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-standard-font-color mb-2">
               Slippage Tolerance
             </label>
-            <div style={{
-              display: 'flex',
-              gap: 8,
-              marginBottom: 8
-            }}>
+            <div className="flex gap-2 mb-2">
               {[0.1, 0.5, 1.0].map(preset => (
                 <button
                   key={preset}
                   onClick={() => setTempSlippage(preset.toString())}
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: 8,
-                    border: tempSlippage === preset.toString() ? 
-                      '1px solid var(--accent-color)' : 
-                      '1px solid rgba(255, 255, 255, 0.1)',
-                    background: tempSlippage === preset.toString() ? 
-                      'rgba(255, 107, 107, 0.2)' : 
-                      'rgba(255, 255, 255, 0.05)',
-                    color: 'var(--standard-font-color)',
-                    cursor: 'pointer',
-                    fontSize: 12,
-                    fontWeight: 500,
-                    transition: 'all 0.2s ease'
-                  }}
+                  className={`px-3 py-2 rounded-lg border cursor-pointer text-xs font-medium transition-all duration-200 ${
+                    tempSlippage === preset.toString()
+                      ? 'border-accent-color bg-red-500/20 text-standard-font-color'
+                      : 'border-white/10 bg-white/5 text-standard-font-color'
+                  }`}
                 >
                   {preset}%
                 </button>
               ))}
-              <div style={{
-                flex: 1,
-                position: 'relative'
-              }}>
+              <div className="flex-1 relative">
                 <input
                   type="number"
                   value={tempSlippage}
@@ -152,82 +83,38 @@ export default function DexSettings({ children, title = 'DEX Settings' }: DexSet
                   min="0.1"
                   max="50"
                   step="0.1"
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: 8,
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    color: 'var(--standard-font-color)',
-                    fontSize: 12,
-                    outline: 'none'
-                  }}
+                  className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-standard-font-color text-xs outline-none"
                 />
-                <span style={{
-                  position: 'absolute',
-                  right: 12,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  fontSize: 12,
-                  color: 'var(--light-font-color)',
-                  pointerEvents: 'none'
-                }}>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-light-font-color pointer-events-none">
                   %
                 </span>
               </div>
             </div>
-            <div style={{
-              fontSize: 11,
-              color: 'var(--light-font-color)',
-              opacity: 0.8
-            }}>
+            <div className="text-[11px] text-light-font-color opacity-80">
               Your transaction will revert if the price changes unfavorably by more than this percentage.
             </div>
           </div>
 
           {/* Transaction Deadline */}
-          <div style={{ marginBottom: 32 }}>
-            <label style={{
-              display: 'block',
-              fontSize: 14,
-              fontWeight: 600,
-              color: 'var(--standard-font-color)',
-              marginBottom: 8
-            }}>
+          <div className="mb-8">
+            <label className="block text-sm font-semibold text-standard-font-color mb-2">
               Transaction Deadline
             </label>
-            <div style={{
-              display: 'flex',
-              gap: 8,
-              marginBottom: 8
-            }}>
+            <div className="flex gap-2 mb-2">
               {[10, 20, 30].map(preset => (
                 <button
                   key={preset}
                   onClick={() => setTempDeadline(preset.toString())}
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: 8,
-                    border: tempDeadline === preset.toString() ? 
-                      '1px solid var(--accent-color)' : 
-                      '1px solid rgba(255, 255, 255, 0.1)',
-                    background: tempDeadline === preset.toString() ? 
-                      'rgba(255, 107, 107, 0.2)' : 
-                      'rgba(255, 255, 255, 0.05)',
-                    color: 'var(--standard-font-color)',
-                    cursor: 'pointer',
-                    fontSize: 12,
-                    fontWeight: 500,
-                    transition: 'all 0.2s ease'
-                  }}
+                  className={`px-3 py-2 rounded-lg border cursor-pointer text-xs font-medium transition-all duration-200 ${
+                    tempDeadline === preset.toString()
+                      ? 'border-accent-color bg-red-500/20 text-standard-font-color'
+                      : 'border-white/10 bg-white/5 text-standard-font-color'
+                  }`}
                 >
                   {preset}m
                 </button>
               ))}
-              <div style={{
-                flex: 1,
-                position: 'relative'
-              }}>
+              <div className="flex-1 relative">
                 <input
                   type="number"
                   value={tempDeadline}
@@ -236,72 +123,29 @@ export default function DexSettings({ children, title = 'DEX Settings' }: DexSet
                   min="1"
                   max="180"
                   step="1"
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: 8,
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    color: 'var(--standard-font-color)',
-                    fontSize: 12,
-                    outline: 'none'
-                  }}
+                  className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-standard-font-color text-xs outline-none"
                 />
-                <span style={{
-                  position: 'absolute',
-                  right: 12,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  fontSize: 12,
-                  color: 'var(--light-font-color)',
-                  pointerEvents: 'none'
-                }}>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-light-font-color pointer-events-none">
                   min
                 </span>
               </div>
             </div>
-            <div style={{
-              fontSize: 11,
-              color: 'var(--light-font-color)',
-              opacity: 0.8
-            }}>
+            <div className="text-[11px] text-light-font-color opacity-80">
               Your transaction will be cancelled if it's pending for more than this long.
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div className="flex gap-3">
             <button
               onClick={handleCancel}
-              style={{
-                flex: 1,
-                padding: '12px 20px',
-                borderRadius: 12,
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                background: 'rgba(255, 255, 255, 0.05)',
-                color: 'var(--standard-font-color)',
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
+              className="flex-1 px-5 py-3 rounded-xl border border-white/10 bg-white/5 text-standard-font-color text-sm font-semibold cursor-pointer transition-all duration-300"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              style={{
-                flex: 1,
-                padding: '12px 20px',
-                borderRadius: 12,
-                border: 'none',
-                background: 'var(--button-gradient)',
-                color: 'white',
-                fontSize: 14,
-                fontWeight: 700,
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
+              className="flex-1 px-5 py-3 rounded-xl border-none bg-button-gradient text-white text-sm font-bold cursor-pointer transition-all duration-300"
             >
               Save
             </button>

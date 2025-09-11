@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Identicon from './Identicon';
-
+import { Badge } from './ui/badge';
+import { AeCard, AeCardContent } from './ui/ae-card';
+import { cn } from '@/lib/utils';
 import { formatAddress } from '../utils/address';
 export default function UserBadge(
   { address, showAvatar = true, linkTo = 'profile', shortAddress = false, chainName }: {
@@ -41,81 +43,68 @@ export default function UserBadge(
   const hrefPath = linkTo === 'account' ? `/trendminer/accounts/${address}` : `/users/${address}`;
 
   return (
-    <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+    <span className="relative inline-flex items-center">
       <a
         ref={ref}
         href={hrefPath}
-        className="author"
+        className="author inline-flex items-center gap-2 text-inherit no-underline min-w-0 hover:text-foreground transition-colors"
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(hrefPath); }}
-        style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'inherit', textDecoration: 'none', minWidth: 0 }}
       >
-        {showAvatar && (<Identicon address={address} size={24} name={name} />)}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0 }}>
-          <span className="chain-name" style={{ fontSize: 14, fontWeight: 800 }}>{name}</span>
+        {showAvatar && (
+          <div className="flex-shrink-0">
+            <Identicon address={address} size={24} name={name} />
+          </div>
+        )}
+        <div className="flex flex-col items-start min-w-0">
+          <span className="chain-name text-sm font-bold transition-colors hover:text-foreground">
+            {name}
+          </span>
           <span
-            className="address"
-            style={{
-              fontSize: 8,
-              color: 'rgba(195, 195, 199, 0.4)',
-              fontFamily: 'monospace',
-              letterSpacing: '0.5px',
-              textDecoration: 'underline',
-              textDecorationColor: 'rgba(195, 195, 199, 0.2)',
-              textDecorationThickness: '1px',
-              textUnderlineOffset: '2px',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              maxWidth: 200,
-              minWidth: 0,
-              flexShrink: 1
-            }}
-            title={address} // Show full address on hover
+            className="address text-xs text-muted-foreground/40 font-mono tracking-wide underline decoration-muted-foreground/20 decoration-1 underline-offset-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px] min-w-0 flex-shrink"
+            title={address}
           >
             {formatAddress(address)}
           </span>
         </div>
       </a>
+      
       {visible && (
-        <div
+        <AeCard
           ref={cardRef}
+          variant="glass"
+          className="absolute top-[calc(100%+6px)] left-0 z-50 min-w-[280px] max-w-[420px] shadow-card"
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 6px)',
-            left: 0,
-            zIndex: 50,
-            background: '#1c1c24',
-            border: '1px solid #2f2f3b',
-            borderRadius: 8,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-            padding: 12,
-            minWidth: 280,
-            maxWidth: 420,
-          }}
         >
-          <div style={{ display: 'flex', gap: 12 }}>
-            <Identicon address={address} size={56} name={name} />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>{profile?.preferredChainName || name}</div>
-              <div style={{ fontSize: 12, color: '#c3c3c7' }}>{address}</div>
-              {profile?.location && (
-                <div style={{ fontSize: 12, color: '#c3c3c7', marginTop: 4 }}>{profile.location}</div>
-              )}
+          <AeCardContent className="p-3">
+            <div className="flex gap-3 mb-3">
+              <div className="flex-shrink-0">
+                <Identicon address={address} size={56} name={name} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="font-bold text-sm text-foreground mb-1">
+                  {profile?.preferredChainName || name}
+                </div>
+                <div className="text-xs text-muted-foreground font-mono">
+                  {address}
+                </div>
+                {profile?.location && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {profile.location}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-          {profile?.biography && (
-            <div style={{ marginTop: 8, fontSize: 13, color: '#c3c3c7', whiteSpace: 'pre-wrap' }}>{profile.biography}</div>
-          )}
-        </div>
+            {profile?.biography && (
+              <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                {profile.biography}
+              </div>
+            )}
+          </AeCardContent>
+        </AeCard>
       )}
-      <style>{`
-        .chain-name { transition: color .2s ease; }
-        a:hover .chain-name { color: #fff; }
-      `}</style>
     </span>
   );
 }

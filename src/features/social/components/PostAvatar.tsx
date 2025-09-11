@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import Identicon from '../../../components/Identicon';
 import AddressAvatar from '../../../components/AddressAvatar';
+import { cn } from '@/lib/utils';
 
 interface PostAvatarProps {
   authorAddress: string;
@@ -16,21 +17,23 @@ const PostAvatar = memo(({
   size = 36,
   overlaySize = 18
 }: PostAvatarProps) => (
-  <div className="avatar-container">
-    <div className="avatar-stack">
-      {chainName && (
-        <div className="chain-avatar">
-          <Identicon address={authorAddress} size={size} name={chainName} />
+  <div className="relative flex-shrink-0">
+    <div className="relative">
+      {chainName ? (
+        <div className="relative">
+          <div className="rounded-xl overflow-hidden shadow-md">
+            <Identicon address={authorAddress} size={size} name={chainName} />
+          </div>
+          <div 
+            className="absolute -bottom-1 -right-1 rounded border-2 border-background shadow-sm overflow-hidden"
+            style={{ width: `${overlaySize}px`, height: `${overlaySize}px` }}
+          >
+            <AddressAvatar address={authorAddress} size="100%" borderRadius="2px" />
+          </div>
         </div>
-      )}
-      {(!chainName) && (
-        <div className="address-avatar">
+      ) : (
+        <div className="rounded-xl overflow-hidden shadow-md">
           <AddressAvatar address={authorAddress} size={size} borderRadius="10px" />
-        </div>
-      )}
-      {chainName && (
-        <div className="address-avatar-overlay">
-          <AddressAvatar address={authorAddress} size='100%' borderRadius="2px" />
         </div>
       )}
     </div>

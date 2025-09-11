@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { createChart, IChartApi, ISeriesApi, LineData, HistogramData, ColorType, LineSeries, HistogramSeries } from 'lightweight-charts';
 import AeButton from '../../../../components/AeButton';
 import { getGraph } from '../../../../libs/dexBackend';
+import { AeCard } from '../../../../components/ui/ae-card';
 
 interface ChartType {
   type: string;
@@ -271,7 +272,7 @@ export default function TokenPricePerformance({
   const showNoData = !chartData.data.length || chartData.data.every(d => d === 0);
 
   return (
-    <div className={`token-price-performance ${className}`}>
+    <div className={`${className}`}>
       {/* Chart Type Selector */}
       {availableGraphTypes.length > 1 && (
         <div className="flex gap-2 mb-3">
@@ -280,8 +281,8 @@ export default function TokenPricePerformance({
             {availableGraphTypes.map((chartType) => (
               <AeButton
                 key={chartType.type}
-                variant={chartType.type === selectedChart.type ? 'accent' : 'ghost'}
-                size="sm"
+                variant={chartType.type === selectedChart.type ? 'primary' : 'ghost'}
+                size="small"
                 onClick={() => handleChartTypeChange(chartType)}
               >
                 {chartType.text}
@@ -290,7 +291,7 @@ export default function TokenPricePerformance({
           </div>
 
           {/* Mobile dropdown */}
-          <div className="md:hidden border border-gray-600 rounded-xl p-2">
+          <div className="md:hidden border border-border rounded-xl p-2">
             <label htmlFor="chart-select" className="sr-only">
               Select Chart Type
             </label>
@@ -301,13 +302,13 @@ export default function TokenPricePerformance({
                 const chartType = availableGraphTypes.find(c => c.type === e.target.value);
                 if (chartType) handleChartTypeChange(chartType);
               }}
-              className="block bg-transparent text-white outline-0"
+              className="block bg-transparent text-foreground outline-0"
             >
               {availableGraphTypes.map((chartType) => (
                 <option 
                   key={chartType.type} 
                   value={chartType.type} 
-                  className="bg-gray-800"
+                  className="bg-background"
                 >
                   {chartType.text}
                 </option>
@@ -318,7 +319,7 @@ export default function TokenPricePerformance({
       )}
 
       {/* Chart Container */}
-      <div className="relative bg-gray-900/50 rounded-xl p-4" style={{ height: '400px' }}>
+      <AeCard className="relative p-4" style={{ height: '400px' }}>
         <div
           ref={chartContainerRef}
           className="w-full h-full"
@@ -326,26 +327,26 @@ export default function TokenPricePerformance({
         
         {/* Loading Overlay */}
         {loading && (
-          <div className="absolute inset-0 flex justify-center items-center text-3xl bg-black/20 rounded-xl">
-            <div className="text-white">Loading...</div>
+          <div className="absolute inset-0 flex justify-center items-center text-3xl bg-background/20 rounded-xl">
+            <div className="text-foreground">Loading...</div>
           </div>
         )}
 
         {/* No Data Overlay */}
         {showNoData && !loading && (
-          <div className="absolute inset-0 flex justify-center items-center text-3xl text-gray-400">
+          <div className="absolute inset-0 flex justify-center items-center text-3xl text-muted-foreground">
             No Data
           </div>
         )}
-      </div>
+      </AeCard>
 
       {/* Time Frame Selector */}
       <div className="flex gap-2 mt-3 justify-center">
         {Object.keys(TIME_FRAMES).map((timeFrame) => (
           <AeButton
             key={timeFrame}
-            variant={timeFrame === selectedTimeFrame ? 'accent' : 'ghost'}
-            size="xs"
+            variant={timeFrame === selectedTimeFrame ? 'primary' : 'ghost'}
+            size="small"
             onClick={() => handleTimeFrameChange(timeFrame as TimeFrame)}
             className="w-14"
           >

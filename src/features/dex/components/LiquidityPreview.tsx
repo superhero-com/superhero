@@ -29,97 +29,52 @@ export default function LiquidityPreview({
   if (!tokenA || !tokenB) return null;
 
   return (
-    <div style={{
-      background: hasError ? 'rgba(255, 107, 107, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-      border: hasError ? '1px solid rgba(255, 107, 107, 0.3)' : '1px solid var(--glass-border)',
-      borderRadius: 16,
-      padding: 16,
-      marginBottom: 20,
-      backdropFilter: 'blur(10px)'
-    }}>
-      <div style={{
-        fontSize: 14,
-        fontWeight: 600,
-        color: 'var(--standard-font-color)',
-        marginBottom: 12,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8
-      }}>
+    <div className={`p-4 mb-5 backdrop-blur-sm rounded-2xl ${
+      hasError 
+        ? 'bg-red-500/10 border border-red-500/30' 
+        : 'bg-white/[0.05] border border-glass-border'
+    }`}>
+      <div className="text-sm font-semibold text-standard-font-color mb-3 flex items-center gap-2">
         <span>{hasError ? '⚠️ Ratio Warning' : 'Pool Preview'}</span>
         {!pairExists && !hasError && (
-          <span style={{
-            fontSize: 11,
-            padding: '2px 8px',
-            borderRadius: 6,
-            background: 'var(--accent-color)',
-            color: 'white',
-            fontWeight: 600
-          }}>
+          <span className="text-xs px-2 py-0.5 rounded-md bg-accent-color text-white font-semibold">
             NEW POOL
           </span>
         )}
       </div>
 
-      <div style={{ display: 'grid', gap: 8 }}>
+      <div className="grid gap-2">
         {preview.ratioAinB && preview.ratioAinB !== '-' && (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            fontSize: 13,
-            color: 'var(--light-font-color)'
-          }}>
+          <div className="flex justify-between items-center text-xs text-light-font-color">
             <span>Rate</span>
-            <span style={{ fontWeight: 600, color: 'var(--standard-font-color)' }}>
+            <span className="font-semibold text-standard-font-color">
               1 {tokenA.symbol} = {preview.ratioAinB} {tokenB.symbol}
             </span>
           </div>
         )}
 
         {preview.ratioBinA && preview.ratioBinA !== '-' && (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            fontSize: 13,
-            color: 'var(--light-font-color)'
-          }}>
+          <div className="flex justify-between items-center text-xs text-light-font-color">
             <span>Rate</span>
-            <span style={{ fontWeight: 600, color: 'var(--standard-font-color)' }}>
+            <span className="font-semibold text-standard-font-color">
               1 {tokenB.symbol} = {preview.ratioBinA} {tokenA.symbol}
             </span>
           </div>
         )}
 
         {preview.sharePct && Number(preview.sharePct) > 0 && (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            fontSize: 13,
-            color: 'var(--light-font-color)'
-          }}>
+          <div className="flex justify-between items-center text-xs text-light-font-color">
             <span>Pool Share</span>
-            <span style={{ 
-              fontWeight: 600, 
-              color: 'var(--accent-color)'
-            }}>
+            <span className="font-semibold text-accent-color">
               {Number(preview.sharePct).toFixed(6)}%
             </span>
           </div>
         )}
 
         {preview.lpMintEstimate && (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            fontSize: 13,
-            color: 'var(--light-font-color)'
-          }}>
+          <div className="flex justify-between items-center text-xs text-light-font-color">
             <span>LP Tokens</span>
-            <span style={{ fontWeight: 600, color: 'var(--standard-font-color)' }}>
+            <span className="font-semibold text-standard-font-color">
               {Number(preview.lpMintEstimate).toFixed(8)}
             </span>
           </div>
@@ -128,45 +83,16 @@ export default function LiquidityPreview({
 
       {/* Suggested Amounts */}
       {(preview.suggestedAmountA || preview.suggestedAmountB) && (
-        <div style={{
-          marginTop: 16,
-          padding: 12,
-          background: 'rgba(78, 205, 196, 0.1)',
-          border: '1px solid rgba(78, 205, 196, 0.3)',
-          borderRadius: 12
-        }}>
-          <div style={{
-            fontSize: 13,
-            fontWeight: 600,
-            color: 'var(--accent-color)',
-            marginBottom: 8
-          }}>
+        <div className="mt-4 p-3 bg-teal-500/10 border border-teal-500/30 rounded-xl">
+          <div className="text-xs font-semibold text-accent-color mb-2">
             💡 Suggested Optimal Amounts
           </div>
           
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div className="flex gap-2 flex-wrap">
             {preview.suggestedAmountB && onSuggestedAmountB && (
               <button
                 onClick={() => onSuggestedAmountB(preview.suggestedAmountB!)}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: 8,
-                  border: '1px solid var(--accent-color)',
-                  background: 'rgba(78, 205, 196, 0.2)',
-                  color: 'var(--accent-color)',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = 'var(--accent-color)';
-                  e.currentTarget.style.color = 'white';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'rgba(78, 205, 196, 0.2)';
-                  e.currentTarget.style.color = 'var(--accent-color)';
-                }}
+                className="px-3 py-1.5 rounded-lg border border-accent-color bg-teal-500/20 text-accent-color text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-accent-color hover:text-white"
               >
                 Use {Number(preview.suggestedAmountB).toFixed(6)} {tokenB.symbol}
               </button>
@@ -175,25 +101,7 @@ export default function LiquidityPreview({
             {preview.suggestedAmountA && onSuggestedAmountA && (
               <button
                 onClick={() => onSuggestedAmountA(preview.suggestedAmountA!)}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: 8,
-                  border: '1px solid var(--accent-color)',
-                  background: 'rgba(78, 205, 196, 0.2)',
-                  color: 'var(--accent-color)',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = 'var(--accent-color)';
-                  e.currentTarget.style.color = 'white';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'rgba(78, 205, 196, 0.2)';
-                  e.currentTarget.style.color = 'var(--accent-color)';
-                }}
+                className="px-3 py-1.5 rounded-lg border border-accent-color bg-teal-500/20 text-accent-color text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-accent-color hover:text-white"
               >
                 Use {Number(preview.suggestedAmountA).toFixed(6)} {tokenA.symbol}
               </button>

@@ -1,13 +1,14 @@
 import React from 'react';
 
 import { useDex } from '../../hooks';
+
 export default function DexSettings() {
-    const slippage = useDex().slippagePct;
-  const deadline = useDex().deadlineMins;
+  const { slippagePct: slippage, deadlineMins: deadline, setSlippage, setDeadline } = useDex();
+  
   return (
-    <div className="settings" style={{ display: 'grid', gap: 8, border: '1px solid #3a3a4a', padding: 12, borderRadius: 8, background: '#1a1a23' }}>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <label htmlFor="dex-slippage">Slippage %</label>
+    <div className="grid gap-2 border border-white/20 p-3 rounded-lg bg-[#1a1a23]">
+      <div className="flex gap-2 items-center">
+        <label htmlFor="dex-slippage" className="text-sm text-white">Slippage %</label>
         <input
           id="dex-slippage"
           type="number"
@@ -16,11 +17,11 @@ export default function DexSettings() {
           step={0.1}
           value={slippage}
           onChange={(e) => setSlippage(Math.min(50, Math.max(0, Number(e.target.value || 0))))}
-          style={{ width: 100, padding: '6px 8px', borderRadius: 8, background: '#111', color: 'white', border: '1px solid #3a3a4a' }}
+          className="w-[100px] py-1.5 px-2 rounded-lg bg-[#111] text-white border border-white/20 text-sm focus:outline-none focus:border-[#4ecdc4]"
         />
       </div>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <label htmlFor="dex-deadline">Deadline (min)</label>
+      <div className="flex gap-2 items-center">
+        <label htmlFor="dex-deadline" className="text-sm text-white">Deadline (min)</label>
         <input
           id="dex-deadline"
           type="number"
@@ -29,7 +30,7 @@ export default function DexSettings() {
           step={1}
           value={deadline}
           onChange={(e) => setDeadline(Math.min(60, Math.max(1, Number(e.target.value || 10))))}
-          style={{ width: 100, padding: '6px 8px', borderRadius: 8, background: '#111', color: 'white', border: '1px solid #3a3a4a' }}
+          className="w-[100px] py-1.5 px-2 rounded-lg bg-[#111] text-white border border-white/20 text-sm focus:outline-none focus:border-[#4ecdc4]"
         />
       </div>
     </div>

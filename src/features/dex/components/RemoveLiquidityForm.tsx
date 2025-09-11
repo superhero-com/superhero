@@ -44,43 +44,14 @@ export default function RemoveLiquidityForm() {
 
   if (!selectedPosition) {
     return (
-      <div className="genz-card" style={{
-        maxWidth: 480,
-        margin: '0 auto',
-        background: 'var(--glass-bg)',
-        border: '1px solid var(--glass-border)',
-        backdropFilter: 'blur(20px)',
-        borderRadius: 24,
-        padding: 32,
-        boxShadow: 'var(--glass-shadow)',
-        textAlign: 'center'
-      }}>
-        <div style={{
-          width: 64,
-          height: 64,
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(255, 107, 107, 0.2))',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 16px auto',
-          fontSize: 24
-        }}>
+      <div className="max-w-[480px] mx-auto bg-glass-bg border border-glass-border backdrop-blur-xl rounded-3xl p-8 shadow-glass text-center">
+        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-500/10 to-red-500/20 flex items-center justify-center mx-auto mb-4 text-2xl">
           💧
         </div>
-        <h3 style={{
-          fontSize: 18,
-          fontWeight: 600,
-          color: 'var(--standard-font-color)',
-          margin: '0 0 8px 0'
-        }}>
+        <h3 className="text-lg font-semibold text-standard-font-color mb-2">
           Select a Position
         </h3>
-        <p style={{
-          fontSize: 14,
-          color: 'var(--light-font-color)',
-          margin: 0
-        }}>
+        <p className="text-sm text-light-font-color">
           Choose a liquidity position from the list to remove liquidity
         </p>
       </div>
@@ -89,17 +60,7 @@ export default function RemoveLiquidityForm() {
 
   if (!address) {
     return (
-      <div className="genz-card" style={{
-        maxWidth: 480,
-        margin: '0 auto',
-        background: 'var(--glass-bg)',
-        border: '1px solid var(--glass-border)',
-        backdropFilter: 'blur(20px)',
-        borderRadius: 24,
-        padding: 32,
-        boxShadow: 'var(--glass-shadow)',
-        textAlign: 'center'
-      }}>
+      <div className="max-w-[480px] mx-auto bg-glass-bg border border-glass-border backdrop-blur-xl rounded-3xl p-8 shadow-glass text-center">
         <ConnectWalletButton />
       </div>
     );
@@ -156,134 +117,59 @@ export default function RemoveLiquidityForm() {
 
   if (showConfirm) {
     return (
-      <div className="genz-card" style={{
-        maxWidth: 480,
-        margin: '0 auto',
-        background: 'var(--glass-bg)',
-        border: '1px solid var(--glass-border)',
-        backdropFilter: 'blur(20px)',
-        borderRadius: 24,
-        padding: 24,
-        boxShadow: 'var(--glass-shadow)'
-      }}>
+      <div className="max-w-[480px] mx-auto bg-glass-bg border border-glass-border backdrop-blur-xl rounded-3xl p-6 shadow-glass">
         {/* Header */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 24
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(255, 107, 107, 0.2))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 18
-            }}>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500/10 to-red-500/20 flex items-center justify-center text-lg">
               💧
             </div>
             <div>
-              <h2 style={{
-                fontSize: 20,
-                fontWeight: 700,
-                color: 'var(--standard-font-color)',
-                margin: 0,
-                background: 'linear-gradient(135deg, #ff6b6b, #feca57)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
-              }}>
+              <h2 className="text-xl font-bold text-standard-font-color m-0 bg-gradient-to-r from-red-400 to-yellow-400 bg-clip-text text-transparent">
                 Confirm Removal
               </h2>
-              <p style={{
-                fontSize: 12,
-                color: 'var(--light-font-color)',
-                margin: '2px 0 0 0'
-              }}>
+              <p className="text-xs text-light-font-color mt-0.5">
                 Review your transaction
               </p>
             </div>
           </div>
           <button
             onClick={() => setShowConfirm(false)}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              border: '1px solid var(--glass-border)',
-              background: 'var(--glass-bg)',
-              color: 'var(--light-font-color)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 14,
-              transition: 'all 0.2s ease'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = 'var(--accent-color)';
-              e.currentTarget.style.color = 'white';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = 'var(--glass-bg)';
-              e.currentTarget.style.color = 'var(--light-font-color)';
-            }}
+            className="w-8 h-8 rounded-full border border-glass-border bg-glass-bg text-light-font-color cursor-pointer flex items-center justify-center text-sm transition-all duration-200 hover:bg-accent-color hover:text-white"
           >
             ✕
           </button>
         </div>
 
         {/* Transaction Details */}
-        <div style={{
-          padding: 20,
-          background: 'rgba(255, 255, 255, 0.03)',
-          borderRadius: 16,
-          border: '1px solid var(--glass-border)',
-          marginBottom: 24
-        }}>
-          <div style={{ marginBottom: 16 }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: 8
-            }}>
-              <span style={{ fontSize: 14, color: 'var(--light-font-color)' }}>
+        <div className="p-5 bg-white/[0.03] rounded-2xl border border-glass-border mb-6">
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-light-font-color">
                 Removing from Pool
               </span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="flex items-center gap-2">
               <AddressChip address={selectedPosition.token0} hideAvatar />
-              <span style={{ color: 'var(--light-font-color)', fontSize: 12 }}>+</span>
+              <span className="text-light-font-color text-xs">+</span>
               <AddressChip address={selectedPosition.token1} hideAvatar />
             </div>
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 16,
-            padding: 16,
-            background: 'rgba(255, 255, 255, 0.02)',
-            borderRadius: 12,
-            border: '1px solid rgba(255, 255, 255, 0.05)'
-          }}>
+          <div className="grid grid-cols-2 gap-4 p-4 bg-white/[0.02] rounded-xl border border-white/[0.05]">
             <div>
-              <div style={{ fontSize: 12, color: 'var(--light-font-color)', marginBottom: 4 }}>
+              <div className="text-xs text-light-font-color mb-1">
                 LP Tokens to Remove
               </div>
-              <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--standard-font-color)' }}>
+              <div className="text-base font-semibold text-standard-font-color">
                 {removeAmount.prettify()}
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 12, color: 'var(--light-font-color)', marginBottom: 4 }}>
+              <div className="text-xs text-light-font-color mb-1">
                 Percentage
               </div>
-              <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--accent-color)' }}>
+              <div className="text-base font-semibold text-accent-color">
                 {useCustomAmount 
                   ? `${((Number(customAmount) / Number(lpAmount.toString())) * 100).toFixed(1)}%`
                   : `${percentage}%`
@@ -293,18 +179,11 @@ export default function RemoveLiquidityForm() {
           </div>
 
           {estimatedValueUsd && (
-            <div style={{
-              marginTop: 12,
-              padding: 12,
-              background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05))',
-              borderRadius: 8,
-              border: '1px solid rgba(76, 175, 80, 0.2)',
-              textAlign: 'center'
-            }}>
-              <div style={{ fontSize: 12, color: 'var(--light-font-color)', marginBottom: 2 }}>
+            <div className="mt-3 p-3 bg-gradient-to-r from-green-500/10 to-green-500/5 rounded-lg border border-green-500/20 text-center">
+              <div className="text-xs text-light-font-color mb-0.5">
                 Estimated Value
               </div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--success-color)' }}>
+              <div className="text-lg font-bold text-success-color">
                 ${estimatedValueUsd.prettify()}
               </div>
             </div>
@@ -312,66 +191,21 @@ export default function RemoveLiquidityForm() {
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div className="flex gap-3">
           <button
             onClick={() => setShowConfirm(false)}
-            style={{
-              flex: 1,
-              padding: '16px 24px',
-              borderRadius: 16,
-              border: '1px solid var(--glass-border)',
-              background: 'var(--glass-bg)',
-              color: 'var(--standard-font-color)',
-              cursor: 'pointer',
-              fontSize: 16,
-              fontWeight: 600,
-              transition: 'all 0.3s ease',
-              backdropFilter: 'blur(10px)'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = 'var(--glass-bg)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
+            className="flex-1 px-6 py-4 rounded-2xl border border-glass-border bg-glass-bg text-standard-font-color cursor-pointer text-base font-semibold transition-all duration-300 backdrop-blur-sm hover:bg-white/10 hover:-translate-y-0.5"
           >
             Cancel
           </button>
           <button
             onClick={handleRemove}
             disabled={loading}
-            style={{
-              flex: 2,
-              padding: '16px 24px',
-              borderRadius: 16,
-              border: 'none',
-              background: loading 
-                ? 'var(--glass-bg)' 
-                : 'linear-gradient(135deg, #ff6b6b, #feca57)',
-              color: 'white',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: 16,
-              fontWeight: 700,
-              letterSpacing: '0.5px',
-              textTransform: 'uppercase',
-              boxShadow: loading ? 'none' : '0 8px 32px rgba(255, 107, 107, 0.3)',
-              transition: 'all 0.3s ease',
-              opacity: loading ? 0.7 : 1
-            }}
-            onMouseOver={(e) => {
-              if (!loading) {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 12px 40px rgba(255, 107, 107, 0.4)';
-              }
-            }}
-            onMouseOut={(e) => {
-              if (!loading) {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 8px 32px rgba(255, 107, 107, 0.3)';
-              }
-            }}
+            className={`flex-[2] px-6 py-4 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ${
+              loading 
+                ? 'bg-glass-bg cursor-not-allowed opacity-70' 
+                : 'bg-gradient-to-r from-red-400 to-yellow-400 shadow-[0_8px_32px_rgba(255,107,107,0.3)] hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(255,107,107,0.4)]'
+            }`}
           >
             {loading ? '⏳ Removing...' : '🔥 Remove Liquidity'}
           </button>
@@ -381,130 +215,58 @@ export default function RemoveLiquidityForm() {
   }
 
   return (
-    <div className="genz-card" style={{
-      maxWidth: 480,
-      margin: '0 auto',
-      background: 'var(--glass-bg)',
-      border: '1px solid var(--glass-border)',
-      backdropFilter: 'blur(20px)',
-      borderRadius: 24,
-      padding: 24,
-      boxShadow: 'var(--glass-shadow)'
-    }}>
+    <div className="max-w-[480px] mx-auto bg-glass-bg border border-glass-border backdrop-blur-xl rounded-3xl p-6 shadow-glass">
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 24
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{
-            width: 40,
-            height: 40,
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(255, 107, 107, 0.2))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 18
-          }}>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500/10 to-red-500/20 flex items-center justify-center text-lg">
             💧
           </div>
           <div>
-            <h2 style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: 'var(--standard-font-color)',
-              margin: 0,
-              background: 'linear-gradient(135deg, #ff6b6b, #feca57)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}>
+            <h2 className="text-xl font-bold text-standard-font-color m-0 bg-gradient-to-r from-red-400 to-yellow-400 bg-clip-text text-transparent">
               Remove Liquidity
             </h2>
-            <p style={{
-              fontSize: 12,
-              color: 'var(--light-font-color)',
-              margin: '2px 0 0 0'
-            }}>
+            <p className="text-xs text-light-font-color mt-0.5">
               Remove tokens from pool
             </p>
           </div>
         </div>
         <button
           onClick={clearSelection}
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: '50%',
-            border: '1px solid var(--glass-border)',
-            background: 'var(--glass-bg)',
-            color: 'var(--light-font-color)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 14,
-            transition: 'all 0.2s ease'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.background = 'var(--accent-color)';
-            e.currentTarget.style.color = 'white';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.background = 'var(--glass-bg)';
-            e.currentTarget.style.color = 'var(--light-font-color)';
-          }}
+          className="w-8 h-8 rounded-full border border-glass-border bg-glass-bg text-light-font-color cursor-pointer flex items-center justify-center text-sm transition-all duration-200 hover:bg-accent-color hover:text-white"
         >
           ✕
         </button>
       </div>
 
       {/* Selected Position Info */}
-      <div style={{
-        padding: 16,
-        background: 'rgba(255, 255, 255, 0.03)',
-        borderRadius: 16,
-        border: '1px solid var(--glass-border)',
-        marginBottom: 24
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 12
-        }}>
-          <span style={{ fontSize: 14, color: 'var(--light-font-color)' }}>
+      <div className="p-4 bg-white/[0.03] rounded-2xl border border-glass-border mb-6">
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-sm text-light-font-color">
             Position
           </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="flex items-center gap-2">
             <AddressChip address={selectedPosition.token0} hideAvatar />
-            <span style={{ color: 'var(--light-font-color)', fontSize: 12 }}>+</span>
+            <span className="text-light-font-color text-xs">+</span>
             <AddressChip address={selectedPosition.token1} hideAvatar />
           </div>
         </div>
         
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 12,
-          fontSize: 12
-        }}>
+        <div className="grid grid-cols-2 gap-3 text-xs">
           <div>
-            <div style={{ color: 'var(--light-font-color)', marginBottom: 2 }}>
+            <div className="text-light-font-color mb-0.5">
               LP Balance
             </div>
-            <div style={{ color: 'var(--standard-font-color)', fontWeight: 600 }}>
+            <div className="text-standard-font-color font-semibold">
               {lpAmount.prettify()}
             </div>
           </div>
           {selectedPosition.valueUsd && (
             <div>
-              <div style={{ color: 'var(--light-font-color)', marginBottom: 2 }}>
+              <div className="text-light-font-color mb-0.5">
                 Total Value
               </div>
-              <div style={{ color: 'var(--success-color)', fontWeight: 600 }}>
+              <div className="text-success-color font-semibold">
                 ${Decimal.from(selectedPosition.valueUsd).prettify()}
               </div>
             </div>
@@ -513,48 +275,29 @@ export default function RemoveLiquidityForm() {
       </div>
 
       {/* Amount Selection */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 16
-        }}>
-          <label style={{
-            fontSize: 14,
-            fontWeight: 600,
-            color: 'var(--standard-font-color)'
-          }}>
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <label className="text-sm font-semibold text-standard-font-color">
             Amount to Remove
           </label>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="flex gap-2">
             <button
               onClick={() => setUseCustomAmount(false)}
-              style={{
-                padding: '4px 8px',
-                borderRadius: 8,
-                border: useCustomAmount ? '1px solid var(--glass-border)' : '1px solid var(--accent-color)',
-                background: useCustomAmount ? 'var(--glass-bg)' : 'var(--accent-color)',
-                color: useCustomAmount ? 'var(--light-font-color)' : 'white',
-                cursor: 'pointer',
-                fontSize: 12,
-                fontWeight: 500
-              }}
+              className={`px-2 py-1 rounded-lg border cursor-pointer text-xs font-medium ${
+                useCustomAmount 
+                  ? 'border-glass-border bg-glass-bg text-light-font-color' 
+                  : 'border-accent-color bg-accent-color text-white'
+              }`}
             >
               %
             </button>
             <button
               onClick={() => setUseCustomAmount(true)}
-              style={{
-                padding: '4px 8px',
-                borderRadius: 8,
-                border: !useCustomAmount ? '1px solid var(--glass-border)' : '1px solid var(--accent-color)',
-                background: !useCustomAmount ? 'var(--glass-bg)' : 'var(--accent-color)',
-                color: !useCustomAmount ? 'var(--light-font-color)' : 'white',
-                cursor: 'pointer',
-                fontSize: 12,
-                fontWeight: 500
-              }}
+              className={`px-2 py-1 rounded-lg border cursor-pointer text-xs font-medium ${
+                !useCustomAmount 
+                  ? 'border-glass-border bg-glass-bg text-light-font-color' 
+                  : 'border-accent-color bg-accent-color text-white'
+              }`}
             >
               LP
             </button>
@@ -564,38 +307,16 @@ export default function RemoveLiquidityForm() {
         {!useCustomAmount ? (
           <>
             {/* Percentage Buttons */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: 8,
-              marginBottom: 16
-            }}>
+            <div className="grid grid-cols-4 gap-2 mb-4">
               {percentageButtons.map((pct) => (
                 <button
                   key={pct}
                   onClick={() => setPercentage(pct)}
-                  style={{
-                    padding: '12px 8px',
-                    borderRadius: 12,
-                    border: percentage === pct ? '1px solid var(--accent-color)' : '1px solid var(--glass-border)',
-                    background: percentage === pct ? 'var(--accent-color)' : 'var(--glass-bg)',
-                    color: percentage === pct ? 'white' : 'var(--standard-font-color)',
-                    cursor: 'pointer',
-                    fontSize: 14,
-                    fontWeight: 600,
-                    transition: 'all 0.2s ease',
-                    backdropFilter: 'blur(10px)'
-                  }}
-                  onMouseOver={(e) => {
-                    if (percentage !== pct) {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    }
-                  }}
-                  onMouseOut={(e) => {
-                    if (percentage !== pct) {
-                      e.currentTarget.style.background = 'var(--glass-bg)';
-                    }
-                  }}
+                  className={`py-3 px-2 rounded-xl border cursor-pointer text-sm font-semibold transition-all duration-200 backdrop-blur-sm ${
+                    percentage === pct 
+                      ? 'border-accent-color bg-accent-color text-white' 
+                      : 'border-glass-border bg-glass-bg text-standard-font-color hover:bg-white/10'
+                  }`}
                 >
                   {pct}%
                 </button>
@@ -603,26 +324,12 @@ export default function RemoveLiquidityForm() {
             </div>
 
             {/* Percentage Slider */}
-            <div style={{
-              padding: 16,
-              background: 'rgba(255, 255, 255, 0.02)',
-              borderRadius: 12,
-              border: '1px solid var(--glass-border)'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 8
-              }}>
-                <span style={{ fontSize: 12, color: 'var(--light-font-color)' }}>
+            <div className="p-4 bg-white/[0.02] rounded-xl border border-glass-border">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs text-light-font-color">
                   Slide to adjust
                 </span>
-                <span style={{
-                  fontSize: 16,
-                  fontWeight: 700,
-                  color: 'var(--accent-color)'
-                }}>
+                <span className="text-base font-bold text-accent-color">
                   {percentage}%
                 </span>
               </div>
@@ -632,13 +339,9 @@ export default function RemoveLiquidityForm() {
                 max="100"
                 value={percentage}
                 onChange={(e) => setPercentage(Number(e.target.value))}
+                className="w-full h-1.5 rounded-sm outline-none cursor-pointer"
                 style={{
-                  width: '100%',
-                  height: 6,
-                  borderRadius: 3,
-                  background: `linear-gradient(to right, var(--accent-color) 0%, var(--accent-color) ${percentage}%, var(--glass-border) ${percentage}%, var(--glass-border) 100%)`,
-                  outline: 'none',
-                  cursor: 'pointer'
+                  background: `linear-gradient(to right, var(--accent-color) 0%, var(--accent-color) ${percentage}%, var(--glass-border) ${percentage}%, var(--glass-border) 100%)`
                 }}
               />
             </div>
@@ -759,42 +462,11 @@ export default function RemoveLiquidityForm() {
       <button
         onClick={() => setShowConfirm(true)}
         disabled={removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))}
-        style={{
-          width: '100%',
-          padding: '16px 24px',
-          borderRadius: 16,
-          border: 'none',
-          background: removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))
-            ? 'var(--glass-bg)' 
-            : 'linear-gradient(135deg, #ff6b6b, #feca57)',
-          color: removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))
-            ? 'var(--light-font-color)'
-            : 'white',
-          cursor: removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))
-            ? 'not-allowed' 
-            : 'pointer',
-          fontSize: 16,
-          fontWeight: 700,
-          letterSpacing: '0.5px',
-          textTransform: 'uppercase',
-          boxShadow: removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))
-            ? 'none'
-            : '0 8px 32px rgba(255, 107, 107, 0.3)',
-          transition: 'all 0.3s ease',
-          opacity: removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0)) ? 0.5 : 1
-        }}
-        onMouseOver={(e) => {
-          if (removeAmount.gt(0) && (!useCustomAmount || (customAmount && Number(customAmount) > 0))) {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 12px 40px rgba(255, 107, 107, 0.4)';
-          }
-        }}
-        onMouseOut={(e) => {
-          if (removeAmount.gt(0) && (!useCustomAmount || (customAmount && Number(customAmount) > 0))) {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 8px 32px rgba(255, 107, 107, 0.3)';
-          }
-        }}
+        className={`w-full px-6 py-4 rounded-2xl border-none text-base font-bold tracking-wider uppercase transition-all duration-300 ${
+          removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))
+            ? 'bg-glass-bg text-light-font-color cursor-not-allowed opacity-50'
+            : 'bg-gradient-to-r from-red-400 to-yellow-400 text-white cursor-pointer shadow-[0_8px_32px_rgba(255,107,107,0.3)] hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(255,107,107,0.4)]'
+        }`}
       >
         💧 Remove {useCustomAmount 
           ? `${((Number(customAmount || '0') / Number(lpAmount.toString())) * 100).toFixed(1)}%`

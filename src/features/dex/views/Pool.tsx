@@ -39,47 +39,15 @@ function PoolContent() {
   };
 
   return (
-    <div className="pool-layout" style={{
-      maxWidth: 1200,
-      margin: '0 auto',
-      padding: '20px',
-      display: 'grid',
-      gridTemplateColumns: '1fr 480px',
-      gap: 32,
-      alignItems: 'start',
-      minHeight: '100vh'
-    }}>
+    <div className="max-w-[1200px] mx-auto p-5 grid grid-cols-[1fr_480px] gap-8 items-start min-h-screen mobile:grid-cols-1 mobile:gap-6 mobile:p-4">
       {/* Left Column - Positions */}
-      <div className="genz-card" style={{
-        background: 'var(--glass-bg)',
-        border: '1px solid var(--glass-border)',
-        backdropFilter: 'blur(20px)',
-        borderRadius: 24,
-        padding: 24,
-        boxShadow: 'var(--glass-shadow)',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
+      <div className="bg-glass-bg border border-glass-border backdrop-blur-[20px] rounded-[24px] p-6 shadow-glass relative overflow-hidden">
         {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{
-            fontSize: 28,
-            fontWeight: 700,
-            color: 'var(--standard-font-color)',
-            margin: '0 0 8px 0',
-            background: 'var(--primary-gradient)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>
+        <div className="mb-6">
+          <h1 className="text-[28px] font-bold text-standard-font-color m-0 mb-2 bg-primary-gradient bg-clip-text text-transparent">
             Your Liquidity Positions
           </h1>
-          <p style={{
-            fontSize: 14,
-            color: 'var(--light-font-color)',
-            margin: 0,
-            lineHeight: 1.5
-          }}>
+          <p className="text-sm text-light-font-color m-0 leading-6">
             Manage your liquidity positions and track earnings
           </p>
         </div>
@@ -344,25 +312,17 @@ function PoolContent() {
           )}
         </div>
 
-        {/* Add keyframes for spinner animation and responsive styles */}
+        {/* Add keyframes for spinner animation */}
         <style>{`
           @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
-          
-          @media (max-width: 768px) {
-            .pool-layout {
-              grid-template-columns: 1fr !important;
-              gap: 24px !important;
-              padding: 16px !important;
-            }
-          }
         `}</style>
       </div>
 
       {/* Right Column - Liquidity Forms */}
-      <div id="liquidity-forms-section" style={{ position: 'sticky', top: 20, display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div id="liquidity-forms-section" className="sticky top-5 flex flex-col gap-6">
         {currentAction === 'remove' ? (
           <RemoveLiquidityForm />
         ) : (

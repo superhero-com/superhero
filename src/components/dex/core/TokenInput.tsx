@@ -2,6 +2,11 @@ import React from 'react';
 import TokenSelector from './TokenSelector';
 import { DexTokenDto } from '../../../api/generated';
 import { Decimal } from '../../../libs/decimal';
+import { AeButton } from '../../ui/ae-button';
+import { Input } from '../../ui/input';
+import { Label } from '../../ui/label';
+import { AeCard, AeCardContent } from '../../ui/ae-card';
+import { cn } from '@/lib/utils';
 
 interface TokenInputProps {
   label: string;
@@ -50,197 +55,110 @@ export default function TokenInput({
   };
 
   return (
-    <div style={{
-      background: 'rgba(255, 255, 255, 0.03)',
-      border: hasInsufficientBalance ? '1px solid var(--error-color)' : '1px solid var(--glass-border)',
-      borderRadius: 16,
-      padding: 16,
-      backdropFilter: 'blur(10px)',
-      transition: 'all 0.3s ease'
-    }}>
-      {/* Label and Balance Row */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 12
-      }}>
-        <label style={{
-          fontSize: 14,
-          fontWeight: 600,
-          color: 'var(--light-font-color)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
-        }}>
-          {label}
-        </label>
-        {balance && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            fontSize: 12,
-            color: 'var(--light-font-color)'
-          }}>
-            <div>
-              Balance:
-              <span style={{
-                fontWeight: 600,
-                color: 'var(--standard-font-color)',
-                fontSize: 12,
-                marginLeft: 8
-              }}>
-                {Decimal.from(balance).prettify()}
-              </span>
-            </div>
-            
-            {/* Max, 50% buttons */}
-            <div style={{ 
-              display: 'flex', 
-              gap: 6, 
-              alignItems: 'center'
-            }}>
-              <button
-                onClick={() => {
-                  if (balance && !disabled && !readOnly) {
-                    const halfBalance = Decimal.from(balance).div(2).toString();
-                    onAmountChange(halfBalance);
-                  }
-                }}
-                disabled={disabled || readOnly || !balance || Number(balance) === 0}
-                style={{
-                  padding: '2px 8px',
-                  borderRadius: 6,
-                  border: '1px solid var(--glass-border)',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  color: 'var(--light-font-color)',
-                  fontSize: 10,
-                  fontWeight: 600,
-                  cursor: disabled || readOnly || !balance ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s ease',
-                  opacity: disabled || readOnly || !balance ? 0.5 : 1
-                }}
-                onMouseOver={(e) => {
-                  if (!disabled && !readOnly && balance && Number(balance) > 0) {
-                    e.currentTarget.style.background = 'var(--accent-color)';
-                    e.currentTarget.style.color = 'white';
-                  }
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                  e.currentTarget.style.color = 'var(--light-font-color)';
-                }}
-              >
-                50%
-              </button>
+    <AeCard 
+      variant="glass" 
+      className={cn(
+        "transition-all duration-300 border-glass-border",
+        hasInsufficientBalance && "border-destructive"
+      )}
+      style={{
+        background: "radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.04), transparent 40%), rgba(255, 255, 255, 0.02)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        boxShadow: hasInsufficientBalance ? 
+          "0 8px 25px rgba(255, 107, 107, 0.2)" : 
+          "0 8px 25px rgba(0,0,0,0.2)"
+      }}
+    >
+      <AeCardContent className="p-4">
+        {/* Label and Balance Row */}
+        <div className="flex justify-between items-center mb-3">
+          <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            {label}
+          </Label>
+          {balance && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                Balance:
+                <span className="font-semibold text-foreground">
+                  {Decimal.from(balance).prettify()}
+                </span>
+              </div>
               
-              <button
-                onClick={() => {
-                  if (balance && !disabled && !readOnly) {
-                    onAmountChange(balance);
-                  }
-                }}
-                disabled={disabled || readOnly || !balance || Number(balance) === 0}
-                style={{
-                  padding: '4px 8px',
-                  borderRadius: 6,
-                  border: '1px solid var(--glass-border)',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  color: 'var(--light-font-color)',
-                  fontSize: 10,
-                  fontWeight: 600,
-                  cursor: disabled || readOnly || !balance ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s ease',
-                  opacity: disabled || readOnly || !balance ? 0.5 : 1
-                }}
-                onMouseOver={(e) => {
-                  if (!disabled && !readOnly && balance && Number(balance) > 0) {
-                    e.currentTarget.style.background = 'var(--accent-color)';
-                    e.currentTarget.style.color = 'white';
-                  }
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                  e.currentTarget.style.color = 'var(--light-font-color)';
-                }}
-              >
-                MAX
-              </button>
+              {/* Max, 50% buttons */}
+              <div className="flex gap-1 items-center">
+                <AeButton
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => {
+                    if (balance && !disabled && !readOnly) {
+                      const halfBalance = Decimal.from(balance).div(2).toString();
+                      onAmountChange(halfBalance);
+                    }
+                  }}
+                  disabled={disabled || readOnly || !balance || Number(balance) === 0}
+                  className="h-6 px-2 text-xs font-semibold border border-glass-border hover:bg-accent hover:text-accent-foreground"
+                >
+                  50%
+                </AeButton>
+                
+                <AeButton
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => {
+                    if (balance && !disabled && !readOnly) {
+                      onAmountChange(balance);
+                    }
+                  }}
+                  disabled={disabled || readOnly || !balance || Number(balance) === 0}
+                  className="h-6 px-2 text-xs font-semibold border border-glass-border hover:bg-accent hover:text-accent-foreground"
+                >
+                  MAX
+                </AeButton>
+              </div>
             </div>
+          )}
+        </div>
+
+        {/* Main Input Row */}
+        <div className="flex gap-3 items-center justify-between p-1 rounded-xl backdrop-blur-md">
+          {/* Token Selector */}
+          <div className="flex-shrink-0">
+            <TokenSelector
+              selected={token}
+              onSelect={onTokenChange}
+              exclude={excludeTokens}
+              disabled={disabled}
+              loading={loading}
+              tokens={tokens}
+              searchValue={searchValue}
+              onSearchChange={onSearchChange}
+            />
+          </div>
+
+          {/* Amount Input */}
+          <div className="flex-1 flex items-center">
+            <Input
+              type="text"
+              inputMode="decimal"
+              placeholder={placeholder}
+              value={amount}
+              onChange={handleAmountChange}
+              readOnly={readOnly}
+              disabled={disabled}
+              className="flex-1 bg-transparent border-none text-right text-lg font-semibold font-mono text-foreground focus:ring-0 focus:border-none shadow-none p-0"
+              aria-label={`amount-${label.toLowerCase()}`}
+            />
+          </div>
+        </div>
+
+        {/* Insufficient Balance Warning */}
+        {hasInsufficientBalance && balance && amount && Number(amount) > 0 && (
+          <div className="mt-2 text-xs text-destructive font-medium flex items-center gap-1">
+            ⚠️ Insufficient {token?.symbol} balance. You need {amount} but only have {Decimal.from(balance).prettify()}
           </div>
         )}
-      </div>
-
-      {/* Main Input Row */}
-      <div style={{
-        display: 'flex',
-        gap: 12,
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        backdropFilter: 'blur(10px)',
-        padding: '4px 0px 4px 12px',
-        borderRadius: 12,
-      }}>
-        {/* Token Selector */}
-        <div style={{ flexShrink: 0 }}>
-          <TokenSelector
-            selected={token}
-            onSelect={onTokenChange}
-            exclude={excludeTokens}
-            disabled={disabled}
-            loading={loading}
-            tokens={tokens}
-            searchValue={searchValue}
-            onSearchChange={onSearchChange}
-          />
-        </div>
-
-        {/* Amount Input */}
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center'
-        }}>
-          <input
-            type="text"
-            inputMode="decimal"
-            placeholder={placeholder}
-            value={amount}
-            onChange={handleAmountChange}
-            readOnly={readOnly}
-            disabled={disabled}
-            style={{
-              flex: 1,
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--standard-font-color)',
-              outline: 'none',
-              fontSize: '18px',
-              fontWeight: 600,
-              fontFamily: 'monospace',
-              boxShadow: 'none',
-              backdropFilter: 'none',
-              textAlign: 'right'
-            }}
-            aria-label={`amount-${label.toLowerCase()}`}
-          />
-        </div>
-      </div>
-
-      {/* Insufficient Balance Warning */}
-      {hasInsufficientBalance && balance && amount && Number(amount) > 0 && (
-        <div style={{
-          marginTop: 8,
-          fontSize: 12,
-          color: 'var(--error-color)',
-          fontWeight: 500,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 4
-        }}>
-          ⚠️ Insufficient {token?.symbol} balance. You need {amount} but only have {Decimal.from(balance).prettify()}
-        </div>
-      )}
-    </div>
+      </AeCardContent>
+    </AeCard>
   );
 }

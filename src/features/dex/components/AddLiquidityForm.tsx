@@ -208,15 +208,15 @@ export default function AddLiquidityForm() {
   const isAddDisabled = state.loading || !amountA || Number(amountA) <= 0 || !amountB || Number(amountB) <= 0 || !tokenA || !tokenB || !!state.error || hasInsufficientBalance;
 
   return (
-    <div className="max-w-[min(480px,100%)] mx-auto bg-glass-bg border border-glass-border backdrop-blur-xl rounded-3xl p-6 shadow-glass relative overflow-hidden">
+    <div className="max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-xl font-bold text-standard-font-color m-0 bg-primary-gradient bg-clip-text text-transparent">
+          <h2 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
             Add Liquidity
           </h2>
           {currentAction === 'add' && selectedTokenA && selectedTokenB && (
-            <p className="text-xs text-light-font-color mt-1">
+            <p className="text-xs text-white/60 mt-1">
               Adding to {selectedTokenA}/{selectedTokenB} position
             </p>
           )}
@@ -226,7 +226,7 @@ export default function AddLiquidityForm() {
           {currentAction === 'add' && (
             <button
               onClick={clearSelection}
-              className="px-3 py-2 rounded-xl border border-glass-border bg-glass-bg text-standard-font-color cursor-pointer backdrop-blur-sm transition-all duration-300 text-xs font-medium hover:bg-accent-color hover:-translate-y-0.5"
+              className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#4ecdc4] hover:-translate-y-0.5 active:translate-y-0"
             >
               ✕ Cancel
             </button>
@@ -235,7 +235,7 @@ export default function AddLiquidityForm() {
           <DexSettings title="Liquidity Settings">
             <button
               aria-label="open-settings"
-              className="px-3 py-2 rounded-xl border border-glass-border bg-glass-bg text-standard-font-color cursor-pointer backdrop-blur-sm transition-all duration-300 text-xs font-medium hover:bg-accent-color hover:-translate-y-0.5"
+              className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#4ecdc4] hover:-translate-y-0.5 active:translate-y-0"
             >
               ⚙️ Settings
             </button>
@@ -243,7 +243,7 @@ export default function AddLiquidityForm() {
         </div>
       </div>
 
-      <div className="text-sm text-light-font-color text-center mb-6 opacity-90">
+      <div className="text-sm text-white/60 text-center mb-6 opacity-90">
         Provide liquidity to earn trading fees from swaps
       </div>
 
@@ -268,7 +268,7 @@ export default function AddLiquidityForm() {
 
       {/* Plus Icon */}
       <div className="flex justify-center my-4 relative">
-        <div className="w-12 h-12 rounded-full bg-button-gradient border-2 border-glass-border text-white flex items-center justify-center text-xl font-semibold shadow-[0_4px_12px_rgba(255,107,107,0.3)] z-[2] relative">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] border-2 border-white/10 text-white flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(255,107,107,0.3)] z-[2] relative hover:shadow-[0_8px_24px_rgba(255,107,107,0.4)] hover:-translate-y-0.5">
           +
         </div>
       </div>
@@ -307,14 +307,14 @@ export default function AddLiquidityForm() {
 
       {/* Error Display */}
       {state.error && (
-        <div className="text-error-color text-sm px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl mb-5 text-center">
+        <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
           {state.error}
         </div>
       )}
 
       {/* Insufficient Balance Warning */}
       {(hasInsufficientBalanceA || hasInsufficientBalanceB) && (
-        <div className="text-error-color text-sm px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl mb-5 text-center">
+        <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
           {hasInsufficientBalanceA && hasInsufficientBalanceB ? (
             <>Insufficient balance for both {tokenA?.symbol} and {tokenB?.symbol}</>
           ) : hasInsufficientBalanceA ? (
@@ -330,10 +330,10 @@ export default function AddLiquidityForm() {
         <button
           onClick={() => setShowConfirm(true)}
           disabled={isAddDisabled}
-          className={`w-full px-6 py-4 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ${
+          className={`w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isAddDisabled
               ? 'bg-white/10 cursor-not-allowed opacity-60'
-              : 'bg-button-gradient shadow-button hover:shadow-button-hover'
+              : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0'
           }`}
         >
           {state.loading ? (
@@ -347,7 +347,7 @@ export default function AddLiquidityForm() {
         <ConnectWalletButton
           label="Connect Wallet to Add Liquidity"
           block
-          className="w-full px-6 py-4 rounded-2xl border-none bg-button-gradient text-white text-base font-bold tracking-wider uppercase shadow-button cursor-pointer"
+          className="w-full py-4 px-6 rounded-2xl border-none bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(255,107,107,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
         />
       )}
 

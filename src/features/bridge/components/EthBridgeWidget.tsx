@@ -139,14 +139,14 @@ export default function EthBridgeWidget() {
   const isDisabled = ethBridgeProcessing || !activeAccount || !ethBridgeIn || Number(ethBridgeIn) <= 0;
 
   return (
-    <div className="w-full max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
+    <div className="w-full max-w-[min(480px,100vw)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden box-border">
       {/* Header */}
-      <div className="flex justify-between items-center mb-4 sm:mb-6">
-        <h2 className="text-lg sm:text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+      <div className="flex justify-between items-center mb-4 sm:mb-6 min-w-0">
+        <h2 className="text-lg sm:text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent min-w-0 flex-shrink">
           Bridge ETH → AE
         </h2>
 
-        <div className="text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-[10px] transition-all duration-300 ease-out font-medium">
+        <div className="text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-[10px] transition-all duration-300 ease-out font-medium flex-shrink-0">
           Cross-chain
         </div>
       </div>
@@ -158,33 +158,33 @@ export default function EthBridgeWidget() {
 
       {/* From Input - ETH */}
       <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-2 backdrop-blur-[10px]">
-        <div className="flex justify-between items-center mb-2">
-          <label className="text-xs text-white/60 font-medium uppercase tracking-wider">
+        <div className="flex justify-between items-center mb-2 min-w-0">
+          <label className="text-xs text-white/60 font-medium uppercase tracking-wider flex-shrink-0">
             From
           </label>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <span className="text-xs text-white/60">
               Ethereum
             </span>
             <button
               onClick={handleMaxClick}
-              className="text-[10px] text-[#4ecdc4] bg-transparent border border-[#4ecdc4] rounded px-1.5 py-0.5 cursor-pointer uppercase tracking-wider hover:bg-[#4ecdc4]/10 transition-all duration-300"
+              className="text-[10px] text-[#4ecdc4] bg-transparent border border-[#4ecdc4] rounded px-1.5 py-0.5 cursor-pointer uppercase tracking-wider hover:bg-[#4ecdc4]/10 transition-all duration-300 flex-shrink-0"
             >
               MAX
             </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <input
             type="text"
             placeholder="0.0"
             value={ethBridgeIn}
             onChange={(e) => setEthBridgeIn(e.target.value)}
-            className="flex-1 bg-transparent border-none text-white text-xl sm:text-2xl font-semibold outline-none min-w-0"
+            className="flex-1 bg-transparent border-none text-white text-xl sm:text-2xl font-semibold outline-none min-w-0 overflow-hidden"
           />
 
-          <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 rounded-xl border border-white/10">
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 rounded-xl border border-white/10 flex-shrink-0">
             <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-[#627eea] to-[#8a92b2] flex items-center justify-center text-white text-xs font-bold">
               Ξ
             </div>
@@ -204,21 +204,21 @@ export default function EthBridgeWidget() {
 
       {/* To Output - AE */}
       <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-5 backdrop-blur-[10px]">
-        <div className="flex justify-between items-center mb-2">
-          <label className="text-xs text-white/60 font-medium uppercase tracking-wider">
+        <div className="flex justify-between items-center mb-2 min-w-0">
+          <label className="text-xs text-white/60 font-medium uppercase tracking-wider flex-shrink-0">
             To (Estimated)
           </label>
-          <span className="text-xs text-white/60">
+          <span className="text-xs text-white/60 flex-shrink-0">
             æternity
           </span>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className={`flex-1 text-xl sm:text-2xl font-semibold ${ethBridgeQuoting ? 'text-white/60' : 'text-white'} min-w-0`}>
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className={`flex-1 text-xl sm:text-2xl font-semibold ${ethBridgeQuoting ? 'text-white/60' : 'text-white'} min-w-0 overflow-hidden`}>
             {ethBridgeQuoting ? 'Quoting…' : (ethBridgeOutAe || '0.0')}
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 rounded-xl border border-white/10">
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 rounded-xl border border-white/10 flex-shrink-0">
             <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-red-400 to-red-300 flex items-center justify-center text-white text-xs font-bold">
               Æ
             </div>

@@ -39,7 +39,7 @@ function PoolContent() {
   };
 
   return (
-    <div className="max-w-[1200px] mx-auto p-5 grid grid-cols-[1fr_480px] gap-8 items-start min-h-screen mobile:grid-cols-1 mobile:gap-6 mobile:p-4">
+    <div className="max-w-[1200px] mx-auto p-4 md:p-5 grid grid-cols-1 lg:grid-cols-[1fr_480px] gap-6 md:gap-8 items-start min-h-screen">
       {/* Left Column - Positions */}
       <div className="bg-glass-bg border border-glass-border backdrop-blur-[20px] rounded-[24px] p-6 shadow-glass relative overflow-hidden">
         {/* Header */}

@@ -31,12 +31,12 @@ export default function TransactionConfirmModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-[var(--secondary-color)] border-white/20">
+      <DialogContent className="w-[95vw] max-w-md mx-auto bg-[var(--secondary-color)] border-white/20">
         <DialogHeader>
           <DialogTitle className="text-center text-white">Confirm Transaction</DialogTitle>
         </DialogHeader>
         
-        <div className="text-center space-y-6 py-4">
+        <div className="text-center space-y-4 sm:space-y-6 py-4">
           <div className="flex justify-center">
             <IconWallet className="w-12 h-12 text-indigo-400" />
           </div>
@@ -47,21 +47,20 @@ export default function TransactionConfirmModal({
             </p>
           </div>
           
-          <div className="flex gap-3 justify-center pt-2">
+          <div className="flex gap-2 sm:gap-3 justify-center pt-2">
             <AeButton 
               variant="secondary" 
               onClick={handleCancel}
               size="md"
-              className="flex-1"
+              className="flex-1 text-sm sm:text-base"
             >
               Cancel
             </AeButton>
             <AeButton 
-              variant="primary" 
+              variant="success" 
               onClick={handleConfirm}
               size="md"
-              className="flex-1"
-              green
+              className="flex-1 text-sm sm:text-base"
             >
               Open Wallet
             </AeButton>

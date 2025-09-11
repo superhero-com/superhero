@@ -147,7 +147,7 @@ export default function PostDetail() {
 
   return (
     <Shell left={<LeftRail />} right={<RightRail />}>
-      <div className="max-w-[680px] mx-auto py-2 px-4 mobile:px-3 mobile-small:px-2">
+      <div className="max-w-[min(680px,100%)] mx-auto py-2 px-2 sm:px-3 md:px-4">
         <div className="mb-4">
           <AeButton onClick={() => navigate(-1)} variant="ghost" size="sm">
             ← Back

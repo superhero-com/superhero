@@ -150,13 +150,13 @@ export default function FeedList() {
           <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
         </div>
 
-        <div className="py-2 max-w-[680px] mx-auto mobile:pt-4 mobile:px-3 mobile-small:px-2 gap-4 flex flex-col">
+        <div className="py-2 max-w-[680px] mx-auto pt-2 md:pt-4 px-2 sm:px-3 md:px-0 gap-4 flex flex-col">
           {renderEmptyState()}
           {renderFeedItems}
         </div>
 
         {hasNextPage && filteredAndSortedList.length > 0 && (
-          <div className="p-6 text-center mobile:p-4">
+          <div className="p-4 md:p-6 text-center">
             <AeButton
               loading={isFetchingNextPage}
               onClick={() => fetchNextPage()}

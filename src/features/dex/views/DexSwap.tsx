@@ -8,12 +8,12 @@ import PoolCandlestickChart from '../components/charts/PoolCandlestickChart';
 export default function DexSwap() {
   const [selectedPair, setSelectedPair] = useState<PairDto | null>(null);
   const [fromToken, setFromToken] = useState<DexTokenDto | null>(null); 
-  // todo get selected pool address
+  // todo get selected pool address3
   return (
     <div>
       {/* Main Content */}
       <div className="flex gap-6 items-start w-full mobile:flex-col mobile:gap-5">
-        <div className="min-w-0 max-w-[480px] flex-shrink-0 mobile:max-w-none">
+        <div className="min-w-0 max-w-[min(480px,100%)] flex-shrink-0 mobile:max-w-none">
           <SwapForm onPairSelected={setSelectedPair} onFromTokenSelected={setFromToken} />
         </div>
 

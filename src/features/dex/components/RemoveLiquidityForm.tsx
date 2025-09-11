@@ -44,7 +44,7 @@ export default function RemoveLiquidityForm() {
 
   if (!selectedPosition) {
     return (
-      <div className="max-w-[480px] mx-auto bg-glass-bg border border-glass-border backdrop-blur-xl rounded-3xl p-8 shadow-glass text-center">
+      <div className="max-w-[min(480px,100%)] mx-auto bg-glass-bg border border-glass-border backdrop-blur-xl rounded-3xl p-8 shadow-glass text-center">
         <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-500/10 to-red-500/20 flex items-center justify-center mx-auto mb-4 text-2xl">
           💧
         </div>
@@ -60,7 +60,7 @@ export default function RemoveLiquidityForm() {
 
   if (!address) {
     return (
-      <div className="max-w-[480px] mx-auto bg-glass-bg border border-glass-border backdrop-blur-xl rounded-3xl p-8 shadow-glass text-center">
+      <div className="max-w-[min(480px,100%)] mx-auto bg-glass-bg border border-glass-border backdrop-blur-xl rounded-3xl p-8 shadow-glass text-center">
         <ConnectWalletButton />
       </div>
     );
@@ -117,7 +117,7 @@ export default function RemoveLiquidityForm() {
 
   if (showConfirm) {
     return (
-      <div className="max-w-[480px] mx-auto bg-glass-bg border border-glass-border backdrop-blur-xl rounded-3xl p-6 shadow-glass">
+      <div className="max-w-[min(480px,100%)] mx-auto bg-glass-bg border border-glass-border backdrop-blur-xl rounded-3xl p-6 shadow-glass">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -215,7 +215,7 @@ export default function RemoveLiquidityForm() {
   }
 
   return (
-    <div className="max-w-[480px] mx-auto bg-glass-bg border border-glass-border backdrop-blur-xl rounded-3xl p-6 shadow-glass">
+    <div className="max-w-[min(480px,100%)] mx-auto bg-glass-bg border border-glass-border backdrop-blur-xl rounded-3xl p-6 shadow-glass">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">

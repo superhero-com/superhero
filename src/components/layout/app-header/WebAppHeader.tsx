@@ -39,7 +39,7 @@ export default function WebAppHeader() {
       backdropFilter: 'blur(10px)',
       borderBottomColor: 'rgba(255, 255, 255, 0.1)'
     }}>
-      <div className="flex items-center gap-6 px-6 h-16 max-w-[1648px] mx-auto md:px-5 md:gap-5">
+      <div className="flex items-center gap-6 px-6 h-16 max-w-[min(1648px,100%)] mx-auto md:px-5 md:gap-5">
         <Link to="/" className="flex items-center no-underline" style={{ color: 'var(--standard-font-color)' }} aria-label="Superhero Home">
           <HeaderLogo className="h-8 w-auto" />
         </Link>

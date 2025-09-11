@@ -208,7 +208,7 @@ export default function AddLiquidityForm() {
   const isAddDisabled = state.loading || !amountA || Number(amountA) <= 0 || !amountB || Number(amountB) <= 0 || !tokenA || !tokenB || !!state.error || hasInsufficientBalance;
 
   return (
-    <div className="max-w-[480px] mx-auto bg-glass-bg border border-glass-border backdrop-blur-xl rounded-3xl p-6 shadow-glass relative overflow-hidden">
+    <div className="max-w-[min(480px,100%)] mx-auto bg-glass-bg border border-glass-border backdrop-blur-xl rounded-3xl p-6 shadow-glass relative overflow-hidden">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>

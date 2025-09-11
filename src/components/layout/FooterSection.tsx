@@ -3,7 +3,7 @@ import React from 'react';
 export default function FooterSection() {
   return (
     <footer className="border-t mt-6 py-4 md:py-5 md:mt-8" style={{ borderTopColor: 'var(--search-nav-border-color)' }}>
-      <div className="max-w-[1648px] mx-auto px-4 flex gap-4 items-center md:flex-col md:gap-4 md:px-4 md:text-center sm:px-3 sm:gap-3">
+      <div className="max-w-[min(1648px,100%)] mx-auto px-4 flex gap-4 items-center md:flex-col md:gap-4 md:px-4 md:text-center sm:px-3 sm:gap-3">
         <div className="text-sm md:order-2 md:text-[13px]" style={{ color: 'var(--light-font-color)' }}>Superhero is Open Source</div>
         <nav className="ml-auto flex gap-3 flex-wrap md:ml-0 md:order-1 md:justify-center md:gap-2 sm:gap-1.5">
           <a 

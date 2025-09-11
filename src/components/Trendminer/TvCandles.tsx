@@ -38,7 +38,7 @@ export default function TvCandles({ candles, height = 340 }: Props) {
     if (data.length) series.setData(data);
   }, [candles]);
 
-  return <div ref={containerRef} style={{ height }} />;
+  return <div ref={containerRef} className="w-full rounded-lg" style={{ height }} />;
 }
 
 

@@ -15,78 +15,48 @@ export default function ExploreRefactored() {
   const transactionList = useTransactionList();
 
   return (
-    <div className="explore-container" style={{ maxWidth: 1400, margin: '0 auto', padding: '20px' }}>
+    <div className="max-w-[1400px] mx-auto p-5">
       <DexTabs />
       
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ 
-          fontSize: 32, 
-          fontWeight: 700, 
-          color: 'white', 
-          margin: '0 0 8px 0' 
-        }}>
+      <div className="mb-6">
+        <h1 className="text-[32px] font-bold text-white m-0 mb-2">
           Explore
         </h1>
-        <p style={{ 
-          fontSize: 16, 
-          opacity: 0.8, 
-          margin: 0, 
-          lineHeight: 1.5 
-        }}>
+        <p className="text-base text-white/80 m-0 leading-relaxed">
           Discover tokens, pools, and track transactions across the æternity ecosystem
         </p>
       </div>
 
       {/* Tab Navigation */}
-      <div style={{ 
-        display: 'flex', 
-        gap: 2, 
-        marginBottom: 24,
-        borderBottom: '1px solid #3a3a4a'
-      }}>
+      <div className="flex gap-0.5 mb-6 border-b border-gray-600">
         <button
           onClick={() => setActive('Tokens')}
-          style={{ 
-            padding: '12px 24px',
-            background: active === 'Tokens' ? '#2a2a39' : 'transparent',
-            border: 'none',
-            color: active === 'Tokens' ? 'white' : '#9aa',
-            cursor: 'pointer',
-            fontSize: 16,
-            fontWeight: 600,
-            borderBottom: active === 'Tokens' ? '2px solid #4caf50' : 'none'
-          }}
+          className={`px-6 py-3 border-none cursor-pointer text-base font-semibold transition-all ${
+            active === 'Tokens' 
+              ? 'bg-gray-800 text-white border-b-2 border-green-500' 
+              : 'bg-transparent text-gray-400 hover:text-white'
+          }`}
         >
           Tokens
         </button>
         <button
           onClick={() => setActive('Pairs')}
-          style={{ 
-            padding: '12px 24px',
-            background: active === 'Pairs' ? '#2a2a39' : 'transparent',
-            border: 'none',
-            color: active === 'Pairs' ? 'white' : '#9aa',
-            cursor: 'pointer',
-            fontSize: 16,
-            fontWeight: 600,
-            borderBottom: active === 'Pairs' ? '2px solid #4caf50' : 'none'
-          }}
+          className={`px-6 py-3 border-none cursor-pointer text-base font-semibold transition-all ${
+            active === 'Pairs' 
+              ? 'bg-gray-800 text-white border-b-2 border-green-500' 
+              : 'bg-transparent text-gray-400 hover:text-white'
+          }`}
         >
           Pools
         </button>
         <button
           onClick={() => setActive('Transactions')}
-          style={{ 
-            padding: '12px 24px',
-            background: active === 'Transactions' ? '#2a2a39' : 'transparent',
-            border: 'none',
-            color: active === 'Transactions' ? 'white' : '#9aa',
-            cursor: 'pointer',
-            fontSize: 16,
-            fontWeight: 600,
-            borderBottom: active === 'Transactions' ? '2px solid #4caf50' : 'none'
-          }}
+          className={`px-6 py-3 border-none cursor-pointer text-base font-semibold transition-all ${
+            active === 'Transactions' 
+              ? 'bg-gray-800 text-white border-b-2 border-green-500' 
+              : 'bg-transparent text-gray-400 hover:text-white'
+          }`}
         >
           Transactions
         </button>
@@ -95,20 +65,11 @@ export default function ExploreRefactored() {
       {/* Content */}
       {active === 'Tokens' && (
         <div>
-          <div style={{ marginBottom: 16 }}>
-            <h2 style={{ 
-              fontSize: 20, 
-              fontWeight: 600, 
-              color: 'white', 
-              margin: '0 0 8px 0' 
-            }}>
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold text-white m-0 mb-2">
               All Tokens
             </h2>
-            <p style={{ 
-              fontSize: 14, 
-              opacity: 0.7, 
-              margin: 0 
-            }}>
+            <p className="text-sm text-white/70 m-0">
               Browse and interact with all available tokens on æternity
             </p>
           </div>
@@ -126,43 +87,23 @@ export default function ExploreRefactored() {
 
       {active === 'Pairs' && (
         <div>
-          <div style={{ marginBottom: 16 }}>
-            <h2 style={{ 
-              fontSize: 20, 
-              fontWeight: 600, 
-              color: 'white', 
-              margin: '0 0 8px 0' 
-            }}>
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold text-white m-0 mb-2">
               Liquidity Pools
             </h2>
-            <p style={{ 
-              fontSize: 14, 
-              opacity: 0.7, 
-              margin: 0 
-            }}>
+            <p className="text-sm text-white/70 m-0">
               Explore trading pairs and their performance metrics
             </p>
           </div>
           
-          <div style={{ overflowX: 'auto' }}>
+          <div className="overflow-x-auto">
             {/* Controls */}
-            <div style={{ 
-              display: 'flex', 
-              gap: 8, 
-              alignItems: 'center', 
-              marginBottom: 16 
-            }}>
-              <label style={{ fontSize: 12, opacity: 0.85 }}>Sort by</label>
+            <div className="flex gap-2 items-center mb-4">
+              <label className="text-xs opacity-85 text-white/80">Sort by</label>
               <select 
                 value={pairList.sort.key} 
                 onChange={(e) => pairList.toggleSort(e.target.value as any)}
-                style={{ 
-                  padding: '6px 8px', 
-                  borderRadius: 6, 
-                  background: '#1a1a23', 
-                  color: 'white', 
-                  border: '1px solid #3a3a4a' 
-                }}
+                className="px-2 py-1.5 rounded-md bg-[#1a1a23] text-white border border-gray-600 text-sm focus:outline-none focus:border-green-500"
               >
                 <option value="transactions">Tx count</option>
                 <option value="pair">Pair</option>
@@ -170,13 +111,7 @@ export default function ExploreRefactored() {
               </select>
               <button 
                 onClick={() => pairList.toggleSort(pairList.sort.key)}
-                style={{ 
-                  padding: '6px 8px', 
-                  borderRadius: 6, 
-                  border: '1px solid #3a3a4a', 
-                  background: '#2a2a39', 
-                  color: 'white' 
-                }}
+                className="px-2 py-1.5 rounded-md border border-gray-600 bg-gray-800 text-white text-sm hover:bg-gray-700 transition-colors"
               >
                 {pairList.sort.asc ? '↑' : '↓'}
               </button>
@@ -184,28 +119,20 @@ export default function ExploreRefactored() {
                 placeholder="Filter pools" 
                 value={pairList.search} 
                 onChange={(e) => pairList.setSearch(e.target.value)}
-                style={{ 
-                  marginLeft: 'auto', 
-                  padding: '6px 8px', 
-                  borderRadius: 6, 
-                  background: '#1a1a23', 
-                  color: 'white', 
-                  border: '1px solid #3a3a4a',
-                  minWidth: 200
-                }} 
+                className="ml-auto px-2 py-1.5 rounded-md bg-[#1a1a23] text-white border border-gray-600 min-w-[200px] text-sm placeholder-white/50 focus:outline-none focus:border-green-500"
               />
             </div>
 
             {/* Pairs Table */}
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="w-full border-collapse bg-white/5 rounded-lg overflow-hidden">
               <thead>
-                <tr style={{ borderBottom: '1px solid #3a3a4a' }}>
-                  <th style={{ textAlign: 'left', padding: '12px 8px', fontSize: 12, opacity: 0.8 }}>Pair</th>
-                  <th style={{ textAlign: 'left', padding: '12px 8px', fontSize: 12, opacity: 0.8 }}>Address</th>
-                  <th style={{ textAlign: 'center', padding: '12px 8px', fontSize: 12, opacity: 0.8 }}>Tx</th>
-                  <th style={{ textAlign: 'right', padding: '12px 8px', fontSize: 12, opacity: 0.8 }}>TVL (USD)</th>
-                  <th style={{ textAlign: 'right', padding: '12px 8px', fontSize: 12, opacity: 0.8 }}>24h Vol</th>
-                  <th style={{ textAlign: 'center', padding: '12px 8px', fontSize: 12, opacity: 0.8 }}>Actions</th>
+                <tr className="border-b border-gray-600 bg-white/10">
+                  <th className="text-left p-3 text-xs opacity-80 text-white/80">Pair</th>
+                  <th className="text-left p-3 text-xs opacity-80 text-white/80">Address</th>
+                  <th className="text-center p-3 text-xs opacity-80 text-white/80">Tx</th>
+                  <th className="text-right p-3 text-xs opacity-80 text-white/80">TVL (USD)</th>
+                  <th className="text-right p-3 text-xs opacity-80 text-white/80">24h Vol</th>
+                  <th className="text-center p-3 text-xs opacity-80 text-white/80">Actions</th>
                 </tr>
               </thead>
               <tbody>

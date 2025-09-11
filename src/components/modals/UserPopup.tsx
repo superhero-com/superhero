@@ -1,24 +1,56 @@
 import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import Identicon from '../Identicon';
 
-export default function UserPopup({ address, onClose }: { address: string; onClose: () => void }) {
+interface UserPopupProps {
+  address: string;
+  open: boolean;
+  onClose: () => void;
+}
+
+export default function UserPopup({ address, open, onClose }: UserPopupProps) {
   const [profile, setProfile] = useState<any>(null);
+  
   return (
-    <div>
-      <div style={{ display: 'flex', gap: 12 }}>
-        <Identicon address={address} size={56} />
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>{profile?.preferredChainName || 'Legend'}</div>
-          <div style={{ fontSize: 12, color: '#c3c3c7' }}>{address}</div>
-          {profile?.location && (
-            <div style={{ fontSize: 12, color: '#c3c3c7', marginTop: 4 }}>{profile.location}</div>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md bg-[var(--secondary-color)] border-white/20">
+        <DialogHeader>
+          <DialogTitle className="text-white">User Profile</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div className="flex gap-3">
+            <Avatar className="h-14 w-14">
+              <AvatarImage src="" alt={address} />
+              <AvatarFallback className="bg-transparent p-0">
+                <Identicon address={address} size={56} />
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-bold text-white">
+                {profile?.preferredChainName || 'Legend'}
+              </div>
+              <div className="text-xs text-gray-300 break-all">
+                {address}
+              </div>
+              {profile?.location && (
+                <div className="text-xs text-gray-300 mt-1">
+                  {profile.location}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {profile?.biography && (
+            <div className="text-xs text-gray-300 whitespace-pre-wrap bg-white/5 rounded-lg p-3">
+              {profile.biography}
+            </div>
           )}
         </div>
-      </div>
-      {profile?.biography && (
-        <div style={{ marginTop: 8, fontSize: 13, color: '#c3c3c7', whiteSpace: 'pre-wrap' }}>{profile.biography}</div>
-      )}
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

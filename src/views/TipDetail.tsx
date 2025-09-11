@@ -29,51 +29,51 @@ export default function TipDetail() {
   }, [navigate, tipId]);
   return (
     <Shell left={<LeftRail />} right={<RightRail />}>
-      <div style={{ maxWidth: 680, margin: '0 auto', padding: '0.5rem 1rem' }}>
-        <div style={{ marginBottom: 8 }}>
+      <div className="max-w-[680px] mx-auto px-4 py-2">
+        <div className="mb-2">
           <AeButton onClick={() => navigate(-1)}>&larr;</AeButton>
         </div>
-        {loading && <div>Loading…</div>}
-        {error && <div>Error loading post.</div>}
+        {loading && <div className="text-white/80">Loading…</div>}
+        {error && <div className="text-red-400">Error loading post.</div>}
         {tip && (
-          <article style={{ display: 'grid', gap: 12 }}>
-            <header style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between' }}>
+          <article className="grid gap-3">
+            <header className="flex items-center gap-3 justify-between">
               <div>{tip.address && <UserBadge address={tip.address} />}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {tip.timestamp && <div style={{ color: '#9aa0a6', fontSize: 12 }}>{new Date(tip.timestamp).toLocaleString()}</div>}
+              <div className="flex items-center gap-2">
+                {tip.timestamp && <div className="text-white/60 text-xs">{new Date(tip.timestamp).toLocaleString()}</div>}
                 <AeButton onClick={() => openModal({ name: 'feed-item-menu', props: { tipId, url: tip.url, author: tip.address } })}>•••</AeButton>
               </div>
             </header>
-            <h2 style={{ margin: 0, fontSize: 18 }}>{tip.title}</h2>
+            <h2 className="m-0 text-lg text-white font-semibold">{tip.title}</h2>
             {tip.url && (
-              <a href={tip.url} target="_blank" rel="noreferrer" style={{ color: '#7aa2ff' }}>{tip.url}</a>
+              <a href={tip.url} target="_blank" rel="noreferrer" className="text-blue-400 hover:text-blue-300">{tip.url}</a>
             )}
             {tip.linkPreview && (tip.linkPreview.title || tip.linkPreview.description) && (
-              <a href={tip.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', color: '#c3c3c7' }}>
-                <div style={{ background: '#2a2a36', borderRadius: 8, padding: 12, display: 'grid', gap: 8 }}>
+              <a href={tip.url} target="_blank" rel="noreferrer" className="no-underline text-white/80 hover:text-white">
+                <div className="bg-gray-800 rounded-lg p-3 grid gap-2">
                   {tip.linkPreview.image && (
-                    <img src={Backend.getTipPreviewUrl(tip.linkPreview.image)} alt="preview" style={{ width: '100%', maxHeight: 240, objectFit: 'cover', borderRadius: 6 }} />
+                    <img src={Backend.getTipPreviewUrl(tip.linkPreview.image)} alt="preview" className="w-full max-h-60 object-cover rounded-md" />
                   )}
-                  <div style={{ fontWeight: 700, color: '#fff' }}>{tip.linkPreview.title}</div>
-                  <div style={{ fontSize: 13 }}>{tip.linkPreview.description}</div>
+                  <div className="font-bold text-white">{tip.linkPreview.title}</div>
+                  <div className="text-sm text-white/80">{tip.linkPreview.description}</div>
                 </div>
               </a>
             )}
             {Array.isArray(tip.media) && tip.media.length > 0 && (
               <div>
-                <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+                <div className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(160px,1fr))]">
                   {tip.media.map((m: string) => (
-                    <img key={m} src={m} alt="media" style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 8 }} />
+                    <img key={m} src={m} alt="media" className="w-full h-40 object-cover rounded-lg" />
                   ))}
                 </div>
               </div>
             )}
-            <section style={{ marginTop: 16 }}>
-              <h3 style={{ fontSize: 16, margin: '12px 0' }}>Comments</h3>
+            <section className="mt-4">
+              <h3 className="text-base font-semibold text-white my-3">Comments</h3>
               {comments.length === 0 ? (
-                <div style={{ color: '#c3c3c7' }}>No comments yet.</div>
+                <div className="text-white/70">No comments yet.</div>
               ) : (
-                <div style={{ display: 'grid', gap: 8 }}>
+                <div className="grid gap-2">
                   {comments
                     .filter((c) => !c.parentId)
                     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -83,21 +83,21 @@ export default function TipDetail() {
                         .filter((x) => x.parentId === c.id)
                         .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
                       return (
-                        <div key={c.id} style={{ background: '#242430', borderRadius: 8, padding: 12 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                        <div key={c.id} className="bg-gray-800 rounded-lg p-3">
+                          <div className="flex items-center gap-2 mb-1.5">
                             {author && <UserBadge address={author} />}
-                            <span style={{ color: '#c3c3c7', fontSize: 12 }}>{new Date(c.createdAt).toLocaleString()}</span>
+                            <span className="text-white/70 text-xs">{new Date(c.createdAt).toLocaleString()}</span>
                           </div>
-                          <div style={{ whiteSpace: 'pre-wrap', marginBottom: 8 }}>{c.text}</div>
+                          <div className="whitespace-pre-wrap mb-2 text-white">{c.text}</div>
                           <div>
                             <AeButton onClick={() => setOpenReplyFor(openReplyFor === c.id ? null : c.id)}>Reply</AeButton>
                           </div>
                           {openReplyFor === c.id && (
-                            <div style={{ display: 'grid', gap: 8, marginTop: 8 }}>
+                            <div className="grid gap-2 mt-2">
                               <textarea
                                 placeholder="Write a reply"
                                 rows={3}
-                                style={{ resize: 'vertical', background: '#1c1c24', color: '#fff', border: '1px solid #2f2f3b', borderRadius: 6, padding: 8 }}
+                                className="resize-y bg-gray-900 text-white border border-gray-600 rounded-md p-2 focus:outline-none focus:border-purple-400"
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
                               />
@@ -124,16 +124,16 @@ export default function TipDetail() {
                             </div>
                           )}
                           {children.length > 0 && (
-                            <div style={{ marginTop: 8, paddingLeft: 24, display: 'grid', gap: 8 }}>
+                            <div className="mt-2 pl-6 grid gap-2">
                               {children.map((cc: any) => {
                                 const ca = cc.address || cc.author || cc.sender;
                                 return (
-                                  <div key={cc.id} style={{ background: '#2a2a36', borderRadius: 8, padding: 12 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                                  <div key={cc.id} className="bg-gray-700 rounded-lg p-3">
+                                    <div className="flex items-center gap-2 mb-1.5">
                                       {ca && <UserBadge address={ca} />}
-                                      <span style={{ color: '#c3c3c7', fontSize: 12 }}>{new Date(cc.createdAt).toLocaleString()}</span>
+                                      <span className="text-white/70 text-xs">{new Date(cc.createdAt).toLocaleString()}</span>
                                     </div>
-                                    <div style={{ whiteSpace: 'pre-wrap' }}>{cc.text}</div>
+                                    <div className="whitespace-pre-wrap text-white">{cc.text}</div>
                                   </div>
                                 );
                               })}
@@ -144,13 +144,13 @@ export default function TipDetail() {
                     })}
                 </div>
               )}
-              <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
+              <div className="grid gap-2 mt-3">
                 <textarea
                   placeholder="Add a comment"
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   rows={3}
-                  style={{ resize: 'vertical', background: '#1c1c24', color: '#fff', border: '1px solid #2f2f3b', borderRadius: 6, padding: 8 }}
+                  className="resize-y bg-gray-900 text-white border border-gray-600 rounded-md p-2 focus:outline-none focus:border-purple-400"
                 />
                 <AeButton
                   onClick={async () => {

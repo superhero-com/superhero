@@ -130,49 +130,77 @@ export default function Swap() {
   }, [activeAccount, router, amountIn, amountOut, isExactIn]);
 
   return (
-    <div className="container" style={{ padding: '16px 0', maxWidth: 560 }}>
-      <div style={{ display: 'grid', gap: 12 }}>
-        <div style={{ fontWeight: 700, fontSize: 18 }}>ETHXIT</div>
-        <p style={{ margin: 0, fontSize: 13, opacity: 0.8 }}>
+    <div className="max-w-[560px] mx-auto py-4 px-4">
+      <div className="grid gap-3">
+        <div className="font-bold text-lg text-white">ETHXIT</div>
+        <p className="m-0 text-sm text-white/80 leading-relaxed">
           Bridge and exit from Ethereum to æternity. Swap bridged aeETH to native AE quickly. For trading other tokens on æternity, use the DEX.{' '}
-          <a href="https://swap.superhero.com" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>Learn more</a>
+          <a href="https://swap.superhero.com" target="_blank" rel="noreferrer" className="underline text-purple-400 hover:text-purple-300">Learn more</a>
         </p>
         {!activeAccount ? (
           <AeButton onClick={connectWallet} size="large">Connect Wallet</AeButton>
         ) : (
-          <div style={{ fontSize: 12, opacity: 0.8 }}>Address: {activeAccount}</div>
+          <div className="text-xs text-white/80">Address: {activeAccount}</div>
         )}
 
-        <div style={{ display: 'grid', gap: 8, border: '1px solid #3a3a4a', borderRadius: 8, padding: 12 }}>
-          <div>From (aeETH on AE)</div>
-          <div style={{ display: 'flex', gap: 8 }}>
+        <div className="grid gap-2 border border-gray-600 rounded-lg p-3 bg-white/5 backdrop-blur-sm">
+          <div className="text-white/90 font-medium">From (aeETH on AE)</div>
+          <div className="flex gap-2">
             <AeButton disabled variant="disabled-token" size="small">{fromToken.symbol}</AeButton>
-            <input id="amountIn" name="amountIn" value={amountIn} onChange={(e) => { setIsExactIn(true); setAmountIn(e.target.value); }} placeholder="0.0" style={{ flex: 1 }} />
+            <input 
+              id="amountIn" 
+              name="amountIn" 
+              value={amountIn} 
+              onChange={(e) => { setIsExactIn(true); setAmountIn(e.target.value); }} 
+              placeholder="0.0" 
+              className="flex-1 px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-400"
+            />
           </div>
         </div>
 
-        <div style={{ textAlign: 'center' }}>↓</div>
+        <div className="text-center text-white/60 text-lg">↓</div>
 
-        <div style={{ display: 'grid', gap: 8, border: '1px solid #3a3a4a', borderRadius: 8, padding: 12 }}>
-          <div>To (AE)</div>
-          <div style={{ display: 'flex', gap: 8 }}>
+        <div className="grid gap-2 border border-gray-600 rounded-lg p-3 bg-white/5 backdrop-blur-sm">
+          <div className="text-white/90 font-medium">To (AE)</div>
+          <div className="flex gap-2">
             <AeButton disabled variant="disabled-token" size="small">{toToken.symbol}</AeButton>
-            <input id="amountOut" name="amountOut" value={amountOut} onChange={(e) => { setIsExactIn(false); setAmountOut(e.target.value); }} placeholder="0.0" style={{ flex: 1 }} />
+            <input 
+              id="amountOut" 
+              name="amountOut" 
+              value={amountOut} 
+              onChange={(e) => { setIsExactIn(false); setAmountOut(e.target.value); }} 
+              placeholder="0.0" 
+              className="flex-1 px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-400"
+            />
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 8 }}>
-          <AeButton onClick={quote} disabled={!router || quoting} loading={quoting} size="large" style={{ flex: 1 }}>{quoting ? 'Quoting…' : 'Get Quote'}</AeButton>
-          <AeButton onClick={doSwap} disabled={!canSwap || swapping} loading={swapping} size="large" style={{ flex: 1 }}>{swapping ? 'Swapping…' : 'Swap'}</AeButton>
+        <div className="flex gap-2">
+          <AeButton onClick={quote} disabled={!router || quoting} loading={quoting} size="large" className="flex-1">
+            {quoting ? 'Quoting…' : 'Get Quote'}
+          </AeButton>
+          <AeButton onClick={doSwap} disabled={!canSwap || swapping} loading={swapping} size="large" className="flex-1">
+            {swapping ? 'Swapping…' : 'Swap'}
+          </AeButton>
         </div>
 
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <label htmlFor="slippage">Slippage</label>
-          <input id="slippage" name="slippage" type="number" min={0} max={100} step={0.1} value={slippage} onChange={(e) => setSlippage(Number(e.target.value))} style={{ width: 100 }} />
-          <span>%</span>
+        <div className="flex gap-2 items-center">
+          <label htmlFor="slippage" className="text-white/80 text-sm">Slippage</label>
+          <input 
+            id="slippage" 
+            name="slippage" 
+            type="number" 
+            min={0} 
+            max={100} 
+            step={0.1} 
+            value={slippage} 
+            onChange={(e) => setSlippage(Number(e.target.value))} 
+            className="w-24 px-2 py-1 bg-black/20 border border-white/20 rounded text-white text-sm focus:outline-none focus:border-purple-400"
+          />
+          <span className="text-white/80 text-sm">%</span>
         </div>
 
-        {error && <div style={{ color: '#ff6b6b', fontSize: 13 }}>{error}</div>}
+        {error && <div className="text-red-400 text-sm p-3 bg-red-500/10 rounded-lg border border-red-500/20">{error}</div>}
       </div>
 
       {/* Token selection disabled for ETHXIT fixed flow */}

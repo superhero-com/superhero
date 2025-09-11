@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { cn } from '../../lib/utils';
 import { TrendminerApi } from '../../api/backend';
 import WebSocketClient from '../../libs/WebSocketClient';
 import MobileCard from '../MobileCard';
-import './LatestTransactionsCarousel.scss';
 
 export default function LatestTransactionsCarousel() {
   const [items, setItems] = useState<any[]>([]);
@@ -86,18 +86,24 @@ export default function LatestTransactionsCarousel() {
   if (!items.length) {
     // Show loading state instead of null to prevent empty placeholders
     return (
-      <div className="latest-transactions-carousel">
-        <div className="carousel-container">
-          <div className="carousel-track">
+      <div className="w-full my-1 overflow-hidden sm:my-0.75">
+        <div className="relative w-full">
+          <div className="flex gap-2 py-2 animate-[carousel-scroll_15s_linear_infinite] sm:gap-1.5 sm:animate-[carousel-scroll_12s_linear_infinite]">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="transaction-item loading">
-                <div className="transaction-content">
-                  <div className="transaction-header">
-                    <div className="transaction-type loading-skeleton">CREATED</div>
-                    <div className="transaction-time loading-skeleton">--:--:--</div>
+              <div key={i} className="inline-flex items-center px-3 py-2 bg-black/5 border border-black/10 rounded-xl flex-shrink-0 transition-all duration-200 min-w-fit opacity-60 pointer-events-none sm:px-2.5 sm:py-1.5">
+                <div className="flex flex-col gap-1 sm:gap-0.75">
+                  <div className="flex justify-between items-center gap-2 sm:gap-1.5">
+                    <div className="px-1.5 py-0.75 rounded border text-[10px] font-bold uppercase tracking-wide border-gray-400 text-gray-400 bg-gray-400/10 whitespace-nowrap sm:px-1 sm:py-0.5 sm:text-[9px] animate-pulse">
+                      CREATED
+                    </div>
+                    <div className="text-[10px] text-[var(--light-font-color)] opacity-70 whitespace-nowrap sm:text-[9px] animate-pulse">
+                      --:--:--
+                    </div>
                   </div>
-                  <div className="transaction-token">
-                    <span className="token-name loading-skeleton">Loading...</span>
+                  <div className="flex justify-between items-center gap-1.5 sm:gap-1">
+                    <span className="text-xs font-semibold text-[var(--primary-color)] flex-1 overflow-hidden text-ellipsis whitespace-nowrap sm:text-[11px] animate-pulse">
+                      Loading...
+                    </span>
                   </div>
                 </div>
               </div>
@@ -123,9 +129,12 @@ export default function LatestTransactionsCarousel() {
   }
   
   return (
-    <div className="latest-transactions-carousel">
-      <div className="carousel-container">
-        <div className="carousel-track" style={{ animationDuration: `${durationSec}s` }}>
+    <div className="w-full my-1 overflow-hidden sm:my-0.75">
+      <div className="relative w-full">
+        <div 
+          className="flex gap-2 py-2 animate-[carousel-scroll_linear_infinite] will-change-transform hover:animation-play-state-paused sm:gap-1.5 sm:active:animation-play-state-paused" 
+          style={{ animationDuration: `${durationSec}s` }}
+        >
           {loop.map((item, index) => {
             const type = normalizeType(item);
             const tokenName = item.token_name || item.name || item.symbol || 'Unknown';
@@ -134,24 +143,31 @@ export default function LatestTransactionsCarousel() {
             return (
               <div
                 key={`${item.sale_address || item.token_address || index}-${index}`}
-                className="transaction-item"
+                className="inline-flex items-center px-3 py-2 bg-black/5 border border-black/10 rounded-xl flex-shrink-0 transition-all duration-200 min-w-fit hover:bg-black/8 hover:border-black/15 hover:-translate-y-0.25 active:translate-y-0 sm:px-2.5 sm:py-1.5 sm:min-h-10"
               >
-                <div className="transaction-content">
-                  <div className="transaction-header">
-                    <div className="transaction-type" style={{ 
-                      color: type.color, 
-                      backgroundColor: type.bg, 
-                      borderColor: type.border 
-                    }}>
+                <div className="flex flex-col gap-1 sm:gap-0.75">
+                  <div className="flex justify-between items-center gap-2 sm:gap-1.5">
+                    <div 
+                      className="px-1.5 py-0.75 rounded border text-[10px] font-bold uppercase tracking-wide whitespace-nowrap sm:px-1 sm:py-0.5 sm:text-[9px]"
+                      style={{ 
+                        color: type.color, 
+                        backgroundColor: type.bg, 
+                        borderColor: type.border 
+                      }}
+                    >
                       {type.label}
                     </div>
-                    <div className="transaction-time">{time}</div>
+                    <div className="text-[10px] text-[var(--light-font-color)] opacity-70 whitespace-nowrap sm:text-[9px]">
+                      {time}
+                    </div>
                   </div>
                   
-                  <div className="transaction-token">
-                    <span className="token-name">#{tokenName}</span>
+                  <div className="flex justify-between items-center gap-1.5 sm:gap-1">
+                    <span className="text-xs font-semibold text-[var(--primary-color)] flex-1 overflow-hidden text-ellipsis whitespace-nowrap sm:text-[11px]">
+                      #{tokenName}
+                    </span>
                     {item.amount && (
-                      <span className="transaction-amount">
+                      <span className="text-[10px] font-medium text-blue-500 whitespace-nowrap sm:text-[9px]">
                         {Number(item.amount).toLocaleString()} AE
                       </span>
                     )}
@@ -160,7 +176,7 @@ export default function LatestTransactionsCarousel() {
                   {item.sale_address && (
                     <a 
                       href={`/trendminer/tokens/${encodeURIComponent(tokenName)}`}
-                      className="transaction-link"
+                      className="text-[10px] text-blue-500 no-underline font-medium transition-all duration-200 self-start whitespace-nowrap hover:text-blue-400 hover:underline sm:text-[9px] sm:p-1 sm:min-h-6 sm:flex sm:items-center"
                     >
                       View Token →
                     </a>

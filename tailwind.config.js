@@ -100,6 +100,14 @@ export default {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(100%)' },
         },
+        'skeleton-loading': {
+          '0%': { backgroundPosition: '200% 0' },
+          '100%': { backgroundPosition: '-200% 0' },
+        },
+        'carousel-scroll': {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -107,6 +115,7 @@ export default {
         'pulse-glow': 'pulse-glow 2s infinite',
         'floating': 'floating 3s ease-in-out infinite',
         shimmer: 'shimmer 3s infinite',
+        'skeleton-loading': 'skeleton-loading 1.5s infinite',
       },
     },
   },

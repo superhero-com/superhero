@@ -138,7 +138,7 @@ export default function FeedList() {
 
         <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
 
-        <div className="py-2 max-w-[680px] mx-auto mobile:pt-4 mobile:px-3 mobile-small:px-2">
+        <div className="py-2 max-w-[680px] mx-auto mobile:pt-4 mobile:px-3 mobile-small:px-2 gap-4 flex flex-col">
           {renderEmptyState()}
           {renderFeedItems}
         </div>

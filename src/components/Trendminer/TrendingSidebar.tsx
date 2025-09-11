@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { cn } from '../../lib/utils';
 import AeButton from '../AeButton';
 import { TrendminerApi } from '../../api/backend';
-import './TrendingSidebar.scss';
 
 type TokenItem = {
   address: string;
@@ -86,14 +86,21 @@ export default function TrendingSidebar() {
   }
 
   return (
-    <div className="genz-card trending-sidebar-card">
-      <div className="sidebar-header">
-        <div className="sidebar-title-wrap">
-          <span className="sidebar-icon">🔥</span>
-          <h4 className="sidebar-title">Explore Trends</h4>
+    <div className="p-3.5 bg-[var(--glass-bg,rgba(255,255,255,0.05))] border border-[var(--glass-border,rgba(255,255,255,0.1))] rounded-2xl shadow-[var(--glass-shadow,0_8px_32px_rgba(0,0,0,0.1))] backdrop-blur-sm">
+      <div className="flex items-center justify-between gap-2.5 mb-2.5">
+        <div className="flex items-center gap-2">
+          <span className="text-base filter drop-shadow-[0_0_8px_rgba(255,107,107,0.5)]">🔥</span>
+          <h4 className="m-0 text-base font-extrabold bg-gradient-to-r from-[var(--neon-pink)] to-[var(--custom-links-color)] bg-clip-text text-transparent">
+            Explore Trends
+          </h4>
         </div>
-        <div className="sidebar-controls">
-          <select aria-label="Order by" className="sidebar-select" value={orderBy} onChange={(e) => setOrderBy(e.target.value as any)}>
+        <div className="flex gap-2">
+          <select 
+            aria-label="Order by" 
+            className="px-3 py-2 rounded-full border border-white/16 bg-white/4 text-[var(--standard-font-color)] text-xs"
+            value={orderBy} 
+            onChange={(e) => setOrderBy(e.target.value as any)}
+          >
             <option value="score">Most Trending</option>
             <option value="created_at">Latest</option>
           </select>
@@ -102,31 +109,43 @@ export default function TrendingSidebar() {
             placeholder="Search trends…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="sidebar-input"
+            className="px-3 py-2 rounded-full border border-white/16 bg-white/4 text-[var(--standard-font-color)] text-xs placeholder:text-[var(--light-font-color)] placeholder:opacity-80"
           />
         </div>
       </div>
 
-      {loading && <div className="sidebar-state muted">Loading…</div>}
-      {error && <div className="sidebar-state error">{error}</div>}
+      {loading && (
+        <div className="p-2 text-xs rounded-lg opacity-80">
+          Loading…
+        </div>
+      )}
+      {error && (
+        <div className="p-2 text-xs rounded-lg text-red-400 bg-red-500/8 border border-red-500/25">
+          {error}
+        </div>
+      )}
 
-      <div className="sidebar-list">
+      <div className="grid gap-2">
         {filtered.slice(0, 12).map((it) => {
           const tok = tagTokenMap[it.tag];
           return (
-            <div key={it.tag} className="sidebar-item">
-              <div className="item-name">#{it.tag.toUpperCase()}</div>
-              <div className="item-details">
+            <div key={it.tag} className="flex justify-between items-center border border-white/12 bg-white/4 rounded-xl p-2.5 min-w-0">
+              <div className="font-extrabold text-[var(--standard-font-color)] text-shadow-[0_0_8px_rgba(78,205,196,0.25)] overflow-hidden text-ellipsis whitespace-nowrap">
+                #{it.tag.toUpperCase()}
+              </div>
+              <div className="flex gap-2 items-center flex-shrink-0 overflow-hidden">
                 {!tok && (
                   <>
-                    <span className="score">↑ {it.score.toLocaleString()}</span>
+                    <span className="text-[var(--neon-pink)] font-bold text-xs">
+                      ↑ {it.score.toLocaleString()}
+                    </span>
                     {it.source && (
                       <a
                         href={`https://x.com/search?q=${encodeURIComponent('#' + it.tag)}&src=typed_query`}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="source-link"
+                        className="text-[var(--custom-links-color)] no-underline text-xs"
                       >
                         via {it.source}
                       </a>
@@ -135,14 +154,18 @@ export default function TrendingSidebar() {
                 )}
                 {tok ? (
                   <>
-                    <span className="metric">{normalizeAe(Number(tok.price ?? 0)).toFixed(6)} AE</span>
-                    <span className="metric">Holders: {tok.holders_count ?? 0}</span>
+                    <span className="text-[var(--neon-teal)] font-bold text-xs">
+                      {normalizeAe(Number(tok.price ?? 0)).toFixed(6)} AE
+                    </span>
+                    <span className="text-[var(--neon-teal)] font-bold text-xs">
+                      Holders: {tok.holders_count ?? 0}
+                    </span>
                     <AeButton
                       variant="accent"
                       size="xs"
                       outlined
                       onClick={() => window.location.href = `/trendminer/tokens/${encodeURIComponent(tok.name || tok.address)}`}
-                      className="view-btn"
+                      className="ml-2"
                     >
                       View
                     </AeButton>
@@ -153,7 +176,7 @@ export default function TrendingSidebar() {
                     size="xs"
                     rounded
                     onClick={() => window.location.href = `/trendminer/create?new=${encodeURIComponent(it.tag)}`}
-                    className="tokenize-btn"
+                    className="ml-2 px-2 py-0.5 rounded-full text-[10px]"
                   >
                     Tokenize
                   </AeButton>

@@ -39,30 +39,32 @@ const aeButtonVariants = cva(
 
 export interface AeButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof aeButtonVariants> {
+  VariantProps<typeof aeButtonVariants> {
   asChild?: boolean
   loading?: boolean
   fullWidth?: boolean
   glow?: boolean
   active?: boolean
+  noShadow?: boolean
 }
 
 const AeButton = React.forwardRef<HTMLButtonElement, AeButtonProps>(
-  ({ 
-    className, 
-    variant, 
-    size, 
-    asChild = false, 
+  ({
+    className,
+    variant,
+    size,
+    asChild = false,
     loading = false,
     fullWidth = false,
     glow = false,
     active = false,
+    noShadow = false,
     children,
     disabled,
-    ...props 
+    ...props
   }, ref) => {
     const Comp = asChild ? Slot : "button"
-    
+
     return (
       <Comp
         className={cn(
@@ -71,6 +73,7 @@ const AeButton = React.forwardRef<HTMLButtonElement, AeButtonProps>(
           glow && "shadow-glow animate-pulse-glow",
           active && "data-[active=true]",
           loading && "cursor-wait",
+          noShadow && "!shadow-none hover:!shadow-none focus:!shadow-none active:!shadow-none focus-visible:!shadow-none !translate-y-0 hover:!translate-y-0 focus:!translate-y-0 active:!translate-y-0 focus-visible:!translate-y-0 !scale-100 hover:!scale-100 focus:!scale-100 active:!scale-100 focus-visible:!scale-100",
           className
         )}
         ref={ref}

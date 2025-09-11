@@ -149,8 +149,8 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
   const currentPrompt = activeAccount ? PROMPTS[promptIndex] : 'Connect your wallet to start posting ✍️';
 
   return (
-    <div className={`max-w-[680px] mx-auto mb-5 md:mx-3 md:mb-4 md:mt-[calc(env(safe-area-inset-top)+4rem)] ${className}`}>
-      <div className="bg-gradient-to-br from-white/8 to-white/3 border border-purple-400 rounded-2xl p-5 transition-all duration-300 backdrop-blur-xl relative shadow-[0_16px_40px_rgba(0,0,0,0.35)] md:rounded-2xl md:p-4">
+    <div className={`max-w-[680px] mx-auto mb-5 md:mx-3 md:mb-4 ${className}`}>
+      <div className="bg-gradient-to-br from-white/8 to-white/3 border border-primary-400 rounded-2xl p-5 transition-all duration-300 backdrop-blur-xl relative shadow-[0_16px_40px_rgba(0,0,0,0.35)] md:rounded-2xl md:p-4">
         <form onSubmit={handleSubmit} className="relative">
     
           <div className="flex flex-col gap-3">
@@ -160,7 +160,7 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
                 placeholder={currentPrompt} 
                 value={text} 
                 onChange={(e) => setText(e.target.value)} 
-                className="bg-white/7 border border-white/14 rounded-2xl p-4 pb-10 text-white text-base transition-all duration-200 outline-none caret-purple-400 resize-none min-h-[80px] leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-purple-400 focus:bg-white/10 focus:shadow-[0_0_0_2px_rgb(168_85_247),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pb-10 md:text-base md:min-h-[100px] md:rounded-2xl" 
+                className="bg-white/7 border border-white/14 rounded-2xl p-4 pb-10 text-white text-base transition-all duration-200 outline-none caret-primary-400 resize-none min-h-[80px] leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-primary-400 focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(78,205,196,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pb-10 md:text-base md:min-h-[100px] md:rounded-2xl" 
                 rows={3} 
                 maxLength={280} 
               />
@@ -189,12 +189,12 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-4 pt-2.5 border-t border-white/12 relative md:flex-col md:gap-3 md:pt-3 md:items-stretch">
-            <div className="flex gap-2.5 relative md:justify-center md:gap-3">
+          <div className="flex flex-col gap-3 pt-2.5 border-t border-white/12 relative md:flex-row md:items-center md:justify-between md:gap-3 md:pt-3">
+            <div className="flex gap-2.5 relative justify-center md:justify-start">
               {/* <button type="button" className="media-button" onClick={() => fileInputRef.current?.click()} disabled={mediaFiles.length >= 4}><IconImage /><span>Media</span></button> */}
               <button 
                 type="button" 
-                className="bg-white/7 border border-white/14 text-white/90 px-3.5 py-2.5 rounded-xl cursor-pointer transition-all duration-200 inline-flex items-center gap-2 text-sm font-bold tracking-wide hover:bg-white/12 hover:border-white/22 hover:text-white hover:-translate-y-px md:px-4 md:py-3 md:min-h-[44px] md:text-sm md:rounded-2xl md:flex-1 md:justify-center" 
+                className="bg-white/5 border border-white/10 text-white/70 px-4 py-2.5 rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(78,205,196,0.2)] active:translate-y-0 flex-1 md:flex-none md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm md:rounded-full" 
                 title="Emoji" 
                 ref={emojiBtnRef} 
                 onClick={() => { setShowEmoji(s => !s); setShowGif(false); }}
@@ -203,7 +203,7 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
               </button>
               <button 
                 type="button" 
-                className="bg-white/7 border border-white/14 text-white/90 px-3.5 py-2.5 rounded-xl cursor-pointer transition-all duration-200 inline-flex items-center gap-2 text-sm font-bold tracking-wide hover:bg-white/12 hover:border-white/22 hover:text-white hover:-translate-y-px md:px-4 md:py-3 md:min-h-[44px] md:text-sm md:rounded-2xl md:flex-1 md:justify-center" 
+                className="bg-white/5 border border-white/10 text-white/70 px-4 py-2.5 rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(78,205,196,0.2)] active:translate-y-0 flex-1 md:flex-none md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm md:rounded-full" 
                 title="GIF" 
                 ref={gifBtnRef} 
                 onClick={() => { setShowGif(s => !s); setShowEmoji(false); }}
@@ -248,7 +248,7 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
                     </button>
                     <button 
                       type="button" 
-                      className="bg-purple-400 text-black border border-purple-400 px-3.5 py-2 rounded-xl cursor-pointer transition-all duration-200 md:px-4 md:py-3 md:min-h-[44px] md:rounded-xl md:text-sm" 
+                      className="bg-primary-400 text-black border border-primary-400 px-3.5 py-2 rounded-xl cursor-pointer transition-all duration-200 md:px-4 md:py-3 md:min-h-[44px] md:rounded-xl md:text-sm" 
                       onClick={addGifFromUrl}
                     >
                       Add
@@ -257,18 +257,21 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
                 </div>
               )}
             </div>
-            <div className="flex items-center justify-end md:justify-center md:items-center">
+            <div className="flex items-center justify-center w-full md:justify-end md:w-auto">
               {activeAccount ? (
                 <AeButton 
                   type="submit" 
                   loading={isSubmitting} 
                   disabled={!text.trim()} 
-                  className="relative bg-purple-400 border-none text-black font-black px-7 py-2.5 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-purple-400 hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(0,0,0,0.3)] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none md:px-6 md:py-3 md:min-h-[44px] md:text-base md:rounded-2xl md:w-full"
+                  className="relative bg-primary-400 border-none text-black font-black px-7 py-2.5 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-primary-400 hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(0,0,0,0.3)] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base md:rounded-full"
                 >
                   {isSubmitting ? 'Posting…' : 'Post'}
                 </AeButton>
               ) : (
-                <ConnectWalletButton />
+                <ConnectWalletButton 
+                  block 
+                  className="w-full md:w-auto" 
+                />
               )}
             </div>
           </div>

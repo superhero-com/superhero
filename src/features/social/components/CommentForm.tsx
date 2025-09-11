@@ -1,10 +1,13 @@
 import React, { useCallback, useState } from 'react';
-import AeButton from '../../../components/AeButton';
+import { AeButton } from '../../../components/ui/ae-button';
+import { Textarea } from '../../../components/ui/textarea';
+import { AeCard, AeCardContent } from '../../../components/ui/ae-card';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useAccount } from '../../../hooks/useAccount';
 import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
 import { CONFIG } from '../../../config';
 import { useQueryClient } from '@tanstack/react-query';
+import { cn } from '@/lib/utils';
 
 interface CommentFormProps {
   postId: string;
@@ -66,39 +69,60 @@ const CommentForm: React.FC<CommentFormProps> = ({
 
   if (!activeAccount) {
     return (
-      <div className="comment-form-container">
-        <div className="comment-form-message">
-          Please connect your wallet to comment
-        </div>
-      </div>
+      <AeCard 
+        variant="glass" 
+        className="mt-4 border-glass-border"
+        style={{
+          background: "radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.04), transparent 40%), rgba(255, 255, 255, 0.02)",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          boxShadow: "0 8px 25px rgba(0,0,0,0.2)"
+        }}
+      >
+        <AeCardContent className="p-4 text-center">
+          <p className="text-sm text-muted-foreground">
+            Please connect your wallet to comment
+          </p>
+        </AeCardContent>
+      </AeCard>
     );
   }
 
   return (
-    <div className="comment-form-container">
-      <form onSubmit={handleSubmit} className="comment-form">
-        <div className="comment-input-wrapper">
-          <textarea
+    <AeCard 
+      variant="glass" 
+      className="mt-4 border-glass-border"
+      style={{
+        background: "radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.04), transparent 40%), rgba(255, 255, 255, 0.02)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        boxShadow: "0 8px 25px rgba(0,0,0,0.2)"
+      }}
+    >
+      <AeCardContent className="p-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder={placeholder}
-            className="comment-input"
             rows={3}
             disabled={isSubmitting}
+            className="resize-none bg-muted/20 border-muted/50 focus:border-accent focus:ring-accent/20"
           />
-        </div>
-        <div className="comment-form-actions">
-          <AeButton
-            type="submit"
-            disabled={!comment.trim() || isSubmitting}
-            loading={isSubmitting}
-            size="sm"
-          >
-            {isSubmitting ? 'Posting...' : 'Post Comment'}
-          </AeButton>
-        </div>
-      </form>
-    </div>
+          <div className="flex justify-end">
+            <AeButton
+              type="submit"
+              disabled={!comment.trim() || isSubmitting}
+              loading={isSubmitting}
+              size="sm"
+              className="px-6"
+            >
+              {isSubmitting ? 'Posting...' : 'Post Comment'}
+            </AeButton>
+          </div>
+        </form>
+      </AeCardContent>
+    </AeCard>
   );
 };
 

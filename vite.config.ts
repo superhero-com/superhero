@@ -8,6 +8,11 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
     plugins: [react(), svgr()],
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
+    },
     // Ensure env is loaded from the monorepo root so .env.* at repo root are picked up
     // Load envs from app directory only to avoid invalid envDir array issue
     envDir: __dirname,

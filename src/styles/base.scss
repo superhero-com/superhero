@@ -1,6 +1,7 @@
 @use './variables.scss' as *;
 @use './mixins.scss' as *;
 @use './mobile-optimizations.scss' as *;
+@import './tailwind.css';
 
 :root {
   color-scheme: dark;

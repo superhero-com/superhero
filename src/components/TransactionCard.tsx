@@ -1,5 +1,8 @@
 import React from 'react';
 import { useAeSdk } from '../hooks';
+import { AeCard, AeCardContent } from './ui/ae-card';
+import { Badge } from './ui/badge';
+import { cn } from '@/lib/utils';
 
 interface TransactionData {
   hash: string;
@@ -52,426 +55,98 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
   };
 
   return (
-    <div
-      style={{
-        padding: 16,
-        borderRadius: 16,
-        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)',
-        border: '1px solid var(--glass-border)',
-        backdropFilter: 'blur(10px)',
-        transition: 'all 0.3s ease',
-        position: 'relative',
-        overflow: 'hidden'
-      }}
-      onMouseOver={(e) => {
-        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 255, 157, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)';
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 255, 157, 0.15)';
-      }}
-      onMouseOut={(e) => {
-        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%)';
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = 'none';
-      }}
+    <AeCard 
+      variant="glass" 
+      className="transition-all duration-300 hover:-translate-y-1 hover:shadow-glow hover:bg-gradient-to-br hover:from-accent/8 hover:to-glass-bg/40"
     >
-      {/* Transaction Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: 12
-      }}>
-        <div style={{
-          fontSize: 16,
-          fontWeight: 700,
-          color: 'var(--standard-font-color)'
-        }}>
-          {tx.type === 'SwapTokens' ? `Swap ${getTransactionTokens(tx).token0Symbol} → ${getTransactionTokens(tx).token1Symbol}` :
-           tx.type === 'PairMint' ? `Add Liquidity ${getTransactionTokens(tx).token0Symbol} / ${getTransactionTokens(tx).token1Symbol}` :
-           tx.type === 'CreatePair' ? `Create ${getTransactionTokens(tx).token0Symbol} / ${getTransactionTokens(tx).token1Symbol} Pool` :
-           tx.type || 'Transaction'}
+      <AeCardContent className="p-4">
+        {/* Transaction Header */}
+        <div className="flex justify-between items-start mb-3">
+          <div className="text-base font-bold text-foreground">
+            {tx.type === 'SwapTokens' ? `Swap ${getTransactionTokens(tx).token0Symbol} → ${getTransactionTokens(tx).token1Symbol}` :
+             tx.type === 'PairMint' ? `Add Liquidity ${getTransactionTokens(tx).token0Symbol} / ${getTransactionTokens(tx).token1Symbol}` :
+             tx.type === 'CreatePair' ? `Create ${getTransactionTokens(tx).token0Symbol} / ${getTransactionTokens(tx).token1Symbol} Pool` :
+             tx.type || 'Transaction'}
+          </div>
+          {tx.microBlockTime && (
+            <div className="text-xs text-muted-foreground">
+              {new Date(Number(tx.microBlockTime) * 1000).toLocaleDateString()}
+            </div>
+          )}
         </div>
-        {tx.microBlockTime && (
-          <div style={{
-            fontSize: 12,
-            color: 'var(--light-font-color)'
-          }}>
-            {new Date(Number(tx.microBlockTime) * 1000).toLocaleDateString()}
-          </div>
-        )}
-      </div>
 
-      {/* Swap Details */}
-      {tx.type === 'SwapTokens' && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr auto 1fr',
-          gap: 12,
-          alignItems: 'center',
-          padding: 12,
-          background: 'rgba(255, 255, 255, 0.02)',
-          borderRadius: 12,
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          marginBottom: 8
-        }}>
-          {/* Token In */}
-          <div style={{ textAlign: 'center' }}>
-            <div style={{
-              fontSize: 11,
-              color: 'var(--light-font-color)',
-              marginBottom: 2,
-              fontWeight: 600
-            }}>
-              FROM
-            </div>
-            <div style={{
-              fontSize: 16,
-              fontWeight: 700,
-              color: 'var(--error-color)',
-              fontFamily: 'monospace',
-              marginBottom: 4
-            }}>
-              -{tx.deltaReserve0 ? formatNumber(Math.abs(Number(tx.deltaReserve0)) / 1e18, 6) : '—'}
-            </div>
-            <div style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: 'var(--standard-font-color)',
-              background: 'rgba(255, 107, 107, 0.1)',
-              padding: '2px 6px',
-              borderRadius: 6,
-              display: 'inline-block'
-            }}>
-              {getTransactionTokens(tx).token0Symbol}
-            </div>
-            {tx.delta0UsdValue && (
-              <div style={{
-                fontSize: 10,
-                color: 'var(--light-font-color)',
-                marginTop: 2
-              }}>
-                ≈ ${formatNumber(Number(tx.delta0UsdValue), 2)}
+        {/* Swap Details */}
+        {tx.type === 'SwapTokens' && (
+          <div className="grid grid-cols-3 gap-3 items-center p-3 bg-muted/20 rounded-xl border border-muted/50 mb-2">
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground font-semibold mb-1">FROM</div>
+              <div className="text-base font-bold text-destructive font-mono mb-1">
+                -{tx.deltaReserve0 ? formatNumber(Math.abs(Number(tx.deltaReserve0)) / 1e18, 6) : '—'}
               </div>
-            )}
-          </div>
-
-          {/* Arrow */}
-          <div style={{
-            fontSize: 20,
-            color: 'var(--accent-color)',
-            fontWeight: 700
-          }}>
-            →
-          </div>
-
-          {/* Token Out */}
-          <div style={{ textAlign: 'center' }}>
-            <div style={{
-              fontSize: 11,
-              color: 'var(--light-font-color)',
-              marginBottom: 2,
-              fontWeight: 600
-            }}>
-              TO
-            </div>
-            <div style={{
-              fontSize: 16,
-              fontWeight: 700,
-              color: 'var(--success-color)',
-              fontFamily: 'monospace',
-              marginBottom: 4
-            }}>
-              +{tx.deltaReserve1 ? formatNumber(Math.abs(Number(tx.deltaReserve1)) / 1e18, 6) : '—'}
-            </div>
-            <div style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: 'var(--standard-font-color)',
-              background: 'rgba(0, 255, 157, 0.1)',
-              padding: '2px 6px',
-              borderRadius: 6,
-              display: 'inline-block'
-            }}>
-              {getTransactionTokens(tx).token1Symbol}
-            </div>
-            {tx.delta1UsdValue && (
-              <div style={{
-                fontSize: 10,
-                color: 'var(--light-font-color)',
-                marginTop: 2
-              }}>
-                ≈ ${formatNumber(Number(tx.delta1UsdValue), 2)}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Liquidity Addition Details */}
-      {tx.type === 'PairMint' && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 12,
-          padding: 12,
-          background: 'rgba(255, 255, 255, 0.02)',
-          borderRadius: 12,
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          marginBottom: 8
-        }}>
-          {/* Reserve 0 */}
-          <div>
-            <div style={{
-              fontSize: 11,
-              color: 'var(--light-font-color)',
-              marginBottom: 2,
-              fontWeight: 600
-            }}>
-              {getTransactionTokens(tx).token0Symbol} ADDED
-            </div>
-            <div style={{
-              fontSize: 16,
-              fontWeight: 700,
-              color: 'var(--success-color)',
-              fontFamily: 'monospace',
-              marginBottom: 4
-            }}>
-              +{tx.deltaReserve0 ? formatNumber(Math.abs(Number(tx.deltaReserve0)) / 1e18, 6) : '—'}
-            </div>
-            <div style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: 'var(--standard-font-color)',
-              background: 'rgba(0, 255, 157, 0.1)',
-              padding: '2px 6px',
-              borderRadius: 6,
-              display: 'inline-block',
-              marginBottom: 2
-            }}>
-              {getTransactionTokens(tx).token0Symbol}
-            </div>
-            {tx.reserve0 && (
-              <div style={{
-                fontSize: 10,
-                color: 'var(--light-font-color)'
-              }}>
-                Pool: {formatNumber(Number(tx.reserve0) / 1e18, 2)}
-              </div>
-            )}
-          </div>
-
-          {/* Reserve 1 */}
-          <div>
-            <div style={{
-              fontSize: 11,
-              color: 'var(--light-font-color)',
-              marginBottom: 2,
-              fontWeight: 600
-            }}>
-              {getTransactionTokens(tx).token1Symbol} ADDED
-            </div>
-            <div style={{
-              fontSize: 16,
-              fontWeight: 700,
-              color: 'var(--success-color)',
-              fontFamily: 'monospace',
-              marginBottom: 4
-            }}>
-              +{tx.deltaReserve1 ? formatNumber(Math.abs(Number(tx.deltaReserve1)) / 1e18, 6) : '—'}
-            </div>
-            <div style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: 'var(--standard-font-color)',
-              background: 'rgba(0, 255, 157, 0.1)',
-              padding: '2px 6px',
-              borderRadius: 6,
-              display: 'inline-block',
-              marginBottom: 2
-            }}>
-              {getTransactionTokens(tx).token1Symbol}
-            </div>
-            {tx.reserve1 && (
-              <div style={{
-                fontSize: 10,
-                color: 'var(--light-font-color)'
-              }}>
-                Pool: {formatNumber(Number(tx.reserve1) / 1e18, 2)}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Create Pair Details */}
-      {tx.type === 'CreatePair' && (
-        <div style={{
-          padding: 12,
-          background: 'linear-gradient(135deg, rgba(138, 43, 226, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%)',
-          borderRadius: 12,
-          border: '1px solid rgba(138, 43, 226, 0.2)',
-          marginBottom: 8
-        }}>
-          <div style={{
-            fontSize: 12,
-            fontWeight: 600,
-            color: 'var(--accent-color)',
-            marginBottom: 8,
-            textAlign: 'center'
-          }}>
-            🎉 New Trading Pair Created
-          </div>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr auto 1fr',
-            gap: 12,
-            alignItems: 'center'
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{
-                fontSize: 14,
-                fontWeight: 700,
-                color: 'var(--standard-font-color)',
-                background: 'rgba(138, 43, 226, 0.15)',
-                padding: '4px 8px',
-                borderRadius: 8,
-                display: 'inline-block'
-              }}>
+              <Badge variant="destructive" className="text-xs px-2 py-1">
                 {getTransactionTokens(tx).token0Symbol}
-              </div>
-              {tx.reserve0 && (
-                <div style={{
-                  fontSize: 11,
-                  color: 'var(--light-font-color)',
-                  marginTop: 4
-                }}>
-                  {formatNumber(Number(tx.reserve0) / 1e18, 4)}
+              </Badge>
+              {tx.delta0UsdValue && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  ≈ ${formatNumber(Number(tx.delta0UsdValue), 2)}
                 </div>
               )}
             </div>
-            
-            <div style={{
-              fontSize: 16,
-              color: 'var(--accent-color)',
-              fontWeight: 700
-            }}>
-              ⚡
-            </div>
-            
-            <div style={{ textAlign: 'center' }}>
-              <div style={{
-                fontSize: 14,
-                fontWeight: 700,
-                color: 'var(--standard-font-color)',
-                background: 'rgba(138, 43, 226, 0.15)',
-                padding: '4px 8px',
-                borderRadius: 8,
-                display: 'inline-block'
-              }}>
+            <div className="text-xl text-accent font-bold text-center">→</div>
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground font-semibold mb-1">TO</div>
+              <div className="text-base font-bold text-success font-mono mb-1">
+                +{tx.deltaReserve1 ? formatNumber(Math.abs(Number(tx.deltaReserve1)) / 1e18, 6) : '—'}
+              </div>
+              <Badge className="text-xs px-2 py-1 bg-success/20 text-success border-success/30">
                 {getTransactionTokens(tx).token1Symbol}
-              </div>
-              {tx.reserve1 && (
-                <div style={{
-                  fontSize: 11,
-                  color: 'var(--light-font-color)',
-                  marginTop: 4
-                }}>
-                  {formatNumber(Number(tx.reserve1) / 1e18, 4)}
+              </Badge>
+              {tx.delta1UsdValue && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  ≈ ${formatNumber(Number(tx.delta1UsdValue), 2)}
                 </div>
               )}
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Total Transaction Value */}
-      {(tx.delta0UsdValue || tx.delta1UsdValue || tx.txUsdFee) && (
-        <div style={{
-          padding: 8,
-          background: 'rgba(255, 255, 255, 0.02)',
-          borderRadius: 8,
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          marginBottom: 8,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <div style={{
-            fontSize: 11,
-            color: 'var(--light-font-color)',
-            fontWeight: 600
-          }}>
-            Transaction Value:
-          </div>
-          <div style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: 'var(--accent-color)',
-            fontFamily: 'monospace'
-          }}>
-            ${formatNumber((Number(tx.delta0UsdValue || 0) + Number(tx.delta1UsdValue || 0)), 2)}
-            {tx.txUsdFee && (
-              <span style={{
-                fontSize: 10,
-                color: 'var(--light-font-color)',
-                marginLeft: 8
-              }}>
-                (Fee: ${formatNumber(Number(tx.txUsdFee), 4)})
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Transaction Footer */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingTop: 8,
-        borderTop: '1px solid rgba(255, 255, 255, 0.05)'
-      }}>
-        {tx.hash && (
-          <div 
-            style={{
-              fontSize: 10,
-              color: 'var(--accent-color)',
-              fontFamily: 'monospace',
-              cursor: 'pointer',
-              padding: '4px 8px',
-              borderRadius: 6,
-              background: 'rgba(0, 255, 157, 0.05)',
-              border: '1px solid rgba(0, 255, 157, 0.1)',
-              transition: 'all 0.2s ease'
-            }}
-            onClick={() => {
-              if (activeNetwork?.explorerUrl) {
-                window.open(`${activeNetwork.explorerUrl}/transactions/${tx.hash}`, '_blank');
-              }
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 255, 157, 0.1)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 255, 157, 0.05)';
-            }}
-          >
-            📋 {tx.hash.slice(0, 8)}...{tx.hash.slice(-6)}
+        {/* Transaction Value */}
+        {(tx.delta0UsdValue || tx.delta1UsdValue || tx.txUsdFee) && (
+          <div className="flex justify-between items-center p-2 bg-muted/20 rounded-lg border border-muted/50 mb-2">
+            <span className="text-xs text-muted-foreground font-semibold">Value:</span>
+            <div className="text-sm font-bold text-accent font-mono">
+              ${formatNumber((Number(tx.delta0UsdValue || 0) + Number(tx.delta1UsdValue || 0)), 2)}
+              {tx.txUsdFee && (
+                <span className="text-xs text-muted-foreground ml-2">
+                  (Fee: ${formatNumber(Number(tx.txUsdFee), 4)})
+                </span>
+              )}
+            </div>
           </div>
         )}
-        
-        {tx.pairAddress && (
-          <div style={{
-            fontSize: 10,
-            color: 'var(--light-font-color)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4
-          }}>
-            🏊 Pool: {tx.pairAddress.slice(0, 6)}...{tx.pairAddress.slice(-4)}
-          </div>
-        )}
-      </div>
-    </div>
+
+        {/* Transaction Footer */}
+        <div className="flex justify-between items-center pt-2 border-t border-muted/50">
+          {tx.hash && (
+            <Badge 
+              variant="outline"
+              className="text-xs font-mono cursor-pointer hover:bg-accent/10 transition-colors"
+              onClick={() => {
+                if (activeNetwork?.explorerUrl) {
+                  window.open(`${activeNetwork.explorerUrl}/transactions/${tx.hash}`, '_blank');
+                }
+              }}
+            >
+              📋 {tx.hash.slice(0, 8)}...{tx.hash.slice(-6)}
+            </Badge>
+          )}
+          {tx.pairAddress && (
+            <div className="text-xs text-muted-foreground font-mono">
+              🏊 {tx.pairAddress.slice(0, 6)}...{tx.pairAddress.slice(-4)}
+            </div>
+          )}
+        </div>
+      </AeCardContent>
+    </AeCard>
   );
 };

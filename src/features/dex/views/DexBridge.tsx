@@ -1,18 +1,17 @@
 import React from 'react';
-import './DexViews.scss';
 import { EthBridgeWidget } from '../../bridge';
 import RecentActivity from '../../../components/dex/supporting/RecentActivity';
 
 export default function DexBridge() {
   return (
-    <div className="dex-bridge-container">
+    <div>
       {/* Main Content */}
-      <div className="dex-swap-content">
-        <div className="dex-swap-main">
+      <div className="flex gap-6 items-start w-full mobile:flex-col mobile:gap-5">
+        <div className="min-w-0 max-w-[600px] flex-shrink-0 mobile:max-w-none">
           <EthBridgeWidget />
         </div>
         
-        <div className="dex-swap-sidebar">
+        <div className="flex-1 min-w-0">
           <RecentActivity />
         </div>
       </div>

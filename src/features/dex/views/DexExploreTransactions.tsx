@@ -2,7 +2,6 @@ import React from 'react';
 import { useTransactionList } from '../../../components/explore/hooks/useTransactionList';
 import { TransactionCard } from '../../../components/TransactionCard';
 import { CONFIG } from '../../../config';
-import './DexViews.scss';
 
 export default function DexExploreTransactions() {
   const transactionList = useTransactionList();
@@ -38,58 +37,22 @@ export default function DexExploreTransactions() {
   });
 
   return (
-    <div className="dex-explore-transactions-container">
+    <div className="p-0">
       {/* Main Content Card */}
-      <div className="genz-card" style={{
-        maxWidth: 1200,
-        margin: '0 auto',
-        background: 'var(--glass-bg)',
-        border: '1px solid var(--glass-border)',
-        backdropFilter: 'blur(20px)',
-        borderRadius: 24,
-        padding: 24,
-        boxShadow: 'var(--glass-shadow)',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
+      <div className="max-w-[1200px] mx-auto bg-glass-bg border border-glass-border backdrop-blur-[20px] rounded-[24px] p-6 shadow-glass relative overflow-hidden mobile:mx-2 mobile:p-4 mobile:rounded-2xl">
         {/* Header */}
-        <div style={{
-          marginBottom: 24
-        }}>
-          <h1 style={{
-            fontSize: 24,
-            fontWeight: 700,
-            color: 'var(--standard-font-color)',
-            margin: '0 0 12px 0',
-            background: 'var(--primary-gradient)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-standard-font-color m-0 mb-3 bg-primary-gradient bg-clip-text text-transparent mobile:text-xl">
             Explore Transactions
           </h1>
-          <p style={{
-            fontSize: 16,
-            color: 'var(--light-font-color)',
-            margin: 0,
-            opacity: 0.8,
-            lineHeight: 1.5
-          }}>
+          <p className="text-base text-light-font-color m-0 opacity-80 leading-6 mobile:text-sm">
             Track recent swaps, liquidity additions, and removals across the DEX.
           </p>
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
+        <div className="overflow-x-auto">
           {/* Compact Filter Controls */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: '1px solid var(--glass-border)',
-            borderRadius: 12,
-            padding: '12px 16px',
-            marginBottom: 20,
-            backdropFilter: 'blur(15px)',
-            boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)'
-          }}>
+          <div className="bg-white/[0.03] border border-glass-border rounded-xl p-3 px-4 mb-5 backdrop-blur-[15px] shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
             {/* Compact Filter Layout */}
             <div style={{
               display: 'flex',
@@ -298,7 +261,7 @@ export default function DexExploreTransactions() {
           </div>
 
           {/* Transaction Cards */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="flex flex-col gap-4">
             {transactionList.transactions.map((tx, i) => (
               <TransactionCard
                 key={tx.transactionHash || i}

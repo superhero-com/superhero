@@ -208,112 +208,47 @@ export default function AddLiquidityForm() {
   const isAddDisabled = state.loading || !amountA || Number(amountA) <= 0 || !amountB || Number(amountB) <= 0 || !tokenA || !tokenB || !!state.error || hasInsufficientBalance;
 
   return (
-    <div className="genz-card" style={{
-      maxWidth: 480,
-      margin: '0 auto',
-      background: 'var(--glass-bg)',
-      border: '1px solid var(--glass-border)',
-      backdropFilter: 'blur(20px)',
-      borderRadius: 24,
-      padding: 24,
-      boxShadow: 'var(--glass-shadow)',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
+    <div className="max-w-[480px] mx-auto bg-glass-bg border border-glass-border backdrop-blur-xl rounded-3xl p-6 shadow-glass relative overflow-hidden">
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 24
-      }}>
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 style={{
-            fontSize: 20,
-            fontWeight: 700,
-            color: 'var(--standard-font-color)',
-            margin: 0,
-            background: 'var(--primary-gradient)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>
+          <h2 className="text-xl font-bold text-standard-font-color m-0 bg-primary-gradient bg-clip-text text-transparent">
             Add Liquidity
           </h2>
           {currentAction === 'add' && selectedTokenA && selectedTokenB && (
-            <p style={{
-              fontSize: 12,
-              color: 'var(--light-font-color)',
-              margin: '4px 0 0 0'
-            }}>
+            <p className="text-xs text-light-font-color mt-1">
               Adding to {selectedTokenA}/{selectedTokenB} position
             </p>
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div className="flex gap-2 items-center">
           {currentAction === 'add' && (
             <button
               onClick={clearSelection}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 12,
-                border: '1px solid var(--glass-border)',
-                background: 'var(--glass-bg)',
-                color: 'var(--standard-font-color)',
-                cursor: 'pointer',
-                backdropFilter: 'blur(10px)',
-                transition: 'all 0.3s ease',
-                fontSize: 12,
-                fontWeight: 500
-              }}
+              className="px-3 py-2 rounded-xl border border-glass-border bg-glass-bg text-standard-font-color cursor-pointer backdrop-blur-sm transition-all duration-300 text-xs font-medium hover:bg-accent-color hover:-translate-y-0.5"
             >
               ✕ Cancel
             </button>
           )}
 
           <DexSettings title="Liquidity Settings">
-          <button
-            aria-label="open-settings"
-            style={{
-              padding: '8px 12px',
-              borderRadius: 12,
-              border: '1px solid var(--glass-border)',
-              background: 'var(--glass-bg)',
-              color: 'var(--standard-font-color)',
-              cursor: 'pointer',
-              backdropFilter: 'blur(10px)',
-              transition: 'all 0.3s ease',
-              fontSize: 12,
-              fontWeight: 500
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = 'var(--accent-color)';
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = 'var(--glass-bg)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            ⚙️ Settings
-          </button>
-                  </DexSettings>
+            <button
+              aria-label="open-settings"
+              className="px-3 py-2 rounded-xl border border-glass-border bg-glass-bg text-standard-font-color cursor-pointer backdrop-blur-sm transition-all duration-300 text-xs font-medium hover:bg-accent-color hover:-translate-y-0.5"
+            >
+              ⚙️ Settings
+            </button>
+          </DexSettings>
         </div>
       </div>
 
-      <div style={{
-        fontSize: 14,
-        color: 'var(--light-font-color)',
-        textAlign: 'center',
-        marginBottom: 24,
-        opacity: 0.9
-      }}>
+      <div className="text-sm text-light-font-color text-center mb-6 opacity-90">
         Provide liquidity to earn trading fees from swaps
       </div>
 
       {/* Token A Input */}
-      <div style={{ marginBottom: 8 }}>
+      <div className="mb-2">
         <TokenInput
           label="Token A"
           token={tokenA}
@@ -332,36 +267,14 @@ export default function AddLiquidityForm() {
       </div>
 
       {/* Plus Icon */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        margin: '16px 0',
-        position: 'relative'
-      }}>
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: '50%',
-            background: 'var(--button-gradient)',
-            border: '2px solid var(--glass-border)',
-            color: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 20,
-            fontWeight: 600,
-            boxShadow: '0 4px 12px rgba(255, 107, 107, 0.3)',
-            zIndex: 2,
-            position: 'relative'
-          }}
-        >
+      <div className="flex justify-center my-4 relative">
+        <div className="w-12 h-12 rounded-full bg-button-gradient border-2 border-glass-border text-white flex items-center justify-center text-xl font-semibold shadow-[0_4px_12px_rgba(255,107,107,0.3)] z-[2] relative">
           +
         </div>
       </div>
 
       {/* Token B Input */}
-      <div style={{ marginBottom: 20 }}>
+      <div className="mb-5">
         <TokenInput
           label="Token B"
           token={tokenB}
@@ -394,32 +307,14 @@ export default function AddLiquidityForm() {
 
       {/* Error Display */}
       {state.error && (
-        <div style={{
-          color: 'var(--error-color)',
-          fontSize: 14,
-          padding: '12px 16px',
-          background: 'rgba(255, 107, 107, 0.1)',
-          border: '1px solid rgba(255, 107, 107, 0.2)',
-          borderRadius: 12,
-          marginBottom: 20,
-          textAlign: 'center'
-        }}>
+        <div className="text-error-color text-sm px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl mb-5 text-center">
           {state.error}
         </div>
       )}
 
       {/* Insufficient Balance Warning */}
       {(hasInsufficientBalanceA || hasInsufficientBalanceB) && (
-        <div style={{
-          color: 'var(--error-color)',
-          fontSize: 14,
-          padding: '12px 16px',
-          background: 'rgba(255, 107, 107, 0.1)',
-          border: '1px solid rgba(255, 107, 107, 0.2)',
-          borderRadius: 12,
-          marginBottom: 20,
-          textAlign: 'center'
-        }}>
+        <div className="text-error-color text-sm px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl mb-5 text-center">
           {hasInsufficientBalanceA && hasInsufficientBalanceB ? (
             <>Insufficient balance for both {tokenA?.symbol} and {tokenB?.symbol}</>
           ) : hasInsufficientBalanceA ? (
@@ -435,38 +330,15 @@ export default function AddLiquidityForm() {
         <button
           onClick={() => setShowConfirm(true)}
           disabled={isAddDisabled}
-          className="genz-btn"
-          style={{
-            width: '100%',
-            padding: '16px 24px',
-            borderRadius: 16,
-            border: 'none',
-            background: isAddDisabled ?
-              'rgba(255, 255, 255, 0.1)' :
-              'var(--button-gradient)',
-            color: 'white',
-            cursor: isAddDisabled ? 'not-allowed' : 'pointer',
-            fontSize: 16,
-            fontWeight: 700,
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: isAddDisabled ?
-              'none' :
-              'var(--button-shadow)',
-            opacity: isAddDisabled ? 0.6 : 1
-          }}
+          className={`w-full px-6 py-4 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ${
+            isAddDisabled
+              ? 'bg-white/10 cursor-not-allowed opacity-60'
+              : 'bg-button-gradient shadow-button hover:shadow-button-hover'
+          }`}
         >
           {state.loading ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <div style={{
-                width: 16,
-                height: 16,
-                border: '2px solid rgba(255,255,255,0.3)',
-                borderTop: '2px solid white',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
-              }}></div>
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               Confirm in wallet…
             </div>
           ) : 'Add Liquidity'}
@@ -475,20 +347,7 @@ export default function AddLiquidityForm() {
         <ConnectWalletButton
           label="Connect Wallet to Add Liquidity"
           block
-          style={{
-            width: '100%',
-            padding: '16px 24px',
-            borderRadius: 16,
-            border: 'none',
-            background: 'var(--button-gradient)',
-            color: 'white',
-            fontSize: 16,
-            fontWeight: 700,
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase',
-            boxShadow: 'var(--button-shadow)',
-            cursor: 'pointer'
-          }}
+          className="w-full px-6 py-4 rounded-2xl border-none bg-button-gradient text-white text-base font-bold tracking-wider uppercase shadow-button cursor-pointer"
         />
       )}
 
@@ -518,13 +377,6 @@ export default function AddLiquidityForm() {
         txHash={successTxHash}
       />
 
-      {/* Add keyframes for spinner animation */}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }

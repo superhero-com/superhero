@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import './DexLayout.scss';
 
 interface NavigationItem {
   id: string;
@@ -172,28 +171,28 @@ export default function DexLayout({ children }: DexLayoutProps) {
   );
 
   return (
-    <div className="dex-layout">
-      <div className="dex-container">
+    <div className="text-text-color">
+      <div className="w-full max-w-[1648px] mx-auto">
         {/* Main Layout with Sidebar */}
-        <div className="dex-main-layout">
+        <div className="flex gap-6 items-start tablet:flex-col tablet:gap-0 tablet:pb-20 tablet:px-4">
           {/* Sidebar Navigation */}
-          <aside className="dex-sidebar">
+          <aside className="min-w-[240px] w-[240px] flex-shrink-0 tablet:fixed tablet:bottom-0 tablet:left-0 tablet:right-0 tablet:w-full tablet:min-w-full tablet:bg-card-bg tablet:border-t tablet:border-border-color tablet:backdrop-blur-[20px] tablet:z-[1000] tablet:p-2 tablet:pb-3 tablet:shadow-[0_-4px_20px_rgba(0,0,0,0.3)] tablet:flex tablet:items-center tablet:justify-center">
             {/* Desktop: Separate sections */}
-            <div className="dex-nav-section dex-desktop-nav">
-              <div className="dex-nav-buttons">
+            <div className="mb-6 tablet:hidden">
+              <div className="flex flex-col gap-2">
                 {navigationItems.map(renderNavigationButton)}
               </div>
             </div>
 
-            <div className="dex-nav-section dex-desktop-nav">
-              <h3 className="dex-section-title">Explore</h3>
-              <div className="dex-nav-buttons">
+            <div className="mb-6 tablet:hidden">
+              <h3 className="text-base font-semibold mb-3 text-text-primary opacity-80">Explore</h3>
+              <div className="flex flex-col gap-2">
                 {exploreItems.map(renderNavigationButton)}
               </div>
             </div>
 
             {/* Mobile: Single line navigation */}
-            <div className="dex-nav-section dex-mobile-nav">
+            <div className="hidden tablet:block w-full">
               <div className={`dex-nav-buttons ${isExploreExpanded ? 'explore-expanded' : ''}`}>
                 {!isExploreExpanded ? (
                   // Normal state: Show main navigation + Explore button
@@ -341,7 +340,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
           </aside>
 
           {/* Main Content */}
-          <main className="dex-content">
+          <main className="flex-1 min-h-[400px] tablet:min-h-[calc(100vh-140px)]">
             {children}
           </main>
         </div>

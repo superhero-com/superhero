@@ -12,7 +12,6 @@ import SortControls from '../components/SortControls';
 import EmptyState from '../components/EmptyState';
 import FeedItem from '../components/FeedItem';
 import { PostApiResponse } from '../types';
-import './FeedList.scss';
 
 // Custom hook
 function useUrlQuery() { return new URLSearchParams(useLocation().search); }
@@ -134,21 +133,22 @@ export default function FeedList() {
 
   return (
     <Shell left={<LeftRail />} right={<RightRail />}>
-      <div className="tips-list">
+      <div className="max-w-[680px] mx-auto">
         <CreatePost onSuccess={refetch} />
 
         <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
 
-        <div className="feed">
+        <div className="py-2 max-w-[680px] mx-auto mobile:pt-4 mobile:px-3 mobile-small:px-2">
           {renderEmptyState()}
           {renderFeedItems}
         </div>
 
         {hasNextPage && filteredAndSortedList.length > 0 && (
-          <div className="load-more">
+          <div className="p-6 text-center mobile:p-4">
             <AeButton
               loading={isFetchingNextPage}
               onClick={() => fetchNextPage()}
+              className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
             >
               Load more
             </AeButton>

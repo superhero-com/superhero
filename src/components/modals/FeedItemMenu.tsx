@@ -100,7 +100,7 @@ export default function FeedItemMenu({ tipId, postId, url, author, children }: F
       </DropdownMenu>
 
       <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
-        <DialogContent className="max-w-md bg-[var(--secondary-color)] border-white/20">
+        <DialogContent className="w-[95vw] max-w-md mx-auto bg-[var(--secondary-color)] border-white/20">
           <DialogHeader>
             <DialogTitle className="text-white">Report Item</DialogTitle>
           </DialogHeader>
@@ -119,11 +119,11 @@ export default function FeedItemMenu({ tipId, postId, url, author, children }: F
               />
             </div>
             
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-2 sm:gap-3 pt-4">
               <AeButton 
                 onClick={() => setReportDialogOpen(false)}
                 variant="secondary"
-                className="flex-1"
+                className="flex-1 text-sm sm:text-base"
               >
                 Cancel
               </AeButton>
@@ -131,7 +131,8 @@ export default function FeedItemMenu({ tipId, postId, url, author, children }: F
                 onClick={handleReport}
                 disabled={!reason.trim() || loading}
                 loading={loading}
-                className="flex-1 bg-red-600 hover:bg-red-700"
+                variant="error"
+                className="flex-1 text-sm sm:text-base"
               >
                 {loading ? 'Reporting...' : 'Report'}
               </AeButton>

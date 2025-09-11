@@ -125,27 +125,27 @@ export default function TokenSelector({
 
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[1000] animate-in fade-in duration-150" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(20,20,28,0.98)] text-white border border-white/10 rounded-3xl p-6 w-[520px] max-w-[90vw] max-h-[85vh] overflow-y-auto backdrop-blur-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.6),_0_8px_32px_rgba(255,107,107,0.2)] z-[1001] animate-in slide-in-from-top-4 duration-200 outline-none">
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(20,20,28,0.98)] text-white border border-white/10 rounded-3xl p-4 sm:p-6 w-[95vw] max-w-md sm:max-w-[520px] max-h-[85vh] overflow-y-auto backdrop-blur-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.6),_0_8px_32px_rgba(255,107,107,0.2)] z-[1001] animate-in slide-in-from-top-4 duration-200 outline-none">
           {/* Header */}
-          <div className="flex justify-between items-center mb-5">
-            <Dialog.Title className="font-bold text-xl m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+          <div className="flex justify-between items-center mb-4 sm:mb-5">
+            <Dialog.Title className="font-bold text-lg sm:text-xl m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
               Select a token
             </Dialog.Title>
             <Dialog.Close asChild>
-              <button className="p-2 rounded-xl bg-white/[0.05] border border-white/10 text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-base flex items-center justify-center w-9 h-9 hover:bg-red-400 hover:scale-110">
+              <button className="p-2 rounded-xl bg-white/[0.05] border border-white/10 text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-base flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 hover:bg-red-400 hover:scale-110">
                 ✕
               </button>
             </Dialog.Close>
           </div>
 
           {/* Search Input */}
-          <div className="relative mb-5">
+          <div className="relative mb-4 sm:mb-5">
             <input
               placeholder="Search by token or paste address"
               value={searchValue}
               onChange={(e) => onSearchChange?.(e.target.value)}
               autoFocus
-              className="w-full py-3.5 pr-12 pl-4 rounded-2xl bg-white/[0.08] text-white border border-white/15 text-[15px] backdrop-blur-[10px] transition-all duration-300 ease-out box-border focus:border-[#4ecdc4] focus:shadow-[0_0_0_2px_rgba(78,205,196,0.2)] focus:outline-none"
+              className="w-full py-3.5 pr-12 pl-4 rounded-2xl bg-white/[0.08] text-white border border-white/15 text-base backdrop-blur-[10px] transition-all duration-300 ease-out box-border focus:border-[#4ecdc4] focus:shadow-[0_0_0_2px_rgba(78,205,196,0.2)] focus:outline-none"
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">
               🔍
@@ -154,11 +154,11 @@ export default function TokenSelector({
 
           {/* Popular Tokens */}
           {!searchValue && (
-            <div className="mb-6">
-              <h4 className="text-sm font-semibold text-white/60 mb-3 uppercase tracking-wide">
+            <div className="mb-4 sm:mb-6">
+              <h4 className="text-xs sm:text-sm font-semibold text-white/60 mb-2 sm:mb-3 uppercase tracking-wide">
                 Popular tokens
               </h4>
-              <div className="grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-3 mb-5">
+              <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-2 sm:gap-3 mb-5">
                 {tokens.slice(0, 4).map((token) => (
                   <button
                     key={token.address}

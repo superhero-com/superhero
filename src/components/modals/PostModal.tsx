@@ -40,7 +40,7 @@ export default function PostModal({ open, onClose }: PostModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-[var(--secondary-color)] border-white/20">
+      <DialogContent className="w-[95vw] max-w-md mx-auto bg-[var(--secondary-color)] border-white/20">
         <DialogHeader>
           <DialogTitle className="text-white">Create Post</DialogTitle>
         </DialogHeader>
@@ -72,20 +72,20 @@ export default function PostModal({ open, onClose }: PostModalProps) {
             />
           </div>
           
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-2 sm:gap-3 pt-4">
             <AeButton 
               onClick={onClose}
               variant="secondary"
-              className="flex-1"
+              className="flex-1 text-sm sm:text-base"
             >
               Cancel
             </AeButton>
             <AeButton
-              green
+              variant="success"
               disabled={!title || loading}
               loading={loading}
               onClick={handlePost}
-              className="flex-1"
+              className="flex-1 text-sm sm:text-base"
             >
               {loading ? 'Posting...' : 'Post'}
             </AeButton>

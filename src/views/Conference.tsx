@@ -10,8 +10,13 @@ export default function Conference() {
     return `https://${CONFIG.JITSI_DOMAIN}/${name}#${opts}`;
   }, [room]);
   return (
-    <div style={{ maxWidth: 980, margin: '0 auto', padding: 16 }}>
-      <iframe id="jitsiConferenceFrame0" title="Conference" src={src} style={{ width: '100%', height: '80vh', border: 0 }} />
+    <div className="max-w-[980px] mx-auto p-4">
+      <iframe 
+        id="jitsiConferenceFrame0" 
+        title="Conference" 
+        src={src} 
+        className="w-full h-[80vh] border-0 rounded-lg shadow-lg" 
+      />
     </div>
   );
 }

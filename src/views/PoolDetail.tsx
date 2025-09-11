@@ -232,20 +232,8 @@ export default function PoolDetail() {
   // Error state (modified from TokenDetail)
   if (error) {
     return (
-      <div className="pool-detail-layout" style={{
-        maxWidth: 1200,
-        margin: '0 auto',
-        padding: '20px'
-      }}>
-        <div style={{
-          textAlign: 'center',
-          padding: 40,
-          color: 'var(--error-color)',
-          background: 'rgba(255, 107, 107, 0.1)',
-          borderRadius: 16,
-          border: '1px solid rgba(255, 107, 107, 0.2)',
-          backdropFilter: 'blur(10px)'
-        }}>
+      <div className="max-w-[1200px] mx-auto p-5">
+        <div className="text-center p-10 text-red-400 bg-red-500/10 rounded-2xl border border-red-500/20 backdrop-blur-xl">
           {error}
         </div>
       </div>
@@ -254,67 +242,29 @@ export default function PoolDetail() {
 
   // Main render (modified from TokenDetail)
   return (
-    <div className="pool-detail-layout" style={{
-      maxWidth: 1200,
-      margin: '0 auto',
-      padding: '20px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 24
-    }}>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 24
-      }}>
+    <div className="max-w-[1200px] mx-auto p-5 flex flex-col gap-6 lg:p-4 md:p-4 md:gap-4">
+      <div className="flex flex-col gap-6">
         {/* Pool Detail Card (modified from Token Detail Card) */}
-        <div className="genz-card" style={{
-          background: 'var(--glass-bg)',
-          border: '1px solid var(--glass-border)',
-          backdropFilter: 'blur(20px)',
-          borderRadius: 24,
-          padding: 24,
-          boxShadow: 'var(--glass-shadow)',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
+        <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] relative overflow-hidden">
           {/* Header (modified for pools) */}
-          <div style={{ marginBottom: 24 }}>
-            <h1 style={{
-              fontSize: 28,
-              fontWeight: 700,
-              margin: '0 0 8px 0',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8
-            }}>
+          <div className="mb-6">
+            <h1 className="text-[28px] font-bold m-0 mb-2 flex items-center gap-2">
               <TokenChip address={pool?.token0?.address || 'AE'} />
-              <span style={{ fontSize: 24, color: 'var(--light-font-color)' }}>
+              <span className="text-2xl text-white/60">
                 /
               </span>
               <TokenChip address={pool?.token1?.address || 'AE'} />
             </h1>
-            <p style={{
-              fontSize: 14,
-              color: 'var(--light-font-color)',
-              margin: '8px 0 0 0',
-              lineHeight: 1.5
-            }}>
+            <p className="text-sm text-white/60 mt-2 mb-0 leading-relaxed">
               Liquidity pool details and statistics
             </p>
-            <div style={{
-              fontSize: 11,
-              color: 'var(--light-font-color)',
-              fontFamily: 'monospace',
-              opacity: 0.7,
-              marginTop: 4
-            }}>
+            <div className="text-xs text-white/60 font-mono opacity-70 mt-1">
               <AddressChip address={pool?.address || ''} />
             </div>
           </div>
 
           {/* Action Buttons (modified for pools) */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+          <div className="flex gap-2 mb-6 flex-wrap">
             <AeButton onClick={() => navigate(`/dex/swap?from=${pool?.token0?.address}&to=${pool?.token1?.address}`)} variant="secondary-dark" size="medium">
               Swap
             </AeButton>
@@ -330,218 +280,77 @@ export default function PoolDetail() {
           </div>
 
           {/* Pool Stats Overview (modified from Token Stats) */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 16,
-            marginBottom: 16
-          }}>
+          <div className="grid grid-cols-3 gap-4 mb-4 lg:grid-cols-3 md:grid-cols-1">
             {/* TVL Card */}
-            <div style={{
-              padding: 20,
-              borderRadius: 16,
-              background: 'linear-gradient(135deg, rgba(0, 255, 127, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-              border: '1px solid rgba(0, 255, 127, 0.2)',
-              backdropFilter: 'blur(10px)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                fontSize: 11,
-                color: 'var(--light-font-color)',
-                marginBottom: 8,
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '1px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}>
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-green-400/10 to-white/5 border border-green-400/20 backdrop-blur-xl relative overflow-hidden">
+              <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
                 🏦 Total Value Locked
               </div>
-              <div style={{
-                fontSize: 24,
-                fontWeight: 800,
-                color: 'var(--success-color)',
-                marginBottom: 4,
-                fontFamily: 'monospace'
-              }}>
+              <div className="text-2xl font-extrabold text-green-400 mb-1 font-mono">
                 ${poolStats ? Decimal.from(poolStats.totalLiquidity || 0).prettify(2) : '0'}
               </div>
-              <div style={{
-                fontSize: 12,
-                color: 'var(--light-font-color)',
-                fontWeight: 500
-              }}>
+              <div className="text-xs text-white/60 font-medium">
                 Pool liquidity value
               </div>
             </div>
 
             {/* Volume Card */}
-            <div style={{
-              padding: 20,
-              borderRadius: 16,
-              background: 'linear-gradient(135deg, rgba(138, 43, 226, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-              border: '1px solid rgba(138, 43, 226, 0.2)',
-              backdropFilter: 'blur(10px)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                fontSize: 11,
-                color: 'var(--light-font-color)',
-                marginBottom: 8,
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '1px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}>
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-purple-600/10 to-white/5 border border-purple-600/20 backdrop-blur-xl relative overflow-hidden">
+              <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
                 📊 Volume (24h)
               </div>
-              <div style={{
-                fontSize: 24,
-                fontWeight: 800,
-                color: 'var(--accent-color)',
-                marginBottom: 4,
-                fontFamily: 'monospace'
-              }}>
+              <div className="text-2xl font-extrabold text-purple-400 mb-1 font-mono">
                 $0
               </div>
-              <div style={{
-                fontSize: 12,
-                color: 'var(--light-font-color)',
-                fontWeight: 500
-              }}>
+              <div className="text-xs text-white/60 font-medium">
                 24h trading volume
               </div>
             </div>
 
             {/* Status Card (new for pools) */}
-            <div style={{
-              padding: 20,
-              borderRadius: 16,
-              background: pool?.synchronized
-                ? 'linear-gradient(135deg, rgba(0, 255, 127, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)'
-                : 'linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-              border: pool?.synchronized
-                ? '1px solid rgba(0, 255, 127, 0.2)'
-                : '1px solid rgba(255, 107, 107, 0.2)',
-              backdropFilter: 'blur(10px)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                fontSize: 11,
-                color: 'var(--light-font-color)',
-                marginBottom: 8,
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '1px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}>
+            <div className={`p-5 rounded-2xl backdrop-blur-xl relative overflow-hidden ${
+              pool?.synchronized
+                ? 'bg-gradient-to-br from-green-400/10 to-white/5 border border-green-400/20'
+                : 'bg-gradient-to-br from-red-400/10 to-white/5 border border-red-400/20'
+            }`}>
+              <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
                 ⚡ Status
               </div>
-              <div style={{
-                fontSize: 24,
-                fontWeight: 800,
-                color: pool?.synchronized ? 'var(--success-color)' : 'var(--error-color)',
-                marginBottom: 4,
-                fontFamily: 'monospace'
-              }}>
+              <div className={`text-2xl font-extrabold mb-1 font-mono ${
+                pool?.synchronized ? 'text-green-400' : 'text-red-400'
+              }`}>
                 {pool?.synchronized ? 'Active' : 'Inactive'}
               </div>
-              <div style={{
-                fontSize: 12,
-                color: 'var(--light-font-color)',
-                fontWeight: 500
-              }}>
+              <div className="text-xs text-white/60 font-medium">
                 Pool information
               </div>
             </div>
           </div>
 
           {/* Pool Reserves (new for pools) */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 16
-          }}>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-1">
             {/* Token 0 Reserve */}
-            <div style={{
-              padding: 18,
-              borderRadius: 14,
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid var(--glass-border)',
-              backdropFilter: 'blur(10px)'
-            }}>
-              <div style={{
-                fontSize: 10,
-                color: 'var(--light-font-color)',
-                marginBottom: 8,
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4
-              }}>
+            <div className="p-4.5 rounded-xl bg-white/3 border border-white/10 backdrop-blur-xl">
+              <div className="text-[10px] text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1">
                 🪙 {pool?.token0?.symbol || 'Token'} Reserve
               </div>
-              <div style={{
-                fontSize: 18,
-                fontWeight: 700,
-                color: 'var(--standard-font-color)',
-                marginBottom: 2
-              }}>
+              <div className="text-lg font-bold text-white mb-0.5">
                 {formatTokenAmount(pool?.liquidityInfo?.reserve0 || 0)}
               </div>
-              <div style={{
-                fontSize: 11,
-                color: 'var(--light-font-color)',
-                fontWeight: 500
-              }}>
+              <div className="text-xs text-white/60 font-medium">
                 ≈ ${poolStats ? formatNumber(poolStats.reserve0 * poolStats.token0Price) : '0'}
               </div>
             </div>
 
             {/* Token 1 Reserve */}
-            <div style={{
-              padding: 18,
-              borderRadius: 14,
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid var(--glass-border)',
-              backdropFilter: 'blur(10px)'
-            }}>
-              <div style={{
-                fontSize: 10,
-                color: 'var(--light-font-color)',
-                marginBottom: 8,
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4
-              }}>
+            <div className="p-4.5 rounded-xl bg-white/3 border border-white/10 backdrop-blur-xl">
+              <div className="text-[10px] text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1">
                 🪙 {pool?.token1?.symbol || 'Token'} Reserve
               </div>
-              <div style={{
-                fontSize: 18,
-                fontWeight: 700,
-                color: 'var(--standard-font-color)',
-                marginBottom: 2
-              }}>
+              <div className="text-lg font-bold text-white mb-0.5">
                 {formatTokenAmount(pool?.liquidityInfo?.reserve1 || 0)}
               </div>
-              <div style={{
-                fontSize: 11,
-                color: 'var(--light-font-color)',
-                fontWeight: 500
-              }}>
+              <div className="text-xs text-white/60 font-medium">
                 ≈ ${poolStats ? formatNumber(poolStats.reserve1 * poolStats.token1Price) : '0'}
               </div>
             </div>
@@ -557,55 +366,28 @@ export default function PoolDetail() {
       </div>
 
       {/* Tabbed Card (modified from TokenDetail) */}
-      <div className="genz-card" style={{
-        background: 'var(--glass-bg)',
-        border: '1px solid var(--glass-border)',
-        backdropFilter: 'blur(20px)',
-        borderRadius: 24,
-        padding: 24,
-        boxShadow: 'var(--glass-shadow)',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
+      <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] relative overflow-hidden">
         {/* Tab Headers (modified for pools) */}
-        <div style={{
-          display: 'flex',
-          marginBottom: 24,
-          borderBottom: '1px solid var(--glass-border)'
-        }}>
+        <div className="flex mb-6 border-b border-white/10">
           <button
             onClick={() => setActiveTab('overview')}
-            style={{
-              padding: '12px 24px',
-              background: activeTab === 'overview' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-              border: 'none',
-              borderBottom: activeTab === 'overview' ? '2px solid var(--accent-color)' : '2px solid transparent',
-              color: activeTab === 'overview' ? 'var(--standard-font-color)' : 'var(--light-font-color)',
-              fontSize: 16,
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              borderRadius: '8px 8px 0 0'
-            }}
+            className={`px-6 py-3 border-none transition-all duration-300 rounded-t-lg ${
+              activeTab === 'overview'
+                ? 'bg-white/10 border-b-2 border-purple-400 text-white'
+                : 'bg-transparent border-b-2 border-transparent text-white/60 hover:text-white/80'
+            }`}
           >
-            Pool Overview
+            <span className="text-base font-semibold">Pool Overview</span>
           </button>
           <button
             onClick={() => setActiveTab('transactions')}
-            style={{
-              padding: '12px 24px',
-              background: activeTab === 'transactions' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-              border: 'none',
-              borderBottom: activeTab === 'transactions' ? '2px solid var(--accent-color)' : '2px solid transparent',
-              color: activeTab === 'transactions' ? 'var(--standard-font-color)' : 'var(--light-font-color)',
-              fontSize: 16,
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              borderRadius: '8px 8px 0 0'
-            }}
+            className={`px-6 py-3 border-none transition-all duration-300 rounded-t-lg ${
+              activeTab === 'transactions'
+                ? 'bg-white/10 border-b-2 border-purple-400 text-white'
+                : 'bg-transparent border-b-2 border-transparent text-white/60 hover:text-white/80'
+            }`}
           >
-            Transactions ({history.length})
+            <span className="text-base font-semibold">Transactions ({history.length})</span>
           </button>
         </div>
 
@@ -613,20 +395,8 @@ export default function PoolDetail() {
         {activeTab === 'overview' && (
           <div>
             {/* Pool Composition (new for pools) */}
-            <div style={{
-              padding: 20,
-              borderRadius: 16,
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)',
-              border: '1px solid var(--glass-border)',
-              backdropFilter: 'blur(10px)',
-              marginBottom: 20
-            }}>
-              <h3 style={{
-                fontSize: 18,
-                fontWeight: 600,
-                color: 'var(--standard-font-color)',
-                margin: '0 0 16px 0'
-              }}>
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-white/8 to-white/2 border border-white/10 backdrop-blur-xl mb-5">
+              <h3 className="text-lg font-semibold text-white m-0 mb-4">
                 Pool Composition
               </h3>
 
@@ -897,40 +667,6 @@ export default function PoolDetail() {
         )}
       </div>
 
-      {/* Responsive styles */}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        @media (max-width: 1024px) {
-          .pool-detail-layout > div:first-child {
-            grid-template-columns: 1fr !important;
-            gap: 16px !important;
-          }
-        }
-        
-        @media (max-width: 768px) {
-          .pool-detail-layout {
-            padding: 16px !important;
-            gap: 16px !important;
-          }
-          
-          .pool-detail-layout .genz-card > div:nth-child(3),
-          .pool-detail-layout .genz-card > div:nth-child(4) {
-            grid-template-columns: 1fr !important;
-            gap: 12px !important;
-          }
-        }
-        
-        @media (max-width: 480px) {
-          .pool-detail-layout .genz-card > div:nth-child(3),
-          .pool-detail-layout .genz-card > div:nth-child(4) {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { IconClose, IconGif, IconImage, IconSmile } from '../../../icons';
 import AeButton from '../../../components/AeButton';
 import ConnectWalletButton from '../../../components/ConnectWalletButton';
-import './CreatePost.scss';
 import Identicon from '../../../components/Identicon';
 // @ts-ignore
 import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
@@ -150,58 +149,124 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
   const currentPrompt = activeAccount ? PROMPTS[promptIndex] : 'Connect your wallet to start posting ✍️';
 
   return (
-    <div className={`create-post-container ${className}`}>
-      <div className="create-post-box expanded">
-        <form onSubmit={handleSubmit} className="create-post-form">
+    <div className={`max-w-[680px] mx-auto mb-5 md:mx-3 md:mb-4 md:mt-[calc(env(safe-area-inset-top)+4rem)] ${className}`}>
+      <div className="bg-gradient-to-br from-white/8 to-white/3 border border-purple-400 rounded-2xl p-5 transition-all duration-300 backdrop-blur-xl relative shadow-[0_16px_40px_rgba(0,0,0,0.35)] md:rounded-2xl md:p-4">
+        <form onSubmit={handleSubmit} className="relative">
     
-          <div className="form-content">
-            <div className="textarea-container">
-              <textarea ref={textareaRef} placeholder={currentPrompt} value={text} onChange={(e) => setText(e.target.value)} className="text-input" rows={3} maxLength={280} />
-              <div className="character-counter">{text.length}/280</div>
+          <div className="flex flex-col gap-3">
+            <div className="relative flex flex-col">
+              <textarea 
+                ref={textareaRef} 
+                placeholder={currentPrompt} 
+                value={text} 
+                onChange={(e) => setText(e.target.value)} 
+                className="bg-white/7 border border-white/14 rounded-2xl p-4 pb-10 text-white text-base transition-all duration-200 outline-none caret-purple-400 resize-none min-h-[80px] leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-purple-400 focus:bg-white/10 focus:shadow-[0_0_0_2px_rgb(168_85_247),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pb-10 md:text-base md:min-h-[100px] md:rounded-2xl" 
+                rows={3} 
+                maxLength={280} 
+              />
+              <div className="absolute bottom-3 right-4 text-white/60 text-sm font-semibold pointer-events-none">{text.length}/280</div>
             </div>
 
             {mediaUrls.length > 0 && (
-              <div className="media-preview">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2 md:grid-cols-[repeat(auto-fill,minmax(120px,1fr))] md:gap-3">
                 {mediaUrls.map((url, index) => (
-                  <div key={index} className="media-item">
-                    {/.mp4$|.webm$|.mov$/i.test(url) ? (<video src={url} controls />) : (<img src={url} alt="media" />)}
-                    <button type="button" className="remove-media" onClick={() => removeMedia(index)}><IconClose /></button>
+                  <div key={index} className="relative rounded-xl overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.25)]">
+                    {/.mp4$|.webm$|.mov$/i.test(url) ? (
+                      <video src={url} controls className="w-full h-45 object-cover block md:h-40" />
+                    ) : (
+                      <img src={url} alt="media" className="w-full h-45 object-cover block md:h-40" />
+                    )}
+                    <button 
+                      type="button" 
+                      className="absolute top-1.5 right-1.5 bg-black/70 border-none text-white w-7 h-7 rounded-full cursor-pointer grid place-items-center transition-all duration-200 hover:bg-black/90 hover:scale-105" 
+                      onClick={() => removeMedia(index)}
+                    >
+                      <IconClose className="w-3 h-3" />
+                    </button>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          <div className="form-footer">
-            <div className="footer-left">
+          <div className="flex items-center justify-between gap-4 pt-2.5 border-t border-white/12 relative md:flex-col md:gap-3 md:pt-3 md:items-stretch">
+            <div className="flex gap-2.5 relative md:justify-center md:gap-3">
               {/* <button type="button" className="media-button" onClick={() => fileInputRef.current?.click()} disabled={mediaFiles.length >= 4}><IconImage /><span>Media</span></button> */}
-              <button type="button" className="link-button" title="Emoji" ref={emojiBtnRef} onClick={() => { setShowEmoji(s => !s); setShowGif(false); }}>
-                <IconSmile /><span>Emoji</span>
+              <button 
+                type="button" 
+                className="bg-white/7 border border-white/14 text-white/90 px-3.5 py-2.5 rounded-xl cursor-pointer transition-all duration-200 inline-flex items-center gap-2 text-sm font-bold tracking-wide hover:bg-white/12 hover:border-white/22 hover:text-white hover:-translate-y-px md:px-4 md:py-3 md:min-h-[44px] md:text-sm md:rounded-2xl md:flex-1 md:justify-center" 
+                title="Emoji" 
+                ref={emojiBtnRef} 
+                onClick={() => { setShowEmoji(s => !s); setShowGif(false); }}
+              >
+                <IconSmile className="w-4 h-4" /><span>Emoji</span>
               </button>
-              <button type="button" className="link-button" title="GIF" ref={gifBtnRef} onClick={() => { setShowGif(s => !s); setShowEmoji(false); }}>
-                <IconGif /><span>GIF</span>
+              <button 
+                type="button" 
+                className="bg-white/7 border border-white/14 text-white/90 px-3.5 py-2.5 rounded-xl cursor-pointer transition-all duration-200 inline-flex items-center gap-2 text-sm font-bold tracking-wide hover:bg-white/12 hover:border-white/22 hover:text-white hover:-translate-y-px md:px-4 md:py-3 md:min-h-[44px] md:text-sm md:rounded-2xl md:flex-1 md:justify-center" 
+                title="GIF" 
+                ref={gifBtnRef} 
+                onClick={() => { setShowGif(s => !s); setShowEmoji(false); }}
+              >
+                <IconGif className="w-4 h-4" /><span>GIF</span>
               </button>
               {/* <input ref={fileInputRef} type="file" accept="image/*,video/*" multiple onChange={handleFileSelect} style={{ display: 'none' }} /> */}
               {showEmoji && (
-                <div className="popover emoji-popover">
-                  <div className="emoji-grid">{DEFAULT_EMOJIS.map((e) => (<button key={e} type="button" className="emoji-btn" onClick={() => insertAtCursor(e)}>{e}</button>))}</div>
-                  <div className="emoji-hint">More soon…</div>
+                <div className="absolute bottom-[110%] left-0 bg-gray-900 border border-white/12 rounded-2xl p-2.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-10 min-w-[240px] md:fixed md:bottom-5 md:left-5 md:right-5 md:min-w-auto md:max-w-none md:rounded-2xl md:p-4 md:shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
+                  <div className="grid grid-cols-10 gap-1.5 md:grid-cols-8 md:gap-2">
+                    {DEFAULT_EMOJIS.map((e) => (
+                      <button 
+                        key={e} 
+                        type="button" 
+                        className="bg-none border-none text-xl p-1.5 cursor-pointer rounded-lg hover:bg-white/10 md:p-2 md:text-[22px] md:min-h-[44px] md:rounded-xl" 
+                        onClick={() => insertAtCursor(e)}
+                      >
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-1.5 text-center text-sm text-white/90">More soon…</div>
                 </div>
               )}
               {showGif && (
-                <div className="popover gif-popover">
-                  <div className="gif-title">Add a GIF</div>
-                  <input type="url" placeholder="Paste GIF/Video URL" value={gifInput} onChange={(e) => setGifInput(e.target.value)} className="gif-input" />
-                  <div className="gif-actions">
-                    <button type="button" className="gif-cancel" onClick={() => setShowGif(false)}>Cancel</button>
-                    <button type="button" className="gif-add" onClick={addGifFromUrl}>Add</button>
+                <div className="absolute bottom-[110%] left-0 bg-gray-900 border border-white/12 rounded-2xl p-3.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-10 min-w-[240px] md:fixed md:bottom-5 md:left-5 md:right-5 md:min-w-auto md:max-w-none md:rounded-2xl md:p-4 md:shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
+                  <div className="font-bold mb-2.5 text-white">Add a GIF</div>
+                  <input 
+                    type="url" 
+                    placeholder="Paste GIF/Video URL" 
+                    value={gifInput} 
+                    onChange={(e) => setGifInput(e.target.value)} 
+                    className="w-full bg-white/8 border border-white/16 rounded-xl p-2.5 text-white text-sm md:p-3 md:text-base md:rounded-xl md:min-h-[44px]" 
+                  />
+                  <div className="mt-2.5 flex justify-end gap-2.5 md:mt-3 md:gap-3">
+                    <button 
+                      type="button" 
+                      className="bg-white/8 border border-white/16 text-white px-3.5 py-2 rounded-xl cursor-pointer transition-all duration-200 hover:bg-white/12 md:px-4 md:py-3 md:min-h-[44px] md:rounded-xl md:text-sm" 
+                      onClick={() => setShowGif(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="button" 
+                      className="bg-purple-400 text-black border border-purple-400 px-3.5 py-2 rounded-xl cursor-pointer transition-all duration-200 md:px-4 md:py-3 md:min-h-[44px] md:rounded-xl md:text-sm" 
+                      onClick={addGifFromUrl}
+                    >
+                      Add
+                    </button>
                   </div>
                 </div>
               )}
             </div>
-            <div className="footer-right">
+            <div className="flex items-center justify-end md:justify-center md:items-center">
               {activeAccount ? (
-                <AeButton type="submit" loading={isSubmitting} disabled={!text.trim()} className="submit-button">{isSubmitting ? 'Posting…' : 'Post'}</AeButton>
+                <AeButton 
+                  type="submit" 
+                  loading={isSubmitting} 
+                  disabled={!text.trim()} 
+                  className="relative bg-purple-400 border-none text-black font-black px-7 py-2.5 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-purple-400 hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(0,0,0,0.3)] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none md:px-6 md:py-3 md:min-h-[44px] md:text-base md:rounded-2xl md:w-full"
+                >
+                  {isSubmitting ? 'Posting…' : 'Post'}
+                </AeButton>
               ) : (
                 <ConnectWalletButton />
               )}

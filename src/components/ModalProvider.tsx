@@ -6,17 +6,7 @@ type Registry = Record<string, React.ComponentType<any>>;
 
 // Simple visually hidden component for accessibility
 const VisuallyHidden: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <span style={{
-    position: 'absolute',
-    width: 1,
-    height: 1,
-    padding: 0,
-    margin: -1,
-    overflow: 'hidden',
-    clip: 'rect(0, 0, 0, 0)',
-    whiteSpace: 'nowrap',
-    border: 0
-  }}>
+  <span className="absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0" style={{ clip: 'rect(0, 0, 0, 0)' }}>
     {children}
   </span>
 );
@@ -43,32 +33,8 @@ export default function ModalProvider({ registry }: { registry: Registry }) {
             }}
           >
             <Dialog.Portal>
-              <Dialog.Overlay 
-                style={{
-                  position: 'fixed',
-                  inset: 0,
-                  background: 'rgba(0, 0, 0, 0.5)',
-                  display: 'grid',
-                  placeItems: 'center',
-                  zIndex: 1001
-                }}
-              />
-              <Dialog.Content
-                style={{
-                  position: 'fixed',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  background: '#1c1c24',
-                  border: '1px solid #2f2f3b',
-                  borderRadius: 8,
-                  maxWidth: 520,
-                  width: '100%',
-                  padding: 16,
-                  outline: 'none',
-                  zIndex: 1002
-                }}
-              >
+              <Dialog.Overlay className="fixed inset-0 bg-black/50 grid place-items-center z-[1001] backdrop-blur-sm" />
+              <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900 border border-gray-700 rounded-2xl max-w-[520px] w-full p-6 outline-none z-[1002] shadow-2xl backdrop-blur-xl bg-white/5 border-white/10">
                 <VisuallyHidden>
                   <Dialog.Title>{modalName} Modal</Dialog.Title>
                 </VisuallyHidden>

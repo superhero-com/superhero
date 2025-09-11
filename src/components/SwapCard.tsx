@@ -121,40 +121,57 @@ export default function SwapCard() {
   }, [activeAccount, router, amountIn]);
 
   return (
-    <div style={{ display: 'grid', gap: 12 }}>
-      <div style={{ fontWeight: 600, fontSize: 16 }}>ETHXIT</div>
-      <div style={{ fontSize: 12, opacity: 0.8, lineHeight: 1.35 }}>
+    <div className="grid gap-3">
+      <div className="text-base font-semibold text-white">ETHXIT</div>
+      <div className="text-xs opacity-80 leading-tight text-white/80">
         Bridge from Ethereum and convert aeETH to AE. For trading other tokens, use the DEX.{' '}
-        <a href="https://swap.superhero.com" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>Learn more</a>
+        <a 
+          href="https://swap.superhero.com" 
+          target="_blank" 
+          rel="noreferrer" 
+          className="underline text-green-400 hover:text-green-300 transition-colors"
+        >
+          Learn more
+        </a>
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div className="flex gap-2">
         <button
           onClick={() => setTab('bridge')}
-          style={{
-            padding: '6px 10px', borderRadius: 6,
-            border: '1px solid #3a3a4a', background: tab === 'bridge' ? '#2a2a39' : '#1a1a23', color: '#fff',
-            flex: 1,
-          }}
-        >Bridge & Swap</button>
+          className={`
+            px-2.5 py-1.5 rounded-md text-sm font-medium flex-1 transition-all duration-200
+            border border-white/20 text-white
+            ${tab === 'bridge' 
+              ? 'bg-white/10 border-green-500/30 shadow-sm' 
+              : 'bg-white/5 hover:bg-white/8'
+            }
+          `}
+        >
+          Bridge & Swap
+        </button>
         <button
           onClick={() => setTab('trade')}
-          style={{
-            padding: '6px 10px', borderRadius: 6,
-            border: '1px solid #3a3a4a', background: tab === 'trade' ? '#2a2a39' : '#1a1a23', color: '#fff',
-            flex: 1,
-          }}
-        >Token Sale</button>
+          className={`
+            px-2.5 py-1.5 rounded-md text-sm font-medium flex-1 transition-all duration-200
+            border border-white/20 text-white
+            ${tab === 'trade' 
+              ? 'bg-white/10 border-green-500/30 shadow-sm' 
+              : 'bg-white/5 hover:bg-white/8'
+            }
+          `}
+        >
+          Token Sale
+        </button>
       </div>
 
       {tab === 'bridge' && (
         <MobileCard variant="elevated" padding="medium">
-          <div style={{ display: 'grid', gap: 16 }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 14, color: '#c3c3c7', marginBottom: 8 }}>
+          <div className="grid gap-4">
+            <div className="text-center">
+              <div className="text-sm text-gray-300 mb-2">
                 Convert aeETH to AE
               </div>
-              <div style={{ fontSize: 12, opacity: 0.7 }}>
+              <div className="text-xs opacity-70 text-white/70">
                 First bridge ETH → aeETH, then swap aeETH → AE
               </div>
             </div>
@@ -168,12 +185,12 @@ export default function SwapCard() {
                 Connect Wallet
               </AeButton>
             ) : (
-              <div style={{ fontSize: 12, opacity: 0.8, textAlign: 'center' }}>
+              <div className="text-xs opacity-80 text-center text-white/80">
                 Connected: {activeAccount.slice(0, 8)}...{activeAccount.slice(-6)}
               </div>
             )}
 
-            <div style={{ display: 'grid', gap: 12 }}>
+            <div className="grid gap-3">
               <MobileInput
                 label="From (aeETH)"
                 placeholder="0.0"
@@ -181,10 +198,14 @@ export default function SwapCard() {
                 onChange={(e) => setAmountIn(e.target.value)}
                 variant="filled"
                 size="large"
-                leftIcon={<span style={{ fontSize: 14, fontWeight: 600, minWidth: '40px', textAlign: 'center' }}>aeETH</span>}
+                leftIcon={
+                  <span className="text-sm font-semibold min-w-10 text-center text-white">
+                    aeETH
+                  </span>
+                }
               />
 
-              <div style={{ textAlign: 'center', fontSize: 20, opacity: 0.6 }}>↓</div>
+              <div className="text-center text-xl opacity-60 text-white/60">↓</div>
 
               <MobileInput
                 label="To (AE)"
@@ -193,35 +214,39 @@ export default function SwapCard() {
                 onChange={(e) => setAmountOut(e.target.value)}
                 variant="filled"
                 size="large"
-                leftIcon={<span style={{ fontSize: 14, fontWeight: 600, minWidth: '40px', textAlign: 'center' }}>AE</span>}
+                leftIcon={
+                  <span className="text-sm font-semibold min-w-10 text-center text-white">
+                    AE
+                  </span>
+                }
                 readOnly
               />
             </div>
 
-            <div style={{ display: 'grid', gap: 8 }}>
-              <div style={{ display: 'flex', gap: 8 }}>
+            <div className="grid gap-2">
+              <div className="flex gap-2">
                 <AeButton
                   onClick={quote}
                   disabled={!router || quoting || !amountIn}
-                  className="large"
-                  style={{ flex: 1 }}
+                  className="large flex-1"
                 >
                   {quoting ? 'Getting Quote...' : 'Get Quote'}
                 </AeButton>
                 <AeButton
                   onClick={doSwap}
                   disabled={!canSwap || swapping}
-                  className="large"
+                  className="large flex-1"
                   green
-                  style={{ flex: 1 }}
                 >
                   {swapping ? 'Swapping...' : 'Swap'}
                 </AeButton>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
-              <label htmlFor="slippage" style={{ fontSize: 12 }}>Slippage:</label>
+            <div className="flex gap-2 items-center justify-center">
+              <label htmlFor="slippage" className="text-xs text-white/80">
+                Slippage:
+              </label>
               <input
                 id="slippage"
                 name="slippage"
@@ -231,50 +256,24 @@ export default function SwapCard() {
                 step={0.1}
                 value={slippage}
                 onChange={(e) => setSlippage(Number(e.target.value))}
-                style={{
-                  width: 80,
-                  padding: '4px 8px',
-                  borderRadius: 4,
-                  border: '1px solid #3a3a4a',
-                  background: '#1a1a23',
-                  color: '#fff',
-                  fontSize: 12
-                }}
+                className="w-20 px-2 py-1 text-xs rounded border border-white/20 bg-white/5 text-white focus:border-green-500 focus:outline-none"
               />
-              <span style={{ fontSize: 12 }}>%</span>
+              <span className="text-xs text-white/80">%</span>
             </div>
 
             {swapError && (
-              <div style={{
-                color: '#ff6b6b',
-                fontSize: 13,
-                textAlign: 'center',
-                padding: '8px',
-                background: 'rgba(255, 107, 107, 0.1)',
-                borderRadius: 6,
-                border: '1px solid rgba(255, 107, 107, 0.3)'
-              }}>
+              <div className="text-red-400 text-xs text-center p-2 bg-red-500/10 rounded-md border border-red-500/30">
                 {swapError}
               </div>
             )}
 
-            <div style={{
-              fontSize: 11,
-              opacity: 0.6,
-              textAlign: 'center',
-              padding: '8px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: 6
-            }}>
-              <div>💡 Need to bridge ETH first?</div>
+            <div className="text-xs opacity-60 text-center p-2 bg-white/5 rounded-md text-white/60">
+              <div className="mb-1">💡 Need to bridge ETH first?</div>
               <a
                 href="https://swap.superhero.com"
                 target="_blank"
                 rel="noreferrer"
-                style={{
-                  textDecoration: 'underline',
-                  color: '#4CAF50'
-                }}
+                className="underline text-green-400 hover:text-green-300 transition-colors"
               >
                 Visit Superhero Swap
               </a>
@@ -285,7 +284,7 @@ export default function SwapCard() {
 
       {tab === 'trade' && (
         <>
-          <div style={{ display: 'grid', gap: 8 }}>
+          <div className="grid gap-2">
             <input
               id="token-search"
               name="search"
@@ -293,7 +292,7 @@ export default function SwapCard() {
               placeholder="Search token"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #3a3a4a', background: '#1a1a23', color: '#fff' }}
+              className="w-full px-2.5 py-2 text-sm rounded-md border border-white/20 bg-white/5 text-white placeholder:text-white/50 focus:border-green-500 focus:outline-none transition-colors"
             />
             <select
               id="token-select"
@@ -303,21 +302,25 @@ export default function SwapCard() {
                 const next = tokens.find((t: any) => t.address === e.target.value);
                 setSelected(next || null);
               }}
-              style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #3a3a4a', background: '#1a1a23', color: '#fff' }}
+              className="w-full px-2.5 py-2 text-sm rounded-md border border-white/20 bg-white/5 text-white focus:border-green-500 focus:outline-none transition-colors"
             >
               {filtered.map((t: any) => (
-                <option key={t.address} value={t.address}>
+                <option key={t.address} value={t.address} className="bg-gray-800 text-white">
                   {(t.symbol || t.name || 'Token')} {t.symbol ? '' : ''}
                 </option>
               ))}
             </select>
           </div>
 
-          {loading && <div style={{ opacity: 0.8, fontSize: 14 }}>Loading tokens…</div>}
-          {error && <div style={{ color: '#ff6b6b', fontSize: 13 }}>{error}</div>}
+          {loading && (
+            <div className="opacity-80 text-sm text-white/80">Loading tokens…</div>
+          )}
+          {error && (
+            <div className="text-red-400 text-xs">{error}</div>
+          )}
 
           {selected && (
-            <div style={{ border: '1px solid #3a3a4a', borderRadius: 8, padding: 10, background: '#1a1a23' }}>
+            <div className="border border-white/20 rounded-lg p-2.5 bg-white/5">
               <TradeCard token={selected} />
             </div>
           )}

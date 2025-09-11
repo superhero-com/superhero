@@ -34,8 +34,8 @@ export default function TxQueue() {
   }, [id, location.search, setTransactionsQueue]);
 
   return (
-    <div style={{ height: '100vh', width: '100vw', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div>Processing transaction…</div>
+    <div className="h-screen w-screen flex items-center justify-center">
+      <div className="text-white/80 text-lg">Processing transaction…</div>
     </div>
   );
 }

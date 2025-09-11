@@ -16,18 +16,35 @@ export default function PoolImport() {
   }
 
   return (
-    <div className="container" style={{ maxWidth: 720, margin: '0 auto', padding: '16px 0' }}>
-      <h2>Import Pool</h2>
-      <div style={{ display: 'grid', gap: 8 }}>
-        <input placeholder="Token A (ct_...)" value={tokenA} onChange={(e) => setTokenA(e.target.value)} style={{ padding: '8px 10px', borderRadius: 8, background: '#1a1a23', color: 'white', border: '1px solid #3a3a4a' }} />
-        <input placeholder="Token B (ct_...)" value={tokenB} onChange={(e) => setTokenB(e.target.value)} style={{ padding: '8px 10px', borderRadius: 8, background: '#1a1a23', color: 'white', border: '1px solid #3a3a4a' }} />
-        <AeButton onClick={() => void check()} disabled={!address || !tokenA || !tokenB} variant="secondary-dark" size="large">Check</AeButton>
+    <div className="max-w-[720px] mx-auto py-4 px-4">
+      <h2 className="text-2xl font-bold text-white mb-4">Import Pool</h2>
+      <div className="grid gap-2">
+        <input 
+          placeholder="Token A (ct_...)" 
+          value={tokenA} 
+          onChange={(e) => setTokenA(e.target.value)} 
+          className="px-2.5 py-2 rounded-lg bg-[#1a1a23] text-white border border-gray-600 focus:outline-none focus:border-purple-400"
+        />
+        <input 
+          placeholder="Token B (ct_...)" 
+          value={tokenB} 
+          onChange={(e) => setTokenB(e.target.value)} 
+          className="px-2.5 py-2 rounded-lg bg-[#1a1a23] text-white border border-gray-600 focus:outline-none focus:border-purple-400"
+        />
+        <AeButton 
+          onClick={() => void check()} 
+          disabled={!address || !tokenA || !tokenB} 
+          variant="secondary-dark" 
+          size="large"
+        >
+          Check
+        </AeButton>
         {result && (
-          <div style={{ fontSize: 13, opacity: 0.85 }}>
+          <div className="text-sm text-white/85 p-3 bg-white/5 rounded-lg border border-white/10">
             {result.pairId ? (
-              <div>Found pool {result.pairId}, your LP: {(result.balance as any).toString()}</div>
+              <div className="text-green-400">Found pool {result.pairId}, your LP: {(result.balance as any).toString()}</div>
             ) : (
-              <div>No pool found or no position</div>
+              <div className="text-yellow-400">No pool found or no position</div>
             )}
           </div>
         )}

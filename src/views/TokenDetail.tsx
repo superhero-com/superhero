@@ -261,31 +261,9 @@ export default function TokenDetail() {
 
   if (loading) {
     return (
-      <div className="token-detail-layout" style={{
-        maxWidth: 1200,
-        margin: '0 auto',
-        padding: '20px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '400px'
-      }}>
-        <div style={{
-          textAlign: 'center',
-          color: 'var(--light-font-color)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 16
-        }}>
-          <div style={{
-            width: 32,
-            height: 32,
-            border: '3px solid rgba(255,255,255,0.1)',
-            borderTop: '3px solid var(--accent-color)',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
+      <div className="max-w-[1200px] mx-auto p-5 flex justify-center items-center min-h-[400px]">
+        <div className="text-center text-white/60 flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-[3px] border-white/10 border-t-purple-400 rounded-full animate-spin"></div>
           Loading token details...
         </div>
       </div>
@@ -294,20 +272,8 @@ export default function TokenDetail() {
 
   if (error) {
     return (
-      <div className="token-detail-layout" style={{
-        maxWidth: 1200,
-        margin: '0 auto',
-        padding: '20px'
-      }}>
-        <div style={{
-          textAlign: 'center',
-          padding: 40,
-          color: 'var(--error-color)',
-          background: 'rgba(255, 107, 107, 0.1)',
-          borderRadius: 16,
-          border: '1px solid rgba(255, 107, 107, 0.2)',
-          backdropFilter: 'blur(10px)'
-        }}>
+      <div className="max-w-[1200px] mx-auto p-5">
+        <div className="text-center p-10 text-red-400 bg-red-500/10 rounded-2xl border border-red-500/20 backdrop-blur-xl">
           {error}
         </div>
       </div>
@@ -315,56 +281,22 @@ export default function TokenDetail() {
   }
 
   return (
-    <div className="token-detail-layout" style={{
-      maxWidth: 1200,
-      margin: '0 auto',
-      padding: '20px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 24
-    }}>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 24
-      }}>
+    <div className="max-w-[1200px] mx-auto p-5 flex flex-col gap-6 lg:p-4 md:p-4 md:gap-4">
+      <div className="flex flex-col gap-6">
         {/* Token Detail Card */}
-        <div className="genz-card" style={{
-          background: 'var(--glass-bg)',
-          border: '1px solid var(--glass-border)',
-          backdropFilter: 'blur(20px)',
-          borderRadius: 24,
-          padding: 24,
-          boxShadow: 'var(--glass-shadow)',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
+        <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] relative overflow-hidden">
           {/* Header */}
-          <div style={{ marginBottom: 24 }}>
-            <h1 style={{
-              fontSize: 28,
-              fontWeight: 700,
-              color: 'var(--standard-font-color)',
-              margin: '0 0 8px 0',
-              background: 'var(--primary-gradient)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
-            }}>
+          <div className="mb-6">
+            <h1 className="text-[28px] font-bold text-white m-0 mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600 bg-clip-text text-transparent">
               {token ? `${token.symbol} / ${token.name}` : 'Loading token…'}
             </h1>
-            <p style={{
-              fontSize: 14,
-              color: 'var(--light-font-color)',
-              margin: 0,
-              lineHeight: 1.5
-            }}>
+            <p className="text-sm text-white/60 m-0 leading-relaxed">
               Token details and statistics
             </p>
           </div>
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+          <div className="flex gap-2 mb-6 flex-wrap">
             <AeButton onClick={() => navigate(`/dex/swap?from=AE&to=${tokenAddress}`)} variant="secondary-dark" size="medium">
               Swap
             </AeButton>
@@ -374,53 +306,19 @@ export default function TokenDetail() {
           </div>
 
           {/* Token Stats Overview */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 16,
-            marginBottom: 16
-          }}>
+          <div className="grid grid-cols-3 gap-4 mb-4 lg:grid-cols-3 md:grid-cols-1">
             {/* Price Card */}
-            <div style={{
-              padding: 20,
-              borderRadius: 16,
-              background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-              border: '1px solid rgba(255, 107, 107, 0.2)',
-              backdropFilter: 'blur(10px)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                fontSize: 11,
-                color: 'var(--light-font-color)',
-                marginBottom: 8,
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '1px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}>
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-red-400/10 to-white/5 border border-red-400/20 backdrop-blur-xl relative overflow-hidden">
+              <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
                 💰 Price
               </div>
-              <div style={{
-                fontSize: 24,
-                fontWeight: 800,
-                color: 'var(--standard-font-color)',
-                marginBottom: 4,
-                fontFamily: 'monospace'
-              }}>
+              <div className="text-2xl font-extrabold text-white mb-1 font-mono">
                 ${Decimal.from(token?.priceUsd || 0).prettify()}
               </div>
               {token?.priceChangeDay && (
-                <div style={{
-                  fontSize: 12,
-                  color: Number(token.priceChangeDay) >= 0 ? 'var(--success-color)' : 'var(--error-color)',
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4
-                }}>
+                <div className={`text-xs font-semibold flex items-center gap-1 ${
+                  Number(token.priceChangeDay) >= 0 ? 'text-green-400' : 'text-red-400'
+                }`}>
                   {Number(token.priceChangeDay) >= 0 ? '📈' : '📉'}
                   {Number(token.priceChangeDay) >= 0 ? '+' : ''}{Number(token.priceChangeDay).toFixed(2)}% (24h)
                 </div>
@@ -1026,42 +924,6 @@ export default function TokenDetail() {
         )}
       </div>
 
-      {/* Add responsive styles */}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        @media (max-width: 1024px) {
-          .token-detail-layout > div:first-child {
-            grid-template-columns: 1fr !important;
-            gap: 16px !important;
-          }
-        }
-        
-        @media (max-width: 768px) {
-          .token-detail-layout {
-            padding: 16px !important;
-            gap: 16px !important;
-          }
-          
-          /* Stack stats vertically on mobile */
-          .token-detail-layout .genz-card > div:nth-child(3),
-          .token-detail-layout .genz-card > div:nth-child(4) {
-            grid-template-columns: 1fr !important;
-            gap: 12px !important;
-          }
-        }
-        
-        @media (max-width: 480px) {
-          /* Single column on very small screens */
-          .token-detail-layout .genz-card > div:nth-child(3),
-          .token-detail-layout .genz-card > div:nth-child(4) {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

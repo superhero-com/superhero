@@ -7,7 +7,6 @@ import { useTokenList } from '../components/dex/hooks/useTokenList';
 import RecentActivity from '../components/dex/supporting/RecentActivity';
 import { RecentActivity as RecentActivityType } from '../components/dex/types/dex';
 import NewAccountEducation from '../components/dex/widgets/NewAccountEducation';
-import './Dex.scss';
 
 export default function DexRefactored() {
   const location = useLocation();
@@ -32,19 +31,21 @@ export default function DexRefactored() {
   };
 
   return (
-    <div className="dex-container">
-      {/* Sexy Theme Switcher */}
-      <div className="dex-theme-switcher">
+    <div className="max-w-[1400px] mx-auto p-5 space-y-6">
+      {/* Theme Switcher */}
+      <div className="flex justify-end">
         <ThemeSwitcher />
       </div>
       
       <DexTabs />
       
-      <div className="dex-header">
-        <h2 className="dex-title">Superhero DEX</h2>
-        <p className="dex-description">
+      <div className="text-center space-y-4 mb-8">
+        <h2 className="text-3xl font-bold text-white bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600 bg-clip-text text-transparent">
+          Superhero DEX
+        </h2>
+        <p className="text-white/80 max-w-3xl mx-auto leading-relaxed">
           Trade any supported AEX-9 tokens on æternity via the AMM. Routes may hop through WAE. Tokens (non-AE) require a one-time allowance. Swaps are non-custodial and executed on-chain.{' '}
-          <a href="https://aepp.dex.superhero.com" target="_blank" rel="noreferrer" className="dex-link">Learn more</a>
+          <a href="https://aepp.dex.superhero.com" target="_blank" rel="noreferrer" className="text-purple-400 hover:text-purple-300 underline">Learn more</a>
         </p>
       </div>
 

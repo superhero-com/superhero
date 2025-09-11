@@ -257,11 +257,11 @@ export default function CreateToken() {
         </div>
         <div>
           <div className="text-xs opacity-70 text-white/70 uppercase tracking-wide font-semibold mb-2">TREND NAME</div>
-          <input 
-            value={name} 
-            onChange={(e) => setName(e.target.value)} 
-            placeholder="YOUR-TREND" 
-            className="w-full px-3 py-2.5 rounded-lg border border-white/20 bg-black/30 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200" 
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="YOUR-TREND"
+            className="w-full px-3 py-2.5 rounded-lg border border-white/20 bg-black/30 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200"
           />
         </div>
         <div>
@@ -269,26 +269,26 @@ export default function CreateToken() {
           <div className="grid gap-2">
             <label className="grid gap-1.5">
               <span className="text-xs opacity-70 text-white/70 font-medium">AE to spend</span>
-              <input 
-                type="number" 
-                min="0" 
-                step="any" 
-                value={initialBuyVolume} 
-                onChange={(e) => setInitialBuyVolume(e.target.value === '' ? '' : Number(e.target.value))} 
-                placeholder="0.0" 
-                className="w-full px-3 py-2.5 rounded-lg border border-white/20 bg-black/30 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200" 
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={initialBuyVolume}
+                onChange={(e) => setInitialBuyVolume(e.target.value === '' ? '' : Number(e.target.value))}
+                placeholder="0.0"
+                className="w-full px-3 py-2.5 rounded-lg border border-white/20 bg-black/30 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200"
               />
             </label>
             <label className="grid gap-1.5">
               <span className="text-xs opacity-70 text-white/70 font-medium">Estimated {symbol || 'TOKEN'} amount</span>
-              <input 
-                type="number" 
-                min="0" 
-                step="any" 
-                value={estimatedTokens} 
-                onChange={(e) => onChangeEstimatedTokens(e.target.value)} 
-                placeholder="0.0" 
-                className="w-full px-3 py-2.5 rounded-lg border border-white/20 bg-black/30 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200" 
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={estimatedTokens}
+                onChange={(e) => onChangeEstimatedTokens(e.target.value)}
+                placeholder="0.0"
+                className="w-full px-3 py-2.5 rounded-lg border border-white/20 bg-black/30 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200"
               />
             </label>
           </div>
@@ -297,17 +297,17 @@ export default function CreateToken() {
       {error && <div className="text-red-400 mt-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">{error}</div>}
       {success && <div className="text-green-400 mt-2 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">{success}</div>}
       <div className="mt-4 flex flex-wrap gap-2">
-        <AeButton 
-          onClick={submit} 
-          disabled={busy} 
-          loading={busy} 
-          variant="primary" 
+        <AeButton
+          onClick={submit}
+          disabled={busy}
+          loading={busy}
+          variant="primary"
           size="large"
         >
           {busy ? 'Deploying…' : 'Create trend (token)'}
         </AeButton>
-        <a 
-          href="/trendminer/invite" 
+        <a
+          href="/trendminer/invite"
           className="ml-2 px-4 py-2.5 rounded-full border border-white/20 bg-white text-gray-900 no-underline hover:bg-gray-100 transition-colors duration-200 font-medium"
         >
           Invite & Earn
@@ -321,9 +321,9 @@ export default function CreateToken() {
             {xPosts.length === 0 && (
               <div className="opacity-80 text-white/80">
                 Unable to load posts. Check them directly on{' '}
-                <a 
-                  href={`https://x.com/search?q=${encodeURIComponent(name)}&f=top`} 
-                  target="_blank" 
+                <a
+                  href={`https://x.com/search?q=${encodeURIComponent(name)}&f=top`}
+                  target="_blank"
                   rel="noreferrer"
                   className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
                 >
@@ -341,10 +341,10 @@ export default function CreateToken() {
                 <div className="text-sm leading-relaxed text-white/90">{p.text}</div>
                 {p.url && (
                   <div className="mt-2">
-                    <a 
-                      href={p.url} 
-                      target="_blank" 
-                      rel="noreferrer" 
+                    <a
+                      href={p.url}
+                      target="_blank"
+                      rel="noreferrer"
                       className="text-xs opacity-80 text-blue-400 hover:text-blue-300 transition-colors duration-200"
                     >
                       View on X
@@ -353,6 +353,7 @@ export default function CreateToken() {
                 )}
               </div>
             ))
+            }
           </div>
         )}
       </div>

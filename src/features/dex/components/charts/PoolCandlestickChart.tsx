@@ -13,7 +13,6 @@ import moment from 'moment';
 import { useQuery } from '@tanstack/react-query';
 import { Decimal } from '../../../../libs/decimal';
 import { TokenChip } from '../../../../components/TokenChip';
-import { AeCard } from '../../../../components/ui/ae-card';
 
 interface PoolCandlestickChartProps {
   pairAddress: string;
@@ -496,8 +495,8 @@ export function PoolCandlestickChart({
 
   if (hasError) {
     return (
-      <AeCard className={`${className} flex flex-col items-center justify-center text-center p-8`} style={{ height }}>
-        <div className="text-base text-destructive mb-4 font-medium">
+      <div className={`${className} max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden flex flex-col items-center justify-center text-center`} style={{ height }}>
+        <div className="text-base text-red-400 mb-4 font-medium">
           Failed to load chart data
         </div>
         <AeButton
@@ -507,15 +506,15 @@ export function PoolCandlestickChart({
         >
           Retry
         </AeButton>
-      </AeCard>
+      </div>
     );
   }
 
   return (
-    <AeCard className={`${className} p-0 overflow-hidden`}>
+    <div className={`${className} max-w-[100%] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden`}>
       <div className="relative" style={{ height }}>
         {/* Chart Info Overlay */}
-        <div className="absolute top-0 left-0 right-24 z-20 p-5 bg-gradient-to-b from-background/95 via-background/75 to-transparent backdrop-blur-sm">
+        <div className="hidden sm:block absolute top-0 left-0 right-24 z-20 p-5 bg-gradient-to-b from-background/50 via-background/15 to-transparent backdrop-blur-sm">
           <div className="flex flex-wrap items-end gap-1 mb-2">
             <div className="text-lg font-bold text-foreground flex items-center gap-2">
               <TokenChip
@@ -613,17 +612,18 @@ export function PoolCandlestickChart({
       </div>
 
       {/* Chart Controls */}
-      <div className="flex items-center justify-between p-4 border-t border-border bg-white/[0.02] backdrop-blur-sm">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center justify-between p-4 border-t border-white/10 bg-white/[0.05] backdrop-blur-[10px]">
+        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
           {intervals.map((interval) => (
             <AeButton
               key={interval.value}
               variant={intervalBy.value === interval.value ? 'primary' : 'secondary-dark'}
               size="small"
               onClick={() => handleIntervalChange(interval)}
+              className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
               style={{
-                minWidth: 40,
-                fontSize: 12,
+                minWidth: 32,
+                fontSize: 11,
                 fontWeight: 600
               }}
             >
@@ -633,37 +633,12 @@ export function PoolCandlestickChart({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="text-muted-foreground text-xs font-mono font-medium">
+          <div className="text-white/60 text-xs font-mono font-medium">
             {moment().format('HH:mm:ss')}
           </div>
-          <div className="text-border">|</div>
-          {/* <AeButton
-            variant="secondary-dark"
-            size="small"
-            onClick={handleCurrencyToggle}
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              textTransform: 'uppercase'
-            }}
-          >
-            <span style={{
-              color: !useCurrentCurrency ? 'var(--accent-color)' : 'var(--light-font-color)',
-              fontWeight: !useCurrentCurrency ? 700 : 500
-            }}>
-              AE
-            </span>
-            <span style={{ margin: '0 4px', color: 'var(--light-font-color)' }}>/</span>
-            <span style={{
-              color: useCurrentCurrency ? 'var(--accent-color)' : 'var(--light-font-color)',
-              fontWeight: useCurrentCurrency ? 700 : 500
-            }}>
-              USD
-            </span>
-          </AeButton> */}
         </div>
       </div>
-    </AeCard>
+    </div>
   );
 }
 

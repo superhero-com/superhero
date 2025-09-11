@@ -12,13 +12,13 @@ export default function DexSwap() {
   return (
     <div>
       {/* Main Content */}
-      <div className="flex gap-6 items-start w-full mobile:flex-col mobile:gap-5">
-        <div className="min-w-0 max-w-[min(480px,100%)] flex-shrink-0 mobile:max-w-none">
+      <div className="flex gap-5 items-start w-full flex-col md:flex-row md:gap-6">
+        <div className="min-w-0 max-w-[min(480px,100%)] flex-shrink-0 w-full md:max-w-[min(480px,100%)]">
           <SwapForm onPairSelected={setSelectedPair} onFromTokenSelected={setFromToken} />
         </div>
 
         {!!selectedPair?.address && (
-          <div className="flex-1 min-w-0 mobile:w-full">
+          <div className="flex-1 min-w-0 w-full">
             <PoolCandlestickChart 
               pairAddress={selectedPair?.address} 
               fromTokenAddress={fromToken?.address}

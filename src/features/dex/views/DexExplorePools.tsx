@@ -39,13 +39,13 @@ export default function DexExplorePools() {
   return (
     <div className="p-0">
       {/* Main Content Card */}
-      <div className="max-w-[1200px] mx-auto bg-glass-bg border border-glass-border backdrop-blur-[20px] rounded-[24px] p-6 shadow-glass relative overflow-hidden mobile:mx-2 mobile:p-4 mobile:rounded-2xl">
+      <div className="max-w-[1200px] mx-2 md:mx-auto bg-glass-bg border border-glass-border backdrop-blur-[20px] rounded-2xl md:rounded-[24px] p-4 md:p-6 shadow-glass relative overflow-hidden">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-standard-font-color m-0 mb-3 bg-primary-gradient bg-clip-text text-transparent mobile:text-xl">
+          <h1 className="text-xl md:text-2xl font-bold text-standard-font-color m-0 mb-3 bg-primary-gradient bg-clip-text text-transparent">
             Explore Pools
           </h1>
-          <p className="text-base text-light-font-color m-0 opacity-80 leading-6 mobile:text-sm">
+          <p className="text-sm md:text-base text-light-font-color m-0 opacity-80 leading-6">
             Explore trading pairs and their performance metrics across the DEX.
           </p>
         </div>

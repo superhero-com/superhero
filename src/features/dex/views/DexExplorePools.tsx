@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { CONFIG } from '../../../config';
-import './DexViews.scss';
 import { TokenChip } from '../../../components/TokenChip';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -38,48 +37,20 @@ export default function DexExplorePools() {
     queryKey: ['DexService.listAllPairs', sort, sortDirection, search, page, limit],
   })
   return (
-    <div className="dex-explore-pools-container">
+    <div className="p-0">
       {/* Main Content Card */}
-      <div className="genz-card" style={{
-        maxWidth: 1200,
-        margin: '0 auto',
-        background: 'var(--glass-bg)',
-        border: '1px solid var(--glass-border)',
-        backdropFilter: 'blur(20px)',
-        borderRadius: 24,
-        padding: 24,
-        boxShadow: 'var(--glass-shadow)',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
+      <div className="max-w-[1200px] mx-2 md:mx-auto bg-glass-bg border border-glass-border backdrop-blur-[20px] rounded-2xl md:rounded-[24px] p-4 md:p-6 shadow-glass relative overflow-hidden">
         {/* Header */}
-        <div style={{
-          marginBottom: 24
-        }}>
-          <h1 style={{
-            fontSize: 24,
-            fontWeight: 700,
-            color: 'var(--standard-font-color)',
-            margin: '0 0 12px 0',
-            background: 'var(--primary-gradient)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>
+        <div className="mb-6">
+          <h1 className="text-xl md:text-2xl font-bold text-standard-font-color m-0 mb-3 bg-primary-gradient bg-clip-text text-transparent">
             Explore Pools
           </h1>
-          <p style={{
-            fontSize: 16,
-            color: 'var(--light-font-color)',
-            margin: 0,
-            opacity: 0.8,
-            lineHeight: 1.5
-          }}>
+          <p className="text-sm md:text-base text-light-font-color m-0 opacity-80 leading-6">
             Explore trading pairs and their performance metrics across the DEX.
           </p>
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
+        <div className="overflow-x-auto">
           {/* Compact Filter Controls */}
           <div style={{
             background: 'rgba(255, 255, 255, 0.03)',

@@ -143,26 +143,12 @@ export default function FAQ() {
   );
 
   return (
-    <div style={{
-      maxWidth: 1000,
-      margin: '0 auto',
-      padding: '24px 16px',
-      color: '#fff',
-      background: '#0f1115',
-      borderRadius: 16,
-    }}>
-      <div style={{
-        borderRadius: 16,
-        padding: '28px 22px',
-        background: 'linear-gradient(90deg, #111317, #1a1f26)',
-        color: '#fff',
-        marginBottom: 16,
-        border: '1px solid rgba(255,255,255,0.06)'
-      }}>
-        <div style={{ fontSize: 14, opacity: 0.9 }}>Welcome</div>
-        <div style={{ fontSize: 32, fontWeight: 800, lineHeight: 1.2 }}>Superhero — the all‑in‑one social + crypto app</div>
-        <div style={{ fontSize: 15, opacity: 0.9, marginTop: 8 }}>Discover trends, mint community tokens, trade on bonding curves, chat in real‑time, and govern treasuries — in partnership with Quali.chat.</div>
-        <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
+    <div className="max-w-[1000px] mx-auto p-6 text-white bg-[#0f1115] rounded-2xl">
+      <div className="rounded-2xl p-7 bg-gradient-to-r from-[#111317] to-[#1a1f26] text-white mb-4 border border-white/[0.06]">
+        <div className="text-sm opacity-90">Welcome</div>
+        <div className="text-[32px] font-extrabold leading-tight">Superhero — the all‑in‑one social + crypto app</div>
+        <div className="text-[15px] opacity-90 mt-2">Discover trends, mint community tokens, trade on bonding curves, chat in real‑time, and govern treasuries — in partnership with Quali.chat.</div>
+        <div className="flex gap-2.5 mt-3.5 flex-wrap">
           <Badge label="Create" />
           <Badge label="Trade" />
           <Badge label="Vote" />
@@ -170,26 +156,26 @@ export default function FAQ() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 16 }}>
+      <div className="grid grid-cols-[260px_1fr] gap-4 lg:grid-cols-1">
         <Card>
-          <div style={{ fontWeight: 800, marginBottom: 8 }}>On this page</div>
-          <div style={{ display: 'grid', gap: 6 }}>
+          <div className="font-extrabold mb-2">On this page</div>
+          <div className="grid gap-1.5">
             {categories.map((cat) => (
-              <a key={cat} href={`#${cat.replace(/\s+/g, '-').toLowerCase()}`} style={{ textDecoration: 'none', color: '#fff', fontSize: 14, opacity: 0.9 }}>
+              <a key={cat} href={`#${cat.replace(/\s+/g, '-').toLowerCase()}`} className="no-underline text-white text-sm opacity-90 hover:opacity-100 transition-opacity">
                 {cat}
               </a>
             ))}
           </div>
-          <div style={{ marginTop: 16, fontSize: 12, opacity: 0.75 }}>Tip: Start with Getting Started, then explore Trendminer and DAO & Governance.</div>
+          <div className="mt-4 text-xs opacity-75">Tip: Start with Getting Started, then explore Trendminer and DAO & Governance.</div>
         </Card>
 
-        <div style={{ display: 'grid', gap: 16 }}>
+        <div className="grid gap-4">
           <Card>
-            <div style={{ fontWeight: 800, marginBottom: 8 }}>Getting Started</div>
-            <div style={{ fontSize: 15, opacity: 0.9 }}>
-              New here? Here’s the short version:
+            <div className="font-extrabold mb-2">Getting Started</div>
+            <div className="text-[15px] opacity-90">
+              New here? Here's the short version:
             </div>
-            <ul style={{ marginTop: 8, paddingLeft: 18, lineHeight: 1.8 }}>
+            <ul className="mt-2 pl-4.5 leading-relaxed">
               <li>Install Superhero Wallet and fund it with a little AE.</li>
               <li>Go to Trending and sort by Market Cap to explore tokens.</li>
               <li>Open a token, connect your wallet, and try a small Buy.</li>
@@ -197,8 +183,8 @@ export default function FAQ() {
             </ul>
           </Card>
           <Card>
-            <div style={{ fontWeight: 800, marginBottom: 8 }}>Features at a glance</div>
-            <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.8 }}>
+            <div className="font-extrabold mb-2">Features at a glance</div>
+            <ul className="m-0 pl-4.5 leading-relaxed">
               <li>Trending lists with Market Cap default sorting</li>
               <li>Token pages: chat, candlesticks, transactions, holders</li>
               <li>Bonding curve trading (mint/burn) with DAO fee streaming</li>
@@ -212,8 +198,8 @@ export default function FAQ() {
 
           {categories.map((cat) => (
             <Card key={cat} id={cat.replace(/\s+/g, '-').toLowerCase()}>
-              <div style={{ fontWeight: 800, marginBottom: 8 }}>{cat}</div>
-              <div style={{ display: 'grid', gap: 10 }}>
+              <div className="font-extrabold mb-2">{cat}</div>
+              <div className="grid gap-2.5">
                 {questions.filter((q) => q.category === cat).map((q) => (
                   <QAItem key={q.id} title={q.title} answer={q.answer} />
                 ))}
@@ -228,13 +214,7 @@ export default function FAQ() {
 
 function Badge({ label }: { label: string }) {
   return (
-    <span style={{
-      padding: '6px 10px',
-      borderRadius: 999,
-      background: 'rgba(255,255,255,0.12)',
-      border: '1px solid rgba(255,255,255,0.2)',
-      fontSize: 12,
-    }}>
+    <span className="px-2.5 py-1.5 rounded-full bg-white/12 border border-white/20 text-xs">
       {label}
     </span>
   );
@@ -242,13 +222,7 @@ function Badge({ label }: { label: string }) {
 
 function Card({ id, children }: { id?: string; children: React.ReactNode }) {
   return (
-    <section id={id} style={{
-      padding: 16,
-      border: '1px solid rgba(255,255,255,0.08)',
-      borderRadius: 12,
-      background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
-      color: '#fff',
-    }}>
+    <section id={id} className="p-4 border border-white/8 rounded-xl bg-gradient-to-b from-white/4 to-white/2 text-white">
       {children}
     </section>
   );
@@ -257,26 +231,17 @@ function Card({ id, children }: { id?: string; children: React.ReactNode }) {
 function QAItem({ title, answer }: { title: string; answer: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, background: 'rgba(255,255,255,0.04)', color: '#fff' }}>
+    <div className="border border-white/8 rounded-xl bg-white/4 text-white">
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        style={{
-          width: '100%',
-          textAlign: 'left',
-          background: 'transparent',
-          border: 0,
-          padding: '10px 12px',
-          cursor: 'pointer',
-          fontWeight: 700,
-          color: '#fff',
-        }}
+        className="w-full text-left bg-transparent border-0 p-3 cursor-pointer font-bold text-white hover:bg-white/5 transition-colors"
       >
         {title}
-        <span style={{ float: 'right', opacity: 0.6 }}>{open ? '−' : '+'}</span>
+        <span className="float-right opacity-60">{open ? '−' : '+'}</span>
       </button>
       {open && (
-        <div style={{ padding: '8px 12px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: 15, opacity: 0.9 }}>
+        <div className="px-3 pb-3 border-t border-white/8 text-[15px] opacity-90">
           {answer}
         </div>
       )}

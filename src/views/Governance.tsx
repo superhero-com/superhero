@@ -3,7 +3,6 @@ import { Encoding, isAddressValid } from '@aeternity/aepp-sdk';
 import Shell from '../components/layout/Shell';
 import LeftRail from '../components/layout/LeftRail';
 import RightRail from '../components/layout/RightRail';
-import './Governance.scss';
 import AeButton from '../components/AeButton';
 import MobileInput from '../components/MobileInput';
 import MobileCard from '../components/MobileCard';
@@ -130,20 +129,23 @@ export default function Governance() {
   };
 
   const renderPollsTab = () => (
-    <div className="gov-native mobile-container">
-      <div className="gov-header mobile-header">
-        <div className="header-content">
-
+    <div className="flex flex-col gap-4 px-4 md:px-6">
+      <div className="flex items-center justify-between mb-6 py-5">
+        <div className="flex items-center gap-4">
           <div className="header-text">
-            <h2>Governance</h2>
-            <p className="header-subtitle">Shape the future of the ecosystem</p>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent m-0">
+              Governance
+            </h2>
+            <p className="text-sm text-slate-400 font-normal mt-1 mb-0">
+              Shape the future of the ecosystem
+            </p>
           </div>
         </div>
       </div>
       
       {/* Enhanced Mobile Controls */}
-      <div className="mobile-controls">
-        <div className="mobile-search-section">
+      <div className="flex flex-col gap-4 mb-6 sticky top-0 z-10 bg-[var(--background-color)] backdrop-blur-lg py-4 -my-4">
+        <div className="w-full">
           <MobileInput
             label="Search polls"
             placeholder="Find polls by title or description..."
@@ -153,11 +155,11 @@ export default function Governance() {
             }}
             variant="filled"
             size="large"
-            className="enhanced-search"
+            className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl transition-all duration-300 focus-within:border-teal-400 focus-within:shadow-[0_0_0_3px_rgba(78,205,196,0.1)] focus-within:-translate-y-px"
           />
         </div>
         
-        <div className="mobile-filter-section">
+        <div className="w-full">
           <MobileInput
             as="select"
             label="Filter by status"
@@ -170,7 +172,7 @@ export default function Governance() {
             }}
             variant="filled"
             size="large"
-            className="enhanced-filter"
+            className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl transition-all duration-300 focus-within:border-teal-400 focus-within:shadow-[0_0_0_3px_rgba(78,205,196,0.1)] focus-within:-translate-y-px"
           >
             <option value="all">All polls</option>
             <option value="open">🟢 Open polls</option>
@@ -180,39 +182,51 @@ export default function Governance() {
       </div>
 
       {/* Enhanced Polls Grid */}
-      <div className="mobile-polls-section">
+      <div className="my-5">
         {polls.length === 0 ? (
-          <MobileCard variant="outlined" padding="large" className="empty-state-card">
-            <div className="mobile-empty-state">
-              <div className="empty-icon">🗳️</div>
-              <h3>No polls found</h3>
-              <p>Try adjusting your search or filters to find what you're looking for.</p>
+          <MobileCard variant="outlined" padding="large" className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl">
+            <div className="text-center py-16 px-5 animate-[slideIn_0.5s_ease-out]">
+              <div className="text-5xl mb-4 block">🗳️</div>
+              <h3 className="m-0 mb-2 text-white text-xl font-semibold">No polls found</h3>
+              <p className="m-0 text-slate-400 text-sm leading-relaxed">Try adjusting your search or filters to find what you're looking for.</p>
             </div>
           </MobileCard>
         ) : (
-          <div className="mobile-polls-grid">
-            {polls.map((p) => (
-              <Link to={`/voting/p/${p.poll}`} key={p.id} className="mobile-poll-link">
-                <MobileCard variant="elevated" padding="medium" clickable className="enhanced-poll-card">
-                  <div className="mobile-poll-card">
-                    <div className="poll-header">
-                      <div className="mobile-poll-title">{p.title}</div>
-                      <div className={`mobile-poll-status ${getStatusColor(p.status)}`}>
+          <div className="grid grid-cols-1 gap-5">
+            {polls.map((p, index) => (
+              <Link to={`/voting/p/${p.poll}`} key={p.id} className="text-inherit no-underline block">
+                <MobileCard 
+                  variant="elevated" 
+                  padding="medium" 
+                  clickable 
+                  className={`bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-white/20 overflow-hidden relative group animate-[slideIn_0.5s_ease-out] [animation-delay:${index * 0.1}s]`}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="font-bold text-lg leading-snug text-white flex-1">
+                        {p.title}
+                      </div>
+                      <div className={`px-3 py-1.5 rounded-2xl text-xs font-semibold uppercase tracking-wide whitespace-nowrap ${
+                        p.status?.toLowerCase() === 'open' 
+                          ? 'bg-gradient-to-br from-green-500/20 to-green-500/10 text-green-400 border border-green-500/30'
+                          : p.status?.toLowerCase() === 'closed'
+                          ? 'bg-gradient-to-br from-red-500/20 to-red-500/10 text-red-400 border border-red-500/30'
+                          : 'bg-gradient-to-br from-gray-500/20 to-gray-500/10 text-gray-400 border border-gray-500/30'
+                      }`}>
                         {p.status || 'Unknown'}
                       </div>
                     </div>
-                    <div className="poll-meta">
-                      <div className="poll-stats">
-                        <span className="stat-item">
-                          <span className="stat-icon">👥</span>
-                          {p.voteCount} votes
-                        </span>
-                        {' '}
-                        <span className="stat-item">
-                          <span className="stat-icon">⏰</span>
-                          {new Date(p.endDate).toLocaleDateString()}
-                        </span>
-                      </div>
+                    <div className="flex gap-4 flex-wrap">
+                      <span className="flex items-center gap-1.5 text-sm text-slate-400 font-medium">
+                        <span className="text-sm">👥</span>
+                        {p.voteCount} votes
+                      </span>
+                      <span className="flex items-center gap-1.5 text-sm text-slate-400 font-medium">
+                        <span className="text-sm">⏰</span>
+                        {new Date(p.endDate).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
                 </MobileCard>
@@ -225,48 +239,58 @@ export default function Governance() {
   );
 
   const renderVoteTab = () => (
-    <div className="gov-native mobile-container">
-      <div className="gov-header mobile-header">
-        <div className="header-content">
+    <div className="flex flex-col gap-4 px-4 md:px-6">
+      <div className="flex items-center justify-between mb-6 py-5">
+        <div className="flex items-center gap-4">
           <div className="header-text">
-            <h2>{poll?.pollState.metadata.title || 'Poll'}</h2>
-            <p className="header-subtitle">Cast your vote and make your voice heard</p>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent m-0">
+              {poll?.pollState.metadata.title || 'Poll'}
+            </h2>
+            <p className="text-sm text-slate-400 font-normal mt-1 mb-0">
+              Cast your vote and make your voice heard
+            </p>
           </div>
         </div>
         <AeButton 
           onClick={() => setActiveTab('polls')}
-          className="mobile-back-btn"
+          className="ml-auto px-4 py-2.5 text-sm h-10 bg-black/20 backdrop-blur-lg text-slate-400 border border-white/10 rounded-xl transition-all duration-300 hover:bg-white/5 hover:border-white/15 hover:-translate-y-px"
         >
           ← Back to Polls
         </AeButton>
       </div>
 
       {/* Enhanced Voting Section */}
-      <div className="mobile-voting-section">
-        <MobileCard variant="elevated" padding="large" className="voting-card">
-          <div className="voting-header">
-            <h3 className="mobile-section-title">🗳️ Cast Your Vote</h3>
+      <div className="mb-6">
+        <MobileCard variant="elevated" padding="large" className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl">
+          <div className="mb-5">
+            <h3 className="text-lg font-semibold text-white mb-0 flex items-center gap-2 relative before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-teal-400 before:rounded-sm">
+              🗳️ Cast Your Vote
+            </h3>
             {poll?.pollState.metadata.description && (
-              <p className="poll-description">{poll.pollState.metadata.description}</p>
+              <p className="text-sm text-slate-400 leading-relaxed mt-2 mb-0 max-h-16 overflow-hidden relative after:content-[''] after:absolute after:bottom-0 after:right-0 after:w-10 after:h-5 after:bg-gradient-to-l after:from-[var(--background-color)] after:pointer-events-none">
+                {poll.pollState.metadata.description}
+              </p>
             )}
           </div>
           
           {myVote && (
-            <div className="mobile-current-vote">
-              <div className="vote-badge">
-                <span className="vote-icon">✅</span>
-                <span className="vote-text">You voted for: <strong>{myVote?.option || myVote}</strong></span>
+            <div className="flex flex-col gap-4 p-5 bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20 rounded-2xl mb-5 backdrop-blur-lg">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">✅</span>
+                <span className="text-sm text-slate-400 font-medium">
+                  You voted for: <strong className="text-green-400 font-semibold">{myVote?.option || myVote}</strong>
+                </span>
               </div>
               <AeButton 
                 onClick={handleRevokeVote} 
-                className="mobile-action-btn secondary revoke-btn"
+                className="bg-transparent text-white border border-white/20 rounded-xl transition-all duration-300 hover:bg-white/5 hover:border-white/30 hover:-translate-y-px"
               >
                 🔄 Change Vote
               </AeButton>
             </div>
           )}
 
-          <div className="mobile-voting-options">
+          <div className="flex flex-col gap-3">
             {(Object.values(poll?.pollState.vote_options ?? {})).map((opt, idx) => {
               const val = idx.toString();
               const lbl = opt;
@@ -278,10 +302,18 @@ export default function Governance() {
                   key={val} 
                   onClick={() => handleVote(val)}
                   disabled={isVoting}
-                  className={`mobile-vote-option-btn ${isSelected ? 'selected' : ''} ${isVotingThis ? 'voting' : ''}`}
+                  className={`h-14 text-base font-semibold bg-black/20 backdrop-blur-lg text-white border-2 border-white/10 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer touch-manipulation min-h-12 ${
+                    isSelected 
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-0.5'
+                      : isVotingThis
+                      ? 'bg-gradient-to-r from-teal-400 to-blue-400 text-white border-transparent animate-pulse'
+                      : 'hover:bg-white/5 hover:border-teal-400 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
+                  } ${
+                    isVoting ? 'opacity-60 cursor-not-allowed transform-none' : ''
+                  } active:scale-98 transition-transform duration-100`}
                 >
-                  <span className="vote-option-text">{lbl}</span>
-                  {isVotingThis && <span className="voting-spinner">⏳</span>}
+                  <span className="flex-1 text-center">{lbl}</span>
+                  {isVotingThis && <span className="text-lg animate-spin">⏳</span>}
                 </button>
               );
             })}
@@ -291,17 +323,19 @@ export default function Governance() {
 
       {/* Enhanced Results Section */}
       {results && (
-        <div className="mobile-results-section">
-          <MobileCard variant="elevated" padding="large" className="results-card">
-            <div className="results-header">
-              <h3 className="mobile-section-title">📊 Live Results</h3>
-              <div className="total-votes">
-                <span className="total-votes-icon">👥</span>
-                <span className="total-votes-text">{results.totalVotes || 0} total votes</span>
+        <div className="mb-6 animate-[slideIn_0.5s_ease-out_0.2s_both]">
+          <MobileCard variant="elevated" padding="large" className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-lg font-semibold text-white mb-0 flex items-center gap-2 relative before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-teal-400 before:rounded-sm">
+                📊 Live Results
+              </h3>
+              <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-2xl border border-white/10">
+                <span className="text-base">👥</span>
+                <span className="text-sm text-slate-400 font-medium">{results.totalVotes || 0} total votes</span>
               </div>
             </div>
             
-            <div className="mobile-results-list">
+            <div className="flex flex-col gap-5">
               {(results.options || []).map((opt: any, idx: number) => {
                 const val = opt.value || opt;
                 const lbl = opt.label || opt;
@@ -311,19 +345,26 @@ export default function Governance() {
                 const isWinning = percentage === Math.max(...(results.options || []).map((o: any) => getVotePercentage(o.votes || 0, total)));
                 
                 return (
-                  <div key={idx} className={`mobile-result-item ${isWinning ? 'winning' : ''}`}>
-                    <div className="mobile-result-header">
-                      <span className="mobile-result-label">
-                        {isWinning && <span className="winner-icon">🏆</span>}
+                  <div 
+                    key={idx} 
+                    className={`flex flex-col gap-3 p-4 bg-white/2 border border-white/6 rounded-2xl transition-all duration-300 hover:bg-white/5 hover:border-white/10 hover:-translate-y-0.5 ${
+                      isWinning 
+                        ? 'bg-gradient-to-br from-yellow-400/10 to-yellow-400/5 border-yellow-400/30 shadow-xl shadow-yellow-400/20 relative before:content-[\'\'] before:absolute before:left-0 before:top-0 before:w-1 before:h-full before:bg-yellow-400 before:rounded-l-2xl before:animate-pulse'
+                        : ''
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="text-base font-semibold text-white flex items-center gap-2">
+                        {isWinning && <span className="text-lg">🏆</span>}
                         {lbl}
                       </span>
-                      <span className="mobile-result-votes">
+                      <span className="text-sm text-slate-400 font-medium">
                         {votes} votes ({percentage}%)
                       </span>
                     </div>
-                    <div className="mobile-result-bar">
+                    <div className="h-3 bg-white/5 rounded-md overflow-hidden relative">
                       <div 
-                        className="mobile-result-progress" 
+                        className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-md transition-all duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)] relative after:content-[''] after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:animate-[shimmer_2s_infinite]" 
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
@@ -337,48 +378,50 @@ export default function Governance() {
 
       {/* Enhanced Account Section */}
       {address && (
-        <div className="mobile-account-section">
-          <MobileCard variant="elevated" padding="large" className="account-card">
-            <div className="account-header">
-              <h3 className="mobile-section-title">👤 Your Governance Power</h3>
+        <div className="mb-6 animate-[slideIn_0.5s_ease-out_0.3s_both]">
+          <MobileCard variant="elevated" padding="large" className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl">
+            <div className="mb-5">
+              <h3 className="text-lg font-semibold text-white mb-0 flex items-center gap-2 relative before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-teal-400 before:rounded-sm">
+                👤 Your Governance Power
+              </h3>
             </div>
             
             {account && (
-              <div className="mobile-account-info">
-                <div className="account-stats">
-                  <div className="mobile-account-item">
-                    <span className="mobile-account-label">
-                      <span className="account-icon">💰</span>
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-4">
+                  <div className="flex justify-between items-center p-4 bg-white/2 border border-white/6 rounded-xl transition-all duration-300 hover:bg-white/5 hover:border-white/10 hover:-translate-y-px relative before:content-[''] before:absolute before:left-0 before:top-0 before:w-1 before:h-full before:bg-teal-400 before:rounded-l-xl before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
+                    <span className="text-sm text-slate-400 flex items-center gap-2 font-medium">
+                      <span className="text-base">💰</span>
                       Balance
                     </span>
-                    <span className="mobile-account-value">{account.balance || '0'} AE</span>
+                    <span className="text-base font-bold text-white">{account.balance || '0'} AE</span>
                   </div>
                   {delegators.length > 0 && (
-                    <div className="mobile-account-item">
-                      <span className="mobile-account-label">
-                        <span className="account-icon">🤝</span>
+                    <div className="flex justify-between items-center p-4 bg-white/2 border border-white/6 rounded-xl transition-all duration-300 hover:bg-white/5 hover:border-white/10 hover:-translate-y-px relative before:content-[''] before:absolute before:left-0 before:top-0 before:w-1 before:h-full before:bg-teal-400 before:rounded-l-xl before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
+                      <span className="text-sm text-slate-400 flex items-center gap-2 font-medium">
+                        <span className="text-base">🤝</span>
                         Delegators
                       </span>
-                      <span className="mobile-account-value">{delegators.length}</span>
+                      <span className="text-base font-bold text-white">{delegators.length}</span>
                     </div>
                   )}
                 </div>
               </div>
             )}
 
-            <div className="mobile-delegation-info">
-              <div className="delegation-status">
+            <div className="mt-5">
+              <div>
                 {delegation.to ? (
-                  <div className="delegation-active">
-                    <span className="delegation-icon">✅</span>
-                    <span className="delegation-text">
-                      Delegating to: <span className="mobile-delegate-address">{delegation.to}</span>
+                  <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20 rounded-xl relative overflow-hidden before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-green-500/10 before:to-transparent before:animate-[shimmer_4s_infinite]">
+                    <span className="text-xl">✅</span>
+                    <span className="text-sm text-slate-400 font-medium">
+                      Delegating to: <span className="text-white font-mono text-xs break-all">{delegation.to}</span>
                     </span>
                   </div>
                 ) : (
-                  <div className="delegation-inactive">
-                    <span className="delegation-icon">⚠️</span>
-                    <span className="delegation-text">No delegation set</span>
+                  <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 border border-yellow-500/20 rounded-xl">
+                    <span className="text-xl">⚠️</span>
+                    <span className="text-sm text-slate-400 font-medium">No delegation set</span>
                   </div>
                 )}
               </div>
@@ -390,51 +433,57 @@ export default function Governance() {
   );
 
   const renderAccountTab = () => (
-    <div className="gov-native mobile-container">
-      <div className="gov-header mobile-header">
-        <div className="header-content">
-          <div className="header-icon-wrapper">
-            <IconGovernance className="gov-icon" />
+    <div className="flex flex-col gap-4 px-4 md:px-6">
+      <div className="flex items-center justify-between mb-6 py-5">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center shadow-xl animate-[fadeIn_0.6s_ease-out]">
+            <IconGovernance className="w-6 h-6 brightness-0 invert" />
           </div>
           <div className="header-text">
-            <h2>My Governance Account</h2>
-            <p className="header-subtitle">Manage your voting power and delegations</p>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent m-0 animate-[slideIn_0.6s_ease-out_0.1s_both]">
+              My Governance Account
+            </h2>
+            <p className="text-sm text-slate-400 font-normal mt-1 mb-0 animate-[slideIn_0.6s_ease-out_0.2s_both]">
+              Manage your voting power and delegations
+            </p>
           </div>
         </div>
       </div>
 
       {/* Enhanced Account Info */}
       {address && (
-        <div className="mobile-account-section">
-          <MobileCard variant="elevated" padding="large" className="account-details-card">
-            <div className="account-header">
-              <h3 className="mobile-section-title">👤 Account Information</h3>
+        <div className="mb-6">
+          <MobileCard variant="elevated" padding="large" className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl">
+            <div className="mb-5">
+              <h3 className="text-lg font-semibold text-white mb-0 flex items-center gap-2 relative before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-teal-400 before:rounded-sm">
+                👤 Account Information
+              </h3>
             </div>
             
             {account && (
-              <div className="mobile-account-info">
-                <div className="account-stats">
-                  <div className="mobile-account-item">
-                    <span className="mobile-account-label">
-                      <span className="account-icon">📍</span>
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-4">
+                  <div className="flex justify-between items-center p-4 bg-white/2 border border-white/6 rounded-xl transition-all duration-300 hover:bg-white/5 hover:border-white/10 hover:-translate-y-px relative before:content-[''] before:absolute before:left-0 before:top-0 before:w-1 before:h-full before:bg-teal-400 before:rounded-l-xl before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
+                    <span className="text-sm text-slate-400 flex items-center gap-2 font-medium">
+                      <span className="text-base">📍</span>
                       Address
                     </span>
-                    <span className="mobile-account-value address-value">{address}</span>
+                    <span className="text-base font-bold text-white font-mono text-xs text-slate-400 max-w-32 overflow-hidden text-ellipsis">{address}</span>
                   </div>
-                  <div className="mobile-account-item">
-                    <span className="mobile-account-label">
-                      <span className="account-icon">💰</span>
+                  <div className="flex justify-between items-center p-4 bg-white/2 border border-white/6 rounded-xl transition-all duration-300 hover:bg-white/5 hover:border-white/10 hover:-translate-y-px relative before:content-[''] before:absolute before:left-0 before:top-0 before:w-1 before:h-full before:bg-teal-400 before:rounded-l-xl before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
+                    <span className="text-sm text-slate-400 flex items-center gap-2 font-medium">
+                      <span className="text-base">💰</span>
                       Balance
                     </span>
-                    <span className="mobile-account-value">{account.balance || '0'} AE</span>
+                    <span className="text-base font-bold text-white">{account.balance || '0'} AE</span>
                   </div>
                   {delegators.length > 0 && (
-                    <div className="mobile-account-item">
-                      <span className="mobile-account-label">
-                        <span className="account-icon">🤝</span>
+                    <div className="flex justify-between items-center p-4 bg-white/2 border border-white/6 rounded-xl transition-all duration-300 hover:bg-white/5 hover:border-white/10 hover:-translate-y-px relative before:content-[''] before:absolute before:left-0 before:top-0 before:w-1 before:h-full before:bg-teal-400 before:rounded-l-xl before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
+                      <span className="text-sm text-slate-400 flex items-center gap-2 font-medium">
+                        <span className="text-base">🤝</span>
                         Delegators
                       </span>
-                      <span className="mobile-account-value">{delegators.length}</span>
+                      <span className="text-base font-bold text-white">{delegators.length}</span>
                     </div>
                   )}
                 </div>
@@ -445,16 +494,18 @@ export default function Governance() {
       )}
 
       {/* Enhanced Delegation Section */}
-      <div className="mobile-delegation-section">
-        <MobileCard variant="elevated" padding="large" className="delegation-card">
-          <div className="delegation-header">
-            <h3 className="mobile-section-title">🤝 Vote Delegation</h3>
-            <p className="mobile-delegation-description">
+      <div className="mb-6 animate-[slideIn_0.5s_ease-out_0.4s_both]">
+        <MobileCard variant="elevated" padding="large" className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl">
+          <div className="mb-5">
+            <h3 className="text-lg font-semibold text-white mb-0 flex items-center gap-2 relative before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-teal-400 before:rounded-sm">
+              🤝 Vote Delegation
+            </h3>
+            <p className="m-0 mt-5 text-sm text-slate-400 leading-relaxed">
               Delegate your voting power to another address. They can vote on your behalf in governance polls.
             </p>
           </div>
           
-          <div className="mobile-delegation-form">
+          <div className="flex flex-col gap-5">
             <MobileInput
               label="Delegate to address"
               placeholder="Enter the address you want to delegate to..."
@@ -462,14 +513,18 @@ export default function Governance() {
               onChange={(e) => setDelegateAddress(e.target.value)}
               variant="filled"
               size="large"
-              className="enhanced-delegation-input"
+              className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl transition-all duration-300 focus-within:border-teal-400 focus-within:shadow-[0_0_0_3px_rgba(78,205,196,0.1)] focus-within:-translate-y-px relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-teal-400 after:transition-all after:duration-300 focus-within:after:w-full"
             />
             
-            <div className="mobile-delegation-actions">
+            <div className="flex flex-col gap-3">
               <AeButton 
                 onClick={handleSaveDelegation}
                 disabled={!delegateAddress.trim() || delegation.loading}
-                className="mobile-action-btn primary"
+                className={`h-13 text-sm font-semibold rounded-2xl transition-all duration-300 ${
+                  !delegateAddress.trim() || delegation.loading
+                    ? 'opacity-50 cursor-not-allowed transform-none relative overflow-hidden after:content-[\'\'] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/10 after:to-transparent after:animate-[shimmer_1.5s_infinite]'
+                    : 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-0 shadow-xl hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-pink-500/40'
+                }`}
               >
                 {delegation.loading ? '⏳ Saving...' : '💾 Save Delegation'}
               </AeButton>
@@ -478,7 +533,7 @@ export default function Governance() {
                 <AeButton 
                   onClick={handleRevokeDelegation}
                   disabled={delegation.loading}
-                  className="mobile-action-btn secondary"
+                  className="bg-black/20 backdrop-blur-lg text-white border border-white/10 rounded-2xl transition-all duration-300 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5"
                 >
                   {delegation.loading ? '⏳ Revoking...' : '❌ Revoke Delegation'}
                 </AeButton>
@@ -487,18 +542,25 @@ export default function Governance() {
           </div>
 
           {delegators.length > 0 && (
-            <div className="mobile-delegators-section">
-              <h4 className="mobile-subsection-title">
-                <span className="subsection-icon">👥</span>
+            <div className="mt-6">
+              <h4 className="m-0 mb-4 text-lg font-semibold text-white flex items-center gap-2">
+                <span className="text-xl">👥</span>
                 Your Delegators
               </h4>
-              <div className="mobile-delegators-list">
+              <div className="flex flex-col gap-3">
                 {delegators.map((delegator: any, idx: number) => (
-                  <div key={idx} className="mobile-delegator-item">
-                    <div className="delegator-info">
-                      <span className="mobile-delegator-address">{delegator.address || delegator}</span>
+                  <div 
+                    key={idx} 
+                    className="p-4 bg-white/2 border border-white/6 rounded-xl transition-all duration-300 hover:bg-white/5 hover:border-white/10 hover:-translate-y-px relative before:content-[''] before:absolute before:left-0 before:top-0 before:w-1 before:h-full before:bg-purple-400 before:rounded-l-xl before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100"
+                  >
+                    <div className="flex justify-between items-center gap-3">
+                      <span className="text-xs font-mono text-slate-400 break-all flex-1">
+                        {delegator.address || delegator}
+                      </span>
                       {delegator.balance && (
-                        <span className="mobile-delegator-balance">{delegator.balance} AE</span>
+                        <span className="text-xs font-semibold text-white whitespace-nowrap">
+                          {delegator.balance} AE
+                        </span>
                       )}
                     </div>
                   </div>
@@ -514,24 +576,36 @@ export default function Governance() {
   return (
     <Shell left={<LeftRail />} right={<RightRail />}> 
       {/* Enhanced Tab Navigation */}
-      <div className="mobile-tab-navigation">
+      <div className="flex gap-2 mb-5 px-1 overflow-x-auto scrollbar-none -ms-overflow-style-none webkit-scrollbar-none scroll-smooth webkit-overflow-scrolling-touch">
         <AeButton 
           onClick={() => setActiveTab('polls')}
-          className={`mobile-tab-btn ${activeTab === 'polls' ? 'active' : ''}`}
+          className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
+            activeTab === 'polls'
+              ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-0.5 relative after:content-[\'\'] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-1 after:bg-teal-400 after:rounded-sm after:animate-[slideIn_0.3s_ease-out]'
+              : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
+          }`}
         >
           📊 Polls
         </AeButton>
         {pollId && (
           <AeButton 
             onClick={() => setActiveTab('vote')}
-            className={`mobile-tab-btn ${activeTab === 'vote' ? 'active' : ''}`}
+            className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
+              activeTab === 'vote'
+                ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-0.5 relative after:content-[\'\'] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-1 after:bg-teal-400 after:rounded-sm after:animate-[slideIn_0.3s_ease-out]'
+                : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
+            }`}
           >
             🗳️ Vote
           </AeButton>
         )}
         <AeButton 
           onClick={() => setActiveTab('account')}
-          className={`mobile-tab-btn ${activeTab === 'account' ? 'active' : ''}`}
+          className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
+            activeTab === 'account'
+              ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-0.5 relative after:content-[\'\'] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-1 after:bg-teal-400 after:rounded-sm after:animate-[slideIn_0.3s_ease-out]'
+              : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
+          }`}
         >
           👤 My Account
         </AeButton>

@@ -4,6 +4,8 @@ import { useAeSdk } from "../hooks";
 import { copyToClipboard } from '../utils/address';
 import { DexTokenDto } from '../api/generated';
 import { DEX_ADDRESSES } from '../libs/dex';
+import { Badge } from './ui/badge';
+import { cn } from '@/lib/utils';
 
 interface TokenChipProps {
     address?: string;
@@ -55,31 +57,6 @@ export const TokenChip = ({
         }
     }, [tokenData?.address, copyable, onClick]);
 
-    const chipStyle: React.CSSProperties = {
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: large ? 8 : 6,
-        padding: large ? '8px 16px' : '6px 12px',
-        borderRadius: 20,
-        background: 'var(--glass-bg)',
-        border: '1px solid var(--glass-border)',
-        color: 'var(--standard-font-color)',
-        fontSize: large ? 14 : 12,
-        fontWeight: 600,
-        cursor: (copyable || onClick) ? 'pointer' : 'default',
-        transition: 'all 0.3s ease',
-        backdropFilter: 'blur(10px)',
-        position: 'relative',
-        overflow: 'hidden',
-        minHeight: large ? 36 : 28,
-        ...style
-    };
-
-    const hoverStyle = {
-        transform: 'translateY(-1px)',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
-    };
-
     const formatAddress = (addr: string, length: number = 6) => {
         if (!addr) return '';
         if (addr.length <= length * 2) return addr;
@@ -89,29 +66,23 @@ export const TokenChip = ({
     if (!tokenData) return null;
 
     return (
-        <div
-            className={`token-chip ${className}`}
-            style={chipStyle}
+        <Badge
+            variant="secondary"
+            className={cn(
+                "inline-flex items-center gap-1.5 rounded-full backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md cursor-pointer relative overflow-hidden font-semibold tracking-wide bg-glass-bg border-glass-border text-foreground",
+                large ? "px-4 py-2 text-sm gap-2 min-h-9" : "px-3 py-1.5 text-xs min-h-7",
+                !(copyable || onClick) && "cursor-default hover:translate-y-0 hover:shadow-none",
+                className
+            )}
+            style={style}
             onClick={handleChipClick}
-            onMouseEnter={(e) => {
-                if (copyable || onClick) {
-                    Object.assign(e.currentTarget.style, hoverStyle);
-                }
-            }}
-            onMouseLeave={(e) => {
-                if (copyable || onClick) {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                }
-            }}
             title={copyable ? 'Click to copy token address' : data?.name || address}
         >
             {/* Token Symbol */}
-            <span style={{
-                fontSize: large ? 14 : 12,
-                fontWeight: 600,
-                letterSpacing: '0.25px'
-            }}>
+            <span className={cn(
+                "font-semibold tracking-wide",
+                large ? "text-sm" : "text-xs"
+            )}>
                 {isLoading
                     ? '...' :
                     (
@@ -123,74 +94,35 @@ export const TokenChip = ({
 
             {/* Token Name (if different from symbol) */}
             {showName && tokenData?.name && tokenData.name !== tokenData.symbol && (
-                <span style={{
-                    fontSize: large ? 12 : 10,
-                    fontWeight: 400,
-                    opacity: 0.7,
-                    maxWidth: large ? 120 : 80,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                }}>
+                <span className={cn(
+                    "font-normal opacity-70 truncate",
+                    large ? "text-xs max-w-30" : "text-xs max-w-20"
+                )}>
                     ({tokenData.name})
                 </span>
             )}
 
             {/* Address (optional) */}
             {showAddress && (
-                <span style={{
-                    fontSize: large ? 11 : 9,
-                    fontWeight: 400,
-                    opacity: 0.6,
-                    fontFamily: 'monospace'
-                }}>
+                <span className={cn(
+                    "font-mono font-normal opacity-60",
+                    large ? "text-xs" : "text-xs"
+                )}>
                     {formatAddress(tokenData.address, large ? 4 : 3)}
                 </span>
             )}
 
             {/* Copy icon */}
             {copyable && (
-                <div style={{
-                    width: 16,
-                    height: 16,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    opacity: 0.7
-                }}>
-                    📋
-                </div>
+                <span className="opacity-70 text-xs">📋</span>
             )}
 
             {/* Copied feedback */}
             {textCopied && (
-                <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'var(--success-color)',
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    borderRadius: 20,
-                    animation: 'fadeInOut 1s ease-in-out'
-                }}>
+                <div className="absolute inset-0 bg-success text-white flex items-center justify-center text-xs font-bold rounded-full animate-pulse">
                     Copied!
                 </div>
             )}
-
-            <style>{`
-                @keyframes fadeInOut {
-                    0% { opacity: 0; transform: scale(0.8); }
-                    50% { opacity: 1; transform: scale(1); }
-                    100% { opacity: 0; transform: scale(0.8); }
-                }
-            `}</style>
-        </div>
+        </Badge>
     );
 };

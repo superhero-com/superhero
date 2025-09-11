@@ -1,11 +1,15 @@
 import waeACI from 'dex-contracts-v2/build/WAE.aci.json';
 import React, { useEffect, useState } from 'react';
+import { Button } from '../../components/ui/button';
+import { Card, CardContent, CardHeader } from '../../components/ui/card';
+import { Input } from '../../components/ui/input';
 import ConnectWalletButton from '../../components/ConnectWalletButton';
 import { useTokenBalances } from '../../components/dex/hooks/useTokenBalances';
 import { useAccount, useAeSdk, useRecentActivities } from '../../hooks';
 import { Decimal } from '../../libs/decimal';
 import { DEX_ADDRESSES } from '../../libs/dex';
 import { errorToUserMessage } from '../../libs/errorMessages';
+import { cn } from '../../lib/utils';
 
 interface WrapUnwrapWidgetProps {
   className?: string;
@@ -138,400 +142,181 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
 
   return (
     <div
-      className={`genz-card ${className || ''}`}
-      style={{
-        maxWidth: 480,
-        margin: '0 auto',
-        background: 'var(--glass-bg)',
-        border: '1px solid var(--glass-border)',
-        backdropFilter: 'blur(20px)',
-        borderRadius: 24,
-        padding: 24,
-        boxShadow: 'var(--glass-shadow)',
-        position: 'relative',
-        overflow: 'hidden',
-        ...style
-      }}
+      className={cn(
+        "max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden",
+        className
+      )}
+      style={style}
     >
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 24
-      }}>
-        <h2 style={{
-          fontSize: 20,
-          fontWeight: 700,
-          color: 'var(--standard-font-color)',
-          margin: 0,
-          background: 'var(--primary-gradient)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text'
-        }}>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
           Wrap / Unwrap AE
         </h2>
 
         {/* Mode Toggle */}
-        <div style={{
-          display: 'flex',
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid var(--glass-border)',
-          borderRadius: 12,
-          padding: 4,
-          backdropFilter: 'blur(10px)'
-        }}>
-          <button
+        <div className="flex bg-white/[0.05] border border-white/10 rounded-xl p-1 backdrop-blur-[10px]">
+          <Button
             onClick={() => setMode('wrap')}
             disabled={isLoading}
-            style={{
-              padding: '6px 12px',
-              borderRadius: 8,
-              border: 'none',
-              background: mode === 'wrap' ? 'var(--accent-color)' : 'transparent',
-              color: mode === 'wrap' ? 'white' : 'var(--light-font-color)',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              transition: 'all 0.3s ease'
-            }}
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300",
+              mode === 'wrap'
+                ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white"
+                : "text-white/60 hover:text-white hover:bg-white/10"
+            )}
           >
             Wrap
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setMode('unwrap')}
             disabled={isLoading}
-            style={{
-              padding: '6px 12px',
-              borderRadius: 8,
-              border: 'none',
-              background: mode === 'unwrap' ? 'var(--accent-color)' : 'transparent',
-              color: mode === 'unwrap' ? 'white' : 'var(--light-font-color)',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              transition: 'all 0.3s ease'
-            }}
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300",
+              mode === 'unwrap'
+                ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white"
+                : "text-white/60 hover:text-white hover:bg-white/10"
+            )}
           >
             Unwrap
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Balance Display */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.03)',
-        border: '1px solid var(--glass-border)',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 20,
-        backdropFilter: 'blur(10px)'
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 16
-        }}>
-          <div style={{ textAlign: 'center', flex: 1 }}>
-            <div style={{
-              fontSize: 12,
-              color: 'var(--light-font-color)',
-              marginBottom: 4,
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>
-              AE Balance
+      <Card className="bg-white/[0.03] border-white/10 rounded-2xl mb-5 backdrop-blur-[10px]">
+        <CardContent className="p-4">
+          <div className="flex justify-between items-center gap-4">
+            <div className="text-center flex-1">
+              <div className="text-xs text-white/60 mb-1 uppercase tracking-wider">
+                AE Balance
+              </div>
+              <div className="text-base font-bold text-white font-mono">
+                {wrapBalances.ae ? Decimal.from(wrapBalances.ae).prettify() : '…'}
+              </div>
             </div>
-            <div style={{
-              fontSize: 16,
-              fontWeight: 700,
-              color: 'var(--standard-font-color)',
-              fontFamily: 'monospace'
-            }}>
-              {wrapBalances.ae ? Decimal.from(wrapBalances.ae).prettify() : '…'}
+
+            <div className="w-0.5 h-10 bg-white/10 rounded-full" />
+
+            <div className="text-center flex-1">
+              <div className="text-xs text-white/60 mb-1 uppercase tracking-wider">
+                WAE Balance
+              </div>
+              <div className="text-base font-bold text-white font-mono">
+                {wrapBalances.wae ? Decimal.from(wrapBalances.wae).prettify() : '…'}
+              </div>
             </div>
           </div>
-
-          <div style={{
-            width: 2,
-            height: 40,
-            background: 'var(--glass-border)',
-            borderRadius: 1
-          }} />
-
-          <div style={{ textAlign: 'center', flex: 1 }}>
-            <div style={{
-              fontSize: 12,
-              color: 'var(--light-font-color)',
-              marginBottom: 4,
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>
-              WAE Balance
-            </div>
-            <div style={{
-              fontSize: 16,
-              fontWeight: 700,
-              color: 'var(--standard-font-color)',
-              fontFamily: 'monospace'
-            }}>
-              {wrapBalances.wae ? Decimal.from(wrapBalances.wae).prettify() : '…'}
-            </div>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Amount Input */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.03)',
-        border: '1px solid var(--glass-border)',
-        borderRadius: 16,
-        padding: 16,
-        backdropFilter: 'blur(10px)',
-        marginBottom: 20
-      }}>
-        {/* Label and Balance Row */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 12
-        }}>
-          <label style={{
-            fontSize: 14,
-            fontWeight: 600,
-            color: 'var(--light-font-color)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px'
-          }}>
-            Amount to {mode}
-          </label>
+      <Card className="bg-white/[0.03] border-white/10 rounded-2xl mb-5 backdrop-blur-[10px]">
+        <CardContent className="p-4">
+          {/* Label and Balance Row */}
+          <div className="flex justify-between items-center mb-3">
+            <label className="text-sm font-semibold text-white/60 uppercase tracking-wider">
+              Amount to {mode}
+            </label>
 
-          {currentBalance && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              fontSize: 12,
-              color: 'var(--light-font-color)'
-            }}>
-              <div>
-                Balance:
-                <span style={{
-                  fontWeight: 600,
-                  color: 'var(--standard-font-color)',
-                  fontSize: 12,
-                  marginLeft: 8
-                }}>
-                  {Decimal.from(currentBalance).prettify()}
-                </span>
+            {currentBalance && (
+              <div className="flex items-center gap-2 text-xs text-white/60">
+                <div>
+                  Balance:
+                  <span className="font-semibold text-white text-xs ml-2">
+                    {Decimal.from(currentBalance).prettify()}
+                  </span>
+                </div>
+
+                {/* Balance buttons */}
+                <div className="flex gap-1.5">
+                  <Button
+                    onClick={handleHalfClick}
+                    disabled={isLoading || !currentBalance || Number(currentBalance) === 0}
+                    variant="outline"
+                    size="sm"
+                    className="h-6 px-2 text-xs font-semibold bg-white/[0.05] border-white/10 text-white/60 hover:bg-gradient-to-r hover:from-[#ff6b6b] hover:to-[#4ecdc4] hover:text-white hover:border-transparent transition-all duration-200"
+                  >
+                    50%
+                  </Button>
+
+                  <Button
+                    onClick={handleMaxClick}
+                    disabled={isLoading || !currentBalance || Number(currentBalance) === 0}
+                    variant="outline"
+                    size="sm"
+                    className="h-6 px-2 text-xs font-semibold bg-white/[0.05] border-white/10 text-white/60 hover:bg-gradient-to-r hover:from-[#ff6b6b] hover:to-[#4ecdc4] hover:text-white hover:border-transparent transition-all duration-200"
+                  >
+                    MAX
+                  </Button>
+                </div>
               </div>
+            )}
+          </div>
 
-              {/* Balance buttons */}
-              <div style={{ display: 'flex', gap: 6 }}>
-                <button
-                  onClick={handleHalfClick}
-                  disabled={isLoading || !currentBalance || Number(currentBalance) === 0}
-                  style={{
-                    padding: '2px 8px',
-                    borderRadius: 6,
-                    border: '1px solid var(--glass-border)',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    color: 'var(--light-font-color)',
-                    fontSize: 10,
-                    fontWeight: 600,
-                    cursor: isLoading || !currentBalance ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s ease',
-                    opacity: isLoading || !currentBalance ? 0.5 : 1
-                  }}
-                  onMouseOver={(e) => {
-                    if (!isLoading && currentBalance && Number(currentBalance) > 0) {
-                      e.currentTarget.style.background = 'var(--accent-color)';
-                      e.currentTarget.style.color = 'white';
-                    }
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                    e.currentTarget.style.color = 'var(--light-font-color)';
-                  }}
-                >
-                  50%
-                </button>
-
-                <button
-                  onClick={handleMaxClick}
-                  disabled={isLoading || !currentBalance || Number(currentBalance) === 0}
-                  style={{
-                    padding: '4px 8px',
-                    borderRadius: 6,
-                    border: '1px solid var(--glass-border)',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    color: 'var(--light-font-color)',
-                    fontSize: 10,
-                    fontWeight: 600,
-                    cursor: isLoading || !currentBalance ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s ease',
-                    opacity: isLoading || !currentBalance ? 0.5 : 1
-                  }}
-                  onMouseOver={(e) => {
-                    if (!isLoading && currentBalance && Number(currentBalance) > 0) {
-                      e.currentTarget.style.background = 'var(--accent-color)';
-                      e.currentTarget.style.color = 'white';
-                    }
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                    e.currentTarget.style.color = 'var(--light-font-color)';
-                  }}
-                >
-                  MAX
-                </button>
-              </div>
+          {/* Input Field */}
+          <div className="flex items-center gap-3 p-3 bg-white/[0.02] rounded-xl border border-white/10">
+            <div className="text-lg font-bold text-white min-w-[60px]">
+              {mode === 'wrap' ? 'AE →' : 'WAE →'}
             </div>
-          )}
-        </div>
 
-        {/* Input Field */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '12px 16px',
-          background: 'rgba(255, 255, 255, 0.02)',
-          borderRadius: 12,
-          border: '1px solid var(--glass-border)'
-        }}>
-          <div style={{
-            fontSize: 18,
-            fontWeight: 700,
-            color: 'var(--standard-font-color)',
-            minWidth: 60
-          }}>
-            {mode === 'wrap' ? 'AE →' : 'WAE →'}
+            <Input
+              type="text"
+              inputMode="decimal"
+              placeholder="0.0"
+              value={currentAmount}
+              onChange={(e) => handleAmountChange(e.target.value)}
+              disabled={isLoading}
+              className="flex-1 bg-transparent border-none text-white text-2xl font-bold font-mono text-right h-auto p-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-white/30"
+              aria-label={`${mode}-amount`}
+            />
+
+            <div className="text-lg font-bold text-white min-w-[60px] text-right">
+              {mode === 'wrap' ? 'WAE' : 'AE'}
+            </div>
           </div>
-
-          <input
-            type="text"
-            inputMode="decimal"
-            placeholder="0.0"
-            value={currentAmount}
-            onChange={(e) => handleAmountChange(e.target.value)}
-            disabled={isLoading}
-            style={{
-              flex: 1,
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--standard-font-color)',
-              outline: 'none',
-              fontSize: '24px',
-              fontWeight: 700,
-              fontFamily: 'monospace',
-              textAlign: 'right'
-            }}
-            aria-label={`${mode}-amount`}
-          />
-
-          <div style={{
-            fontSize: 18,
-            fontWeight: 700,
-            color: 'var(--standard-font-color)',
-            minWidth: 60,
-            textAlign: 'right'
-          }}>
-            {mode === 'wrap' ? 'WAE' : 'AE'}
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Error Display */}
       {error && (
-        <div style={{
-          color: 'var(--error-color)',
-          fontSize: 14,
-          padding: '12px 16px',
-          background: 'rgba(255, 107, 107, 0.1)',
-          border: '1px solid rgba(255, 107, 107, 0.2)',
-          borderRadius: 12,
-          marginBottom: 20,
-          textAlign: 'center'
-        }}>
+        <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
           {error}
         </div>
       )}
 
       {/* Execute Button */}
       {activeAccount ? (
-        <button
+        <Button
           onClick={handleExecute}
           disabled={isExecuteDisabled}
-          className="genz-btn"
-          style={{
-            width: '100%',
-            padding: '16px 24px',
-            borderRadius: 16,
-            border: 'none',
-            background: isExecuteDisabled ?
-              'rgba(255, 255, 255, 0.1)' :
-              'var(--button-gradient)',
-            color: 'white',
-            cursor: isExecuteDisabled ? 'not-allowed' : 'pointer',
-            fontSize: 16,
-            fontWeight: 700,
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: isExecuteDisabled ?
-              'none' :
-              'var(--button-shadow)',
-            opacity: isExecuteDisabled ? 0.6 : 1
-          }}
+          className={cn(
+            "w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+            isExecuteDisabled
+              ? "bg-white/10 cursor-not-allowed opacity-60"
+              : "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
+          )}
         >
           {isLoading ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <div style={{
-                width: 16,
-                height: 16,
-                border: '2px solid rgba(255,255,255,0.3)',
-                borderTop: '2px solid white',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
-              }}></div>
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               {mode === 'wrap' ? 'Wrapping…' : 'Unwrapping…'}
             </div>
           ) : (
             `${mode === 'wrap' ? 'Wrap AE → WAE' : 'Unwrap WAE → AE'}`
           )}
-        </button>
+        </Button>
       ) : (
         <ConnectWalletButton
           label="Connect Wallet to Wrap/Unwrap"
           block
-          style={{
-            width: '100%',
-            padding: '16px 24px',
-            borderRadius: 16,
-            border: 'none',
-            background: 'var(--button-gradient)',
-            color: 'white',
-            fontSize: 16,
-            fontWeight: 700,
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase',
-            boxShadow: 'var(--button-shadow)',
-            cursor: 'pointer'
-          }}
+          className="w-full py-4 px-6 rounded-2xl border-none bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(255,107,107,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
         />
       )}
-
-      {/* Add keyframes for spinner animation */}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }

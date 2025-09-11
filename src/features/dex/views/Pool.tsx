@@ -10,7 +10,7 @@ import RecentActivity from '../../../components/dex/supporting/RecentActivity';
 function PoolContent() {
   const navigate = useNavigate();
   const { activeAccount } = useAccount();
-  const { positions, loading, error, refreshPositions, invalidateCache } = useLiquidityPositions();
+  const { positions, loading, error, refreshPositions } = useLiquidityPositions();
   const { selectPositionForAdd, selectPositionForRemove, currentAction, setRefreshPositions } = usePool();
 
   // // Connect refresh function to context
@@ -39,338 +39,142 @@ function PoolContent() {
   };
 
   return (
-    <div className="pool-layout" style={{
-      maxWidth: 1200,
-      margin: '0 auto',
-      padding: '20px',
-      display: 'grid',
-      gridTemplateColumns: '1fr 480px',
-      gap: 32,
-      alignItems: 'start',
-      minHeight: '100vh'
-    }}>
-      {/* Left Column - Positions */}
-      <div className="genz-card" style={{
-        background: 'var(--glass-bg)',
-        border: '1px solid var(--glass-border)',
-        backdropFilter: 'blur(20px)',
-        borderRadius: 24,
-        padding: 24,
-        boxShadow: 'var(--glass-shadow)',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{
-            fontSize: 28,
-            fontWeight: 700,
-            color: 'var(--standard-font-color)',
-            margin: '0 0 8px 0',
-            background: 'var(--primary-gradient)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>
-            Your Liquidity Positions
-          </h1>
-          <p style={{
-            fontSize: 14,
-            color: 'var(--light-font-color)',
-            margin: 0,
-            lineHeight: 1.5
-          }}>
-            Manage your liquidity positions and track earnings
-          </p>
-        </div>
-
-        {/* Stats Overview */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-          gap: 16,
-          marginBottom: 24
-        }}>
-          <div style={{
-            padding: 16,
-            borderRadius: 16,
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid var(--glass-border)',
-            backdropFilter: 'blur(10px)'
-          }}>
-            <div style={{
-              fontSize: 12,
-              color: 'var(--light-font-color)',
-              marginBottom: 4,
-              fontWeight: 500,
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>
-              Positions
-            </div>
-            <div style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: 'var(--standard-font-color)'
-            }}>
-              {positions.length}
-            </div>
-          </div>
-          <div style={{
-            padding: 16,
-            borderRadius: 16,
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid var(--glass-border)',
-            backdropFilter: 'blur(10px)'
-          }}>
-            <div style={{
-              fontSize: 12,
-              color: 'var(--light-font-color)',
-              marginBottom: 4,
-              fontWeight: 500,
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>
-              Total Value
-            </div>
-            <div style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: 'var(--success-color)'
-            }}>
-              ${positions.reduce((sum, pos) => sum + (Number(pos.valueUsd) || 0), 0).toLocaleString()}
-            </div>
-          </div>
-          <div style={{
-            padding: 16,
-            borderRadius: 16,
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid var(--glass-border)',
-            backdropFilter: 'blur(10px)'
-          }}>
-            <div style={{
-              fontSize: 12,
-              color: 'var(--light-font-color)',
-              marginBottom: 4,
-              fontWeight: 500,
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>
-              Fees Earned
-            </div>
-            <div style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: 'var(--accent-color)'
-            }}>
-              $0.00
-            </div>
+    <div className="mx-auto md:p-5 flex flex-col gap-6 md:gap-8 min-h-screen">
+      {/* Top Row - Forms and Positions */}
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_480px] gap-6 md:gap-8 items-start">
+        {/* Mobile: Forms First, Desktop: Positions First */}
+        <div className="lg:order-2 order-1">
+          {/* Right Column - Liquidity Forms */}
+          <div id="liquidity-forms-section" className="lg:sticky lg:top-5 flex flex-col gap-6">
+            {currentAction === 'remove' ? (
+              <RemoveLiquidityForm />
+            ) : (
+              <AddLiquidityForm />
+            )}
           </div>
         </div>
 
-        {/* Positions List */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 16
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <h3 style={{
-                fontSize: 16,
-                fontWeight: 600,
-                color: 'var(--standard-font-color)',
-                margin: 0
-              }}>
-                Active Positions
-              </h3>
-              {loading && positions.length > 0 && (
-                <div style={{
-                  width: 16,
-                  height: 16,
-                  border: '2px solid rgba(255,255,255,0.1)',
-                  borderTop: '2px solid var(--accent-color)',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite'
-                }}></div>
-              )}
+        {/* Mobile: Positions Second, Desktop: Positions First */}
+        <div className="lg:order-1 order-1">
+          <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
+            {/* Header */}
+            <div className="mb-6">
+              <h1 className="text-[28px] font-bold text-white m-0 mb-2 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+                Your Liquidity Positions
+              </h1>
+              <p className="text-sm text-white/60 m-0 leading-6">
+                Manage your liquidity positions and track earnings
+              </p>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {activeAccount && (
-                <button
-                  onClick={() => refreshPositions()}
-                  disabled={loading}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: 12,
-                    border: '1px solid var(--glass-border)',
-                    background: loading ? 'rgba(255,255,255,0.1)' : 'var(--glass-bg)',
-                    color: loading ? 'var(--light-font-color)' : 'var(--standard-font-color)',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    transition: 'all 0.3s ease',
-                    backdropFilter: 'blur(10px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    opacity: loading ? 0.6 : 1
-                  }}
-                  onMouseOver={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.background = 'var(--accent-color)';
-                      e.currentTarget.style.transform = 'translateY(-1px)';
-                    }
-                  }}
-                  onMouseOut={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.background = 'var(--glass-bg)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                    }
-                  }}
-                >
-                  {loading ? (
-                    <>
-                      <div style={{
-                        width: 12,
-                        height: 12,
-                        border: '2px solid rgba(255,255,255,0.3)',
-                        borderTop: '2px solid currentColor',
-                        borderRadius: '50%',
-                        animation: 'spin 1s linear infinite'
-                      }}></div>
-                      Refreshing...
-                    </>
-                  ) : (
-                    <>🔄 Refresh</>
+
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              <div className="p-4 rounded-2xl bg-white/[0.05] border border-white/10 backdrop-blur-[10px]">
+                <div className="text-xs text-white/60 mb-1 font-medium uppercase tracking-wider">
+                  Positions
+                </div>
+                <div className="text-xl font-bold text-white">
+                  {positions.length}
+                </div>
+              </div>
+              <div className="p-4 rounded-2xl bg-white/[0.05] border border-white/10 backdrop-blur-[10px]">
+                <div className="text-xs text-white/60 mb-1 font-medium uppercase tracking-wider">
+                  Total Value
+                </div>
+                <div className="text-xl font-bold text-green-400">
+                  ${positions.reduce((sum, pos) => sum + (Number(pos.valueUsd) || 0), 0).toLocaleString()}
+                </div>
+              </div>
+              <div className="p-4 rounded-2xl bg-white/[0.05] border border-white/10 backdrop-blur-[10px]">
+                <div className="text-xs text-white/60 mb-1 font-medium uppercase tracking-wider">
+                  Fees Earned
+                </div>
+                <div className="text-xl font-bold text-[#4ecdc4]">
+                  $0.00
+                </div>
+              </div>
+            </div>
+
+            {/* Positions List */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-base font-semibold text-white m-0">
+                    Active Positions
+                  </h3>
+                  {loading && positions.length > 0 && (
+                    <div className="w-4 h-4 border-2 border-white/10 border-t-[#4ecdc4] rounded-full animate-spin"></div>
                   )}
-                </button>
+                </div>
+                <div className="flex gap-2">
+                  {activeAccount && (
+                    <button
+                      onClick={() => refreshPositions()}
+                      disabled={loading}
+                      className={`px-4 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] backdrop-blur-[10px] flex items-center gap-2 ${loading
+                        ? 'cursor-not-allowed opacity-60'
+                        : 'hover:bg-[#4ecdc4] hover:-translate-y-0.5 active:translate-y-0'
+                        }`}
+                    >
+                      {loading ? (
+                        <>
+                          <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          Refreshing...
+                        </>
+                      ) : (
+                        <>🔄 Refresh</>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {loading && positions.length === 0 ? (
+                <div className="text-center py-10 text-white/60 flex flex-col items-center gap-4">
+                  <div className="w-8 h-8 border-3 border-white/10 border-t-[#4ecdc4] rounded-full animate-spin"></div>
+                  Loading your positions...
+                </div>
+              ) : error ? (
+                <div className="text-center p-5 text-red-400 bg-red-400/10 rounded-2xl border border-red-400/20 backdrop-blur-[10px]">
+                  {error}
+                </div>
+              ) : positions.length === 0 ? (
+                <div className="text-center p-10 bg-white/[0.03] rounded-2xl border border-white/10 backdrop-blur-[10px]">
+                  <div className="text-5xl mb-4 opacity-30">
+                    💧
+                  </div>
+                  <div className="text-base font-semibold mb-2 text-white">
+                    No liquidity positions found
+                  </div>
+                  <div className="text-sm text-white/60 mb-5 leading-relaxed">
+                    Start earning fees by providing liquidity to trading pairs
+                  </div>
+                  {!activeAccount && (
+                    <ConnectWalletButton
+                      label="Connect Wallet to Start"
+                      className="px-6 py-3 rounded-xl border-none bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white text-sm font-semibold shadow-[0_8px_25px_rgba(255,107,107,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                    />
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {positions.map((position) => (
+                    <LiquidityPositionCard
+                      key={position.pairId}
+                      position={position}
+                      onRemove={handleRemoveLiquidity}
+                      onAdd={handleAddLiquidity}
+                    />
+                  ))}
+                </div>
               )}
             </div>
           </div>
-
-          {loading && positions.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: 40,
-              color: 'var(--light-font-color)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 16
-            }}>
-              <div style={{
-                width: 32,
-                height: 32,
-                border: '3px solid rgba(255,255,255,0.1)',
-                borderTop: '3px solid var(--accent-color)',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
-              }}></div>
-              Loading your positions...
-            </div>
-          ) : error ? (
-            <div style={{
-              textAlign: 'center',
-              padding: 20,
-              color: 'var(--error-color)',
-              background: 'rgba(255, 107, 107, 0.1)',
-              borderRadius: 16,
-              border: '1px solid rgba(255, 107, 107, 0.2)',
-              backdropFilter: 'blur(10px)'
-            }}>
-              {error}
-            </div>
-          ) : positions.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: 40,
-              background: 'rgba(255, 255, 255, 0.03)',
-              borderRadius: 16,
-              border: '1px solid var(--glass-border)',
-              backdropFilter: 'blur(10px)'
-            }}>
-              <div style={{
-                fontSize: 48,
-                marginBottom: 16,
-                opacity: 0.3
-              }}>
-                💧
-              </div>
-              <div style={{
-                fontSize: 16,
-                fontWeight: 600,
-                marginBottom: 8,
-                color: 'var(--standard-font-color)'
-              }}>
-                No liquidity positions found
-              </div>
-              <div style={{
-                fontSize: 14,
-                color: 'var(--light-font-color)',
-                marginBottom: 20,
-                lineHeight: 1.5
-              }}>
-                Start earning fees by providing liquidity to trading pairs
-              </div>
-              {!activeAccount && (
-                <ConnectWalletButton
-                  label="Connect Wallet to Start"
-                  style={{
-                    padding: '12px 24px',
-                    borderRadius: 12,
-                    border: 'none',
-                    background: 'var(--button-gradient)',
-                    color: 'white',
-                    fontSize: 14,
-                    fontWeight: 600,
-                    boxShadow: 'var(--button-shadow)'
-                  }}
-                />
-              )}
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {positions.map((position) => (
-                <LiquidityPositionCard
-                  key={position.pairId}
-                  position={position}
-                  onRemove={handleRemoveLiquidity}
-                  onAdd={handleAddLiquidity}
-                />
-              ))}
-            </div>
-          )}
         </div>
-
-        {/* Add keyframes for spinner animation and responsive styles */}
-        <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-          
-          @media (max-width: 768px) {
-            .pool-layout {
-              grid-template-columns: 1fr !important;
-              gap: 24px !important;
-              padding: 16px !important;
-            }
-          }
-        `}</style>
       </div>
 
-      {/* Right Column - Liquidity Forms */}
-      <div id="liquidity-forms-section" style={{ position: 'sticky', top: 20, display: 'flex', flexDirection: 'column', gap: 24 }}>
-        {currentAction === 'remove' ? (
-          <RemoveLiquidityForm />
-        ) : (
-          <AddLiquidityForm />
-        )}
-
-        <RecentActivity />
-      </div>
+      {/* Bottom Row - Recent Activity */}
+      <RecentActivity />
     </div>
   );
 }

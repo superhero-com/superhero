@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAccount } from '../hooks';
 import { CONFIG } from '../config';
 import AddressAvatar from './AddressAvatar';
+import { Badge } from './ui/badge';
+import { cn } from '@/lib/utils';
 import { 
   formatAddress, 
   isAccountAddress, 
@@ -64,124 +66,55 @@ export function AddressChip({
     }
   }, [address, copyable, linkToProfile, linkToExplorer, isAccount, navigate, prefix, onClick]);
 
-  const chipStyle: React.CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: large ? 8 : 6,
-    padding: large ? '8px 16px' : '6px 12px',
-    borderRadius: 20,
-    background: isActive ? 'var(--accent-color)' : 'var(--glass-bg)',
-    border: `1px solid ${isActive ? 'var(--accent-color)' : 'var(--glass-border)'}`,
-    color: isActive ? 'white' : 'var(--standard-font-color)',
-    fontSize: large ? 14 : 12,
-    fontWeight: 600,
-    cursor: (copyable || linkToExplorer || linkToProfile || onClick) ? 'pointer' : 'default',
-    transition: 'all 0.3s ease',
-    backdropFilter: 'blur(10px)',
-    position: 'relative',
-    overflow: 'hidden',
-    ...style
-  };
-
-  const hoverStyle = {
-    transform: 'translateY(-1px)',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
-  };
-
   return (
-    <div
-      className={`address-chip ${className}`}
-      style={chipStyle}
+    <Badge
+      variant={isActive ? "default" : "secondary"}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md cursor-pointer relative overflow-hidden font-semibold tracking-wide",
+        large ? "px-4 py-2 text-sm gap-2" : "px-3 py-1.5 text-xs",
+        isActive ? "bg-accent text-accent-foreground border-accent" : "bg-glass-bg border-glass-border text-foreground",
+        !(copyable || linkToExplorer || linkToProfile || onClick) && "cursor-default hover:translate-y-0 hover:shadow-none",
+        className
+      )}
+      style={style}
       onClick={handleChipClick}
-      onMouseEnter={(e) => {
-        if (copyable || linkToExplorer || linkToProfile || onClick) {
-          Object.assign(e.currentTarget.style, hoverStyle);
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (copyable || linkToExplorer || linkToProfile || onClick) {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = 'none';
-        }
-      }}
       title={copyable ? 'Click to copy address' : linkToExplorer ? 'Click to view in explorer' : address}
     >
       {/* Avatar */}
       {!hideAvatar && (
-        <AddressAvatar 
-          address={address} 
-          size={large ? 20 : 16}
-          style={{ marginLeft: -2 }}
-        />
+        <div className="-ml-0.5">
+          <AddressAvatar 
+            address={address} 
+            size={large ? 20 : 16}
+          />
+        </div>
       )}
       
       {/* Address text */}
-      <span style={{ 
-        fontSize: large ? 14 : 12,
-        fontWeight: 600,
-        letterSpacing: '0.25px'
-      }}>
+      <span className={cn(
+        "font-semibold tracking-wide",
+        large ? "text-sm" : "text-xs"
+      )}>
         {formatAddress(address, large ? 8 : 6)}
       </span>
       
       {/* Copy icon */}
       {copyable && (
-        <div style={{
-          width: 16,
-          height: 16,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          opacity: 0.7
-        }}>
-          📋
-        </div>
+        <span className="opacity-70 text-xs">📋</span>
       )}
       
       {/* External link icon */}
       {linkToExplorer && !isAccount && (
-        <div style={{
-          width: 16,
-          height: 16,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          opacity: 0.7
-        }}>
-          🔗
-        </div>
+        <span className="opacity-70 text-xs">🔗</span>
       )}
       
       {/* Copied feedback */}
       {textCopied && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'var(--success-color)',
-          color: 'white',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 11,
-          fontWeight: 700,
-          borderRadius: 20,
-          animation: 'fadeInOut 1s ease-in-out'
-        }}>
+        <div className="absolute inset-0 bg-success text-white flex items-center justify-center text-xs font-bold rounded-full animate-pulse">
           Copied!
         </div>
       )}
-      
-      <style>{`
-        @keyframes fadeInOut {
-          0% { opacity: 0; transform: scale(0.8); }
-          50% { opacity: 1; transform: scale(1); }
-          100% { opacity: 0; transform: scale(0.8); }
-        }
-      `}</style>
-    </div>
+    </Badge>
   );
 }
 

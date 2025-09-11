@@ -1,15 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { IconClose, IconGif, IconImage, IconSmile } from '../../../icons';
-import AeButton from '../../../components/AeButton';
-import ConnectWalletButton from '../../../components/ConnectWalletButton';
-import './CreatePost.scss';
-import Identicon from '../../../components/Identicon';
-// @ts-ignore
-import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
-import { PostsService } from '../../../api/generated';
-import { CONFIG } from '../../../config';
-import { useAccount } from '../../../hooks/useAccount';
-import { useAeSdk } from '../../../hooks/useAeSdk';
+import React from 'react';
+import PostForm from './PostForm';
 
 interface CreatePostProps {
   onClose?: () => void;
@@ -18,197 +8,19 @@ interface CreatePostProps {
   onTextChange?: (text: string) => void;
 }
 
-const DEFAULT_EMOJIS = [
-  '😀', '😄', '😍', '🔥', '🚀', '✨', '🎉', '🙌', '🧠', '💡', '🧪', '🦾', '🤝', '💬', '🔗', '📈', '🧭', '🛠️', '🧩', '🦄',
-];
-
-const PROMPTS: string[] = [
-  'Drop alpha: what’s cooking on æ today? 🚀',
-  'Spill the tea ☕️ — wins, fails, spicy takes?',
-  'GM makers. What are you shipping? 🧪',
-  'Show & tell: graphs, code, memes 📈',
-  'One hot take about æternity… go. 🔥',
-  'Who should we vibe‑check? Tag ’em 👀',
-  'What’s your builder ritual today? 🛠️',
-  'If it compiles, it ships. What’s next? ⚙️',
-  'Less talk, more blocks. What did you deploy? ⛓️',
-  'Teach us something in 1 line. 🧠',
-];
-
 export default function CreatePost({ onClose, onSuccess, className = '', onTextChange }: CreatePostProps) {
-  const { sdk } = useAeSdk();
-  const { activeAccount, chainNames } = useAccount();
-
-  const [text, setText] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
-  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
-  const [showEmoji, setShowEmoji] = useState(false);
-  const [showGif, setShowGif] = useState(false);
-  const [gifInput, setGifInput] = useState('');
-  const [promptIndex, setPromptIndex] = useState(0);
-
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const emojiBtnRef = useRef<HTMLButtonElement>(null);
-  const gifBtnRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => { setPromptIndex(Math.floor(Math.random() * PROMPTS.length)); }, []);
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [text]);
-
-  useEffect(() => { onTextChange?.(text); }, [text, onTextChange]);
-
-  useEffect(() => { if (textareaRef.current) textareaRef.current.focus(); }, []);
-
-  useEffect(() => {
-    function onDocClick(e: MouseEvent) {
-      const target = e.target as Node;
-      if (emojiBtnRef.current && emojiBtnRef.current.contains(target)) return;
-      if (gifBtnRef.current && gifBtnRef.current.contains(target)) return;
-      const popovers = document.querySelectorAll('.popover');
-      for (const p of Array.from(popovers)) if (p.contains(target)) return;
-      setShowEmoji(false); setShowGif(false);
-    }
-    document.addEventListener('click', onDocClick);
-    return () => document.removeEventListener('click', onDocClick);
-  }, []);
-
-  const insertAtCursor = (value: string) => {
-    const el = textareaRef.current;
-    if (!el) { setText(prev => prev + value); return; }
-    const start = el.selectionStart ?? el.value.length;
-    const end = el.selectionEnd ?? el.value.length;
-    const newValue = el.value.slice(0, start) + value + el.value.slice(end);
-    setText(newValue);
-    requestAnimationFrame(() => { el.focus(); const pos = start + value.length; el.setSelectionRange(pos, pos); });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = text.trim();
-    if (!trimmed) return;
-    if (!activeAccount) return;
-
-    setIsSubmitting(true);
-    try {
-
-      const postMedia: string[] = [...mediaUrls];
-      console.log("[CreatePost] handleSubmit", sdk);
-      const contract = await sdk.initializeContract({
-        aci: TIPPING_V3_ACI as any,
-        address: CONFIG.CONTRACT_V3_ADDRESS
-      });
-      const { decodedResult } = await contract.post_without_tip(trimmed, postMedia);
-      console.log("[CreatePost] handleSubmit", decodedResult);
-      try {
-        await PostsService.getById({
-          id: `${decodedResult}_v3`
-        });
-      } catch { }
-      // try { await Backend.awaitTip(`${decodedResult}_v3`); } catch {}
-      // Reset after success
-      setText('');
-      setMediaFiles([]);
-      setMediaUrls([]);
-      onSuccess?.();
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length > 0) {
-      setMediaFiles(prev => [...prev, ...files.slice(0, 4 - prev.length)]);
-      files.slice(0, 4 - mediaFiles.length).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (e) => { setMediaUrls(prev => [...prev, e.target?.result as string]); };
-        reader.readAsDataURL(file);
-      });
-    }
-  };
-
-  const addGifFromUrl = () => {
-    const url = gifInput.trim();
-    if (!url) return;
-    setMediaUrls(prev => [...prev, url]);
-    setGifInput('');
-    setShowGif(false);
-  };
-
-  const removeMedia = (index: number) => { setMediaFiles(prev => prev.filter((_, i) => i !== index)); setMediaUrls(prev => prev.filter((_, i) => i !== index)); };
-  const handleClose = () => { setText(''); setMediaFiles([]); setMediaUrls([]); onClose?.(); };
-
-
-  const chainName = chainNames?.[activeAccount || ''];
-  const currentPrompt = activeAccount ? PROMPTS[promptIndex] : 'Connect your wallet to start posting ✍️';
-
   return (
-    <div className={`create-post-container ${className}`}>
-      <div className="create-post-box expanded">
-        <form onSubmit={handleSubmit} className="create-post-form">
-    
-          <div className="form-content">
-            <div className="textarea-container">
-              <textarea ref={textareaRef} placeholder={currentPrompt} value={text} onChange={(e) => setText(e.target.value)} className="text-input" rows={3} maxLength={280} />
-              <div className="character-counter">{text.length}/280</div>
-            </div>
-
-            {mediaUrls.length > 0 && (
-              <div className="media-preview">
-                {mediaUrls.map((url, index) => (
-                  <div key={index} className="media-item">
-                    {/.mp4$|.webm$|.mov$/i.test(url) ? (<video src={url} controls />) : (<img src={url} alt="media" />)}
-                    <button type="button" className="remove-media" onClick={() => removeMedia(index)}><IconClose /></button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="form-footer">
-            <div className="footer-left">
-              {/* <button type="button" className="media-button" onClick={() => fileInputRef.current?.click()} disabled={mediaFiles.length >= 4}><IconImage /><span>Media</span></button> */}
-              <button type="button" className="link-button" title="Emoji" ref={emojiBtnRef} onClick={() => { setShowEmoji(s => !s); setShowGif(false); }}>
-                <IconSmile /><span>Emoji</span>
-              </button>
-              <button type="button" className="link-button" title="GIF" ref={gifBtnRef} onClick={() => { setShowGif(s => !s); setShowEmoji(false); }}>
-                <IconGif /><span>GIF</span>
-              </button>
-              {/* <input ref={fileInputRef} type="file" accept="image/*,video/*" multiple onChange={handleFileSelect} style={{ display: 'none' }} /> */}
-              {showEmoji && (
-                <div className="popover emoji-popover">
-                  <div className="emoji-grid">{DEFAULT_EMOJIS.map((e) => (<button key={e} type="button" className="emoji-btn" onClick={() => insertAtCursor(e)}>{e}</button>))}</div>
-                  <div className="emoji-hint">More soon…</div>
-                </div>
-              )}
-              {showGif && (
-                <div className="popover gif-popover">
-                  <div className="gif-title">Add a GIF</div>
-                  <input type="url" placeholder="Paste GIF/Video URL" value={gifInput} onChange={(e) => setGifInput(e.target.value)} className="gif-input" />
-                  <div className="gif-actions">
-                    <button type="button" className="gif-cancel" onClick={() => setShowGif(false)}>Cancel</button>
-                    <button type="button" className="gif-add" onClick={addGifFromUrl}>Add</button>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="footer-right">
-              {activeAccount ? (
-                <AeButton type="submit" loading={isSubmitting} disabled={!text.trim()} className="submit-button">{isSubmitting ? 'Posting…' : 'Post'}</AeButton>
-              ) : (
-                <ConnectWalletButton />
-              )}
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
+    <PostForm
+      isPost={true}
+      onClose={onClose}
+      onSuccess={onSuccess}
+      className={className}
+      onTextChange={onTextChange}
+      showMediaFeatures={true}
+      showEmojiPicker={true}
+      showGifInput={true}
+      characterLimit={280}
+      minHeight="80px"
+    />
   );
 }

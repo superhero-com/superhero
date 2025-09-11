@@ -14,80 +14,49 @@ export default function ExploreRefactored() {
   const pairList = usePairList();
   const transactionList = useTransactionList();
 
-  return;
   return (
-    <div className="explore-container" style={{ maxWidth: 1400, margin: '0 auto', padding: '20px' }}>
+    <div className="max-w-[1400px] mx-auto p-5">
       <DexTabs />
       
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ 
-          fontSize: 32, 
-          fontWeight: 700, 
-          color: 'white', 
-          margin: '0 0 8px 0' 
-        }}>
+      <div className="mb-6">
+        <h1 className="text-[32px] font-bold text-white m-0 mb-2">
           Explore
         </h1>
-        <p style={{ 
-          fontSize: 16, 
-          opacity: 0.8, 
-          margin: 0, 
-          lineHeight: 1.5 
-        }}>
+        <p className="text-base text-white/80 m-0 leading-relaxed">
           Discover tokens, pools, and track transactions across the æternity ecosystem
         </p>
       </div>
 
       {/* Tab Navigation */}
-      <div style={{ 
-        display: 'flex', 
-        gap: 2, 
-        marginBottom: 24,
-        borderBottom: '1px solid #3a3a4a'
-      }}>
+      <div className="flex gap-0.5 mb-6 border-b border-gray-600">
         <button
           onClick={() => setActive('Tokens')}
-          style={{ 
-            padding: '12px 24px',
-            background: active === 'Tokens' ? '#2a2a39' : 'transparent',
-            border: 'none',
-            color: active === 'Tokens' ? 'white' : '#9aa',
-            cursor: 'pointer',
-            fontSize: 16,
-            fontWeight: 600,
-            borderBottom: active === 'Tokens' ? '2px solid #4caf50' : 'none'
-          }}
+          className={`px-6 py-3 border-none cursor-pointer text-base font-semibold transition-all ${
+            active === 'Tokens' 
+              ? 'bg-gray-800 text-white border-b-2 border-green-500' 
+              : 'bg-transparent text-gray-400 hover:text-white'
+          }`}
         >
           Tokens
         </button>
         <button
           onClick={() => setActive('Pairs')}
-          style={{ 
-            padding: '12px 24px',
-            background: active === 'Pairs' ? '#2a2a39' : 'transparent',
-            border: 'none',
-            color: active === 'Pairs' ? 'white' : '#9aa',
-            cursor: 'pointer',
-            fontSize: 16,
-            fontWeight: 600,
-            borderBottom: active === 'Pairs' ? '2px solid #4caf50' : 'none'
-          }}
+          className={`px-6 py-3 border-none cursor-pointer text-base font-semibold transition-all ${
+            active === 'Pairs' 
+              ? 'bg-gray-800 text-white border-b-2 border-green-500' 
+              : 'bg-transparent text-gray-400 hover:text-white'
+          }`}
         >
           Pools
         </button>
         <button
           onClick={() => setActive('Transactions')}
-          style={{ 
-            padding: '12px 24px',
-            background: active === 'Transactions' ? '#2a2a39' : 'transparent',
-            border: 'none',
-            color: active === 'Transactions' ? 'white' : '#9aa',
-            cursor: 'pointer',
-            fontSize: 16,
-            fontWeight: 600,
-            borderBottom: active === 'Transactions' ? '2px solid #4caf50' : 'none'
-          }}
+          className={`px-6 py-3 border-none cursor-pointer text-base font-semibold transition-all ${
+            active === 'Transactions' 
+              ? 'bg-gray-800 text-white border-b-2 border-green-500' 
+              : 'bg-transparent text-gray-400 hover:text-white'
+          }`}
         >
           Transactions
         </button>
@@ -96,20 +65,11 @@ export default function ExploreRefactored() {
       {/* Content */}
       {active === 'Tokens' && (
         <div>
-          <div style={{ marginBottom: 16 }}>
-            <h2 style={{ 
-              fontSize: 20, 
-              fontWeight: 600, 
-              color: 'white', 
-              margin: '0 0 8px 0' 
-            }}>
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold text-white m-0 mb-2">
               All Tokens
             </h2>
-            <p style={{ 
-              fontSize: 14, 
-              opacity: 0.7, 
-              margin: 0 
-            }}>
+            <p className="text-sm text-white/70 m-0">
               Browse and interact with all available tokens on æternity
             </p>
           </div>
@@ -127,20 +87,11 @@ export default function ExploreRefactored() {
 
       {active === 'Pairs' && (
         <div>
-          <div style={{ marginBottom: 16 }}>
-            <h2 style={{ 
-              fontSize: 20, 
-              fontWeight: 600, 
-              color: 'white', 
-              margin: '0 0 8px 0' 
-            }}>
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold text-white m-0 mb-2">
               Liquidity Pools
             </h2>
-            <p style={{ 
-              fontSize: 14, 
-              opacity: 0.7, 
-              margin: 0 
-            }}>
+            <p className="text-sm text-white/70 m-0">
               Explore trading pairs and their performance metrics
             </p>
           </div>

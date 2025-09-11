@@ -1,10 +1,12 @@
 import React from 'react';
 import { Encoded } from '@aeternity/aepp-sdk';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import AeButton from '../AeButton';
 import { IconWallet } from '../../icons';
 
 interface TransactionConfirmModalProps {
   transaction: Encoded.Transaction;
+  open: boolean;
   onConfirm: () => void;
   onCancel: () => void;
   onClose: () => void;
@@ -12,6 +14,7 @@ interface TransactionConfirmModalProps {
 
 export default function TransactionConfirmModal({ 
   transaction, 
+  open,
   onConfirm, 
   onCancel, 
   onClose 
@@ -27,57 +30,43 @@ export default function TransactionConfirmModal({
   };
 
   return (
-    <div style={{ textAlign: 'center', padding: '20px' }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        marginBottom: '20px' 
-      }}>
-        <IconWallet style={{ 
-          width: '48px', 
-          height: '48px', 
-          color: '#6366f1' 
-        }} />
-      </div>
-      
-      <h3 style={{ 
-        marginBottom: '16px', 
-        fontSize: '20px',
-        fontWeight: '600'
-      }}>
-        Confirm Transaction
-      </h3>
-      
-      <div style={{ 
-        marginBottom: '24px',
-        color: '#6b7280',
-        lineHeight: '1.5'
-      }}>
-        <p style={{ marginBottom: '12px' }}>
-          Please check your wallet and confirm the transaction to proceed.
-        </p>
-      </div>
-      
-      <div style={{ 
-        display: 'flex', 
-        gap: '12px', 
-        justifyContent: 'center' 
-      }}>
-        <AeButton 
-          variant="secondary" 
-          onClick={handleCancel}
-          size="md"
-        >
-          Cancel
-        </AeButton>
-        <AeButton 
-          variant="primary" 
-          onClick={handleConfirm}
-          size="md"
-        >
-          Open Wallet
-        </AeButton>
-      </div>
-    </div>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="w-[95vw] max-w-md mx-auto bg-[var(--secondary-color)] border-white/20">
+        <DialogHeader>
+          <DialogTitle className="text-center text-white">Confirm Transaction</DialogTitle>
+        </DialogHeader>
+        
+        <div className="text-center space-y-4 sm:space-y-6 py-4">
+          <div className="flex justify-center">
+            <IconWallet className="w-12 h-12 text-indigo-400" />
+          </div>
+          
+          <div className="space-y-3">
+            <p className="text-sm text-gray-300 leading-relaxed">
+              Please check your wallet and confirm the transaction to proceed.
+            </p>
+          </div>
+          
+          <div className="flex gap-2 sm:gap-3 justify-center pt-2">
+            <AeButton 
+              variant="secondary" 
+              onClick={handleCancel}
+              size="md"
+              className="flex-1 text-sm sm:text-base"
+            >
+              Cancel
+            </AeButton>
+            <AeButton 
+              variant="success" 
+              onClick={handleConfirm}
+              size="md"
+              className="flex-1 text-sm sm:text-base"
+            >
+              Open Wallet
+            </AeButton>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

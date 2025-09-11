@@ -3,7 +3,6 @@ import { Backend, TrendminerApi } from '../../api/backend';
 import { useToast } from '../ToastProvider';
 import Sparkline from '../Trendminer/Sparkline';
 import TrendingSidebar from '../Trendminer/TrendingSidebar';
-import './RightRail.scss';
 
 import { useWallet } from '../../hooks';
 interface SearchSuggestion {
@@ -488,17 +487,19 @@ export default function RightRail() {
   const topTrending = useMemo(() => trending.slice(0, 8), [trending]);
 
   return (
-    <div className="right-rail">
+    <div className="grid gap-4 h-fit min-w-0 scrollbar-thin scrollbar-track-white/[0.02] scrollbar-thumb-gradient-to-r scrollbar-thumb-from-pink-500/60 scrollbar-thumb-via-teal-500/60 scrollbar-thumb-to-pink-500/60 scrollbar-thumb-rounded-[10px] scrollbar-thumb-border scrollbar-thumb-border-white/10 hover:scrollbar-thumb-from-pink-500/80 hover:scrollbar-thumb-via-teal-500/80 hover:scrollbar-thumb-to-pink-500/80">
       {/* Enhanced Price Section */}
-      <div className="genz-card price-section">
-        <div className="card-header">
-          <span className="card-icon">📈</span>
-          <h4>AE Price</h4>
-          <div className="currency-selector">
+      <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-5 shadow-[var(--glass-shadow)] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_12px_32px_rgba(255,107,107,0.2)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-[var(--border-gradient)] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">📈</span>
+          <h4 className="m-0 text-base font-bold text-[var(--standard-font-color)] flex-1">AE Price</h4>
+          <div className="flex gap-1">
             {(['usd', 'eur', 'cny'] as const).map(currency => (
               <button
                 key={currency}
-                className={`currency-btn ${selectedCurrency === currency ? 'active' : ''}`}
+                className={`bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[10px] cursor-pointer transition-all duration-200 hover:bg-white/10 ${
+                  selectedCurrency === currency ? 'bg-[var(--neon-teal)] text-white border-[var(--neon-teal)]' : 'text-[var(--light-font-color)]'
+                }`}
                 onClick={() => setSelectedCurrency(currency)}
               >
                 {currency.toUpperCase()}
@@ -507,13 +508,13 @@ export default function RightRail() {
           </div>
         </div>
 
-        <div className="price-content">
-          <div className="price-row">
-            <div className="price-info">
-              <div className="price-amount">
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <div className="text-xl font-bold text-[var(--standard-font-color)] mb-1">
                 {prices?.[selectedCurrency] ? formatPrice(prices[selectedCurrency], selectedCurrency) : '-'}
               </div>
-              <div className="price-change">
+              <div className="text-xs font-semibold">
                 {prices?.change24h && (
                   <span style={{ color: getPriceChangeColor(prices.change24h) }}>
                     {prices.change24h > 0 ? '+' : ''}{prices.change24h.toFixed(2)}% (24h)
@@ -521,7 +522,7 @@ export default function RightRail() {
                 )}
               </div>
             </div>
-            <div className="price-chart">
+            <div className="flex-shrink-0">
               <Sparkline
                 points={selectedCurrency === 'usd' ? usdSpark : eurSpark}
                 width={80}
@@ -531,16 +532,16 @@ export default function RightRail() {
             </div>
           </div>
 
-          <div className="price-stats">
-            <div className="stat-item">
-              <span className="stat-label">Market Cap</span>
-              <span className="stat-value">
+          <div className="grid gap-2">
+            <div className="flex justify-between items-center py-2 border-b border-white/5 last:border-b-0">
+              <span className="text-[11px] text-[var(--light-font-color)] uppercase tracking-wide">Market Cap</span>
+              <span className="text-[11px] text-[var(--standard-font-color)] font-semibold">
                 {prices?.marketCap ? formatMarketCap(prices.marketCap) : '-'}
               </span>
             </div>
-            <div className="stat-item">
-              <span className="stat-label">24h Volume</span>
-              <span className="stat-value">
+            <div className="flex justify-between items-center py-2 border-b border-white/5 last:border-b-0">
+              <span className="text-[11px] text-[var(--light-font-color)] uppercase tracking-wide">24h Volume</span>
+              <span className="text-[11px] text-[var(--standard-font-color)] font-semibold">
                 {prices?.volume24h ? formatMarketCap(prices.volume24h) : '-'}
               </span>
             </div>
@@ -549,12 +550,12 @@ export default function RightRail() {
       </div>
 
       {/* Enhanced Trending Section */}
-      {/* <div className="genz-card trending-section">
-        <div className="card-header">
-          <span className="card-icon">🔥</span>
-          <h4>Trending Topics</h4>
+      {/* <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-5 shadow-[var(--glass-shadow)] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_12px_32px_rgba(255,107,107,0.2)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-[var(--border-gradient)] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">🔥</span>
+          <h4 className="m-0 text-base font-bold text-[var(--standard-font-color)] flex-1">Trending Topics</h4>
           <button
-            className="explore-btn"
+            className="bg-none border-none text-[var(--neon-teal)] text-base cursor-pointer p-1 rounded transition-all duration-200 hover:bg-[rgba(0,255,157,0.1)] hover:scale-110"
             onClick={() => window.location.href = '/trending'}
             title="Explore all trends"
           >
@@ -562,14 +563,14 @@ export default function RightRail() {
           </button>
         </div>
 
-        <div className="trending-content">
+        <div className="grid gap-2">
           {topTrending.map((topic, index) => (
-            <div key={index} className="trending-item">
-              <span className="trending-rank">#{index + 1}</span>
-              <span className="trending-topic">
+            <div key={index} className="flex items-center gap-2 p-2 px-3 bg-white/[0.02] border border-white/5 rounded-lg transition-all duration-200 cursor-pointer hover:bg-white/5 hover:border-white/10 hover:translate-x-1">
+              <span className="text-[10px] text-[var(--neon-pink)] font-bold min-w-[20px]">#{index + 1}</span>
+              <span className="flex-1 text-xs text-[var(--standard-font-color)] font-semibold">
                 {typeof topic[0] === 'string' ? topic[0] : 'Unknown Topic'}
               </span>
-              <span className="trending-count">
+              <span className="text-[10px] text-[var(--light-font-color)]">
                 {typeof topic[1] === 'number' ? `${topic[1]} mentions` : '0 mentions'}
               </span>
             </div>

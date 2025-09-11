@@ -34,13 +34,17 @@ export default function WebAppHeader() {
   };
 
   return (
-    <header className="web-app-header">
-      <div className="container">
-        <Link to="/" className="brand" aria-label="Superhero Home">
-          <HeaderLogo className="icon logo" />
+    <header className="sticky top-0 z-[1000] hidden md:block border-b" style={{ 
+      backgroundColor: 'var(--topnav-background)', 
+      backdropFilter: 'blur(10px)',
+      borderBottomColor: 'rgba(255, 255, 255, 0.1)'
+    }}>
+      <div className="flex items-center gap-6 px-6 h-16 max-w-[min(1648px,100%)] mx-auto md:px-5 md:gap-5">
+        <Link to="/" className="flex items-center no-underline" style={{ color: 'var(--standard-font-color)' }} aria-label="Superhero Home">
+          <HeaderLogo className="h-8 w-auto" />
         </Link>
 
-        <nav className="nav-links">
+        <nav className="flex items-center gap-6 flex-grow md:gap-5">
           {navigationItems.map(item => (
             item.isExternal ? (
               <a
@@ -48,30 +52,71 @@ export default function WebAppHeader() {
                 href={item.path}
                 target="_blank"
                 rel="noreferrer"
-                className={isActiveRoute(item.path) ? 'active' : ''}
+                className={`no-underline font-medium px-3 py-2 rounded-lg transition-all duration-200 relative ${
+                  isActiveRoute(item.path) 
+                    ? 'after:content-[""] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-0.5 after:rounded-sm'
+                    : ''
+                }`}
+                style={{
+                  color: isActiveRoute(item.path) ? 'var(--custom-links-color)' : 'var(--light-font-color)',
+                  backgroundColor: isActiveRoute(item.path) ? 'rgba(0,255,157,0.1)' : 'transparent',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActiveRoute(item.path)) {
+                    e.currentTarget.style.color = 'var(--standard-font-color)';
+                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActiveRoute(item.path)) {
+                    e.currentTarget.style.color = 'var(--light-font-color)';
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
               >
                 {item.label}
+                {isActiveRoute(item.path) && (
+                  <span 
+                    className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
+                    style={{ backgroundColor: 'var(--custom-links-color)' }}
+                  />
+                )}
               </a>
             ) : (
               <Link
                 key={item.id}
                 to={item.path}
-                className={isActiveRoute(item.path) ? 'active' : ''}
+                className={`no-underline font-medium px-3 py-2 rounded-lg transition-all duration-200 relative`}
+                style={{
+                  color: isActiveRoute(item.path) ? 'var(--custom-links-color)' : 'var(--light-font-color)',
+                  backgroundColor: isActiveRoute(item.path) ? 'rgba(0,255,157,0.1)' : 'transparent',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActiveRoute(item.path)) {
+                    e.currentTarget.style.color = 'var(--standard-font-color)';
+                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActiveRoute(item.path)) {
+                    e.currentTarget.style.color = 'var(--light-font-color)';
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
               >
                 {item.label}
+                {isActiveRoute(item.path) && (
+                  <span 
+                    className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
+                    style={{ backgroundColor: 'var(--custom-links-color)' }}
+                  />
+                )}
               </Link>
             )
           ))}
         </nav>
 
-        <div className="header-actions">
-          {/* <button 
-            className="theme-toggle" 
-            onClick={toggleTheme} 
-            aria-label="Toggle theme"
-          >
-            {theme === 'dark' ? 'Light' : 'Dark'}
-          </button> */}
+        <div className="flex items-center gap-4">
           <HeaderWalletButton />
         </div>
       </div>

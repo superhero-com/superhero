@@ -14,7 +14,7 @@ export default function TokenPricePerformanceExample() {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Token Price Performance</h2>
+      <h2 className="text-2xl font-bold mb-4 text-foreground">Token Price Performance</h2>
       
       <TokenPricePerformance
         availableGraphTypes={availableGraphTypes}
@@ -24,8 +24,8 @@ export default function TokenPricePerformanceExample() {
         className="max-w-4xl"
       />
       
-      <div className="mt-6 p-4 bg-gray-800 rounded-lg">
-        <h3 className="text-lg font-semibold mb-2">Usage Example:</h3>
+      <div className="mt-6 p-4 bg-muted rounded-lg">
+        <h3 className="text-lg font-semibold mb-2 text-foreground">Usage Example:</h3>
         <pre className="text-sm text-green-400 overflow-x-auto">
 {`import { TokenPricePerformance } from '@/features/dex/components';
 

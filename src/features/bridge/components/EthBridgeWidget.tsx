@@ -34,7 +34,7 @@ export default function EthBridgeWidget() {
       try {
         setEthBridgeQuoting(true);
         setEthBridgeError(null);
-        const quote = await bridgeService.getBridgeQuote(sdk, ethBridgeIn);
+        const quote = await bridgeService.getBridgeQuote(sdk as any, ethBridgeIn);
         setEthBridgeOutAe(quote);
       } catch (e: any) {
         setEthBridgeError(errorToUserMessage(e, { action: 'quote' }));
@@ -63,7 +63,7 @@ export default function EthBridgeWidget() {
       };
 
       const result = await bridgeService.bridgeEthToAe(
-        sdk,
+        sdk as any,
         bridgeOptions,
         (status: BridgeStatus, message?: string) => {
           setEthBridgeStep(status);
@@ -139,163 +139,56 @@ export default function EthBridgeWidget() {
   const isDisabled = ethBridgeProcessing || !activeAccount || !ethBridgeIn || Number(ethBridgeIn) <= 0;
 
   return (
-    <div className="genz-card" style={{
-      maxWidth: 480,
-      margin: '0 auto',
-      background: 'var(--glass-bg)',
-      border: '1px solid var(--glass-border)',
-      backdropFilter: 'blur(20px)',
-      borderRadius: 24,
-      padding: 24,
-      boxShadow: 'var(--glass-shadow)',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
+    <div className="w-full max-w-[min(480px,100vw)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden box-border">
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 24
-      }}>
-        <h2 style={{
-          fontSize: 20,
-          fontWeight: 700,
-          color: 'var(--standard-font-color)',
-          margin: 0,
-          background: 'var(--primary-gradient)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text'
-        }}>
+      <div className="flex justify-between items-center mb-4 sm:mb-6 min-w-0">
+        <h2 className="text-lg sm:text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent min-w-0 flex-shrink">
           Bridge ETH → AE
         </h2>
 
-        <div style={{
-          fontSize: 12,
-          color: 'var(--light-font-color)',
-          padding: '4px 8px',
-          background: 'rgba(255, 255, 255, 0.05)',
-          borderRadius: 8,
-          border: '1px solid var(--glass-border)'
-        }}>
+        <div className="text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-[10px] transition-all duration-300 ease-out font-medium flex-shrink-0">
           Cross-chain
         </div>
       </div>
 
       {/* Description */}
-      <p style={{
-        margin: '0 0 20px',
-        fontSize: 14,
-        color: 'var(--light-font-color)',
-        lineHeight: 1.5
-      }}>
+      <p className="m-0 mb-4 sm:mb-5 text-sm text-white/60 leading-relaxed">
         Bridge native ETH from Ethereum to æternity as æETH, then automatically swap to AE tokens.
       </p>
 
       {/* From Input - ETH */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid var(--glass-border)',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 8
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 8
-        }}>
-          <label style={{
-            fontSize: 12,
-            color: 'var(--light-font-color)',
-            fontWeight: 500,
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px'
-          }}>
+      <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-2 backdrop-blur-[10px]">
+        <div className="flex justify-between items-center mb-2 min-w-0">
+          <label className="text-xs text-white/60 font-medium uppercase tracking-wider flex-shrink-0">
             From
           </label>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8
-          }}>
-            <span style={{
-              fontSize: 12,
-              color: 'var(--light-font-color)'
-            }}>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span className="text-xs text-white/60">
               Ethereum
             </span>
             <button
               onClick={handleMaxClick}
-              style={{
-                fontSize: 10,
-                color: 'var(--accent-color)',
-                background: 'transparent',
-                border: '1px solid var(--accent-color)',
-                borderRadius: 4,
-                padding: '2px 6px',
-                cursor: 'pointer',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
-              }}
+              className="text-[10px] text-[#4ecdc4] bg-transparent border border-[#4ecdc4] rounded px-1.5 py-0.5 cursor-pointer uppercase tracking-wider hover:bg-[#4ecdc4]/10 transition-all duration-300 flex-shrink-0"
             >
               MAX
             </button>
           </div>
         </div>
 
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12
-        }}>
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <input
             type="text"
             placeholder="0.0"
             value={ethBridgeIn}
             onChange={(e) => setEthBridgeIn(e.target.value)}
-            style={{
-              flex: 1,
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--standard-font-color)',
-              fontSize: 24,
-              fontWeight: 600,
-              outline: 'none',
-              fontFamily: 'inherit'
-            }}
+            className="flex-1 bg-transparent border-none text-white text-xl sm:text-2xl font-semibold outline-none min-w-0 overflow-hidden"
           />
 
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '8px 12px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: 12,
-            border: '1px solid var(--glass-border)'
-          }}>
-            <div style={{
-              width: 24,
-              height: 24,
-              borderRadius: '50%',
-              background: 'linear-gradient(45deg, #627eea, #8a92b2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontSize: 12,
-              fontWeight: 700
-            }}>
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 rounded-xl border border-white/10 flex-shrink-0">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-[#627eea] to-[#8a92b2] flex items-center justify-center text-white text-xs font-bold">
               Ξ
             </div>
-            <span style={{
-              color: 'var(--standard-font-color)',
-              fontSize: 16,
-              fontWeight: 600
-            }}>
+            <span className="text-white text-sm sm:text-base font-semibold">
               ETH
             </span>
           </div>
@@ -303,106 +196,33 @@ export default function EthBridgeWidget() {
       </div>
 
       {/* Bridge Arrow */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        margin: '16px 0',
-        position: 'relative'
-      }}>
-        <div style={{
-          width: 48,
-          height: 48,
-          borderRadius: '50%',
-          background: 'var(--button-gradient)',
-          border: '2px solid var(--glass-border)',
-          color: 'white',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 20,
-          fontWeight: 600,
-          boxShadow: '0 4px 12px rgba(255, 107, 107, 0.3)',
-          zIndex: 2,
-          position: 'relative'
-        }}>
+      <div className="flex justify-center my-3 sm:my-4 relative">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] border-2 border-white/10 text-white flex items-center justify-center text-lg sm:text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(255,107,107,0.3)] z-[2] relative hover:shadow-[0_8px_24px_rgba(255,107,107,0.4)] hover:-translate-y-0.5">
           🌉
         </div>
       </div>
 
       {/* To Output - AE */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid var(--glass-border)',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 20
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 8
-        }}>
-          <label style={{
-            fontSize: 12,
-            color: 'var(--light-font-color)',
-            fontWeight: 500,
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px'
-          }}>
+      <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-5 backdrop-blur-[10px]">
+        <div className="flex justify-between items-center mb-2 min-w-0">
+          <label className="text-xs text-white/60 font-medium uppercase tracking-wider flex-shrink-0">
             To (Estimated)
           </label>
-          <span style={{
-            fontSize: 12,
-            color: 'var(--light-font-color)'
-          }}>
+          <span className="text-xs text-white/60 flex-shrink-0">
             æternity
           </span>
         </div>
 
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12
-        }}>
-          <div style={{
-            flex: 1,
-            fontSize: 24,
-            fontWeight: 600,
-            color: ethBridgeQuoting ? 'var(--light-font-color)' : 'var(--standard-font-color)',
-            fontFamily: 'inherit'
-          }}>
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className={`flex-1 text-xl sm:text-2xl font-semibold ${ethBridgeQuoting ? 'text-white/60' : 'text-white'} min-w-0 overflow-hidden`}>
             {ethBridgeQuoting ? 'Quoting…' : (ethBridgeOutAe || '0.0')}
           </div>
 
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '8px 12px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: 12,
-            border: '1px solid var(--glass-border)'
-          }}>
-            <div style={{
-              width: 24,
-              height: 24,
-              borderRadius: '50%',
-              background: 'linear-gradient(45deg, #ff6b6b, #ff8e8e)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontSize: 12,
-              fontWeight: 700
-            }}>
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 rounded-xl border border-white/10 flex-shrink-0">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-red-400 to-red-300 flex items-center justify-center text-white text-xs font-bold">
               Æ
             </div>
-            <span style={{
-              color: 'var(--standard-font-color)',
-              fontSize: 16,
-              fontWeight: 600
-            }}>
+            <span className="text-white text-sm sm:text-base font-semibold">
               AE
             </span>
           </div>
@@ -411,54 +231,28 @@ export default function EthBridgeWidget() {
 
       {/* Bridge Process Info */}
       {ethBridgeStep !== 'idle' && (
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid var(--glass-border)',
-          borderRadius: 16,
-          padding: 16,
-          marginBottom: 20,
-          backdropFilter: 'blur(10px)'
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 8
-          }}>
-            <span style={{ fontSize: 14, color: 'var(--light-font-color)' }}>
+        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-5 backdrop-blur-[10px]">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-white/60">
               Bridge Status
             </span>
-            <span style={{
-              fontSize: 14,
-              fontWeight: 600,
-              color: ethBridgeStep === 'completed' ? 'var(--success-color)' :
-                ethBridgeStep === 'failed' ? 'var(--error-color)' :
-                  'var(--warning-color)'
-            }}>
-              {ethBridgeStep === 'idle' ? 'Ready' :
-                ethBridgeStep === 'connecting' ? 'Connecting to wallets' :
-                  ethBridgeStep === 'bridging' ? 'Bridging ETH → æETH' :
-                    ethBridgeStep === 'waiting' ? 'Waiting for æETH deposit' :
-                      ethBridgeStep === 'swapping' ? 'Swapping æETH → AE' :
-                        ethBridgeStep === 'completed' ? 'Completed successfully' :
-                          ethBridgeStep === 'failed' ? 'Failed' : 'Processing'}
+            <span className={`text-sm font-semibold ${
+              ethBridgeStep === 'completed' ? 'text-green-400' :
+              ethBridgeStep === 'failed' ? 'text-red-400' :
+              'text-yellow-400'
+            }`}>
+              {ethBridgeStep === 'connecting' ? 'Connecting to wallets' :
+                ethBridgeStep === 'bridging' ? 'Bridging ETH → æETH' :
+                  ethBridgeStep === 'waiting' ? 'Waiting for æETH deposit' :
+                    ethBridgeStep === 'swapping' ? 'Swapping æETH → AE' :
+                      ethBridgeStep === 'completed' ? 'Completed successfully' :
+                        ethBridgeStep === 'failed' ? 'Failed' : 'Processing'}
             </span>
           </div>
 
           {ethBridgeProcessing && (
-            <div style={{
-              width: '100%',
-              height: 4,
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: 2,
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                height: '100%',
-                background: 'var(--primary-gradient)',
-                borderRadius: 2,
-                animation: 'progress 2s ease-in-out infinite'
-              }}></div>
+            <div className="w-full h-1 bg-white/10 rounded overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] rounded animate-pulse"></div>
             </div>
           )}
         </div>
@@ -466,16 +260,7 @@ export default function EthBridgeWidget() {
 
       {/* Error Display */}
       {ethBridgeError && (
-        <div style={{
-          color: 'var(--error-color)',
-          fontSize: 14,
-          padding: '12px 16px',
-          background: 'rgba(255, 107, 107, 0.1)',
-          border: '1px solid rgba(255, 107, 107, 0.2)',
-          borderRadius: 12,
-          marginBottom: 20,
-          textAlign: 'center'
-        }}>
+        <div className="text-red-400 text-sm py-3 px-3 sm:px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-4 sm:mb-5 text-center">
           {ethBridgeError}
         </div>
       )}
@@ -485,38 +270,15 @@ export default function EthBridgeWidget() {
         <button
           onClick={handleEthBridge}
           disabled={isDisabled}
-          className="genz-btn"
-          style={{
-            width: '100%',
-            padding: '16px 24px',
-            borderRadius: 16,
-            border: 'none',
-            background: isDisabled ?
-              'rgba(255, 255, 255, 0.1)' :
-              'var(--button-gradient)',
-            color: 'white',
-            cursor: isDisabled ? 'not-allowed' : 'pointer',
-            fontSize: 16,
-            fontWeight: 700,
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: isDisabled ?
-              'none' :
-              'var(--button-shadow)',
-            opacity: isDisabled ? 0.6 : 1
-          }}
+          className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            isDisabled
+              ? 'bg-white/10 cursor-not-allowed opacity-60'
+              : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0'
+          }`}
         >
           {ethBridgeProcessing ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <div style={{
-                width: 16,
-                height: 16,
-                border: '2px solid rgba(255,255,255,0.3)',
-                borderTop: '2px solid white',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
-              }}></div>
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               {ethBridgeStep === 'connecting' ? 'Connecting…' :
                 ethBridgeStep === 'bridging' ? 'Bridging…' :
                   ethBridgeStep === 'waiting' ? 'Waiting for æETH…' :
@@ -528,35 +290,10 @@ export default function EthBridgeWidget() {
         <ConnectWalletButton
           label="Connect Wallet to Bridge"
           block
-          style={{
-            width: '100%',
-            padding: '16px 24px',
-            borderRadius: 16,
-            border: 'none',
-            background: 'var(--button-gradient)',
-            color: 'white',
-            fontSize: 16,
-            fontWeight: 700,
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase',
-            boxShadow: 'var(--button-shadow)',
-            cursor: 'pointer'
-          }}
+          className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white text-sm sm:text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(255,107,107,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
         />
       )}
 
-      {/* Add keyframes for animations */}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        @keyframes progress {
-          0% { transform: translateX(-100%); }
-          50% { transform: translateX(0%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
     </div>
   );
 }

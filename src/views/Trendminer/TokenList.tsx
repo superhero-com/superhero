@@ -100,56 +100,91 @@ export default function TokenList() {
   }, [page, hasMore, loading, orderBy, orderDirection, search]);
 
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '1rem' }}>
-      <div style={{ padding: '16px 12px', borderRadius: 8, background: 'linear-gradient(rgba(0,0,0,0.03), rgba(0,0,0,0.03))' }}>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-          <div style={{ fontSize: 28, fontWeight: 700 }}>Tokenize Trends. Own the Hype. Build Communities.</div>
-          <div style={{ minWidth: 360, flex: 1 }}>
+    <div className="max-w-5xl mx-auto p-4">
+      <div className="p-4 rounded-lg bg-gradient-to-b from-black/10 to-black/5 backdrop-blur-sm border border-white/10">
+        <div className="flex gap-3 items-center justify-between flex-wrap">
+          <div className="text-2xl md:text-3xl font-bold text-white">
+            Tokenize Trends. Own the Hype. Build Communities.
+          </div>
+          <div className="min-w-80 flex-1">
             <GlobalStatsAnalytics />
           </div>
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tokens or tags" style={{ flex: 1, minWidth: 220, padding: '8px 12px' }} />
-        <select className="flat-select" value={collection} onChange={(e) => setCollection(e.target.value as any)}>
+      <div className="flex gap-2 items-center mb-3 flex-wrap">
+        <input 
+          value={search} 
+          onChange={(e) => setSearch(e.target.value)} 
+          placeholder="Search tokens or tags" 
+          className="flex-1 min-w-56 px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50" 
+        />
+        <select 
+          className="px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50" 
+          value={collection} 
+          onChange={(e) => setCollection(e.target.value as any)}
+        >
           <option value="all">All</option>
           <option value="word">Words</option>
           <option value="number">Numbers</option>
         </select>
-        <select className="flat-select" value={sort} onChange={(e) => setSort(e.target.value as any)}>
+        <select 
+          className="px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50" 
+          value={sort} 
+          onChange={(e) => setSort(e.target.value as any)}
+        >
           <option value="trending_score">Trending</option>
           <option value="market_cap">Market Cap</option>
           <option value="newest">Newest</option>
           <option value="oldest">Oldest</option>
           <option value="holders_count">Holders</option>
         </select>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
-          <input type="checkbox" checked={myOnly} onChange={(e) => setMyOnly(e.target.checked)} />
+        <label className="flex items-center gap-1.5 text-xs text-white">
+          <input 
+            type="checkbox" 
+            checked={myOnly} 
+            onChange={(e) => setMyOnly(e.target.checked)} 
+            className="rounded"
+          />
           My tokens only
         </label>
-        <a href="/trendminer/invite" style={{ padding: '8px 12px', borderRadius: 999, border: '1px solid rgba(0,0,0,0.12)', background: '#fff', textDecoration: 'none', color: '#111' }}>Invite & Earn</a>
+        <a 
+          href="/trendminer/invite" 
+          className="px-3 py-2 rounded-full border border-white/20 bg-white text-gray-900 no-underline hover:bg-gray-100 transition-colors duration-200 text-sm font-medium"
+        >
+          Invite & Earn
+        </a>
       </div>
-      {error && <div style={{ color: 'tomato' }}>{error}</div>}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+      {error && <div className="text-red-400 mb-4">{error}</div>}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {items.map((it) => (
-          <Link key={it.address} to={`/trendminer/tokens/${encodeURIComponent(it.name || it.address)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ padding: 12, border: '1px solid rgba(0,0,0,0.1)', borderRadius: 8 }}>
-              <div style={{ fontWeight: 700 }}>#{it.name || it.symbol} {it.symbol ? <span style={{ opacity: 0.7 }}>(#{it.symbol})</span> : null}</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 13, opacity: 0.85 }}>
+          <Link 
+            key={it.address} 
+            to={`/trendminer/tokens/${encodeURIComponent(it.name || it.address)}`} 
+            className="no-underline text-inherit"
+          >
+            <div className="p-3 border border-white/10 rounded-lg bg-black/20 backdrop-blur-lg hover:-translate-y-1 hover:shadow-lg transition-all duration-200">
+              <div className="font-bold text-white">
+                #{it.name || it.symbol} {it.symbol ? (
+                  <span className="opacity-70 text-white/70">(#{it.symbol})</span>
+                ) : null}
+              </div>
+              <div className="flex justify-between mt-2 text-sm opacity-85 text-white/85">
                 <div>MC: {Number(it.market_cap ?? 0).toLocaleString()}</div>
                 <div>Holders: {it.holders_count ?? 0}</div>
-                <div> {Number(it.price ?? 0).toFixed(4)}</div>
+                <div>{Number(it.price ?? 0).toFixed(4)}</div>
               </div>
               {typeof (it as any).trending_score !== 'undefined' && (
-                <div style={{ marginTop: 6, fontSize: 12, opacity: 0.8 }}>Score: {Number((it as any).trending_score).toFixed(2)}</div>
+                <div className="mt-1.5 text-xs opacity-80 text-white/80">
+                  Score: {Number((it as any).trending_score).toFixed(2)}
+                </div>
               )}
             </div>
           </Link>
         ))}
       </div>
-      <div ref={observerRef} style={{ height: 24 }} />
-      {loading && <div>Loading…</div>}
-      {!loading && !items.length && <div>No tokens found.</div>}
+      <div ref={observerRef} className="h-6" />
+      {loading && <div className="text-center py-4 text-white/80">Loading…</div>}
+      {!loading && !items.length && <div className="text-center py-4 text-white/80">No tokens found.</div>}
     </div>
   );
 }

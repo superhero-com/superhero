@@ -1,6 +1,8 @@
 import React from 'react';
 import { useWallet, useWalletConnect } from '../hooks';
 import Identicon from './Identicon';
+import { AeButton } from './ui/ae-button';
+import { cn } from '@/lib/utils';
 
 type Props = { block?: boolean } & React.HTMLAttributes<HTMLDivElement>;
 
@@ -15,38 +17,31 @@ export default function MiniWalletInfo({ block, style, ...rest }: Props) {
   return (
     <div
       {...rest}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        padding: block ? '10px 12px' : undefined,
-        borderRadius: block ? 999 : undefined,
-        border: block ? '1px solid rgba(0,0,0,0.12)' : undefined,
-        background: block ? '#111' : undefined,
-        color: block ? '#fff' : undefined,
-        ...(style || {}),
-      }}
+      className={cn(
+        "flex items-center gap-2",
+        block && "p-3 rounded-full border border-border bg-card text-foreground",
+        rest.className
+      )}
+      style={style}
     >
-      <Identicon address={address} size={24} />
-      <div style={{ display: 'grid', lineHeight: 1 }}>
-        <div style={{ fontWeight: 700 }}>{short}</div>
-        <div style={{ fontSize: 12, opacity: 0.8 }}>{Number(balance || 0).toLocaleString(undefined, { maximumFractionDigits: 6 })} AE</div>
+      <div className="w-6 h-6 rounded-full overflow-hidden">
+        <Identicon address={address} size={24} />
       </div>
-      <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
-        {/* <button
-          onClick={() => refreshAeBalance()}
-          title="Refresh balance"
-          style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'inherit' }}
-        >
-          Refresh
-        </button> */}
-        <button
+      <div className="grid leading-none">
+        <div className="font-bold text-sm">{short}</div>
+        <div className="text-xs text-muted-foreground">
+          {Number(balance || 0).toLocaleString(undefined, { maximumFractionDigits: 6 })} AE
+        </div>
+      </div>
+      <div className="ml-auto">
+        <AeButton
           onClick={() => disconnectWallet()}
-          title="Logout"
-          style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'inherit' }}
+          variant="ghost"
+          size="xs"
+          className="h-8 px-2 border border-border/20 hover:bg-accent"
         >
           Logout
-        </button>
+        </AeButton>
       </div>
     </div>
   );

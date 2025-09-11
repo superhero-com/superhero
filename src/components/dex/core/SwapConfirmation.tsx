@@ -53,86 +53,23 @@ export default function SwapConfirmation({
   return (
     <Dialog.Root open={show} onOpenChange={onClose}>
       <Dialog.Portal>
-        <Dialog.Overlay
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.9)',
-            backdropFilter: 'blur(12px)',
-            zIndex: 1000
-          }}
-        />
-        <Dialog.Content
-          style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: 'rgba(20, 20, 28, 0.98)',
-            color: 'var(--standard-font-color)',
-            border: '1px solid var(--glass-border)',
-            borderRadius: 24,
-            padding: 24,
-            width: 480,
-            maxWidth: '90vw',
-            maxHeight: '85vh',
-            overflowY: 'auto',
-            backdropFilter: 'blur(20px)',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)',
-            zIndex: 1000,
-            outline: 'none'
-          }}
-        >
+        <Dialog.Overlay className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[1000]" />
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(20,20,28,0.98)] text-white border border-white/10 rounded-3xl p-6 w-[480px] max-w-[90vw] max-h-[85vh] overflow-y-auto backdrop-blur-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-[1000] outline-none">
           {/* Header */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 24
-          }}>
-            <Dialog.Title style={{
-              fontWeight: 700,
-              fontSize: 20,
-              margin: 0,
-              background: 'var(--primary-gradient)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
-            }}>
+          <div className="flex justify-between items-center mb-6">
+            <Dialog.Title className="font-bold text-xl m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
               Confirm Swap
             </Dialog.Title>
             <Dialog.Close asChild>
-              <button
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: 12,
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--glass-border)',
-                  color: 'var(--standard-font-color)',
-                  cursor: 'pointer',
-                  fontSize: 16
-                }}
-              >
+              <button className="p-2 rounded-xl bg-white/[0.05] border border-white/10 text-white cursor-pointer text-base">
                 ✕
               </button>
             </Dialog.Close>
           </div>
 
           {/* Swap Details */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid var(--glass-border)',
-            borderRadius: 16,
-            padding: 20,
-            marginBottom: 20
-          }}>
-            <div style={{
-              fontSize: 14,
-              fontWeight: 600,
-              color: 'var(--light-font-color)',
-              marginBottom: 16,
-              textAlign: 'center'
-            }}>
+          <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-5 mb-5">
+            <div className="text-sm font-semibold text-white/60 mb-4 text-center">
               You will swap
             </div>
 
@@ -480,13 +417,6 @@ export default function SwapConfirmation({
         </Dialog.Content>
       </Dialog.Portal>
 
-      {/* Add keyframes for spinner animation */}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </Dialog.Root>
   );
 }

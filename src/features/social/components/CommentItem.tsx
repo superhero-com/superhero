@@ -1,11 +1,14 @@
 import React, { memo, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import UserBadge from '../../../components/UserBadge';
-import AeButton from '../../../components/AeButton';
+import { AeButton } from '../../../components/ui/ae-button';
+import { Badge } from '../../../components/ui/badge';
+import { AeCard, AeCardContent } from '../../../components/ui/ae-card';
 import { IconComment } from '../../../icons';
 import { relativeTime } from '../../../utils/time';
 import { linkify } from '../../../utils/linkify';
 import { PostDto, PostsService } from '../../../api/generated';
+import { cn } from '@/lib/utils';
 import PostAvatar from './PostAvatar';
 import CommentForm from './CommentForm';
 
@@ -72,106 +75,130 @@ const CommentItem = memo(({
   }, [showReplies]);
 
   return (
-    <div className={`comment-item depth-${depth}`}>
-      <div className="comment-avatar">
-        <PostAvatar 
-          authorAddress={authorAddress} 
-          chainName={chainName} 
-          size={Math.max(32, 40 - depth * 4)} 
-          overlaySize={Math.max(16, 20 - depth * 2)} 
-        />
-      </div>
-      <div className="comment-content">
-        <div className="comment-header">
-          <UserBadge 
-            address={authorAddress} 
-            showAvatar={false}
-            chainName={chainName}
-          />
-          {comment.created_at && (
-            <span className="comment-timestamp">
-              {relativeTime(new Date(comment.created_at))}
-            </span>
-          )}
-        </div>
-        
-        <div className="comment-text">{linkify(comment.content)}</div>
-        
-        {/* Media display for comments */}
-        {comment.media && Array.isArray(comment.media) && comment.media.length > 0 && (
-          <div className="comment-media-grid">
-            {comment.media.slice(0, 2).map((m: string, index: number) => (
-              <img 
-                key={`${comment.id}-${index}`} 
-                src={m} 
-                alt="media" 
-                className="comment-media-item"
-                loading="lazy"
-                decoding="async"
+    <div className={cn("relative", depth > 0 && "ml-8 mt-3")}>
+      <AeCard 
+        variant="glass" 
+        className="transition-all duration-300 hover:-translate-y-1 hover:shadow-glow border-glass-border"
+        style={{
+          background: "radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.04), transparent 40%), rgba(255, 255, 255, 0.02)",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          boxShadow: "0 8px 25px rgba(0,0,0,0.2)"
+        }}
+      >
+        <AeCardContent className="p-4">
+          <div className="flex gap-3">
+            <div className="flex-shrink-0">
+              <PostAvatar 
+                authorAddress={authorAddress} 
+                chainName={chainName} 
+                size={Math.max(32, 40 - depth * 4)} 
+                overlaySize={Math.max(16, 20 - depth * 2)} 
               />
-            ))}
+            </div>
+            
+            <div className="flex-1 min-w-0 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <UserBadge 
+                    address={authorAddress} 
+                    showAvatar={false}
+                    chainName={chainName}
+                  />
+                </div>
+                {comment.created_at && (
+                  <span className="text-xs text-muted-foreground flex-shrink-0">
+                    {relativeTime(new Date(comment.created_at))}
+                  </span>
+                )}
+              </div>
+              
+              <div className="text-sm text-foreground leading-relaxed">
+                {linkify(comment.content)}
+              </div>
+              
+              {/* Media display for comments */}
+              {comment.media && Array.isArray(comment.media) && comment.media.length > 0 && (
+                <div className="flex gap-2">
+                  {comment.media.slice(0, 2).map((m: string, index: number) => (
+                    <img 
+                      key={`${comment.id}-${index}`} 
+                      src={m} 
+                      alt="media" 
+                      className="w-20 h-20 object-cover rounded-lg transition-transform hover:scale-105"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ))}
+                </div>
+              )}
+              
+              <div className="flex items-center justify-between pt-2 border-t border-muted/50">
+                <div className="flex items-center gap-2">
+                  {hasReplies && (
+                    <Badge 
+                      variant="secondary" 
+                      className="flex items-center gap-1 text-xs cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={toggleReplies}
+                    >
+                      <IconComment className="w-3 h-3" /> 
+                      {comment.total_comments} {comment.total_comments === 1 ? 'reply' : 'replies'}
+                    </Badge>
+                  )}
+                </div>
+                
+                {canReply && (
+                  <AeButton
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleReplyClick}
+                    className="h-8 px-3 text-xs"
+                  >
+                    Reply
+                  </AeButton>
+                )}
+              </div>
+            </div>
           </div>
-        )}
-        
-        <div className="comment-actions">
-          <div className="comment-stats">
-            {hasReplies && (
-              <button 
-                className="replies-toggle"
-                onClick={toggleReplies}
-              >
-                <IconComment /> 
-                {comment.total_comments} {comment.total_comments === 1 ? 'reply' : 'replies'}
-              </button>
-            )}
-          </div>
-          
-          {canReply && (
-            <div className="comment-reply-actions">
-              <AeButton
-                variant="ghost"
-                size="sm"
-                onClick={handleReplyClick}
-              >
-                Reply
-              </AeButton>
+        </AeCardContent>
+      </AeCard>
+      
+      {/* Reply form */}
+      {showReplyForm && canReply && (
+        <div className="ml-11 mt-3">
+          <CommentForm 
+            postId={comment.id} 
+            onCommentAdded={handleCommentAdded}
+            placeholder="Write a reply..."
+          />
+        </div>
+      )}
+      
+      {/* Nested replies */}
+      {hasReplies && showReplies && (
+        <div className="mt-3 space-y-3">
+          {repliesLoading && (
+            <div className="ml-11 text-sm text-muted-foreground">
+              Loading replies...
             </div>
           )}
-        </div>
-        
-        {/* Reply form */}
-        {showReplyForm && canReply && (
-          <div className="reply-form-container">
-            <CommentForm 
-              postId={comment.id} 
+          {repliesError && (
+            <div className="ml-11 text-sm text-destructive">
+              Error loading replies
+            </div>
+          )}
+          {fetchedReplies.map((reply) => (
+            <CommentItem
+              key={reply.id}
+              comment={reply}
+              chainNames={chainNames}
               onCommentAdded={handleCommentAdded}
-              placeholder="Write a reply..."
+              depth={depth + 1}
+              maxDepth={maxDepth}
             />
-          </div>
-        )}
-        
-        {/* Nested replies */}
-        {hasReplies && showReplies && (
-          <div className="comment-replies">
-            {repliesLoading && (
-              <div className="replies-loading">Loading replies...</div>
-            )}
-            {repliesError && (
-              <div className="replies-error">Error loading replies</div>
-            )}
-            {fetchedReplies.map((reply) => (
-              <CommentItem
-                key={reply.id}
-                comment={reply}
-                chainNames={chainNames}
-                onCommentAdded={handleCommentAdded}
-                depth={depth + 1}
-                maxDepth={maxDepth}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 });

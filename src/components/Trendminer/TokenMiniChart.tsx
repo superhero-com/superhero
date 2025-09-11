@@ -105,11 +105,14 @@ export default function TokenMiniChart({
   }, [address, timeframe, cacheKey, visible]);
 
   return (
-    <div ref={ref} style={{ width, height, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+    <div ref={ref} className="flex items-center justify-end" style={{ width, height }}>
       {points ? (
         <Sparkline points={points.length ? points : [0, 0]} width={width} height={height} stroke={stroke} />
       ) : (
-        <div style={{ width, height, background: 'linear-gradient(to right, rgba(0,0,0,0.06), rgba(0,0,0,0.02))', borderRadius: 6 }} />
+        <div 
+          className="bg-gradient-to-r from-black/6 to-black/2 rounded-md" 
+          style={{ width, height }} 
+        />
       )}
     </div>
   );

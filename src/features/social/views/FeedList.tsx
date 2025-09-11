@@ -134,9 +134,21 @@ export default function FeedList() {
   return (
     <Shell left={<LeftRail />} right={<RightRail />}>
       <div className="max-w-[680px] mx-auto">
-        <CreatePost onSuccess={refetch} />
+        {/* Mobile: SortControls first and sticky */}
+        <div className="md:hidden">
+          <SortControls 
+            sortBy={sortBy} 
+            onSortChange={handleSortChange}
+            className="sticky top-0 z-10 bg-black/20 backdrop-blur-md"
+          />
+          <CreatePost onSuccess={refetch} />
+        </div>
 
-        <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
+        {/* Desktop: CreatePost first, then SortControls */}
+        <div className="hidden md:block">
+          <CreatePost onSuccess={refetch} />
+          <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
+        </div>
 
         <div className="py-2 max-w-[680px] mx-auto mobile:pt-4 mobile:px-3 mobile-small:px-2 gap-4 flex flex-col">
           {renderEmptyState()}

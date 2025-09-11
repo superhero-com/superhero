@@ -5,39 +5,40 @@ import { cn } from '@/lib/utils';
 interface SortControlsProps {
   sortBy: string;
   onSortChange: (sortBy: string) => void;
+  className?: string;
 }
 
 // Component: Sort Controls
-const SortControls = memo(({ sortBy, onSortChange }: SortControlsProps) => (
-  <div className="flex justify-center p-4">
-    <div className="flex gap-2 bg-muted/20 rounded-full p-1 backdrop-blur-sm border border-muted/50">
+const SortControls = memo(({ sortBy, onSortChange, className = '' }: SortControlsProps) => (
+  <div className="flex gap-2 bg-white/5 rounded-full p-1 mb-4 border border-white/10 w-full md:w-auto">
       <AeButton
         onClick={() => onSortChange('latest')}
         variant={sortBy === 'latest' ? 'default' : 'ghost'}
         size="sm"
+        noShadow={sortBy === 'latest'}
         className={cn(
-          "rounded-full px-6 py-2 text-sm font-semibold transition-all",
-          sortBy === 'latest' 
-            ? "bg-accent text-accent-foreground shadow-md" 
-            : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+          "flex-1 rounded-full px-6 py-2 text-sm font-semibold transition-all",
+          sortBy === 'latest'
+            ? "bg-primary-400 text-black hover:bg-primary-400 focus:bg-primary-400"
+            : "text-white/70 hover:text-white hover:bg-white/10 focus:text-white focus:bg-white/10"
         )}
       >
-        Latest
-      </AeButton>
+      Latest
+    </AeButton>
       <AeButton
         onClick={() => onSortChange('hot')}
         variant={sortBy === 'hot' ? 'default' : 'ghost'}
         size="sm"
+        noShadow={sortBy === 'hot'}
         className={cn(
-          "rounded-full px-6 py-2 text-sm font-semibold transition-all",
-          sortBy === 'hot' 
-            ? "bg-accent text-accent-foreground shadow-md" 
-            : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+          "flex-1 rounded-full px-6 py-2 text-sm font-semibold transition-all",
+          sortBy === 'hot'
+            ? "bg-primary-400 text-black hover:bg-primary-400 focus:bg-primary-400"
+            : "text-white/70 hover:text-white hover:bg-white/10 focus:text-white focus:bg-white/10"
         )}
       >
-        Most Popular
-      </AeButton>
-    </div>
+      Most Popular
+    </AeButton>
   </div>
 ));
 

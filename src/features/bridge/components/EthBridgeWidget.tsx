@@ -4,8 +4,6 @@ import { errorToUserMessage } from '../../../libs/errorMessages';
 import { useToast } from '../../../components/ToastProvider';
 import { CONFIG } from '../../../config';
 import ConnectWalletButton from '../../../components/ConnectWalletButton';
-import { AeCard } from '../../../components/ui/ae-card';
-import AeButton from '../../../components/AeButton';
 
 import { useDex, useAeSdk, useRecentActivities } from '../../../hooks';
 
@@ -141,56 +139,56 @@ export default function EthBridgeWidget() {
   const isDisabled = ethBridgeProcessing || !activeAccount || !ethBridgeIn || Number(ethBridgeIn) <= 0;
 
   return (
-    <AeCard className="max-w-lg mx-auto p-6">
+    <div className="w-full max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold m-0 bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+      <div className="flex justify-between items-center mb-4 sm:mb-6">
+        <h2 className="text-lg sm:text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
           Bridge ETH → AE
         </h2>
 
-        <div className="text-xs text-muted-foreground px-2 py-1 bg-white/5 rounded-lg border border-border">
+        <div className="text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-[10px] transition-all duration-300 ease-out font-medium">
           Cross-chain
         </div>
       </div>
 
       {/* Description */}
-      <p className="m-0 mb-5 text-sm text-muted-foreground leading-relaxed">
+      <p className="m-0 mb-4 sm:mb-5 text-sm text-white/60 leading-relaxed">
         Bridge native ETH from Ethereum to æternity as æETH, then automatically swap to AE tokens.
       </p>
 
       {/* From Input - ETH */}
-      <div className="bg-white/5 border border-border rounded-2xl p-4 mb-2">
+      <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-2 backdrop-blur-[10px]">
         <div className="flex justify-between items-center mb-2">
-          <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+          <label className="text-xs text-white/60 font-medium uppercase tracking-wider">
             From
           </label>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-white/60">
               Ethereum
             </span>
             <button
               onClick={handleMaxClick}
-              className="text-[10px] text-primary bg-transparent border border-primary rounded px-1.5 py-0.5 cursor-pointer uppercase tracking-wider hover:bg-primary/10"
+              className="text-[10px] text-[#4ecdc4] bg-transparent border border-[#4ecdc4] rounded px-1.5 py-0.5 cursor-pointer uppercase tracking-wider hover:bg-[#4ecdc4]/10 transition-all duration-300"
             >
               MAX
             </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <input
             type="text"
             placeholder="0.0"
             value={ethBridgeIn}
             onChange={(e) => setEthBridgeIn(e.target.value)}
-            className="flex-1 bg-transparent border-none text-foreground text-2xl font-semibold outline-none"
+            className="flex-1 bg-transparent border-none text-white text-xl sm:text-2xl font-semibold outline-none min-w-0"
           />
 
-          <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-xl border border-border">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#627eea] to-[#8a92b2] flex items-center justify-center text-white text-xs font-bold">
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 rounded-xl border border-white/10">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-[#627eea] to-[#8a92b2] flex items-center justify-center text-white text-xs font-bold">
               Ξ
             </div>
-            <span className="text-foreground text-base font-semibold">
+            <span className="text-white text-sm sm:text-base font-semibold">
               ETH
             </span>
           </div>
@@ -198,33 +196,33 @@ export default function EthBridgeWidget() {
       </div>
 
       {/* Bridge Arrow */}
-      <div className="flex justify-center my-4 relative">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-primary/80 border-2 border-border text-white flex items-center justify-center text-xl font-semibold shadow-lg shadow-primary/30 z-10 relative">
+      <div className="flex justify-center my-3 sm:my-4 relative">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] border-2 border-white/10 text-white flex items-center justify-center text-lg sm:text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(255,107,107,0.3)] z-[2] relative hover:shadow-[0_8px_24px_rgba(255,107,107,0.4)] hover:-translate-y-0.5">
           🌉
         </div>
       </div>
 
       {/* To Output - AE */}
-      <div className="bg-white/5 border border-border rounded-2xl p-4 mb-5">
+      <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-5 backdrop-blur-[10px]">
         <div className="flex justify-between items-center mb-2">
-          <label className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+          <label className="text-xs text-white/60 font-medium uppercase tracking-wider">
             To (Estimated)
           </label>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-white/60">
             æternity
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className={`flex-1 text-2xl font-semibold ${ethBridgeQuoting ? 'text-muted-foreground' : 'text-foreground'}`}>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className={`flex-1 text-xl sm:text-2xl font-semibold ${ethBridgeQuoting ? 'text-white/60' : 'text-white'} min-w-0`}>
             {ethBridgeQuoting ? 'Quoting…' : (ethBridgeOutAe || '0.0')}
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-xl border border-border">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-red-400 to-red-300 flex items-center justify-center text-white text-xs font-bold">
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 rounded-xl border border-white/10">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-red-400 to-red-300 flex items-center justify-center text-white text-xs font-bold">
               Æ
             </div>
-            <span className="text-foreground text-base font-semibold">
+            <span className="text-white text-sm sm:text-base font-semibold">
               AE
             </span>
           </div>
@@ -233,15 +231,15 @@ export default function EthBridgeWidget() {
 
       {/* Bridge Process Info */}
       {ethBridgeStep !== 'idle' && (
-        <div className="bg-white/5 border border-border rounded-2xl p-4 mb-5 backdrop-blur-sm">
+        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-5 backdrop-blur-[10px]">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-white/60">
               Bridge Status
             </span>
             <span className={`text-sm font-semibold ${
-              ethBridgeStep === 'completed' ? 'text-green-500' :
-              ethBridgeStep === 'failed' ? 'text-red-500' :
-              'text-yellow-500'
+              ethBridgeStep === 'completed' ? 'text-green-400' :
+              ethBridgeStep === 'failed' ? 'text-red-400' :
+              'text-yellow-400'
             }`}>
               {ethBridgeStep === 'connecting' ? 'Connecting to wallets' :
                 ethBridgeStep === 'bridging' ? 'Bridging ETH → æETH' :
@@ -254,7 +252,7 @@ export default function EthBridgeWidget() {
 
           {ethBridgeProcessing && (
             <div className="w-full h-1 bg-white/10 rounded overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-primary to-primary/80 rounded animate-pulse"></div>
+              <div className="h-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] rounded animate-pulse"></div>
             </div>
           )}
         </div>
@@ -262,19 +260,21 @@ export default function EthBridgeWidget() {
 
       {/* Error Display */}
       {ethBridgeError && (
-        <div className="text-red-500 text-sm py-3 px-4 bg-red-500/10 border border-red-500/20 rounded-xl mb-5 text-center">
+        <div className="text-red-400 text-sm py-3 px-3 sm:px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-4 sm:mb-5 text-center">
           {ethBridgeError}
         </div>
       )}
 
       {/* Bridge Button */}
       {activeAccount ? (
-        <AeButton
+        <button
           onClick={handleEthBridge}
           disabled={isDisabled}
-          variant={isDisabled ? 'secondary' : 'primary'}
-          size="large"
-          className="w-full"
+          className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            isDisabled
+              ? 'bg-white/10 cursor-not-allowed opacity-60'
+              : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0'
+          }`}
         >
           {ethBridgeProcessing ? (
             <div className="flex items-center justify-center gap-2">
@@ -285,15 +285,15 @@ export default function EthBridgeWidget() {
                     ethBridgeStep === 'swapping' ? 'Swapping…' : 'Processing…'}
             </div>
           ) : 'Bridge & Swap'}
-        </AeButton>
+        </button>
       ) : (
         <ConnectWalletButton
           label="Connect Wallet to Bridge"
           block
-          className="w-full"
+          className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white text-sm sm:text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(255,107,107,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
         />
       )}
 
-    </AeCard>
+    </div>
   );
 }

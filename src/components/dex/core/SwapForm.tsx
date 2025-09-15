@@ -342,6 +342,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <TokenInput
           label="From"
           token={tokenIn}
+          skipToken={tokenOut}
           amount={amountIn}
           balance={balances.in}
           onTokenChange={setTokenIn}
@@ -372,6 +373,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <TokenInput
           label="To"
           token={tokenOut}
+          skipToken={tokenIn}
           amount={quoteLoading ? 'Quoting…' : amountOut}
           balance={balances.out}
           onTokenChange={setTokenOut}

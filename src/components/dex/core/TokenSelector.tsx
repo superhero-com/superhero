@@ -8,6 +8,7 @@ import { Decimal } from '../../../libs/decimal';
 interface TokenSelectorProps {
   label?: string;
   selected?: DexTokenDto | null;
+  skipToken?: DexTokenDto | null;
   onSelect: (token: DexTokenDto) => void;
   exclude?: DexTokenDto[];
   disabled?: boolean;
@@ -20,6 +21,7 @@ interface TokenSelectorProps {
 export default function TokenSelector({
   label,
   selected,
+  skipToken,
   onSelect,
   exclude = [],
   disabled = false,
@@ -42,7 +44,8 @@ export default function TokenSelector({
         token.symbol.toLowerCase().includes(term) ||
         (token.address || '').toLowerCase().includes(term);
       const notExcluded = !excludeIds.includes(token.address);
-      return matchesSearch && notExcluded;
+      const notSkipped = !skipToken || token.address !== skipToken.address;
+      return matchesSearch && notExcluded && notSkipped;
     });
   }, [tokens, searchValue, exclude]);
 
@@ -151,47 +154,6 @@ export default function TokenSelector({
               🔍
             </div>
           </div>
-
-          {/* Popular Tokens */}
-          {!searchValue && (
-            <div className="mb-4 sm:mb-6">
-              <h4 className="text-xs sm:text-sm font-semibold text-white/60 mb-2 sm:mb-3 uppercase tracking-wide">
-                Popular tokens
-              </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-2 sm:gap-3 mb-5">
-                {tokens.slice(0, 4).map((token) => (
-                  <button
-                    key={token.address}
-                    onClick={() => handleSelect(token)}
-                    style={{
-                      padding: '12px 16px',
-                      borderRadius: 12,
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      color: 'var(--standard-font-color)',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      fontSize: 14,
-                      fontWeight: 600,
-                      textAlign: 'center'
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.background = 'var(--accent-color)';
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(78, 205, 196, 0.3)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  >
-                    {token.symbol}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Custom Token Input */}
           {searchValue && isValidAddress(searchValue) && (

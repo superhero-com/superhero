@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 interface TokenInputProps {
   label: string;
   token: DexTokenDto | null;
+  skipToken: DexTokenDto | null;
   amount: string;
   balance?: string;
   onTokenChange: (token: DexTokenDto) => void;
@@ -29,6 +30,7 @@ interface TokenInputProps {
 export default function TokenInput({
   label,
   token,
+  skipToken,
   amount,
   balance,
   onTokenChange,
@@ -126,6 +128,7 @@ export default function TokenInput({
           <div className="flex-shrink-0">
             <TokenSelector
               selected={token}
+              skipToken={skipToken}
               onSelect={onTokenChange}
               exclude={excludeTokens}
               disabled={disabled}

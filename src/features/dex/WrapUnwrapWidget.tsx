@@ -1,14 +1,13 @@
-import waeACI from 'dex-contracts-v2/build/WAE.aci.json';
 import React, { useEffect, useState } from 'react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import ConnectWalletButton from '../../components/ConnectWalletButton';
+import { useSwapExecution } from '../../components/dex/hooks/useSwapExecution';
 import { useTokenBalances } from '../../components/dex/hooks/useTokenBalances';
-import { useAccount, useAeSdk, useRecentActivities } from '../../hooks';
+import { useAccount, useAeSdk } from '../../hooks';
 import { Decimal } from '../../libs/decimal';
 import { DEX_ADDRESSES } from '../../libs/dex';
-import { errorToUserMessage } from '../../libs/errorMessages';
 import { cn } from '../../lib/utils';
 
 interface WrapUnwrapWidgetProps {
@@ -17,19 +16,16 @@ interface WrapUnwrapWidgetProps {
 }
 
 export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
-  const { sdk } = useAeSdk();
   const { activeAccount, loadAccountData } = useAccount();
-  const { addActivity } = useRecentActivities();
   const { wrapBalances } = useTokenBalances(null, null);
+  const { executeSwap, loading } = useSwapExecution();
 
   const [wrapAmount, setWrapAmount] = useState<string>('');
   const [unwrapAmount, setUnwrapAmount] = useState<string>('');
-  const [wrapping, setWrapping] = useState(false);
-  const [unwrapping, setUnwrapping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<'wrap' | 'unwrap'>('wrap');
 
-  const isLoading = wrapping || unwrapping;
+  const isLoading = loading;
   const currentAmount = mode === 'wrap' ? wrapAmount : unwrapAmount;
   const setCurrentAmount = mode === 'wrap' ? setWrapAmount : setUnwrapAmount;
   const currentBalance = mode === 'wrap' ? wrapBalances.ae : wrapBalances.wae;
@@ -62,79 +58,54 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
     }
   };
 
-  async function wrapAeToWae(amountAe: string) {
-    try {
-      setWrapping(true);
-      setError(null);
-      const wae = await sdk.initializeContract({
-        aci: waeACI,
-        address: DEX_ADDRESSES.wae as `ct_${string}`
-      });
-      const aettos = Decimal.from(amountAe).bigNumber;
-      const result = await wae.deposit({ amount: aettos });
-
-      // Track the wrap activity
-      if (activeAccount && result?.hash) {
-        addActivity({
-          type: 'wrap',
-          hash: result.hash,
-          account: activeAccount,
-          tokenIn: 'AE',
-          tokenOut: 'WAE',
-          amountIn: amountAe,
-          amountOut: amountAe, // 1:1 wrap ratio
-        });
-      }
-
-      setWrapAmount('');
-      void loadAccountData();
-    } catch (e: any) {
-      setError(errorToUserMessage(e, { action: 'wrap' }));
-    } finally {
-      setWrapping(false);
-    }
-  }
-
-  async function unwrapWaeToAe(amountWae: string) {
-    try {
-      setUnwrapping(true);
-      setError(null);
-      const wae = await sdk.initializeContract({
-        aci: waeACI,
-        address: DEX_ADDRESSES.wae as `ct_${string}`
-      });
-      const aettos = Decimal.from(amountWae).bigNumber;
-      const result = await wae.withdraw(aettos, null);
-
-      // Track the unwrap activity
-      if (activeAccount && result?.hash) {
-        addActivity({
-          type: 'unwrap',
-          hash: result.hash,
-          account: activeAccount,
-          tokenIn: 'WAE',
-          tokenOut: 'AE',
-          amountIn: amountWae,
-          amountOut: amountWae, // 1:1 unwrap ratio
-        });
-      }
-
-      setUnwrapAmount('');
-      void loadAccountData();
-    } catch (e: any) {
-      setError(errorToUserMessage(e, { action: 'unwrap' }));
-    } finally {
-      setUnwrapping(false);
-    }
-  }
-
   const handleExecute = async () => {
     if (!currentAmount || Number(currentAmount) <= 0) return;
 
-    if (mode === 'wrap') {
-      await wrapAeToWae(currentAmount);
-    } else {
-      await unwrapWaeToAe(currentAmount);
+    try {
+      setError(null);
+
+      // Create token objects for AE and WAE
+      const aeToken = {
+        address: 'ae',
+        name: 'Aeternity',
+        symbol: 'AE',
+        decimals: 18,
+        pairs_count: 0,
+        created_at: new Date().toISOString(),
+        is_ae: true
+      };
+
+      const waeToken = {
+        address: DEX_ADDRESSES.wae,
+        name: 'Wrapped AE',
+        symbol: 'WAE',
+        decimals: 18,
+        pairs_count: 0,
+        created_at: new Date().toISOString(),
+        is_ae: false
+      };
+
+      // Determine tokenIn and tokenOut based on mode
+      const tokenIn = mode === 'wrap' ? aeToken : waeToken;
+      const tokenOut = mode === 'wrap' ? waeToken : aeToken;
+
+      // Execute the swap (which will use wrap/unwrap internally)
+      await executeSwap({
+        tokenIn,
+        tokenOut,
+        amountIn: currentAmount,
+        amountOut: currentAmount, // 1:1 ratio
+        path: [], // Will be handled by executeSwap
+        slippagePct: 0.5, // Minimal slippage for wrap/unwrap
+        deadlineMins: 20,
+        isExactIn: true
+      });
+
+      // Clear the input and reload account data on success
+      setCurrentAmount('');
+      void loadAccountData();
+    } catch (e: any) {
+      setError(e.message || `Failed to ${mode} tokens`);
     }
   };
 

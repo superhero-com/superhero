@@ -19,7 +19,18 @@ export function useSwapQuote() {
   const quoteSeqRef = useRef(0);
   const quoteTimerRef = useRef<number | null>(null);
 
+  function isAeToWae(tokenIn: any, tokenOut: any): boolean {
+    const isAetoWae = tokenIn.address == 'ae' && tokenOut.address == DEX_ADDRESSES.wae;
+    const isWaeToAe = tokenIn.address == DEX_ADDRESSES.wae && tokenOut.address == 'ae';
+    return isAetoWae || isWaeToAe;
+  }
   async function buildBestPath(tokenIn: any, tokenOut: any): Promise<string[] | null> {
+    console.log('[dex] Building best path', {
+      tokenIn,
+      tokenOut
+    });
+
+    if (isAeToWae(tokenIn, tokenOut)) return [DEX_ADDRESSES.wae];
     try {
       if (!tokenIn || !tokenOut) return null;
 
@@ -94,6 +105,9 @@ export function useSwapQuote() {
   }
 
   async function refreshQuote(params: SwapQuoteParams, onQuoteResult?: (result: { amountOut?: string; amountIn?: string; path: string[]; priceImpact?: number }) => void): Promise<{ amountOut?: string; amountIn?: string; path: string[]; priceImpact?: number }> {
+    console.log('[dex] Refresh quote', {
+      params
+    });
     setError(null);
     const drivingAmount = params.isExactIn ? params.amountIn : params.amountOut;
     if (!drivingAmount || Number(drivingAmount) <= 0 || !params.tokenIn || !params.tokenOut) {
@@ -104,6 +118,29 @@ export function useSwapQuote() {
     setQuoteLoading(true);
 
     try {
+      // Handle AE to WAE conversion with 1:1 ratio
+      if (isAeToWae(params.tokenIn, params.tokenOut)) {
+        const path = [params.tokenIn.address === 'ae' ? 'ae' : DEX_ADDRESSES.wae, params.tokenOut.address === 'ae' ? 'ae' : DEX_ADDRESSES.wae];
+        let amountOut: string | undefined;
+        let amountIn: string | undefined;
+
+        if (params.isExactIn) {
+          amountOut = params.amountIn; // 1:1 ratio
+        } else {
+          amountIn = params.amountOut; // 1:1 ratio
+        }
+
+        const result = { amountOut, amountIn, path, priceImpact: 0 };
+        
+        if (seq === quoteSeqRef.current) {
+          setRouteInfo({ path, priceImpact: 0 });
+          onQuoteResult?.(result);
+          setQuoteLoading(false);
+        }
+
+        return result;
+      }
+
       // eslint-disable-next-line no-console
       console.info('[dex] Quoting amount out…', {
         amountIn: params.amountIn,

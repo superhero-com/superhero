@@ -1,8 +1,11 @@
+import waeACI from 'dex-contracts-v2/build/WAE.aci.json';
 import React, { useState } from 'react';
 import { CONFIG } from '../../../config';
 import { useAeSdk, useRecentActivities } from '../../../hooks';
+import { Decimal } from '../../../libs/decimal';
 import {
   addSlippage,
+  DEX_ADDRESSES,
   ensureAllowanceForRouter,
   fromAettos,
   getRouterTokenAllowance,
@@ -22,6 +25,60 @@ export function useSwapExecution() {
   const [loading, setLoading] = useState(false);
   const [allowanceInfo, setAllowanceInfo] = useState<string | null>(null);
 
+  function isAeToWae(tokenIn: any, tokenOut: any): boolean {
+    const isAetoWae = tokenIn.address == 'ae' && tokenOut.address == DEX_ADDRESSES.wae;
+    const isWaeToAe = tokenIn.address == DEX_ADDRESSES.wae && tokenOut.address == 'ae';
+    return isAetoWae || isWaeToAe;
+  }
+
+  async function wrapAeToWae(amountAe: string): Promise<string | null> {
+    const wae = await sdk.initializeContract({
+      aci: waeACI,
+      address: DEX_ADDRESSES.wae as `ct_${string}`
+    });
+    const aettos = Decimal.from(amountAe).bigNumber;
+    const result = await wae.deposit({ amount: aettos });
+
+    // Track the wrap activity
+    if (activeAccount && result?.hash) {
+      addActivity({
+        type: 'wrap',
+        hash: result.hash,
+        account: activeAccount,
+        tokenIn: 'AE',
+        tokenOut: 'WAE',
+        amountIn: amountAe,
+        amountOut: amountAe, // 1:1 wrap ratio
+      });
+    }
+
+    return result?.hash || null;
+  }
+
+  async function unwrapWaeToAe(amountWae: string): Promise<string | null> {
+    const wae = await sdk.initializeContract({
+      aci: waeACI,
+      address: DEX_ADDRESSES.wae as `ct_${string}`
+    });
+    const aettos = Decimal.from(amountWae).bigNumber;
+    const result = await wae.withdraw(aettos, null);
+
+    // Track the unwrap activity
+    if (activeAccount && result?.hash) {
+      addActivity({
+        type: 'unwrap',
+        hash: result.hash,
+        account: activeAccount,
+        tokenIn: 'WAE',
+        tokenOut: 'AE',
+        amountIn: amountWae,
+        amountOut: amountWae, // 1:1 unwrap ratio
+      });
+    }
+
+    return result?.hash || null;
+  }
+
   async function approveIfNeeded(amountAettos: bigint, tokenIn: any) {
     if (!tokenIn || tokenIn.is_ae) return; // AE does not need allowance
 
@@ -39,6 +96,7 @@ export function useSwapExecution() {
     } catch { }
   }
 
+  //
   async function executeSwap(params: SwapExecutionParams): Promise<string | null> {
     console.log('[dex] executeSwap->params::', params);
 
@@ -49,7 +107,7 @@ export function useSwapExecution() {
       if (!sdk) {
         throw new Error('SDK not initialized. Please connect your wallet and try again.');
       }
-      
+
       if (!activeAccount) {
         throw new Error('No active account. Please connect your wallet and try again.');
       }
@@ -68,6 +126,39 @@ export function useSwapExecution() {
 
       if (params.tokenIn.address === params.tokenOut.address) {
         throw new Error('Cannot swap the same token. Please select different tokens.');
+      }
+
+      // Handle AE to WAE or WAE to AE conversion directly
+      if (isAeToWae(params.tokenIn, params.tokenOut)) {
+        let txHash: string | null = null;
+
+        if (params.tokenIn.address === 'ae' && params.tokenOut.address === DEX_ADDRESSES.wae) {
+          // AE -> WAE (wrap)
+          txHash = await wrapAeToWae(params.amountIn);
+        } else if (params.tokenIn.address === DEX_ADDRESSES.wae && params.tokenOut.address === 'ae') {
+          // WAE -> AE (unwrap)
+          txHash = await unwrapWaeToAe(params.amountIn);
+        }
+
+        if (txHash) {
+          try {
+            const url = CONFIG.EXPLORER_URL ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${txHash}` : '';
+            const actionName = params.tokenIn.address === 'ae' ? 'Wrap' : 'Unwrap';
+            toast.push(
+              React.createElement('div', {},
+                React.createElement('div', {}, `${actionName} submitted`),
+                CONFIG.EXPLORER_URL && React.createElement('a', {
+                  href: url,
+                  target: '_blank',
+                  rel: 'noreferrer',
+                  style: { color: '#8bc9ff', textDecoration: 'underline' }
+                }, 'View on explorer')
+              )
+            );
+          } catch { }
+        }
+
+        return txHash;
       }
 
       const { router } = await initDexContracts(sdk);
@@ -276,7 +367,7 @@ export function useSwapExecution() {
           isExactIn: params.isExactIn
         }
       });
-      
+
       const errorMsg = errorToUserMessage(e, {
         action: 'swap',
         slippagePct: params.slippagePct,

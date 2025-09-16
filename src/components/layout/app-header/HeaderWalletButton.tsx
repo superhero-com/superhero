@@ -9,6 +9,7 @@ import AddressAvatar from '../../../components/AddressAvatar';
 import { AeButton } from '@/components/ui/ae-button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/ae-dropdown-menu';
 import { cn } from '@/lib/utils';
+import { AddressFormatted } from '@/components/AddressFormatted';
 
 export default function HeaderWalletButton() {
   const { activeAccount } = useAeSdk();
@@ -59,8 +60,15 @@ export default function HeaderWalletButton() {
               <Identicon address={activeAccount} size={32} name={chainName} />
             </div>
             <div className="flex flex-col items-start text-left">
-              <div className="text-sm font-semibold text-foreground">
-                {chainName ?? formatAddress(activeAccount)}
+              <div className="text-sm text-foreground max-w-[150px]">
+                {
+                  chainName ? (
+                    <AddressFormatted address={chainName} truncate/>
+                  ) : (
+                    <AddressFormatted address={activeAccount} />
+                  )
+                }
+                
               </div>
               <div className="text-xs text-muted-foreground">
                 {decimalBalance.prettify()} AE

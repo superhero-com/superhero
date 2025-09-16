@@ -1,9 +1,13 @@
-import { memo } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Identicon from '@/components/Identicon';
 import AddressAvatar from '@/components/AddressAvatar';
 import AddressFormatted from '@/components/AddressFormatted';
+import { AeCard, AeCardContent } from '@/components/ui/ae-card';
 import { useChainName } from '@/hooks/useChainName';
+import { useAccountBalances } from '@/hooks/useAccountBalances';
 import { cn } from '@/lib/utils';
+import { Decimal } from '@/libs/decimal';
 
 interface AddressAvatarWithChainNameProps {
     address: string;
@@ -12,6 +16,7 @@ interface AddressAvatarWithChainNameProps {
     showAddress?: boolean;
     truncateAddress?: boolean;
     className?: string;
+    isHoverEnabled?: boolean;
 }
 
 export const AddressAvatarWithChainName = memo(({
@@ -20,12 +25,46 @@ export const AddressAvatarWithChainName = memo(({
     overlaySize = 18,
     showAddress = true,
     truncateAddress = true,
-    className
+    className,
+    isHoverEnabled = true
 }: AddressAvatarWithChainNameProps) => {
+    const navigate = useNavigate();
     const { chainName } = useChainName(address);
+    const { decimalBalance, aex9Balances } = useAccountBalances(address);
 
-    return (
-        <div className={cn("flex items-center gap-3", className)}>
+    // Hover state management (same as UserBadge)
+    const [hover, setHover] = useState(false);
+    const [visible, setVisible] = useState(false);
+    const ref = useRef<HTMLDivElement | null>(null);
+    const cardRef = useRef<HTMLDivElement | null>(null);
+
+    // Show card after 300ms delay when hovering
+    useEffect(() => {
+        if (!hover || !isHoverEnabled) { setVisible(false); return; }
+        const id = window.setTimeout(() => setVisible(true), 300);
+        return () => window.clearTimeout(id);
+    }, [hover]);
+
+    // Handle click outside to close card
+    useEffect(() => {
+        function handleDocClick(e: MouseEvent) {
+            if (!cardRef.current) return;
+            if (cardRef.current.contains(e.target as Node)) return;
+            if (ref.current && ref.current.contains(e.target as Node)) return;
+            setVisible(false);
+        }
+        if (visible) document.addEventListener('click', handleDocClick);
+        return () => document.removeEventListener('click', handleDocClick);
+    }, [visible]);
+
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigate(`/users/${address}`);
+    };
+
+    const renderContent = () => (
+        <>
             {/* Avatar Section - Based on PostAvatar logic */}
             <div className="relative flex-shrink-0">
                 <div className="relative">
@@ -66,7 +105,82 @@ export const AddressAvatarWithChainName = memo(({
                     </span>
                 </div>
             )}
-        </div>
+        </>
+    )
+
+    return (
+        <span className="relative inline-flex items-center">
+            <div
+                ref={ref}
+                className={cn("flex items-center gap-3 cursor-pointer transition-colors hover:text-foreground", className)}
+                onMouseEnter={() => setHover(true)}
+                onMouseLeave={() => setHover(false)}
+                onClick={handleClick}
+            >
+                {renderContent()}
+            </div>
+
+            {/* Hover Card - Lazy loaded only when visible */}
+            {visible && (
+                <AeCard
+                    ref={cardRef}
+                    variant="glow"
+                    className="absolute top-0 left-0 z-50 min-w-[280px] max-w-[420px] shadow-card"
+                    onMouseEnter={() => setHover(true)}
+                    onMouseLeave={() => setHover(false)}
+                >
+                    <AeCardContent className="p-3">
+                        <div>
+                            <div className="flex gap-3 mb-3 align-center items-center">
+                                {renderContent()}
+
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                {/* AE Balance */}
+                                <div className="text-xs text-muted-foreground mb-2">
+                                    <span className="font-semibold">AE Balance: </span>
+                                    <span className="font-mono">{decimalBalance ? `${decimalBalance} AE` : 'Loading...'}</span>
+                                </div>
+
+                                {/* Top 3 Token Holdings */}
+                                {aex9Balances.length > 0 && (
+                                    <div className="text-xs text-muted-foreground">
+                                        <div className="font-semibold mb-1">Tokens Holdings:</div>
+                                        {aex9Balances
+                                            .sort((a, b) => {
+                                                // Calculate decimal values for comparison using Decimal library
+                                                const balanceA = a.amount && a.decimals
+                                                    ? Decimal.from(a.amount).div(10 ** a.decimals)
+                                                    : Decimal.from(0);
+                                                const balanceB = b.amount && b.decimals
+                                                    ? Decimal.from(b.amount).div(10 ** b.decimals)
+                                                    : Decimal.from(0);
+                                                // Sort descending (highest first)
+                                                return balanceB.gt(balanceA) ? 1 : balanceB.lt(balanceA) ? -1 : 0;
+                                            })
+                                            .slice(0, 3)
+                                            .map((token, index) => {
+                                                const balance = Decimal.from(token.amount).div(10 ** token.decimals).prettify();
+                                                return (
+                                                    <div key={token.contract_id || index} className="flex justify-between items-center py-0.5">
+                                                        <span className="font-medium">{token.symbol || token.token_symbol || token.token_name || 'Unknown'}</span>
+                                                        <span className="font-mono text-xs">{balance}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        {aex9Balances.length > 3 && (
+                                            <div className="text-xs text-muted-foreground/60 mt-1">
+                                                + {aex9Balances.length - 3} more...
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </AeCardContent>
+                </AeCard>
+            )}
+        </span>
     );
 }, (prevProps, nextProps) => {
     // Custom comparison for better performance

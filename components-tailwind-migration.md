@@ -95,7 +95,6 @@
 ### Social Components
 - ✅ `features/social/components/PostContent.tsx` - Migrated with responsive media grids
 - ✅ `features/social/components/FeedItem.tsx` - Migrated to AeCard with glassmorphism
-- ✅ `features/social/components/PostAvatar.tsx` - Migrated with overlay positioning
 - ✅ `features/social/components/CreatePost.tsx` - Migrated with glassmorphism design, responsive layout, and modern form styling
 - ✅ `features/social/components/SortControls.tsx` - Migrated to modern pill-style buttons
 - ✅ `features/social/components/PostCommentsList.tsx` - Migrated with loading/error states

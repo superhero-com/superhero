@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import Identicon from '@/components/Identicon';
 import AddressAvatar from '@/components/AddressAvatar';
@@ -13,7 +14,8 @@ interface AddressAvatarWithChainNameProps {
     address: string;
     size?: number;
     overlaySize?: number;
-    showAddress?: boolean;
+    showAddressAndChainName?: boolean;
+    showBalance?: boolean;
     truncateAddress?: boolean;
     className?: string;
     isHoverEnabled?: boolean;
@@ -23,7 +25,8 @@ export const AddressAvatarWithChainName = memo(({
     address,
     size = 36,
     overlaySize = 18,
-    showAddress = true,
+    showAddressAndChainName = true,
+    showBalance = false,
     truncateAddress = true,
     className,
     isHoverEnabled = true
@@ -35,15 +38,31 @@ export const AddressAvatarWithChainName = memo(({
     // Hover state management (same as UserBadge)
     const [hover, setHover] = useState(false);
     const [visible, setVisible] = useState(false);
+    const [position, setPosition] = useState({ top: 0, left: 0 });
     const ref = useRef<HTMLDivElement | null>(null);
     const cardRef = useRef<HTMLDivElement | null>(null);
 
+    // Calculate position for hover card
+    const updatePosition = () => {
+        if (ref.current) {
+            const rect = ref.current.getBoundingClientRect();
+            setPosition({
+                top: rect.bottom + window.scrollY + 8,
+                left: rect.left + window.scrollX,
+            });
+        }
+    };
+
     // Show card after 300ms delay when hovering
     useEffect(() => {
-        if (!hover || !isHoverEnabled) { setVisible(false); return; }
+        if (!hover || !isHoverEnabled) {
+            setVisible(false);
+            return;
+        }
+        updatePosition();
         const id = window.setTimeout(() => setVisible(true), 300);
         return () => window.clearTimeout(id);
-    }, [hover]);
+    }, [hover, isHoverEnabled]);
 
     // Handle click outside to close card
     useEffect(() => {
@@ -65,7 +84,6 @@ export const AddressAvatarWithChainName = memo(({
 
     const renderContent = () => (
         <>
-            {/* Avatar Section - Based on PostAvatar logic */}
             <div className="relative flex-shrink-0">
                 <div className="relative">
                     {chainName ? (
@@ -88,28 +106,40 @@ export const AddressAvatarWithChainName = memo(({
                 </div>
             </div>
 
-            {/* Address/ChainName Text Section - Styled like UserBadge */}
-            {showAddress && (
-                <div className="flex flex-col items-start min-w-0">
-                    <span className="chain-name text-sm font-bold bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-                        <AddressFormatted
-                            address={chainName ?? 'Fellow superhero'}
-                            truncate={truncateAddress}
-                            truncateFixed={false}
-                        />
-                    </span>
-                    <span className="address text-xs font-mono tracking-wide underline decoration-muted-foreground/20 decoration-1 underline-offset-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px] min-w-0 flex-shrink bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-                        <AddressFormatted
-                            address={address}
-                        />
-                    </span>
+            <div className="flex flex-col items-start min-w-0">
+                {
+                    ((!chainName && showAddressAndChainName) || chainName) && (
+                        <span className="chain-name text-sm font-bold bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+                            <AddressFormatted
+                                address={chainName ?? 'Fellow superhero'}
+                                truncate={truncateAddress}
+                                truncateFixed={false}
+                            />
+                        </span>
+                    )
+                }
+                {
+                    (!chainName || showAddressAndChainName) && (
+                        <span className="address text-xs font-mono tracking-wide underline decoration-muted-foreground/20 decoration-1 underline-offset-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px] min-w-0 flex-shrink bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+                            <AddressFormatted
+                                address={address}
+                            />
+                        </span>
+                    )
+                }
+                <div>
+                    {showBalance && (
+                        <div className="text-md text-muted-foreground">
+                            {decimalBalance.shorten()} AE
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
         </>
     )
 
     return (
-        <span className="relative inline-flex items-center">
+        <span className="relative inline-flex items-center" style={{ zIndex: 'auto' }}>
             <div
                 ref={ref}
                 className={cn("flex items-center gap-3 cursor-pointer transition-colors hover:text-foreground", className)}
@@ -120,12 +150,18 @@ export const AddressAvatarWithChainName = memo(({
                 {renderContent()}
             </div>
 
-            {/* Hover Card - Lazy loaded only when visible */}
-            {visible && (
+            {/* Hover Card - Rendered as portal to avoid clipping */}
+            {visible && createPortal(
                 <AeCard
                     ref={cardRef}
                     variant="glow"
-                    className="absolute top-0 left-0 z-50 min-w-[280px] max-w-[420px] shadow-card"
+                    className="min-w-[300px] max-w-[420px] shadow-card"
+                    style={{
+                        position: 'absolute',
+                        top: position.top,
+                        left: position.left,
+                        zIndex: 9999,
+                    }}
                     onMouseEnter={() => setHover(true)}
                     onMouseLeave={() => setHover(false)}
                 >
@@ -163,7 +199,7 @@ export const AddressAvatarWithChainName = memo(({
                                                 const balance = Decimal.from(token.amount).div(10 ** token.decimals).prettify();
                                                 return (
                                                     <div key={token.contract_id || index} className="flex justify-between items-center py-0.5">
-                                                        <span className="font-medium">{token.symbol || token.token_symbol || token.token_name || 'Unknown'}</span>
+                                                        <span className="font-medium max-w-[150px] overflow-hidden text-ellipsis">{token.symbol || token.token_symbol || token.token_name || 'Unknown'}</span>
                                                         <span className="font-mono text-xs">{balance}</span>
                                                     </div>
                                                 );
@@ -178,7 +214,8 @@ export const AddressAvatarWithChainName = memo(({
                             </div>
                         </div>
                     </AeCardContent>
-                </AeCard>
+                </AeCard>,
+                document.body
             )}
         </span>
     );

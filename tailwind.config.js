@@ -118,6 +118,11 @@ export default {
           '0%': { transform: 'translateX(0)' },
           '100%': { transform: 'translateX(-50%)' },
         },
+        'truncate-scroll': {
+          '0%': { transform: 'translateX(0)' },
+          '50%': { transform: 'translateX(var(--animation-translate))' },
+          '100%': { transform: 'translateX(0)' },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -126,6 +131,7 @@ export default {
         'floating': 'floating 3s ease-in-out infinite',
         shimmer: 'shimmer 3s infinite',
         'skeleton-loading': 'skeleton-loading 1.5s infinite',
+        'truncate-scroll': 'truncate-scroll var(--animation-duration, 3s) 1.5s infinite linear',
       },
     },
   },

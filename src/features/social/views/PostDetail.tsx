@@ -1,20 +1,17 @@
-import React, { useEffect, useMemo, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
 import { useQuery } from '@tanstack/react-query';
-import { Backend } from '../../../api/backend';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { PostsService } from '../../../api/generated';
-import Shell from '../../../components/layout/Shell';
+import AeButton from '../../../components/AeButton';
 import LeftRail from '../../../components/layout/LeftRail';
 import RightRail from '../../../components/layout/RightRail';
-import UserBadge from '../../../components/UserBadge';
-import AeButton from '../../../components/AeButton';
-import { relativeTime } from '../../../utils/time';
+import Shell from '../../../components/layout/Shell';
 import { useWallet } from '../../../hooks';
-import PostAvatar from '../components/PostAvatar';
-import PostContent from '../components/PostContent';
+import { relativeTime } from '../../../utils/time';
 import CommentForm from '../components/CommentForm';
 import PostCommentsList from '../components/PostCommentsList';
-import { PostDto } from '../../../api/generated';
+import PostContent from '../components/PostContent';
 
 export default function PostDetail() {
   const { postId } = useParams();
@@ -121,18 +118,15 @@ export default function PostDetail() {
     return (
       <header className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          {authorAddress && (
-            <div className="flex items-center gap-4">
-              <PostAvatar authorAddress={authorAddress} chainName={chainName} size={40} overlaySize={22} />
-              <UserBadge
+          {
+            authorAddress && (
+              <AddressAvatarWithChainName
                 address={authorAddress}
-                showAvatar={false}
-                chainName={chainName}
-                linkTo="profile"
-                shortAddress
+                size={48}
+                overlaySize={24}
               />
-            </div>
-          )}
+            )
+          }
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {displayPost?.timestamp && (

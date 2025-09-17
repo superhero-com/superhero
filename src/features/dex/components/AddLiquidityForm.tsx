@@ -40,6 +40,9 @@ export default function AddLiquidityForm() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [successTxHash, setSuccessTxHash] = useState<string>('');
   const [successAmounts, setSuccessAmounts] = useState<{ amountA: string; amountB: string }>({ amountA: '', amountB: '' });
+  
+  // Track which input is currently focused for auto-fill logic
+  const [focusedInput, setFocusedInput] = useState<'A' | 'B' | null>(null);
 
   // Helper function to find token by symbol or contract address
   const findToken = (identifier: string): DexTokenDto | null => {
@@ -117,6 +120,36 @@ export default function AddLiquidityForm() {
       amountB
     }));
   }, [amountA, amountB, setState]);
+
+  // Bidirectional auto-fill based on pool ratio
+  useEffect(() => {
+    if (!state.pairPreview || !state.pairPreview.ratioAinB || !focusedInput) return;
+
+    const ratioAinB = parseFloat(state.pairPreview.ratioAinB);
+    if (isNaN(ratioAinB) || ratioAinB <= 0) return;
+
+    if (focusedInput === 'A' && amountA !== undefined && amountA !== null) {
+      // User is typing in Token A, auto-fill Token B based on ratio
+      const amountANum = parseFloat(amountA);
+      if (!isNaN(amountANum)) {
+        const calculatedAmountB = amountANum === 0 ? '0' : (amountANum / ratioAinB).toString();
+        // Only update if the calculated amount is different from current amountB
+        if (calculatedAmountB !== amountB) {
+          setAmountB(calculatedAmountB);
+        }
+      }
+    } else if (focusedInput === 'B' && amountB !== undefined && amountB !== null) {
+      // User is typing in Token B, auto-fill Token A based on ratio
+      const amountBNum = parseFloat(amountB);
+      if (!isNaN(amountBNum)) {
+        const calculatedAmountA = amountBNum === 0 ? '0' : (amountBNum * ratioAinB).toString();
+        // Only update if the calculated amount is different from current amountA
+        if (calculatedAmountA !== amountA) {
+          setAmountA(calculatedAmountA);
+        }
+      }
+    }
+  }, [amountA, amountB, state.pairPreview, focusedInput]);
 
   const filteredTokensA = useMemo(() => {
     const term = searchA.trim().toLowerCase();
@@ -203,6 +236,7 @@ export default function AddLiquidityForm() {
     }
   }, [amountB, balances.out]);
 
+
   const hasInsufficientBalance = hasInsufficientBalanceA || hasInsufficientBalanceB;
 
   const isAddDisabled = state.loading || !amountA || Number(amountA) <= 0 || !amountB || Number(amountB) <= 0 || !tokenA || !tokenB || !!state.error || hasInsufficientBalance;
@@ -252,6 +286,7 @@ export default function AddLiquidityForm() {
         <TokenInput
           label="Token A"
           token={tokenA}
+          skipToken={tokenB}
           amount={amountA}
           balance={balances.in}
           onTokenChange={setTokenA}
@@ -263,6 +298,8 @@ export default function AddLiquidityForm() {
           searchValue={searchA}
           onSearchChange={setSearchA}
           hasInsufficientBalance={hasInsufficientBalanceA}
+          onFocus={() => setFocusedInput('A')}
+          onBlur={() => setFocusedInput(null)}
         />
       </div>
 
@@ -278,6 +315,7 @@ export default function AddLiquidityForm() {
         <TokenInput
           label="Token B"
           token={tokenB}
+          skipToken={tokenA}
           amount={amountB}
           balance={balances.out}
           onTokenChange={setTokenB}
@@ -289,6 +327,8 @@ export default function AddLiquidityForm() {
           searchValue={searchB}
           onSearchChange={setSearchB}
           hasInsufficientBalance={hasInsufficientBalanceB}
+          onFocus={() => setFocusedInput('B')}
+          onBlur={() => setFocusedInput(null)}
         />
       </div>
 

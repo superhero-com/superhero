@@ -110,7 +110,22 @@ export function useSwapQuote() {
     });
     setError(null);
     const drivingAmount = params.isExactIn ? params.amountIn : params.amountOut;
-    if (!drivingAmount || Number(drivingAmount) <= 0 || !params.tokenIn || !params.tokenOut) {
+    
+    // If no amount or tokens, return empty result
+    if (!drivingAmount || !params.tokenIn || !params.tokenOut) {
+      return { path: [] };
+    }
+    
+    // If amount is 0, clear the output and return empty result
+    if (Number(drivingAmount) === 0) {
+      const result = { amountOut: '', amountIn: '', path: [], priceImpact: 0 };
+      setRouteInfo({ path: [], priceImpact: 0 });
+      onQuoteResult?.(result);
+      return result;
+    }
+    
+    // If amount is negative, return empty result
+    if (Number(drivingAmount) < 0) {
       return { path: [] };
     }
 

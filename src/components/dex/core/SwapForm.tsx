@@ -74,10 +74,10 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   const { loading: swapLoading, allowanceInfo, executeSwap } = useSwapExecution();
 
   const handleQuoteResult = (result: { amountOut?: string; amountIn?: string; path: string[]; priceImpact?: number }) => {
-    if (result.amountOut && isExactIn) {
+    if (result.amountOut !== undefined && isExactIn) {
       setAmountOut(result.amountOut);
     }
-    if (result.amountIn && !isExactIn) {
+    if (result.amountIn !== undefined && !isExactIn) {
       setAmountIn(result.amountIn);
     }
   };

@@ -132,8 +132,8 @@ export function useAddLiquidity() {
       const ain = state.amountA ? new BigNumber(toAettos(state.amountA, state.decA).toString()) : null;
       const bin = state.amountB ? new BigNumber(toAettos(state.amountB, state.decB).toString()) : null;
 
-      // Validate ratio for existing pools
-      if (ain && bin && !rA.isZero() && !rB.isZero()) {
+      // Validate ratio for existing pools (only if both amounts are non-zero)
+      if (ain && bin && !rA.isZero() && !rB.isZero() && !ain.isZero() && !bin.isZero()) {
         const currentRatio = rA.div(rB);
         const inputRatio = ain.div(bin);
         const ratioDifference = currentRatio.minus(inputRatio).abs().div(currentRatio).times(100);

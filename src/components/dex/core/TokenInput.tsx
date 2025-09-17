@@ -25,6 +25,8 @@ interface TokenInputProps {
   searchValue?: string;
   onSearchChange?: (value: string) => void;
   hasInsufficientBalance?: boolean;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 export default function TokenInput({
@@ -43,7 +45,9 @@ export default function TokenInput({
   placeholder = "0.0",
   searchValue = "",
   onSearchChange,
-  hasInsufficientBalance = false
+  hasInsufficientBalance = false,
+  onFocus,
+  onBlur
 }: TokenInputProps) {
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/,/g, '.');
@@ -147,6 +151,8 @@ export default function TokenInput({
               placeholder={placeholder}
               value={amount}
               onChange={handleAmountChange}
+              onFocus={onFocus}
+              onBlur={onBlur}
               readOnly={readOnly}
               disabled={disabled}
               className="flex-1 bg-transparent border-none text-right text-lg font-semibold font-mono text-foreground focus:ring-0 focus:border-none shadow-none p-0"

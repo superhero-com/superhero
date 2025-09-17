@@ -224,7 +224,6 @@ export const AddressAvatarWithChainName = memo(({
     return prevProps.address === nextProps.address &&
         prevProps.size === nextProps.size &&
         prevProps.overlaySize === nextProps.overlaySize &&
-        prevProps.showAddress === nextProps.showAddress &&
         prevProps.truncateAddress === nextProps.truncateAddress;
 });
 

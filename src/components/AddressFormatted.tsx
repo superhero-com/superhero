@@ -33,7 +33,7 @@ export function AddressFormatted({
   }, [address]);
 
   const addressChunks = useMemo(() => {
-    return address.match(/.{1,3}/g)?.map(prepareChunk) || [];
+    return address?.match(/.{1,3}/g)?.map(prepareChunk) || [];
   }, [address]);
 
   const cssVariables = useMemo(() => ({

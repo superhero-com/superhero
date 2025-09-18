@@ -1,10 +1,10 @@
-import { toAe } from '@aeternity/aepp-sdk';
+import { TokenChip } from '@/components/TokenChip';
 import { useEffect, useState } from 'react';
-import AddressChip from '../../../components/AddressChip';
 import ConnectWalletButton from '../../../components/ConnectWalletButton';
 import { useTokenList } from '../../../components/dex/hooks/useTokenList';
 import { useAccount, useDex } from '../../../hooks';
 import { Decimal } from '../../../libs/decimal';
+import { fromAettos } from '../../../libs/dex';
 import { usePool } from '../context/PoolProvider';
 import { useAddLiquidity } from '../hooks/useAddLiquidity';
 
@@ -71,7 +71,18 @@ export default function RemoveLiquidityForm() {
     
     setLoading(true);
     try {
-      const liquidityToRemove = useCustomAmount ? customAmount : removeAmount.toString();
+      const liquidityToRemove = removeAmountForTransaction;
+      
+      // Debug logging to understand the balance conversion
+      console.log('=== REMOVE LIQUIDITY DEBUG ===');
+      console.log('selectedPosition.balance (raw):', selectedPosition.balance);
+      console.log('lpAmount (converted):', lpAmount.toString());
+      console.log('lpAmount (max precision):', lpAmount.toStringWithoutPrecision());
+      console.log('percentage:', percentage);
+      console.log('useCustomAmount:', useCustomAmount);
+      console.log('removeAmount:', removeAmount.toString());
+      console.log('removeAmountForTransaction:', removeAmountForTransaction);
+      console.log('=====================================');
       
       // Determine if this is an AE pair
       const isAePair = selectedPosition.token0 === 'AE' || selectedPosition.token1 === 'AE';
@@ -83,7 +94,9 @@ export default function RemoveLiquidityForm() {
         liquidity: liquidityToRemove,
         slippagePct,
         deadlineMins,
-        isAePair
+        isAePair,
+        isFullRemoval: percentage === 100 && !useCustomAmount,
+        rawBalance: percentage === 100 && !useCustomAmount ? selectedPosition.balance : undefined
       });
       
       if (txHash) {
@@ -100,12 +113,22 @@ export default function RemoveLiquidityForm() {
     }
   };
 
-  const lpAmount = selectedPosition.balance ? Decimal.from(toAe(selectedPosition.balance)) : Decimal.from('0');
+  // selectedPosition.balance is already in correct LP token format (string of bigint aettos)
+  // LP tokens have 18 decimals, so we need to convert from aettos to decimal representation
+  const lpAmount = selectedPosition.balance ? Decimal.from(fromAettos(selectedPosition.balance, 18)) : Decimal.from('0');
   const removeAmount = useCustomAmount 
     ? Decimal.from(customAmount || '0')
     : percentage === 100 
       ? lpAmount  // Use exact balance for 100% to avoid precision loss
       : lpAmount.mul(percentage).div(100);
+  
+  // For 100% removal, bypass conversion completely by using the raw balance
+  const removeAmountForTransaction = useCustomAmount 
+    ? customAmount 
+    : percentage === 100 
+      ? fromAettos(selectedPosition.balance, 18)  // Convert raw balance directly to avoid any precision loss
+      // ? selectedPosition.balance
+      : removeAmount.toString();
   
   const estimatedValueUsd = selectedPosition.valueUsd 
     ? Decimal.from(selectedPosition.valueUsd).mul(useCustomAmount 
@@ -150,9 +173,11 @@ export default function RemoveLiquidityForm() {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <AddressChip address={selectedPosition.token0} hideAvatar />
+            <TokenChip address={selectedPosition.token0} />
+              {/* <AddressChip address={selectedPosition.token0} hideAvatar /> */}
               <span className="text-white/60 text-xs">+</span>
-              <AddressChip address={selectedPosition.token1} hideAvatar />
+              <TokenChip address={selectedPosition.token1} />
+              {/* <AddressChip address={selectedPosition.token1} hideAvatar /> */}
             </div>
           </div>
 
@@ -162,7 +187,9 @@ export default function RemoveLiquidityForm() {
                 LP Tokens to Remove
               </div>
               <div className="text-base font-semibold text-white">
-                {removeAmount.prettify()}
+                {percentage === 100 && !useCustomAmount 
+                  ? lpAmount.prettifyWithMaxPrecision() 
+                  : removeAmount.prettify()}
               </div>
             </div>
             <div>
@@ -246,14 +273,14 @@ export default function RemoveLiquidityForm() {
 
       {/* Selected Position Info */}
       <div className="p-4 bg-white/[0.05] rounded-2xl border border-white/10 mb-6 backdrop-blur-[10px]">
-        <div className="flex justify-between items-center mb-3">
+        <div className="flex flex-row flex-wrap justify-between items-center mb-3">
           <span className="text-sm text-white/60">
             Position
           </span>
           <div className="flex items-center gap-2">
-            <AddressChip address={selectedPosition.token0} hideAvatar />
+            <TokenChip address={selectedPosition.token0} />
             <span className="text-white/60 text-xs">+</span>
-            <AddressChip address={selectedPosition.token1} hideAvatar />
+            <TokenChip address={selectedPosition.token1} />
           </div>
         </div>
         
@@ -390,7 +417,9 @@ export default function RemoveLiquidityForm() {
               LP Tokens to Remove
             </div>
             <div className="text-base font-semibold text-white">
-              {removeAmount.prettify()}
+              {percentage === 100 && !useCustomAmount 
+                ? lpAmount.prettifyWithMaxPrecision() 
+                : removeAmount.prettify(12)}
             </div>
           </div>
           <div>

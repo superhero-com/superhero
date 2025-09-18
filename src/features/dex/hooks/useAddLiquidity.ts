@@ -392,7 +392,7 @@ export function useAddLiquidity() {
   }
 
   // Remove liquidity function
-  async function executeRemoveLiquidity(params: RemoveLiquidityExecutionParams): Promise<string> {
+  async function executeRemoveLiquidity(params: RemoveLiquidityExecutionParams & { isFullRemoval?: boolean; rawBalance?: string }): Promise<string> {
     if (!address) {
       throw new Error('Wallet not connected');
     }
@@ -408,11 +408,17 @@ export function useAddLiquidity() {
       const { router, factory } = await initDexContracts(sdk);
       
       // Convert liquidity amount to bigint
-      const liquidityAmount = toAettos(params.liquidity, 18); // LP tokens are 18 decimals
+      // For full removal, use raw balance to avoid precision loss
+      const liquidityAmount = params.isFullRemoval && params.rawBalance 
+        ? BigInt(params.rawBalance)
+        : toAettos(params.liquidity, 18); // LP tokens are 18 decimals
+        // :params.liquidity;
       
       console.log('========================')
       console.log('executeRemoveLiquidity->router::', router)
       console.log('executeRemoveLiquidity->params::', params)
+      console.log('executeRemoveLiquidity->isFullRemoval::', params.isFullRemoval)
+      console.log('executeRemoveLiquidity->rawBalance::', params.rawBalance)
       console.log('executeRemoveLiquidity->liquidityAmount::', liquidityAmount.toString())
       console.log('executeRemoveLiquidity->currentTime::', Date.now())
       console.log('executeRemoveLiquidity->deadline::', Date.now() + params.deadlineMins * 60 * 1000)
@@ -529,20 +535,20 @@ export function useAddLiquidity() {
         await ensurePairAllowanceForRouter(sdk, pairInfo.pairAddress, address, liquidityAmount);
         console.log('LP token allowance ensured.');
         
-        console.log('remove_liquidity params::', {
-          tokenA: params.tokenA,
-          tokenB: params.tokenB,
-          liquidity: liquidityAmount.toString(),
-          minAmountA: minAmountA.toString(),
-          minAmountB: minAmountB.toString(),
-          address,
-          deadline: BigInt(Date.now() + params.deadlineMins * 60 * 1000).toString(),
-          expectedAmountA: expectedAmountA.toString(),
-          expectedAmountB: expectedAmountB.toString(),
-          totalSupply: totalSupply.toString(),
-          reserveA: reserveA.toString(),
-          reserveB: reserveB.toString()
-        });
+        // console.log('remove_liquidity params::', {
+        //   tokenA: params.tokenA,
+        //   tokenB: params.tokenB,
+        //   liquidity: liquidityAmount.toString(), //
+        //   minAmountA: minAmountA.toString(),
+        //   minAmountB: minAmountB.toString(),
+        //   address,
+        //   deadline: BigInt(Date.now() + params.deadlineMins * 60 * 1000).toString(),
+        //   expectedAmountA: expectedAmountA.toString(),
+        //   expectedAmountB: expectedAmountB.toString(),
+        //   totalSupply: totalSupply.toString(),
+        //   reserveA: reserveA.toString(),
+        //   reserveB: reserveB.toString()
+        // });
         
         const res = await router.remove_liquidity(
           params.tokenA,

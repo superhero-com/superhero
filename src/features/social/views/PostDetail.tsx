@@ -152,10 +152,22 @@ export default function PostDetail() {
         {error && renderErrorState()}
 
         {post && (
-          <article className="grid gap-4">
+          <article className="grid">
             {renderPostHeader(post)}
 
-            <PostContent post={post} />
+            <div className="border-l border-white ml-[23px] pl-[37px]">
+              <PostContent post={post} />
+            </div>
+
+
+
+            {/* Comments section */}
+            {postData && postData.total_comments > 0 && (
+              <PostCommentsList
+                id={postId!}
+                onCommentAdded={handleCommentAdded}
+              />
+            )}
 
             {/* Comment form */}
             {postId && (
@@ -166,14 +178,6 @@ export default function PostDetail() {
                   placeholder="Share your thoughts..."
                 />
               </div>
-            )}
-
-            {/* Comments section */}
-            {postData && postData.total_comments > 0 && (
-              <PostCommentsList
-                id={postId!}
-                onCommentAdded={handleCommentAdded}
-              />
             )}
           </article>
         )}

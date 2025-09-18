@@ -41,12 +41,16 @@ export default function Shell({ left, right, children }: ShellProps) {
 
           {hasRight && (
             <aside className="hidden lg:block sticky top-0 self-start min-w-0">
-              {right}
+              <div className="min-h-screen flex flex-col">
+                <div className="min-w-0">
+                  {right}
+                </div>
+                <FooterSection />
+              </div>
             </aside>
           )}
         </div>
       </div>
-      <FooterSection />
     </>
   );
 }

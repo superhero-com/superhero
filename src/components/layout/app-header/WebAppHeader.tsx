@@ -42,7 +42,8 @@ export default function WebAppHeader() {
       borderBottomColor: 'rgba(255, 255, 255, 0.1)'
     }}>
       <div className="flex items-center gap-6 px-6 h-16 max-w-[min(1536px,100%)] mx-auto md:px-5 md:gap-5">
-        <Link to="/" className="flex items-center no-underline" style={{ color: 'var(--standard-font-color)' }} aria-label="Superhero Home">
+        {/* Hide header logo on large screens; keep for small where left nav is hidden */}
+        <Link to="/" className="flex items-center no-underline lg:hidden" style={{ color: 'var(--standard-font-color)' }} aria-label="Superhero Home">
           <HeaderLogo className="h-8 w-auto" />
         </Link>
 

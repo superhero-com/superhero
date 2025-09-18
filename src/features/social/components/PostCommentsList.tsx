@@ -73,15 +73,9 @@ export default function PostCommentsList({ id, onCommentAdded }: PostCommentsLis
   }
 
   return (
-    <div className="mt-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-foreground">
-          Comments ({comments.length})
-        </h3>
-      </div>
-      
+    <div className="space-y-6">
       {comments.length === 0 ? (
-        <AeCard variant="glass">
+        <AeCard >
           <AeCardContent className="p-8 text-center">
             <div className="text-2xl opacity-60 mb-2">💬</div>
             <p className="text-sm text-muted-foreground">
@@ -90,7 +84,7 @@ export default function PostCommentsList({ id, onCommentAdded }: PostCommentsLis
           </AeCardContent>
         </AeCard>
       ) : (
-        <div className="space-y-4">
+        <div>
           {comments.map((comment) => (
             <CommentItem
               key={comment.id}

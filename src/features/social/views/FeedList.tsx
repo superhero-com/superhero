@@ -157,8 +157,8 @@ export default function FeedList() {
   }, [filteredAndSortedList, chainNames, handleItemClick]);
 
   return (
-    <Shell right={<RightRail hideTrends />}>
-      <div className="max-w-[880px] mx-auto">
+    <Shell>
+      <div className="w-full">
         {/* Mobile: SortControls first and sticky */}
         <div className="md:hidden">
           <SortControls
@@ -175,7 +175,7 @@ export default function FeedList() {
           <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
         </div>
 
-        <div className="py-2 max-w-[880px] mx-auto pt-2 md:pt-4 px-2 sm:px-3 md:px-0 gap-4 flex flex-col">
+        <div className="py-2 w-full pt-2 md:pt-4 px-2 sm:px-3 md:px-4 gap-4 flex flex-col">
           {renderEmptyState()}
           {renderFeedItems}
         </div>

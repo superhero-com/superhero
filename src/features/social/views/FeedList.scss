@@ -209,8 +209,9 @@
 }
 
 .feed {
-  max-width: 680px;
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
+  margin: 0;
   padding: 0.5rem 0;
   
   // Performance optimization: use contain for better rendering

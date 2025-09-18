@@ -4,8 +4,9 @@
 @keyframes confetti-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 .create-post-container {
-  max-width: 680px;
-  margin: 0 auto 1.25rem auto;
+  max-width: none;
+  width: 100%;
+  margin: 0 0 1.25rem 0;
   @include mobile { 
     margin: 0 0.75rem 1rem 0.75rem;
     // Add top margin to account for fixed SortControls on mobile

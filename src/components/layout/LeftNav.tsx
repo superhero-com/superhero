@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { HeaderLogo } from '../../icons';
 import { navigationItems } from './app-header/navigationItems';
 
 export default function LeftNav() {
@@ -8,8 +9,8 @@ export default function LeftNav() {
 
   return (
   <nav className="grid gap-2 pr-2">
-      <Link to="/" className="no-underline px-3 py-2 rounded-xl text-[var(--standard-font-color)] hover:bg-white/10 transition-colors w-fit">
-        <span className="text-xl align-middle">🦸</span>
+      <Link to="/" className="no-underline px-3 py-2 rounded-xl text-[var(--standard-font-color)] hover:bg-white/10 transition-colors w-fit" aria-label="Superhero Home">
+        <HeaderLogo className="h-8 w-auto" />
       </Link>
       <div className="grid gap-1">
         {navigationItems.map((item) => {

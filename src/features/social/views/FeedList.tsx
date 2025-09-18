@@ -157,7 +157,7 @@ export default function FeedList() {
   }, [filteredAndSortedList, chainNames, handleItemClick]);
 
   return (
-    <Shell>
+    <Shell right={<RightRail hideTrends /> }>
       <div className="w-full">
         {/* Mobile: SortControls first and sticky */}
         <div className="md:hidden">

@@ -9,7 +9,7 @@ export default function LeftNav() {
   const isActive = (path: string) => (path === '/' ? pathname === '/' : pathname.startsWith(path));
 
   return (
-  <nav className="flex flex-col gap-2 pr-2 h-[calc(100vh-4rem)]">
+  <nav className="flex flex-col gap-2 pr-2 min-h-screen">
       <Link to="/" className="no-underline px-3 py-2 rounded-xl text-[var(--standard-font-color)] hover:bg-white/10 transition-colors w-fit" aria-label="Superhero Home">
         <HeaderLogo className="h-8 w-auto" />
       </Link>

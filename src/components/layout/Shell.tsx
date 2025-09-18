@@ -40,7 +40,7 @@ export default function Shell({ left, right, children }: ShellProps) {
           </main>
 
           {hasRight && (
-            <aside className="hidden lg:block sticky top-16 self-start min-w-0">
+            <aside className="hidden lg:block sticky top-0 self-start min-w-0">
               {right}
             </aside>
           )}

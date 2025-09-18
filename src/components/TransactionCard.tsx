@@ -61,7 +61,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
     >
       <AeCardContent className="p-4">
         {/* Transaction Header */}
-        <div className="flex justify-between items-start mb-3">
+        <div className="flex flex-row flex-wrap gap-2 justify-between items-start mb-3">
           <div className="text-base font-bold text-foreground">
             {tx.type === 'SwapTokens' ? `Swap ${getTransactionTokens(tx).token0Symbol} → ${getTransactionTokens(tx).token1Symbol}` :
              tx.type === 'PairMint' ? `Add Liquidity ${getTransactionTokens(tx).token0Symbol} / ${getTransactionTokens(tx).token1Symbol}` :
@@ -77,7 +77,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
 
         {/* Swap Details */}
         {tx.type === 'SwapTokens' && (
-          <div className="grid grid-cols-3 gap-3 items-center p-3 bg-muted/20 rounded-xl border border-muted/50 mb-2">
+          <div className="grid grid-cols-3 gap-2 items-center p-3 bg-muted/20 rounded-xl border border-muted/50 mb-2">
             <div className="text-center">
               <div className="text-xs text-muted-foreground font-semibold mb-1">FROM</div>
               <div className="text-base font-bold text-destructive font-mono mb-1">
@@ -126,7 +126,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
         )}
 
         {/* Transaction Footer */}
-        <div className="flex justify-between items-center pt-2 border-t border-muted/50">
+        <div className="flex justify-between items-center pt-2 border-t border-muted/50 gap-2">
           {tx.hash && (
             <Badge 
               variant="outline"

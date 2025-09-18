@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PostsService } from '../../../api/generated';
 import AeButton from '../../../components/AeButton';
-import LeftRail from '../../../components/layout/LeftRail';
 import RightRail from '../../../components/layout/RightRail';
 import Shell from '../../../components/layout/Shell';
 import { useWallet } from '../../../hooks';
@@ -140,8 +139,8 @@ export default function PostDetail() {
   };
 
   return (
-    <Shell left={<LeftRail />} right={<RightRail />}>
-      <div className="max-w-[min(680px,100%)] mx-auto py-2 px-2 sm:px-3 md:px-4">
+    <Shell right={<RightRail />}>
+      <div className="max-w-[min(880px,100%)] mx-auto py-2 px-2 sm:px-3 md:px-4">
         <div className="mb-4">
           <AeButton onClick={() => navigate(-1)} variant="ghost" size="sm">
             ← Back

@@ -23,7 +23,7 @@ export default function Landing() {
       
       {/* Hero */}
       <section className="min-h-screen flex items-center relative bg-gradient-to-br from-[#0a0a0f] via-[#0f0f23] to-[#1a1a2e]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,107,107,0.15)_0%,transparent_50%),radial-gradient(circle_at_80%_20%,rgba(78,205,196,0.15)_0%,transparent_50%),radial-gradient(circle_at_40%_40%,rgba(69,183,209,0.1)_0%,transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,107,107,0.15)_0%,transparent_50%),radial-gradient(circle_at_80%_20%,rgba(0,255,157,0.15)_0%,transparent_50%),radial-gradient(circle_at_40%_40%,rgba(69,183,209,0.1)_0%,transparent_50%)]" />
         <div className="relative z-10 w-full">
           <div className="max-w-[1180px] mx-auto px-4 py-32">
             <h3 className="text-sm font-semibold tracking-wider uppercase mb-3 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
@@ -60,7 +60,7 @@ export default function Landing() {
             <div className="w-full md:w-1/2 px-4 mb-8 md:mb-0">
               <div className="pl-0 md:pl-40">
                 <div className="mb-8">
-                  <span className="text-teal-400 text-base font-semibold">Privacy First</span>
+                  <span className="text-[var(--neon-teal)] text-base font-semibold">Privacy First</span>
                   <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
                     Share your story — 
                   </h2>
@@ -88,7 +88,7 @@ export default function Landing() {
                   alt="Decentralized" 
                   className="max-h-16 max-w-16 mb-8 drop-shadow-[0_0_10px_rgba(255,107,107,0.7)]" 
                 />
-                <h4 className="text-teal-400 text-xl font-bold mb-6">
+                <h4 className="text-[var(--neon-teal)] text-xl font-bold mb-6">
                   Fully decentralized
                 </h4>
                 <p className="text-slate-300 text-base leading-relaxed">

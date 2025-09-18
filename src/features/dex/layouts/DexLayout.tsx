@@ -192,7 +192,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
 
   return (
     <div className="text-text-color">
-      <div className="w-full max-w-[min(1648px,100%)] mx-auto">
+      <div className="w-full max-w-[min(1536px,100%)] mx-auto">
         {/* Main Layout with Sidebar */}
         <div className="flex items-start flex-col gap-0 pb-20 px-4 lg:flex-row lg:gap-6 lg:pb-0 lg:px-0">
           {/* Sidebar Navigation */}

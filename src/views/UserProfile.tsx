@@ -4,6 +4,7 @@ import AeButton from '../components/AeButton';
 import Identicon from '../components/Identicon';
 import RightRail from '../components/layout/RightRail';
 import Shell from '../components/layout/Shell';
+import LeftNav from '../components/layout/LeftNav';
 import UserBadge from '../components/UserBadge';
 
 import { useQuery } from '@tanstack/react-query';
@@ -49,7 +50,7 @@ export default function UserProfile() {
   }, [address]);
 
   return (
-    <Shell right={<RightRail />}>
+    <Shell left={<LeftNav />} right={<RightRail />}> 
       <div className="max-w-[880px] mx-auto">
         {/* Compact Profile header */}
         <div className="bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-5 mb-4 relative overflow-hidden transition-all duration-300 hover:border-white/20 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 md:p-4 md:mb-3 md:rounded-xl">

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import LeftNav from '../../../components/layout/LeftNav';
 
 interface NavigationItem {
   id: string;
@@ -196,23 +197,14 @@ export default function DexLayout({ children }: DexLayoutProps) {
         {/* Main Layout with Sidebar */}
         <div className="flex items-start flex-col gap-0 pb-20 px-4 lg:flex-row lg:gap-6 lg:pb-0 lg:px-0">
           {/* Sidebar Navigation */}
-          <aside className="lg:min-w-[240px] lg:w-[240px] lg:flex-shrink-0 lg:relative lg:bg-transparent lg:border-0 lg:backdrop-blur-0 lg:z-auto lg:p-0 lg:pb-0 lg:shadow-none lg:block fixed bottom-0 left-0 right-0 w-full min-w-full bg-card-bg border-t border-border-color backdrop-blur-[20px] z-[1000] p-2 pb-3 shadow-[0_-4px_20px_rgba(0,0,0,0.3)] flex items-center justify-center">
-            {/* Desktop: Separate sections */}
-            <div className="mb-6 hidden lg:block">
-              <div className="flex flex-col gap-2">
-                {navigationItems.map(renderNavigationButton)}
-              </div>
+          <aside className="lg:min-w-[240px] lg:w-[240px] lg:flex-shrink-0 lg:relative lg:bg-transparent lg:border-0 lg:backdrop-blur-0 lg:z-auto lg:p-0 lg:pb-0 lg:shadow-none">
+            {/* Desktop: Use global LeftNav */}
+            <div className="hidden lg:block">
+              <LeftNav />
             </div>
 
-            <div className="mb-6 hidden lg:block">
-              <h3 className="text-base font-semibold mb-3 text-text-primary opacity-80">Explore</h3>
-              <div className="flex flex-col gap-2">
-                {exploreItems.map(renderNavigationButton)}
-              </div>
-            </div>
-
-            {/* Mobile: Horizontal bottom navigation */}
-            <div className="block lg:hidden w-full">
+            {/* Mobile: Horizontal bottom navigation (kept) */}
+            <div className="block lg:hidden w-full fixed bottom-0 left-0 right-0 bg-card-bg border-t border-border-color backdrop-blur-[20px] z-[1000] p-2 pb-3 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
               <div className={`flex items-center justify-around gap-1 ${isExploreExpanded ? 'explore-expanded' : ''}`}>
                 {!isExploreExpanded ? (
                   // Normal state: Show main navigation + Explore button

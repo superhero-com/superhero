@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { PostsService } from '../../../api/generated';
 import AeButton from '../../../components/AeButton';
 import RightRail from '../../../components/layout/RightRail';
+import LeftNav from '../../../components/layout/LeftNav';
 import Shell from '../../../components/layout/Shell';
 import { useWallet } from '../../../hooks';
 import { relativeTime } from '../../../utils/time';
@@ -139,7 +140,7 @@ export default function PostDetail() {
   };
 
   return (
-    <Shell right={<RightRail />}>
+    <Shell left={<LeftNav />} right={<RightRail />}>
       <div className="max-w-[min(880px,100%)] mx-auto py-2 px-2 sm:px-3 md:px-4">
         <div className="mb-4">
           <AeButton onClick={() => navigate(-1)} variant="ghost" size="sm">

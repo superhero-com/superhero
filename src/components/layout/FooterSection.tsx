@@ -58,7 +58,7 @@ export default function FooterSection() {
 
   return (
     <footer className="border-t mt-6 py-4 md:py-5 md:mt-8" style={{ borderTopColor: 'var(--search-nav-border-color)' }}>
-      <div className="max-w-[min(1648px,100%)] mx-auto px-4 flex gap-4 items-center md:flex-col md:gap-4 md:px-4 md:text-center sm:px-3 sm:gap-3">
+      <div className="max-w-[min(1536px,100%)] mx-auto px-4 flex gap-4 items-center md:flex-col md:gap-4 md:px-4 md:text-center sm:px-3 sm:gap-3">
         <div className="text-sm md:order-2 md:text-[13px]" style={{ color: 'var(--light-font-color)' }}>Superhero is Open Source</div>
         <nav className="ml-auto flex gap-3 flex-wrap md:ml-0 md:order-1 md:justify-center md:gap-2 sm:gap-1.5">
           <a 
@@ -125,7 +125,7 @@ export default function FooterSection() {
           </a>
         </nav>
       </div>
-      <div className="max-w-[min(1648px,100%)] mx-auto px-4 mt-2 flex justify-end md:justify-center md:px-4 sm:px-3">
+      <div className="max-w-[min(1536px,100%)] mx-auto px-4 mt-2 flex justify-end md:justify-center md:px-4 sm:px-3">
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-lg px-3 py-2 shadow-sm">
           <div className="flex items-center gap-2 md:gap-2 sm:gap-1.5 flex-wrap text-sm md:text-[13px] sm:text-xs">
             <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/[0.03] border border-white/[0.06]">

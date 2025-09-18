@@ -10,6 +10,7 @@ import { IconComment } from '../../../icons';
 import { linkify } from '../../../utils/linkify';
 import { relativeTime } from '../../../utils/time';
 import CommentForm from './CommentForm';
+import { useNavigate } from 'react-router-dom';
 
 interface CommentItemProps {
   comment: PostDto;
@@ -27,6 +28,7 @@ const CommentItem = memo(({
   depth = 0,
   maxDepth = 3
 }: CommentItemProps) => {
+  const navigate = useNavigate();
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
 
@@ -70,28 +72,30 @@ const CommentItem = memo(({
   }, [onCommentAdded, showReplies, hasReplies, refetchReplies]);
 
   const toggleReplies = useCallback(() => {
-    setShowReplies(!showReplies);
+    navigate(`/post/${comment.id}`);
+    // setShowReplies(!showReplies);
   }, [showReplies]);
 
   return (
-    <div className={cn("relative", depth > 0 && "ml-8 mt-3")}>
+    <div className={cn("relative",)}>
       <AeCard
-        variant="glass"
+        variant="gradient"
         className="transition-all duration-300 hover:-translate-y-1 hover:shadow-glow border-glass-border"
         style={{
-          background: "radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.04), transparent 40%), rgba(255, 255, 255, 0.02)",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
-          boxShadow: "0 8px 25px rgba(0,0,0,0.2)"
+          // background: "radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.04), transparent 40%), rgba(255, 255, 255, 0.02)",
+          // backdropFilter: "blur(10px)",
+          // WebkitBackdropFilter: "blur(10px)",
+          // boxShadow: "0 8px 25px rgba(0,0,0,0.2)"
         }}
       >
-        <AeCardContent className="p-4">
+        <AeCardContent className="py-4 px-0 ">
           <div className="flex gap-3">
             <div className="flex-1 min-w-0 space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <AddressAvatarWithChainName
                     address={authorAddress}
+                    avatarBackground={true}
                     size={48}
                     overlaySize={24}
                   />
@@ -157,7 +161,7 @@ const CommentItem = memo(({
 
       {/* Reply form */}
       {showReplyForm && canReply && (
-        <div className="ml-11 mt-3">
+        <div className="mt-3">
           <CommentForm
             postId={comment.id}
             onCommentAdded={handleCommentAdded}
@@ -167,7 +171,7 @@ const CommentItem = memo(({
       )}
 
       {/* Nested replies */}
-      {hasReplies && showReplies && (
+      {/* {hasReplies && showReplies && (
         <div className="mt-3 space-y-3">
           {repliesLoading && (
             <div className="ml-11 text-sm text-muted-foreground">
@@ -190,7 +194,9 @@ const CommentItem = memo(({
             />
           ))}
         </div>
-      )}
+      )} */}
+
+      <div className="h-full w-[1px] bg-white absolute left-[23px] top-0 -z-10" />
     </div>
   );
 });

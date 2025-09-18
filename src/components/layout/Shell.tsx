@@ -30,7 +30,7 @@ export default function Shell({ left, right, children }: ShellProps) {
           ].filter(Boolean).join(' ')}
         >
           {hasLeft && (
-            <aside className="hidden lg:block sticky top-16 self-start min-w-0">
+            <aside className="hidden lg:block sticky top-0 self-start min-w-0">
               {left}
             </aside>
           )}

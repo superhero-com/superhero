@@ -200,7 +200,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
           'lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)]'
         ].join(' ')}>
           {/* Desktop LeftNav (matches Shell positioning/behavior) */}
-          <aside className="hidden lg:block sticky top-16 self-start min-w-0">
+          <aside className="hidden lg:block sticky top-0 self-start min-w-0">
             <LeftNav />
           </aside>
 

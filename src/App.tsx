@@ -2,7 +2,6 @@ import React, { Suspense, useEffect } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import GlobalNewAccountEducation from './components/GlobalNewAccountEducation';
 import CollectInvitationLinkCard from './components/Invitation/CollectInvitationLinkCard';
-import AppHeader from './components/layout/app-header';
 import ModalProvider from './components/ModalProvider';
 import { useAeSdk, useAccount, useWalletConnect } from './hooks';
 import { routes } from './routes';
@@ -48,7 +47,6 @@ export default function App() {
 
   return (
     <div className="app-container">
-      <AppHeader />
       <div className="app-content">
         <CollectInvitationLinkCard />
       </div>

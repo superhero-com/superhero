@@ -117,7 +117,6 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
         "max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden",
         className
       )}
-      style={style}
     >
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
@@ -189,7 +188,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
       <Card className="bg-white/[0.03] border-white/10 rounded-2xl mb-5 backdrop-blur-[10px]">
         <CardContent className="p-4">
           {/* Label and Balance Row */}
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex flex-row flex-wrap gap-2 items-center mb-3">
             <label className="text-sm font-semibold text-white/60 uppercase tracking-wider">
               Amount to {mode}
             </label>

@@ -612,8 +612,8 @@ export function PoolCandlestickChart({
       </div>
 
       {/* Chart Controls */}
-      <div className="flex items-center justify-between p-4 border-t border-white/10 bg-white/[0.05] backdrop-blur-[10px]">
-        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+      <div className="flex flex-row flex-wrap items-center justify-between p-2 border-t border-white/10 bg-white/[0.05] backdrop-blur-[10px]">
+        <div className="flex flex-row flex-wrap items-center gap-0 sm:gap-2">
           {intervals.map((interval) => (
             <AeButton
               key={interval.value}

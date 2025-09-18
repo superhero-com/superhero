@@ -158,7 +158,7 @@ export default function FeedList() {
   }, [filteredAndSortedList, chainNames, handleItemClick]);
 
   return (
-    <Shell left={<LeftNav />} right={<RightRail hideTrends /> }>
+    <Shell left={<LeftNav />} right={<RightRail hideTrends />}>
       <div className="w-full">
         {/* Mobile: SortControls first and sticky */}
         <div className="md:hidden">
@@ -176,7 +176,7 @@ export default function FeedList() {
           <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
         </div>
 
-        <div className="py-2 w-full pt-2 md:pt-4 px-2 sm:px-3 md:px-4 gap-4 flex flex-col">
+        <div className="w-full gap-4 flex flex-col">
           {renderEmptyState()}
           {renderFeedItems}
         </div>

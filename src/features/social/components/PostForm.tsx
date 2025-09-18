@@ -226,7 +226,7 @@ export default function PostForm({
   }
 
   return (
-    <div className={`max-w-[680px] mx-auto mb-5 md:mx-3 md:mb-4 ${className}`}>
+    <div className={`${isPost ? 'w-full max-w-none' : 'max-w-[680px] mx-auto md:mx-3'} mb-5 md:mb-4 ${className}`}>
       <div className="bg-gradient-to-br from-white/8 to-white/3 border border-primary-400 rounded-2xl p-5 transition-all duration-300 backdrop-blur-xl relative shadow-[0_16px_40px_rgba(0,0,0,0.35)] md:rounded-2xl md:p-4">
         <form onSubmit={handleSubmit} className="relative">
           <div className="flex flex-col gap-3">
@@ -236,7 +236,7 @@ export default function PostForm({
                 placeholder={currentPlaceholder} 
                 value={text} 
                 onChange={(e) => setText(e.target.value)} 
-                className="bg-white/7 border border-white/14 rounded-2xl p-4 pb-10 text-white text-base transition-all duration-200 outline-none caret-primary-400 resize-none leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-primary-400 focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(78,205,196,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pb-10 md:text-base md:rounded-2xl" 
+                className="bg-white/7 border border-white/14 rounded-2xl p-4 pb-10 text-white text-base transition-all duration-200 outline-none caret-primary-400 resize-none leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-primary-400 focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(0,255,157,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pb-10 md:text-base md:rounded-2xl" 
                 style={{ minHeight }}
                 rows={isPost ? 3 : 2}
                 maxLength={characterLimit} 
@@ -276,7 +276,7 @@ export default function PostForm({
                 {showEmojiPicker && (
                   <button 
                     type="button" 
-                    className="bg-white/5 border border-white/10 text-white/70 px-4 py-2.5 rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(78,205,196,0.2)] active:translate-y-0 flex-1 md:flex-none md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm md:rounded-full" 
+                    className="bg-white/5 border border-white/10 text-white/70 px-4 py-2.5 rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 flex-1 md:flex-none md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm md:rounded-full" 
                     title="Emoji" 
                     ref={emojiBtnRef} 
                     onClick={() => { setShowEmoji(s => !s); setShowGif(false); }}
@@ -288,7 +288,7 @@ export default function PostForm({
                 {showGifInput && (
                   <button 
                     type="button" 
-                    className="bg-white/5 border border-white/10 text-white/70 px-4 py-2.5 rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(78,205,196,0.2)] active:translate-y-0 flex-1 md:flex-none md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm md:rounded-full" 
+                    className="bg-white/5 border border-white/10 text-white/70 px-4 py-2.5 rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 flex-1 md:flex-none md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm md:rounded-full" 
                     title="GIF" 
                     ref={gifBtnRef} 
                     onClick={() => { setShowGif(s => !s); setShowEmoji(false); }}

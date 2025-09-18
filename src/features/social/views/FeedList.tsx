@@ -1,20 +1,21 @@
-import React, { useMemo, useState, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { PostsService } from '../../../api/generated';
-import AeButton from '../../../components/AeButton';
-import Shell from '../../../components/layout/Shell';
-import LeftRail from '../../../components/layout/LeftRail';
-import RightRail from '../../../components/layout/RightRail';
-import { useWallet } from '../../../hooks';
-import CreatePost from '../components/CreatePost';
-import SortControls from '../components/SortControls';
-import EmptyState from '../components/EmptyState';
-import FeedItem from '../components/FeedItem';
-import { PostApiResponse } from '../types';
+import React, { useMemo, useState, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { PostsService } from "../../../api/generated";
+import AeButton from "../../../components/AeButton";
+import Shell from "../../../components/layout/Shell";
+import RightRail from "../../../components/layout/RightRail";
+import { useWallet } from "../../../hooks";
+import CreatePost from "../components/CreatePost";
+import SortControls from "../components/SortControls";
+import EmptyState from "../components/EmptyState";
+import FeedItem from "../components/FeedItem";
+import { PostApiResponse } from "../types";
 
 // Custom hook
-function useUrlQuery() { return new URLSearchParams(useLocation().search); }
+function useUrlQuery() {
+  return new URLSearchParams(useLocation().search);
+}
 
 export default function FeedList() {
   const navigate = useNavigate();
@@ -24,9 +25,9 @@ export default function FeedList() {
   // Comment counts are now provided directly by the API in post.total_comments
 
   // URL parameters
-  const sortBy = urlQuery.get('sortBy') || 'latest';
-  const search = urlQuery.get('search') || '';
-  const filterBy = urlQuery.get('filterBy') || 'all';
+  const sortBy = urlQuery.get("sortBy") || "latest";
+  const search = urlQuery.get("search") || "";
+  const filterBy = urlQuery.get("filterBy") || "all";
 
   const [localSearch, setLocalSearch] = useState(search);
 
@@ -40,17 +41,26 @@ export default function FeedList() {
     isFetchingNextPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['posts', { limit: 10, sortBy, search, filterBy }],
-    queryFn: ({ pageParam = 1 }) => PostsService.listAll({
-      limit: 10,
-      page: pageParam,
-      orderBy: sortBy === 'latest' ? 'created_at' : sortBy === 'hot' ? 'total_comments' : 'created_at',
-      orderDirection: 'DESC',
-      search: localSearch,
-    }) as unknown as Promise<PostApiResponse>,
+    queryKey: ["posts", { limit: 10, sortBy, search, filterBy }],
+    queryFn: ({ pageParam = 1 }) =>
+      PostsService.listAll({
+        limit: 10,
+        page: pageParam,
+        orderBy:
+          sortBy === "latest"
+            ? "created_at"
+            : sortBy === "hot"
+            ? "total_comments"
+            : "created_at",
+        orderDirection: "DESC",
+        search: localSearch,
+      }) as unknown as Promise<PostApiResponse>,
     getNextPageParam: (lastPage) => {
-      if (lastPage?.meta?.currentPage && lastPage?.meta?.totalPages &&
-        lastPage.meta.currentPage < lastPage.meta.totalPages) {
+      if (
+        lastPage?.meta?.currentPage &&
+        lastPage?.meta?.totalPages &&
+        lastPage.meta.currentPage < lastPage.meta.totalPages
+      ) {
         return lastPage.meta.currentPage + 1;
       }
       return undefined;
@@ -59,8 +69,8 @@ export default function FeedList() {
   });
 
   // Derived state
-  const list = useMemo(() =>
-    data?.pages?.flatMap(page => page?.items ?? []) ?? [],
+  const list = useMemo(
+    () => data?.pages?.flatMap((page) => page?.items ?? []) ?? [],
     [data]
   );
 
@@ -70,18 +80,27 @@ export default function FeedList() {
 
     if (localSearch.trim()) {
       const searchTerm = localSearch.toLowerCase();
-      filtered = filtered.filter(item =>
-        (item.content && item.content.toLowerCase().includes(searchTerm)) ||
-        (item.topics && item.topics.some(topic => topic.toLowerCase().includes(searchTerm))) ||
-        (item.sender_address && item.sender_address.toLowerCase().includes(searchTerm)) ||
-        (chainNames?.[item.sender_address] && chainNames[item.sender_address].toLowerCase().includes(searchTerm))
+      filtered = filtered.filter(
+        (item) =>
+          (item.content && item.content.toLowerCase().includes(searchTerm)) ||
+          (item.topics &&
+            item.topics.some((topic) =>
+              topic.toLowerCase().includes(searchTerm)
+            )) ||
+          (item.sender_address &&
+            item.sender_address.toLowerCase().includes(searchTerm)) ||
+          (chainNames?.[item.sender_address] &&
+            chainNames[item.sender_address].toLowerCase().includes(searchTerm))
       );
     }
 
-    if (filterBy === 'withMedia') {
-      filtered = filtered.filter(item => item.media && Array.isArray(item.media) && item.media.length > 0);
-    } else if (filterBy === 'withComments') {
-      filtered = filtered.filter(item => {
+    if (filterBy === "withMedia") {
+      filtered = filtered.filter(
+        (item) =>
+          item.media && Array.isArray(item.media) && item.media.length > 0
+      );
+    } else if (filterBy === "withComments") {
+      filtered = filtered.filter((item) => {
         return (item.total_comments ?? 0) > 0;
       });
     }
@@ -90,13 +109,19 @@ export default function FeedList() {
   }, [list, localSearch, filterBy, chainNames]);
 
   // Memoized event handlers for better performance
-  const handleSortChange = useCallback((newSortBy: string) => {
-    navigate(`/?sortBy=${newSortBy}`);
-  }, [navigate]);
+  const handleSortChange = useCallback(
+    (newSortBy: string) => {
+      navigate(`/?sortBy=${newSortBy}`);
+    },
+    [navigate]
+  );
 
-  const handleItemClick = useCallback((postId: string) => {
-    navigate(`/post/${postId}`);
-  }, [navigate]);
+  const handleItemClick = useCallback(
+    (postId: string) => {
+      navigate(`/post/${postId}`);
+    },
+    [navigate]
+  );
 
   // Render helpers
   const renderEmptyState = () => {
@@ -132,12 +157,12 @@ export default function FeedList() {
   }, [filteredAndSortedList, chainNames, handleItemClick]);
 
   return (
-    <Shell left={<LeftRail />} right={<RightRail />}>
-      <div className="max-w-[680px] mx-auto">
+    <Shell right={<RightRail hideTrends />}>
+      <div className="max-w-[880px] mx-auto">
         {/* Mobile: SortControls first and sticky */}
         <div className="md:hidden">
-          <SortControls 
-            sortBy={sortBy} 
+          <SortControls
+            sortBy={sortBy}
             onSortChange={handleSortChange}
             className="sticky top-0 z-10 bg-black/20 backdrop-blur-md"
           />
@@ -150,7 +175,7 @@ export default function FeedList() {
           <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
         </div>
 
-        <div className="py-2 max-w-[680px] mx-auto pt-2 md:pt-4 px-2 sm:px-3 md:px-0 gap-4 flex flex-col">
+        <div className="py-2 max-w-[880px] mx-auto pt-2 md:pt-4 px-2 sm:px-3 md:px-0 gap-4 flex flex-col">
           {renderEmptyState()}
           {renderFeedItems}
         </div>

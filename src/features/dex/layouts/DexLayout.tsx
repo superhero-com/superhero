@@ -192,77 +192,72 @@ export default function DexLayout({ children }: DexLayoutProps) {
   );
 
   return (
-    <div className="text-text-color">
-      <div className="w-full max-w-[min(1536px,100%)] mx-auto">
-        {/* Main Layout with Sidebar */}
-        <div className="flex items-start flex-col gap-0 pb-20 px-4 lg:flex-row lg:gap-6 lg:pb-0 lg:px-0">
-          {/* Sidebar Navigation */}
-          <aside className="lg:min-w-[240px] lg:w-[240px] lg:flex-shrink-0 lg:relative lg:bg-transparent lg:border-0 lg:backdrop-blur-0 lg:z-auto lg:p-0 lg:pb-0 lg:shadow-none">
-            {/* Desktop: Use global LeftNav */}
-            <div className="hidden lg:block">
-              <LeftNav />
-            </div>
-
-            {/* Mobile: Horizontal bottom navigation (kept) */}
-            <div className="block lg:hidden w-full fixed bottom-0 left-0 right-0 bg-card-bg border-t border-border-color backdrop-blur-[20px] z-[1000] p-2 pb-3 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
-              <div className={`flex items-center justify-around gap-1 ${isExploreExpanded ? 'explore-expanded' : ''}`}>
-                {!isExploreExpanded ? (
-                  // Normal state: Show main navigation + Explore button
-                  mobileNavigationItems.map((item) => {
-                    if (item.id === 'explore') {
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={handleExploreToggle}
-                          className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-200 ${
-                            isExploreActive() 
-                              ? 'text-primary bg-primary/10' 
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                          }`}
-                          title={item.description}
-                          style={{
-                            minWidth: '60px',
-                            height: '56px',
-                          }}
-                        >
-                          <span className="text-xl">{item.icon}</span>
-                          <span className="text-xs font-medium leading-none">{item.label}</span>
-                        </button>
-                      );
-                    }
-                    return renderMobileNavigationButton(item);
-                  })
-                ) : (
-                  // Expanded state: Show explore items sliding from right + close button (transformed from explore)
-                  <>
-                    {/* Explore items that slide in from the right */}
-                    {exploreItems.map((item) => renderMobileNavigationButton(item))}
-                    
-                    {/* Close button that stays in the same position as the original Explore button */}
-                    <button
-                      onClick={handleCloseExplore}
-                      className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-200 text-destructive hover:bg-destructive/10"
-                      title="Close explore menu"
-                      style={{
-                        minWidth: '60px',
-                        height: '56px',
-                      }}
-                    >
-                      <span className="text-xl">✕</span>
-                      <span className="text-xs font-medium leading-none">Close</span>
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
+    <>
+      <div className="min-h-screen w-full max-w-[min(1536px,100%)] mx-auto flex flex-col">
+        <div className={[
+          'flex-grow grid grid-cols-1 gap-4 p-2 px-4 md:gap-3 md:p-2 md:px-3 lg:gap-4 lg:p-2 lg:px-4 sm:gap-2 sm:p-1 sm:px-2',
+          // Left rail + main (match Shell when only left is present)
+          'lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)]'
+        ].join(' ')}>
+          {/* Desktop LeftNav (matches Shell positioning/behavior) */}
+          <aside className="hidden lg:block sticky top-16 self-start min-w-0">
+            <LeftNav />
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 min-h-[calc(100vh-140px)] lg:min-h-[400px]">
+          <main className="min-w-0 overflow-hidden">
             {children}
           </main>
         </div>
       </div>
-    </div>
+
+      {/* Mobile: Horizontal bottom navigation (kept) */}
+      <div className="block lg:hidden w-full fixed bottom-0 left-0 right-0 bg-card-bg border-t border-border-color backdrop-blur-[20px] z-[1000] p-2 pb-3 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
+        <div className={`flex items-center justify-around gap-1 ${isExploreExpanded ? 'explore-expanded' : ''}`}>
+          {!isExploreExpanded ? (
+            mobileNavigationItems.map((item) => {
+              if (item.id === 'explore') {
+                return (
+                  <button
+                    key={item.id}
+                    onClick={handleExploreToggle}
+                    className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-200 ${
+                      isExploreActive() 
+                        ? 'text-primary bg-primary/10' 
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    }`}
+                    title={item.description}
+                    style={{
+                      minWidth: '60px',
+                      height: '56px',
+                    }}
+                  >
+                    <span className="text-xl">{item.icon}</span>
+                    <span className="text-xs font-medium leading-none">{item.label}</span>
+                  </button>
+                );
+              }
+              return renderMobileNavigationButton(item);
+            })
+          ) : (
+            <>
+              {exploreItems.map((item) => renderMobileNavigationButton(item))}
+              <button
+                onClick={handleCloseExplore}
+                className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-200 text-destructive hover:bg-destructive/10"
+                title="Close explore menu"
+                style={{
+                  minWidth: '60px',
+                  height: '56px',
+                }}
+              >
+                <span className="text-xl">✕</span>
+                <span className="text-xs font-medium leading-none">Close</span>
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </>
   );
 }

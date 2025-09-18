@@ -152,7 +152,8 @@ export default function WebAppHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-4">
+        {/* Hide wallet button on large screens; it appears in LeftNav there */}
+        <div className="flex items-center gap-4 lg:hidden">
           <HeaderWalletButton />
         </div>
       </div>

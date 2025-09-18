@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { HeaderLogo } from '../../icons';
+import HeaderWalletButton from './app-header/HeaderWalletButton';
 import { navigationItems } from './app-header/navigationItems';
 
 export default function LeftNav() {
@@ -8,7 +9,7 @@ export default function LeftNav() {
   const isActive = (path: string) => (path === '/' ? pathname === '/' : pathname.startsWith(path));
 
   return (
-  <nav className="grid gap-2 pr-2">
+  <nav className="flex flex-col gap-2 pr-2 h-[calc(100vh-4rem)]">
       <Link to="/" className="no-underline px-3 py-2 rounded-xl text-[var(--standard-font-color)] hover:bg-white/10 transition-colors w-fit" aria-label="Superhero Home">
         <HeaderLogo className="h-8 w-auto" />
       </Link>
@@ -66,12 +67,11 @@ export default function LeftNav() {
         })}
       </div>
 
-      <Link
-        to="/"
-        className="no-underline mt-2 inline-flex items-center justify-center px-4 py-2 rounded-2xl bg-[var(--neon-teal)] text-black font-semibold hover:opacity-90 transition-opacity"
-      >
-        Post
-      </Link>
+      <div className="mt-auto pt-3 border-t border-white/10">
+        <div className="hidden lg:block">
+          <HeaderWalletButton />
+        </div>
+      </div>
     </nav>
   );
 }

@@ -78,12 +78,12 @@ export default function TokenInput({
     >
       <AeCardContent className="p-4">
         {/* Label and Balance Row */}
-        <div className="flex justify-between items-center mb-3">
+        <div className="flex flex-row flex-wrap   sm:items-center justify-between mb-3">
           <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             {label}
           </Label>
           {balance && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
                 Balance:
                 <span className="font-semibold text-foreground">
@@ -92,7 +92,7 @@ export default function TokenInput({
               </div>
               
               {/* Max, 50% buttons */}
-              <div className="flex gap-1 items-center">
+              <div className="flex gap-2 items-center">
                 <AeButton
                   variant="ghost"
                   size="xs"
@@ -103,7 +103,7 @@ export default function TokenInput({
                     }
                   }}
                   disabled={disabled || readOnly || !balance || Number(balance) === 0}
-                  className="h-6 px-2 text-xs font-semibold border border-glass-border hover:bg-accent hover:text-accent-foreground"
+                  className="h-6 px-2  font-semibold border border-glass-border hover:bg-accent hover:text-accent-foreground"
                 >
                   50%
                 </AeButton>
@@ -117,7 +117,7 @@ export default function TokenInput({
                     }
                   }}
                   disabled={disabled || readOnly || !balance || Number(balance) === 0}
-                  className="h-6 px-2 text-xs font-semibold border border-glass-border hover:bg-accent hover:text-accent-foreground"
+                  className="h-6 px-1 font-semibold border border-glass-border hover:bg-accent hover:text-accent-foreground"
                 >
                   MAX
                 </AeButton>

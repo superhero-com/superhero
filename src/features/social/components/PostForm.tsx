@@ -263,7 +263,7 @@ export default function PostForm({
       <div
         className={`max-w-[680px] mx-auto mb-5 md:mx-3 md:mb-4 ${className}`}
       >
-        <div className="bg-gradient-to-br from-white/8 to-white/3 border border-[#1161FE] rounded-2xl p-5 transition-all duration-300 backdrop-blur-xl relative shadow-none md:rounded-2xl md:p-4">
+        <div className="bg-gradient-to-br from-white/8 to-white/3 border border-[var(--glass-border)] rounded-2xl p-5 transition-all duration-300 backdrop-blur-xl relative shadow-none md:rounded-2xl md:p-4">
           <div className="text-center text-white/70">
             <p className="text-sm">Please connect your wallet to comment</p>
           </div>
@@ -278,7 +278,7 @@ export default function PostForm({
         isPost ? "w-full max-w-none" : "max-w-[680px] mx-auto md:mx-3"
       } mb-5 md:mb-4 ${className}`}
     >
-      <div className="bg-gradient-to-br from-white/8 to-white/3 border border-[#1161FE] rounded-2xl p-5 transition-all duration-300 backdrop-blur-xl relative shadow-none md:rounded-2xl md:p-4">
+      <div className="bg-gradient-to-br from-white/8 to-white/3 border border-[var(--glass-border)] rounded-2xl p-5 transition-all duration-300 backdrop-blur-xl relative shadow-none md:rounded-2xl md:p-4">
         <form onSubmit={handleSubmit} className="relative">
           <div className="flex flex-col gap-3">
             <div className="relative flex flex-col">

@@ -339,7 +339,7 @@ export default function PostForm({
 
           <div className="flex flex-col gap-3 pt-2.5 border-t border-white/12 relative md:flex-row md:items-center md:justify-between md:gap-3 md:pt-3">
             {(showEmojiPicker || showGifInput) && (
-              <div className="flex gap-2.5 relative justify-center md:justify-start">
+              <div className={`flex gap-2.5 relative justify-center md:justify-start ${activeAccount ? 'pl-12' : ''}`}>
                 {showEmojiPicker && (
                   <button
                     type="button"

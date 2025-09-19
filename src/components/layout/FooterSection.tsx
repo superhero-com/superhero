@@ -126,37 +126,27 @@ export default function FooterSection() {
         </nav>
       </div>
       <div className="max-w-[min(1536px,100%)] mx-auto px-4 mt-2 flex justify-end md:justify-center md:px-4 sm:px-3">
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-lg px-3 py-2 shadow-sm">
-          <div className="flex items-center gap-2 md:gap-2 sm:gap-1.5 flex-wrap text-sm md:text-[13px] sm:text-xs">
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/[0.03] border border-white/[0.06]">
-              <span
-                className="inline-block w-1.5 h-1.5 rounded-full"
-                style={{ backgroundColor: isOnline ? 'var(--neon-green)' : 'var(--neon-pink)' }}
-              />
+        <div className="bg-transparent rounded-lg px-3 py-2">
+          <div className="flex items-center gap-3 md:gap-2 sm:gap-2 flex-wrap text-sm md:text-[13px] sm:text-xs">
+            <div className="px-0 py-0 rounded-none">
               <span style={{ color: isOnline ? 'var(--neon-green)' : 'var(--neon-pink)' }}>
-                {isOnline ? 'Blockchain 🟢 Connected' : 'Blockchain 🔴 Offline'}
+                {isOnline ? '🟢 Blockchain' : '🔴 Blockchain'}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/[0.03] border border-white/[0.06]">
-              <span
-                className="inline-block w-1.5 h-1.5 rounded-full"
-                style={{ backgroundColor: statusColor(apiStatus.backend) }}
-              />
-              <span style={{ color: statusColor(apiStatus.backend) }}>Backend {statusEmoji(apiStatus.backend)}</span>
+            <div className="px-0 py-0 rounded-none">
+              <span style={{ color: statusColor(apiStatus.backend) }}>
+                {`${statusEmoji(apiStatus.backend)} Backend`}
+              </span>
             </div>
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/[0.03] border border-white/[0.06]">
-              <span
-                className="inline-block w-1.5 h-1.5 rounded-full"
-                style={{ backgroundColor: statusColor(apiStatus.trendminer) }}
-              />
-              <span style={{ color: statusColor(apiStatus.trendminer) }}>Trendminer {statusEmoji(apiStatus.trendminer)}</span>
+            <div className="px-0 py-0 rounded-none">
+              <span style={{ color: statusColor(apiStatus.trendminer) }}>
+                {`${statusEmoji(apiStatus.trendminer)} Trendminer`}
+              </span>
             </div>
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/[0.03] border border-white/[0.06]">
-              <span
-                className="inline-block w-1.5 h-1.5 rounded-full"
-                style={{ backgroundColor: statusColor(apiStatus.dex) }}
-              />
-              <span style={{ color: statusColor(apiStatus.dex) }}>DEX {statusEmoji(apiStatus.dex)}</span>
+            <div className="px-0 py-0 rounded-none">
+              <span style={{ color: statusColor(apiStatus.dex) }}>
+                {`${statusEmoji(apiStatus.dex)} DEX`}
+              </span>
             </div>
           </div>
         </div>

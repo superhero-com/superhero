@@ -126,28 +126,21 @@ export default function FooterSection() {
         </nav>
       </div>
       <div className="max-w-[min(1536px,100%)] mx-auto px-4 mt-2 flex justify-end md:justify-center md:px-4 sm:px-3">
-        <div className="bg-transparent rounded-lg px-3 py-2">
-          <div className="flex items-center gap-3 md:gap-2 sm:gap-2 flex-wrap text-sm md:text-[13px] sm:text-xs">
-            <div className="px-0 py-0 rounded-none">
-              <span style={{ color: isOnline ? 'var(--neon-green)' : 'var(--neon-pink)' }}>
-                {isOnline ? '🟢 Blockchain' : '🔴 Blockchain'}
-              </span>
-            </div>
-            <div className="px-0 py-0 rounded-none">
-              <span style={{ color: statusColor(apiStatus.backend) }}>
-                {`${statusEmoji(apiStatus.backend)} Backend`}
-              </span>
-            </div>
-            <div className="px-0 py-0 rounded-none">
-              <span style={{ color: statusColor(apiStatus.trendminer) }}>
-                {`${statusEmoji(apiStatus.trendminer)} Trendminer`}
-              </span>
-            </div>
-            <div className="px-0 py-0 rounded-none">
-              <span style={{ color: statusColor(apiStatus.dex) }}>
-                {`${statusEmoji(apiStatus.dex)} DEX`}
-              </span>
-            </div>
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-lg px-3 py-2 shadow-sm">
+          <div className="text-[11px] text-[var(--light-font-color)] uppercase tracking-wide mb-1 text-center">Status</div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm md:text-[13px] sm:text-xs">
+            <span style={{ color: isOnline ? 'var(--neon-green)' : 'var(--neon-pink)' }}>
+              {isOnline ? '🟢 Blockchain' : '🔴 Blockchain'}
+            </span>
+            <span style={{ color: statusColor(apiStatus.backend) }}>
+              {`${statusEmoji(apiStatus.backend)} Backend`}
+            </span>
+            <span style={{ color: statusColor(apiStatus.trendminer) }}>
+              {`${statusEmoji(apiStatus.trendminer)} Trendminer`}
+            </span>
+            <span style={{ color: statusColor(apiStatus.dex) }}>
+              {`${statusEmoji(apiStatus.dex)} DEX`}
+            </span>
           </div>
         </div>
       </div>

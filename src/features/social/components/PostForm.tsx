@@ -283,8 +283,12 @@ export default function PostForm({
           <div className="flex flex-col gap-3">
             <div className="relative flex items-start gap-3">
               {activeAccount && (
-                <div className="flex-shrink-0 mt-1">
-                  <AddressAvatar address={activeAccount} size={48} />
+                <div className="flex-shrink-0 self-start">
+                  <AddressAvatar
+                    address={activeAccount}
+                    size={48}
+                    className="border-white/14 shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
+                  />
                 </div>
               )}
               <textarea
@@ -339,7 +343,11 @@ export default function PostForm({
 
           <div className="flex flex-col gap-3 pt-2.5 border-t border-white/12 relative md:flex-row md:items-center md:justify-between md:gap-3 md:pt-3">
             {(showEmojiPicker || showGifInput) && (
-              <div className={`flex gap-2.5 relative justify-center md:justify-start ${activeAccount ? 'pl-12' : ''}`}>
+              <div
+                className={`flex gap-2.5 relative justify-center md:justify-start ${
+                  activeAccount ? "pl-12" : ""
+                }`}
+              >
                 {showEmojiPicker && (
                   <button
                     type="button"

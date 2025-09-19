@@ -263,7 +263,7 @@ export default function PostForm({
       <div
         className={`max-w-[680px] mx-auto mb-5 md:mx-3 md:mb-4 ${className}`}
       >
-        <div className="bg-gradient-to-br from-white/8 to-white/3 border border-primary-400 rounded-2xl p-5 transition-all duration-300 backdrop-blur-xl relative shadow-none md:rounded-2xl md:p-4">
+        <div className="bg-gradient-to-br from-white/8 to-white/3 border border-[#1161FE] rounded-2xl p-5 transition-all duration-300 backdrop-blur-xl relative shadow-none md:rounded-2xl md:p-4">
           <div className="text-center text-white/70">
             <p className="text-sm">Please connect your wallet to comment</p>
           </div>
@@ -278,7 +278,7 @@ export default function PostForm({
         isPost ? "w-full max-w-none" : "max-w-[680px] mx-auto md:mx-3"
       } mb-5 md:mb-4 ${className}`}
     >
-      <div className="bg-gradient-to-br from-white/8 to-white/3 border border-primary-400 rounded-2xl p-5 transition-all duration-300 backdrop-blur-xl relative shadow-none md:rounded-2xl md:p-4">
+      <div className="bg-gradient-to-br from-white/8 to-white/3 border border-[#1161FE] rounded-2xl p-5 transition-all duration-300 backdrop-blur-xl relative shadow-none md:rounded-2xl md:p-4">
         <form onSubmit={handleSubmit} className="relative">
           <div className="flex flex-col gap-3">
             <div className="relative flex flex-col">
@@ -287,7 +287,7 @@ export default function PostForm({
                 placeholder={currentPlaceholder}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                className="bg-white/7 border border-white/14 rounded-2xl p-4 pb-10 text-white text-base transition-all duration-200 outline-none caret-primary-400 resize-none leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-primary-400 focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(0,255,157,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pb-10 md:text-base md:rounded-2xl"
+                className="bg-white/7 border border-white/14 rounded-2xl p-4 pb-10 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pb-10 md:text-base md:rounded-2xl"
                 style={{ minHeight }}
                 rows={isPost ? 3 : 2}
                 maxLength={characterLimit}
@@ -424,7 +424,7 @@ export default function PostForm({
                   type="submit"
                   loading={isSubmitting}
                   disabled={!text.trim()}
-                  className="relative bg-primary-400 border-none text-black font-black px-7 py-2.5 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-primary-400 hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(0,0,0,0.3)] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base md:rounded-full"
+                  className="relative bg-[#1161FE] border-none text-black font-black px-7 py-2.5 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(0,0,0,0.3)] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base md:rounded-full"
                 >
                   {isSubmitting
                     ? isPost

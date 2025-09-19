@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { IconClose, IconGif, IconImage, IconSmile } from "../../../icons";
 import AeButton from "../../../components/AeButton";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
-import Identicon from "../../../components/Identicon";
+import AddressAvatar from "../../../components/AddressAvatar";
 // @ts-ignore
 import TIPPING_V3_ACI from "tipping-contract/generated/Tipping_v3.aci.json";
 import { PostsService } from "../../../api/generated";
@@ -281,7 +281,12 @@ export default function PostForm({
       <div className="bg-gradient-to-br from-white/8 to-white/3 border border-[var(--glass-border)] rounded-2xl p-5 transition-all duration-300 backdrop-blur-xl relative shadow-none md:rounded-2xl md:p-4">
         <form onSubmit={handleSubmit} className="relative">
           <div className="flex flex-col gap-3">
-            <div className="relative flex flex-col">
+            <div className="relative flex items-start gap-3">
+              {activeAccount && (
+                <div className="flex-shrink-0 mt-1 ml-1">
+                  <AddressAvatar address={activeAccount} size={36} />
+                </div>
+              )}
               <textarea
                 ref={textareaRef}
                 placeholder={currentPlaceholder}

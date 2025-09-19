@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { PostsService } from "../../../api/generated";
@@ -18,7 +18,9 @@ function useUrlQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
-export default function FeedList() {
+export default function FeedList({
+  standalone = true,
+}: { standalone?: boolean } = {}) {
   const navigate = useNavigate();
   const urlQuery = useUrlQuery();
   const { chainNames } = useWallet();
@@ -157,42 +159,54 @@ export default function FeedList() {
     });
   }, [filteredAndSortedList, chainNames, handleItemClick]);
 
-  return (
-    <Shell left={<LeftNav />} right={<RightRail hideTrends />}>
-      <div className="w-full">
-        {/* Mobile: SortControls first and sticky */}
-        <div className="md:hidden">
-          <SortControls
-            sortBy={sortBy}
-            onSortChange={handleSortChange}
-            className="sticky top-0 z-10 bg-black/20 backdrop-blur-md"
-          />
-          <CreatePost onSuccess={refetch} />
-        </div>
+  // Preload PostDetail chunk to avoid first-click lazy load delay
+  useEffect(() => {
+    // Vite supports preloading dynamic chunks via import()
+    import("../views/PostDetail").catch(() => {});
+  }, []);
 
-        {/* Desktop: CreatePost first, then SortControls */}
-        <div className="hidden md:block">
-          <CreatePost onSuccess={refetch} />
-          <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
-        </div>
-
-        <div className="w-full gap-4 flex flex-col">
-          {renderEmptyState()}
-          {renderFeedItems}
-        </div>
-
-        {hasNextPage && filteredAndSortedList.length > 0 && (
-          <div className="p-4 md:p-6 text-center">
-            <AeButton
-              loading={isFetchingNextPage}
-              onClick={() => fetchNextPage()}
-              className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
-            >
-              Load more
-            </AeButton>
-          </div>
-        )}
+  const content = (
+    <div className="w-full">
+      {/* Mobile: SortControls first and sticky */}
+      <div className="md:hidden">
+        <SortControls
+          sortBy={sortBy}
+          onSortChange={handleSortChange}
+          className="sticky top-0 z-10 bg-black/20 backdrop-blur-md"
+        />
+        <CreatePost onSuccess={refetch} />
       </div>
+
+      {/* Desktop: CreatePost first, then SortControls */}
+      <div className="hidden md:block">
+        <CreatePost onSuccess={refetch} />
+        <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
+      </div>
+
+      <div className="w-full gap-4 flex flex-col">
+        {renderEmptyState()}
+        {renderFeedItems}
+      </div>
+
+      {hasNextPage && filteredAndSortedList.length > 0 && (
+        <div className="p-4 md:p-6 text-center">
+          <AeButton
+            loading={isFetchingNextPage}
+            onClick={() => fetchNextPage()}
+            className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
+          >
+            Load more
+          </AeButton>
+        </div>
+      )}
+    </div>
+  );
+
+  return standalone ? (
+    <Shell left={<LeftNav />} right={<RightRail hideTrends />}>
+      {content}
     </Shell>
+  ) : (
+    content
   );
 }

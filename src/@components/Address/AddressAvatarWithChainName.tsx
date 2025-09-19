@@ -88,7 +88,7 @@ export const AddressAvatarWithChainName = memo(({
                 <div className="relative">
                     {chainName ? (
                         <div className="relative">
-                            <div className="rounded-xl overflow-hidden shadow-md">
+                            <div className="rounded-full overflow-hidden shadow-md">
                                 <Identicon address={address} size={size} name={chainName} />
                             </div>
                             <div
@@ -99,8 +99,8 @@ export const AddressAvatarWithChainName = memo(({
                             </div>
                         </div>
                     ) : (
-                        <div className="rounded-xl overflow-hidden shadow-md">
-                            <AddressAvatar address={address} size={size} borderRadius="10px" />
+                        <div className="rounded-full overflow-hidden shadow-md">
+                            <AddressAvatar address={address} size={size} borderRadius="50%" />
                         </div>
                     )}
                 </div>

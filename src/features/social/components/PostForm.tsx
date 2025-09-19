@@ -283,8 +283,8 @@ export default function PostForm({
           <div className="flex flex-col gap-3">
             <div className="relative flex items-start gap-3">
               {activeAccount && (
-                <div className="flex-shrink-0 mt-1 ml-1">
-                  <AddressAvatar address={activeAccount} size={36} />
+                <div className="flex-shrink-0 mt-1">
+                  <AddressAvatar address={activeAccount} size={48} />
                 </div>
               )}
               <textarea

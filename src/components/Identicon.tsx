@@ -15,7 +15,8 @@ export default function Identicon({ address, size = 32, name }: { address: strin
           style={{
             width: size,
             height: size,
-            borderRadius: 0,
+            borderRadius: '50%',
+            border: '1px solid rgba(255,255,255,0.14)',
             overflow: 'hidden',
             transition: 'transform .15s ease, box-shadow .15s ease'
           }}
@@ -36,7 +37,8 @@ export default function Identicon({ address, size = 32, name }: { address: strin
           style={{
             width: size,
             height: size,
-            borderRadius: 0,
+            borderRadius: '50%',
+            border: '1px solid rgba(255,255,255,0.14)',
             overflow: 'hidden',
             transition: 'transform .15s ease, box-shadow .15s ease'
           }}

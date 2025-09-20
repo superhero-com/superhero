@@ -19,6 +19,7 @@ interface AddressAvatarWithChainNameProps {
     truncateAddress?: boolean;
     className?: string;
     isHoverEnabled?: boolean;
+    avatarBackground?: boolean;
 }
 
 export const AddressAvatarWithChainName = memo(({
@@ -29,7 +30,8 @@ export const AddressAvatarWithChainName = memo(({
     showBalance = false,
     truncateAddress = true,
     className,
-    isHoverEnabled = true
+    isHoverEnabled = true,
+    avatarBackground = false
 }: AddressAvatarWithChainNameProps) => {
     const navigate = useNavigate();
     const { chainName } = useChainName(address);
@@ -88,7 +90,7 @@ export const AddressAvatarWithChainName = memo(({
                 <div className="relative">
                     {chainName ? (
                         <div className="relative">
-                            <div className="rounded-full overflow-hidden shadow-md">
+                            <div className={cn("rounded-full overflow-hidden shadow-md", avatarBackground && "bg-white")}>
                                 <Identicon address={address} size={size} name={chainName} />
                             </div>
                             <div

@@ -154,38 +154,40 @@ export default function PostDetail({
       {isLoading && renderLoadingState()}
       {error && renderErrorState()}
 
-      {post && (
-        <article className="grid gap-4">
-          {renderPostHeader(post)}
+        {isLoading && renderLoadingState()}
+        {error && renderErrorState()}
 
-          <PostContent post={post} />
+        {post && (
+          <article className="grid">
+            {renderPostHeader(post)}
 
-          {/* Comment form */}
-          {postId && (
-            <div className="mt-8 pt-6 border-t border-white/10">
-              <CommentForm
-                postId={postId}
-                onCommentAdded={handleCommentAdded}
-                placeholder="Share your thoughts..."
-              />
+            <div className="border-l border-white ml-[23px] pl-[37px]">
+              <PostContent post={post} />
             </div>
-          )}
 
-          {/* Comments section */}
-          {postData && postData.total_comments > 0 && (
-            <PostCommentsList
-              id={postId!}
-              onCommentAdded={handleCommentAdded}
-            />
-          )}
-        </article>
-      )}
-    </div>
-  );
 
-  return standalone ? (
-    <Shell left={<LeftNav />} right={<RightRail />}>
-      {content}
+
+            {/* Comments section */}
+            {postData && postData.total_comments > 0 && (
+              <PostCommentsList
+                id={postId!}
+                onCommentAdded={handleCommentAdded}
+              />
+            )}
+
+            {/* Comment form */}
+            {postId && (
+              <div className="mt-8 pt-6 border-t border-white/10">
+                <CommentForm
+                  postId={postId}
+                  onCommentAdded={handleCommentAdded}
+                  placeholder="Share your thoughts..."
+                />
+              </div>
+            )}
+          </article>
+        )}
+      </div>
     </Shell>
   ) : (
     content

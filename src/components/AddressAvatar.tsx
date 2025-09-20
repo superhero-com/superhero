@@ -18,15 +18,15 @@ export default function AddressAvatar({
   // Using a simple avatar service - you can replace this with your preferred service
   const avatarUrl = `https://avatars.superherowallet.com/${address}`;
   
-  const radiusClass = borderRadius === '50%' ? 'rounded-full' : borderRadius.includes('px') ? `rounded-[${borderRadius}]` : 'rounded-lg';
+  const radiusClass = 'rounded-full';
   
   return (
     <div 
-      className={`${radiusClass} overflow-hidden flex items-center justify-center bg-white/5 border border-white/10 backdrop-blur-sm flex-shrink-0 ${className}`}
+      className={`${radiusClass} overflow-hidden flex items-center justify-center bg-white/5 border border-white/15 backdrop-blur-sm flex-shrink-0 ${className}`}
       style={{
         width: typeof size === 'string' ? size : `${size}px`,
         height: typeof size === 'string' ? size : `${size}px`,
-        borderRadius: borderRadius !== '50%' && !borderRadius.includes('px') ? borderRadius : undefined,
+        borderRadius: '50%',
         ...style
       }}
     >

@@ -323,14 +323,14 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     <div className="max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+        <h2 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#00ff9d] bg-clip-text text-transparent">
           Swap Tokens
         </h2>
 
         <DexSettings title="Swap Settings">
           <button
             aria-label="open-settings"
-            className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#4ecdc4] hover:-translate-y-0.5 active:translate-y-0"
+            className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
           >
             ⚙️ Settings
           </button>
@@ -362,7 +362,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <button
           onClick={handleTokenSwap}
           disabled={swapLoading || !tokenIn || !tokenOut}
-          className="w-12 h-12 rounded-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] border-2 border-white/10 text-white cursor-pointer flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(255,107,107,0.3)] z-[2] relative hover:shadow-[0_8px_24px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 hover:rotate-180 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:rotate-0"
+          className="w-12 h-12 rounded-full bg-gradient-to-r from-[#ff6b6b] to-[#00ff9d] border-2 border-white/10 text-white cursor-pointer flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(255,107,107,0.3)] z-[2] relative hover:shadow-[0_8px_24px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 hover:rotate-180 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:rotate-0"
         >
           ↕️
         </button>
@@ -447,7 +447,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
           className={`w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isSwapDisabled
               ? 'bg-white/10 cursor-not-allowed opacity-60'
-              : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0'
+              : 'bg-gradient-to-r from-[#ff6b6b] to-[#00ff9d] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0'
           }`}
         >
           {swapLoading ? (
@@ -461,7 +461,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <ConnectWalletButton
           label="Connect Wallet to Swap"
           block
-          className="w-full py-4 px-6 rounded-2xl border-none bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(255,107,107,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
+          className="w-full py-4 px-6 rounded-2xl border-none bg-gradient-to-r from-[#ff6b6b] to-[#00ff9d] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(255,107,107,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
         />
       )}
 

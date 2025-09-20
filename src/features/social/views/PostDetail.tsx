@@ -154,40 +154,63 @@ export default function PostDetail({
       {isLoading && renderLoadingState()}
       {error && renderErrorState()}
 
-        {isLoading && renderLoadingState()}
-        {error && renderErrorState()}
+      {isLoading && renderLoadingState()}
+      {error && renderErrorState()}
 
-        {post && (
-          <article className="grid">
-            {renderPostHeader(post)}
+      {post && (
+        <article className="grid">
+          {renderPostHeader(post)}
 
-            <div className="border-l border-white ml-[23px] pl-[37px]">
-              <PostContent post={post} />
-            </div>
+          <div className="border-l border-white ml-[23px] pl-[37px]">
+            <PostContent post={post} />
+          </div>
 
 
 
-            {/* Comments section */}
-            {postData && postData.total_comments > 0 && (
-              <PostCommentsList
-                id={postId!}
+          {/* Comments section */}
+          {postData && postData.total_comments > 0 && (
+            <PostCommentsList
+              id={postId!}
+              onCommentAdded={handleCommentAdded}
+            />
+          )}
+
+          {/* Comment form */}
+          {postId && (
+            <div className="mt-8 pt-6 border-t border-white/10">
+              <CommentForm
+                postId={postId}
                 onCommentAdded={handleCommentAdded}
+                placeholder="Share your thoughts..."
               />
-            )}
+            </div>
+          )}
+        </article>
+      )}
+    </div>
+  );
+  return standalone ? (
+    <Shell left={<LeftNav />} right={<RightRail />}>
+      {content}
 
-            {/* Comment form */}
-            {postId && (
-              <div className="mt-8 pt-6 border-t border-white/10">
-                <CommentForm
-                  postId={postId}
-                  onCommentAdded={handleCommentAdded}
-                  placeholder="Share your thoughts..."
-                />
-              </div>
-            )}
-          </article>
-        )}
-      </div>
+      {/* Comments section */}
+      {postData && postData.total_comments > 0 && (
+        <PostCommentsList
+          id={postId!}
+          onCommentAdded={handleCommentAdded}
+        />
+      )}
+
+      {/* Comment form */}
+      {postId && (
+        <div className="mt-8 pt-6 border-t border-white/10">
+          <CommentForm
+            postId={postId}
+            onCommentAdded={handleCommentAdded}
+            placeholder="Share your thoughts..."
+          />
+        </div>
+      )}
     </Shell>
   ) : (
     content

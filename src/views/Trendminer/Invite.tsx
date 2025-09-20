@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { TrendminerApi } from '../../api/backend';
 import InvitationList from '../../components/Invitation/InvitationList';
-import LeftRail from '../../components/layout/LeftRail';
 import RightRail from '../../components/layout/RightRail';
 import Shell from '../../components/layout/Shell';
 import WalletConnectBtn from '../../components/WalletConnectBtn';
@@ -147,7 +146,7 @@ export default function Invite() {
   const isEligibleForRewards = uniqueInviteesCount >= 4 && accumulatedRewardsAe > 0;
 
   return (
-    <Shell left={<LeftRail />} right={<RightRail />}>
+    <Shell right={<RightRail />}>
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Hero Section */}
         <div className="text-center mb-8 py-8">
@@ -247,7 +246,7 @@ export default function Invite() {
                       value={amountAe}
                       onChange={(e) => setAmountAe(e.target.value === '' ? '' : Number(e.target.value))}
                       placeholder="0.0"
-                      className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 lg:p-5 text-white text-sm md:text-base transition-all duration-300 outline-none font-medium w-full box-border focus:border-teal-400 focus:shadow-[0_0_0_3px_rgba(78,205,196,0.1)] focus:bg-white/8 focus:-translate-y-px placeholder:text-slate-400 placeholder:opacity-60"
+                      className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 lg:p-5 text-white text-sm md:text-base transition-all duration-300 outline-none font-medium w-full box-border focus:border-[var(--neon-teal)] focus:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus:bg-white/8 focus:-translate-y-px placeholder:text-slate-400 placeholder:opacity-60"
                     />
                   </label>
                 </div>
@@ -262,7 +261,7 @@ export default function Invite() {
                       step={1}
                       value={count}
                       onChange={(e) => setCount(Math.max(1, Number(e.target.value || 1)))}
-                      className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 lg:p-5 text-white text-sm md:text-base transition-all duration-300 outline-none font-medium w-full box-border focus:border-teal-400 focus:shadow-[0_0_0_3px_rgba(78,205,196,0.1)] focus:bg-white/8 focus:-translate-y-px placeholder:text-slate-400 placeholder:opacity-60"
+                      className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 lg:p-5 text-white text-sm md:text-base transition-all duration-300 outline-none font-medium w-full box-border focus:border-[var(--neon-teal)] focus:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus:bg-white/8 focus:-translate-y-px placeholder:text-slate-400 placeholder:opacity-60"
                     />
                   </label>
                 </div>
@@ -274,7 +273,7 @@ export default function Invite() {
                 className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold flex items-center justify-center gap-3 uppercase tracking-wider relative overflow-hidden break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${
                   !address 
                     ? 'opacity-50 cursor-not-allowed bg-gray-600 transform-none'
-                    : 'bg-gradient-to-r from-teal-500 to-blue-500 text-white shadow-lg shadow-teal-500/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-teal-500/40 before:content-[\'\'] before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:transition-all before:duration-500 hover:before:left-full'
+                    : 'bg-gradient-to-r from-[var(--neon-teal)] to-blue-500 text-white shadow-lg shadow-[rgba(0,255,157,0.3)] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[rgba(0,255,157,0.4)] before:content-[\'\'] before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:transition-all before:duration-500 hover:before:left-full'
                 }`}
               >
                 {generating ? (
@@ -293,7 +292,7 @@ export default function Invite() {
             {/* Generated Links */}
             {inviteLinks.length > 0 && (
               <div className="mt-8 pt-8 border-t border-white/10">
-                <h4 className="m-0 mb-6 text-xl md:text-2xl lg:text-3xl font-bold text-teal-400 break-words">
+                <h4 className="m-0 mb-6 text-xl md:text-2xl lg:text-3xl font-bold text-[var(--neon-teal)] break-words">
                   Generated Invite Links
                 </h4>
                 <div className="flex flex-col gap-4">
@@ -310,7 +309,7 @@ export default function Invite() {
                         className={`${
                           copiedIndex === i 
                             ? 'bg-green-500 shadow-lg shadow-green-500/30' 
-                            : 'bg-teal-400 shadow-lg shadow-teal-400/30 hover:bg-teal-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-teal-400/40'
+                            : 'bg-[var(--neon-teal)] shadow-lg shadow-[rgba(0,255,157,0.3)] hover:bg-[rgba(0,255,157,0.9)] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[rgba(0,255,157,0.4)]'
                         } border-0 rounded-lg p-4 text-white cursor-pointer transition-all duration-300 text-base md:text-lg min-w-10 min-h-10 md:min-w-12 md:min-h-12 lg:min-w-14 lg:min-h-14 flex items-center justify-center flex-shrink-0`}
                       >
                         {copiedIndex === i ? '✓' : '📋'}
@@ -407,7 +406,7 @@ export default function Invite() {
             </h3>
             <div className="flex gap-4 flex-wrap">
               <select
-                className="bg-white/5 border border-white/10 rounded-lg p-2 md:p-3 text-white text-xs md:text-sm cursor-pointer transition-all duration-300 font-medium min-w-[100px] focus:border-teal-400 focus:shadow-[0_0_0_3px_rgba(78,205,196,0.1)] focus:outline-none"
+                className="bg-white/5 border border-white/10 rounded-lg p-2 md:p-3 text-white text-xs md:text-sm cursor-pointer transition-all duration-300 font-medium min-w-[100px] focus:border-[var(--neon-teal)] focus:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus:outline-none"
                 value={orderBy}
                 onChange={(e) => setOrderBy(e.target.value as any)}
               >
@@ -415,7 +414,7 @@ export default function Invite() {
                 <option value="amount">Amount</option>
               </select>
               <select
-                className="bg-white/5 border border-white/10 rounded-lg p-2 md:p-3 text-white text-xs md:text-sm cursor-pointer transition-all duration-300 font-medium min-w-[100px] focus:border-teal-400 focus:shadow-[0_0_0_3px_rgba(78,205,196,0.1)] focus:outline-none"
+                className="bg-white/5 border border-white/10 rounded-lg p-2 md:p-3 text-white text-xs md:text-sm cursor-pointer transition-all duration-300 font-medium min-w-[100px] focus:border-[var(--neon-teal)] focus:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus:outline-none"
                 value={orderDirection}
                 onChange={(e) => setOrderDirection(e.target.value as any)}
               >
@@ -442,7 +441,7 @@ export default function Invite() {
                 <div className="text-slate-400 font-medium text-xs md:text-sm break-words leading-relaxed">
                   {new Date(r.created_at || Date.now()).toLocaleString()}
                 </div>
-                <div className="font-bold text-teal-400 text-sm md:text-lg text-center md:text-left break-words">
+                <div className="font-bold text-[var(--neon-teal)] text-sm md:text-lg text-center md:text-left break-words">
                   {r.amount ?? 0} AE
                 </div>
                 <div className="font-mono text-xs md:text-sm text-slate-400 break-all leading-relaxed">

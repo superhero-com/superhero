@@ -57,6 +57,10 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
 
   const isLoading = isPostLoading;
   const error = postError;
+  // Ensure detail page scrolls to top when opened
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
 
 
@@ -154,7 +158,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   const content = (
     <div className="w-full py-2 px-2 sm:px-3 md:px-4">
       <div className="mb-4">
-        <AeButton onClick={() => navigate(-1)} variant="ghost" size="sm">
+        <AeButton onClick={() => { navigate('/'); }} variant="ghost" size="sm">
           ← Back
         </AeButton>
       </div>

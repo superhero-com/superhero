@@ -8,6 +8,7 @@ import { useAeSdk, useAccount, useWalletConnect } from './hooks';
 import { routes } from './routes';
 import './styles/genz-components.scss';
 import './styles/mobile-optimizations.scss';
+import { useSuperheroChainNames } from './hooks/useChainName';
 const PostModal = React.lazy(() => import('./components/modals/PostModal'));
 const CookiesDialog = React.lazy(() => import('./components/modals/CookiesDialog'));
 const TokenSelectModal = React.lazy(() => import('./components/modals/TokenSelect'));
@@ -18,6 +19,7 @@ const TransactionConfirmModal = React.lazy(() => import('./components/modals/Tra
 
 
 export default function App() {
+  useSuperheroChainNames()
   const { initSdk, sdkInitialized, activeAccount } = useAeSdk();
   const { loadAccountData } = useAccount();
   const { checkWalletConnection } = useWalletConnect();

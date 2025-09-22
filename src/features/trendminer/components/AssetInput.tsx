@@ -1,4 +1,4 @@
-import React, { useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useRef, forwardRef, useImperativeHandle, useState, useEffect } from 'react';
 import { cn } from '../../../lib/utils';
 import { Button } from '../../../components/ui/button';
 import { Decimal } from '../../../libs/decimal';
@@ -47,6 +47,22 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
   className = '',
 }, ref) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Internal state for handling decimal input (like Vue model)
+  const [internalValue, setInternalValue] = useState<string>(String(modelValue));
+
+  // Update internal value when modelValue changes (similar to Vue watcher)
+  useEffect(() => {
+    const value = String(modelValue);
+    
+    if (value.includes('e')) {
+      // Handle scientific notation
+      setInternalValue(Decimal.from(modelValue).prettify(6));
+    } else if (typeof modelValue === 'number' || !value.endsWith('.')) {
+      // Update unless the value ends with a dot (user is typing decimal)
+      setInternalValue(value);
+    }
+  }, [modelValue]);
 
   useImperativeHandle(ref, () => ({
     focus: () => {
@@ -55,11 +71,26 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
   }));
 
   const sanitizeValue = (value: string): string => {
-    return value.replaceAll(',', '').replaceAll('-', '');
+    // Remove commas and negative signs, but keep decimal points and numbers
+    let sanitized = value.replace(/[^0-9.]/g, '');
+    
+    // Ensure only one decimal point
+    const parts = sanitized.split('.');
+    if (parts.length > 2) {
+      sanitized = parts[0] + '.' + parts.slice(1).join('');
+    }
+    
+    return sanitized;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const sanitizedValue = sanitizeValue(e.target.value);
+    const rawValue = e.target.value;
+    const sanitizedValue = sanitizeValue(rawValue);
+    
+    // Update internal value immediately for better UX
+    setInternalValue(rawValue);
+    
+    // Only emit sanitized value to parent
     onUpdateModelValue?.(sanitizedValue);
   };
 
@@ -79,7 +110,7 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
     if (value.isZero) return '0.00';
     return `$${value.prettify(2)}`;
   };
-
+console.log('tokenBalance', tokenBalance);
   return (
     <div 
       className={cn(
@@ -103,17 +134,17 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
           color === 'success' && "border-green-500"
         )}
       >
-        <div className="flex items-center">
+        <div className="flex items-center gap-5">
           <input
             ref={inputRef}
             type="text"
             inputMode="decimal"
-            value={String(modelValue)}
+            value={internalValue}
             onChange={handleInputChange}
             onFocus={handleFocus}
             disabled={disabled}
             className={cn(
-              "flex-1 input w-full text-xl leading-7 p-0 h-7 text-ellipsis whitespace-nowrap overflow-hidden",
+              "flex-1 input w-full text-xl leading-7 p-3 h-7 text-ellipsis whitespace-nowrap overflow-hidden",
               "border-none outline-none bg-transparent text-white placeholder-white/60",
               "focus:border-none focus:outline-none focus:ring-0",
               "min-w-[40%]"

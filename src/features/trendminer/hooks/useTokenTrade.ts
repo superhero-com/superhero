@@ -3,6 +3,13 @@ import BigNumber from 'bignumber.js';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { Decimal } from '../../../libs/decimal';
 import { TokenDto, TokenTradeState } from '../types';
+import {
+  calculateBuyPriceWithAffiliationFee,
+  calculateSellReturn,
+  calculateTokensFromAE,
+  toDecimals,
+  toAe
+} from '../../../utils/bondingCurve';
 
 // Constants from Vue implementation
 const PROTOCOL_DAO_AFFILIATION_FEE = 0.05;
@@ -27,10 +34,118 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
 
   const tokenRef = useRef<TokenDto>(token);
 
+  // Calculate next price using bonding curve
+  const calculateNextPrice = useCallback((currentSupply: Decimal) => {
+    try {
+      const price = Decimal.from(
+        toAe(
+          calculateBuyPriceWithAffiliationFee(
+            new BigNumber(currentSupply.bigNumber),
+            new BigNumber(1).multipliedBy(new BigNumber(10).pow(18)),
+          ),
+        ),
+      );
+      setState(prev => ({ ...prev, nextPrice: price }));
+    } catch (error) {
+      console.error('Error calculating bonding curve price:', error);
+      setState(prev => ({ ...prev, nextPrice: Decimal.ZERO }));
+    }
+  }, []);
+
+  // Calculate token cost based on bonding curve
+  const calculateTokenCost = useCallback((amount?: number, _isBuying = false, _isUsingToken = false): number => {
+    const tokenDecimals = tokenRef.current.decimals ?? 18;
+    const tokenSupply = new BigNumber(tokenRef.current.total_supply ?? 0);
+    let currentSupply = Decimal.from(toAe(tokenSupply.toString()));
+
+    if (!amount || amount <= 0) {
+      calculateNextPrice(currentSupply);
+      return amount || 0;
+    }
+
+    const tokenAmountBigNumber = new BigNumber(toDecimals(amount, tokenDecimals).toString());
+    let tokenAmountCostDecimal: Decimal;
+
+    if (_isBuying) {
+      if (_isUsingToken) {
+        currentSupply = currentSupply.add(Decimal.from(amount));
+        tokenAmountCostDecimal = Decimal.from(
+          toAe(calculateBuyPriceWithAffiliationFee(tokenSupply, tokenAmountBigNumber)),
+        );
+      } else {
+        tokenAmountCostDecimal = Decimal.from(
+          calculateTokensFromAE(tokenSupply, amount).toFixed(2),
+        );
+        currentSupply = currentSupply.add(tokenAmountCostDecimal.toString());
+      }
+    } else {
+      if (_isUsingToken) {
+        currentSupply = currentSupply.sub(Decimal.from(amount));
+        tokenAmountCostDecimal = Decimal.from(
+          toAe(calculateSellReturn(tokenSupply, tokenAmountBigNumber)),
+        );
+      } else {
+        tokenAmountCostDecimal = Decimal.from(
+          calculateTokensFromAE(tokenSupply, amount).toFixed(2),
+        );
+        currentSupply = currentSupply.sub(tokenAmountCostDecimal.toString());
+      }
+    }
+
+    calculateNextPrice(currentSupply);
+    return parseFloat(tokenAmountCostDecimal.toString());
+  }, [calculateNextPrice]);
+
   // Update token reference when prop changes
   useEffect(() => {
     tokenRef.current = token;
   }, [token]);
+
+  // Watch tokenA changes and calculate tokenB automatically
+  useEffect(() => {
+    if (
+      state.tokenA === undefined ||
+      state.tokenA <= 0 ||
+      !state.tokenAFocused ||
+      !tokenRef.current.sale_address
+    ) {
+      return;
+    }
+
+    const calculatedTokenB = calculateTokenCost(
+      state.tokenA,
+      state.isBuying,
+      !state.isBuying
+    );
+
+    setState(prev => ({
+      ...prev,
+      tokenB: calculatedTokenB
+    }));
+  }, [state.tokenA, state.isBuying, state.tokenAFocused, calculateTokenCost]);
+
+  // Watch tokenB changes and calculate tokenA automatically  
+  useEffect(() => {
+    if (
+      state.tokenB === undefined ||
+      state.tokenB <= 0 ||
+      state.tokenAFocused ||
+      !tokenRef.current.sale_address
+    ) {
+      return;
+    }
+
+    const calculatedTokenA = calculateTokenCost(
+      state.tokenB,
+      state.isBuying,
+      state.isBuying
+    );
+
+    setState(prev => ({
+      ...prev,
+      tokenA: calculatedTokenA
+    }));
+  }, [state.tokenB, state.isBuying, state.tokenAFocused, calculateTokenCost]);
 
   const resetFormState = useCallback(() => {
     setState(prev => ({
@@ -102,6 +217,14 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       return Decimal.ZERO;
     }
     return priceImpactDiff().div(currentPrice).mul(100);
+  };
+
+  // Calculate formatted percentage for display
+  const estimatedNextTokenPriceImpactDifferenceFormattedPercentage = (): string => {
+    const percentValue = priceImpactPercent();
+    return percentValue.gt(Decimal.from(1))
+      ? percentValue.prettify(2)
+      : percentValue.prettify();
   };
 
   // Calculate protocol DAO reward for buying
@@ -202,6 +325,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     averageTokenPrice: averageTokenPrice(),
     priceImpactDiff: priceImpactDiff(),
     priceImpactPercent: priceImpactPercent(),
+    estimatedNextTokenPriceImpactDifferenceFormattedPercentage: estimatedNextTokenPriceImpactDifferenceFormattedPercentage(),
     protocolTokenReward: protocolTokenReward(),
     spendableAeBalance: spendableAeBalance(),
     isInsufficientBalance: isInsufficientBalance(),

@@ -37,11 +37,11 @@ export default function GlobalStatsAnalytics() {
   ]), [totals, last7Days]);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}>
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {items.map((it) => (
-        <div key={it.name} style={{ padding: 8, background: 'rgba(0,0,0,0.03)', borderRadius: 8 }}>
-          <div style={{ fontSize: 12, opacity: 0.8 }}>{it.name}</div>
-          <div style={{ fontWeight: 800 }}>{loading ? '…' : (it.value as any)}</div>
+        <div key={it.name} className="p-2 bg-black/5 dark:bg-white/5 rounded-lg">
+          <div className="text-xs opacity-80 mb-1">{it.name}</div>
+          <div className="font-extrabold text-sm sm:text-base">{loading ? '…' : (it.value as any)}</div>
         </div>
       ))}
     </div>

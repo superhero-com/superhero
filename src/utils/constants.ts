@@ -19,3 +19,11 @@ export const IS_SAFARI =
   /Mozilla\/5.0 \((Macintosh|iPad|iPhone|iPod); [\s\S]+?\) AppleWebKit\/\S+ \(KHTML, like Gecko\)( (Version|Safari|Mobile)\/\S+)+/.test(
     navigator.userAgent,
   );
+
+export const COIN_SYMBOL = 'AE';
+export const AETERNITY_TOKEN_BASE_DATA = {
+    address: 'aeternity',
+    decimals: 18, // Amount of decimals
+    name: 'Aeternity',
+    symbol: COIN_SYMBOL,
+  } as const;

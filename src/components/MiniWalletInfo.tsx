@@ -35,7 +35,7 @@ export default function MiniWalletInfo({ block, style, ...rest }: Props) {
       </div>
       <div className="ml-auto">
         <AeButton
-          onClick={() => disconnectWallet()}
+          onClick={() => { disconnectWallet(); try { window.location.reload(); } catch {} }}
           variant="ghost"
           size="xs"
           className="h-8 px-2 border border-border/20 hover:bg-accent"

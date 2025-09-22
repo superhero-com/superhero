@@ -283,7 +283,7 @@ export default function PostForm({
           <div className="flex flex-col gap-3">
             <div className="relative flex items-start gap-3">
               {activeAccount && (
-                <div className="flex-shrink-0 self-start">
+                <div className={`flex-shrink-0 self-start ${isPost ? "hidden md:block" : ""}`}>
                   <AddressAvatar
                     address={activeAccount}
                     size={48}
@@ -345,7 +345,7 @@ export default function PostForm({
             {(showEmojiPicker || showGifInput) && (
               <div
                 className={`flex gap-2.5 relative justify-center md:justify-start ${
-                  activeAccount ? "pl-[60px]" : ""
+                  activeAccount ? (isPost ? "md:pl-[60px]" : "pl-[60px]") : ""
                 }`}
               >
                 {showEmojiPicker && (

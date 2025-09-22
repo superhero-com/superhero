@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { TrendminerApi } from '../../api/backend';
-import MobileCard from '../../components/MobileCard';
 import Sparkline from '../../components/Trendminer/Sparkline';
-import TokenChat from '../../components/Trendminer/TokenChat';
+import TokenTrades from '../../components/Trendminer/TokenTrades';
+import TokenHolders from '../../components/Trendminer/TokenHolders';
+import CommentsList from '../../components/Trendminer/CommentsList';
 import TvCandles from '../../components/Trendminer/TvCandles';
+import ShareModal from '../../components/ui/ShareModal';
 import { CONFIG } from '../../config';
 import { QualiChatService, type QualiMessage } from '../../libs/QualiChatService';
 import WebSocketClient from '../../libs/WebSocketClient';
-import TradeCard from './TradeCard';
+import { TokenTradeCard, TokenRanking } from '../../features/trendminer';
 import { TokenSummary } from '../../features/bcl/components';
+import LatestTransactionsCarousel from '@/components/Trendminer/LatestTransactionsCarousel';
 
 export default function TokenDetails() {
   const params = useParams();
@@ -41,6 +44,7 @@ export default function TokenDetails() {
   const [intervalSec, setIntervalSec] = useState<number>(5 * 60);
   const [featuredMessage, setFeaturedMessage] = useState<QualiMessage | null>(null);
   const [mcRank, setMcRank] = useState<number | null>(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
 
   useEffect(() => {
     let cancel = false;
@@ -120,11 +124,6 @@ export default function TokenDetails() {
     return () => { cancelled = true; };
   }, [data?.sale_address, intervalSec]);
 
-  function formatTokenAmount(aettos: number, decimals: number = 18, fractionDigits = 0) {
-    if (!isFinite(aettos)) return '0';
-    const units = aettos / Math.pow(10, decimals);
-    return units.toLocaleString(undefined, { maximumFractionDigits: fractionDigits });
-  }
 
   useEffect(() => {
     let cancelled = false;
@@ -277,16 +276,28 @@ export default function TokenDetails() {
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 text-white">
       {/* Header */}
+      <LatestTransactionsCarousel />
       <div className="mb-8">
-        <div className="flex items-center gap-4 flex-wrap mb-4">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-            #{data.name || data.symbol} {data.symbol ? (
-              <span className="opacity-70 font-medium text-white/70">({data.symbol})</span>
-            ) : null}
-          </h1>
-          <div className="px-3 py-2 rounded-xl bg-white/[0.05] border border-white/10 text-white/80 font-semibold text-sm backdrop-blur-[10px]">
-            MC RANK {mcRank != null ? `#${mcRank}` : '—'}
+        <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+              #{data.name || data.symbol} {data.symbol ? (
+                <span className="opacity-70 font-medium text-white/70">({data.symbol})</span>
+              ) : null}
+            </h1>
+            <div className="px-3 py-2 rounded-xl bg-white/[0.05] border border-white/10 text-white/80 font-semibold text-sm backdrop-blur-[10px]">
+              MC RANK {mcRank != null ? `#${mcRank}` : '—'}
+            </div>
           </div>
+          
+          {/* Share Button */}
+          <button
+            onClick={() => setShareModalOpen(true)}
+            className="px-4 py-2 rounded-xl bg-white/[0.05] border border-white/10 text-white hover:bg-white/[0.08] hover:border-white/20 transition-all duration-300 ease-out flex items-center gap-2 text-sm font-medium"
+          >
+            <span>🔗</span>
+            Share Token
+          </button>
         </div>
         {featuredMessage?.content?.body && (
           <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
@@ -299,6 +310,7 @@ export default function TokenDetails() {
             </div>
           </div>
         )}
+        {/* TODO: Add buuton share token */}
       </div>
 
       {/* Main Content Grid */}
@@ -307,11 +319,16 @@ export default function TokenDetails() {
         <div className="flex flex-col gap-6">
           {/* Trade Card */}
           <div className="w-full min-w-0">
-            <TradeCard token={data} />
+            <TokenTradeCard token={data} />
           </div>
 
           {/* Token Information Card */}
           <TokenSummary token={data} holders={holders} />
+
+          {/* Token Ranking Card */}
+          <div className="w-full min-w-0">
+            <TokenRanking token={data} />
+          </div>
 
           {/* Performance Section */}
           <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
@@ -426,78 +443,45 @@ export default function TokenDetails() {
 
             <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] min-h-[400px]">
               {activeTab === 'chat' && (
-                <div>
-                  <div className="text-xs text-white/60 mb-4 bg-white/[0.05] border border-white/10 rounded-xl p-3">
-                    Comments are powered by Quali.chat. Click "Add comment" to post in the public room; messages appear here shortly after.
-                  </div>
-                  <TokenChat token={{ name: data.name, address: data.address || data.contract_address }} />
-                </div>
+                <CommentsList 
+                  token={{ 
+                    name: data.name, 
+                    address: data.address || data.contract_address 
+                  }} 
+                />
               )}
 
               {activeTab === 'tx' && (
-                <div>
-                  <div className="flex flex-col gap-3 mb-4">
-                    {transactions.map((tx, idx) => (
-                      <div key={tx.tx_hash || tx.id || idx} className="flex justify-between items-center text-sm py-3 px-4 bg-white/[0.05] border border-white/10 rounded-xl">
-                        <div className="font-mono text-white/80 max-w-48 overflow-hidden text-ellipsis whitespace-nowrap">
-                          {(tx.tx_hash || '').slice(0, 8)}…{(tx.tx_hash || '').slice(-6)}
-                        </div>
-                        <div className="font-medium text-white">{tx.tx_type || 'TX'}</div>
-                        <div className="text-white/60 text-xs">
-                          {new Date(tx.created_at || Date.now()).toLocaleString()}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {!transactions.length && (
-                    <div className="text-white/60 text-sm text-center py-8">
-                      No transactions
-                    </div>
-                  )}
-                  {!txEnd && (
-                    <button
-                      onClick={loadMoreTx}
-                      className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/[0.05] text-white text-sm font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0"
-                    >
-                      Load more
-                    </button>
-                  )}
-                </div>
+                <TokenTrades
+                  transactions={transactions}
+                  loading={false}
+                  hasMore={!txEnd}
+                  onLoadMore={loadMoreTx}
+                />
               )}
 
               {activeTab === 'holders' && (
-                <div>
-                  <div className="flex flex-col gap-3 mb-4">
-                    {holders.map((h, idx) => (
-                      <div key={h.address || h.account_address || idx} className="flex justify-between items-center text-sm py-3 px-4 bg-white/[0.05] border border-white/10 rounded-xl">
-                        <div className="font-mono text-white/80 max-w-48 overflow-hidden text-ellipsis whitespace-nowrap">
-                          {h.address || h.account_address}
-                        </div>
-                        <div className="font-medium text-white">
-                          {formatTokenAmount(Number(h.balance ?? 0), Number(data.decimals ?? 18), 6)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {!holders.length && (
-                    <div className="text-white/60 text-sm text-center py-8">
-                      No holders
-                    </div>
-                  )}
-                  {!holdersEnd && (
-                    <button
-                      onClick={loadMoreHolders}
-                      className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/[0.05] text-white text-sm font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0"
-                    >
-                      Load more
-                    </button>
-                  )}
-                </div>
+                <TokenHolders
+                  holders={holders}
+                  loading={false}
+                  hasMore={!holdersEnd}
+                  onLoadMore={loadMoreHolders}
+                  decimals={Number(data?.decimals ?? 18)}
+                  totalSupply={data?.total_supply}
+                />
               )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        shareUrl={window.location.href}
+        title={`Share ${data?.name || data?.symbol || 'Token'}`}
+      />
     </div>
   );
 }

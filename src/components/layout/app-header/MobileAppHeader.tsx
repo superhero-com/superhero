@@ -112,7 +112,8 @@ export default function MobileAppHeader() {
               <IconSearch />
             </button>
           )} */}
-          <HeaderWalletButton className="flex-1" />
+          {/* Wallet button hidden in the top mobile header */}
+          {/* <HeaderWalletButton className="flex-1" /> */}
           <div className="flex-grow md:hidden" />
 
           <button

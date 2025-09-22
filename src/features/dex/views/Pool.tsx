@@ -1,22 +1,18 @@
-import React from 'react';
+import { Decimal } from '@/libs/decimal';
+import { toAe } from '@aeternity/aepp-sdk';
 import { useNavigate } from 'react-router-dom';
-import { useAccount } from '../../../hooks';
 import ConnectWalletButton from '../../../components/ConnectWalletButton';
-import { AddLiquidityForm, RemoveLiquidityForm, LiquidityPositionCard } from '../components';
-import { useLiquidityPositions } from '../hooks';
-import { PoolProvider, usePool } from '../context/PoolProvider';
 import RecentActivity from '../../../components/dex/supporting/RecentActivity';
+import { useAccount } from '../../../hooks';
+import { AddLiquidityForm, LiquidityPositionCard, RemoveLiquidityForm } from '../components';
+import { PoolProvider, usePool } from '../context/PoolProvider';
+import { useLiquidityPositions } from '../hooks';
 
 function PoolContent() {
   const navigate = useNavigate();
   const { activeAccount } = useAccount();
   const { positions, loading, error, refreshPositions } = useLiquidityPositions();
-  const { selectPositionForAdd, selectPositionForRemove, currentAction, setRefreshPositions } = usePool();
-
-  // // Connect refresh function to context
-  // React.useEffect(() => {
-  //   setRefreshPositions(() => refreshPositions);
-  // }, [refreshPositions, setRefreshPositions]);
+  const { selectPositionForAdd, selectPositionForRemove, currentAction } = usePool();
 
   const handleRemoveLiquidity = (pairId: string) => {
     const position = positions.find(p => p.pairId === pairId);
@@ -158,7 +154,7 @@ function PoolContent() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {positions.map((position) => (
+                  {positions.filter((position) => position.balance && Decimal.from(toAe(position.balance)).gt(0.001)).map((position) => (
                     <LiquidityPositionCard
                       key={position.pairId}
                       position={position}

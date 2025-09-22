@@ -83,6 +83,9 @@ export default function RightRail({
     Array<{ token: string; price: number; change: number }>
   >([]);
 
+  // Toggle visibility of Top Tokens, Live Activity, and Price Alerts sections
+  const SHOW_RIGHT_RAIL_EXTRAS = false;
+
   const [usdSpark, setUsdSpark] = useState<number[]>(() => {
     try {
       const raw = sessionStorage.getItem("ae_spark_usd");
@@ -854,7 +857,7 @@ export default function RightRail({
       {!hideTrends && <TrendingSidebar />}
 
       {/* Top Tokens */}
-      {topTokens.length > 0 && (
+      {SHOW_RIGHT_RAIL_EXTRAS && topTokens.length > 0 && (
         <div className="genz-card" style={{ marginBottom: "16px" }}>
           <div
             style={{
@@ -955,6 +958,7 @@ export default function RightRail({
       )}
 
       {/* Live Activity Feed */}
+      {SHOW_RIGHT_RAIL_EXTRAS && (
       <div className="genz-card" style={{ marginBottom: "16px" }}>
         <div
           style={{
@@ -1054,9 +1058,10 @@ export default function RightRail({
           </div>
         </div>
       </div>
+      )}
 
       {/* Price Alerts */}
-      {priceAlerts.length > 0 && (
+      {SHOW_RIGHT_RAIL_EXTRAS && priceAlerts.length > 0 && (
         <div className="genz-card" style={{ marginBottom: "16px" }}>
           <div
             style={{

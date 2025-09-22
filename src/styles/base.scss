@@ -179,6 +179,24 @@ a:hover::after {
   width: 100%;
 }
 
+/* Utility: disable gradient text for specific links */
+a.no-gradient-text {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: currentColor !important;
+  background-clip: initial !important;
+  color: var(--light-font-color) !important;
+}
+a.no-gradient-text:hover {
+  color: var(--light-font-color) !important;
+  filter: none;
+  transform: none;
+  text-shadow: none;
+}
+a.no-gradient-text::after {
+  display: none;
+}
+
 img, video { max-width: 100%; height: auto; display: block; }
 
 /* Prevent content overflow */

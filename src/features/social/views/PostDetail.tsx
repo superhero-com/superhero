@@ -9,6 +9,8 @@ import RightRail from '../../../components/layout/RightRail';
 import Shell from '../../../components/layout/Shell';
 import { useWallet } from '../../../hooks';
 import { relativeTime } from '../../../utils/time';
+import { CONFIG } from '../../../config';
+import { IconLink } from '../../../icons';
 import CommentForm from '../components/CommentForm';
 import PostCommentsList from '../components/PostCommentsList';
 import PostContent from '../components/PostContent';
@@ -114,6 +116,9 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
 
   const renderPostHeader = (displayPost: any) => {
     const { authorAddress, chainName } = getAuthorInfo(displayPost);
+    const explorerUrl = postData?.tx_hash && CONFIG.EXPLORER_URL
+      ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${postData.tx_hash}`
+      : null;
 
     return (
       <header className="flex items-start justify-between gap-4">
@@ -129,10 +134,17 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
           }
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          {displayPost?.timestamp && (
-            <div className="text-light-font-color text-xs font-medium">
-              {relativeTime(new Date(displayPost.timestamp))}
-            </div>
+          {explorerUrl && (
+            <a
+              href={explorerUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text"
+              title={postData?.tx_hash}
+            >
+              {`On-chain${displayPost?.timestamp ? ` ${relativeTime(new Date(displayPost.timestamp))}` : ''}`}
+              <IconLink className="w-2.5 h-2.5" />
+            </a>
           )}
         </div>
       </header>
@@ -182,7 +194,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   );
 
   return standalone ? (
-    <Shell left={<LeftRail />} right={<RightRail />}>
+    <Shell left={<LeftRail />} right={<RightRail />} containerClassName="max-w-[1080px] mx-auto">
       {content}
     </Shell>
   ) : (

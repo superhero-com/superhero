@@ -6,11 +6,12 @@ import { PostDto, PostsService } from '../../../api/generated';
 import { AeButton } from '../../../components/ui/ae-button';
 import { AeCard, AeCardContent } from '../../../components/ui/ae-card';
 import { Badge } from '../../../components/ui/badge';
-import { IconComment } from '../../../icons';
+import { IconComment, IconLink } from '../../../icons';
 import { linkify } from '../../../utils/linkify';
 import { relativeTime } from '../../../utils/time';
 import CommentForm from './CommentForm';
 import { useNavigate } from 'react-router-dom';
+import { CONFIG } from '../../../config';
 
 interface CommentItemProps {
   comment: PostDto;
@@ -100,11 +101,23 @@ const CommentItem = memo(({
                     overlaySize={24}
                   />
                 </div>
-                {comment.created_at && (
+                {comment.tx_hash && CONFIG.EXPLORER_URL ? (
+                  <a
+                    href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${comment.tx_hash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text"
+                    title={comment.tx_hash}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {`On-chain${comment.created_at ? ` ${relativeTime(new Date(comment.created_at))}` : ''}`}
+                    <IconLink className="w-2.5 h-2.5" />
+                  </a>
+                ) : comment.created_at ? (
                   <span className="text-xs text-muted-foreground flex-shrink-0">
                     {relativeTime(new Date(comment.created_at))}
                   </span>
-                )}
+                ) : null}
               </div>
 
               <div className='ml-3' style={{ paddingLeft: '48px' }}>

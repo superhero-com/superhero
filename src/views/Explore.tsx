@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import DexTabs from '../components/dex/DexTabs';
-import TokenTable from '../components/explore/core/TokenTable';
+import TokenTable from '../components/explore/components/TokenListTable';
 import { useTokenList } from '../components/explore/hooks/useTokenList';
 import { usePairList } from '../components/explore/hooks/usePairList';
 import { useTransactionList } from '../components/explore/hooks/useTransactionList';

@@ -93,10 +93,9 @@ export default function DexExploreTransactions() {
                 
                 {/* Type Dropdown */}
                 <div style={{
-                  position: 'relative',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 6
+                  gap: 16
                 }}>
                   <span style={{
                     fontSize: 12,

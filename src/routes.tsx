@@ -61,6 +61,7 @@ export const routes: RouteObject[] = [
         path: "post/:postId/comment/:id",
         element: <PostDetail standalone={false} />,
       },
+      { path: "users/:address", element: <UserProfile standalone={false} /> },
     ],
   },
   { path: "/trending", element: <Trending /> },
@@ -75,6 +76,7 @@ export const routes: RouteObject[] = [
   { path: "/trendminer/accounts", element: <TrendAccounts /> },
   { path: "/trendminer/accounts/:address", element: <TrendAccountDetails /> },
   { path: "/trendminer/create", element: <TrendCreate /> },
+  // Kept for backward compatibility; redirecting into SocialLayout version
   { path: "/users/:address", element: <UserProfile /> },
   { path: "/landing", element: <Landing /> },
   { path: "/meet/:room?", element: <Conference /> },

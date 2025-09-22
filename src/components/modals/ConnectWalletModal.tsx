@@ -27,7 +27,7 @@ function getInstallItems() {
     chrome: 'https://chrome.google.com/webstore/detail/superhero-wallet/mnhmmkepfddpifjkamaligfeemcbhdne',
     firefox: 'https://addons.mozilla.org/en-US/firefox/addon/superhero-wallet/',
     android: 'https://play.google.com/store/apps/details?id=com.superhero.cordova',
-    ios: 'https://apps.apple.com/app/superhero-wallet/id1511976050',
+    ios: 'https://apps.apple.com/us/app/superhero-wallet/id1502786641',
   } as const;
 
   if (isMobile) {

@@ -27,32 +27,32 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
   return (
     <div className="glass-card cursor-pointer w-full" onClick={handleItemClick}>
       <div className="flex gap-3">
-        <div className="flex-1 min-w-0 space-y-2">
-          <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0 space-y-0 md:space-y-2">
+          <div className="flex flex-col gap-0 md:flex-row md:items-start md:justify-between md:gap-2">
             <div className="flex-1 min-w-0">
               <AddressAvatarWithChainName
                 address={authorAddress}
-                size={48}
-                overlaySize={24}
+                size={40}
+                overlaySize={20}
               />
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {item.tx_hash && CONFIG.EXPLORER_URL && (
+            {item.tx_hash && CONFIG.EXPLORER_URL && (
+              <div className="mt-0 md:mt-0 md:flex md:items-center md:gap-2 md:flex-shrink-0">
                 <a
                   href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${item.tx_hash}`}
                   target="_blank"
                   rel="noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text"
+                  className="inline-flex items-center gap-0.5 md:gap-1 text-[11px] md:text-xs leading-none md:leading-normal text-light-font-color hover:text-light-font-color no-gradient-text md:self-start"
                   title={item.tx_hash}
                 >
-                  {`On-chain${item.created_at ? ` ${relativeTime(new Date(item.created_at))}` : ''}`}
-                  <IconLink className="w-2.5 h-2.5" />
+                  {`Posted on-chain${item.created_at ? ` ${relativeTime(new Date(item.created_at))}` : ''}`}
+                  <IconLink className="w-2 h-2 md:w-2.5 md:h-2.5" />
                 </a>
-              )}
-            </div>
+              </div>
+            )}
           </div>
-          <div className="ml-3" style={{ paddingLeft: "48px" }}>
+          <div className="ml-0 -mt-3 md:mt-0 md:ml-3 md:pl-10">
             <div className="text-[15px] text-foreground leading-snug">
               {linkify(item.content)}
             </div>

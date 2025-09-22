@@ -66,7 +66,13 @@ export default function MobileAppHeader() {
   }, [showOverlay, showSearch]);
 
   return (
-    <div className="z-[101] fixed top-0 left-0 right-0 w-full bg-[rgba(var(--background-color-rgb),0.95)] backdrop-blur-[20px] border-b border-white/10 shadow-[0_2px_20px_rgba(0,0,0,0.1)] md:hidden pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))]">
+    <div className="z-[101] fixed top-0 left-0 right-0 w-full md:hidden pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] border-b" style={{
+      backgroundColor: 'rgba(12, 12, 20, 0.5)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      borderBottomColor: 'rgba(255, 255, 255, 0.14)',
+      boxShadow: '0 6px 28px rgba(0,0,0,0.35)'
+    }}>
       {/* Search Mode */}
       {showSearch ? (
         <div className="px-3 flex items-center gap-3 w-full pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))]">

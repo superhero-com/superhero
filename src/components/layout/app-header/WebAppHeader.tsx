@@ -33,7 +33,7 @@ export default function WebAppHeader() {
     return pathname.startsWith(path);
   };
 
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  // Dropdown menus removed; show only top-level links
 
   return (
     <header className="sticky top-0 z-[1000] hidden md:block border-b" style={{ 
@@ -42,8 +42,7 @@ export default function WebAppHeader() {
       borderBottomColor: 'rgba(255, 255, 255, 0.1)'
     }}>
       <div className="flex items-center gap-6 px-6 h-16 max-w-[min(1536px,100%)] mx-auto md:px-5 md:gap-5">
-        {/* Hide header logo on large screens; keep for small where left nav is hidden */}
-        <Link to="/" className="flex items-center no-underline lg:hidden" style={{ color: 'var(--standard-font-color)' }} aria-label="Superhero Home">
+        <Link to="/" className="flex items-center no-underline" style={{ color: 'var(--standard-font-color)' }} aria-label="Superhero Home">
           <HeaderLogo className="h-8 w-auto" />
         </Link>
 
@@ -85,51 +84,6 @@ export default function WebAppHeader() {
                   />
                 )}
               </a>
-            ) : item.children && item.children.length > 0 ? (
-              <div
-                key={item.id}
-                className="relative"
-                onMouseEnter={() => setOpenMenu(item.id)}
-                onMouseLeave={() => setOpenMenu((prev) => (prev === item.id ? null : prev))}
-              >
-                <Link
-                  to={item.path}
-                  className={`no-underline font-medium px-3 py-2 rounded-lg transition-all duration-200 relative flex items-center gap-1`}
-                  style={{
-                    color: isActiveRoute(item.path) ? 'var(--custom-links-color)' : 'var(--light-font-color)',
-                    backgroundColor: isActiveRoute(item.path) ? 'rgba(0,255,157,0.1)' : 'transparent',
-                  }}
-                >
-                  {item.label}
-                  <span aria-hidden>▾</span>
-                  {isActiveRoute(item.path) && (
-                    <span 
-                      className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
-                      style={{ backgroundColor: 'var(--custom-links-color)' }}
-                    />
-                  )}
-                </Link>
-
-                {openMenu === item.id && (
-                  <div
-                    className="absolute top-[calc(100%+8px)] left-0 min-w-[220px] bg-[var(--topnav-background)] border border-white/10 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.4)] p-2 z-[1100]"
-                  >
-                    {item.children.map((child) => (
-                      <Link
-                        key={child.id}
-                        to={child.path}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg no-underline text-sm transition-all duration-200"
-                        style={{ color: 'var(--light-font-color)' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'var(--standard-font-color)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--light-font-color)'; }}
-                      >
-                        <span className="w-5 text-center">{child.icon}</span>
-                        <span>{child.label}</span>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
             ) : (
               <Link
                 key={item.id}
@@ -152,8 +106,7 @@ export default function WebAppHeader() {
           ))}
         </nav>
 
-        {/* Hide wallet button on large screens; it appears in LeftNav there */}
-        <div className="flex items-center gap-4 lg:hidden">
+        <div className="flex items-center gap-4">
           <HeaderWalletButton />
         </div>
       </div>

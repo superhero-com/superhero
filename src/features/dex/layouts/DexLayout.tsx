@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import LeftNav from '../../../components/layout/LeftNav';
+import './DexLayout.scss';
 
 interface NavigationItem {
   id: string;
@@ -194,17 +194,24 @@ export default function DexLayout({ children }: DexLayoutProps) {
   return (
     <>
       <div className="min-h-screen w-full max-w-[min(1536px,100%)] mx-auto flex flex-col">
-        <div className={[
-          'flex-grow grid grid-cols-1 gap-4 p-2 px-4 md:gap-3 md:p-2 md:px-3 lg:gap-4 lg:p-2 lg:px-4 sm:gap-2 sm:p-1 sm:px-2',
-          // Left rail + main (match Shell when only left is present)
-          'lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)]'
-        ].join(' ')}>
-          {/* Desktop LeftNav (matches Shell positioning/behavior) */}
+        <div className="flex-grow grid grid-cols-1 gap-4 p-2 px-4 md:gap-3 md:p-2 md:px-3 lg:gap-4 lg:p-2 lg:px-4 sm:gap-2 sm:p-1 sm:px-2 lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)]">
           <aside className="hidden lg:block sticky top-0 self-start min-w-0">
-            <LeftNav />
+            <div className="dex-sidebar">
+              <div className="dex-nav-section">
+                <div className="dex-nav-buttons">
+                  {navigationItems.map((item) => renderNavigationButton(item))}
+                </div>
+              </div>
+
+              <div className="dex-nav-section">
+                <div className="dex-section-title">Explore</div>
+                <div className="dex-nav-buttons">
+                  {exploreItems.map((item) => renderNavigationButton(item))}
+                </div>
+              </div>
+            </div>
           </aside>
 
-          {/* Main Content */}
           <main className="min-w-0 overflow-hidden">
             {children}
           </main>

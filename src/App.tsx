@@ -7,6 +7,7 @@ import { useAeSdk, useAccount, useWalletConnect } from "./hooks";
 import { routes } from "./routes";
 import "./styles/genz-components.scss";
 import "./styles/mobile-optimizations.scss";
+import AppHeader from "./components/layout/app-header";
 const PostModal = React.lazy(() => import("./components/modals/PostModal"));
 const CookiesDialog = React.lazy(
   () => import("./components/modals/CookiesDialog")
@@ -59,6 +60,7 @@ export default function App() {
         <CollectInvitationLinkCard />
       </div>
       <GlobalNewAccountEducation />
+      <AppHeader />
       <Suspense fallback={<div className="loading-fallback" />}>
         <ModalProvider
           registry={{

@@ -668,8 +668,21 @@ export default function RightRail({
         <div className="grid gap-2">
           {activeAccount ? (
             <div className="py-1">
-              <div className="text-[13px] text-[var(--light-font-color)] uppercase tracking-wide mb-1">
-                Wallet Balance
+              <div className="flex items-center justify-between mb-1">
+                <div className="text-[13px] text-[var(--light-font-color)] uppercase tracking-wide">
+                  Wallet Balance
+                </div>
+                {accountId && (
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/users/${accountId}`)}
+                      className="bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[10px] cursor-pointer transition-all duration-200 hover:bg-white/10 text-[var(--light-font-color)]"
+                    >
+                      VIEW PROFILE
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="text-2xl font-extrabold text-[var(--standard-font-color)]">
                 {Number(balanceAe || 0).toLocaleString(undefined, {

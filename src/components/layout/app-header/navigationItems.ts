@@ -49,12 +49,12 @@ export const navigationItems: NavigationItem[] = [
       },
     ],
   },
-  // {
-  //     id: 'trending',
-  //     label: 'Trends',
-  //     path: '/trending',
-  //     icon: '📈',
-  // },
+  {
+      id: 'trending',
+      label: 'Trends',
+      path: '/trending',
+      icon: '📈',
+  },
   // {
   //     id: 'invite',
   //     label: 'Invite & Earn',

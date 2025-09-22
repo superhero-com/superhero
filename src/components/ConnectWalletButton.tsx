@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAeSdk, useWalletConnect } from '../hooks';
+import { useAeSdk, useWalletConnect, useModal } from '../hooks';
 import Favicon from '../svg/favicon.svg?react';
 import { AeButton } from './ui/ae-button';
 import { cn } from '@/lib/utils';
@@ -14,12 +14,13 @@ type Props = {
 export default function ConnectWalletButton({ label = 'Connect Wallet', block, style, className }: Props) {
   const { activeAccount } = useAeSdk()
   const { connectWallet, connectingWallet } = useWalletConnect()
+  const { openModal } = useModal();
 
   if (activeAccount) return null;
   
   return (
     <AeButton
-      onClick={() => connectWallet()}
+      onClick={() => openModal({ name: 'connect-wallet' })}
       disabled={connectingWallet}
       loading={connectingWallet}
       variant="ghost"

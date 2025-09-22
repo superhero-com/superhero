@@ -26,6 +26,9 @@ const AlertModal = React.lazy(() => import("./components/modals/AlertModal"));
 const TransactionConfirmModal = React.lazy(
   () => import("./components/modals/TransactionConfirmModal")
 );
+const ConnectWalletModal = React.lazy(
+  () => import("./components/modals/ConnectWalletModal")
+);
 
 export default function App() {
   useSuperheroChainNames();
@@ -73,6 +76,7 @@ export default function App() {
             "feed-item-menu": FeedItemMenu,
             alert: AlertModal,
             "transaction-confirm": TransactionConfirmModal,
+            "connect-wallet": ConnectWalletModal,
           }}
         />
       </Suspense>

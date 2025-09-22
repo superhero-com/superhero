@@ -50,7 +50,7 @@ export default function UserProfile({ standalone = true }: { standalone?: boolea
   }, [address]);
 
   const content = (
-    <div className="max-w-[880px] mx-auto">
+    <div className="w-full">
       <div className="mb-4">
         <AeButton onClick={() => navigate(-1)} variant="ghost" size="sm">
           ← Back
@@ -109,7 +109,7 @@ export default function UserProfile({ standalone = true }: { standalone?: boolea
   );
 
   return standalone ? (
-    <Shell right={<RightRail />}>
+    <Shell right={<RightRail />} containerClassName="max-w-[1080px] mx-auto">
       {content}
     </Shell>
   ) : (

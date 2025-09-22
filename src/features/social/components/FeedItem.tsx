@@ -4,10 +4,10 @@ import { memo, useCallback } from "react";
 import { PostDto } from "../../../api/generated";
 // Using shared glass card styles via `genz-card` to match wallet/AE price cards
 import { Badge } from "../../../components/ui/badge";
-import { useChainName } from "../../../hooks/useChainName";
-import { IconComment } from "../../../icons";
+import { IconComment, IconLink } from "../../../icons";
 import { linkify } from "../../../utils/linkify";
 import { relativeTime } from "../../../utils/time";
+import { CONFIG } from "../../../config";
 
 interface FeedItemProps {
   item: PostDto;
@@ -17,7 +17,6 @@ interface FeedItemProps {
 
 // Component: Individual Feed Item
 const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
-  const { chainName } = useChainName(item.sender_address);
   const postId = item.id;
   const authorAddress = item.sender_address;
 
@@ -37,11 +36,21 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
                 overlaySize={24}
               />
             </div>
-            {item.created_at && (
-              <span className="text-xs text-muted-foreground flex-shrink-0">
-                {relativeTime(new Date(item.created_at))}
-              </span>
-            )}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {item.tx_hash && CONFIG.EXPLORER_URL && (
+                <a
+                  href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${item.tx_hash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text"
+                  title={item.tx_hash}
+                >
+                  {`On-chain${item.created_at ? ` ${relativeTime(new Date(item.created_at))}` : ''}`}
+                  <IconLink className="w-2.5 h-2.5" />
+                </a>
+              )}
+            </div>
           </div>
           <div className="ml-3" style={{ paddingLeft: "48px" }}>
             <div className="text-sm text-foreground leading-relaxed">
@@ -83,6 +92,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
                 <IconComment className="w-3 h-3" />
                 {commentCount}
               </Badge>
+              {/* On-chain link moved to header (top-left) */}
             </div>
           </div>
         </div>
@@ -97,7 +107,6 @@ const MemoizedFeedItem = memo(FeedItem, (prevProps, nextProps) => {
   return (
     prevProps.item.id === nextProps.item.id &&
     prevProps.commentCount === nextProps.commentCount &&
-    prevProps.chainName === nextProps.chainName &&
     prevProps.item.created_at === nextProps.item.created_at &&
     JSON.stringify(prevProps.item.media) ===
       JSON.stringify(nextProps.item.media)

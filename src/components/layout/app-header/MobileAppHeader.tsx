@@ -1,9 +1,15 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import SearchInput from '../../SearchInput';
-import { HeaderLogo, IconSearch, IconMobileMenu } from '../../../icons';
-import HeaderWalletButton from './HeaderWalletButton';
+import { HeaderLogo, IconSearch } from '../../../icons';
+// import HeaderWalletButton from './HeaderWalletButton';
 import { navigationItems } from './navigationItems';
+import AddressAvatar from '../../AddressAvatar';
+import { useAeSdk } from '../../../hooks/useAeSdk';
+import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { AeButton } from '@/components/ui/ae-button';
+import { useWalletConnect } from '../../../hooks/useWalletConnect';
+import { useModal } from '../../../hooks';
 
 
 
@@ -17,6 +23,15 @@ export default function MobileAppHeader() {
 
   const { pathname } = useLocation();
   const isOnFeed = pathname === '/';
+  const { activeAccount } = useAeSdk();
+  const { disconnectWallet, walletInfo } = useWalletConnect();
+  const { openModal } = useModal();
+
+  const handleConnect = () => openModal({ name: 'connect-wallet' });
+  const handleLogout = () => {
+    disconnectWallet();
+    try { window.location.reload(); } catch {}
+  };
 
   const toggleTheme = useCallback(() => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -117,11 +132,26 @@ export default function MobileAppHeader() {
           <div className="flex-grow md:hidden" />
 
           <button
-            className="flex-grow bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
+            className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
             onClick={handleMenuToggle}
             aria-label="Open Menu"
           >
-            <IconMobileMenu />
+            <span className="flex items-center gap-2">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path d="M4 6h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M4 12h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M4 18h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
+              {activeAccount && (
+                <AddressAvatar address={activeAccount} size={28} />
+              )}
+            </span>
           </button>
         </div>
       )}
@@ -141,6 +171,35 @@ export default function MobileAppHeader() {
               </button>
             </div>
 
+            <div className="py-4 px-6 border-b border-white/10 sm:py-3 sm:px-5">
+              {activeAccount ? (
+                <div>
+                  <AddressAvatarWithChainName
+                    isHoverEnabled={false}
+                    address={activeAccount}
+                    size={40}
+                    overlaySize={18}
+                    showBalance={true}
+                    showAddressAndChainName={true}
+                    hideFallbackName={true}
+                  />
+                  <div className="mt-3">
+                    <AeButton
+                      onClick={handleLogout}
+                      className="w-full justify-center bg-white/5 border border-white/10 rounded-xl"
+                      variant="ghost"
+                    >
+                      Disconnect
+                    </AeButton>
+                  </div>
+                </div>
+              ) : (
+                <AeButton onClick={handleConnect} className="w-full justify-center gap-2">
+                  Connect Wallet
+                </AeButton>
+              )}
+            </div>
+
             <nav className="flex flex-col py-4 px-6 gap-2 flex-1 sm:py-3 sm:px-5 sm:gap-1.5">
               {navigationItems.map(item => (
                 item.isExternal ? (
@@ -149,10 +208,9 @@ export default function MobileAppHeader() {
                     href={item.path}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center py-4 px-5 bg-white/5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] gap-4 relative hover:bg-white/10 hover:translate-x-1 focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--custom-links-color)] focus-visible:outline-offset-2 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px] sm:gap-3"
+                  className="flex items-center py-4 px-5 bg-white/5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] relative hover:bg-white/10 hover:translate-x-1 focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--custom-links-color)] focus-visible:outline-offset-2 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px]"
                     onClick={handleNavigationClick}
                   >
-                    <span className="text-xl w-6 text-center sm:text-lg sm:w-5">{item.icon}</span>
                     <span className="text-base sm:text-[15px]">{item.label}</span>
                   </a>
                 ) : (
@@ -160,18 +218,13 @@ export default function MobileAppHeader() {
                     key={item.id}
                     to={item.path}
                     onClick={handleNavigationClick}
-                    className="flex items-center py-4 px-5 bg-white/5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] gap-4 relative hover:bg-white/10 hover:translate-x-1 focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--custom-links-color)] focus-visible:outline-offset-2 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px] sm:gap-3"
+                    className="flex items-center py-4 px-5 bg-white/5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] relative hover:bg-white/10 hover:translate-x-1 focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--custom-links-color)] focus-visible:outline-offset-2 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px]"
                   >
-                    <span className="text-xl w-6 text-center sm:text-lg sm:w-5">{item.icon}</span>
                     <span className="text-base sm:text-[15px]">{item.label}</span>
                   </Link>
                 )
               ))}
             </nav>
-
-            <div className="py-4 px-6 border-t border-white/10 sm:py-3 sm:px-5">
-              <HeaderWalletButton />
-            </div>
           </div>
         </div>
       )}

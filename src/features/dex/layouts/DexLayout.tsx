@@ -219,7 +219,16 @@ export default function DexLayout({ children }: DexLayoutProps) {
       </div>
 
       {/* Mobile: Horizontal bottom navigation (kept) */}
-      <div className="block lg:hidden w-full fixed bottom-0 left-0 right-0 bg-card-bg border-t border-border-color backdrop-blur-[20px] z-[1000] p-2 pb-3 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
+      <div
+        className="block lg:hidden w-full fixed bottom-0 left-0 right-0 z-[1000] p-2 pb-3 border-t"
+        style={{
+          backgroundColor: 'rgba(12, 12, 20, 0.5)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderTopColor: 'rgba(255, 255, 255, 0.14)',
+          boxShadow: '0 -6px 28px rgba(0,0,0,0.35)'
+        }}
+      >
         <div className={`flex items-center justify-around gap-1 ${isExploreExpanded ? 'explore-expanded' : ''}`}>
           {!isExploreExpanded ? (
             mobileNavigationItems.map((item) => {

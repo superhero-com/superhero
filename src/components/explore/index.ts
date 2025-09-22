@@ -1,5 +1,5 @@
 // Core components
-export { default as TokenTable } from './core/TokenTable';
+export { default as TokenTable } from './components/TokenListTable';
 
 // Hooks
 export { useTokenList } from './hooks/useTokenList';

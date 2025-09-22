@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AddressChip } from '../components/AddressChip';
 import AeButton from '../components/AeButton';
@@ -8,7 +8,6 @@ import { TokenPricePerformance } from '../features/dex/components';
 import { useAeSdk } from '../hooks';
 import { Decimal } from '../libs/decimal';
 import { getHistory, getPairsByTokenUsd, getTokenWithUsd } from '../libs/dexBackend';
-import moment from 'moment';
 
 interface TokenData {
   address: string;
@@ -86,6 +85,7 @@ export default function TokenDetail() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'pools' | 'transactions'>('pools');
   const [tokenSymbolCache, setTokenSymbolCache] = useState<Record<string, string>>({});
+
 
 
   async function getTokenMetaData(_tokenAddress: string) {
@@ -272,7 +272,7 @@ export default function TokenDetail() {
 
   if (error) {
     return (
-      <div className="max-w-[1200px] mx-auto p-5">
+      <div className="mx-auto md:p-5 flex flex-col gap-6 md:gap-8 min-h-screen">
         <div className="text-center p-10 text-red-400 bg-red-500/10 rounded-2xl border border-red-500/20 backdrop-blur-xl">
           {error}
         </div>
@@ -280,8 +280,10 @@ export default function TokenDetail() {
     );
   }
 
+
   return (
-    <div className="max-w-[1200px] mx-auto p-5 flex flex-col gap-6 lg:p-4 md:p-4 md:gap-4">
+    <div className="mx-auto md:p-5 flex flex-col gap-6 md:gap-8 min-h-screen">
+      <div className="grid grid-cols-1 gap-6 md:gap-8 items-start">
       <div className="flex flex-col gap-6">
         {/* Token Detail Card */}
         <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] relative overflow-hidden">
@@ -306,7 +308,7 @@ export default function TokenDetail() {
           </div>
 
           {/* Token Stats Overview */}
-          <div className="grid grid-cols-3 gap-4 mb-4 lg:grid-cols-3 md:grid-cols-1">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             {/* Price Card */}
             <div className="p-5 rounded-2xl bg-gradient-to-br from-red-400/10 to-white/5 border border-red-400/20 backdrop-blur-xl relative overflow-hidden">
               <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
@@ -409,11 +411,7 @@ export default function TokenDetail() {
           </div>
 
           {/* Secondary Stats Row */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 16
-          }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Locked Tokens */}
             <div style={{
               padding: 18,
@@ -923,7 +921,7 @@ export default function TokenDetail() {
           </div>
         )}
       </div>
-
+      </div>
     </div>
   );
 }

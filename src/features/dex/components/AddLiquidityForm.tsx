@@ -41,8 +41,6 @@ export default function AddLiquidityForm() {
   const [successTxHash, setSuccessTxHash] = useState<string>('');
   const [successAmounts, setSuccessAmounts] = useState<{ amountA: string; amountB: string }>({ amountA: '', amountB: '' });
   
-  // Track which input is currently focused for auto-fill logic
-  const [focusedInput, setFocusedInput] = useState<'A' | 'B' | null>(null);
 
   // Helper function to find token by symbol or contract address
   const findToken = (identifier: string): DexTokenDto | null => {
@@ -101,10 +99,22 @@ export default function AddLiquidityForm() {
 
   // Update hook state when tokens change
   useEffect(() => {
+    // For AE tokens, use 'AE' as the address for the hook state
+    const tokenAAddress = tokenA?.is_ae ? 'AE' : (tokenA?.address || '');
+    const tokenBAddress = tokenB?.is_ae ? 'AE' : (tokenB?.address || '');
+    
+    console.log('Setting tokens in hook state:', {
+      tokenA: tokenAAddress,
+      tokenB: tokenBAddress,
+      symbolA: tokenA?.symbol || '',
+      symbolB: tokenB?.symbol || '',
+      tokenAObject: tokenA,
+      tokenBObject: tokenB,
+    });
     setState(prev => ({
       ...prev,
-      tokenA: tokenA?.address || '',
-      tokenB: tokenB?.address || '',
+      tokenA: tokenAAddress,
+      tokenB: tokenBAddress,
       symbolA: tokenA?.symbol || '',
       symbolB: tokenB?.symbol || '',
       decA: tokenA?.decimals || 18,
@@ -121,35 +131,45 @@ export default function AddLiquidityForm() {
     }));
   }, [amountA, amountB, setState]);
 
-  // Bidirectional auto-fill based on pool ratio
-  useEffect(() => {
-    if (!state.pairPreview || !state.pairPreview.ratioAinB || !focusedInput) return;
-
-    const ratioAinB = parseFloat(state.pairPreview.ratioAinB);
-    if (isNaN(ratioAinB) || ratioAinB <= 0) return;
-
-    if (focusedInput === 'A' && amountA !== undefined && amountA !== null) {
-      // User is typing in Token A, auto-fill Token B based on ratio
-      const amountANum = parseFloat(amountA);
-      if (!isNaN(amountANum)) {
-        const calculatedAmountB = amountANum === 0 ? '0' : (amountANum / ratioAinB).toString();
-        // Only update if the calculated amount is different from current amountB
-        if (calculatedAmountB !== amountB) {
+  // Handle Token A amount change and auto-calculate Token B
+  const handleAmountAChange = (newAmountA: string) => {
+    setAmountA(newAmountA);
+    
+    // Auto-calculate Token B based on ratio
+    if (state.pairPreview?.ratioAinB && newAmountA && newAmountA !== '') {
+      const ratioAinB = parseFloat(state.pairPreview.ratioAinB);
+      if (!isNaN(ratioAinB) && ratioAinB > 0) {
+        const amountANum = parseFloat(newAmountA);
+        if (!isNaN(amountANum)) {
+          const calculatedAmountB = amountANum === 0 ? '0' : (amountANum / ratioAinB).toString();
           setAmountB(calculatedAmountB);
         }
       }
-    } else if (focusedInput === 'B' && amountB !== undefined && amountB !== null) {
-      // User is typing in Token B, auto-fill Token A based on ratio
-      const amountBNum = parseFloat(amountB);
-      if (!isNaN(amountBNum)) {
-        const calculatedAmountA = amountBNum === 0 ? '0' : (amountBNum * ratioAinB).toString();
-        // Only update if the calculated amount is different from current amountA
-        if (calculatedAmountA !== amountA) {
+    } else if (!newAmountA || newAmountA === '') {
+      // Clear Token B when Token A is cleared
+      setAmountB('');
+    }
+  };
+
+  // Handle Token B amount change and auto-calculate Token A
+  const handleAmountBChange = (newAmountB: string) => {
+    setAmountB(newAmountB);
+    
+    // Auto-calculate Token A based on ratio
+    if (state.pairPreview?.ratioAinB && newAmountB && newAmountB !== '') {
+      const ratioAinB = parseFloat(state.pairPreview.ratioAinB);
+      if (!isNaN(ratioAinB) && ratioAinB > 0) {
+        const amountBNum = parseFloat(newAmountB);
+        if (!isNaN(amountBNum)) {
+          const calculatedAmountA = amountBNum === 0 ? '0' : (amountBNum * ratioAinB).toString();
           setAmountA(calculatedAmountA);
         }
       }
+    } else if (!newAmountB || newAmountB === '') {
+      // Clear Token A when Token B is cleared
+      setAmountA('');
     }
-  }, [amountA, amountB, state.pairPreview, focusedInput]);
+  };
 
   const filteredTokensA = useMemo(() => {
     const term = searchA.trim().toLowerCase();
@@ -290,7 +310,7 @@ export default function AddLiquidityForm() {
           amount={amountA}
           balance={balances.in}
           onTokenChange={setTokenA}
-          onAmountChange={setAmountA}
+          onAmountChange={handleAmountAChange}
           tokens={filteredTokensA}
           excludeTokens={tokenB ? [tokenB] : []}
           disabled={state.loading}
@@ -298,8 +318,6 @@ export default function AddLiquidityForm() {
           searchValue={searchA}
           onSearchChange={setSearchA}
           hasInsufficientBalance={hasInsufficientBalanceA}
-          onFocus={() => setFocusedInput('A')}
-          onBlur={() => setFocusedInput(null)}
         />
       </div>
 
@@ -319,7 +337,7 @@ export default function AddLiquidityForm() {
           amount={amountB}
           balance={balances.out}
           onTokenChange={setTokenB}
-          onAmountChange={setAmountB}
+          onAmountChange={handleAmountBChange}
           tokens={filteredTokensB}
           excludeTokens={tokenA ? [tokenA] : []}
           disabled={state.loading}
@@ -327,8 +345,6 @@ export default function AddLiquidityForm() {
           searchValue={searchB}
           onSearchChange={setSearchB}
           hasInsufficientBalance={hasInsufficientBalanceB}
-          onFocus={() => setFocusedInput('B')}
-          onBlur={() => setFocusedInput(null)}
         />
       </div>
 

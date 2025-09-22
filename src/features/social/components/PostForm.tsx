@@ -83,7 +83,7 @@ export default function PostForm({
   showEmojiPicker = true,
   showGifInput = true,
   characterLimit = 280,
-  minHeight = "80px",
+  minHeight = "60px",
 }: PostFormProps) {
   const { sdk } = useAeSdk();
   const { activeAccount, chainNames } = useAccount();
@@ -298,7 +298,7 @@ export default function PostForm({
                 onChange={(e) => setText(e.target.value)}
                 className="bg-white/7 border border-white/14 rounded-2xl p-4 pb-10 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pb-10 md:text-base md:rounded-2xl"
                 style={{ minHeight }}
-                rows={isPost ? 3 : 2}
+                rows={2}
                 maxLength={characterLimit}
               />
               {characterLimit && (
@@ -341,11 +341,11 @@ export default function PostForm({
             )}
           </div>
 
-          <div className="flex flex-col gap-3 pt-2.5 border-t border-white/12 relative md:flex-row md:items-center md:justify-between md:gap-3 md:pt-3">
+          <div className="flex flex-col gap-3 pt-2.5 relative md:flex-row md:items-center md:justify-between md:gap-3 md:pt-3">
             {(showEmojiPicker || showGifInput) && (
               <div
                 className={`flex gap-2.5 relative justify-center md:justify-start ${
-                  activeAccount ? "pl-12" : ""
+                  activeAccount ? "pl-[60px]" : ""
                 }`}
               >
                 {showEmojiPicker && (

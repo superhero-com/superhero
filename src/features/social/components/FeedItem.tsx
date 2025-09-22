@@ -27,7 +27,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
   return (
     <div className="glass-card cursor-pointer w-full" onClick={handleItemClick}>
       <div className="flex gap-3">
-        <div className="flex-1 min-w-0 space-y-3">
+        <div className="flex-1 min-w-0 space-y-2">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               <AddressAvatarWithChainName
@@ -53,7 +53,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
             </div>
           </div>
           <div className="ml-3" style={{ paddingLeft: "48px" }}>
-            <div className="text-sm text-foreground leading-relaxed">
+            <div className="text-[15px] text-foreground leading-snug">
               {linkify(item.content)}
             </div>
 
@@ -84,12 +84,12 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
                 </div>
               )}
 
-            <div className="flex items-center justify-between pt-2 border-t border-muted/50">
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-muted/50">
               <Badge
-                variant="secondary"
-                className="flex items-center gap-1 text-xs bg-muted/30 hover:bg-muted/50 transition-colors"
+                variant="outline"
+                className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 bg-transparent border-white/10 hover:border-white/20 transition-colors"
               >
-                <IconComment className="w-3 h-3" />
+                <IconComment className="w-[14px] h-[14px]" />
                 {commentCount}
               </Badge>
               {/* On-chain link moved to header (top-left) */}

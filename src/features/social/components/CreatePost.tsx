@@ -20,7 +20,7 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
       showEmojiPicker={true}
       showGifInput={true}
       characterLimit={280}
-      minHeight="80px"
+      minHeight="60px"
     />
   );
 }

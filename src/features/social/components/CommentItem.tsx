@@ -121,7 +121,7 @@ const CommentItem = memo(({
               </div>
 
               <div className='ml-3' style={{ paddingLeft: '48px' }}>
-                <div className="text-sm text-foreground leading-relaxed">
+                <div className="text-[15px] text-foreground leading-snug">
                   {linkify(comment.content)}
                 </div>
 
@@ -141,15 +141,15 @@ const CommentItem = memo(({
                   </div>
                 )}
 
-                <div className="flex items-center justify-between pt-2 border-t border-muted/50">
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-muted/50">
                   <div className="flex items-center gap-2">
                     {hasReplies && (
                       <Badge
-                        variant="secondary"
-                        className="flex items-center gap-1 text-xs cursor-pointer hover:bg-muted/50 transition-colors"
+                        variant="outline"
+                        className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 bg-transparent border-white/10 hover:border-white/20 cursor-pointer transition-colors"
                         onClick={toggleReplies}
                       >
-                        <IconComment className="w-3 h-3" />
+                        <IconComment className="w-[14px] h-[14px]" />
                         {comment.total_comments} {comment.total_comments === 1 ? 'reply' : 'replies'}
                       </Badge>
                     )}

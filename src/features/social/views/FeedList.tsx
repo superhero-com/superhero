@@ -120,6 +120,10 @@ export default function FeedList({
 
   const handleItemClick = useCallback(
     (postId: string) => {
+      // Save current feed scroll position before leaving
+      try {
+        sessionStorage.setItem("feedScrollY", String(window.scrollY || 0));
+      } catch {}
       navigate(`/post/${postId}`);
     },
     [navigate]
@@ -162,6 +166,17 @@ export default function FeedList({
   useEffect(() => {
     // Vite supports preloading dynamic chunks via import()
     import("../views/PostDetail").catch(() => {});
+  }, []);
+
+  // Restore scroll position when returning from detail pages
+  useEffect(() => {
+    const saved = sessionStorage.getItem("feedScrollY");
+    const savedY = saved ? Number(saved) : 0;
+    if (!Number.isNaN(savedY) && savedY > 0) {
+      requestAnimationFrame(() => window.scrollTo(0, savedY));
+      // Clear after restoring to avoid stale restores
+      sessionStorage.removeItem("feedScrollY");
+    }
   }, []);
 
   const content = (

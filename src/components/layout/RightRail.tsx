@@ -670,7 +670,7 @@ export default function RightRail({
             <div className="py-1">
               <div className="flex items-center justify-between mb-1">
                 <div className="text-[13px] text-[var(--light-font-color)] uppercase tracking-wide">
-                  Wallet Balance
+                  Your Wallet Balance
                 </div>
                 {accountId && (
                   <div className="flex gap-1">

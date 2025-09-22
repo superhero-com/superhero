@@ -52,7 +52,7 @@ export default function UserProfile({ standalone = true }: { standalone?: boolea
   const content = (
     <div className="w-full">
       <div className="mb-4">
-        <AeButton onClick={() => navigate(-1)} variant="ghost" size="sm">
+        <AeButton onClick={() => { navigate('/'); }} variant="ghost" size="sm">
           ← Back
         </AeButton>
       </div>

@@ -84,7 +84,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
                 </div>
               )}
 
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-muted/50">
+            <div className="flex items-center justify-between mt-2 pt-2">
               <Badge
                 variant="outline"
                 className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 bg-transparent border-white/10 hover:border-white/20 transition-colors"

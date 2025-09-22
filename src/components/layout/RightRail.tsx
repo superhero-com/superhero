@@ -30,8 +30,10 @@ interface SearchFilter {
 
 export default function RightRail({
   hideTrends = false,
+  hidePriceSection = true,
 }: {
   hideTrends?: boolean;
+  hidePriceSection?: boolean;
 }) {
   const toast = useToast();
   const navigate = useNavigate();
@@ -741,81 +743,83 @@ export default function RightRail({
         </div>
       </div>
 
-      {/* Enhanced Price Section */}
-      <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-5 shadow-[var(--glass-shadow)] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_12px_32px_rgba(255,107,107,0.2)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-[var(--border-gradient)] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
-            📈
-          </span>
-          <h4 className="m-0 text-base font-bold text-[var(--standard-font-color)] flex-1">
-            AE Price
-          </h4>
-          <div className="flex gap-1">
-            {(["usd", "eur", "cny"] as const).map((currency) => (
-              <button
-                key={currency}
-                className={`bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[10px] cursor-pointer transition-all duration-200 hover:bg-white/10 ${
-                  selectedCurrency === currency
-                    ? "bg-[var(--neon-teal)] text-white border-[var(--neon-teal)]"
-                    : "text-[var(--light-font-color)]"
-                }`}
-                onClick={() => setSelectedCurrency(currency)}
-              >
-                {currency.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <div className="text-xl font-bold text-[var(--standard-font-color)] mb-1">
-                {prices?.[selectedCurrency]
-                  ? formatPrice(prices[selectedCurrency], selectedCurrency)
-                  : "-"}
-              </div>
-              <div className="text-xs font-semibold">
-                {prices?.change24h && (
-                  <span
-                    style={{ color: getPriceChangeColor(prices.change24h) }}
-                  >
-                    {prices.change24h > 0 ? "+" : ""}
-                    {prices.change24h.toFixed(2)}% (24h)
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="flex-shrink-0">
-              <Sparkline
-                points={selectedCurrency === "usd" ? usdSpark : eurSpark}
-                width={80}
-                height={24}
-                stroke={selectedCurrency === "usd" ? "#66d19e" : "#5bb0ff"}
-              />
+      {/* Enhanced Price Section (hidden by default via hidePriceSection) */}
+      {!hidePriceSection && (
+        <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-5 shadow-[var(--glass-shadow)] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_12px_32px_rgba(255,107,107,0.2)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-[var(--border-gradient)] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
+              📈
+            </span>
+            <h4 className="m-0 text-base font-bold text-[var(--standard-font-color)] flex-1">
+              AE Price
+            </h4>
+            <div className="flex gap-1">
+              {(["usd", "eur", "cny"] as const).map((currency) => (
+                <button
+                  key={currency}
+                  className={`bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[10px] cursor-pointer transition-all duration-200 hover:bg-white/10 ${
+                    selectedCurrency === currency
+                      ? "bg-[var(--neon-teal)] text-white border-[var(--neon-teal)]"
+                      : "text-[var(--light-font-color)]"
+                  }`}
+                  onClick={() => setSelectedCurrency(currency)}
+                >
+                  {currency.toUpperCase()}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="grid gap-2">
-            <div className="flex justify-between items-center py-2 border-b border-white/5 last:border-b-0">
-              <span className="text-[11px] text-[var(--light-font-color)] uppercase tracking-wide">
-                Market Cap
-              </span>
-              <span className="text-[11px] text-[var(--standard-font-color)] font-semibold">
-                {prices?.marketCap ? formatMarketCap(prices.marketCap) : "-"}
-              </span>
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <div className="text-xl font-bold text-[var(--standard-font-color)] mb-1">
+                  {prices?.[selectedCurrency]
+                    ? formatPrice(prices[selectedCurrency], selectedCurrency)
+                    : "-"}
+                </div>
+                <div className="text-xs font-semibold">
+                  {prices?.change24h && (
+                    <span
+                      style={{ color: getPriceChangeColor(prices.change24h) }}
+                    >
+                      {prices.change24h > 0 ? "+" : ""}
+                      {prices.change24h.toFixed(2)}% (24h)
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex-shrink-0">
+                <Sparkline
+                  points={selectedCurrency === "usd" ? usdSpark : eurSpark}
+                  width={80}
+                  height={24}
+                  stroke={selectedCurrency === "usd" ? "#66d19e" : "#5bb0ff"}
+                />
+              </div>
             </div>
-            <div className="flex justify-between items-center py-2 border-b border-white/5 last:border-b-0">
-              <span className="text-[11px] text-[var(--light-font-color)] uppercase tracking-wide">
-                24h Volume
-              </span>
-              <span className="text-[11px] text-[var(--standard-font-color)] font-semibold">
-                {prices?.volume24h ? formatMarketCap(prices.volume24h) : "-"}
-              </span>
+
+            <div className="grid gap-2">
+              <div className="flex justify-between items-center py-2 border-b border-white/5 last:border-b-0">
+                <span className="text-[11px] text-[var(--light-font-color)] uppercase tracking-wide">
+                  Market Cap
+                </span>
+                <span className="text-[11px] text-[var(--standard-font-color)] font-semibold">
+                  {prices?.marketCap ? formatMarketCap(prices.marketCap) : "-"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-white/5 last:border-b-0">
+                <span className="text-[11px] text-[var(--light-font-color)] uppercase tracking-wide">
+                  24h Volume
+                </span>
+                <span className="text-[11px] text-[var(--standard-font-color)] font-semibold">
+                  {prices?.volume24h ? formatMarketCap(prices.volume24h) : "-"}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Enhanced Trending Section */}
       {/* <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-5 shadow-[var(--glass-shadow)] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_12px_32px_rgba(255,107,107,0.2)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-[var(--border-gradient)] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">

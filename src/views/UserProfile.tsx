@@ -45,6 +45,8 @@ export default function UserProfile({ standalone = true }: { standalone?: boolea
 
   useEffect(() => {
     if (!address) return;
+    // Scroll to top whenever navigating to a user profile
+    window.scrollTo(0, 0);
     loadAccountData();
     // Load profile
   }, [address]);
@@ -52,7 +54,7 @@ export default function UserProfile({ standalone = true }: { standalone?: boolea
   const content = (
     <div className="w-full">
       <div className="mb-4">
-        <AeButton onClick={() => { navigate('/'); }} variant="ghost" size="sm">
+        <AeButton onClick={() => { (window.history.length > 1) ? navigate(-1) : navigate('/'); }} variant="ghost" size="sm"  outlined className="!border !border-solid !border-white/15 hover:!border-white/35">
           ← Back
         </AeButton>
       </div>

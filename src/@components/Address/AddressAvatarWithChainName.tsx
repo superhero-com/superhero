@@ -116,6 +116,7 @@ export const AddressAvatarWithChainName = memo(({
                                 address={chainName ?? 'Fellow superhero'}
                                 truncate={truncateAddress}
                                 truncateFixed={false}
+                                className={className}
                             />
                         </span>
                     )

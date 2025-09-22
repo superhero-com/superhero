@@ -99,3 +99,7 @@
   animation: truncate-test 3s 1.5s infinite linear;
 }
 
+.animate-truncate-scroll {
+  animation: truncate-scroll var(--animation-duration, 10s) var(--animation-delay, 1s) infinite linear !important;
+}
+

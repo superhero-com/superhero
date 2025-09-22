@@ -42,7 +42,7 @@ export default function Shell({ left, right, children, containerClassName }: She
             </aside>
           )}
 
-          <main className="min-w-0 overflow-hidden">{children}</main>
+          <main className="min-w-0 overflow-visible">{children}</main>
 
           {hasRight && (
             <aside className="hidden lg:block sticky top-0 self-start min-w-0">

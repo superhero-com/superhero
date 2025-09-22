@@ -16,7 +16,7 @@ export const navigationItems: NavigationItem[] = [
   },
   {
     id: "dex",
-    label: "Tokens",
+    label: "DEX",
     path: "/dex/swap",
     icon: "💱",
     children: [

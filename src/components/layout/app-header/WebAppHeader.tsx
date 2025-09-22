@@ -37,9 +37,11 @@ export default function WebAppHeader() {
 
   return (
     <header className="sticky top-0 z-[1000] hidden md:block border-b" style={{ 
-      backgroundColor: 'var(--topnav-background)', 
-      backdropFilter: 'blur(10px)',
-      borderBottomColor: 'rgba(255, 255, 255, 0.1)'
+      backgroundColor: 'rgba(12, 12, 20, 0.5)',
+      backdropFilter: 'blur(14px)',
+      WebkitBackdropFilter: 'blur(14px)',
+      borderBottomColor: 'rgba(255, 255, 255, 0.14)',
+      boxShadow: '0 6px 28px rgba(0,0,0,0.35)'
     }}>
       <div className="flex items-center gap-6 px-6 h-16 max-w-[min(1536px,100%)] mx-auto md:px-5 md:gap-5">
         <Link to="/" className="flex items-center no-underline" style={{ color: 'var(--standard-font-color)' }} aria-label="Superhero Home">

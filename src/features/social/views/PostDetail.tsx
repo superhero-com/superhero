@@ -13,7 +13,7 @@ import CommentForm from '../components/CommentForm';
 import PostCommentsList from '../components/PostCommentsList';
 import PostContent from '../components/PostContent';
 
-export default function PostDetail() {
+export default function PostDetail({ standalone = true }: { standalone?: boolean } = {}) {
   const { postId } = useParams();
   const navigate = useNavigate();
   const { chainNames } = useWallet();
@@ -139,49 +139,53 @@ export default function PostDetail() {
     );
   };
 
-  return (
-    <Shell left={<LeftRail />} right={<RightRail />}>
-      <div className="max-w-[min(680px,100%)] mx-auto py-2 px-2 sm:px-3 md:px-4">
-        <div className="mb-4">
-          <AeButton onClick={() => navigate(-1)} variant="ghost" size="sm">
-            ← Back
-          </AeButton>
-        </div>
-
-        {isLoading && renderLoadingState()}
-        {error && renderErrorState()}
-
-        {post && (
-          <article className="grid">
-            {renderPostHeader(post)}
-
-            <div className="border-l border-white ml-[23px] pl-[37px]">
-              <PostContent post={post} />
-            </div>
-
-
-
-            {/* Comments section */}
-            {postData && postData.total_comments > 0 && (
-              <PostCommentsList
-                id={postId!}
-                onCommentAdded={handleCommentAdded}
-              />
-            )}
-
-            {/* Comment form */}
-            {postId && (
-              <div className="mt-8 pt-6 border-t border-white/10">
-                <CommentForm
-                  postId={postId}
-                  onCommentAdded={handleCommentAdded}
-                  placeholder="Share your thoughts..."
-                />
-              </div>
-            )}
-          </article>
-        )}
+  const content = (
+    <div className="w-full py-2 px-2 sm:px-3 md:px-4">
+      <div className="mb-4">
+        <AeButton onClick={() => navigate(-1)} variant="ghost" size="sm">
+          ← Back
+        </AeButton>
       </div>
+
+      {isLoading && renderLoadingState()}
+      {error && renderErrorState()}
+
+      {post && (
+        <article className="grid">
+          {renderPostHeader(post)}
+
+          <div className="border-l border-white ml-[23px] pl-[37px]">
+            <PostContent post={post} />
+          </div>
+
+          {/* Comments section */}
+          {postData && postData.total_comments > 0 && (
+            <PostCommentsList
+              id={postId!}
+              onCommentAdded={handleCommentAdded}
+            />
+          )}
+
+          {/* Comment form */}
+          {postId && (
+            <div className="mt-8 pt-6 border-t border-white/10">
+              <CommentForm
+                postId={postId}
+                onCommentAdded={handleCommentAdded}
+                placeholder="Share your thoughts..."
+              />
+            </div>
+          )}
+        </article>
+      )}
+    </div>
+  );
+
+  return standalone ? (
+    <Shell left={<LeftRail />} right={<RightRail />}>
+      {content}
     </Shell>
+  ) : (
+    content
   );
 }

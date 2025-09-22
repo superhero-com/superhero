@@ -10,7 +10,7 @@ export interface NavigationItem {
 export const navigationItems: NavigationItem[] = [
   {
     id: "home",
-    label: "Home",
+    label: "Feed",
     path: "/",
     icon: "🏠",
   },

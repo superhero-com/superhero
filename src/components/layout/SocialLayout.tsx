@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import Shell from "./Shell";
 import RightRail from "./RightRail";
 
@@ -8,8 +8,7 @@ export default function SocialLayout({
 }: {
   children?: React.ReactNode;
 }) {
-  const { pathname } = useLocation();
-  const containerClassName = pathname === "/" ? "max-w-[min(1200px,100%)]" : undefined;
+  const containerClassName = "max-w-[min(1200px,100%)]";
   return (
     <Shell right={<RightRail />} containerClassName={containerClassName}>
       <Suspense fallback={<div className="loading-fallback" />}>

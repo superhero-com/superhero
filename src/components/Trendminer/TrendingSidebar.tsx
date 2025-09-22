@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { cn } from '../../lib/utils';
 import AeButton from '../AeButton';
 import { TrendminerApi } from '../../api/backend';
-
+import configs from '../../configs';
 type TokenItem = {
   address: string;
   name: string;
@@ -85,6 +85,7 @@ export default function TrendingSidebar() {
     return n >= 1e12 ? n / 1e18 : n;
   }
 
+  if (!configs.features.trendminer) return null;
   return (
     <div className="p-3.5 bg-[var(--glass-bg,rgba(255,255,255,0.05))] border border-[var(--glass-border,rgba(255,255,255,0.1))] rounded-2xl shadow-[var(--glass-shadow,0_8px_32px_rgba(0,0,0,0.1))] backdrop-blur-sm">
       <div className="flex items-center justify-between gap-2.5 mb-2.5">

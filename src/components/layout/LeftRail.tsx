@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Backend, TrendminerApi } from '../../api/backend';
 import { useAeSdk } from '../../hooks';
 import WebSocketClient from '../../libs/WebSocketClient';
-
+import configs from '../../configs';
 interface TrendingTag {
   tag: string;
   score: number;
@@ -403,7 +403,7 @@ export default function LeftRail() {
 
 
 
-          {marketStats && (
+          {(marketStats && configs.features.trendminer) && (
             <div className="grid grid-cols-2 gap-2 mt-2">
               <div className="py-2 px-3 bg-teal-500/10 rounded-lg border border-teal-500/20 text-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(78,205,196,0.2)]">
                 <div className="text-[10px] text-[var(--neon-teal)] font-semibold">
@@ -425,31 +425,33 @@ export default function LeftRail() {
           )}
 
           {/* Network Status */}
-          <div className="grid grid-cols-3 gap-1.5 mt-2">
+          <div className={`grid grid-cols-${configs.features.trendminer ? '3' : '2'} gap-1.5 mt-2`}>
             <div className="flex flex-col items-center py-1.5 px-2 bg-white/[0.02] border border-white/[0.05] rounded-md text-[9px]">
               <span className="text-[#b8c5d6] mb-0.5">Backend</span>
-              <span className={`text-xs ${
-                apiStatus.backend === 'online' ? 'animate-pulse opacity-100' :
+              <span className={`text-xs ${apiStatus.backend === 'online' ? 'animate-pulse opacity-100' :
                 apiStatus.backend === 'checking' ? 'animate-spin opacity-100' : 'opacity-50'
-              }`}>
+                }`}>
                 {apiStatus.backend === 'online' ? '🟢' : apiStatus.backend === 'offline' ? '🔴' : '🟡'}
               </span>
             </div>
-            <div className="flex flex-col items-center py-1.5 px-2 bg-white/[0.02] border border-white/[0.05] rounded-md text-[9px]">
-              <span className="text-[#b8c5d6] mb-0.5">Trendminer</span>
-              <span className={`text-xs ${
-                apiStatus.trendminer === 'online' ? 'animate-pulse opacity-100' :
-                apiStatus.trendminer === 'checking' ? 'animate-spin opacity-100' : 'opacity-50'
-              }`}>
-                {apiStatus.trendminer === 'online' ? '🟢' : apiStatus.trendminer === 'offline' ? '🔴' : '🟡'}
-              </span>
-            </div>
+            {
+              configs.features.trendminer && (
+                <div className="flex flex-col items-center py-1.5 px-2 bg-white/[0.02] border border-white/[0.05] rounded-md text-[9px]">
+                  <span className="text-[#b8c5d6] mb-0.5">Trendminer</span>
+                  <span className={`text-xs ${apiStatus.trendminer === 'online' ? 'animate-pulse opacity-100' :
+                    apiStatus.trendminer === 'checking' ? 'animate-spin opacity-100' : 'opacity-50'
+                    }`}>
+                    {apiStatus.trendminer === 'online' ? '🟢' : apiStatus.trendminer === 'offline' ? '🔴' : '🟡'}
+                  </span>
+                </div>
+              )
+            }
+
             <div className="flex flex-col items-center py-1.5 px-2 bg-white/[0.02] border border-white/[0.05] rounded-md text-[9px]">
               <span className="text-[#b8c5d6] mb-0.5">DEX</span>
-              <span className={`text-xs ${
-                apiStatus.dex === 'online' ? 'animate-pulse opacity-100' :
+              <span className={`text-xs ${apiStatus.dex === 'online' ? 'animate-pulse opacity-100' :
                 apiStatus.dex === 'checking' ? 'animate-spin opacity-100' : 'opacity-50'
-              }`}>
+                }`}>
                 {apiStatus.dex === 'online' ? '🟢' : apiStatus.dex === 'offline' ? '🔴' : '🟡'}
               </span>
             </div>
@@ -458,148 +460,156 @@ export default function LeftRail() {
       </div>
 
       {/* Enhanced Quick Actions */}
-      <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-5 shadow-[var(--glass-shadow)] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_12px_32px_rgba(255,107,107,0.2)] mb-4">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-lg">⚡</span>
-          <h4 className="m-0 text-[var(--neon-pink)] text-base font-bold">Quick Actions</h4>
-        </div>
+      {
+        configs.features.trendminer && (
+          <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-5 shadow-[var(--glass-shadow)] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_12px_32px_rgba(255,107,107,0.2)] mb-4">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-lg">⚡</span>
+              <h4 className="m-0 text-[var(--neon-pink)] text-base font-bold">Quick Actions</h4>
+            </div>
 
-        <div className="grid gap-2.5">
-          <button
-            className="bg-gradient-to-r from-teal-500 to-teal-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(78,205,196,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => handleQuickAction('explore')}
-            title="Explore and add tokens to your wallet"
-          >
-            🎯 Explore Tokens
-          </button>
-          <button
-            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(59,130,246,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => handleQuickAction('bridge')}
-            title="Bridge assets from Ethereum to æternity"
-          >
-            🌉 Bridge Assets
-          </button>
-          <button
-            className="bg-gradient-to-r from-pink-500 to-pink-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(236,72,153,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => handleQuickAction('trending')}
-            title="View trending tokens and topics"
-          >
-            🔥 Trending
-          </button>
-          <button
-            className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(245,158,11,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => handleQuickAction('governance')}
-            title="Participate in governance"
-          >
-            🗳️ Governance
-          </button>
-          <button
-            className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(147,51,234,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => handleQuickAction('meet')}
-            title="Join or create a meeting"
-          >
-            🎥 Meet
-          </button>
-          <a
-            href="https://quali.chat"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-gradient-to-r from-teal-500 to-teal-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(78,205,196,0.3)] no-underline text-center flex items-center justify-center gap-1.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            title="Join the community chat"
-          >
-            💬 Chat
-          </a>
-        </div>
-      </div>
+            <div className="grid gap-2.5">
+              <button
+                className="bg-gradient-to-r from-teal-500 to-teal-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(78,205,196,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+                onClick={() => handleQuickAction('explore')}
+                title="Explore and add tokens to your wallet"
+              >
+                🎯 Explore Tokens
+              </button>
+              <button
+                className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(59,130,246,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+                onClick={() => handleQuickAction('bridge')}
+                title="Bridge assets from Ethereum to æternity"
+              >
+                🌉 Bridge Assets
+              </button>
+              <button
+                className="bg-gradient-to-r from-pink-500 to-pink-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(236,72,153,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+                onClick={() => handleQuickAction('trending')}
+                title="View trending tokens and topics"
+              >
+                🔥 Trending
+              </button>
+              <button
+                className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(245,158,11,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+                onClick={() => handleQuickAction('governance')}
+                title="Participate in governance"
+              >
+                🗳️ Governance
+              </button>
+              <button
+                className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(147,51,234,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+                onClick={() => handleQuickAction('meet')}
+                title="Join or create a meeting"
+              >
+                🎥 Meet
+              </button>
+              <a
+                href="https://quali.chat"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-gradient-to-r from-teal-500 to-teal-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(78,205,196,0.3)] no-underline text-center flex items-center justify-center gap-1.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+                title="Join the community chat"
+              >
+                💬 Chat
+              </a>
+            </div>
+          </div>
+        )
+      }
 
       {/* Live Trending Topics */}
-      <div className="genz-card" style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <span style={{ fontSize: '18px' }}>🔥</span>
-          <h4 style={{ margin: 0, color: 'var(--neon-yellow)', fontSize: '16px' }}>Live Trending</h4>
-          <button
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--neon-teal)',
-              fontSize: '16px',
-              cursor: 'pointer',
-              padding: '4px',
-              borderRadius: '4px',
-              transition: 'all 0.2s ease',
-              marginLeft: 'auto'
-            }}
-            onClick={() => navigate('/trending')}
-            title="Explore all trends"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 255, 157, 0.1)';
-              e.currentTarget.style.transform = 'scale(1.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'none';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-          >
-            🔍
-          </button>
-          <div style={{
-            width: '6px',
-            height: '6px',
-            borderRadius: '50%',
-            background: 'var(--neon-pink)',
-            animation: 'pulse 1s infinite'
-          }} />
-        </div>
-
-        <div style={{ display: 'grid', gap: '8px' }}>
-          {trendingTags.slice(0, 6).map((tag, index) => (
-            <div
-              key={index}
-              className="trending-topic"
-              style={{
-                padding: '8px 12px',
-                background: `rgba(255,255,255,${0.03 + (index * 0.02)})`,
-                borderRadius: '10px',
-                border: '1px solid rgba(255,255,255,0.05)',
-                fontSize: '11px',
-                color: '#b8c5d6',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                textAlign: 'center',
-                position: 'relative',
-                overflow: 'hidden'
-              }}
-              onClick={() => handleTrendingTopic(tag.tag)}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.12)';
-                e.currentTarget.style.color = 'white';
-                e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = `rgba(255,255,255,${0.03 + (index * 0.02)})`;
-                e.currentTarget.style.color = '#b8c5d6';
-                e.currentTarget.style.transform = 'translateY(0) scale(1)';
-              }}
-              title={`Search for ${tag.tag} (Score: ${tag.score})`}
-            >
-              <span style={{
-                position: 'absolute',
-                top: '2px',
-                right: '6px',
-                fontSize: '8px',
-                color: 'var(--neon-pink)',
-                fontWeight: '600'
-              }}>
-                #{index + 1}
-              </span>
-              {tag.tag}
+      {
+        configs.features.trendminer && (
+          <div className="genz-card" style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '18px' }}>🔥</span>
+              <h4 style={{ margin: 0, color: 'var(--neon-yellow)', fontSize: '16px' }}>Live Trending</h4>
+              <button
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--neon-teal)',
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  borderRadius: '4px',
+                  transition: 'all 0.2s ease',
+                  marginLeft: 'auto'
+                }}
+                onClick={() => navigate('/trending')}
+                title="Explore all trends"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 255, 157, 0.1)';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'none';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                🔍
+              </button>
+              <div style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: 'var(--neon-pink)',
+                animation: 'pulse 1s infinite'
+              }} />
             </div>
-          ))}
-        </div>
-      </div>
+
+            <div style={{ display: 'grid', gap: '8px' }}>
+              {trendingTags.slice(0, 6).map((tag, index) => (
+                <div
+                  key={index}
+                  className="trending-topic"
+                  style={{
+                    padding: '8px 12px',
+                    background: `rgba(255,255,255,${0.03 + (index * 0.02)})`,
+                    borderRadius: '10px',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    fontSize: '11px',
+                    color: '#b8c5d6',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    textAlign: 'center',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}
+                  onClick={() => handleTrendingTopic(tag.tag)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.12)';
+                    e.currentTarget.style.color = 'white';
+                    e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = `rgba(255,255,255,${0.03 + (index * 0.02)})`;
+                    e.currentTarget.style.color = '#b8c5d6';
+                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  }}
+                  title={`Search for ${tag.tag} (Score: ${tag.score})`}
+                >
+                  <span style={{
+                    position: 'absolute',
+                    top: '2px',
+                    right: '6px',
+                    fontSize: '8px',
+                    color: 'var(--neon-pink)',
+                    fontWeight: '600'
+                  }}>
+                    #{index + 1}
+                  </span>
+                  {tag.tag}
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      }
 
       {/* Top Tokens */}
-      {topTokens.length > 0 && (
+      {(topTokens.length > 0 && configs.features.trendminer) && (
         <div className="genz-card" style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <span style={{ fontSize: '18px' }}>💎</span>
@@ -669,86 +679,90 @@ export default function LeftRail() {
       )}
 
       {/* Live Activity Feed */}
-      <div className="genz-card" style={{ marginBottom: '16px' }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            marginBottom: '16px',
-            cursor: 'pointer'
-          }}
-          onClick={() => setShowLiveFeed(!showLiveFeed)}
-          title="Click to toggle live feed"
-        >
-          <span style={{ fontSize: '18px' }}>📡</span>
-          <h4 style={{ margin: 0, color: 'var(--neon-green)', fontSize: '16px' }}>Live Activity</h4>
-          <span style={{
-            fontSize: '12px',
-            color: 'var(--neon-green)',
-            marginLeft: 'auto',
-            transition: 'transform 0.3s ease',
-            transform: showLiveFeed ? 'rotate(180deg)' : 'rotate(0deg)'
-          }}>
-            ▼
-          </span>
-        </div>
+      {
+        configs.features.trendminer && (
+          <div className="genz-card" style={{ marginBottom: '16px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '16px',
+                cursor: 'pointer'
+              }}
+              onClick={() => setShowLiveFeed(!showLiveFeed)}
+              title="Click to toggle live feed"
+            >
+              <span style={{ fontSize: '18px' }}>📡</span>
+              <h4 style={{ margin: 0, color: 'var(--neon-green)', fontSize: '16px' }}>Live Activity</h4>
+              <span style={{
+                fontSize: '12px',
+                color: 'var(--neon-green)',
+                marginLeft: 'auto',
+                transition: 'transform 0.3s ease',
+                transform: showLiveFeed ? 'rotate(180deg)' : 'rotate(0deg)'
+              }}>
+                ▼
+              </span>
+            </div>
 
-        <div style={{
-          maxHeight: showLiveFeed ? '300px' : '0px',
-          overflow: 'hidden',
-          transition: 'max-height 0.3s ease'
-        }}>
-          <div style={{ display: 'grid', gap: '6px' }}>
-            {liveTransactions.map((tx, index) => (
-              <div
-                key={index}
-                className={`live-activity-item ${tx.type === 'CREATED' ? 'new-token' : ''}`}
-                style={{
-                  padding: '8px 10px',
-                  background: 'rgba(255,255,255,0.02)',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255,255,255,0.03)',
-                  fontSize: '10px',
-                  color: '#b8c5d6',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  animation: index === 0 ? 'slideIn 0.5s ease' : 'none'
-                }}
-              >
-                <span style={{
-                  fontSize: '12px',
-                  color: tx.type === 'CREATED' ? 'var(--neon-green)' : 'var(--neon-blue)'
-                }}>
-                  {tx.type === 'CREATED' ? '🆕' : '💱'}
-                </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '10px', fontWeight: '600', color: 'white' }}>
-                    {tx.token_name}
+            <div style={{
+              maxHeight: showLiveFeed ? '300px' : '0px',
+              overflow: 'hidden',
+              transition: 'max-height 0.3s ease'
+            }}>
+              <div style={{ display: 'grid', gap: '6px' }}>
+                {liveTransactions.map((tx, index) => (
+                  <div
+                    key={index}
+                    className={`live-activity-item ${tx.type === 'CREATED' ? 'new-token' : ''}`}
+                    style={{
+                      padding: '8px 10px',
+                      background: 'rgba(255,255,255,0.02)',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255,255,255,0.03)',
+                      fontSize: '10px',
+                      color: '#b8c5d6',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      animation: index === 0 ? 'slideIn 0.5s ease' : 'none'
+                    }}
+                  >
+                    <span style={{
+                      fontSize: '12px',
+                      color: tx.type === 'CREATED' ? 'var(--neon-green)' : 'var(--neon-blue)'
+                    }}>
+                      {tx.type === 'CREATED' ? '🆕' : '💱'}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '10px', fontWeight: '600', color: 'white' }}>
+                        {tx.token_name}
+                      </div>
+                      <div style={{ fontSize: '9px', color: '#94a3b8' }}>
+                        {tx.type === 'CREATED' ? 'Token Created' : 'Transaction'}
+                      </div>
+                    </div>
+                    <div style={{
+                      fontSize: '8px',
+                      color: '#64748b',
+                      fontFamily: 'monospace'
+                    }}>
+                      {new Date(tx.created_at).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
                   </div>
-                  <div style={{ fontSize: '9px', color: '#94a3b8' }}>
-                    {tx.type === 'CREATED' ? 'Token Created' : 'Transaction'}
-                  </div>
-                </div>
-                <div style={{
-                  fontSize: '8px',
-                  color: '#64748b',
-                  fontFamily: 'monospace'
-                }}>
-                  {new Date(tx.created_at).toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      </div>
+        )
+      }
 
       {/* Price Alerts */}
-      {priceAlerts.length > 0 && (
+      {(priceAlerts.length > 0 && configs.features.trendminer) && (
         <div className="genz-card" style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <span style={{ fontSize: '18px' }}>📈</span>

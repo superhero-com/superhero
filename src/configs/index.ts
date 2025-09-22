@@ -42,6 +42,10 @@ export const configs: IAppConfigs = {
   },
 //   languages: ["en"],
   avatarServiceUrl: "https://avatars.superherowallet.com/",
+
+  features: {
+    trendminer: false,
+  }
 };
 
 export default configs;

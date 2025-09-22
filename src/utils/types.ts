@@ -33,6 +33,10 @@ export interface IAppConfigs {
     networks: Record<NetworkId, INetwork>;
     // languages: SupportedLanguage[];
     avatarServiceUrl: string;
+
+    features: {
+        trendminer: boolean;
+    }
 }
 
 export interface Wallet {

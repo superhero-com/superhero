@@ -1,6 +1,6 @@
 import React, { lazy } from 'react';
 import { RouteObject } from 'react-router-dom';
-
+import configs from './configs';
 const FeedList = lazy(() => import('./features/social/views/FeedList'));
 const Trending = lazy(() => import('./views/Trending'));
 const TrendTokens = lazy(() => import('./views/Trendminer/TokenList'));
@@ -9,9 +9,9 @@ const TrendCloudVisx = lazy(() => import('./views/Trendminer/TrendCloudVisx'));
 const TrendTokenDetails = lazy(() => import('./views/Trendminer/TokenDetails'));
 const TrendInvite = lazy(() => import('./views/Trendminer/Invite'));
 const TrendDao = lazy(() => import('./views/Trendminer/Dao'));
-  const TrendDaos = lazy(() => import('./views/Trendminer/Daos'));
-  const TrendAccounts = lazy(() => import('./views/Trendminer/Accounts'));
-  const TrendAccountDetails = lazy(() => import('./views/Trendminer/AccountDetails'));
+const TrendDaos = lazy(() => import('./views/Trendminer/Daos'));
+const TrendAccounts = lazy(() => import('./views/Trendminer/Accounts'));
+const TrendAccountDetails = lazy(() => import('./views/Trendminer/AccountDetails'));
 const TrendCreate = lazy(() => import('./views/Trendminer/CreateToken'));
 const PostDetail = lazy(() => import('./features/social/views/PostDetail'));
 const UserProfile = lazy(() => import('./views/UserProfile'));
@@ -21,42 +21,47 @@ const Governance = lazy(() => import('./views/Governance'));
 const Terms = lazy(() => import('./views/Terms'));
 const Privacy = lazy(() => import('./views/Privacy'));
 const FAQ = lazy(() => import('./views/FAQ'));
-  const TxQueue = lazy(() => import('./views/TxQueue'));
-  
-  // DEX Components
-  const DexLayout = lazy(() => import('./features/dex/layouts/DexLayout'));
-  const DexSwap = lazy(() => import('./features/dex/views/DexSwap'));
-  const DexWrap = lazy(() => import('./features/dex/views/DexWrap'));
-  const DexBridge = lazy(() => import('./features/dex/views/DexBridge'));
-  const Pool = lazy(() => import('./features/dex/views/Pool'));
-  const DexExploreTokens = lazy(() => import('./features/dex/views/DexExploreTokens'));
-  const DexExplorePools = lazy(() => import('./features/dex/views/DexExplorePools'));
-  const DexExploreTransactions = lazy(() => import('./features/dex/views/DexExploreTransactions'));
-  
-  // Legacy DEX components (for backward compatibility)
-  const Swap = lazy(() => import('./views/Swap'));
-  const PoolImport = lazy(() => import('./views/PoolImport'));
-  const Explore = lazy(() => import('./views/Explore'));
-  const TokenDetail = lazy(() => import('./views/TokenDetail'));
-  const PoolDetail = lazy(() => import('./views/PoolDetail'));
-  const AddTokens = lazy(() => import('./views/AddTokens'));
+const TxQueue = lazy(() => import('./views/TxQueue'));
 
-export const routes: RouteObject[] = [
-  { path: '/', element: <FeedList /> },
-  { path: '/post/:postId', element: <PostDetail /> },
-  { path: '/post/:postId/comment/:id', element: <PostDetail /> },
-  { path: '/trending', element: <Trending /> },
-  { path: '/trendminer', element: <TrendCloud /> },
-  { path: '/trendminer/visx', element: <TrendCloudVisx /> },
-  { path: '/trendminer/tokens', element: <TrendTokens /> },
-  { path: '/trendminer/tokens/:tokenName', element: <TrendTokenDetails /> },
-  { path: '/tx-queue/:id', element: <TxQueue /> },
+// DEX Components
+const DexLayout = lazy(() => import('./features/dex/layouts/DexLayout'));
+const DexSwap = lazy(() => import('./features/dex/views/DexSwap'));
+const DexWrap = lazy(() => import('./features/dex/views/DexWrap'));
+const DexBridge = lazy(() => import('./features/dex/views/DexBridge'));
+const Pool = lazy(() => import('./features/dex/views/Pool'));
+const DexExploreTokens = lazy(() => import('./features/dex/views/DexExploreTokens'));
+const DexExplorePools = lazy(() => import('./features/dex/views/DexExplorePools'));
+const DexExploreTransactions = lazy(() => import('./features/dex/views/DexExploreTransactions'));
+
+// Legacy DEX components (for backward compatibility)
+const Swap = lazy(() => import('./views/Swap'));
+const PoolImport = lazy(() => import('./views/PoolImport'));
+const Explore = lazy(() => import('./views/Explore'));
+const TokenDetail = lazy(() => import('./views/TokenDetail'));
+const PoolDetail = lazy(() => import('./views/PoolDetail'));
+const AddTokens = lazy(() => import('./views/AddTokens'));
+
+const trendminerRoutes = [
   { path: '/trendminer/invite', element: <TrendInvite /> },
   { path: '/trendminer/dao/:saleAddress', element: <TrendDao /> },
   { path: '/trendminer/daos', element: <TrendDaos /> },
   { path: '/trendminer/accounts', element: <TrendAccounts /> },
   { path: '/trendminer/accounts/:address', element: <TrendAccountDetails /> },
   { path: '/trendminer/create', element: <TrendCreate /> },
+  { path: '/trending', element: <Trending /> },
+  { path: '/trendminer', element: <TrendCloud /> },
+  { path: '/trendminer/visx', element: <TrendCloudVisx /> },
+  { path: '/trendminer/tokens', element: <TrendTokens /> },
+  { path: '/trendminer/tokens/:tokenName', element: <TrendTokenDetails /> },
+]
+
+export const routes: RouteObject[] = [
+  { path: '/', element: <FeedList /> },
+  { path: '/post/:postId', element: <PostDetail /> },
+  { path: '/post/:postId/comment/:id', element: <PostDetail /> },
+
+  { path: '/tx-queue/:id', element: <TxQueue /> },
+
   { path: '/users/:address', element: <UserProfile /> },
   { path: '/landing', element: <Landing /> },
   { path: '/meet/:room?', element: <Conference /> },
@@ -92,6 +97,10 @@ export const routes: RouteObject[] = [
   { path: '/privacy', element: <Privacy /> },
   { path: '/faq', element: <FAQ /> },
   { path: '*', element: <FeedList /> },
+
+  ...(
+    configs.features.trendminer ? trendminerRoutes : []
+  )
 ];
 
 

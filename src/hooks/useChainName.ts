@@ -25,11 +25,9 @@ export function useSuperheroChainNames() {
     const [chainNames, setChainNames] = useAtom(chainNamesAtom);
 
     async function loadChainNames() {
-        console.log("loadChainNames");
         const url = `https://superhero-backend-mainnet.prd.service.aepps.com/cache/chainnames`;
         const response = await fetch(url);
         const data = await response.json();
-        console.log("loadChainNames->data", data);
         setChainNames(data);
     }
 

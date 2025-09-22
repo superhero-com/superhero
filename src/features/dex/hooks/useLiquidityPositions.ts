@@ -1,4 +1,5 @@
 import { useAtomValue, useSetAtom } from 'jotai';
+import { toAe } from '@aeternity/aepp-sdk';
 import { useCallback, useEffect, useState } from 'react';
 import { useAeSdk, useDex } from '../../../hooks';
 import {
@@ -12,13 +13,14 @@ import {
   shouldRefreshPositionsAtom
 } from '../atoms/positionsAtoms';
 import { LiquidityPosition, PoolListState } from '../types/pool';
+import { Decimal } from '@/libs/decimal';
 
-export function useLiquidityPositions(): PoolListState & { 
+export function useLiquidityPositions(): PoolListState & {
   refreshPositions: () => Promise<void>;
 } {
   const { activeAccount } = useAeSdk()
   const { providedLiquidity, scanAccountLiquidity } = useDex();
-  
+
   // Jotai atoms
   const getPositionsForAccount = useAtomValue(getPositionsForAccountAtom);
   const isLoadingForAccount = useAtomValue(isLoadingForAccountAtom);
@@ -28,7 +30,7 @@ export function useLiquidityPositions(): PoolListState & {
   const setLoadingForAccount = useSetAtom(setLoadingForAccountAtom);
   const setErrorForAccount = useSetAtom(setErrorForAccountAtom);
   const invalidatePositions = useSetAtom(invalidatePositionsAtom);
-  
+
   // Local UI state
   const [showImport, setShowImport] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
@@ -52,6 +54,7 @@ export function useLiquidityPositions(): PoolListState & {
       const accountLiquidity = providedLiquidity[accountAddress] || {};
       const provided = accountLiquidity;
 
+
       // Convert to our typed format
       const positions: LiquidityPosition[] = Object.entries(provided)
         .map(([pairId, info]) => {
@@ -65,6 +68,8 @@ export function useLiquidityPositions(): PoolListState & {
             valueUsd: info.valueUsd,
           };
         })
+        // TODO: temporary solution because it's not possible to fully remove the liquidity position.
+        .filter((position) => position?.balance && Decimal.from(toAe(position?.balance)).gt(0.001))
         .filter(Boolean) as LiquidityPosition[];
 
       // Cache the positions

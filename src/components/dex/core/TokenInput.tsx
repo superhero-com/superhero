@@ -78,7 +78,7 @@ export default function TokenInput({
     >
       <AeCardContent className="p-4">
         {/* Label and Balance Row */}
-        <div className="flex flex-row flex-wrap   sm:items-center justify-between mb-3">
+        <div className="flex flex-row flex-wrap items-center justify-between mb-3">
           <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             {label}
           </Label>

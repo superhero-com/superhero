@@ -93,7 +93,7 @@ export default function MobileAppHeader() {
           <Link to="/" className="text-[var(--standard-font-color)] flex items-center min-h-[44px] min-w-[44px]" aria-label="Superhero Home">
             <HeaderLogo className="h-7 w-auto" />
           </Link>
-          <div className="flex-grow" />
+          <div className="flex-grow hidden md:block" />
 
           {/* <button
             className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
@@ -112,10 +112,11 @@ export default function MobileAppHeader() {
               <IconSearch />
             </button>
           )} */}
-          <HeaderWalletButton />
+          <HeaderWalletButton className="flex-1" />
+          <div className="flex-grow md:hidden" />
 
           <button
-            className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
+            className="flex-grow bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
             onClick={handleMenuToggle}
             aria-label="Open Menu"
           >

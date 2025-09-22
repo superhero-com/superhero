@@ -181,14 +181,14 @@ export default function FeedList({
 
   const content = (
     <div className="w-full">
-      {/* Mobile: SortControls first and sticky */}
+      {/* Mobile: CreatePost first, then SortControls */}
       <div className="md:hidden">
+        <CreatePost onSuccess={refetch} />
         <SortControls
           sortBy={sortBy}
           onSortChange={handleSortChange}
-          className="sticky top-0 z-10 bg-black/20 backdrop-blur-md"
+          className="sticky top-0 z-10 bg-black/20 backdrop-blur-md w-full"
         />
-        <CreatePost onSuccess={refetch} />
       </div>
 
       {/* Desktop: CreatePost first, then SortControls */}

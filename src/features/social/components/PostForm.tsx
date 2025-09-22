@@ -250,7 +250,7 @@ export default function PostForm({
   } else if (isPost) {
     currentPlaceholder = activeAccount
       ? PROMPTS[promptIndex]
-      : "Connect your wallet to start posting ✍️";
+      : "Connect your Superhero Wallet to start posting on-chain ✍️";
   } else {
     currentPlaceholder = activeAccount
       ? "Write a comment..."

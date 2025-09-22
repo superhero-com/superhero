@@ -1,18 +1,22 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { TrendminerApi } from '../../api/backend';
-import Sparkline from '../../components/Trendminer/Sparkline';
-import TokenTrades from '../../components/Trendminer/TokenTrades';
-import TokenHolders from '../../components/Trendminer/TokenHolders';
-import CommentsList from '../../components/Trendminer/CommentsList';
-import TvCandles from '../../components/Trendminer/TvCandles';
-import ShareModal from '../../components/ui/ShareModal';
-import { CONFIG } from '../../config';
-import { QualiChatService, type QualiMessage } from '../../libs/QualiChatService';
-import WebSocketClient from '../../libs/WebSocketClient';
-import { TokenTradeCard, TokenRanking } from '../../features/trendminer';
-import { TokenSummary } from '../../features/bcl/components';
-import LatestTransactionsCarousel from '@/components/Trendminer/LatestTransactionsCarousel';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
+import { TrendminerApi } from "../../api/backend";
+import Sparkline from "../../components/Trendminer/Sparkline";
+import TokenTrades from "../../components/Trendminer/TokenTrades";
+import TokenHolders from "../../components/Trendminer/TokenHolders";
+import CommentsList from "../../components/Trendminer/CommentsList";
+import TvCandles from "../../components/Trendminer/TvCandles";
+import ShareModal from "../../components/ui/ShareModal";
+import { CONFIG } from "../../config";
+import {
+  QualiChatService,
+  type QualiMessage,
+} from "../../libs/QualiChatService";
+import WebSocketClient from "../../libs/WebSocketClient";
+import { TokenTradeCard, TokenRanking } from "../../features/trendminer";
+import { TokenSummary } from "../../features/bcl/components";
+import LatestTransactionsCarousel from "@/components/Trendminer/LatestTransactionsCarousel";
+import Token24hChange from "../../components/Trendminer/Token24hChange";
 
 export default function TokenDetails() {
   const params = useParams();
@@ -20,10 +24,10 @@ export default function TokenDetails() {
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const wsUrl = CONFIG.TRENDMINER_WS_URL || '';
+  const wsUrl = CONFIG.TRENDMINER_WS_URL || "";
   const [holders, setHolders] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'chat' | 'tx' | 'holders'>('chat');
+  const [activeTab, setActiveTab] = useState<"chat" | "tx" | "holders">("chat");
   const holdersPageRef = useRef(1);
   const txPageRef = useRef(1);
   const [txEnd, setTxEnd] = useState(false);
@@ -35,14 +39,16 @@ export default function TokenDetails() {
     if (!performance) return [] as Array<{ x: number; y: number }>;
     const mapKey = (k: string) => Number(String(performance[k] ?? 0));
     return [
-      { x: 1, y: mapKey('price_change_24h') },
-      { x: 7, y: mapKey('price_change_7d') },
-      { x: 30, y: mapKey('price_change_30d') },
+      { x: 1, y: mapKey("price_change_24h") },
+      { x: 7, y: mapKey("price_change_7d") },
+      { x: 30, y: mapKey("price_change_30d") },
     ];
   }, [performance]);
   const [candleSeries, setCandleSeries] = useState<any[]>([]);
   const [intervalSec, setIntervalSec] = useState<number>(5 * 60);
-  const [featuredMessage, setFeaturedMessage] = useState<QualiMessage | null>(null);
+  const [featuredMessage, setFeaturedMessage] = useState<QualiMessage | null>(
+    null
+  );
   const [mcRank, setMcRank] = useState<number | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
@@ -50,54 +56,99 @@ export default function TokenDetails() {
     let cancel = false;
     async function loadFeatured() {
       try {
-        const resp = await QualiChatService.getTokenMessages(data?.name || addressOrName, data?.address || data?.contract_address || addressOrName, { from: undefined, limit: 1 });
-        const onlyText = (resp?.data || []).filter((m: any) => m?.content?.msgtype === 'm.text');
+        const resp = await QualiChatService.getTokenMessages(
+          data?.name || addressOrName,
+          data?.address || data?.contract_address || addressOrName,
+          { from: undefined, limit: 1 }
+        );
+        const onlyText = (resp?.data || []).filter(
+          (m: any) => m?.content?.msgtype === "m.text"
+        );
         if (!cancel) setFeaturedMessage(onlyText[0] || null);
       } catch {
         if (!cancel) setFeaturedMessage(null);
       }
     }
     loadFeatured();
-    return () => { cancel = true; };
+    return () => {
+      cancel = true;
+    };
   }, [data?.address, data?.contract_address, data?.name, addressOrName]);
 
   // Prefer rank from payload if available; otherwise keep previous value
   useEffect(() => {
     if (!data) return;
-    const candidates = [data.rank, data.current_rank, data.currentRank, data.market_cap_rank, data.position];
-    const found = candidates.find((x: any) => typeof x === 'number');
-    if (typeof found === 'number') setMcRank((prev) => (prev == null ? Number(found) : prev));
-  }, [data?.rank, data?.current_rank, data?.currentRank, data?.market_cap_rank, data?.position]);
+    const candidates = [
+      data.rank,
+      data.current_rank,
+      data.currentRank,
+      data.market_cap_rank,
+      data.position,
+    ];
+    const found = candidates.find((x: any) => typeof x === "number");
+    if (typeof found === "number")
+      setMcRank((prev) => (prev == null ? Number(found) : prev));
+  }, [
+    data?.rank,
+    data?.current_rank,
+    data?.currentRank,
+    data?.market_cap_rank,
+    data?.position,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
     async function loadRank() {
       try {
-        const tokenAddr = (data?.sale_address as string) || (data?.address as string) || addressOrName;
+        const tokenAddr =
+          (data?.sale_address as string) ||
+          (data?.address as string) ||
+          addressOrName;
         if (!tokenAddr) return;
-        const resp: any = await TrendminerApi.listTokenRankings(tokenAddr, { limit: 10, page: 1 });
+        const resp: any = await TrendminerApi.listTokenRankings(tokenAddr, {
+          limit: 10,
+          page: 1,
+        });
         let rank: number | null = null;
-        const tryFields = ['rank', 'currentRank', 'current_rank', 'position'];
+        const tryFields = ["rank", "currentRank", "current_rank", "position"];
         for (const k of tryFields) {
-          if (resp && typeof resp[k] === 'number') { rank = Number(resp[k]); break; }
+          if (resp && typeof resp[k] === "number") {
+            rank = Number(resp[k]);
+            break;
+          }
         }
         if (rank == null && Array.isArray(resp?.items)) {
-          const found = resp.items.find((it: any) => (it.address || it.contract_address || it.sale_address) === tokenAddr);
+          const found = resp.items.find(
+            (it: any) =>
+              (it.address || it.contract_address || it.sale_address) ===
+              tokenAddr
+          );
           if (found) {
-            for (const k of tryFields) { if (typeof found[k] === 'number') { rank = Number(found[k]); break; } }
+            for (const k of tryFields) {
+              if (typeof found[k] === "number") {
+                rank = Number(found[k]);
+                break;
+              }
+            }
           }
-          if (rank == null && typeof resp?.meta?.offset === 'number') {
-            const idx = resp.items.findIndex((it: any) => (it.address || it.contract_address || it.sale_address) === tokenAddr);
+          if (rank == null && typeof resp?.meta?.offset === "number") {
+            const idx = resp.items.findIndex(
+              (it: any) =>
+                (it.address || it.contract_address || it.sale_address) ===
+                tokenAddr
+            );
             if (idx >= 0) rank = Number(resp.meta.offset) + idx + 1;
           }
         }
-        if (!cancelled && typeof rank === 'number') setMcRank(rank);
+        if (!cancelled && typeof rank === "number") setMcRank(rank);
       } catch {
         // keep previous rank on failures
       }
     }
     loadRank();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [data?.sale_address, data?.address, addressOrName]);
 
   useEffect(() => {
@@ -105,25 +156,37 @@ export default function TokenDetails() {
     async function loadCandles() {
       if (!data?.sale_address) return;
       try {
-        const resp = await TrendminerApi.getTokenHistory(data.sale_address, { interval: intervalSec, convertTo: 'ae', limit: 200, page: 1 });
-        const items = Array.isArray(resp?.pages) ? resp.pages.flat() : (Array.isArray(resp) ? resp : []);
-        const mapped = items.map((it: any) => ({
-          time: new Date(it.timeClose).getTime(),
-          open: Number(it.quote.open),
-          high: Number(it.quote.high),
-          low: Number(it.quote.low),
-          close: Number(it.quote.close),
-          volume: Number(it.quote.volume),
-        })).sort((a: any, b: any) => a.time - b.time);
+        const resp = await TrendminerApi.getTokenHistory(data.sale_address, {
+          interval: intervalSec,
+          convertTo: "ae",
+          limit: 200,
+          page: 1,
+        });
+        const items = Array.isArray(resp?.pages)
+          ? resp.pages.flat()
+          : Array.isArray(resp)
+          ? resp
+          : [];
+        const mapped = items
+          .map((it: any) => ({
+            time: new Date(it.timeClose).getTime(),
+            open: Number(it.quote.open),
+            high: Number(it.quote.high),
+            low: Number(it.quote.low),
+            close: Number(it.quote.close),
+            volume: Number(it.quote.volume),
+          }))
+          .sort((a: any, b: any) => a.time - b.time);
         if (!cancelled) setCandleSeries(mapped);
       } catch (e) {
         // ignore for now; keep whatever is shown
       }
     }
     loadCandles();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [data?.sale_address, intervalSec]);
-
 
   useEffect(() => {
     let cancelled = false;
@@ -131,16 +194,20 @@ export default function TokenDetails() {
       setLoading(true);
       setError(null);
       try {
-        const resp = await TrendminerApi.fetchJson(`/api/tokens/${encodeURIComponent(addressOrName)}`);
+        const resp = await TrendminerApi.fetchJson(
+          `/api/tokens/${encodeURIComponent(addressOrName)}`
+        );
         if (!cancelled) setData(resp);
       } catch (e: any) {
-        if (!cancelled) setError(e?.message || 'Failed to load token');
+        if (!cancelled) setError(e?.message || "Failed to load token");
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
     if (addressOrName) load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [addressOrName]);
 
   async function loadMoreTx() {
@@ -148,7 +215,10 @@ export default function TokenDetails() {
     try {
       const tokenAddress = (data?.sale_address as string) || addressOrName;
       if (!tokenAddress) return;
-      const resp = await TrendminerApi.listTokenTransactions(tokenAddress, { limit: 10, page: txPageRef.current });
+      const resp = await TrendminerApi.listTokenTransactions(tokenAddress, {
+        limit: 10,
+        page: txPageRef.current,
+      });
       const list = resp?.items ?? resp ?? [];
       setTransactions((prev) => [...prev, ...list]);
       const totalPages = resp?.meta?.totalPages;
@@ -156,7 +226,7 @@ export default function TokenDetails() {
       txPageRef.current = currentPage + 1;
       if (totalPages && currentPage >= totalPages) setTxEnd(true);
       if (!resp?.meta && list.length < 10) setTxEnd(true);
-    } catch { }
+    } catch {}
   }
 
   async function loadMoreHolders() {
@@ -164,7 +234,10 @@ export default function TokenDetails() {
     try {
       const tokenAddress = (data?.sale_address as string) || addressOrName;
       if (!tokenAddress) return;
-      const resp = await TrendminerApi.listTokenHolders(tokenAddress, { limit: 10, page: holdersPageRef.current });
+      const resp = await TrendminerApi.listTokenHolders(tokenAddress, {
+        limit: 10,
+        page: holdersPageRef.current,
+      });
       const list = resp?.items ?? resp ?? [];
       setHolders((prev) => [...prev, ...list]);
       const totalPages = resp?.meta?.totalPages;
@@ -172,7 +245,7 @@ export default function TokenDetails() {
       holdersPageRef.current = currentPage + 1;
       if (totalPages && currentPage >= totalPages) setHoldersEnd(true);
       if (!resp?.meta && list.length < 10) setHoldersEnd(true);
-    } catch { }
+    } catch {}
   }
 
   useEffect(() => {
@@ -189,39 +262,55 @@ export default function TokenDetails() {
       try {
         const perf = await TrendminerApi.getTokenPerformance(addressOrName);
         if (!cancelled) setPerformance(perf || null);
-      } catch { }
+      } catch {}
       try {
         const scoreResp = await TrendminerApi.getTokenScore(addressOrName);
         if (!cancelled) setScore(scoreResp || null);
-      } catch { }
+      } catch {}
 
       const tokenAddress = (data?.sale_address as string) || addressOrName;
       if (!tokenAddress) return;
       try {
-        const resp = await TrendminerApi.listTokenHolders(tokenAddress, { limit: 10, page: holdersPageRef.current });
+        const resp = await TrendminerApi.listTokenHolders(tokenAddress, {
+          limit: 10,
+          page: holdersPageRef.current,
+        });
         const arr = resp?.items ?? resp ?? [];
         if (!cancelled) {
           setHolders(arr);
           const currentPage = resp?.meta?.currentPage ?? 1;
           const totalPages = resp?.meta?.totalPages;
           holdersPageRef.current = currentPage + 1;
-          if ((totalPages && currentPage >= totalPages) || (!resp?.meta && arr.length < 10)) setHoldersEnd(true);
+          if (
+            (totalPages && currentPage >= totalPages) ||
+            (!resp?.meta && arr.length < 10)
+          )
+            setHoldersEnd(true);
         }
-      } catch { }
+      } catch {}
       try {
-        const tx = await TrendminerApi.listTokenTransactions(tokenAddress, { limit: 10, page: txPageRef.current });
+        const tx = await TrendminerApi.listTokenTransactions(tokenAddress, {
+          limit: 10,
+          page: txPageRef.current,
+        });
         const list = tx?.items ?? tx ?? [];
         if (!cancelled) {
           setTransactions(list);
           const currentPage = tx?.meta?.currentPage ?? 1;
           const totalPages = tx?.meta?.totalPages;
           txPageRef.current = currentPage + 1;
-          if ((totalPages && currentPage >= totalPages) || (!tx?.meta && list.length < 10)) setTxEnd(true);
+          if (
+            (totalPages && currentPage >= totalPages) ||
+            (!tx?.meta && list.length < 10)
+          )
+            setTxEnd(true);
         }
-      } catch { }
+      } catch {}
     }
     if (addressOrName) loadExtra();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [addressOrName, data?.sale_address]);
 
   useEffect(() => {
@@ -231,47 +320,72 @@ export default function TokenDetails() {
 
   useEffect(() => {
     if (!data?.sale_address) return;
-    const unsub = WebSocketClient.subscribe(`TokenUpdated::${data.sale_address}`, (payload) => {
-      setData((prev: any) => ({ ...(prev || {}), ...payload }));
-    });
-    const unsub2 = WebSocketClient.subscribe(`TokenHistory::${data.sale_address}`, (tx: any) => {
-      setCandleSeries((curr) => {
-        const currentTime = Date.now();
-        const last = curr[curr.length - 1];
-        const within = last ? (Math.floor(currentTime / 1000) - Math.floor((last.time as any) / 1000) < intervalSec) : false;
-        const price = Number(tx?.data?.buy_price?.ae ?? tx?.data?.price ?? 0);
-        if (!price) return curr;
-        if (within && last) {
-          const updated = { ...last } as any;
-          updated.high = Math.max(updated.high, price);
-          updated.low = Math.min(updated.low, price);
-          updated.close = price;
-          return [...curr.slice(0, -1), updated];
-        }
-        return [...curr, { time: currentTime, open: price, high: price, low: price, close: price }];
-      });
-    });
-    return () => { unsub(); unsub2(); };
+    const unsub = WebSocketClient.subscribe(
+      `TokenUpdated::${data.sale_address}`,
+      (payload) => {
+        setData((prev: any) => ({ ...(prev || {}), ...payload }));
+      }
+    );
+    const unsub2 = WebSocketClient.subscribe(
+      `TokenHistory::${data.sale_address}`,
+      (tx: any) => {
+        setCandleSeries((curr) => {
+          const currentTime = Date.now();
+          const last = curr[curr.length - 1];
+          const within = last
+            ? Math.floor(currentTime / 1000) -
+                Math.floor((last.time as any) / 1000) <
+              intervalSec
+            : false;
+          const price = Number(tx?.data?.buy_price?.ae ?? tx?.data?.price ?? 0);
+          if (!price) return curr;
+          if (within && last) {
+            const updated = { ...last } as any;
+            updated.high = Math.max(updated.high, price);
+            updated.low = Math.min(updated.low, price);
+            updated.close = price;
+            return [...curr.slice(0, -1), updated];
+          }
+          return [
+            ...curr,
+            {
+              time: currentTime,
+              open: price,
+              high: price,
+              low: price,
+              close: price,
+            },
+          ];
+        });
+      }
+    );
+    return () => {
+      unsub();
+      unsub2();
+    };
   }, [data?.sale_address, intervalSec]);
 
-  if (loading) return (
-    <div className="flex flex-col items-center justify-center min-h-48 p-10 text-center">
-      <div className="w-8 h-8 border-3 border-purple-300 border-t-purple-600 rounded-full animate-spin mb-4" />
-      <span className="text-white/80">Loading token details...</span>
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="flex flex-col items-center justify-center min-h-48 p-10 text-center">
+        <div className="w-8 h-8 border-3 border-purple-300 border-t-purple-600 rounded-full animate-spin mb-4" />
+        <span className="text-white/80">Loading token details...</span>
+      </div>
+    );
 
-  if (error) return (
-    <div className="flex flex-col items-center justify-center min-h-48 p-10 text-center text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl">
-      {error}
-    </div>
-  );
+  if (error)
+    return (
+      <div className="flex flex-col items-center justify-center min-h-48 p-10 text-center text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl">
+        {error}
+      </div>
+    );
 
-  if (!data) return (
-    <div className="flex flex-col items-center justify-center min-h-48 p-10 text-center text-white/80">
-      Token not found
-    </div>
-  );
+  if (!data)
+    return (
+      <div className="flex flex-col items-center justify-center min-h-48 p-10 text-center text-white/80">
+        Token not found
+      </div>
+    );
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 text-white">
@@ -281,23 +395,38 @@ export default function TokenDetails() {
         <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
           <div className="flex items-center gap-4 flex-wrap">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-              #{data.name || data.symbol} {data.symbol ? (
-                <span className="opacity-70 font-medium text-white/70">({data.symbol})</span>
+              #{data.name || data.symbol}{" "}
+              {data.symbol ? (
+                <span className="opacity-70 font-medium text-white/70">
+                  ({data.symbol})
+                </span>
               ) : null}
             </h1>
             <div className="px-3 py-2 rounded-xl bg-white/[0.05] border border-white/10 text-white/80 font-semibold text-sm backdrop-blur-[10px]">
-              MC RANK {mcRank != null ? `#${mcRank}` : '—'}
+              MC RANK {mcRank != null ? `#${mcRank}` : "—"}
             </div>
           </div>
-          
-          {/* Share Button */}
-          <button
-            onClick={() => setShareModalOpen(true)}
-            className="px-4 py-2 rounded-xl bg-white/[0.05] border border-white/10 text-white hover:bg-white/[0.08] hover:border-white/20 transition-all duration-300 ease-out flex items-center gap-2 text-sm font-medium"
-          >
-            <span>🔗</span>
-            Share Token
-          </button>
+          {/* 24h Change Badge */}
+
+          <div className="flex items-center gap-6">
+            <Token24hChange
+              tokenAddress={
+                data.address || data.contract_address || addressOrName
+              }
+              createdAt={
+                data.created_at || data.createdAt || new Date().toISOString()
+              }
+              performance24h={performance}
+            />
+
+            {/* Share Button */}
+            <button
+              onClick={() => setShareModalOpen(true)}
+              className="px-4 py-2 rounded-xl bg-white/[0.05] border border-white/10 text-white hover:bg-white/[0.08] hover:border-white/20 transition-all duration-300 ease-out flex items-center gap-2 text-sm font-medium"
+            >
+              <span>🔗</span>
+            </button>
+          </div>
         </div>
         {featuredMessage?.content?.body && (
           <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
@@ -305,8 +434,12 @@ export default function TokenDetails() {
               {featuredMessage.content.body}
             </div>
             <div className="flex gap-3 text-xs text-white/60">
-              <span>{featuredMessage.sender || 'user'}</span>
-              <span>{new Date(featuredMessage.origin_server_ts || Date.now()).toLocaleString()}</span>
+              <span>{featuredMessage.sender || "user"}</span>
+              <span>
+                {new Date(
+                  featuredMessage.origin_server_ts || Date.now()
+                ).toLocaleString()}
+              </span>
             </div>
           </div>
         )}
@@ -337,20 +470,42 @@ export default function TokenDetails() {
             </h3>
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] text-center">
-                <div className="text-xs text-white/60 font-medium mb-1">24h</div>
-                <div className={`text-lg font-bold ${Number(performance?.price_change_24h ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <div className="text-xs text-white/60 font-medium mb-1">
+                  24h
+                </div>
+                <div
+                  className={`text-lg font-bold ${
+                    Number(performance?.price_change_24h ?? 0) >= 0
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
                   {Number(performance?.price_change_24h ?? 0).toFixed(2)}%
                 </div>
               </div>
               <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] text-center">
                 <div className="text-xs text-white/60 font-medium mb-1">7d</div>
-                <div className={`text-lg font-bold ${Number(performance?.price_change_7d ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <div
+                  className={`text-lg font-bold ${
+                    Number(performance?.price_change_7d ?? 0) >= 0
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
                   {Number(performance?.price_change_7d ?? 0).toFixed(2)}%
                 </div>
               </div>
               <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] text-center">
-                <div className="text-xs text-white/60 font-medium mb-1">30d</div>
-                <div className={`text-lg font-bold ${Number(performance?.price_change_30d ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <div className="text-xs text-white/60 font-medium mb-1">
+                  30d
+                </div>
+                <div
+                  className={`text-lg font-bold ${
+                    Number(performance?.price_change_30d ?? 0) >= 0
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
                   {Number(performance?.price_change_30d ?? 0).toFixed(2)}%
                 </div>
               </div>
@@ -380,22 +535,23 @@ export default function TokenDetails() {
 
             <div className="flex gap-2 flex-wrap">
               {[
-                ['1m', 60],
-                ['5m', 5 * 60],
-                ['15m', 15 * 60],
-                ['1h', 60 * 60],
-                ['4h', 4 * 60 * 60],
-                ['D', 24 * 60 * 60],
-                ['W', 7 * 24 * 60 * 60],
-                ['M', 30 * 24 * 60 * 60],
+                ["1m", 60],
+                ["5m", 5 * 60],
+                ["15m", 15 * 60],
+                ["1h", 60 * 60],
+                ["4h", 4 * 60 * 60],
+                ["D", 24 * 60 * 60],
+                ["W", 7 * 24 * 60 * 60],
+                ["M", 30 * 24 * 60 * 60],
               ].map(([label, sec]) => (
                 <button
                   key={label as string}
                   onClick={() => setIntervalSec(sec as number)}
-                  className={`px-3 py-2 rounded-xl text-xs font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${intervalSec === sec
-                      ? 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white border-transparent shadow-[0_4px_12px_rgba(255,107,107,0.3)]'
-                      : 'border border-white/10 bg-white/[0.05] text-white/80 hover:bg-white/[0.08] hover:border-white/20 hover:text-white'
-                    }`}
+                  className={`px-3 py-2 rounded-xl text-xs font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                    intervalSec === sec
+                      ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white border-transparent shadow-[0_4px_12px_rgba(255,107,107,0.3)]"
+                      : "border border-white/10 bg-white/[0.05] text-white/80 hover:bg-white/[0.08] hover:border-white/20 hover:text-white"
+                  }`}
                 >
                   {label as string}
                 </button>
@@ -413,45 +569,48 @@ export default function TokenDetails() {
 
             <div className="flex gap-2 mb-6 bg-white/[0.05] border border-white/10 rounded-2xl p-1 backdrop-blur-[10px]">
               <button
-                onClick={() => setActiveTab('chat')}
-                className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${activeTab === 'chat'
-                    ? 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white shadow-[0_4px_12px_rgba(255,107,107,0.3)]'
-                    : 'text-white/70 hover:text-white hover:bg-white/[0.05]'
-                  }`}
+                onClick={() => setActiveTab("chat")}
+                className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                  activeTab === "chat"
+                    ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white shadow-[0_4px_12px_rgba(255,107,107,0.3)]"
+                    : "text-white/70 hover:text-white hover:bg-white/[0.05]"
+                }`}
               >
                 Chat
               </button>
               <button
-                onClick={() => setActiveTab('tx')}
-                className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${activeTab === 'tx'
-                    ? 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white shadow-[0_4px_12px_rgba(255,107,107,0.3)]'
-                    : 'text-white/70 hover:text-white hover:bg-white/[0.05]'
-                  }`}
+                onClick={() => setActiveTab("tx")}
+                className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                  activeTab === "tx"
+                    ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white shadow-[0_4px_12px_rgba(255,107,107,0.3)]"
+                    : "text-white/70 hover:text-white hover:bg-white/[0.05]"
+                }`}
               >
                 Transactions
               </button>
               <button
-                onClick={() => setActiveTab('holders')}
-                className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${activeTab === 'holders'
-                    ? 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white shadow-[0_4px_12px_rgba(255,107,107,0.3)]'
-                    : 'text-white/70 hover:text-white hover:bg-white/[0.05]'
-                  }`}
+                onClick={() => setActiveTab("holders")}
+                className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                  activeTab === "holders"
+                    ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white shadow-[0_4px_12px_rgba(255,107,107,0.3)]"
+                    : "text-white/70 hover:text-white hover:bg-white/[0.05]"
+                }`}
               >
                 Holders ({data?.holders_count ?? holders?.length ?? 0})
               </button>
             </div>
 
             <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] min-h-[400px]">
-              {activeTab === 'chat' && (
-                <CommentsList 
-                  token={{ 
-                    name: data.name, 
-                    address: data.address || data.contract_address 
-                  }} 
+              {activeTab === "chat" && (
+                <CommentsList
+                  token={{
+                    name: data.name,
+                    address: data.address || data.contract_address,
+                  }}
                 />
               )}
 
-              {activeTab === 'tx' && (
+              {activeTab === "tx" && (
                 <TokenTrades
                   transactions={transactions}
                   loading={false}
@@ -460,7 +619,7 @@ export default function TokenDetails() {
                 />
               )}
 
-              {activeTab === 'holders' && (
+              {activeTab === "holders" && (
                 <TokenHolders
                   holders={holders}
                   loading={false}
@@ -480,10 +639,8 @@ export default function TokenDetails() {
         isOpen={shareModalOpen}
         onClose={() => setShareModalOpen(false)}
         shareUrl={window.location.href}
-        title={`Share ${data?.name || data?.symbol || 'Token'}`}
+        title={`Share ${data?.name || data?.symbol || "Token"}`}
       />
     </div>
   );
 }
-
-

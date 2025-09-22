@@ -41,13 +41,31 @@ export default function TradeTokenInput({
 }: TradeTokenInputProps) {
   
   const handleTokenAUpdate = (value: string) => {
-    const numValue = value ? parseFloat(value) : undefined;
-    onTokenAChange(numValue);
+    // Allow empty string, partial decimals like "0." or "."
+    if (value === '' || value === '.') {
+      onTokenAChange(undefined);
+      return;
+    }
+    
+    const numValue = parseFloat(value);
+    // Only update if it's a valid number or allow partial input
+    if (!isNaN(numValue) || value.endsWith('.')) {
+      onTokenAChange(isNaN(numValue) ? undefined : numValue);
+    }
   };
 
   const handleTokenBUpdate = (value: string) => {
-    const numValue = value ? parseFloat(value) : undefined;
-    onTokenBChange(numValue);
+    // Allow empty string, partial decimals like "0." or "."
+    if (value === '' || value === '.') {
+      onTokenBChange(undefined);
+      return;
+    }
+    
+    const numValue = parseFloat(value);
+    // Only update if it's a valid number or allow partial input
+    if (!isNaN(numValue) || value.endsWith('.')) {
+      onTokenBChange(isNaN(numValue) ? undefined : numValue);
+    }
   };
 
   if (!token?.sale_address) {

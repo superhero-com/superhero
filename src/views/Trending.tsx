@@ -273,9 +273,9 @@ export default function Trending() {
 
   // Desktop layout
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+    <div className="max-w-[1400px] mx-auto min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
       {/* Banner */}
-      <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border-b border-white/10 backdrop-blur-xl">
+      <div className=" bg-gradient-to-br from-purple-900/20 to-pink-900/20 border-b border-white/10 backdrop-blur-xl">
         <div className="max-w-[1400px] mx-auto p-6">
           <div className="flex gap-4 items-center justify-between flex-wrap">
             <div className="min-w-0 flex-1">

@@ -1,25 +1,28 @@
-import React, { useState } from 'react';
-import { Button } from '../../../components/ui/button';
-import { cn } from '../../../lib/utils';
-import WalletConnectBtn from '../../../components/WalletConnectBtn';
-import { useAeSdk } from '../../../hooks/useAeSdk';
-import { useTokenTrade } from '../hooks/useTokenTrade';
-import { TokenDto } from '../types';
-import { Decimal } from '../../../libs/decimal';
-import TradeTokenInput from './TradeTokenInput';
-import MessageBox from './MessageBox';
-import TransactionConfirmDetailRow from './TransactionConfirmDetailRow';
-import ImpactBadge from './ImpactBadge';
-import FractionFormatter from './FractionFormatter';
-import LivePriceFormatter from './LivePriceFormatter';
+import React, { useState } from "react";
+import { Button } from "../../../components/ui/button";
+import { cn } from "../../../lib/utils";
+import WalletConnectBtn from "../../../components/WalletConnectBtn";
+import { useAeSdk } from "../../../hooks/useAeSdk";
+import { useTokenTrade } from "../hooks/useTokenTrade";
+import { TokenDto } from "../types";
+import { Decimal } from "../../../libs/decimal";
+import TradeTokenInput from "./TradeTokenInput";
+import MessageBox from "./MessageBox";
+import TransactionConfirmDetailRow from "./TransactionConfirmDetailRow";
+import ImpactBadge from "./ImpactBadge";
+import FractionFormatter from "./FractionFormatter";
+import LivePriceFormatter from "./LivePriceFormatter";
+import { COIN_SYMBOL } from "@/utils/constants";
 
 interface TokenTradeCardProps {
   token: TokenDto;
   onClose?: () => void;
 }
 
-
-export default function TokenTradeCard({ token, onClose }: TokenTradeCardProps) {
+export default function TokenTradeCard({
+  token,
+  onClose,
+}: TokenTradeCardProps) {
   const { activeAccount } = useAeSdk();
   const [settingsDialogVisible, setSettingsDialogVisible] = useState(false);
   const [detailsShown, setDetailsShown] = useState(false);
@@ -39,6 +42,7 @@ export default function TokenTradeCard({ token, onClose }: TokenTradeCardProps) 
     protocolTokenReward,
     userBalance,
     spendableAeBalance,
+    estimatedNextTokenPriceImpactDifferenceFormattedPercentage,
     slippage,
     switchTradeView,
     setTokenAmount,
@@ -47,7 +51,7 @@ export default function TokenTradeCard({ token, onClose }: TokenTradeCardProps) 
     resetFormState,
   } = useTokenTrade({ token });
 
-  const currentStepText = isBuying ? '' : '1/2';
+  const currentStepText = isBuying ? "" : "1/2";
 
   const formatFractionalPrice = (decimal: Decimal): string => {
     return decimal.prettify();
@@ -74,8 +78,8 @@ export default function TokenTradeCard({ token, onClose }: TokenTradeCardProps) 
             size="lg"
             className={cn(
               "w-full rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-              isBuying 
-                ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0" 
+              isBuying
+                ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
                 : "bg-white/10 border border-white/10 hover:bg-white/20"
             )}
             onClick={() => switchTradeView(true)}
@@ -87,8 +91,8 @@ export default function TokenTradeCard({ token, onClose }: TokenTradeCardProps) 
             size="lg"
             className={cn(
               "w-full rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-              !isBuying 
-                ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0" 
+              !isBuying
+                ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
                 : "bg-white/10 border border-white/10 hover:bg-white/20"
             )}
             onClick={() => switchTradeView(false)}
@@ -101,11 +105,7 @@ export default function TokenTradeCard({ token, onClose }: TokenTradeCardProps) 
       {/* Content */}
       <div>
         {errorMessage && (
-          <MessageBox
-            color="error"
-            title="Oops"
-            text={errorMessage}
-          />
+          <MessageBox color="error" title="Oops" text={errorMessage} />
         )}
 
         <TradeTokenInput
@@ -127,7 +127,10 @@ export default function TokenTradeCard({ token, onClose }: TokenTradeCardProps) 
         <div className="mt-4 space-y-2">
           {!averageTokenPrice.isZero && !averageTokenPrice.infinite && (
             <TransactionConfirmDetailRow label="Avg Token Price">
-              <LivePriceFormatter aePrice={averageTokenPrice} watchPrice={false} />
+              <LivePriceFormatter
+                aePrice={averageTokenPrice}
+                watchPrice={false}
+              />
             </TransactionConfirmDetailRow>
           )}
 
@@ -137,7 +140,7 @@ export default function TokenTradeCard({ token, onClose }: TokenTradeCardProps) 
                 onClick={() => setDetailsShown(!detailsShown)}
                 className="text-sm text-[#4ecdc4] hover:text-white transition-colors"
               >
-                {detailsShown ? 'Hide Details' : 'Show Details'}
+                {detailsShown ? "Hide Details" : "Show Details"}
               </button>
 
               <TransactionConfirmDetailRow label="Allowed Slippage">
@@ -153,21 +156,25 @@ export default function TokenTradeCard({ token, onClose }: TokenTradeCardProps) 
               </TransactionConfirmDetailRow>
 
               <TransactionConfirmDetailRow label="Price Impact">
-                <div className={cn(
-                  "flex items-center gap-1",
-                  isBuying ? "text-green-600" : "text-red-600"
-                )}>
+                <div
+                  className={cn(
+                    "flex items-center gap-4",
+                    isBuying ? "text-green-600" : "text-red-600"
+                  )}
+                >
                   <div className="flex items-center">
-                    {priceImpactDiff.isZero ? '' : isBuying ? '+' : '-'}
+                    {priceImpactDiff.isZero ? "" : isBuying ? "+" : "-"}
                     <FractionFormatter
                       fractionalPrice={formatFractionalPrice(priceImpactDiff)}
                     />
-                    &nbsp;AE
+                    &nbsp;{COIN_SYMBOL}
                   </div>
                   <ImpactBadge
                     isPositive={isBuying}
                     isZero={priceImpactDiff.isZero}
-                    percentage={priceImpactPercent.prettify(2)}
+                    percentage={
+                      estimatedNextTokenPriceImpactDifferenceFormattedPercentage
+                    }
                   />
                 </div>
               </TransactionConfirmDetailRow>
@@ -211,7 +218,7 @@ export default function TokenTradeCard({ token, onClose }: TokenTradeCardProps) 
                   {currentStepText && <span>{currentStepText}</span>}
                 </div>
               ) : (
-                'Place Order'
+                "Place Order"
               )}
             </Button>
           )}
@@ -239,14 +246,15 @@ export default function TokenTradeCard({ token, onClose }: TokenTradeCardProps) 
             >
               <div>
                 <span>
-                  {successTxData.isBuying ? 'Bought' : 'Sold'}{' '}
-                  {successTxData.destAmount.prettify()} {successTxData.symbol} for{' '}
-                  {successTxData.sourceAmount.prettify()} AE. New balance:{' '}
+                  {successTxData.isBuying ? "Bought" : "Sold"}{" "}
+                  {successTxData.destAmount.prettify()} {successTxData.symbol}{" "}
+                  for {successTxData.sourceAmount.prettify()} AE. New balance:{" "}
                   {successTxData.userBalance.prettify()}
                 </span>
                 {successTxData.protocolReward && (
                   <span className="ml-1">
-                    Earned {successTxData.protocolReward.prettify()} {successTxData.protocolSymbol}
+                    Earned {successTxData.protocolReward.prettify()}{" "}
+                    {successTxData.protocolSymbol}
                   </span>
                 )}
               </div>
@@ -259,7 +267,9 @@ export default function TokenTradeCard({ token, onClose }: TokenTradeCardProps) 
       {settingsDialogVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 max-w-sm w-full mx-4 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
-            <h3 className="text-lg font-semibold mb-4 text-white bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">Settings</h3>
+            <h3 className="text-lg font-semibold mb-4 text-white bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+              Settings
+            </h3>
             <div className="mb-4">
               <label className="block text-sm font-medium text-white/60 mb-2">
                 Slippage Tolerance (%)

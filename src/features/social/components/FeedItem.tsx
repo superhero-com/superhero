@@ -50,6 +50,7 @@ const FeedItem = memo(({
                   address={authorAddress}
                   size={48}
                   overlaySize={24}
+                  className="max-w-[250px] md:max-w-[min(100%,350px)]"
                 />
               </div>
               {item.created_at && (

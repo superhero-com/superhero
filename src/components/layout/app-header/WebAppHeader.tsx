@@ -44,7 +44,7 @@ export default function WebAppHeader() {
           <HeaderLogo className="h-8 w-auto" />
         </Link>
 
-        <nav className="flex items-center gap-6 flex-grow md:gap-5">
+        <nav className="flex-1 items-center gap-6 flex-grow md:gap-5">
           {navigationItems.map(item => (
             item.isExternal ? (
               <a
@@ -116,7 +116,7 @@ export default function WebAppHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex-1 flex justify-end items-end gap-4">
           <HeaderWalletButton />
         </div>
       </div>

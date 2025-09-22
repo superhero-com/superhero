@@ -54,6 +54,7 @@ export default function HeaderWalletButton() {
             overlaySize={18}
             showBalance={true}
             showAddressAndChainName={false}
+            className="max-w-[120px] md:max-w-[min(100%,250px)]"
           />
         </div>
       </DropdownMenuTrigger>

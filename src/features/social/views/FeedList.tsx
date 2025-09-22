@@ -4,7 +4,6 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { PostsService } from "../../../api/generated";
 import AeButton from "../../../components/AeButton";
 import Shell from "../../../components/layout/Shell";
-import LeftNav from "../../../components/layout/LeftNav";
 import RightRail from "../../../components/layout/RightRail";
 import { useWallet } from "../../../hooks";
 import CreatePost from "../components/CreatePost";
@@ -203,7 +202,7 @@ export default function FeedList({
   );
 
   return standalone ? (
-    <Shell left={<LeftNav />} right={<RightRail hideTrends />}>
+    <Shell right={<RightRail hideTrends />}>
       {content}
     </Shell>
   ) : (

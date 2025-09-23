@@ -88,7 +88,7 @@ const CommentItem = memo(({
           <div className="flex gap-3">
             <div className="flex-1 min-w-0 space-y-0 md:space-y-2">
               <div className="flex flex-col gap-0 sm:grid sm:grid-cols-[1fr_auto] sm:items-start sm:gap-2 w-full">
-              <div className="flex-1 min-w-0 relative z-10">
+              <div className="flex-1 min-w-0 relative z-20">
                   <AddressAvatarWithChainName
                     address={authorAddress}
                     avatarBackground={true}

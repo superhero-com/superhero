@@ -125,7 +125,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
 
     return (
       <header className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 relative z-20">
           {authorAddress && (
             <AddressAvatarWithChainName address={authorAddress} size={40} overlaySize={20} />
           )}

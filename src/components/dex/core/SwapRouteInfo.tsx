@@ -10,9 +10,10 @@ interface SwapRouteInfoProps {
   tokens: DexTokenDto[];
   tokenIn: DexTokenDto;
   tokenOut: DexTokenDto;
+  className?: string;
 }
 
-export default function SwapRouteInfo({ routeInfo, tokens, tokenIn, tokenOut }: SwapRouteInfoProps) {
+export default function SwapRouteInfo({ routeInfo, tokens, tokenIn, tokenOut, className }: SwapRouteInfoProps) {
   function routeLabel(addr: string): string {
     if (addr === DEX_ADDRESSES.wae) return 'WAE';
     if (tokenIn?.address === addr) return tokenIn.symbol;
@@ -34,7 +35,6 @@ export default function SwapRouteInfo({ routeInfo, tokens, tokenIn, tokenOut }: 
     return f ? `${i}.${f.slice(0, 6)}` : i;
   }
 
-  if (!routeInfo.path.length) return null;
 
   function buildRouteDisplay(): string {
     const routeLabels = routeInfo.path.map(p => routeLabel(p));
@@ -53,8 +53,13 @@ export default function SwapRouteInfo({ routeInfo, tokens, tokenIn, tokenOut }: 
     return routeDisplay;
   }
 
+  if (!routeInfo.path.length) {
+    return null;
+  }
+
+
   return (
-    <AeCard variant="glass" className="mt-3">
+    <AeCard variant="glass" className={cn('mt-3', className)}>
       <AeCardContent className="p-3">
         <div className="text-xs text-muted-foreground space-y-3">
           <div className="flex items-center gap-2">

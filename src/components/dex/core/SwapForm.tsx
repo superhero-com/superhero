@@ -264,6 +264,8 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       }
     } catch (error) {
       console.error('Swap failed:', error);
+      console.log("======")
+      console.log('Swap failed message:', error.message || error);
     }
   };
 
@@ -317,7 +319,9 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     }
   }, [amountIn, balances.in]);
 
-  const isSwapDisabled = swapLoading || !amountIn || Number(amountIn) <= 0 || !amountOut || !tokenIn || !tokenOut || hasInsufficientBalance;
+  const isSwapDisabled = useMemo(() => {
+    return swapLoading || !amountIn || Number(amountIn) <= 0 || Number(amountOut) <= 0 || !amountOut || !tokenIn || !tokenOut || hasInsufficientBalance || routeInfo.path.length === 0;
+  }, [swapLoading, amountIn, amountOut, tokenIn, tokenOut, hasInsufficientBalance, routeInfo.path.length]);
 
   return (
     <div className="w-full sm:w-[480px] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden flex-shrink-0">
@@ -419,6 +423,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
 
       {/* Route Information */}
       <SwapRouteInfo
+        className='mb-5'
         routeInfo={routeInfo}
         tokens={tokens}
         tokenIn={tokenIn}

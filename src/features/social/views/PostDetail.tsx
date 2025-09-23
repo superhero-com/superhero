@@ -14,6 +14,7 @@ import { IconLink } from '../../../icons';
 import CommentForm from '../components/CommentForm';
 import PostCommentsList from '../components/PostCommentsList';
 import PostContent from '../components/PostContent';
+import ConnectWalletButton from '../../../components/ConnectWalletButton';
 
 export default function PostDetail({ standalone = true }: { standalone?: boolean } = {}) {
   const { postId } = useParams();
@@ -204,6 +205,11 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
           )}
         </article>
       )}
+
+      {/* Bottom connect wallet CTA for users not connected (button renders null if connected) */}
+      <div className="mt-8">
+        <ConnectWalletButton block className="w-full md:w-auto" />
+      </div>
     </div>
   );
 

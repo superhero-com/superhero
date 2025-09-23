@@ -35,7 +35,7 @@ export const AddressAvatarWithChainName = memo(({
     hideFallbackName = false
 }: AddressAvatarWithChainNameProps) => {
     const navigate = useNavigate();
-    const { decimalBalance, aex9Balances } = useAccountBalances(address);
+    const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(address);
     const { chainName } = useChainName(address);
 
     // Hover state management (same as UserBadge)
@@ -66,6 +66,14 @@ export const AddressAvatarWithChainName = memo(({
         const id = window.setTimeout(() => setVisible(true), 300);
         return () => window.clearTimeout(id);
     }, [hover, isHoverEnabled]);
+
+    // Load balances when needed (only when showing balance or when hover card is visible)
+    useEffect(() => {
+        if (!address) return;
+        if (showBalance || visible) {
+            loadAccountData();
+        }
+    }, [address, showBalance, visible]);
 
     // Handle click outside to close card
     useEffect(() => {
@@ -153,7 +161,7 @@ export const AddressAvatarWithChainName = memo(({
                                 {/* AE Balance */}
                                 <div className="text-xs text-muted-foreground mb-2">
                                     <span className="font-semibold">AE Balance: </span>
-                                    <span className="font-mono">{decimalBalance ? `${decimalBalance} AE` : 'Loading...'}</span>
+                                    <span className="font-mono">{decimalBalance ? `${decimalBalance.prettify()} AE` : 'Loading...'}</span>
                                 </div>
 
                                 {/* Top 3 Token Holdings */}

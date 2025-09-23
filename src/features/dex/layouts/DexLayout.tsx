@@ -13,28 +13,28 @@ interface NavigationItem {
 const navigationItems: NavigationItem[] = [
   {
     id: 'swap',
-    label: 'Swap Tokens',
+    label: 'SWAP',
     icon: '🔄',
     path: '/dex/swap',
     description: 'Trade any supported AEX-9 tokens'
   },
   {
     id: 'wrap',
-    label: 'Wrap/Unwrap',
+    label: 'WRAP',
     icon: '📦',
     path: '/dex/wrap',
     description: 'Convert AE ↔ WAE'
   },
   {
     id: 'bridge',
-    label: 'ETH Bridge',
+    label: 'BRIDGE',
     icon: '🌉',
     path: '/dex/bridge',
     description: 'Bridge ETH to æternity'
   },
   {
     id: 'pool',
-    label: 'Pool',
+    label: 'POOL',
     icon: '💧',
     path: '/dex/pool',
     description: 'Manage liquidity positions'
@@ -157,21 +157,9 @@ export default function DexLayout({ children }: DexLayoutProps) {
         position: 'relative',
         overflow: 'hidden',
         fontSize: '14px',
-        fontWeight: '500'
-      }}
-      onMouseOver={(e) => {
-        if (!isActiveRoute(item.path)) {
-          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-          e.currentTarget.style.transform = 'translateX(4px)';
-          e.currentTarget.style.color = 'var(--standard-font-color, #ffffff)';
-        }
-      }}
-      onMouseOut={(e) => {
-        if (!isActiveRoute(item.path)) {
-          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
-          e.currentTarget.style.transform = 'translateX(0)';
-          e.currentTarget.style.color = 'var(--light-font-color, #9aa)';
-        }
+        fontWeight: '500',
+        boxShadow: 'none',
+        transform: 'none'
       }}
     >
       {/* Active indicator */}
@@ -193,7 +181,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
 
   return (
     <>
-      <div className="min-h-screen w-full max-w-[min(1536px,100%)] mx-auto flex flex-col">
+      <div className="min-h-screen w-full max-w-[min(1536px,100%)] mx-auto flex flex-col pb-24 lg:pb-0">
         <div className="flex-grow grid grid-cols-1 gap-4 p-2 px-4 md:gap-3 md:p-2 md:px-3 lg:gap-4 lg:p-2 lg:px-4 sm:gap-2 sm:p-1 sm:px-2 lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)]">
           <aside className="hidden lg:block sticky top-0 self-start min-w-0">
             <div className="dex-sidebar">

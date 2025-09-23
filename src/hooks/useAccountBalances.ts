@@ -39,15 +39,17 @@ export const useAccountBalances = (selectedAccount: string) => {
         const balances = await _loadAex9DataFromMdw(url, []);
         const waeBalances = await getTokenBalance(sdk, DEX_ADDRESSES.wae, selectedAccount);
 
+        const accountBalances = balances.concat({
+            contract_id: DEX_ADDRESSES.wae,
+            amount: waeBalances.toString(),
+            decimals: 18,
+            name: 'Wrapped AE',
+            symbol: 'WAE',
+        });
         setAex9Balances(prev => ({
-            ...prev, [selectedAccount]: balances.concat({
-                contract_id: DEX_ADDRESSES.wae,
-                amount: waeBalances.toString(),
-                decimals: 18,
-                name: 'Wrapped AE',
-                symbol: 'WAE',
-            })
+            ...prev, [selectedAccount]: accountBalances
         }));
+        return accountBalances;
     }
 
     async function loadAccountData() {
@@ -63,6 +65,7 @@ export const useAccountBalances = (selectedAccount: string) => {
         balance,
         decimalBalance,
         aex9Balances,
-        loadAccountData
+        loadAccountData,
+        loadAccountAex9Balances,
     }
 };

@@ -10,6 +10,7 @@ import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithC
 import { AeButton } from '@/components/ui/ae-button';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
 import { useModal } from '../../../hooks';
+import FooterSection from '../FooterSection';
 
 
 
@@ -225,6 +226,11 @@ export default function MobileAppHeader() {
                 )
               ))}
             </nav>
+
+            {/* Footer from right rail inside mobile menu (compact) */}
+            <div className="mt-auto pb-5 pt-2 px-3">
+              <FooterSection compact />
+            </div>
           </div>
         </div>
       )}

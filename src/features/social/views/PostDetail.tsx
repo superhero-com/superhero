@@ -64,14 +64,13 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
 
 
 
-  // Dynamic meta tags similar to Vue metaInfo()
+  // Dynamic meta tags (do not change the document title)
   useEffect(() => {
     if (!postData) return;
     const title = `Tip ${String(postId).split('_')[0]}`;
     const description = postData.content;
     const author = postData.sender_address;
     const image = (postData.media && postData.media[0]) || undefined;
-    document.title = title;
     function setMeta(attr: 'name' | 'property', key: string, value: string) {
       if (!value) return;
       let el = document.querySelector(`meta[${attr}='${key}']`) as HTMLMetaElement | null;

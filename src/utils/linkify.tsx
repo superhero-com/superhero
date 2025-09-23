@@ -1,42 +1,83 @@
 import React from 'react';
 
-const URL_REGEX = /((https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/[\w\-._~:/?#[\]@!$&'()*+,;=%]*)?)/gi;
+// URL matcher (external links)
+const URL_REGEX = /((https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/[\w\-._~:\/?#[\]@!$&'()*+,;=%]*)?)/gi;
+// Optional '@' followed by an AENS name ending with .chain (word boundary to avoid trailing '/')
+const AENS_TAG_REGEX = /@?[a-z0-9-]+\.chain\b/gi;
 
 export function linkify(text: string): React.ReactNode[] {
   if (!text) return [];
-  const parts: React.ReactNode[] = [];
-  let lastIndex = 0;
-  String(text).replace(URL_REGEX, (match, _p1, _p2, _p3, offset: number) => {
-    if (offset > lastIndex) parts.push(text.slice(lastIndex, offset));
-    const href = match.startsWith('http') ? match : `https://${match}`;
-    const fullText = formatUrl(match);
-    const display = truncateEnd(fullText, 60);
-    parts.push(
+  const raw = String(text);
+
+  // Pass 1: Identify AENS mentions and turn them into profile links
+  const aensLinked: React.ReactNode[] = [];
+  let last = 0;
+  raw.replace(AENS_TAG_REGEX, (match: string, offset: number) => {
+    if (offset > last) aensLinked.push(raw.slice(last, offset));
+    const name = match.startsWith('@') ? match.slice(1) : match; // strip optional '@'
+    aensLinked.push(
       <a
-        href={href}
-        key={`${href}-${offset}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          display: 'inline-block',
-          width: 'auto',
-          maxWidth: '100%',
-          verticalAlign: 'bottom',
-          textAlign: 'left',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis'
-        }}
-        title={match}
+        href={`/users/${name}`}
+        key={`aens-${name}-${offset}`}
+        className="font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent no-underline hover:underline"
       >
-        {display}
-      </a>,
+        {match}
+      </a>
     );
-    lastIndex = offset + match.length;
+    last = offset + match.length;
     return match;
   });
-  if (lastIndex < text.length) parts.push(text.slice(lastIndex));
-  return parts;
+  if (last < raw.length) aensLinked.push(raw.slice(last));
+
+  // Pass 2: Within remaining plain text segments, linkify regular URLs
+  const finalParts: React.ReactNode[] = [];
+  aensLinked.forEach((node, idx) => {
+    if (typeof node !== 'string') {
+      finalParts.push(node);
+      return;
+    }
+    const segment = node as string;
+    let segLast = 0;
+    segment.replace(URL_REGEX, (m, _p1, _p2, _p3, off: number) => {
+      // Avoid converting bare 'name.chain' we might have missed (shouldn't happen due to pass 1)
+      // but keep the logic simple: if it ends with .chain and is not protocol-prefixed, treat as plain text.
+      const isChainNoProtocol = /(^|\s)[\w-]+\.chain\b/i.test(segment.slice(Math.max(0, off - 1), off + m.length)) && !/^https?:\/\//i.test(m);
+      if (off > segLast) finalParts.push(segment.slice(segLast, off));
+      if (isChainNoProtocol) {
+        finalParts.push(m);
+      } else {
+        const href = m.startsWith('http') ? m : `https://${m}`;
+        const fullText = formatUrl(m);
+        const display = truncateEnd(fullText, 60);
+        finalParts.push(
+          <a
+            href={href}
+            key={`${href}-${idx}-${off}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-block',
+              width: 'auto',
+              maxWidth: '100%',
+              verticalAlign: 'bottom',
+              textAlign: 'left',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+            title={m}
+          >
+            {display}
+          </a>
+        );
+      }
+      segLast = off + m.length;
+      return m;
+    });
+    if (segLast < segment.length) finalParts.push(segment.slice(segLast));
+  });
+
+  return finalParts;
 }
 
 function formatUrl(url: string): string {

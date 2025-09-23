@@ -167,15 +167,15 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
           {renderPostHeader(post)}
 
           {/* Mobile: show time inside the left-line wrapper; desktop uses inline header */}
-          <div className="relative">
+          <div className="relative -mt-5 md:mt-0">
             <div className="hidden md:block absolute left-[20px] top-0 bottom-0 w-[1px] bg-white/90 z-0 pointer-events-none" />
-            <div className="border-l border-white ml-[20px] pl-[40px] md:border-none md:ml-0 md:pl-[48px] relative z-10">
+            <div className="border-l border-white ml-[20px] pl-[32px] md:border-none md:ml-0 md:pl-[52px] relative z-10">
               {postData?.tx_hash && CONFIG.EXPLORER_URL && (
                 <a
                   href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${postData.tx_hash}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-0.5 md:hidden text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text group"
+                  className="inline-flex items-center gap-0.5 md:hidden text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text group -mt-2"
                   title={postData?.tx_hash}
                 >
                   <span className="underline-offset-2 group-hover:underline">

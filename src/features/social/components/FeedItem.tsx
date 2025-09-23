@@ -56,7 +56,21 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
               </div>
             )}
           </div>
-          <div className="ml-0 -mt-3 md:mt-0 md:ml-3 md:pl-12 relative">
+          <div className="border-l border-white ml-[20px] pl-[32px] -mt-5 md:mt-0 md:border-none md:ml-3 md:pl-[52px] relative">
+            {/* Mobile-only timestamp inside the left line; desktop uses inline header */}
+            {item.tx_hash && CONFIG.EXPLORER_URL && (
+              <a
+                href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${item.tx_hash}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-0.5 text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text md:hidden -mt-2"
+                title={item.tx_hash}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {`Posted on-chain${item.created_at ? ` ${relativeTime(new Date(item.created_at))}` : ''}`}
+                <IconLink className="w-2 h-2" />
+              </a>
+            )}
             <div className="hidden md:block absolute left-[20px] top-0 bottom-0 w-[1px] bg-white/90 z-0 pointer-events-none" />
             <div className="text-[15px] text-foreground leading-snug">
               {linkify(item.content, { knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}

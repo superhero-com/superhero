@@ -357,31 +357,12 @@ export default function SwapConfirmation({
           </div>
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: 12 }}>
-            <button
-              onClick={onClose}
-              disabled={loading}
-              style={{
-                flex: 1,
-                padding: '16px 24px',
-                borderRadius: 16,
-                border: '1px solid var(--glass-border)',
-                background: 'rgba(255, 255, 255, 0.05)',
-                color: 'var(--standard-font-color)',
-                fontSize: 16,
-                fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.5 : 1,
-                transition: 'all 0.3s ease'
-              }}
-            >
-              Cancel
-            </button>
+          <div style={{ display: 'grid', gap: 10 }}>
             <button
               onClick={onConfirm}
               disabled={loading}
               style={{
-                flex: 2,
+                width: '100%',
                 padding: '16px 24px',
                 borderRadius: 16,
                 border: 'none',
@@ -411,7 +392,26 @@ export default function SwapConfirmation({
                   }}></div>
                   Swapping...
                 </>
-              ) : 'Confirm Swap'}
+              ) : 'Confirm on Wallet'}
+            </button>
+            <button
+              onClick={onClose}
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '16px 24px',
+                borderRadius: 16,
+                border: '1px solid var(--glass-border)',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: 'var(--standard-font-color)',
+                fontSize: 16,
+                fontWeight: 600,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.5 : 1,
+                transition: 'all 0.3s ease'
+              }}
+            >
+              Cancel
             </button>
           </div>
         </Dialog.Content>

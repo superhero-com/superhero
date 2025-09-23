@@ -119,7 +119,7 @@ const CommentItem = memo(({
                   </span>
                 ) : null}
                 {/* Mobile-only timestamp inside the line; desktop remains inline in header */}
-                <div className="w-full border-l border-white ml-[23px] pl-[37px] md:hidden">
+                <div className="w-full border-l border-white ml-[20px] pl-[34px] md:hidden">
                   {comment.tx_hash && CONFIG.EXPLORER_URL ? (
                     <a
                       href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${comment.tx_hash}`}
@@ -190,7 +190,7 @@ const CommentItem = memo(({
             </div>
           </div>
           {/* Desktop-only full-height left line to visually connect avatar and content */}
-          <div className="hidden md:block absolute left-[23px] top-0 bottom-0 w-[1px] bg-white/90 z-0 pointer-events-none" />
+          <div className="hidden md:block absolute left-[20px] top-0 bottom-0 w-[1px] bg-white/90 z-0 pointer-events-none" />
           </AeCardContent>
       </AeCard>
 

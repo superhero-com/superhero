@@ -5,6 +5,7 @@ import AddressAvatar from '@/components/AddressAvatar';
 import AddressFormatted from '@/components/AddressFormatted';
 import { AeCard, AeCardContent } from '@/components/ui/ae-card';
 import { useAccountBalances } from '@/hooks/useAccountBalances';
+import { useChainName } from '@/hooks/useChainName';
 import { cn } from '@/lib/utils';
 import { Decimal } from '@/libs/decimal';
 
@@ -35,6 +36,7 @@ export const AddressAvatarWithChainName = memo(({
 }: AddressAvatarWithChainNameProps) => {
     const navigate = useNavigate();
     const { decimalBalance, aex9Balances } = useAccountBalances(address);
+    const { chainName } = useChainName(address);
 
     // Hover state management (same as UserBadge)
     const [hover, setHover] = useState(false);
@@ -95,9 +97,12 @@ export const AddressAvatarWithChainName = memo(({
 
             <div className="flex flex-col items-start min-w-0">
                 {showAddressAndChainName && (
-                    <span className="address text-xs font-mono tracking-wide underline decoration-muted-foreground/20 decoration-1 underline-offset-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px] min-w-0 flex-shrink bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+                    <span className="chain-name text-sm font-bold bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
                         <AddressFormatted
-                            address={address}
+                            address={chainName || address}
+                            truncate={truncateAddress}
+                            truncateFixed={false}
+                            className={className}
                         />
                     </span>
                 )}

@@ -20,15 +20,15 @@ export const navigationItems: NavigationItem[] = [
     path: "/dex/swap",
     icon: "💱",
     children: [
-      { id: "dex-swap", label: "Swap Tokens", path: "/dex/swap", icon: "🔄" },
-      { id: "dex-wrap", label: "Wrap / Unwrap", path: "/dex/wrap", icon: "📦" },
+      { id: "dex-swap", label: "SWAP", path: "/dex/swap", icon: "🔄" },
+      { id: "dex-wrap", label: "WRAP", path: "/dex/wrap", icon: "📦" },
       {
         id: "dex-bridge",
-        label: "ETH Bridge",
+        label: "BRIDGE",
         path: "/dex/bridge",
         icon: "🌉",
       },
-      { id: "dex-pool", label: "Pool", path: "/dex/pool", icon: "💧" },
+      { id: "dex-pool", label: "POOL", path: "/dex/pool", icon: "💧" },
       {
         id: "dex-explore-tokens",
         label: "Explore Tokens",

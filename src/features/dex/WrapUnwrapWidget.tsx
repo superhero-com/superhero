@@ -121,7 +121,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold m-0 sh-dex-title">
-          Wrap / Unwrap AE
+          (Un)Wrap AE
         </h2>
 
         {/* Mode Toggle */}

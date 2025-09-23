@@ -208,7 +208,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
 
       {/* Mobile: Horizontal bottom navigation (kept) */}
       <div
-        className="block lg:hidden w-full fixed bottom-0 left-0 right-0 z-[1000] p-2 pb-3 border-t"
+        className="block lg:hidden w-full fixed bottom-0 left-0 right-0 z-[900] p-2 pb-3 border-t"
         style={{
           backgroundColor: 'rgba(12, 12, 20, 0.5)',
           backdropFilter: 'blur(12px)',

@@ -81,7 +81,7 @@ export default function MobileAppHeader() {
   }, [showOverlay, showSearch]);
 
   return (
-    <div className="z-[101] fixed top-0 left-0 right-0 w-full md:hidden pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] border-b" style={{
+    <div className="z-[1100] fixed top-0 left-0 right-0 w-full md:hidden pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] border-b" style={{
       backgroundColor: 'rgba(12, 12, 20, 0.5)',
       backdropFilter: 'blur(12px)',
       WebkitBackdropFilter: 'blur(12px)',
@@ -158,8 +158,8 @@ export default function MobileAppHeader() {
 
       {/* Navigation Overlay */}
       {showOverlay && (
-        <div className="fixed inset-0 bg-black/80 flex items-start justify-end z-[1000] animate-[fadeIn_0.2s_ease-out] backdrop-blur-[4px] sm:items-start sm:justify-center" onClick={() => setShowOverlay(false)}>
-          <div className="z-[1001] text-[var(--light-font-color)] relative w-full max-w-[320px] h-screen bg-[var(--background-color)] flex flex-col overflow-y-auto animate-[slideInRight_0.3s_ease-out] shadow-[-10px_0_30px_rgba(0,0,0,0.3)] sm:max-w-full sm:w-full sm:animate-[slideInUp_0.3s_ease-out] sm:shadow-[0_-10px_30px_rgba(0,0,0,0.3)]" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/80 flex items-start justify-end z-[1100] animate-[fadeIn_0.2s_ease-out] backdrop-blur-[4px] sm:items-start sm:justify-center" onClick={() => setShowOverlay(false)}>
+          <div className="z-[1101] text-[var(--light-font-color)] relative w-full max-w-[320px] h-screen bg-[var(--background-color)] flex flex-col overflow-y-auto animate-[slideInRight_0.3s_ease-out] shadow-[-10px_0_30px_rgba(0,0,0,0.3)] sm:max-w-full sm:w-full sm:animate-[slideInUp_0.3s_ease-out] sm:shadow-[0_-10px_30px_rgba(0,0,0,0.3)]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between py-5 px-6 pb-4 border-b border-white/10 sm:py-4 sm:px-5 sm:pb-3">
               <h2 className="m-0 text-xl font-semibold text-[var(--standard-font-color)] sm:text-lg">Menu</h2>
               <button
@@ -200,7 +200,7 @@ export default function MobileAppHeader() {
               )}
             </div>
 
-            <nav className="flex flex-col py-4 px-6 gap-2 flex-1 sm:py-3 sm:px-5 sm:gap-1.5">
+            <nav className="flex flex-col py-5 px-6 gap-3 flex-1 sm:py-4 sm:px-6 sm:gap-2">
               {navigationItems.map(item => (
                 item.isExternal ? (
                   <a
@@ -208,19 +208,19 @@ export default function MobileAppHeader() {
                     href={item.path}
                     target="_blank"
                     rel="noreferrer"
-                  className="flex items-center py-4 px-5 bg-white/5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] relative hover:bg-white/10 hover:translate-x-1 focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--custom-links-color)] focus-visible:outline-offset-2 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px]"
+                  className="flex items-center justify-center py-5 px-6 bg-white/5 rounded-2xl text-[var(--standard-font-color)] no-underline font-semibold transition-all duration-200 min-h-[60px] relative hover:bg-white/10 focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--custom-links-color)] focus-visible:outline-offset-2 sm:py-4 sm:px-5 sm:min-h-[56px]"
                     onClick={handleNavigationClick}
                   >
-                    <span className="text-base sm:text-[15px]">{item.label}</span>
+                    <span className="text-lg sm:text-base">{item.label}</span>
                   </a>
                 ) : (
                   <Link
                     key={item.id}
                     to={item.path}
                     onClick={handleNavigationClick}
-                    className="flex items-center py-4 px-5 bg-white/5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] relative hover:bg-white/10 hover:translate-x-1 focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--custom-links-color)] focus-visible:outline-offset-2 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px]"
+                    className="flex items-center justify-center py-5 px-6 bg-white/5 rounded-2xl text-[var(--standard-font-color)] no-underline font-semibold transition-all duration-200 min-h-[60px] relative hover:bg-white/10 focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--custom-links-color)] focus-visible:outline-offset-2 sm:py-4 sm:px-5 sm:min-h-[56px]"
                   >
-                    <span className="text-base sm:text-[15px]">{item.label}</span>
+                    <span className="text-lg sm:text-base">{item.label}</span>
                   </Link>
                 )
               ))}

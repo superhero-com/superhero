@@ -100,7 +100,7 @@
     background: var(--card-bg, #1a1a23);
     border-top: 1px solid var(--border-color, #2a2a39);
     backdrop-filter: blur(20px);
-    z-index: 1000;
+    z-index: 900;
     padding: 8px 12px 12px 12px;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
     display: flex;

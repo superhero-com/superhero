@@ -1,6 +1,8 @@
-import { useAtomValue, useSetAtom } from 'jotai';
+import { DexService, PairDto } from '@/api/generated';
+
+import { providedLiquidityAtom, useAccount, useAeSdk } from '@/hooks';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useState } from 'react';
-import { useAeSdk, useDex } from '../../../hooks';
 import {
   getErrorForAccountAtom,
   getPositionsForAccountAtom,
@@ -11,12 +13,13 @@ import {
   shouldRefreshPositionsAtom
 } from '../atoms/positionsAtoms';
 import { LiquidityPosition, PoolListState } from '../types/pool';
-
 export function useLiquidityPositions(): PoolListState & {
   refreshPositions: () => Promise<void>;
 } {
+  const { aex9Balances, loadAccountAex9Balances } = useAccount()
+
   const { activeAccount } = useAeSdk()
-  const { providedLiquidity, scanAccountLiquidity } = useDex();
+  const [providedLiquidity, setProvidedLiquidity] = useAtom(providedLiquidityAtom);
 
   // Jotai atoms
   const getPositionsForAccount = useAtomValue(getPositionsForAccountAtom);
@@ -36,6 +39,45 @@ export function useLiquidityPositions(): PoolListState & {
   const loading = activeAccount ? isLoadingForAccount(activeAccount) : false;
   const error = activeAccount ? getErrorForAccount(activeAccount) : null;
   const shouldRefresh = activeAccount ? shouldRefreshPositions(activeAccount) : false;
+
+  const scanAccountLiquidity = useCallback(async (accountAddress: string) => {
+    if (!accountAddress) return;
+
+    const accountAex9Balances = await loadAccountAex9Balances();
+    const listAllPairs: any = await DexService.listAllPairs({ limit: 1000, page: 1 });
+    console.log("[useDex] scanAccountLiquidity superheroPairs", listAllPairs);
+    console.log("[useDex] scanAccountLiquidity accountAex9Balances", accountAex9Balances);
+    // const pairs = await getPairs(false);
+    const pairs: PairDto[] = listAllPairs.items;
+
+    const accountLiquidities = {}
+    for (const pair of pairs) {
+      // this should get from user balances.
+      const balance = accountAex9Balances.find(b => b.contract_id === pair.address)?.amount || 0;
+      if (balance && balance > 0n) {
+        accountLiquidities[pair.address] = {
+          accountAddress,
+          pair,
+          token0: pair.token0.address,
+          token1: pair.token1.address,
+          balance: balance.toString(),
+        };
+      }
+    }
+
+    setProvidedLiquidity(prev => {
+      const accountLiquidity = prev[accountAddress] || {};
+      return {
+        ...prev,
+        [accountAddress]: {
+          ...accountLiquidity,
+        },
+      };
+    });
+
+    return accountLiquidities;
+  }, [loadAccountAex9Balances, aex9Balances]);
+
 
   // Function to load positions from the dex store and cache them
   const loadAndCachePositions = useCallback(async (accountAddress: string) => {

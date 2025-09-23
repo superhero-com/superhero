@@ -1,5 +1,3 @@
-import { Decimal } from '@/libs/decimal';
-import { toAe } from '@aeternity/aepp-sdk';
 import { useNavigate } from 'react-router-dom';
 import ConnectWalletButton from '../../../components/ConnectWalletButton';
 import RecentActivity from '../../../components/dex/supporting/RecentActivity';
@@ -14,19 +12,7 @@ function PoolContent() {
   const { positions, loading, error, refreshPositions } = useLiquidityPositions();
   const { selectPositionForAdd, selectPositionForRemove, currentAction } = usePool();
 
-  const handleRemoveLiquidity = (pairId: string) => {
-    const position = positions.find(p => p.pairId === pairId);
-    if (position) {
-      selectPositionForRemove(position);
-    }
-  };
-
-  const handleAddLiquidity = (pairId: string) => {
-    const position = positions.find(p => p.pairId === pairId);
-    if (position) {
-      selectPositionForAdd(position);
-    }
-
+  const handleFormSelect = () => {
     // Focus on the forms section
     const formsSection = document.getElementById('liquidity-forms-section');
     if (formsSection) {
@@ -155,12 +141,18 @@ function PoolContent() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {positions.filter((position) => position.balance && Decimal.from(toAe(position.balance)).gt(0.001)).map((position) => (
+                  {positions.map((position) => (
                     <LiquidityPositionCard
-                      key={position.pairId}
+                      key={position.pair.address}
                       position={position}
-                      onRemove={handleRemoveLiquidity}
-                      onAdd={handleAddLiquidity}
+                      onRemove={(position) => {
+                        selectPositionForRemove(position);
+                        handleFormSelect();
+                      }}
+                      onAdd={(position) => {
+                        selectPositionForAdd(position);
+                        handleFormSelect();
+                      }}
                     />
                   ))}
                 </div>

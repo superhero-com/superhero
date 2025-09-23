@@ -293,7 +293,7 @@ export default function PostForm({
                 <div className={`flex-shrink-0 self-start ${isPost ? "hidden md:block" : "hidden md:block"}`}>
                   <AddressAvatarWithChainName
                     address={activeAccount}
-                    size={48}
+                    size={40}
                     overlaySize={20}
                     isHoverEnabled={true}
                     showAddressAndChainName={false}

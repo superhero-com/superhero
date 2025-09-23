@@ -127,7 +127,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
       <header className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           {authorAddress && (
-            <AddressAvatarWithChainName address={authorAddress} size={48} overlaySize={24} />
+            <AddressAvatarWithChainName address={authorAddress} size={40} overlaySize={20} />
           )}
         </div>
         {/* Desktop: show time inline on the right */}

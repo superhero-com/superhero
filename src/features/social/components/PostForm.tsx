@@ -287,7 +287,7 @@ export default function PostForm({
           <div className="flex flex-col gap-3">
             <div className="relative flex items-start gap-3">
               {activeAccount && (
-                <div className={`flex-shrink-0 self-start ${isPost ? "hidden md:block" : ""}`}>
+                <div className={`flex-shrink-0 self-start ${isPost ? "hidden md:block" : "hidden md:block"}`}>
                   <AddressAvatar
                     address={activeAccount}
                     size={48}
@@ -349,13 +349,13 @@ export default function PostForm({
             {(showEmojiPicker || showGifInput) && (
               <div
                 className={`flex gap-2.5 relative justify-center md:justify-start ${
-                  activeAccount ? (isPost ? "md:pl-[60px]" : "pl-[60px]") : ""
+                  activeAccount ? (isPost ? "md:pl-[60px]" : "md:pl-[60px]") : ""
                 }`}
               >
                 {showEmojiPicker && (
                   <button
                     type="button"
-                    className="bg-white/5 border border-white/10 text-white/70 px-4 py-2.5 rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 flex-1 md:flex-none md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm md:rounded-full"
+                    className="bg-white/5 border border-white/10 text-white/70 px-4 py-2.5 rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 flex-1 w-full md:flex-none md:w-auto md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm md:rounded-full"
                     title="Emoji"
                     ref={emojiBtnRef}
                     onClick={() => {
@@ -371,7 +371,7 @@ export default function PostForm({
                 {showGifInput && (
                   <button
                     type="button"
-                    className="bg-white/5 border border-white/10 text-white/70 px-4 py-2.5 rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 flex-1 md:flex-none md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm md:rounded-full"
+                    className="bg-white/5 border border-white/10 text-white/70 px-4 py-2.5 rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 flex-1 w-full md:flex-none md:w-auto md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm md:rounded-full"
                     title="GIF"
                     ref={gifBtnRef}
                     onClick={() => {

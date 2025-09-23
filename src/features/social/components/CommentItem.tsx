@@ -80,20 +80,15 @@ const CommentItem = memo(({
   return (
     <div className={cn("relative",)}>
       <AeCard
-        variant="gradient"
-        className="transition-all duration-300 hover:-translate-y-1 hover:shadow-glow border-glass-border"
-        style={{
-          // background: "radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.04), transparent 40%), rgba(255, 255, 255, 0.02)",
-          // backdropFilter: "blur(10px)",
-          // WebkitBackdropFilter: "blur(10px)",
-          // boxShadow: "0 8px 25px rgba(0,0,0,0.2)"
-        }}
+        variant="default"
+        hover={false}
+        className="border-0 bg-transparent shadow-none"
       >
-        <AeCardContent className="py-4 px-0 ">
+         <AeCardContent className="py-4 px-0 relative">
           <div className="flex gap-3">
-            <div className="flex-1 min-w-0 space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 space-y-0 md:space-y-2">
+              <div className="flex flex-col gap-0 sm:grid sm:grid-cols-[1fr_auto] sm:items-start sm:gap-2 w-full">
+                <div className="flex-1 min-w-0 relative z-10">
                   <AddressAvatarWithChainName
                     address={authorAddress}
                     avatarBackground={true}
@@ -101,26 +96,49 @@ const CommentItem = memo(({
                     overlaySize={24}
                   />
                 </div>
+                {/* Desktop: show time inline on the right */}
                 {comment.tx_hash && CONFIG.EXPLORER_URL ? (
-                  <a
-                    href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${comment.tx_hash}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text"
-                    title={comment.tx_hash}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {`On-chain${comment.created_at ? ` ${relativeTime(new Date(comment.created_at))}` : ''}`}
-                    <IconLink className="w-2.5 h-2.5" />
-                  </a>
+                  <div className="hidden sm:flex items-center gap-2 flex-shrink-0 whitespace-nowrap">
+                    <a
+                      href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${comment.tx_hash}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text"
+                      title={comment.tx_hash}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {`Posted on-chain${comment.created_at ? ` ${relativeTime(new Date(comment.created_at))}` : ''}`}
+                      <IconLink className="w-2.5 h-2.5" />
+                    </a>
+                  </div>
                 ) : comment.created_at ? (
-                  <span className="text-xs text-muted-foreground flex-shrink-0">
+                  <span className="hidden sm:inline text-xs text-muted-foreground flex-shrink-0 whitespace-nowrap">
                     {relativeTime(new Date(comment.created_at))}
                   </span>
                 ) : null}
+                {/* Mobile-only timestamp inside the line; desktop remains inline in header */}
+                <div className="w-full border-l border-white ml-[23px] pl-[37px] md:hidden">
+                  {comment.tx_hash && CONFIG.EXPLORER_URL ? (
+                    <a
+                      href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${comment.tx_hash}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-0.5 text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text md:hidden"
+                      title={comment.tx_hash}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {`Posted on-chain${comment.created_at ? ` ${relativeTime(new Date(comment.created_at))}` : ''}`}
+                      <IconLink className="w-2 h-2" />
+                    </a>
+                  ) : comment.created_at ? (
+                    <span className="text-[11px] text-muted-foreground flex-shrink-0 leading-none md:hidden">
+                      {relativeTime(new Date(comment.created_at))}
+                    </span>
+                  ) : null}
+                </div>
               </div>
 
-              <div className='ml-3' style={{ paddingLeft: '48px' }}>
+                <div className='w-full border-l border-white ml-[23px] pl-[37px] pr-4 md:pr-6 -mt-[1px] md:border-none md:ml-0 md:pl-[48px]'>
                 <div className="text-[15px] text-foreground leading-snug">
                   {linkify(comment.content)}
                 </div>
@@ -141,35 +159,35 @@ const CommentItem = memo(({
                   </div>
                 )}
 
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-muted/50">
-                  <div className="flex items-center gap-2">
-                    {hasReplies && (
-                      <Badge
-                        variant="outline"
-                        className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 bg-transparent border-white/10 hover:border-white/20 cursor-pointer transition-colors"
-                        onClick={toggleReplies}
-                      >
-                        <IconComment className="w-[14px] h-[14px]" />
-                        {comment.total_comments} {comment.total_comments === 1 ? 'reply' : 'replies'}
-                      </Badge>
-                    )}
-                  </div>
+                   <div className="flex items-center gap-3 mt-2">
+                     {hasReplies && (
+                       <Badge
+                         variant="outline"
+                         className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 bg-transparent border-white/10 hover:border-white/20 cursor-pointer transition-colors"
+                         onClick={toggleReplies}
+                       >
+                         <IconComment className="w-[14px] h-[14px]" />
+                         {comment.total_comments} {comment.total_comments === 1 ? 'reply' : 'replies'}
+                       </Badge>
+                     )}
 
-                  {canReply && (
-                    <AeButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleReplyClick}
-                      className="h-8 px-3 text-xs"
-                    >
-                      Reply
-                    </AeButton>
-                  )}
-                </div>
-              </div>
+                     {canReply && (
+                       <AeButton
+                         variant="link"
+                         size="sm"
+                         onClick={handleReplyClick}
+                         className="px-0 h-auto text-xs -ml-1 md:ml-0 text-muted-foreground hover:text-foreground no-underline shadow-none hover:shadow-none"
+                       >
+                         Reply
+                       </AeButton>
+                     )}
+                   </div>
+               </div>
             </div>
           </div>
-        </AeCardContent>
+           {/* Desktop-only full-height left line to visually connect avatar and content */}
+           <div className="hidden md:block absolute left-[23px] top-0 bottom-0 w-[1px] bg-white -z-10" />
+          </AeCardContent>
       </AeCard>
 
       {/* Reply form */}
@@ -209,7 +227,7 @@ const CommentItem = memo(({
         </div>
       )} */}
 
-      <div className="h-full w-[1px] bg-white absolute left-[23px] top-0 -z-10" />
+      {/* Single vertical line handled by parent wrappers; remove duplicate */}
     </div>
   );
 });

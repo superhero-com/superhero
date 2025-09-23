@@ -146,7 +146,6 @@
 - ✅ `views/AddTokens.tsx` - Migrated with enhanced table styling and status badges
 - ✅ `views/Explore.tsx` - Migrated with modern tab navigation and table styling (duplicate of ExploreRefactored)
 - ✅ `views/TipDetail.tsx` - Migrated with modern comment system and responsive layout
-- ✅ `views/PoolImport.tsx` - Simple form migrated with enhanced input styling
 - ✅ `views/Landing.tsx` - Migrated with modern hero sections, glassmorphism cards and responsive design
 - ✅ `views/Trending.tsx` - Migrated with glassmorphism cards, modern table design and responsive layout
 - ✅ `views/FAQ.tsx` - Migrated with modern card layouts and interactive accordion

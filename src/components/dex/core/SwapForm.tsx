@@ -11,6 +11,8 @@ import { useTokenList } from '../hooks/useTokenList';
 import { SwapQuoteParams } from '../types/dex';
 import SwapConfirmation from './SwapConfirmation';
 import SwapRouteInfo from './SwapRouteInfo';
+import SwapInfoDisplay from './SwapInfoDisplay';
+import NoLiquidityWarning from './NoLiquidityWarning';
 import TokenInput from './TokenInput';
 import { Decimal } from '../../../libs/decimal';
 
@@ -319,9 +321,30 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     }
   }, [amountIn, balances.in]);
 
+  // No liquidity detection
+  const hasNoLiquidity = useMemo(() => {
+    // Only show no liquidity warning if:
+    // 1. We have both tokens selected
+    // 2. We have a valid input amount > 0
+    // 3. We're not currently loading a quote
+    // 4. We don't have a general error (which might be a different issue)
+    // 5. The output amount is 0 or empty after quoting
+    if (!tokenIn || !tokenOut || !amountIn || Number(amountIn) <= 0 || quoteLoading || error) {
+      return false;
+    }
+
+    // Check if we have a meaningful output amount
+    const hasValidOutput = amountOut && Number(amountOut) > 0;
+    
+    // If we don't have a valid output and no route was found, it's likely no liquidity
+    const hasNoRoute = routeInfo.path.length === 0;
+    
+    return !hasValidOutput || hasNoRoute;
+  }, [tokenIn, tokenOut, amountIn, amountOut, quoteLoading, error, routeInfo.path.length]);
+
   const isSwapDisabled = useMemo(() => {
-    return swapLoading || !amountIn || Number(amountIn) <= 0 || Number(amountOut) <= 0 || !amountOut || !tokenIn || !tokenOut || hasInsufficientBalance || routeInfo.path.length === 0;
-  }, [swapLoading, amountIn, amountOut, tokenIn, tokenOut, hasInsufficientBalance, routeInfo.path.length]);
+    return swapLoading || !amountIn || Number(amountIn) <= 0 || Number(amountOut) <= 0 || !amountOut || !tokenIn || !tokenOut || hasInsufficientBalance || routeInfo.path.length === 0 || hasNoLiquidity;
+  }, [swapLoading, amountIn, amountOut, tokenIn, tokenOut, hasInsufficientBalance, routeInfo.path.length, hasNoLiquidity]);
 
   return (
     <div className="w-full sm:w-[480px] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden flex-shrink-0">
@@ -395,40 +418,30 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         />
       </div>
 
-      {/* Trading Info Panel */}
-      {(routeInfo.priceImpact != null || allowanceInfo) && (
-        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 mb-5 backdrop-blur-[10px]">
-          {routeInfo.priceImpact != null && (
-            <div className={`flex justify-between items-center ${allowanceInfo ? 'mb-2' : ''}`}>
-              <span className="text-sm text-white/60">
-                Price Impact
-              </span>
-              <span className={`text-sm font-semibold ${
-                routeInfo.priceImpact > 10 ? 'text-red-400' :
-                routeInfo.priceImpact > 5 ? 'text-yellow-400' :
-                'text-green-400'
-              }`}>
-                {routeInfo.priceImpact.toFixed(2)}%
-              </span>
-            </div>
-          )}
-
-          {allowanceInfo && !tokenIn?.is_ae && (
-            <div className="text-xs text-white/60 py-2 px-3 bg-red-400/10 rounded-lg border border-red-400/20">
-              {allowanceInfo}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Route Information */}
-      <SwapRouteInfo
-        className='mb-5'
-        routeInfo={routeInfo}
-        tokens={tokens}
+      {/* No Liquidity Warning */}
+      <NoLiquidityWarning
         tokenIn={tokenIn}
         tokenOut={tokenOut}
+        show={hasNoLiquidity}
       />
+
+      {/* Swap Info Display */}
+      <SwapInfoDisplay
+        tokenIn={tokenIn}
+        tokenOut={tokenOut}
+        amountIn={amountIn}
+        amountOut={amountOut}
+        routeInfo={routeInfo}
+        tokens={tokens}
+        isExactIn={isExactIn}
+      />
+
+      {/* Allowance Info (if needed) */}
+      {allowanceInfo && !tokenIn?.is_ae && (
+        <div className="text-xs text-white/60 py-2 px-3 bg-red-400/10 rounded-lg border border-red-400/20 mb-5">
+          {allowanceInfo}
+        </div>
+      )}
 
       {/* Error Display */}
       {error && (

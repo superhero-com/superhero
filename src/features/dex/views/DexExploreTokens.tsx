@@ -43,7 +43,7 @@ export default function DexExploreTokens() {
       <div className="max-w-[1200px] mx-2 md:mx-auto bg-glass-bg border border-glass-border backdrop-blur-[20px] rounded-2xl md:rounded-[24px] p-4 md:p-6 shadow-glass relative overflow-hidden">
         {/* Header Card */}
         <div className="mb-6">
-          <h1 className="text-xl md:text-2xl font-bold text-standard-font-color m-0 mb-3 bg-primary-gradient bg-clip-text text-transparent">
+          <h1 className="text-xl md:text-2xl font-bold m-0 mb-3 sh-dex-title">
             Explore Tokens
           </h1>
           <p className="text-sm md:text-base text-light-font-color m-0 opacity-80 leading-6">

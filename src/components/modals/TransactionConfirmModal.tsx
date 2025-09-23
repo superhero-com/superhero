@@ -43,22 +43,25 @@ export default function TransactionConfirmModal({
           </p>
         </div>
         
-        <div className="flex gap-2 sm:gap-3 justify-center pt-2">
+        <div className="flex flex-col gap-2 sm:gap-3 pt-2">
+          <AeButton 
+            variant="primary"
+            onClick={handleConfirm}
+            size="md"
+            fullWidth
+            className="text-sm sm:text-base"
+            style={{ background: '#1161FE' }}
+          >
+            Confirm in Wallet
+          </AeButton>
           <AeButton 
             variant="secondary" 
             onClick={handleCancel}
             size="md"
-            className="flex-1 text-sm sm:text-base"
+            fullWidth
+            className="text-sm sm:text-base"
           >
             Cancel
-          </AeButton>
-          <AeButton 
-            variant="success" 
-            onClick={handleConfirm}
-            size="md"
-            className="flex-1 text-sm sm:text-base"
-          >
-            Confirm on Wallet
           </AeButton>
         </div>
       </div>

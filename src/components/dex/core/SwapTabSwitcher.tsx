@@ -20,7 +20,7 @@ interface TabConfig {
 const tabs: TabConfig[] = [
   {
     id: 'swap',
-    label: 'Swap Tokens',
+    label: 'SWAP',
     icon: '🔄',
     description: 'Trade any supported AEX-9 tokens',
     component: SwapForm

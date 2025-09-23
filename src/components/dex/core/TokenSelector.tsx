@@ -109,7 +109,7 @@ export default function TokenSelector({
                   : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,107,107,0.3)]'
               } ${
                 selected
-                  ? 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white'
+                  ? 'bg-[#1161FE] text-white'
                   : 'bg-white/[0.05] text-white'
               }`}
             >
@@ -131,7 +131,7 @@ export default function TokenSelector({
         <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(20,20,28,0.98)] text-white border border-white/10 rounded-3xl p-4 sm:p-6 w-[95vw] max-w-md sm:max-w-[520px] max-h-[85vh] overflow-y-auto backdrop-blur-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.6),_0_8px_32px_rgba(255,107,107,0.2)] z-[1001] animate-in slide-in-from-top-4 duration-200 outline-none">
           {/* Header */}
           <div className="flex justify-between items-center mb-4 sm:mb-5">
-            <Dialog.Title className="font-bold text-lg sm:text-xl m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+            <Dialog.Title className="font-bold text-lg sm:text-xl m-0 sh-dex-title">
               Select a token
             </Dialog.Title>
             <Dialog.Close asChild>
@@ -148,7 +148,7 @@ export default function TokenSelector({
               value={searchValue}
               onChange={(e) => onSearchChange?.(e.target.value)}
               autoFocus
-              className="w-full py-3.5 pr-12 pl-4 rounded-2xl bg-white/[0.08] text-white border border-white/15 text-base backdrop-blur-[10px] transition-all duration-300 ease-out box-border focus:border-[#4ecdc4] focus:shadow-[0_0_0_2px_rgba(78,205,196,0.2)] focus:outline-none"
+              className="w-full py-3.5 pr-12 pl-4 rounded-2xl bg-white/[0.08] text-white border border-white/15 text-base backdrop-blur-[10px] transition-all duration-300 ease-out box-border focus:border-[#00ff9d] focus:shadow-[0_0_0_2px_rgba(0,255,157,0.2)] focus:outline-none"
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">
               🔍
@@ -160,8 +160,8 @@ export default function TokenSelector({
             <div style={{
               marginBottom: 20,
               padding: 16,
-              background: 'rgba(78, 205, 196, 0.1)',
-              border: '1px solid rgba(78, 205, 196, 0.3)',
+              background: 'rgba(0, 255, 157, 0.1)',
+              border: '1px solid rgba(0, 255, 157, 0.3)',
               borderRadius: 16
             }}>
               <div style={{
@@ -205,7 +205,7 @@ export default function TokenSelector({
                 }}
                 onMouseOver={(e) => {
                   e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(78, 205, 196, 0.4)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 255, 157, 0.4)';
                 }}
                 onMouseOut={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
@@ -272,7 +272,7 @@ export default function TokenSelector({
                   backdropFilter: 'blur(10px)'
                 }}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.background = 'rgba(78, 205, 196, 0.15)';
+                  e.currentTarget.style.background = 'rgba(0, 255, 157, 0.15)';
                   e.currentTarget.style.transform = 'translateX(2px)';
                   e.currentTarget.style.borderColor = 'var(--accent-color)';
                 }}

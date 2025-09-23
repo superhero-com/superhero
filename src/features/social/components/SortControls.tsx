@@ -1,6 +1,6 @@
-import React, { memo } from 'react';
-import { AeButton } from '../../../components/ui/ae-button';
-import { cn } from '@/lib/utils';
+import React, { memo } from "react";
+import { AeButton } from "../../../components/ui/ae-button";
+import { cn } from "@/lib/utils";
 
 interface SortControlsProps {
   sortBy: string;
@@ -9,39 +9,46 @@ interface SortControlsProps {
 }
 
 // Component: Sort Controls
-const SortControls = memo(({ sortBy, onSortChange, className = '' }: SortControlsProps) => (
-  <div className="flex gap-2 bg-white/5 rounded-full p-1 mb-4 border border-white/10 w-full md:w-auto">
+const SortControls = memo(
+  ({ sortBy, onSortChange, className = "" }: SortControlsProps) => (
+    <div
+      className={cn(
+        "flex w-full items-center gap-1.5 bg-white/5 rounded-full p-0.5 mb-3 border border-white/10 md:inline-flex md:w-auto",
+        className
+      )}
+    >
       <AeButton
-        onClick={() => onSortChange('latest')}
-        variant={sortBy === 'latest' ? 'default' : 'ghost'}
-        size="sm"
-        noShadow={sortBy === 'latest'}
+        onClick={() => onSortChange("latest")}
+        variant={sortBy === "latest" ? "default" : "ghost"}
+        size="xs"
+        noShadow={true}
         className={cn(
-          "flex-1 rounded-full px-6 py-2 text-sm font-semibold transition-all",
-          sortBy === 'latest'
-            ? "bg-primary-400 text-black hover:bg-primary-400 focus:bg-primary-400"
+          "rounded-full px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24",
+          sortBy === "latest"
+            ? "bg-[#1161FE] text-white hover:bg-[#1161FE] focus:bg-[#1161FE]"
             : "text-white/70 hover:text-white hover:bg-white/10 focus:text-white focus:bg-white/10"
         )}
       >
-      Latest
-    </AeButton>
+        Latest
+      </AeButton>
       <AeButton
-        onClick={() => onSortChange('hot')}
-        variant={sortBy === 'hot' ? 'default' : 'ghost'}
-        size="sm"
-        noShadow={sortBy === 'hot'}
+        onClick={() => onSortChange("hot")}
+        variant={sortBy === "hot" ? "default" : "ghost"}
+        size="xs"
+        noShadow={true}
         className={cn(
-          "flex-1 rounded-full px-6 py-2 text-sm font-semibold transition-all",
-          sortBy === 'hot'
-            ? "bg-primary-400 text-black hover:bg-primary-400 focus:bg-primary-400"
+          "rounded-full px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24",
+          sortBy === "hot"
+            ? "bg-[#1161FE] text-white hover:bg-[#1161FE] focus:bg-[#1161FE]"
             : "text-white/70 hover:text-white hover:bg-white/10 focus:text-white focus:bg-white/10"
         )}
       >
-      Most Popular
-    </AeButton>
-  </div>
-));
+        Popular
+      </AeButton>
+    </div>
+  )
+);
 
-SortControls.displayName = 'SortControls';
+SortControls.displayName = "SortControls";
 
 export default SortControls;

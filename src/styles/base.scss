@@ -6,12 +6,12 @@
 :root {
   color-scheme: dark;
   /* Gen Z Ultra Modern Dark Theme */
-  --primary-color: #4ecdc4;
+  --primary-color: #00ff9d;
   --background-color: #0a0a0f;
   --background-color-rgb: 10, 10, 15;
   --secondary-color: #1a1a2e;
   --search-nav-border-color: #2d2d44;
-  --custom-links-color: #4ecdc4;
+  --custom-links-color: #00ff9d;
   --standard-font-color: #f8fafc;
   --light-font-color: #94a3b8;
   --light-color: #1e293b;
@@ -24,30 +24,30 @@
   --mobile-navigation-height: 70px;
   
   /* Gen Z Vibrant Accent Colors */
-  --accent-color: #4ecdc4;
-  --accent-gradient: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%);
-  --success-color: #4ecdc4;
+  --accent-color: #00ff9d;
+  --accent-gradient: linear-gradient(135deg, #ff6b6b 0%, #00ff9d 50%, #45b7d1 100%);
+  --success-color: #00ff9d;
   --warning-color: #ffd93d;
   --error-color: #ff6b6b;
   
   /* Gen Z Ultra Modern Gradients */
-  --primary-gradient: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%);
+  --primary-gradient: linear-gradient(135deg, #ff6b6b 0%, #00ff9d 50%, #45b7d1 100%);
   --secondary-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   --card-gradient: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  --button-gradient: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+  --button-gradient: linear-gradient(135deg, #ff6b6b 0%, #00ff9d 100%);
   
   /* Gen Z Glow Effects */
-  --glow-shadow: 0 0 30px rgba(255, 107, 107, 0.4), 0 0 60px rgba(78, 205, 196, 0.3);
+  --glow-shadow: 0 0 30px rgba(255, 107, 107, 0.4), 0 0 60px rgba(0, 255, 157, 0.3);
   --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(255, 107, 107, 0.15);
-  --button-shadow: 0 8px 24px rgba(255, 107, 107, 0.4), 0 4px 12px rgba(78, 205, 196, 0.3);
+  --button-shadow: 0 8px 24px rgba(255, 107, 107, 0.4), 0 4px 12px rgba(0, 255, 157, 0.3);
   
   /* Gen Z Border Effects */
-  --border-gradient: linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1);
+  --border-gradient: linear-gradient(135deg, #ff6b6b, #00ff9d, #45b7d1);
   --border-glow: 0 0 15px rgba(255, 107, 107, 0.6);
   
   /* Gen Z Additional Colors */
   --neon-pink: #ff6b6b;
-  --neon-teal: #4ecdc4;
+  --neon-teal: #00ff9d;
   --neon-blue: #45b7d1;
   --neon-yellow: #ffd93d;
   --neon-purple: #a855f7;
@@ -62,11 +62,11 @@
 :root[data-theme='light'] {
   color-scheme: light;
   /* Gen Z Ultra Modern Light Theme */
-  --primary-color: #4ecdc4;
+  --primary-color: #00ff9d;
   --background-color: #fafafa;
   --secondary-color: #ffffff;
   --search-nav-border-color: #e2e8f0;
-  --custom-links-color: #4ecdc4;
+  --custom-links-color: #00ff9d;
   --standard-font-color: #1e293b;
   --light-font-color: #64748b;
   --light-color: #f1f5f9;
@@ -76,30 +76,30 @@
   --topnav-background: rgba(250, 250, 250, 0.95);
   
   /* Gen Z Vibrant Accent Colors */
-  --accent-color: #4ecdc4;
-  --accent-gradient: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%);
-  --success-color: #4ecdc4;
+  --accent-color: #00ff9d;
+  --accent-gradient: linear-gradient(135deg, #ff6b6b 0%, #00ff9d 50%, #45b7d1 100%);
+  --success-color: #00ff9d;
   --warning-color: #ffd93d;
   --error-color: #ff6b6b;
   
   /* Gen Z Ultra Modern Gradients */
-  --primary-gradient: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%);
+  --primary-gradient: linear-gradient(135deg, #ff6b6b 0%, #00ff9d 50%, #45b7d1 100%);
   --secondary-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
   --card-gradient: linear-gradient(145deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
-  --button-gradient: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+  --button-gradient: linear-gradient(135deg, #ff6b6b 0%, #00ff9d 100%);
   
   /* Gen Z Glow Effects */
-  --glow-shadow: 0 0 30px rgba(255, 107, 107, 0.3), 0 0 60px rgba(78, 205, 196, 0.2);
+  --glow-shadow: 0 0 30px rgba(255, 107, 107, 0.3), 0 0 60px rgba(0, 255, 157, 0.2);
   --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.1), 0 8px 24px rgba(255, 107, 107, 0.1);
-  --button-shadow: 0 8px 24px rgba(255, 107, 107, 0.3), 0 4px 12px rgba(78, 205, 196, 0.2);
+  --button-shadow: 0 8px 24px rgba(255, 107, 107, 0.3), 0 4px 12px rgba(0, 255, 157, 0.2);
   
   /* Gen Z Border Effects */
-  --border-gradient: linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1);
+  --border-gradient: linear-gradient(135deg, #ff6b6b, #00ff9d, #45b7d1);
   --border-glow: 0 0 15px rgba(255, 107, 107, 0.4);
   
   /* Gen Z Additional Colors */
   --neon-pink: #ff6b6b;
-  --neon-teal: #4ecdc4;
+  --neon-teal: #00ff9d;
   --neon-blue: #45b7d1;
   --neon-yellow: #ffd93d;
   --neon-purple: #a855f7;
@@ -138,12 +138,32 @@ body {
   /* Better touch scrolling */
   -webkit-overflow-scrolling: touch;
   /* Gen Z Ultra Dynamic Background */
-  background: 
+  background:
     radial-gradient(circle at 20% 80%, rgba(255, 107, 107, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(78, 205, 196, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(0, 255, 157, 0.15) 0%, transparent 50%),
     radial-gradient(circle at 40% 40%, rgba(69, 183, 209, 0.1) 0%, transparent 50%),
     linear-gradient(135deg, $background_color 0%, #0f0f23 50%, #1a1a2e 100%);
   background-attachment: fixed;
+}
+
+/* iOS-safe fixed background to full viewport height */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 100dvh; /* ensure fixed to device viewport on mobile */
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 80%, rgba(255, 107, 107, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(0, 255, 157, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(69, 183, 209, 0.1) 0%, transparent 50%),
+    linear-gradient(135deg, $background_color 0%, #0f0f23 50%, #1a1a2e 100%);
+  will-change: transform;
+  transform: translateZ(0); /* helps Safari keep it fixed */
 }
 
 a { 
@@ -177,6 +197,24 @@ a::after {
 
 a:hover::after {
   width: 100%;
+}
+
+/* Utility: disable gradient text for specific links */
+a.no-gradient-text {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: currentColor !important;
+  background-clip: initial !important;
+  color: var(--light-font-color) !important;
+}
+a.no-gradient-text:hover {
+  color: var(--light-font-color) !important;
+  filter: none;
+  transform: none;
+  text-shadow: none;
+}
+a.no-gradient-text::after {
+  display: none;
 }
 
 img, video { max-width: 100%; height: auto; display: block; }
@@ -306,7 +344,7 @@ input:focus,
 textarea:focus {
   border-color: var(--neon-teal);
   background: var(--glass-bg);
-  box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.2), var(--glass-shadow);
+  box-shadow: 0 0 0 3px rgba(0, 255, 157, 0.2), var(--glass-shadow);
   transform: translateY(-2px);
 }
 

@@ -117,12 +117,11 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
         "max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden",
         className
       )}
-      style={style}
     >
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-          Wrap / Unwrap AE
+        <h2 className="text-xl font-bold m-0 sh-dex-title">
+          (Un)Wrap AE
         </h2>
 
         {/* Mode Toggle */}
@@ -130,12 +129,12 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
           <Button
             onClick={() => setMode('wrap')}
             disabled={isLoading}
-            variant="ghost"
+            variant={mode === 'wrap' ? 'default' : 'ghost'}
             size="sm"
             className={cn(
               "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300",
               mode === 'wrap'
-                ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white"
+                ? "bg-[#1161FE] text-white active:bg-[#1161FE]"
                 : "text-white/60 hover:text-white hover:bg-white/10"
             )}
           >
@@ -144,12 +143,12 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
           <Button
             onClick={() => setMode('unwrap')}
             disabled={isLoading}
-            variant="ghost"
+            variant={mode === 'unwrap' ? 'default' : 'ghost'}
             size="sm"
             className={cn(
               "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300",
               mode === 'unwrap'
-                ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white"
+                ? "bg-[#1161FE] text-white active:bg-[#1161FE]"
                 : "text-white/60 hover:text-white hover:bg-white/10"
             )}
           >
@@ -189,7 +188,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
       <Card className="bg-white/[0.03] border-white/10 rounded-2xl mb-5 backdrop-blur-[10px]">
         <CardContent className="p-4">
           {/* Label and Balance Row */}
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex flex-row flex-wrap gap-2 items-center mb-3">
             <label className="text-sm font-semibold text-white/60 uppercase tracking-wider">
               Amount to {mode}
             </label>
@@ -210,7 +209,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
                     disabled={isLoading || !currentBalance || Number(currentBalance) === 0}
                     variant="outline"
                     size="sm"
-                    className="h-6 px-2 text-xs font-semibold bg-white/[0.05] border-white/10 text-white/60 hover:bg-gradient-to-r hover:from-[#ff6b6b] hover:to-[#4ecdc4] hover:text-white hover:border-transparent transition-all duration-200"
+                className="h-6 px-2 text-xs font-semibold bg-white/[0.05] border-white/10 text-white/60 hover:bg-[#1161FE] hover:text-white hover:border-transparent transition-all duration-200"
                   >
                     50%
                   </Button>
@@ -220,7 +219,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
                     disabled={isLoading || !currentBalance || Number(currentBalance) === 0}
                     variant="outline"
                     size="sm"
-                    className="h-6 px-2 text-xs font-semibold bg-white/[0.05] border-white/10 text-white/60 hover:bg-gradient-to-r hover:from-[#ff6b6b] hover:to-[#4ecdc4] hover:text-white hover:border-transparent transition-all duration-200"
+                className="h-6 px-2 text-xs font-semibold bg-white/[0.05] border-white/10 text-white/60 hover:bg-[#1161FE] hover:text-white hover:border-transparent transition-all duration-200"
                   >
                     MAX
                   </Button>
@@ -266,10 +265,10 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
           onClick={handleExecute}
           disabled={isExecuteDisabled}
           className={cn(
-            "w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+            "w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
             isExecuteDisabled
               ? "bg-white/10 cursor-not-allowed opacity-60"
-              : "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
+              : "bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
           )}
         >
           {isLoading ? (
@@ -283,9 +282,10 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
         </Button>
       ) : (
         <ConnectWalletButton
-          label="Connect Wallet to Wrap/Unwrap"
+          label="Connect wallet"
+          variant="dex"
           block
-          className="w-full py-4 px-6 rounded-2xl border-none bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(255,107,107,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
+          className="w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
         />
       )}
     </div>

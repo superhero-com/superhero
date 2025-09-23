@@ -10,6 +10,8 @@ import {
   toDecimals,
   toAe
 } from '../../../utils/bondingCurve';
+import { useUserBalance } from '../../../hooks/useUserBalance';
+import { useAccount } from '@/hooks';
 
 // Constants from Vue implementation
 const PROTOCOL_DAO_AFFILIATION_FEE = 0.05;
@@ -21,6 +23,7 @@ interface UseTokenTradeProps {
 
 export function useTokenTrade({ token }: UseTokenTradeProps) {
   const { sdk, activeAccount } = useAeSdk();
+  const { decimalBalance: spendableAeBalance } = useAccount();
   
   const [state, setState] = useState<TokenTradeState>({
     tokenAFocused: false,
@@ -236,24 +239,11 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     ) / 100;
   };
 
-  // Calculate spendable AE balance (simplified implementation)
-  const spendableAeBalance = (): Decimal => {
-    // This would need to be integrated with actual wallet balance
-    // For now, return a placeholder value
-    const mockBalance = Decimal.from('10'); // 10 AE
-    const slippageAmount = mockBalance.mul(Decimal.from(state.slippage).add(1)).div(100);
-    const balance = mockBalance.sub(slippageAmount).sub(Decimal.from('0.001'));
-    
-    if (balance.lte(Decimal.ZERO)) {
-      return Decimal.ZERO;
-    }
-    return balance;
-  };
 
   // Check if user has insufficient balance
   const isInsufficientBalance = (): boolean => {
     if (state.isBuying) {
-      return Decimal.from(state.tokenA || 0).gt(spendableAeBalance());
+      return Decimal.from(state.tokenA || 0).gt(spendableAeBalance);
     } else {
       return Decimal.from(state.tokenB || 0).gt(Decimal.from(state.userBalance || '0'));
     }
@@ -327,7 +317,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     priceImpactPercent: priceImpactPercent(),
     estimatedNextTokenPriceImpactDifferenceFormattedPercentage: estimatedNextTokenPriceImpactDifferenceFormattedPercentage(),
     protocolTokenReward: protocolTokenReward(),
-    spendableAeBalance: spendableAeBalance(),
+    spendableAeBalance: spendableAeBalance,
     isInsufficientBalance: isInsufficientBalance(),
     
     // Actions

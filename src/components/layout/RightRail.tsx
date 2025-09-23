@@ -1149,53 +1149,46 @@ export default function RightRail({
       <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-5 shadow-[var(--glass-shadow)] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_12px_32px_rgba(255,107,107,0.2)]">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-lg">⚡</span>
-          <h4 className="m-0 text-[var(--neon-pink)] text-base font-bold">
+          <h4 className="m-0 text-white text-base font-bold">
             Quick Actions
           </h4>
         </div>
 
         <div className="grid gap-2.5">
           <button
-            className="bg-gradient-to-r from-teal-500 to-teal-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(78,205,196,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => handleQuickAction("explore")}
-            title="Explore and add tokens to your wallet"
+            className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(16,185,129,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            onClick={() => navigate('/dex/swap')}
+            title="Swap tokens on the DEX"
           >
-            🎯 Explore Tokens
+            🔄 Swap Tokens
           </button>
           <button
-            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(59,130,246,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => handleQuickAction("bridge")}
-            title="Bridge assets from Ethereum to æternity"
+            className="bg-gradient-to-r from-sky-500 to-blue-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(59,130,246,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            onClick={() => navigate('/dex/wrap')}
+            title="Wrap or unwrap AE"
           >
-            🌉 Bridge Assets
+            📦 Wrap AE
           </button>
           <button
-            className="bg-gradient-to-r from-pink-500 to-pink-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(236,72,153,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => handleQuickAction("trending")}
-            title="View trending tokens and topics"
+            className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(59,130,246,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            onClick={() => navigate('/dex/bridge')}
+            title="Bridge Ether to AE"
           >
-            🔥 Trending
+            🌉 Bridge Ether
           </button>
           <button
-            className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(245,158,11,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => handleQuickAction("governance")}
-            title="Participate in governance"
+            className="bg-gradient-to-r from-amber-500 to-orange-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(245,158,11,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            onClick={() => navigate('/dex/pool')}
+            title="Provide liquidity to pools"
           >
-            🗳️ Governance
-          </button>
-          <button
-            className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(147,51,234,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => handleQuickAction("meet")}
-            title="Join or create a meeting"
-          >
-            🎥 Meet
+            💧 Provide Liquidity
           </button>
           <a
             href="https://quali.chat"
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-gradient-to-r from-teal-500 to-teal-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(78,205,196,0.3)] no-underline text-center flex items-center justify-center gap-1.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            title="Join the community chat"
+            className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(147,51,234,0.35)] no-underline text-center flex items-center justify-center gap-1.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            title="Open Chat"
           >
             💬 Chat
           </a>

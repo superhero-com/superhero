@@ -2,17 +2,21 @@ import React, { memo } from 'react';
 import { Backend } from '../../../api/backend';
 import { cn } from '@/lib/utils';
 import { linkify } from '../../../utils/linkify';
+import { useWallet } from '../../../hooks';
 
 interface PostContentProps {
   post: any; // Using any for now since the old Backend API structure is different from PostDto
 }
 
 // Component: Post Content Display
-const PostContent = memo(({ post }: PostContentProps) => (
+const PostContent = memo(({ post }: PostContentProps) => {
+  const { chainNames } = useWallet();
+  const known = new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase()));
+  return (
   <div className="space-y-3">
     {post.title && (
       <div className="text-[15px] text-foreground leading-snug">
-        {linkify(post.title)}
+        {linkify(post.title, { knownChainNames: known })}
       </div>
     )}
     
@@ -80,7 +84,7 @@ const PostContent = memo(({ post }: PostContentProps) => (
       </div>
     )}
   </div>
-));
+)});
 
 PostContent.displayName = 'PostContent';
 

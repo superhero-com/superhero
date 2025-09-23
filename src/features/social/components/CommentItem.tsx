@@ -88,12 +88,12 @@ const CommentItem = memo(({
           <div className="flex gap-3">
             <div className="flex-1 min-w-0 space-y-0 md:space-y-2">
               <div className="flex flex-col gap-0 sm:grid sm:grid-cols-[1fr_auto] sm:items-start sm:gap-2 w-full">
-              <div className="flex-1 min-w-0 relative z-10">
+              <div className="flex-1 min-w-0 relative z-20">
                   <AddressAvatarWithChainName
                     address={authorAddress}
                     avatarBackground={true}
-                    size={48}
-                    overlaySize={24}
+                    size={40}
+                    overlaySize={20}
                   />
                 </div>
                 {/* Desktop: show time inline on the right */}
@@ -103,11 +103,13 @@ const CommentItem = memo(({
                       href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${comment.tx_hash}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text"
+                      className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text group"
                       title={comment.tx_hash}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {`Posted on-chain${comment.created_at ? ` ${relativeTime(new Date(comment.created_at))}` : ''}`}
+                      <span className="underline-offset-2 group-hover:underline">
+                        {`Posted on-chain${comment.created_at ? ` ${relativeTime(new Date(comment.created_at))}` : ''}`}
+                      </span>
                       <IconLink className="w-2.5 h-2.5" />
                     </a>
                   </div>
@@ -117,17 +119,19 @@ const CommentItem = memo(({
                   </span>
                 ) : null}
                 {/* Mobile-only timestamp inside the line; desktop remains inline in header */}
-                <div className="w-full border-l border-white ml-[23px] pl-[37px] md:hidden">
+                <div className="w-full border-l border-white ml-[20px] pl-[32px] -mt-5 md:hidden">
                   {comment.tx_hash && CONFIG.EXPLORER_URL ? (
                     <a
                       href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${comment.tx_hash}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-0.5 text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text md:hidden"
+                      className="inline-flex items-center gap-0.5 text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text md:hidden group -mt-2"
                       title={comment.tx_hash}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {`Posted on-chain${comment.created_at ? ` ${relativeTime(new Date(comment.created_at))}` : ''}`}
+                      <span className="underline-offset-2 group-hover:underline">
+                        {`Posted on-chain${comment.created_at ? ` ${relativeTime(new Date(comment.created_at))}` : ''}`}
+                      </span>
                       <IconLink className="w-2 h-2" />
                     </a>
                   ) : comment.created_at ? (
@@ -138,9 +142,9 @@ const CommentItem = memo(({
                 </div>
               </div>
 
-                <div className='w-full border-l border-white ml-[23px] pl-[37px] pr-4 md:pr-6 -mt-[1px] md:border-none md:ml-0 md:pl-[48px] relative z-10'>
+              <div className='w-full border-l border-white ml-[20px] pl-[32px] pr-4 md:pr-6 -mt-[1px] md:border-none md:ml-0 md:pl-[52px] relative z-10'>
                 <div className="text-[15px] text-foreground leading-snug">
-                  {linkify(comment.content)}
+                  {linkify(comment.content, { knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}
                 </div>
 
                 {/* Media display for comments */}
@@ -186,7 +190,7 @@ const CommentItem = memo(({
             </div>
           </div>
           {/* Desktop-only full-height left line to visually connect avatar and content */}
-          <div className="hidden md:block absolute left-[23px] top-0 bottom-0 w-[1px] bg-white/90 z-0 pointer-events-none" />
+          <div className="hidden md:block absolute left-[20px] top-0 bottom-0 w-[1px] bg-white/90 z-0 pointer-events-none" />
           </AeCardContent>
       </AeCard>
 

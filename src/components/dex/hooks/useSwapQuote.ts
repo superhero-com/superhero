@@ -53,6 +53,7 @@ export function useSwapQuote() {
         // eslint-disable-next-line no-console
         console.info('[dex] Querying dex-backend for routes…');
         const routes = await getSwapRoutes(tokenInAddr, tokenOutAddr);
+        console.log('[dex] Routes found via backend::', routes);
 
         const first = routes?.[0];
         if (first && first.length >= 1) {

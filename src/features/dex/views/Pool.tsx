@@ -141,9 +141,9 @@ function PoolContent() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {positions.map((position) => (
+                  {positions.filter(position => position?.pair?.address).map((position, index) => (
                     <LiquidityPositionCard
-                      key={position.pair.address}
+                      key={`${position?.pair?.address}-${index}`}
                       position={position}
                       onRemove={(position) => {
                         selectPositionForRemove(position);

@@ -9,7 +9,8 @@ export function linkify(text: string): React.ReactNode[] {
   String(text).replace(URL_REGEX, (match, _p1, _p2, _p3, offset: number) => {
     if (offset > lastIndex) parts.push(text.slice(lastIndex, offset));
     const href = match.startsWith('http') ? match : `https://${match}`;
-    const display = formatUrl(match);
+    const fullText = formatUrl(match);
+    const display = truncateEnd(fullText, 60);
     parts.push(
       <a
         href={href}
@@ -18,7 +19,7 @@ export function linkify(text: string): React.ReactNode[] {
         rel="noopener noreferrer"
         style={{
           display: 'inline-block',
-          width: '100%',
+          width: 'auto',
           maxWidth: '100%',
           verticalAlign: 'bottom',
           textAlign: 'left',
@@ -48,6 +49,11 @@ function formatUrl(url: string): string {
   } catch {
     return url;
   }
+}
+
+function truncateEnd(text: string, max: number): string {
+  if (text.length <= max) return text;
+  return text.slice(0, Math.max(0, max - 1)) + '…';
 }
 
 

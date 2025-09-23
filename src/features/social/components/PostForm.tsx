@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { IconClose, IconGif, IconImage, IconSmile } from "../../../icons";
 import AeButton from "../../../components/AeButton";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
-import AddressAvatar from "../../../components/AddressAvatar";
+import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 // @ts-ignore
 import TIPPING_V3_ACI from "tipping-contract/generated/Tipping_v3.aci.json";
 import { PostsService } from "../../../api/generated";
@@ -291,9 +291,12 @@ export default function PostForm({
             <div className="relative flex items-start gap-3">
               {activeAccount && (
                 <div className={`flex-shrink-0 self-start ${isPost ? "hidden md:block" : "hidden md:block"}`}>
-                  <AddressAvatar
+                  <AddressAvatarWithChainName
                     address={activeAccount}
                     size={48}
+                    overlaySize={20}
+                    isHoverEnabled={true}
+                    showAddressAndChainName={false}
                     className="border-white/14 shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
                   />
                 </div>

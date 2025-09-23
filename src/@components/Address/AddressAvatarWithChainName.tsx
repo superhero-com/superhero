@@ -1,12 +1,11 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import Identicon from '@/components/Identicon';
 import AddressAvatar from '@/components/AddressAvatar';
 import AddressFormatted from '@/components/AddressFormatted';
 import { AeCard, AeCardContent } from '@/components/ui/ae-card';
-import { useChainName } from '@/hooks/useChainName';
 import { useAccountBalances } from '@/hooks/useAccountBalances';
+import { useChainName } from '@/hooks/useChainName';
 import { cn } from '@/lib/utils';
 import { Decimal } from '@/libs/decimal';
 
@@ -36,8 +35,8 @@ export const AddressAvatarWithChainName = memo(({
     hideFallbackName = false
 }: AddressAvatarWithChainNameProps) => {
     const navigate = useNavigate();
+    const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(address);
     const { chainName } = useChainName(address);
-    const { decimalBalance, aex9Balances } = useAccountBalances(address);
 
     // Hover state management (same as UserBadge)
     const [hover, setHover] = useState(false);
@@ -68,6 +67,14 @@ export const AddressAvatarWithChainName = memo(({
         return () => window.clearTimeout(id);
     }, [hover, isHoverEnabled]);
 
+    // Load balances when needed (only when showing balance or when hover card is visible)
+    useEffect(() => {
+        if (!address) return;
+        if (showBalance || visible) {
+            loadAccountData();
+        }
+    }, [address, showBalance, visible]);
+
     // Handle click outside to close card
     useEffect(() => {
         function handleDocClick(e: MouseEvent) {
@@ -90,61 +97,26 @@ export const AddressAvatarWithChainName = memo(({
         <>
             <div className="relative flex-shrink-0">
                 <div className="relative">
-                    {chainName ? (
-                        <div className="relative">
-
-                            <div className={cn("rounded-xl overflow-hidden shadow-md", avatarBackground && "bg-white")}>
-                                <Identicon address={address} size={size} name={chainName} />
-                            </div>
-                            <div
-                                className="absolute -bottom-1 -right-1 rounded border-2 border-background shadow-sm overflow-hidden"
-                                style={{ width: `${overlaySize}px`, height: `${overlaySize}px` }}
-                            >
-                                <AddressAvatar address={address} size="100%" borderRadius="2px" />
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="rounded-full overflow-hidden shadow-md">
-                            <AddressAvatar address={address} size={size} borderRadius="50%" />
-                        </div>
-                    )}
+                    <div className="rounded-full overflow-hidden shadow-md">
+                        <AddressAvatar address={address} size={size} borderRadius="50%" />
+                    </div>
                 </div>
             </div>
 
             <div className="flex flex-col items-start min-w-0">
-                {chainName && (
-                    <span className="chain-name text-sm font-bold bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+                {showAddressAndChainName && (
+                    <span className="chain-name text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
                         <AddressFormatted
-                            address={chainName}
-                            truncate={truncateAddress}
-                            truncateFixed={false}
+                            address={chainName || address}
+                            truncate={false}
                             className={className}
                         />
                     </span>
                 )}
-                {!chainName && showAddressAndChainName && !hideFallbackName && (
-                    <span className="chain-name text-sm font-bold bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-                        <AddressFormatted
-                            address={'Fellow superhero'}
-                            truncate={truncateAddress}
-                            truncateFixed={false}
-                            className={className}
-                        />
-                    </span>
-                )}
-                {
-                    (!chainName || showAddressAndChainName) && (
-                        <span className="address text-xs font-mono tracking-wide underline decoration-muted-foreground/20 decoration-1 underline-offset-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px] min-w-0 flex-shrink bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-                            <AddressFormatted
-                                address={address}
-                            />
-                        </span>
-                    )
-                }
                 <div>
                     {showBalance && (
-                        <div className="text-md text-muted-foreground">
-                            {decimalBalance.shorten()} AE
+                        <div className="text-sm font-bold text-white">
+                            {decimalBalance.prettify()} AE
                         </div>
                     )}
                 </div>
@@ -189,7 +161,7 @@ export const AddressAvatarWithChainName = memo(({
                                 {/* AE Balance */}
                                 <div className="text-xs text-muted-foreground mb-2">
                                     <span className="font-semibold">AE Balance: </span>
-                                    <span className="font-mono">{decimalBalance ? `${decimalBalance} AE` : 'Loading...'}</span>
+                                    <span className="font-mono">{decimalBalance ? `${decimalBalance.prettify()} AE` : 'Loading...'}</span>
                                 </div>
 
                                 {/* Top 3 Token Holdings */}

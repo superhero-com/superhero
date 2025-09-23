@@ -125,9 +125,9 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
 
     return (
       <header className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 relative z-20">
           {authorAddress && (
-            <AddressAvatarWithChainName address={authorAddress} size={48} overlaySize={24} />
+            <AddressAvatarWithChainName address={authorAddress} size={40} overlaySize={20} />
           )}
         </div>
         {/* Desktop: show time inline on the right */}
@@ -137,10 +137,12 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
               href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${postData.tx_hash}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text"
+              className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text group"
               title={postData?.tx_hash}
             >
-              {`Posted on-chain${post?.timestamp ? ` ${relativeTime(new Date(post.timestamp))}` : ''}`}
+              <span className="underline-offset-2 group-hover:underline">
+                {`Posted on-chain${post?.timestamp ? ` ${relativeTime(new Date(post.timestamp))}` : ''}`}
+              </span>
               <IconLink className="w-2.5 h-2.5" />
             </a>
           </div>
@@ -165,18 +167,20 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
           {renderPostHeader(post)}
 
           {/* Mobile: show time inside the left-line wrapper; desktop uses inline header */}
-          <div className="relative">
-            <div className="hidden md:block absolute left-[23px] top-0 bottom-0 w-[1px] bg-white/90 z-0 pointer-events-none" />
-            <div className="border-l border-white ml-[23px] pl-[37px] md:border-none md:ml-0 md:pl-[48px] relative z-10">
+          <div className="relative -mt-5 md:mt-0">
+            <div className="hidden md:block absolute left-[20px] top-0 bottom-0 w-[1px] bg-white/90 z-0 pointer-events-none" />
+            <div className="border-l border-white ml-[20px] pl-[32px] md:border-none md:ml-0 md:pl-[52px] relative z-10">
               {postData?.tx_hash && CONFIG.EXPLORER_URL && (
                 <a
                   href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${postData.tx_hash}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-0.5 md:hidden text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text"
+                  className="inline-flex items-center gap-0.5 md:hidden text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text group -mt-2"
                   title={postData?.tx_hash}
                 >
-                  {`Posted on-chain${post?.timestamp ? ` ${relativeTime(new Date(post.timestamp))}` : ''}`}
+                  <span className="underline-offset-2 group-hover:underline">
+                    {`Posted on-chain${post?.timestamp ? ` ${relativeTime(new Date(post.timestamp))}` : ''}`}
+                  </span>
                   <IconLink className="w-2 h-2" />
                 </a>
               )}

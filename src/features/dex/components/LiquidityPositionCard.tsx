@@ -7,8 +7,8 @@ import { LiquidityPosition } from "../types/pool";
 
 interface LiquidityPositionCardProps {
   position: LiquidityPosition;
-  onRemove?: (pairId: string) => void;
-  onAdd?: (pairId: string) => void;
+  onRemove?: (position: LiquidityPosition) => void;
+  onAdd?: (position: LiquidityPosition) => void;
 }
 
 export default function LiquidityPositionCard({
@@ -17,7 +17,7 @@ export default function LiquidityPositionCard({
   onAdd,
 }: LiquidityPositionCardProps) {
   const { currentAction, selectedPosition } = usePool();
-  const isSelected = selectedPosition?.pairId === position.pairId;
+  const isSelected = selectedPosition?.pair.address === position.pair.address;
 
   return (
     <div
@@ -29,9 +29,9 @@ export default function LiquidityPositionCard({
       <div className="flex-col md:flex-row flex gap-3 mb-2 ">
         <div className="flex items-center gap-3 mb-2 ">
           <div className="text-base font-semibold text-standard-font-color flex items-center gap-1">
-            <TokenChip address={position.token0} />
+            <TokenChip token={position.pair.token0} />
             <span className="text-lg text-light-font-color">/</span>
-            <TokenChip address={position.token1} />
+            <TokenChip token={position.pair.token1} />
           </div>
         </div>
         {/* {position.valueUsd && (
@@ -42,7 +42,7 @@ export default function LiquidityPositionCard({
         <div className="flex items-center gap-3 mb-2 ">
           <div className="text-[10px] text-light-font-color">View Pair:</div>
           <AddressChip
-            address={position.pairId}
+            address={position.pair.address}
             copyable
             linkToExplorer
             hideAvatar
@@ -75,7 +75,7 @@ export default function LiquidityPositionCard({
         <div className="flex flex-wrap gap-2">
           {onAdd && (
             <button
-              onClick={() => onAdd(position.pairId)}
+              onClick={() => onAdd(position)}
               className="px-4 py-2 rounded-xl border border-glass-border bg-glass-bg text-standard-font-color cursor-pointer text-xs font-medium backdrop-blur-sm transition-all duration-300 hover:bg-accent-color hover:-translate-y-0.5"
             >
               + Add
@@ -83,7 +83,7 @@ export default function LiquidityPositionCard({
           )}
           {onRemove && (
             <button
-              onClick={() => onRemove(position.pairId)}
+              onClick={() => onRemove(position)}
               className="px-4 py-2 rounded-xl border border-red-500/30 bg-red-500/10 text-error-color cursor-pointer text-xs font-medium backdrop-blur-sm transition-all duration-300 hover:bg-red-500/20 hover:-translate-y-0.5"
             >
               Remove

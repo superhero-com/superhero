@@ -1,5 +1,7 @@
+import { DexTokenDto, PairDto } from "@/api/generated";
+
 export interface LiquidityPosition {
-  pairId: string;
+  pair: PairDto;
   token0: string;
   token1: string;
   balance: string;

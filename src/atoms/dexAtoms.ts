@@ -1,11 +1,12 @@
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import { DexTokenDto } from "@/api/generated";
 
 // Type for individual liquidity position data
 export type LiquidityPositionData = {
   balance: string;
-  token0: string;
-  token1: string;
+  token0: DexTokenDto;
+  token1: DexTokenDto;
   sharePct?: string;
   valueUsd?: string;
 };

@@ -1,11 +1,9 @@
 import { useAtomValue, useSetAtom } from 'jotai';
-import { toAe } from '@aeternity/aepp-sdk';
 import { useCallback, useEffect, useState } from 'react';
 import { useAeSdk, useDex } from '../../../hooks';
 import {
   getErrorForAccountAtom,
   getPositionsForAccountAtom,
-  invalidatePositionsAtom,
   isLoadingForAccountAtom,
   setErrorForAccountAtom,
   setLoadingForAccountAtom,
@@ -13,7 +11,6 @@ import {
   shouldRefreshPositionsAtom
 } from '../atoms/positionsAtoms';
 import { LiquidityPosition, PoolListState } from '../types/pool';
-import { Decimal } from '@/libs/decimal';
 
 export function useLiquidityPositions(): PoolListState & {
   refreshPositions: () => Promise<void>;
@@ -29,7 +26,6 @@ export function useLiquidityPositions(): PoolListState & {
   const setPositionsForAccount = useSetAtom(setPositionsForAccountAtom);
   const setLoadingForAccount = useSetAtom(setLoadingForAccountAtom);
   const setErrorForAccount = useSetAtom(setErrorForAccountAtom);
-  const invalidatePositions = useSetAtom(invalidatePositionsAtom);
 
   // Local UI state
   const [showImport, setShowImport] = useState(false);
@@ -48,28 +44,10 @@ export function useLiquidityPositions(): PoolListState & {
       setErrorForAccount({ address: accountAddress, error: null });
 
       // Scan account liquidity
-      await scanAccountLiquidity(accountAddress);
-
-      // Get positions from Jotai store
-      const accountLiquidity = providedLiquidity[accountAddress] || {};
-      const provided = accountLiquidity;
-
+      const accountLiquidity = await scanAccountLiquidity(accountAddress);
 
       // Convert to our typed format
-      const positions: LiquidityPosition[] = Object.entries(provided)
-        .map(([pairId, info]) => {
-          if (!info) return null;
-          return {
-            pairId,
-            token0: info.token0,
-            token1: info.token1,
-            balance: info.balance,
-            sharePct: info.sharePct,
-            valueUsd: info.valueUsd,
-          };
-        })
-        // TODO: temporary solution because it's not possible to fully remove the liquidity position.
-        .filter((position) => position?.balance && Decimal.from(toAe(position?.balance)).gt(0.001))
+      const positions: LiquidityPosition[] = Object.values(accountLiquidity)
         .filter(Boolean) as LiquidityPosition[];
 
       // Cache the positions

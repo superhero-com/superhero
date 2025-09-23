@@ -138,12 +138,32 @@ body {
   /* Better touch scrolling */
   -webkit-overflow-scrolling: touch;
   /* Gen Z Ultra Dynamic Background */
-  background: 
+  background:
     radial-gradient(circle at 20% 80%, rgba(255, 107, 107, 0.15) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(0, 255, 157, 0.15) 0%, transparent 50%),
     radial-gradient(circle at 40% 40%, rgba(69, 183, 209, 0.1) 0%, transparent 50%),
     linear-gradient(135deg, $background_color 0%, #0f0f23 50%, #1a1a2e 100%);
   background-attachment: fixed;
+}
+
+/* iOS-safe fixed background to full viewport height */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 100dvh; /* ensure fixed to device viewport on mobile */
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 80%, rgba(255, 107, 107, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(0, 255, 157, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(69, 183, 209, 0.1) 0%, transparent 50%),
+    linear-gradient(135deg, $background_color 0%, #0f0f23 50%, #1a1a2e 100%);
+  will-change: transform;
+  transform: translateZ(0); /* helps Safari keep it fixed */
 }
 
 a { 

@@ -88,7 +88,7 @@ const CommentItem = memo(({
           <div className="flex gap-3">
             <div className="flex-1 min-w-0 space-y-0 md:space-y-2">
               <div className="flex flex-col gap-0 sm:grid sm:grid-cols-[1fr_auto] sm:items-start sm:gap-2 w-full">
-                <div className="flex-1 min-w-0 relative z-10">
+              <div className="flex-1 min-w-0 relative z-10">
                   <AddressAvatarWithChainName
                     address={authorAddress}
                     avatarBackground={true}
@@ -138,7 +138,7 @@ const CommentItem = memo(({
                 </div>
               </div>
 
-                <div className='w-full border-l border-white ml-[23px] pl-[37px] pr-4 md:pr-6 -mt-[1px] md:border-none md:ml-0 md:pl-[48px]'>
+                <div className='w-full border-l border-white ml-[23px] pl-[37px] pr-4 md:pr-6 -mt-[1px] md:border-none md:ml-0 md:pl-[48px] relative z-10'>
                 <div className="text-[15px] text-foreground leading-snug">
                   {linkify(comment.content)}
                 </div>
@@ -185,8 +185,8 @@ const CommentItem = memo(({
                </div>
             </div>
           </div>
-           {/* Desktop-only full-height left line to visually connect avatar and content */}
-           <div className="hidden md:block absolute left-[23px] top-0 bottom-0 w-[1px] bg-white -z-10" />
+          {/* Desktop-only full-height left line to visually connect avatar and content */}
+          <div className="hidden md:block absolute left-[23px] top-0 bottom-0 w-[1px] bg-white/90 z-0 pointer-events-none" />
           </AeCardContent>
       </AeCard>
 

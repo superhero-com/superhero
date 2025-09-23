@@ -70,7 +70,7 @@ export function formatAddress(address: string, length = 6): string {
   const { valid, prefix, hash } = validateHash(address);
   if (valid && prefix === Encoding.AccountAddress && hash) {
     if (hash.length <= 6) return address;
-    return `${prefix}_${hash.slice(0, 3)} ... ${hash.slice(-3)}`;
+    return `${prefix}_${hash.slice(0, 3)}...${hash.slice(-3)}`;
   }
   
   if (address.length <= length * 2 + 3) {

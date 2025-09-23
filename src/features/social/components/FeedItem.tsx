@@ -43,10 +43,12 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
                   target="_blank"
                   rel="noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-0.5 md:gap-1 text-[11px] md:text-xs leading-none md:leading-normal text-light-font-color hover:text-light-font-color no-gradient-text md:self-start"
+                  className="inline-flex items-center gap-0.5 md:gap-1 text-[11px] md:text-xs leading-none md:leading-normal text-light-font-color hover:text-light-font-color no-gradient-text md:self-start group"
                   title={item.tx_hash}
                 >
-                  {`Posted on-chain${item.created_at ? ` ${relativeTime(new Date(item.created_at))}` : ''}`}
+                  <span className="underline-offset-2 group-hover:underline">
+                    {`Posted on-chain${item.created_at ? ` ${relativeTime(new Date(item.created_at))}` : ''}`}
+                  </span>
                   <IconLink className="w-2 h-2 md:w-2.5 md:h-2.5" />
                 </a>
               </div>

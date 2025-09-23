@@ -19,8 +19,8 @@ export const configs: IAppConfigs = {
       networkId: "ae_mainnet",
       apiUrl: process.env.VUE_APP_MAINNET_API || "",
       websocketUrl: process.env.VUE_APP_MAINNET_WS || "",
-      url: "https://mdw.wordcraft.fun",
-      middlewareUrl: "https://mdw.wordcraft.fun/mdw",
+      url: "https://mainnet.aeternity.io",
+      middlewareUrl: "https://mainnet.aeternity.io/mdw",
       explorerUrl: "https://aescan.io",
       compilerUrl: "https://v7.compiler.aepps.com",
       superheroBackendUrl:

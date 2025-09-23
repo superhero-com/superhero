@@ -109,7 +109,7 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                verticalAlign: '-0.24em',
+                verticalAlign: '-0.3em',
                 lineHeight: 'inherit',
               }}
             >

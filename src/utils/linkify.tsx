@@ -1,9 +1,12 @@
 import React from 'react';
+import { formatAddress } from './address';
 
 // URL matcher (external links)
 const URL_REGEX = /((https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/[\w\-._~:\/?#[\]@!$&'()*+,;=%]*)?)/gi;
 // Optional '@' followed by an AENS name ending with .chain (word boundary to avoid trailing '/')
 const AENS_TAG_REGEX = /@?[a-z0-9-]+\.chain\b/gi;
+// Optional '@' followed by an account address starting with ak_
+const ACCOUNT_TAG_REGEX = /@?(ak_[A-Za-z0-9]+)/gi;
 
 export function linkify(text: string, options?: { knownChainNames?: Set<string> }): React.ReactNode[] {
   if (!text) return [];
@@ -36,9 +39,38 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
   });
   if (last < raw.length) aensLinked.push(raw.slice(last));
 
-  // Pass 2: Within remaining plain text segments, linkify regular URLs
-  const finalParts: React.ReactNode[] = [];
+  // Pass 2a: Within remaining plain text segments, convert ak_ address mentions
+  const accountLinked: React.ReactNode[] = [];
   aensLinked.forEach((node, idx) => {
+    if (typeof node !== 'string') {
+      accountLinked.push(node);
+      return;
+    }
+    const segment = node as string;
+    let segLast = 0;
+    segment.replace(ACCOUNT_TAG_REGEX, (m: string, addr: string, off: number) => {
+      if (off > segLast) accountLinked.push(segment.slice(segLast, off));
+      const address = addr; // captured address without leading '@'
+      const displayCore = formatAddress(address);
+      const display = m.startsWith('@') ? `@${displayCore}` : displayCore;
+      accountLinked.push(
+        <a
+          href={`/users/${address}`}
+          key={`acc-${address}-${idx}-${off}`}
+          className="font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent no-underline hover:underline"
+        >
+          {display}
+        </a>
+      );
+      segLast = off + m.length;
+      return m;
+    });
+    if (segLast < segment.length) accountLinked.push(segment.slice(segLast));
+  });
+
+  // Pass 2b: Within remaining plain text segments, linkify regular URLs
+  const finalParts: React.ReactNode[] = [];
+  accountLinked.forEach((node, idx) => {
     if (typeof node !== 'string') {
       finalParts.push(node);
       return;

@@ -119,13 +119,13 @@ const CommentItem = memo(({
                   </span>
                 ) : null}
                 {/* Mobile-only timestamp inside the line; desktop remains inline in header */}
-                <div className="w-full border-l border-white ml-[20px] pl-[40px] md:hidden">
+                <div className="w-full border-l border-white ml-[20px] pl-[32px] -mt-5 md:hidden">
                   {comment.tx_hash && CONFIG.EXPLORER_URL ? (
                     <a
                       href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${comment.tx_hash}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-0.5 text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text md:hidden group"
+                      className="inline-flex items-center gap-0.5 text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text md:hidden group -mt-2"
                       title={comment.tx_hash}
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -142,7 +142,7 @@ const CommentItem = memo(({
                 </div>
               </div>
 
-              <div className='w-full border-l border-white ml-[20px] pl-[40px] pr-4 md:pr-6 -mt-[1px] md:border-none md:ml-0 md:pl-[48px] relative z-10'>
+              <div className='w-full border-l border-white ml-[20px] pl-[32px] pr-4 md:pr-6 -mt-[1px] md:border-none md:ml-0 md:pl-[52px] relative z-10'>
                 <div className="text-[15px] text-foreground leading-snug">
                   {linkify(comment.content, { knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}
                 </div>

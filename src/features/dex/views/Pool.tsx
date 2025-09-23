@@ -55,7 +55,7 @@ function PoolContent() {
           <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
             {/* Header */}
             <div className="mb-6">
-              <h1 className="text-[28px] font-bold text-white m-0 mb-2 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+              <h1 className="text-[28px] font-bold m-0 mb-2 sh-dex-title">
                 Your Liquidity Positions
               </h1>
               <p className="text-sm text-white/60 m-0 leading-6">
@@ -148,7 +148,7 @@ function PoolContent() {
                   {!activeAccount && (
                     <ConnectWalletButton
                       label="Connect Wallet to Start"
-                      className="px-6 py-3 rounded-xl border-none bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white text-sm font-semibold shadow-[0_8px_25px_rgba(255,107,107,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                      className="px-6 py-3 rounded-xl border-none bg-[#1161FE] text-white text-sm font-semibold shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
                     />
                   )}
                 </div>

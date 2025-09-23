@@ -100,8 +100,7 @@ export const AddressAvatarWithChainName = memo(({
                     <span className="chain-name text-sm font-bold bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
                         <AddressFormatted
                             address={chainName || address}
-                            truncate={truncateAddress}
-                            truncateFixed={false}
+                            truncate={false}
                             className={className}
                         />
                     </span>

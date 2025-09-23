@@ -37,3 +37,16 @@ export function useSuperheroChainNames() {
 
     return { chainNames };
 }
+
+export function useAddressByChainName(chainNameInput?: string) {
+    const [chainNames] = useAtom(chainNamesAtom);
+    const address = useMemo(() => {
+        if (!chainNameInput) return null;
+        const target = chainNameInput.toLowerCase();
+        for (const [addr, name] of Object.entries(chainNames)) {
+            if ((name || '').toLowerCase() === target) return addr;
+        }
+        return null;
+    }, [chainNames, chainNameInput]);
+    return { address };
+}

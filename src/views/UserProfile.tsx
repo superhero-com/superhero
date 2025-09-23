@@ -12,7 +12,7 @@ import FeedItem from "../features/social/components/FeedItem";
 import { PostApiResponse } from "../features/social/types";
 import "../features/social/views/FeedList.scss";
 import { useAccountBalances } from "../hooks/useAccountBalances";
-import { useChainName } from "../hooks/useChainName";
+import { useChainName, useAddressByChainName } from "../hooks/useChainName";
 
 import AddressAvatar from "../components/AddressAvatar";
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
@@ -20,8 +20,12 @@ import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithC
 export default function UserProfile({ standalone = true }: { standalone?: boolean } = {}) {
   const navigate = useNavigate();
   const { address } = useParams();
-  const { decimalBalance, loadAccountData } = useAccountBalances(address);
-  const { chainName } = useChainName(address);
+  // Support AENS chain name route: /users/<name.chain>
+  const isChainName = address?.endsWith('.chain');
+  const { address: resolvedAddress } = useAddressByChainName(isChainName ? address : undefined);
+  const effectiveAddress = (isChainName && resolvedAddress) ? resolvedAddress : address as string;
+  const { decimalBalance, loadAccountData } = useAccountBalances(effectiveAddress);
+  const { chainName } = useChainName(effectiveAddress);
 
   const { data } = useQuery({
     queryKey: ["PostsService.listAll", address],
@@ -32,9 +36,9 @@ export default function UserProfile({ standalone = true }: { standalone?: boolea
         orderBy: "created_at",
         orderDirection: "DESC",
         search: "",
-        accountAddress: address,
+        accountAddress: effectiveAddress,
       }) as unknown as Promise<PostApiResponse>,
-    enabled: !!address,
+    enabled: !!effectiveAddress,
   });
 
   const [profile, setProfile] = useState<any>(null);
@@ -44,12 +48,12 @@ export default function UserProfile({ standalone = true }: { standalone?: boolea
   const posts = data?.items || [];
 
   useEffect(() => {
-    if (!address) return;
+    if (!effectiveAddress) return;
     // Scroll to top whenever navigating to a user profile
     window.scrollTo(0, 0);
     loadAccountData();
     // Load profile
-  }, [address]);
+  }, [effectiveAddress]);
 
   const content = (
     <div className="w-full">
@@ -60,7 +64,7 @@ export default function UserProfile({ standalone = true }: { standalone?: boolea
       </div>
       {/* Compact Profile header */}
       <div className="bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-5 mb-4 relative overflow-hidden transition-all duration-300 hover:border-white/20 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 md:p-4 md:mb-3 md:rounded-xl">
-        <AddressAvatarWithChainName address={address} size={56} showBalance />
+        <AddressAvatarWithChainName address={effectiveAddress} size={56} showBalance />
       </div>
 
       {/* Tabs */}

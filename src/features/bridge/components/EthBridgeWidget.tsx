@@ -145,7 +145,7 @@ export default function EthBridgeWidget() {
     >
       {/* Header */}
       <div className="flex justify-between items-center mb-4 sm:mb-6 min-w-0">
-        <h2 className="text-lg sm:text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent min-w-0 flex-shrink">
+        <h2 className="text-lg sm:text-xl font-bold m-0 sh-dex-title min-w-0 flex-shrink">
           Bridge ETH → AE
         </h2>
 

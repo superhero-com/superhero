@@ -56,7 +56,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
               </div>
             )}
           </div>
-          <div className="ml-0 -mt-3 md:mt-0 md:ml-3 md:pl-10 relative">
+          <div className="ml-0 -mt-3 md:mt-0 md:ml-3 md:pl-12 relative">
             <div className="hidden md:block absolute left-[20px] top-0 bottom-0 w-[1px] bg-white/90 z-0 pointer-events-none" />
             <div className="text-[15px] text-foreground leading-snug">
               {linkify(item.content, { knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}

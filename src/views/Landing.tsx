@@ -22,7 +22,7 @@ export default function Landing() {
     <div className='bg-black-900'>
       
       {/* Hero */}
-      <section className="min-h-screen flex items-center relative bg-gradient-to-br from-[#0a0a0f] via-[#0f0f23] to-[#1a1a2e]">
+      <section className="h-screen overflow-hidden flex items-center relative bg-gradient-to-br from-[#0a0a0f] via-[#0f0f23] to-[#1a1a2e]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,107,107,0.15)_0%,transparent_50%),radial-gradient(circle_at_80%_20%,rgba(0,255,157,0.15)_0%,transparent_50%),radial-gradient(circle_at_40%_40%,rgba(69,183,209,0.1)_0%,transparent_50%)]" />
         <div className="relative z-10 w-full">
           <div className="max-w-[1180px] mx-auto px-4 py-32">

@@ -119,7 +119,11 @@ export default function PostForm({
   }, [text, onTextChange]);
 
   useEffect(() => {
-    if (textareaRef.current) textareaRef.current.focus();
+    // Avoid auto-focusing on mobile to prevent keyboard popping up
+    const isDesktop = typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(min-width: 768px)').matches;
+    if (isDesktop && textareaRef.current) textareaRef.current.focus();
   }, []);
 
   useEffect(() => {

@@ -94,18 +94,27 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              display: 'inline-block',
-              width: 'auto',
-              maxWidth: '100%',
-              verticalAlign: 'bottom',
-              textAlign: 'left',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
+              display: 'inline',
+              verticalAlign: 'baseline',
+              lineHeight: 'inherit',
+              margin: 0,
+              padding: 0,
             }}
             title={m}
           >
-            {display}
+            <span
+              style={{
+                display: 'inline-block',
+                maxWidth: '100%',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                verticalAlign: '-0.24em',
+                lineHeight: 'inherit',
+              }}
+            >
+              {display}
+            </span>
           </a>
         );
       }

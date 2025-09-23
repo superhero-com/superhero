@@ -274,7 +274,7 @@ export default function DexExplorePools() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/dex/pool/add?from=${pair.token0.address}&to=${pair.token1.address}`);
+                          navigate(`/dex/pool?from=${pair.token0.address}&to=${pair.token1.address}`);
                         }}
                         className="flex-1 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-[var(--button-gradient)] active:text-white"
                       >
@@ -344,7 +344,7 @@ export default function DexExplorePools() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                navigate(`/dex/pool/add?from=${pair.token0.address}&to=${pair.token1.address}`);
+                                navigate(`/dex/pool?from=${pair.token0.address}&to=${pair.token1.address}`);
                               }}
                               className="py-1.5 px-3 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-xs font-medium backdrop-blur-[10px] transition-all duration-300 hover:bg-[var(--button-gradient)] hover:-translate-y-px hover:text-white"
                             >

@@ -46,7 +46,7 @@ export default function HeaderWalletButton() {
             address={activeAccount}
             size={36}
             overlaySize={18}
-            showBalance={false}
+            showBalance={true}
             showAddressAndChainName={true}
             className="max-w-[160px] md:max-w-[min(100%,250px)]"
           />

@@ -70,7 +70,7 @@ export default function LiquiditySuccessNotification({
           </div>
 
           {/* Title */}
-          <Dialog.Title className="text-2xl font-bold text-center m-0 mb-2 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+          <Dialog.Title className="text-2xl font-bold text-center m-0 mb-2 sh-dex-title">
             Liquidity Added Successfully!
           </Dialog.Title>
 

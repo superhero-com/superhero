@@ -148,7 +148,7 @@ export default function RemoveLiquidityForm() {
               💧
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+              <h2 className="text-xl font-bold m-0 sh-dex-title">
                 Confirm Removal
               </h2>
               <p className="text-xs text-white/60 mt-0.5">
@@ -231,7 +231,7 @@ export default function RemoveLiquidityForm() {
             className={`flex-[2] px-6 py-4 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
               loading 
                 ? 'bg-white/10 cursor-not-allowed opacity-60' 
-                : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0'
+                : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0'
             }`}
           >
             {loading ? (
@@ -255,7 +255,7 @@ export default function RemoveLiquidityForm() {
             💧
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+            <h2 className="text-xl font-bold m-0 sh-dex-title">
               Remove Liquidity
             </h2>
             <p className="text-xs text-white/60 mt-0.5">
@@ -454,7 +454,7 @@ export default function RemoveLiquidityForm() {
         className={`w-full py-4 px-6 rounded-2xl border-none text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
           removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))
             ? 'bg-white/10 text-white/60 cursor-not-allowed opacity-60'
-            : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white cursor-pointer shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0'
+            : 'bg-[#1161FE] text-white cursor-pointer shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0'
         }`}
       >
         💧 Remove {useCustomAmount 

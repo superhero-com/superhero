@@ -283,7 +283,7 @@ export default function AddLiquidityForm() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#00ff9d] bg-clip-text text-transparent">
+          <h2 className="text-xl font-bold m-0 sh-dex-title">
             Add Liquidity
           </h2>
         </div>
@@ -348,7 +348,7 @@ export default function AddLiquidityForm() {
 
       {/* Plus Icon */}
       <div className="flex justify-center my-4 relative">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#ff6b6b] to-[#00ff9d] border-2 border-white/10 text-white flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(255,107,107,0.3)] z-[2] relative hover:shadow-[0_8px_24px_rgba(255,107,107,0.4)] hover:-translate-y-0.5">
+        <div className="w-12 h-12 rounded-full bg-[#1161FE] border-2 border-white/10 text-white flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(17,97,254,0.3)] z-[2] relative hover:shadow-[0_8px_24px_rgba(17,97,254,0.4)] hover:-translate-y-0.5">
           +
         </div>
       </div>
@@ -423,7 +423,7 @@ export default function AddLiquidityForm() {
           className={`w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isAddDisabled
               ? "bg-white/10 cursor-not-allowed opacity-60"
-              : "bg-gradient-to-r from-[#ff6b6b] to-[#00ff9d] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
+              : "bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
           }`}
         >
           {state.loading ? (
@@ -439,7 +439,7 @@ export default function AddLiquidityForm() {
         <ConnectWalletButton
           label="Connect Wallet to Add Liquidity"
           block
-          className="w-full py-4 px-6 rounded-2xl border-none bg-gradient-to-r from-[#ff6b6b] to-[#00ff9d] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(255,107,107,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
+          className="w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
         />
       )}
 

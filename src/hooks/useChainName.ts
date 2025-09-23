@@ -1,6 +1,7 @@
 import { useAtom } from "jotai";
 import { useEffect, useMemo } from "react";
 import { chainNamesAtom } from "../atoms/walletAtoms";
+import { Backend } from "../api/backend";
 
 export function useChainName(accountAddress: string) {
     const [chainNames,] = useAtom(chainNamesAtom);
@@ -15,10 +16,13 @@ export function useSuperheroChainNames() {
     const [chainNames, setChainNames] = useAtom(chainNamesAtom);
 
     async function loadChainNames() {
-        const url = `https://superhero-backend-mainnet.prd.service.aepps.com/cache/chainnames`;
-        const response = await fetch(url);
-        const data = await response.json();
-        setChainNames(data);
+        try {
+            const data = await Backend.getCacheChainNames();
+            setChainNames(data || {});
+        } catch (e) {
+            // ignore transient errors; keep existing cache
+            console.warn('Failed to load chain names', e);
+        }
     }
 
     useEffect(() => {

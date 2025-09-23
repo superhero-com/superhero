@@ -92,8 +92,8 @@ const CommentItem = memo(({
                   <AddressAvatarWithChainName
                     address={authorAddress}
                     avatarBackground={true}
-                    size={48}
-                    overlaySize={24}
+                    size={40}
+                    overlaySize={20}
                   />
                 </div>
                 {/* Desktop: show time inline on the right */}

@@ -5,7 +5,7 @@ const URL_REGEX = /((https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/[\w\-._~:\/?#[\]@!$&'()*+
 // Optional '@' followed by an AENS name ending with .chain (word boundary to avoid trailing '/')
 const AENS_TAG_REGEX = /@?[a-z0-9-]+\.chain\b/gi;
 
-export function linkify(text: string): React.ReactNode[] {
+export function linkify(text: string, options?: { knownChainNames?: Set<string> }): React.ReactNode[] {
   if (!text) return [];
   const raw = String(text);
 
@@ -15,15 +15,22 @@ export function linkify(text: string): React.ReactNode[] {
   raw.replace(AENS_TAG_REGEX, (match: string, offset: number) => {
     if (offset > last) aensLinked.push(raw.slice(last, offset));
     const name = match.startsWith('@') ? match.slice(1) : match; // strip optional '@'
-    aensLinked.push(
-      <a
-        href={`/users/${name}`}
-        key={`aens-${name}-${offset}`}
-        className="font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent no-underline hover:underline"
-      >
-        {match}
-      </a>
-    );
+    const normalized = name.toLowerCase();
+    const isKnown = options?.knownChainNames?.has(normalized) ?? false;
+    if (isKnown) {
+      aensLinked.push(
+        <a
+          href={`/users/${name}`}
+          key={`aens-${name}-${offset}`}
+          className="font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent no-underline hover:underline"
+        >
+          {match}
+        </a>
+      );
+    } else {
+      // Unknown name → keep as plain text
+      aensLinked.push(match);
+    }
     last = offset + match.length;
     return match;
   });
@@ -39,11 +46,10 @@ export function linkify(text: string): React.ReactNode[] {
     const segment = node as string;
     let segLast = 0;
     segment.replace(URL_REGEX, (m, _p1, _p2, _p3, off: number) => {
-      // Avoid converting bare 'name.chain' we might have missed (shouldn't happen due to pass 1)
-      // but keep the logic simple: if it ends with .chain and is not protocol-prefixed, treat as plain text.
-      const isChainNoProtocol = /(^|\s)[\w-]+\.chain\b/i.test(segment.slice(Math.max(0, off - 1), off + m.length)) && !/^https?:\/\//i.test(m);
+      // Avoid converting bare 'name.chain' (optionally followed by '/') without protocol into a link
+      const isBareChainNoProtocol = !/^https?:\/\//i.test(m) && /^[\w-]+\.chain(\/|$)/i.test(m);
       if (off > segLast) finalParts.push(segment.slice(segLast, off));
-      if (isChainNoProtocol) {
+      if (isBareChainNoProtocol) {
         finalParts.push(m);
       } else {
         const href = m.startsWith('http') ? m : `https://${m}`;

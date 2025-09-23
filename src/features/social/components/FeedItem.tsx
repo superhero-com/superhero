@@ -6,6 +6,7 @@ import { PostDto } from "../../../api/generated";
 import { Badge } from "../../../components/ui/badge";
 import { IconComment, IconLink } from "../../../icons";
 import { linkify } from "../../../utils/linkify";
+import { useWallet } from "../../../hooks";
 import { relativeTime } from "../../../utils/time";
 import { CONFIG } from "../../../config";
 
@@ -19,6 +20,7 @@ interface FeedItemProps {
 const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
   const postId = item.id;
   const authorAddress = item.sender_address;
+  const { chainNames } = useWallet();
 
   const handleItemClick = useCallback(() => {
     onItemClick(postId);
@@ -56,7 +58,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
           </div>
           <div className="ml-0 -mt-3 md:mt-0 md:ml-3 md:pl-10">
             <div className="text-[15px] text-foreground leading-snug">
-              {linkify(item.content)}
+              {linkify(item.content, { knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}
             </div>
 
             {item.media &&

@@ -271,6 +271,9 @@ export default function PostForm({
           <div className="text-center text-white/70">
             <p className="text-sm">Please connect your wallet to comment</p>
           </div>
+          <div className="mt-3 flex justify-center">
+            <ConnectWalletButton block className="w-full md:w-auto" />
+          </div>
         </div>
       </div>
     );

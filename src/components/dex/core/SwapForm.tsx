@@ -320,7 +320,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   const isSwapDisabled = swapLoading || !amountIn || Number(amountIn) <= 0 || !amountOut || !tokenIn || !tokenOut || hasInsufficientBalance;
 
   return (
-    <div className="max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
+    <div className="w-full sm:w-[480px] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden flex-shrink-0">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold m-0 sh-dex-title">
@@ -444,7 +444,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <button
           onClick={() => setShowConfirm(true)}
           disabled={isSwapDisabled}
-          className={`w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isSwapDisabled
               ? 'bg-white/10 cursor-not-allowed opacity-60'
               : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0'
@@ -459,7 +459,8 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         </button>
       ) : (
         <ConnectWalletButton
-          label="Connect Wallet to Swap"
+          label="Connect wallet"
+          variant="dex"
           block
           className="w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
         />

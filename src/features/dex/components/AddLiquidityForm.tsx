@@ -420,7 +420,7 @@ export default function AddLiquidityForm() {
         <button
           onClick={() => setShowConfirm(true)}
           disabled={isAddDisabled}
-          className={`w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isAddDisabled
               ? "bg-white/10 cursor-not-allowed opacity-60"
               : "bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
@@ -437,7 +437,8 @@ export default function AddLiquidityForm() {
         </button>
       ) : (
         <ConnectWalletButton
-          label="Connect Wallet to Add Liquidity"
+          label="Connect wallet"
+          variant="dex"
           block
           className="w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
         />

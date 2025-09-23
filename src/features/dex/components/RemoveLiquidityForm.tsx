@@ -61,7 +61,7 @@ export default function RemoveLiquidityForm() {
   if (!address) {
     return (
       <div className="max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.1)] text-center">
-        <ConnectWalletButton />
+        <ConnectWalletButton label="Connect wallet" variant="dex" />
       </div>
     );
   }
@@ -451,7 +451,7 @@ export default function RemoveLiquidityForm() {
       <button
         onClick={() => setShowConfirm(true)}
         disabled={removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))}
-        className={`w-full py-4 px-6 rounded-2xl border-none text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+        className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
           removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))
             ? 'bg-white/10 text-white/60 cursor-not-allowed opacity-60'
             : 'bg-[#1161FE] text-white cursor-pointer shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0'

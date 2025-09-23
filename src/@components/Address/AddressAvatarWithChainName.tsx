@@ -115,8 +115,8 @@ export const AddressAvatarWithChainName = memo(({
                 )}
                 <div>
                     {showBalance && (
-                        <div className="text-md text-muted-foreground">
-                            {decimalBalance.shorten()} AE
+                        <div className="text-sm font-bold text-white">
+                            {decimalBalance.prettify()} AE
                         </div>
                     )}
                 </div>

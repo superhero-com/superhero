@@ -20,6 +20,7 @@ interface AddressAvatarWithChainNameProps {
     className?: string;
     isHoverEnabled?: boolean;
     avatarBackground?: boolean;
+    hideFallbackName?: boolean;
 }
 
 export const AddressAvatarWithChainName = memo(({
@@ -31,7 +32,8 @@ export const AddressAvatarWithChainName = memo(({
     truncateAddress = true,
     className,
     isHoverEnabled = true,
-    avatarBackground = false
+    avatarBackground = false,
+    hideFallbackName = false
 }: AddressAvatarWithChainNameProps) => {
     const navigate = useNavigate();
     const { chainName } = useChainName(address);
@@ -90,6 +92,7 @@ export const AddressAvatarWithChainName = memo(({
                 <div className="relative">
                     {chainName ? (
                         <div className="relative">
+
                             <div className={cn("rounded-xl overflow-hidden shadow-md", avatarBackground && "bg-white")}>
                                 <Identicon address={address} size={size} name={chainName} />
                             </div>
@@ -101,26 +104,34 @@ export const AddressAvatarWithChainName = memo(({
                             </div>
                         </div>
                     ) : (
-                        <div className="rounded-xl overflow-hidden shadow-md">
-                            <AddressAvatar address={address} size={size} borderRadius="10px" />
+                        <div className="rounded-full overflow-hidden shadow-md">
+                            <AddressAvatar address={address} size={size} borderRadius="50%" />
                         </div>
                     )}
                 </div>
             </div>
 
             <div className="flex flex-col items-start min-w-0">
-                {
-                    ((!chainName && showAddressAndChainName) || chainName) && (
-                        <span className="chain-name text-sm font-bold bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-                            <AddressFormatted
-                                address={chainName ?? 'Fellow superhero'}
-                                truncate={truncateAddress}
-                                truncateFixed={false}
-                                className={className}
-                            />
-                        </span>
-                    )
-                }
+                {chainName && (
+                    <span className="chain-name text-sm font-bold bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+                        <AddressFormatted
+                            address={chainName}
+                            truncate={truncateAddress}
+                            truncateFixed={false}
+                            className={className}
+                        />
+                    </span>
+                )}
+                {!chainName && showAddressAndChainName && !hideFallbackName && (
+                    <span className="chain-name text-sm font-bold bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+                        <AddressFormatted
+                            address={'Fellow superhero'}
+                            truncate={truncateAddress}
+                            truncateFixed={false}
+                            className={className}
+                        />
+                    </span>
+                )}
                 {
                     (!chainName || showAddressAndChainName) && (
                         <span className="address text-xs font-mono tracking-wide underline decoration-muted-foreground/20 decoration-1 underline-offset-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px] min-w-0 flex-shrink bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">

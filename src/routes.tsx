@@ -1,106 +1,202 @@
-import React, { lazy } from 'react';
-import { RouteObject } from 'react-router-dom';
-import configs from './configs';
-const FeedList = lazy(() => import('./features/social/views/FeedList'));
-const Trending = lazy(() => import('./views/Trending'));
-const TrendTokens = lazy(() => import('./views/Trendminer/TokenList'));
-const TrendCloud = lazy(() => import('./views/Trendminer/TrendCloud'));
-const TrendCloudVisx = lazy(() => import('./views/Trendminer/TrendCloudVisx'));
-const TrendTokenDetails = lazy(() => import('./views/Trendminer/TokenDetails'));
-const TrendInvite = lazy(() => import('./views/Trendminer/Invite'));
-const TrendDao = lazy(() => import('./views/Trendminer/Dao'));
-const TrendDaos = lazy(() => import('./views/Trendminer/Daos'));
-const TrendAccounts = lazy(() => import('./views/Trendminer/Accounts'));
-const TrendAccountDetails = lazy(() => import('./views/Trendminer/AccountDetails'));
-const TrendCreate = lazy(() => import('./views/Trendminer/CreateToken'));
-const PostDetail = lazy(() => import('./features/social/views/PostDetail'));
-const UserProfile = lazy(() => import('./views/UserProfile'));
-const Landing = lazy(() => import('./views/Landing'));
-const Conference = lazy(() => import('./views/Conference'));
-const Governance = lazy(() => import('./views/Governance'));
-const Terms = lazy(() => import('./views/Terms'));
-const Privacy = lazy(() => import('./views/Privacy'));
-const FAQ = lazy(() => import('./views/FAQ'));
-const TxQueue = lazy(() => import('./views/TxQueue'));
+import React, { lazy } from "react";
+import { RouteObject } from "react-router-dom";
+import SocialLayout from "./components/layout/SocialLayout";
+
+const FeedList = lazy(() => import("./features/social/views/FeedList"));
+const Trending = lazy(() => import("./views/Trending"));
+const TrendTokens = lazy(() => import("./views/Trendminer/TokenList"));
+const TrendCloud = lazy(() => import("./views/Trendminer/TrendCloud"));
+const TrendCloudVisx = lazy(() => import("./views/Trendminer/TrendCloudVisx"));
+const TrendTokenDetails = lazy(() => import("./views/Trendminer/TokenDetails"));
+const TrendInvite = lazy(() => import("./views/Trendminer/Invite"));
+const TrendDao = lazy(() => import("./views/Trendminer/Dao"));
+const TrendDaos = lazy(() => import("./views/Trendminer/Daos"));
+const TrendAccounts = lazy(() => import("./views/Trendminer/Accounts"));
+const TrendAccountDetails = lazy(
+  () => import("./views/Trendminer/AccountDetails")
+);
+const TrendCreate = lazy(() => import("./views/Trendminer/CreateToken"));
+const PostDetail = lazy(() => import("./features/social/views/PostDetail"));
+const UserProfile = lazy(() => import("./views/UserProfile"));
+const Landing = lazy(() => import("./views/Landing"));
+const Conference = lazy(() => import("./views/Conference"));
+const Governance = lazy(() => import("./views/Governance"));
+const Terms = lazy(() => import("./views/Terms"));
+const Privacy = lazy(() => import("./views/Privacy"));
+const FAQ = lazy(() => import("./views/FAQ"));
+const TxQueue = lazy(() => import("./views/TxQueue"));
 
 // DEX Components
-const DexLayout = lazy(() => import('./features/dex/layouts/DexLayout'));
-const DexSwap = lazy(() => import('./features/dex/views/DexSwap'));
-const DexWrap = lazy(() => import('./features/dex/views/DexWrap'));
-const DexBridge = lazy(() => import('./features/dex/views/DexBridge'));
-const Pool = lazy(() => import('./features/dex/views/Pool'));
-const DexExploreTokens = lazy(() => import('./features/dex/views/DexExploreTokens'));
-const DexExplorePools = lazy(() => import('./features/dex/views/DexExplorePools'));
-const DexExploreTransactions = lazy(() => import('./features/dex/views/DexExploreTransactions'));
+const DexLayout = lazy(() => import("./features/dex/layouts/DexLayout"));
+const DexSwap = lazy(() => import("./features/dex/views/DexSwap"));
+const DexWrap = lazy(() => import("./features/dex/views/DexWrap"));
+const DexBridge = lazy(() => import("./features/dex/views/DexBridge"));
+const Pool = lazy(() => import("./features/dex/views/Pool"));
+const DexExploreTokens = lazy(
+  () => import("./features/dex/views/DexExploreTokens")
+);
+const DexExplorePools = lazy(
+  () => import("./features/dex/views/DexExplorePools")
+);
+const DexExploreTransactions = lazy(
+  () => import("./features/dex/views/DexExploreTransactions")
+);
 
 // Legacy DEX components (for backward compatibility)
-const Swap = lazy(() => import('./views/Swap'));
-const PoolImport = lazy(() => import('./views/PoolImport'));
-const Explore = lazy(() => import('./views/Explore'));
-const TokenDetail = lazy(() => import('./views/TokenDetail'));
-const PoolDetail = lazy(() => import('./views/PoolDetail'));
-const AddTokens = lazy(() => import('./views/AddTokens'));
-
-const trendminerRoutes = [
-  { path: '/trendminer/invite', element: <TrendInvite /> },
-  { path: '/trendminer/dao/:saleAddress', element: <TrendDao /> },
-  { path: '/trendminer/daos', element: <TrendDaos /> },
-  { path: '/trendminer/accounts', element: <TrendAccounts /> },
-  { path: '/trendminer/accounts/:address', element: <TrendAccountDetails /> },
-  { path: '/trendminer/create', element: <TrendCreate /> },
-  { path: '/trending', element: <Trending /> },
-  { path: '/trendminer', element: <TrendCloud /> },
-  { path: '/trendminer/visx', element: <TrendCloudVisx /> },
-  { path: '/trendminer/tokens', element: <TrendTokens /> },
-  { path: '/trendminer/tokens/:tokenName', element: <TrendTokenDetails /> },
-]
+const Swap = lazy(() => import("./views/Swap"));
+const PoolImport = lazy(() => import("./views/PoolImport"));
+const Explore = lazy(() => import("./views/Explore"));
+const TokenDetail = lazy(() => import("./views/TokenDetail"));
+const PoolDetail = lazy(() => import("./views/PoolDetail"));
+const AddTokens = lazy(() => import("./views/AddTokens"));
 
 export const routes: RouteObject[] = [
-  { path: '/', element: <FeedList /> },
-  { path: '/post/:postId', element: <PostDetail /> },
-  { path: '/post/:postId/comment/:id', element: <PostDetail /> },
-
-  { path: '/tx-queue/:id', element: <TxQueue /> },
-
-  { path: '/users/:address', element: <UserProfile /> },
-  { path: '/landing', element: <Landing /> },
-  { path: '/meet/:room?', element: <Conference /> },
-  { path: '/voting', element: <Governance /> },
-  { path: '/voting/p/:id', element: <Governance /> },
-  { path: '/voting/account', element: <Governance /> },
+  {
+    path: "/",
+    element: <SocialLayout />,
+    children: [
+      { index: true, element: <FeedList standalone={false} /> },
+      { path: "post/:postId", element: <PostDetail standalone={false} /> },
+      {
+        path: "post/:postId/comment/:id",
+        element: <PostDetail standalone={false} />,
+      },
+      { path: "users/:address", element: <UserProfile standalone={false} /> },
+    ],
+  },
+  { path: "/trending", element: <Trending /> },
+  { path: "/trendminer", element: <TrendCloud /> },
+  { path: "/trendminer/visx", element: <TrendCloudVisx /> },
+  { path: "/trendminer/tokens", element: <TrendTokens /> },
+  { path: "/trendminer/tokens/:tokenName", element: <TrendTokenDetails /> },
+  { path: "/tx-queue/:id", element: <TxQueue /> },
+  { path: "/trendminer/invite", element: <TrendInvite /> },
+  { path: "/trendminer/dao/:saleAddress", element: <TrendDao /> },
+  { path: "/trendminer/daos", element: <TrendDaos /> },
+  { path: "/trendminer/accounts", element: <TrendAccounts /> },
+  { path: "/trendminer/accounts/:address", element: <TrendAccountDetails /> },
+  { path: "/trendminer/create", element: <TrendCreate /> },
+  // Kept for backward compatibility; redirecting into SocialLayout version
+  { path: "/users/:address", element: <UserProfile /> },
+  { path: "/landing", element: <Landing /> },
+  { path: "/meet/:room?", element: <Conference /> },
+  { path: "/voting", element: <Governance /> },
+  { path: "/voting/p/:id", element: <Governance /> },
+  { path: "/voting/account", element: <Governance /> },
 
   // New DEX Routes with Layout
-  { path: '/dex', element: <DexLayout><DexSwap /></DexLayout> },
-  { path: '/dex/swap', element: <DexLayout><DexSwap /></DexLayout> },
-  { path: '/dex/wrap', element: <DexLayout><DexWrap /></DexLayout> },
-  { path: '/dex/bridge', element: <DexLayout><DexBridge /></DexLayout> },
-  { path: '/dex/pool', element: <DexLayout><Pool /></DexLayout> },
-  { path: '/dex/pool/import', element: <DexLayout><PoolImport /></DexLayout> },
-  { path: '/dex/pool/add-tokens', element: <DexLayout><AddTokens /></DexLayout> },
-  { path: '/dex/explore/tokens', element: <DexLayout><DexExploreTokens /></DexLayout> },
-  { path: '/dex/explore/tokens/:tokenAddress', element: <DexLayout><TokenDetail /></DexLayout> },
-  { path: '/dex/explore/pools', element: <DexLayout><DexExplorePools /></DexLayout> },
-  { path: '/dex/explore/pools/:poolAddress', element: <DexLayout><PoolDetail /></DexLayout> },
-  { path: '/dex/explore/transactions', element: <DexLayout><DexExploreTransactions /></DexLayout> },
+  {
+    path: "/dex",
+    element: (
+      <DexLayout>
+        <DexSwap />
+      </DexLayout>
+    ),
+  },
+  {
+    path: "/dex/swap",
+    element: (
+      <DexLayout>
+        <DexSwap />
+      </DexLayout>
+    ),
+  },
+  {
+    path: "/dex/wrap",
+    element: (
+      <DexLayout>
+        <DexWrap />
+      </DexLayout>
+    ),
+  },
+  {
+    path: "/dex/bridge",
+    element: (
+      <DexLayout>
+        <DexBridge />
+      </DexLayout>
+    ),
+  },
+  {
+    path: "/dex/pool",
+    element: (
+      <DexLayout>
+        <Pool />
+      </DexLayout>
+    ),
+  },
+  {
+    path: "/dex/pool/import",
+    element: (
+      <DexLayout>
+        <PoolImport />
+      </DexLayout>
+    ),
+  },
+  {
+    path: "/dex/pool/add-tokens",
+    element: (
+      <DexLayout>
+        <AddTokens />
+      </DexLayout>
+    ),
+  },
+  {
+    path: "/dex/explore/tokens",
+    element: (
+      <DexLayout>
+        <DexExploreTokens />
+      </DexLayout>
+    ),
+  },
+  {
+    path: "/dex/explore/tokens/:tokenAddress",
+    element: (
+      <DexLayout>
+        <TokenDetail />
+      </DexLayout>
+    ),
+  },
+  {
+    path: "/dex/explore/pools",
+    element: (
+      <DexLayout>
+        <DexExplorePools />
+      </DexLayout>
+    ),
+  },
+  {
+    path: "/dex/explore/pools/:poolAddress",
+    element: (
+      <DexLayout>
+        <PoolDetail />
+      </DexLayout>
+    ),
+  },
+  {
+    path: "/dex/explore/transactions",
+    element: (
+      <DexLayout>
+        <DexExploreTransactions />
+      </DexLayout>
+    ),
+  },
 
   // Legacy DEX Routes (for backward compatibility)
-  { path: '/swap', element: <Swap /> },
-  { path: '/pool', element: <Pool /> },
-  { path: '/pool/import', element: <PoolImport /> },
-  { path: '/explore', element: <Explore /> },
-  { path: '/explore/tokens/:id', element: <TokenDetail /> },
-  { path: '/explore/pools/:id', element: <PoolDetail /> },
-  { path: '/pool/add-tokens', element: <AddTokens /> },
+  { path: "/swap", element: <Swap /> },
+  { path: "/pool", element: <Pool /> },
+  { path: "/pool/import", element: <PoolImport /> },
+  { path: "/explore", element: <Explore /> },
+  { path: "/explore/tokens/:id", element: <TokenDetail /> },
+  { path: "/explore/pools/:id", element: <PoolDetail /> },
+  { path: "/pool/add-tokens", element: <AddTokens /> },
 
-
-  { path: '/terms', element: <Terms /> },
-  { path: '/privacy', element: <Privacy /> },
-  { path: '/faq', element: <FAQ /> },
-  { path: '*', element: <FeedList /> },
-
-  ...(
-    configs.features.trendminer ? trendminerRoutes : []
-  )
+  { path: "/terms", element: <Terms /> },
+  { path: "/privacy", element: <Privacy /> },
+  { path: "/faq", element: <FAQ /> },
+  {
+    path: "*",
+    element: <SocialLayout />,
+    children: [{ index: true, element: <FeedList standalone={false} /> }],
+  },
 ];
-
-

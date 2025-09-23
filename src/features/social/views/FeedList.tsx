@@ -1,22 +1,25 @@
-import React, { useMemo, useState, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { PostsService } from '../../../api/generated';
-import AeButton from '../../../components/AeButton';
-import Shell from '../../../components/layout/Shell';
-import LeftRail from '../../../components/layout/LeftRail';
-import RightRail from '../../../components/layout/RightRail';
-import { useWallet } from '../../../hooks';
-import CreatePost from '../components/CreatePost';
-import SortControls from '../components/SortControls';
-import EmptyState from '../components/EmptyState';
-import FeedItem from '../components/FeedItem';
-import { PostApiResponse } from '../types';
+import React, { useMemo, useState, useCallback, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { PostsService } from "../../../api/generated";
+import AeButton from "../../../components/AeButton";
+import Shell from "../../../components/layout/Shell";
+import RightRail from "../../../components/layout/RightRail";
+import { useWallet } from "../../../hooks";
+import CreatePost from "../components/CreatePost";
+import SortControls from "../components/SortControls";
+import EmptyState from "../components/EmptyState";
+import FeedItem from "../components/FeedItem";
+import { PostApiResponse } from "../types";
 
 // Custom hook
-function useUrlQuery() { return new URLSearchParams(useLocation().search); }
+function useUrlQuery() {
+  return new URLSearchParams(useLocation().search);
+}
 
-export default function FeedList() {
+export default function FeedList({
+  standalone = true,
+}: { standalone?: boolean } = {}) {
   const navigate = useNavigate();
   const urlQuery = useUrlQuery();
   const { chainNames } = useWallet();
@@ -24,9 +27,9 @@ export default function FeedList() {
   // Comment counts are now provided directly by the API in post.total_comments
 
   // URL parameters
-  const sortBy = urlQuery.get('sortBy') || 'latest';
-  const search = urlQuery.get('search') || '';
-  const filterBy = urlQuery.get('filterBy') || 'all';
+  const sortBy = urlQuery.get("sortBy") || "latest";
+  const search = urlQuery.get("search") || "";
+  const filterBy = urlQuery.get("filterBy") || "all";
 
   const [localSearch, setLocalSearch] = useState(search);
 
@@ -40,17 +43,26 @@ export default function FeedList() {
     isFetchingNextPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['posts', { limit: 10, sortBy, search, filterBy }],
-    queryFn: ({ pageParam = 1 }) => PostsService.listAll({
-      limit: 10,
-      page: pageParam,
-      orderBy: sortBy === 'latest' ? 'created_at' : sortBy === 'hot' ? 'total_comments' : 'created_at',
-      orderDirection: 'DESC',
-      search: localSearch,
-    }) as unknown as Promise<PostApiResponse>,
+    queryKey: ["posts", { limit: 10, sortBy, search, filterBy }],
+    queryFn: ({ pageParam = 1 }) =>
+      PostsService.listAll({
+        limit: 10,
+        page: pageParam,
+        orderBy:
+          sortBy === "latest"
+            ? "created_at"
+            : sortBy === "hot"
+            ? "total_comments"
+            : "created_at",
+        orderDirection: "DESC",
+        search: localSearch,
+      }) as unknown as Promise<PostApiResponse>,
     getNextPageParam: (lastPage) => {
-      if (lastPage?.meta?.currentPage && lastPage?.meta?.totalPages &&
-        lastPage.meta.currentPage < lastPage.meta.totalPages) {
+      if (
+        lastPage?.meta?.currentPage &&
+        lastPage?.meta?.totalPages &&
+        lastPage.meta.currentPage < lastPage.meta.totalPages
+      ) {
         return lastPage.meta.currentPage + 1;
       }
       return undefined;
@@ -59,8 +71,8 @@ export default function FeedList() {
   });
 
   // Derived state
-  const list = useMemo(() =>
-    data?.pages?.flatMap(page => page?.items ?? []) ?? [],
+  const list = useMemo(
+    () => data?.pages?.flatMap((page) => page?.items ?? []) ?? [],
     [data]
   );
 
@@ -70,18 +82,27 @@ export default function FeedList() {
 
     if (localSearch.trim()) {
       const searchTerm = localSearch.toLowerCase();
-      filtered = filtered.filter(item =>
-        (item.content && item.content.toLowerCase().includes(searchTerm)) ||
-        (item.topics && item.topics.some(topic => topic.toLowerCase().includes(searchTerm))) ||
-        (item.sender_address && item.sender_address.toLowerCase().includes(searchTerm)) ||
-        (chainNames?.[item.sender_address] && chainNames[item.sender_address].toLowerCase().includes(searchTerm))
+      filtered = filtered.filter(
+        (item) =>
+          (item.content && item.content.toLowerCase().includes(searchTerm)) ||
+          (item.topics &&
+            item.topics.some((topic) =>
+              topic.toLowerCase().includes(searchTerm)
+            )) ||
+          (item.sender_address &&
+            item.sender_address.toLowerCase().includes(searchTerm)) ||
+          (chainNames?.[item.sender_address] &&
+            chainNames[item.sender_address].toLowerCase().includes(searchTerm))
       );
     }
 
-    if (filterBy === 'withMedia') {
-      filtered = filtered.filter(item => item.media && Array.isArray(item.media) && item.media.length > 0);
-    } else if (filterBy === 'withComments') {
-      filtered = filtered.filter(item => {
+    if (filterBy === "withMedia") {
+      filtered = filtered.filter(
+        (item) =>
+          item.media && Array.isArray(item.media) && item.media.length > 0
+      );
+    } else if (filterBy === "withComments") {
+      filtered = filtered.filter((item) => {
         return (item.total_comments ?? 0) > 0;
       });
     }
@@ -90,13 +111,23 @@ export default function FeedList() {
   }, [list, localSearch, filterBy, chainNames]);
 
   // Memoized event handlers for better performance
-  const handleSortChange = useCallback((newSortBy: string) => {
-    navigate(`/?sortBy=${newSortBy}`);
-  }, [navigate]);
+  const handleSortChange = useCallback(
+    (newSortBy: string) => {
+      navigate(`/?sortBy=${newSortBy}`);
+    },
+    [navigate]
+  );
 
-  const handleItemClick = useCallback((postId: string) => {
-    navigate(`/post/${postId}`);
-  }, [navigate]);
+  const handleItemClick = useCallback(
+    (postId: string) => {
+      // Save current feed scroll position before leaving
+      try {
+        sessionStorage.setItem("feedScrollY", String(window.scrollY || 0));
+      } catch {}
+      navigate(`/post/${postId}`);
+    },
+    [navigate]
+  );
 
   // Render helpers
   const renderEmptyState = () => {
@@ -131,42 +162,65 @@ export default function FeedList() {
     });
   }, [filteredAndSortedList, chainNames, handleItemClick]);
 
-  return (
-    <Shell left={<LeftRail />} right={<RightRail />}>
-      <div className="max-w-[680px] mx-auto">
-        {/* Mobile: SortControls first and sticky */}
-        <div className="md:hidden">
-          <SortControls 
-            sortBy={sortBy} 
-            onSortChange={handleSortChange}
-            className="sticky top-0 z-10 bg-black/20 backdrop-blur-md"
-          />
-          <CreatePost onSuccess={refetch} />
-        </div>
+  // Preload PostDetail chunk to avoid first-click lazy load delay
+  useEffect(() => {
+    // Vite supports preloading dynamic chunks via import()
+    import("../views/PostDetail").catch(() => {});
+  }, []);
 
-        {/* Desktop: CreatePost first, then SortControls */}
-        <div className="hidden md:block">
-          <CreatePost onSuccess={refetch} />
-          <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
-        </div>
+  // Restore scroll position when returning from detail pages
+  useEffect(() => {
+    const saved = sessionStorage.getItem("feedScrollY");
+    const savedY = saved ? Number(saved) : 0;
+    if (!Number.isNaN(savedY) && savedY > 0) {
+      requestAnimationFrame(() => window.scrollTo(0, savedY));
+      // Clear after restoring to avoid stale restores
+      sessionStorage.removeItem("feedScrollY");
+    }
+  }, []);
 
-        <div className="py-2 max-w-[680px] mx-auto pt-2 md:pt-4 px-2 sm:px-3 md:px-0 gap-4 flex flex-col">
-          {renderEmptyState()}
-          {renderFeedItems}
-        </div>
-
-        {hasNextPage && filteredAndSortedList.length > 0 && (
-          <div className="p-4 md:p-6 text-center">
-            <AeButton
-              loading={isFetchingNextPage}
-              onClick={() => fetchNextPage()}
-              className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
-            >
-              Load more
-            </AeButton>
-          </div>
-        )}
+  const content = (
+    <div className="w-full">
+      {/* Mobile: CreatePost first, then SortControls */}
+      <div className="md:hidden">
+        <CreatePost onSuccess={refetch} />
+        <SortControls
+          sortBy={sortBy}
+          onSortChange={handleSortChange}
+          className="sticky top-0 z-10 bg-black/20 backdrop-blur-md w-full"
+        />
       </div>
+
+      {/* Desktop: CreatePost first, then SortControls */}
+      <div className="hidden md:block">
+        <CreatePost onSuccess={refetch} />
+        <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
+      </div>
+
+      <div className="w-full gap-4 flex flex-col">
+        {renderEmptyState()}
+        {renderFeedItems}
+      </div>
+
+      {hasNextPage && filteredAndSortedList.length > 0 && (
+        <div className="p-4 md:p-6 text-center">
+          <AeButton
+            loading={isFetchingNextPage}
+            onClick={() => fetchNextPage()}
+            className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
+          >
+            Load more
+          </AeButton>
+        </div>
+      )}
+    </div>
+  );
+
+  return standalone ? (
+    <Shell right={<RightRail hideTrends />} containerClassName="max-w-[1080px] mx-auto">
+      {content}
     </Shell>
+  ) : (
+    content
   );
 }

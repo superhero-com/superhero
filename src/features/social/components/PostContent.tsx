@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import { Backend } from '../../../api/backend';
 import { cn } from '@/lib/utils';
+import { linkify } from '../../../utils/linkify';
 
 interface PostContentProps {
   post: any; // Using any for now since the old Backend API structure is different from PostDto
@@ -10,8 +11,8 @@ interface PostContentProps {
 const PostContent = memo(({ post }: PostContentProps) => (
   <div className="space-y-3">
     {post.title && (
-      <div className="text-base font-semibold text-foreground leading-relaxed">
-        {post.title}
+      <div className="text-[15px] text-foreground leading-snug">
+        {linkify(post.title)}
       </div>
     )}
     

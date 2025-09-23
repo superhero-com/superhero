@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Encoding, isAddressValid } from '@aeternity/aepp-sdk';
 import Shell from '../components/layout/Shell';
-import LeftRail from '../components/layout/LeftRail';
 import RightRail from '../components/layout/RightRail';
 import AeButton from '../components/AeButton';
 import MobileInput from '../components/MobileInput';
@@ -155,7 +154,7 @@ export default function Governance() {
             }}
             variant="filled"
             size="large"
-            className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl transition-all duration-300 focus-within:border-teal-400 focus-within:shadow-[0_0_0_3px_rgba(78,205,196,0.1)] focus-within:-translate-y-px"
+            className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl transition-all duration-300 focus-within:border-[var(--neon-teal)] focus-within:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus-within:-translate-y-px"
           />
         </div>
         
@@ -172,7 +171,7 @@ export default function Governance() {
             }}
             variant="filled"
             size="large"
-            className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl transition-all duration-300 focus-within:border-teal-400 focus-within:shadow-[0_0_0_3px_rgba(78,205,196,0.1)] focus-within:-translate-y-px"
+            className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl transition-all duration-300 focus-within:border-[var(--neon-teal)] focus-within:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus-within:-translate-y-px"
           >
             <option value="all">All polls</option>
             <option value="open">🟢 Open polls</option>
@@ -263,7 +262,7 @@ export default function Governance() {
       <div className="mb-6">
         <MobileCard variant="elevated" padding="large" className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl">
           <div className="mb-5">
-            <h3 className="text-lg font-semibold text-white mb-0 flex items-center gap-2 relative before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-teal-400 before:rounded-sm">
+            <h3 className="text-lg font-semibold text-white mb-0 flex items-center gap-2 relative before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-[var(--neon-teal)] before:rounded-sm">
               🗳️ Cast Your Vote
             </h3>
             {poll?.pollState.metadata.description && (
@@ -306,8 +305,8 @@ export default function Governance() {
                     isSelected 
                       ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-0.5'
                       : isVotingThis
-                      ? 'bg-gradient-to-r from-teal-400 to-blue-400 text-white border-transparent animate-pulse'
-                      : 'hover:bg-white/5 hover:border-teal-400 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
+                      ? 'bg-gradient-to-r from-[var(--neon-teal)] to-blue-400 text-white border-transparent animate-pulse'
+                      : 'hover:bg-white/5 hover:border-[var(--neon-teal)] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
                   } ${
                     isVoting ? 'opacity-60 cursor-not-allowed transform-none' : ''
                   } active:scale-98 transition-transform duration-100`}
@@ -326,7 +325,7 @@ export default function Governance() {
         <div className="mb-6 animate-[slideIn_0.5s_ease-out_0.2s_both]">
           <MobileCard variant="elevated" padding="large" className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl">
             <div className="flex justify-between items-center mb-5">
-              <h3 className="text-lg font-semibold text-white mb-0 flex items-center gap-2 relative before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-teal-400 before:rounded-sm">
+              <h3 className="text-lg font-semibold text-white mb-0 flex items-center gap-2 relative before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-[var(--neon-teal)] before:rounded-sm">
                 📊 Live Results
               </h3>
               <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-2xl border border-white/10">
@@ -381,7 +380,7 @@ export default function Governance() {
         <div className="mb-6 animate-[slideIn_0.5s_ease-out_0.3s_both]">
           <MobileCard variant="elevated" padding="large" className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl">
             <div className="mb-5">
-              <h3 className="text-lg font-semibold text-white mb-0 flex items-center gap-2 relative before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-teal-400 before:rounded-sm">
+              <h3 className="text-lg font-semibold text-white mb-0 flex items-center gap-2 relative before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-5 before:bg-[var(--neon-teal)] before:rounded-sm">
                 👤 Your Governance Power
               </h3>
             </div>
@@ -574,14 +573,14 @@ export default function Governance() {
   );
 
   return (
-    <Shell left={<LeftRail />} right={<RightRail />}> 
+    <Shell right={<RightRail />}> 
       {/* Enhanced Tab Navigation */}
       <div className="flex gap-2 mb-5 px-1 overflow-x-auto scrollbar-none -ms-overflow-style-none webkit-scrollbar-none scroll-smooth webkit-overflow-scrolling-touch">
         <AeButton 
           onClick={() => setActiveTab('polls')}
           className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
             activeTab === 'polls'
-              ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-0.5 relative after:content-[\'\'] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-1 after:bg-teal-400 after:rounded-sm after:animate-[slideIn_0.3s_ease-out]'
+              ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-0.5 relative after:content-[\'\'] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-1 after:bg-[var(--neon-teal)] after:rounded-sm after:animate-[slideIn_0.3s_ease-out]'
               : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
           }`}
         >
@@ -592,7 +591,7 @@ export default function Governance() {
             onClick={() => setActiveTab('vote')}
             className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
               activeTab === 'vote'
-                ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-0.5 relative after:content-[\'\'] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-1 after:bg-teal-400 after:rounded-sm after:animate-[slideIn_0.3s_ease-out]'
+                ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-0.5 relative after:content-[\'\'] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-1 after:bg-[var(--neon-teal)] after:rounded-sm after:animate-[slideIn_0.3s_ease-out]'
                 : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
             }`}
           >
@@ -603,7 +602,7 @@ export default function Governance() {
           onClick={() => setActiveTab('account')}
           className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-semibold bg-black/20 backdrop-blur-lg border transition-all duration-300 touch-manipulation ${
             activeTab === 'account'
-              ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-0.5 relative after:content-[\'\'] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-1 after:bg-teal-400 after:rounded-sm after:animate-[slideIn_0.3s_ease-out]'
+              ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-0.5 relative after:content-[\'\'] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-1 after:bg-[var(--neon-teal)] after:rounded-sm after:animate-[slideIn_0.3s_ease-out]'
               : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
           }`}
         >

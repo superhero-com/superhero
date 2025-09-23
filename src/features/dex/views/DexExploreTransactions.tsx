@@ -37,12 +37,12 @@ export default function DexExploreTransactions() {
   });
 
   return (
-    <div className="p-0">
+    <div className="mx-auto md:p-5 flex flex-col gap-6 md:gap-8 min-h-screen">
       {/* Main Content Card */}
-      <div className="max-w-[1200px] mx-2 md:mx-auto bg-glass-bg border border-glass-border backdrop-blur-[20px] rounded-2xl md:rounded-[24px] p-4 md:p-6 shadow-glass relative overflow-hidden">
+      <div className="grid grid-cols-1 gap-6 md:gap-8 items-start">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-xl md:text-2xl font-bold text-standard-font-color m-0 mb-3 bg-primary-gradient bg-clip-text text-transparent">
+          <h1 className="text-xl md:text-2xl font-bold m-0 mb-3 sh-dex-title">
             Explore Transactions
           </h1>
           <p className="text-sm md:text-base text-light-font-color m-0 opacity-80 leading-6">
@@ -65,6 +65,7 @@ export default function DexExploreTransactions() {
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
+                flexWrap: 'wrap',
                 gap: 12
               }}>
                 <div style={{
@@ -89,7 +90,7 @@ export default function DexExploreTransactions() {
                   }}>
                     Filter Transactions
                   </span>
-                </div>
+                </div> 
                 
                 {/* Type Dropdown */}
                 <div style={{

@@ -9,11 +9,13 @@ import RightRail from '../../../components/layout/RightRail';
 import Shell from '../../../components/layout/Shell';
 import { useWallet } from '../../../hooks';
 import { relativeTime } from '../../../utils/time';
+import { CONFIG } from '../../../config';
+import { IconLink } from '../../../icons';
 import CommentForm from '../components/CommentForm';
 import PostCommentsList from '../components/PostCommentsList';
 import PostContent from '../components/PostContent';
 
-export default function PostDetail() {
+export default function PostDetail({ standalone = true }: { standalone?: boolean } = {}) {
   const { postId } = useParams();
   const navigate = useNavigate();
   const { chainNames } = useWallet();
@@ -55,17 +57,20 @@ export default function PostDetail() {
 
   const isLoading = isPostLoading;
   const error = postError;
+  // Ensure detail page scrolls to top when opened
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
 
 
-  // Dynamic meta tags similar to Vue metaInfo()
+  // Dynamic meta tags (do not change the document title)
   useEffect(() => {
     if (!postData) return;
     const title = `Tip ${String(postId).split('_')[0]}`;
     const description = postData.content;
     const author = postData.sender_address;
     const image = (postData.media && postData.media[0]) || undefined;
-    document.title = title;
     function setMeta(attr: 'name' | 'property', key: string, value: string) {
       if (!value) return;
       let el = document.querySelector(`meta[${attr}='${key}']`) as HTMLMetaElement | null;
@@ -114,74 +119,100 @@ export default function PostDetail() {
 
   const renderPostHeader = (displayPost: any) => {
     const { authorAddress, chainName } = getAuthorInfo(displayPost);
+    const explorerUrl = postData?.tx_hash && CONFIG.EXPLORER_URL
+      ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${postData.tx_hash}`
+      : null;
 
     return (
       <header className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          {
-            authorAddress && (
-              <AddressAvatarWithChainName
-                address={authorAddress}
-                size={48}
-                overlaySize={24}
-              />
-            )
-          }
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {displayPost?.timestamp && (
-            <div className="text-light-font-color text-xs font-medium">
-              {relativeTime(new Date(displayPost.timestamp))}
-            </div>
+          {authorAddress && (
+            <AddressAvatarWithChainName address={authorAddress} size={48} overlaySize={24} />
           )}
         </div>
+        {/* Desktop: show time inline on the right */}
+        {postData?.tx_hash && CONFIG.EXPLORER_URL && (
+          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
+            <a
+              href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${postData.tx_hash}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text"
+              title={postData?.tx_hash}
+            >
+              {`Posted on-chain${post?.timestamp ? ` ${relativeTime(new Date(post.timestamp))}` : ''}`}
+              <IconLink className="w-2.5 h-2.5" />
+            </a>
+          </div>
+        )}
       </header>
     );
   };
 
-  return (
-    <Shell left={<LeftRail />} right={<RightRail />}>
-      <div className="max-w-[min(680px,100%)] mx-auto py-2 px-2 sm:px-3 md:px-4">
-        <div className="mb-4">
-          <AeButton onClick={() => navigate(-1)} variant="ghost" size="sm">
-            ← Back
-          </AeButton>
-        </div>
+  const content = (
+    <div className="w-full py-2 px-2 sm:px-3 md:px-4">
+      <div className="mb-4">
+        <AeButton onClick={() => { navigate('/'); }} variant="ghost" size="sm" outlined className="!border !border-solid !border-white/15 hover:!border-white/35">
+          ← Back
+        </AeButton>
+      </div>
 
-        {isLoading && renderLoadingState()}
-        {error && renderErrorState()}
+      {isLoading && renderLoadingState()}
+      {error && renderErrorState()}
 
-        {post && (
-          <article className="grid">
-            {renderPostHeader(post)}
+      {post && (
+        <article className="grid">
+          {renderPostHeader(post)}
 
-            <div className="border-l border-white ml-[23px] pl-[37px]">
+          {/* Mobile: show time inside the left-line wrapper; desktop uses inline header */}
+          <div className="relative">
+            <div className="hidden md:block absolute left-[23px] top-0 bottom-0 w-[1px] bg-white/90 z-0 pointer-events-none" />
+            <div className="border-l border-white ml-[23px] pl-[37px] md:border-none md:ml-0 md:pl-[48px] relative z-10">
+              {postData?.tx_hash && CONFIG.EXPLORER_URL && (
+                <a
+                  href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${postData.tx_hash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-0.5 md:hidden text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text"
+                  title={postData?.tx_hash}
+                >
+                  {`Posted on-chain${post?.timestamp ? ` ${relativeTime(new Date(post.timestamp))}` : ''}`}
+                  <IconLink className="w-2 h-2" />
+                </a>
+              )}
               <PostContent post={post} />
             </div>
+          </div>
 
+          {/* Comments section */}
+          {postData && postData.total_comments > 0 && (
+            <PostCommentsList
+              id={postId!}
+              onCommentAdded={handleCommentAdded}
+            />
+          )}
 
-
-            {/* Comments section */}
-            {postData && postData.total_comments > 0 && (
-              <PostCommentsList
-                id={postId!}
+          {/* Comment form */}
+          {postId && (
+            <div className="mt-8 pt-6 border-t border-white/10">
+              <CommentForm
+                postId={postId}
                 onCommentAdded={handleCommentAdded}
+                placeholder="Share your thoughts..."
               />
-            )}
+            </div>
+          )}
+        </article>
+      )}
 
-            {/* Comment form */}
-            {postId && (
-              <div className="mt-8 pt-6 border-t border-white/10">
-                <CommentForm
-                  postId={postId}
-                  onCommentAdded={handleCommentAdded}
-                  placeholder="Share your thoughts..."
-                />
-              </div>
-            )}
-          </article>
-        )}
-      </div>
+    </div>
+  );
+
+  return standalone ? (
+    <Shell left={<LeftRail />} right={<RightRail />} containerClassName="max-w-[1080px] mx-auto">
+      {content}
     </Shell>
+  ) : (
+    content
   );
 }

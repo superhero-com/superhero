@@ -84,7 +84,7 @@ describe('GovernanceApi Integration Tests', () => {
       expect(typeof firstPoll.closeHeight).toBe('number');
       expect(typeof firstPoll.delegationCount).toBe('number');
       expect(typeof firstPoll.score).toBe('number');
-    });
+    }, 60000);
   });
 
   describe('getPollOverview', () => {

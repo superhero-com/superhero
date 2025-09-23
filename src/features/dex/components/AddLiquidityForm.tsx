@@ -1,24 +1,31 @@
-import { useEffect, useMemo, useState } from 'react';
-import { DEX_ADDRESSES } from '../../../libs/dex';
-import ConnectWalletButton from '../../../components/ConnectWalletButton';
-import { useAddLiquidity } from '../hooks';
-import { useTokenList } from '../../../components/dex/hooks/useTokenList';
-import { useTokenBalances } from '../../../components/dex/hooks/useTokenBalances';
-import { DexTokenDto } from '../../../api/generated';
-import TokenInput from '../../../components/dex/core/TokenInput';
-import DexSettings from './DexSettings';
-import LiquidityConfirmation from './LiquidityConfirmation';
-import LiquidityPreview from './LiquidityPreview';
-import LiquiditySuccessNotification from '../../../components/dex/core/LiquiditySuccessNotification';
-import { Decimal } from '../../../libs/decimal';
+import { useEffect, useMemo, useState } from "react";
+import { DEX_ADDRESSES } from "../../../libs/dex";
+import ConnectWalletButton from "../../../components/ConnectWalletButton";
+import { useAddLiquidity } from "../hooks";
+import { useTokenList } from "../../../components/dex/hooks/useTokenList";
+import { useTokenBalances } from "../../../components/dex/hooks/useTokenBalances";
+import { DexTokenDto } from "../../../api/generated";
+import TokenInput from "../../../components/dex/core/TokenInput";
+import DexSettings from "./DexSettings";
+import LiquidityConfirmation from "./LiquidityConfirmation";
+import LiquidityPreview from "./LiquidityPreview";
+import LiquiditySuccessNotification from "../../../components/dex/core/LiquiditySuccessNotification";
+import { Decimal } from "../../../libs/decimal";
 
-import { useAccount, useDex } from '../../../hooks';
-import { usePool } from '../context/PoolProvider';
+import { useAccount, useDex } from "../../../hooks";
+import { usePool } from "../context/PoolProvider";
+import { TokenChip } from "@/components/TokenChip";
 
 export default function AddLiquidityForm() {
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
-  const { currentAction, selectedTokenA, selectedTokenB, clearSelection, onPositionUpdated } = usePool();
+  const {
+    currentAction,
+    selectedTokenA,
+    selectedTokenB,
+    clearSelection,
+    onPositionUpdated,
+  } = usePool();
 
   // Token list and balances
   const { tokens, loading: tokensLoading } = useTokenList();
@@ -27,10 +34,10 @@ export default function AddLiquidityForm() {
   const { balances } = useTokenBalances(tokenA, tokenB);
 
   // Amounts and liquidity state
-  const [amountA, setAmountA] = useState<string>('');
-  const [amountB, setAmountB] = useState<string>('');
-  const [searchA, setSearchA] = useState('');
-  const [searchB, setSearchB] = useState('');
+  const [amountA, setAmountA] = useState<string>("");
+  const [amountB, setAmountB] = useState<string>("");
+  const [searchA, setSearchA] = useState("");
+  const [searchB, setSearchB] = useState("");
 
   // Liquidity hook
   const { state, setState, executeAddLiquidity } = useAddLiquidity();
@@ -38,32 +45,31 @@ export default function AddLiquidityForm() {
   // UI state
   const [showConfirm, setShowConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [successTxHash, setSuccessTxHash] = useState<string>('');
-  const [successAmounts, setSuccessAmounts] = useState<{ amountA: string; amountB: string }>({ amountA: '', amountB: '' });
-  
+  const [successTxHash, setSuccessTxHash] = useState<string>("");
+  const [successAmounts, setSuccessAmounts] = useState<{ amountA: string; amountB: string }>({ amountA: "", amountB: "" });
 
   // Helper function to find token by symbol or contract address
   const findToken = (identifier: string): DexTokenDto | null => {
     if (!identifier || !tokens.length) return null;
-    
+
     // First try to find by symbol (case insensitive)
-    const bySymbol = tokens.find(t => 
-      t.symbol.toLowerCase() === identifier.toLowerCase()
+    const bySymbol = tokens.find(
+      (t) => t.symbol.toLowerCase() === identifier.toLowerCase()
     );
     if (bySymbol) return bySymbol;
-    
+
     // Then try to find by contract address
-    const byAddress = tokens.find(t => 
-      t.address === identifier || t.address === identifier.toLowerCase()
+    const byAddress = tokens.find(
+      (t) => t.address === identifier || t.address === identifier.toLowerCase()
     );
     if (byAddress) return byAddress;
-    
+
     // For AE, check if it's the native token
-    if (identifier.toLowerCase() === 'ae') {
-      const aeToken = tokens.find(t => t.is_ae);
+    if (identifier.toLowerCase() === "ae") {
+      const aeToken = tokens.find((t) => t.is_ae);
       if (aeToken) return aeToken;
     }
-    
+
     return null;
   };
 
@@ -78,14 +84,14 @@ export default function AddLiquidityForm() {
         setTokenA(foundTokenA);
       }
     }
-    
+
     if (selectedTokenB) {
       const foundTokenB = findToken(selectedTokenB);
       if (foundTokenB && (!tokenB || tokenB.symbol !== foundTokenB.symbol)) {
         setTokenB(foundTokenB);
       }
     }
-    
+
     // Set default tokens if no context tokens provided and none selected
     if (!selectedTokenA && !tokenA && tokens.length) {
       setTokenA(tokens[2] || tokens[0]);
@@ -95,28 +101,18 @@ export default function AddLiquidityForm() {
     }
   }, [tokens, selectedTokenA, selectedTokenB]);
 
-
-
   // Update hook state when tokens change
   useEffect(() => {
     // For AE tokens, use 'AE' as the address for the hook state
-    const tokenAAddress = tokenA?.is_ae ? 'AE' : (tokenA?.address || '');
-    const tokenBAddress = tokenB?.is_ae ? 'AE' : (tokenB?.address || '');
-    
-    console.log('Setting tokens in hook state:', {
-      tokenA: tokenAAddress,
-      tokenB: tokenBAddress,
-      symbolA: tokenA?.symbol || '',
-      symbolB: tokenB?.symbol || '',
-      tokenAObject: tokenA,
-      tokenBObject: tokenB,
-    });
+    const tokenAAddress = tokenA?.is_ae ? "AE" : (tokenA?.address || "");
+    const tokenBAddress = tokenB?.is_ae ? "AE" : (tokenB?.address || "");
+
     setState(prev => ({
       ...prev,
       tokenA: tokenAAddress,
       tokenB: tokenBAddress,
-      symbolA: tokenA?.symbol || '',
-      symbolB: tokenB?.symbol || '',
+      symbolA: tokenA?.symbol || "",
+      symbolB: tokenB?.symbol || "",
       decA: tokenA?.decimals || 18,
       decB: tokenB?.decimals || 18,
     }));
@@ -124,10 +120,10 @@ export default function AddLiquidityForm() {
 
   // Update hook state when amounts change
   useEffect(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       amountA,
-      amountB
+      amountB,
     }));
   }, [amountA, amountB, setState]);
 
@@ -174,7 +170,9 @@ export default function AddLiquidityForm() {
   const filteredTokensA = useMemo(() => {
     const term = searchA.trim().toLowerCase();
     const matches = (t: DexTokenDto) =>
-      !term || t.symbol.toLowerCase().includes(term) || (t.address || '').toLowerCase().includes(term);
+      !term ||
+      t.symbol.toLowerCase().includes(term) ||
+      (t.address || "").toLowerCase().includes(term);
     const ae = tokens.find((t) => t.is_ae);
     const wae = tokens.find((t) => t.address === DEX_ADDRESSES.wae);
     const rest = tokens.filter((t) => t !== ae && t !== wae).filter(matches);
@@ -188,7 +186,9 @@ export default function AddLiquidityForm() {
   const filteredTokensB = useMemo(() => {
     const term = searchB.trim().toLowerCase();
     const matches = (t: DexTokenDto) =>
-      !term || t.symbol.toLowerCase().includes(term) || (t.address || '').toLowerCase().includes(term);
+      !term ||
+      t.symbol.toLowerCase().includes(term) ||
+      (t.address || "").toLowerCase().includes(term);
     const ae = tokens.find((t) => t.is_ae);
     const wae = tokens.find((t) => t.address === DEX_ADDRESSES.wae);
     const rest = tokens.filter((t) => t !== ae && t !== wae).filter(matches);
@@ -203,37 +203,45 @@ export default function AddLiquidityForm() {
     if (!tokenA || !tokenB || !amountA || !amountB) return;
 
     try {
-      const txHash = await executeAddLiquidity({
-        tokenA: tokenA.address,
-        tokenB: tokenB.address,
-        amountA,
-        amountB,
-        slippagePct,
-        deadlineMins,
-        isAePair: tokenA.address === 'AE' || tokenB.address === 'AE' || tokenA.is_ae || tokenB.is_ae || false,
-      }, { suppressToast: true }); // Suppress toast since we're using the custom success notification
+      const txHash = await executeAddLiquidity(
+        {
+          tokenA: tokenA.address,
+          tokenB: tokenB.address,
+          amountA,
+          amountB,
+          slippagePct,
+          deadlineMins,
+          isAePair:
+            tokenA.address === "AE" ||
+            tokenB.address === "AE" ||
+            tokenA.is_ae ||
+            tokenB.is_ae ||
+            false,
+        },
+        { suppressToast: true }
+      ); // Suppress toast since we're using the custom success notification
 
       if (txHash) {
         // Capture amounts before clearing form
         setSuccessAmounts({ amountA, amountB });
         setSuccessTxHash(txHash);
         setShowSuccess(true);
-        
+
         // Clear form
-        setAmountA('');
-        setAmountB('');
+        setAmountA("");
+        setAmountB("");
         setShowConfirm(false);
-        
+
         // Clear selection if we were adding to existing position
-        if (currentAction === 'add') {
+        if (currentAction === "add") {
           clearSelection();
         }
-        
+
         // Refresh positions after successful transaction
         await onPositionUpdated();
       }
     } catch (error) {
-      console.error('Add liquidity failed:', error);
+      console.error("Add liquidity failed:", error);
     }
   };
 
@@ -256,31 +264,35 @@ export default function AddLiquidityForm() {
     }
   }, [amountB, balances.out]);
 
+  const hasInsufficientBalance =
+    hasInsufficientBalanceA || hasInsufficientBalanceB;
 
-  const hasInsufficientBalance = hasInsufficientBalanceA || hasInsufficientBalanceB;
-
-  const isAddDisabled = state.loading || !amountA || Number(amountA) <= 0 || !amountB || Number(amountB) <= 0 || !tokenA || !tokenB || !!state.error || hasInsufficientBalance;
+  const isAddDisabled =
+    state.loading ||
+    !amountA ||
+    Number(amountA) <= 0 ||
+    !amountB ||
+    Number(amountB) <= 0 ||
+    !tokenA ||
+    !tokenB ||
+    !!state.error ||
+    hasInsufficientBalance;
 
   return (
     <div className="max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-xl font-bold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+          <h2 className="text-xl font-bold m-0 sh-dex-title">
             Add Liquidity
           </h2>
-          {currentAction === 'add' && selectedTokenA && selectedTokenB && (
-            <p className="text-xs text-white/60 mt-1">
-              Adding to {selectedTokenA}/{selectedTokenB} position
-            </p>
-          )}
         </div>
 
         <div className="flex gap-2 items-center">
-          {currentAction === 'add' && (
+          {currentAction === "add" && (
             <button
               onClick={clearSelection}
-              className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#4ecdc4] hover:-translate-y-0.5 active:translate-y-0"
+              className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
             >
               ✕ Cancel
             </button>
@@ -289,14 +301,27 @@ export default function AddLiquidityForm() {
           <DexSettings title="Liquidity Settings">
             <button
               aria-label="open-settings"
-              className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#4ecdc4] hover:-translate-y-0.5 active:translate-y-0"
+              className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
             >
               ⚙️ Settings
             </button>
           </DexSettings>
         </div>
       </div>
-
+      <div className="flex-wrap text-sm text-white/60 text-left mb-6 opacity-90">
+        {currentAction === "add" && selectedTokenA && selectedTokenB && (
+          <p className="text-xs text-white/60 mt-1">
+            Adding to
+            <TokenChip address={selectedTokenA} />
+            <span className="text-lg text-light-font-color">
+              /
+            </span>
+            <TokenChip address={selectedTokenB} />
+          
+            position
+          </p>
+        )}
+      </div>
       <div className="text-sm text-white/60 text-center mb-6 opacity-90">
         Provide liquidity to earn trading fees from swaps
       </div>
@@ -323,7 +348,7 @@ export default function AddLiquidityForm() {
 
       {/* Plus Icon */}
       <div className="flex justify-center my-4 relative">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] border-2 border-white/10 text-white flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(255,107,107,0.3)] z-[2] relative hover:shadow-[0_8px_24px_rgba(255,107,107,0.4)] hover:-translate-y-0.5">
+        <div className="w-12 h-12 rounded-full bg-[#1161FE] border-2 border-white/10 text-white flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(17,97,254,0.3)] z-[2] relative hover:shadow-[0_8px_24px_rgba(17,97,254,0.4)] hover:-translate-y-0.5">
           +
         </div>
       </div>
@@ -350,7 +375,7 @@ export default function AddLiquidityForm() {
 
       {/* Liquidity Preview */}
       {state.pairPreview && (
-        <LiquidityPreview 
+        <LiquidityPreview
           preview={state.pairPreview}
           tokenA={tokenA}
           tokenB={tokenB}
@@ -372,11 +397,20 @@ export default function AddLiquidityForm() {
       {(hasInsufficientBalanceA || hasInsufficientBalanceB) && (
         <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
           {hasInsufficientBalanceA && hasInsufficientBalanceB ? (
-            <>Insufficient balance for both {tokenA?.symbol} and {tokenB?.symbol}</>
+            <>
+              Insufficient balance for both {tokenA?.symbol} and {" "}
+              {tokenB?.symbol}
+            </>
           ) : hasInsufficientBalanceA ? (
-            <>Insufficient {tokenA?.symbol} balance. You need {amountA} but only have {balances.in ? Decimal.from(balances.in).prettify() : '0'}</>
+            <>
+              Insufficient {tokenA?.symbol} balance. You need {amountA} but only
+              have {balances.in ? Decimal.from(balances.in).prettify() : "0"}
+            </>
           ) : (
-            <>Insufficient {tokenB?.symbol} balance. You need {amountB} but only have {balances.out ? Decimal.from(balances.out).prettify() : '0'}</>
+            <>
+              Insufficient {tokenB?.symbol} balance. You need {amountB} but only
+              have {balances.out ? Decimal.from(balances.out).prettify() : "0"}
+            </>
           )}
         </div>
       )}
@@ -386,10 +420,10 @@ export default function AddLiquidityForm() {
         <button
           onClick={() => setShowConfirm(true)}
           disabled={isAddDisabled}
-          className={`w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isAddDisabled
-              ? 'bg-white/10 cursor-not-allowed opacity-60'
-              : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0'
+              ? "bg-white/10 cursor-not-allowed opacity-60"
+              : "bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
           }`}
         >
           {state.loading ? (
@@ -397,13 +431,16 @@ export default function AddLiquidityForm() {
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               Confirm in wallet…
             </div>
-          ) : 'Add Liquidity'}
+          ) : (
+            "Add Liquidity"
+          )}
         </button>
       ) : (
         <ConnectWalletButton
-          label="Connect Wallet to Add Liquidity"
+          label="Connect wallet"
+          variant="dex"
           block
-          className="w-full py-4 px-6 rounded-2xl border-none bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(255,107,107,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
+          className="w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
         />
       )}
 
@@ -432,7 +469,6 @@ export default function AddLiquidityForm() {
         amountB={successAmounts.amountB}
         txHash={successTxHash}
       />
-
     </div>
   );
 }

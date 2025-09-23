@@ -1,9 +1,16 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import SearchInput from '../../SearchInput';
-import { HeaderLogo, IconSearch, IconMobileMenu } from '../../../icons';
-import HeaderWalletButton from './HeaderWalletButton';
+import { HeaderLogo, IconSearch } from '../../../icons';
+// import HeaderWalletButton from './HeaderWalletButton';
 import { navigationItems } from './navigationItems';
+import AddressAvatar from '../../AddressAvatar';
+import { useAeSdk } from '../../../hooks/useAeSdk';
+import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { AeButton } from '@/components/ui/ae-button';
+import { useWalletConnect } from '../../../hooks/useWalletConnect';
+import { useModal } from '../../../hooks';
+import FooterSection from '../FooterSection';
 
 
 
@@ -17,6 +24,15 @@ export default function MobileAppHeader() {
 
   const { pathname } = useLocation();
   const isOnFeed = pathname === '/';
+  const { activeAccount } = useAeSdk();
+  const { disconnectWallet, walletInfo } = useWalletConnect();
+  const { openModal } = useModal();
+
+  const handleConnect = () => openModal({ name: 'connect-wallet' });
+  const handleLogout = () => {
+    disconnectWallet();
+    try { window.location.reload(); } catch {}
+  };
 
   const toggleTheme = useCallback(() => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -66,7 +82,13 @@ export default function MobileAppHeader() {
   }, [showOverlay, showSearch]);
 
   return (
-    <div className="z-[101] fixed top-0 left-0 right-0 w-full bg-[rgba(var(--background-color-rgb),0.95)] backdrop-blur-[20px] border-b border-white/10 shadow-[0_2px_20px_rgba(0,0,0,0.1)] md:hidden pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))]">
+    <div className="z-[1100] fixed top-0 left-0 right-0 w-full md:hidden pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] border-b" style={{
+      backgroundColor: 'rgba(12, 12, 20, 0.5)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      borderBottomColor: 'rgba(255, 255, 255, 0.14)',
+      boxShadow: '0 6px 28px rgba(0,0,0,0.35)'
+    }}>
       {/* Search Mode */}
       {showSearch ? (
         <div className="px-3 flex items-center gap-3 w-full pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))]">
@@ -106,23 +128,39 @@ export default function MobileAppHeader() {
               <IconSearch />
             </button>
           )} */}
-          <HeaderWalletButton className="flex-1" />
+          {/* Wallet button hidden in the top mobile header */}
+          {/* <HeaderWalletButton className="flex-1" /> */}
           <div className="flex-grow md:hidden" />
 
           <button
-            className="flex-grow bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
+            className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
             onClick={handleMenuToggle}
             aria-label="Open Menu"
           >
-            <IconMobileMenu />
+            <span className="flex items-center gap-2">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path d="M4 6h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M4 12h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M4 18h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
+              {activeAccount && (
+                <AddressAvatar address={activeAccount} size={28} />
+              )}
+            </span>
           </button>
         </div>
       )}
 
       {/* Navigation Overlay */}
       {showOverlay && (
-        <div className="fixed inset-0 bg-black/80 flex items-start justify-end z-[1000] animate-[fadeIn_0.2s_ease-out] backdrop-blur-[4px] sm:items-start sm:justify-center" onClick={() => setShowOverlay(false)}>
-          <div className="z-[1001] text-[var(--light-font-color)] relative w-full max-w-[320px] h-screen bg-[var(--background-color)] flex flex-col overflow-y-auto animate-[slideInRight_0.3s_ease-out] shadow-[-10px_0_30px_rgba(0,0,0,0.3)] sm:max-w-full sm:w-full sm:animate-[slideInUp_0.3s_ease-out] sm:shadow-[0_-10px_30px_rgba(0,0,0,0.3)]" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/80 flex items-start justify-end z-[1100] animate-[fadeIn_0.2s_ease-out] backdrop-blur-[4px] sm:items-start sm:justify-center" onClick={() => setShowOverlay(false)}>
+          <div className="z-[1101] text-[var(--light-font-color)] relative w-full max-w-[320px] h-screen bg-[var(--background-color)] flex flex-col overflow-y-auto animate-[slideInRight_0.3s_ease-out] shadow-[-10px_0_30px_rgba(0,0,0,0.3)] sm:max-w-full sm:w-full sm:animate-[slideInUp_0.3s_ease-out] sm:shadow-[0_-10px_30px_rgba(0,0,0,0.3)]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between py-5 px-6 pb-4 border-b border-white/10 sm:py-4 sm:px-5 sm:pb-3">
               <h2 className="m-0 text-xl font-semibold text-[var(--standard-font-color)] sm:text-lg">Menu</h2>
               <button
@@ -134,7 +172,36 @@ export default function MobileAppHeader() {
               </button>
             </div>
 
-            <nav className="flex flex-col py-4 px-6 gap-2 flex-1 sm:py-3 sm:px-5 sm:gap-1.5">
+            <div className="py-4 px-6 border-b border-white/10 sm:py-3 sm:px-5">
+              {activeAccount ? (
+                <div>
+                  <AddressAvatarWithChainName
+                    isHoverEnabled={false}
+                    address={activeAccount}
+                    size={40}
+                    overlaySize={18}
+                    showBalance={true}
+                    showAddressAndChainName={true}
+                    hideFallbackName={true}
+                  />
+                  <div className="mt-3">
+                    <AeButton
+                      onClick={handleLogout}
+                      className="w-full justify-center bg-white/5 border border-white/10 rounded-xl"
+                      variant="ghost"
+                    >
+                      Disconnect
+                    </AeButton>
+                  </div>
+                </div>
+              ) : (
+                <AeButton onClick={handleConnect} className="w-full justify-center gap-2 bg-[#1161FE] hover:bg-[#1161FE] text-white border-none rounded-full">
+                  Connect Wallet
+                </AeButton>
+              )}
+            </div>
+
+            <nav className="flex flex-col py-5 px-6 gap-3 flex-1 sm:py-4 sm:px-6 sm:gap-2">
               {navigationItems.map(item => (
                 item.isExternal ? (
                   <a
@@ -142,28 +209,27 @@ export default function MobileAppHeader() {
                     href={item.path}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center py-4 px-5 bg-white/5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] gap-4 relative hover:bg-white/10 hover:translate-x-1 focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--custom-links-color)] focus-visible:outline-offset-2 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px] sm:gap-3"
+                  className="flex items-center justify-center py-5 px-6 bg-white/5 rounded-2xl text-[var(--standard-font-color)] no-underline font-semibold transition-all duration-200 min-h-[60px] relative hover:bg-white/10 focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--custom-links-color)] focus-visible:outline-offset-2 sm:py-4 sm:px-5 sm:min-h-[56px]"
                     onClick={handleNavigationClick}
                   >
-                    <span className="text-xl w-6 text-center sm:text-lg sm:w-5">{item.icon}</span>
-                    <span className="text-base sm:text-[15px]">{item.label}</span>
+                    <span className="text-lg sm:text-base">{item.label}</span>
                   </a>
                 ) : (
                   <Link
                     key={item.id}
                     to={item.path}
                     onClick={handleNavigationClick}
-                    className="flex items-center py-4 px-5 bg-white/5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] gap-4 relative hover:bg-white/10 hover:translate-x-1 focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--custom-links-color)] focus-visible:outline-offset-2 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px] sm:gap-3"
+                    className="flex items-center justify-center py-5 px-6 bg-white/5 rounded-2xl text-[var(--standard-font-color)] no-underline font-semibold transition-all duration-200 min-h-[60px] relative hover:bg-white/10 focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--custom-links-color)] focus-visible:outline-offset-2 sm:py-4 sm:px-5 sm:min-h-[56px]"
                   >
-                    <span className="text-xl w-6 text-center sm:text-lg sm:w-5">{item.icon}</span>
-                    <span className="text-base sm:text-[15px]">{item.label}</span>
+                    <span className="text-lg sm:text-base">{item.label}</span>
                   </Link>
                 )
               ))}
             </nav>
 
-            <div className="py-4 px-6 border-t border-white/10 sm:py-3 sm:px-5">
-              <HeaderWalletButton />
+            {/* Footer from right rail inside mobile menu (compact) */}
+            <div className="mt-auto pb-5 pt-2 px-3">
+              <FooterSection compact />
             </div>
           </div>
         </div>

@@ -1,20 +1,17 @@
-import React from 'react';
-import { EthBridgeWidget } from '../../bridge';
-import RecentActivity from '../../../components/dex/supporting/RecentActivity';
+import React from "react";
+import { EthBridgeWidget } from "../../bridge";
+import RecentActivity from "../../../components/dex/supporting/RecentActivity";
 
 //
 export default function DexBridge() {
   return (
-    <div className="w-full max-w-full overflow-hidden">
-      {/* Main Content */}
-      <div className="flex gap-4 sm:gap-5 items-start w-full flex-col md:flex-row md:gap-6">
-        <div className="w-full max-w-full min-w-0 flex-shrink-0 md:max-w-[min(480px,100%)]">
-          <EthBridgeWidget />
-        </div>
-        
-        <div className="flex-1 min-w-0 w-full">
-          <RecentActivity />
-        </div>
+    <div className="mx-auto md:p-5 flex flex-row flex-wrap gap-6 md:gap-8">
+      <div className="grid grid-cols-1 gap-6 md:gap-8 items-start">
+        <EthBridgeWidget />
+      </div>
+
+      <div className="flex-1 min-w-0 w-full">
+        <RecentActivity />
       </div>
     </div>
   );

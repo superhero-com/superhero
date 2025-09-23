@@ -71,6 +71,23 @@
   }
 }
 
+@layer components {
+  /* Reusable DEX title style: superhero blue */
+  .dex-title {
+    @apply font-bold text-white;
+  }
+
+  /* Use this to avoid legacy .dex-title gradient from Dex.scss */
+  .sh-dex-title {
+    @apply font-bold;
+    color: #ffffff;
+    -webkit-text-fill-color: #ffffff;
+    background: none;
+    -webkit-background-clip: initial;
+    background-clip: initial;
+  }
+}
+
 @keyframes truncate-scroll {
   0% {
     transform: translateX(0);

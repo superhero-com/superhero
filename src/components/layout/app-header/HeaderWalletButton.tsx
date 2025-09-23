@@ -5,24 +5,18 @@ import React from 'react';
 import { useAccount } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
+import { useModal } from '../../../hooks';
 import Favicon from '../../../svg/favicon.svg?react';
 
 export default function HeaderWalletButton() {
   const { activeAccount } = useAeSdk();
-  const { connectWallet, disconnectWallet, walletInfo } = useWalletConnect();
+  const { disconnectWallet, walletInfo } = useWalletConnect();
+  const { openModal } = useModal();
   const { decimalBalance } = useAccount();
-  const [loading, setLoading] = React.useState(false);
-
-  async function handleConnect() {
-    setLoading(true);
-    try {
-      await connectWallet();
-    } finally {
-      setLoading(false);
-    }
-  }
+  const handleConnect = () => openModal({ name: 'connect-wallet' });
   const handleLogout = () => {
     disconnectWallet();
+    try { window.location.reload(); } catch {}
   };
 
   // If not connected, show connect button
@@ -30,14 +24,14 @@ export default function HeaderWalletButton() {
     return (
       <AeButton
         onClick={handleConnect}
-        disabled={loading}
-        loading={loading}
+        disabled={false}
+        loading={false}
         variant="default"
         size="default"
-        className="gap-2"
+        className="gap-2 rounded-full"
       >
         <Favicon className="w-4 h-4" />
-        {loading ? 'Connecting…' : 'Connect Wallet'}
+        Connect Wallet
       </AeButton>
     );
   }

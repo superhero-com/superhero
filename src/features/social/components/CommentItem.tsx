@@ -103,11 +103,13 @@ const CommentItem = memo(({
                       href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${comment.tx_hash}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text"
+                      className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text group"
                       title={comment.tx_hash}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {`Posted on-chain${comment.created_at ? ` ${relativeTime(new Date(comment.created_at))}` : ''}`}
+                      <span className="underline-offset-2 group-hover:underline">
+                        {`Posted on-chain${comment.created_at ? ` ${relativeTime(new Date(comment.created_at))}` : ''}`}
+                      </span>
                       <IconLink className="w-2.5 h-2.5" />
                     </a>
                   </div>
@@ -123,11 +125,13 @@ const CommentItem = memo(({
                       href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${comment.tx_hash}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-0.5 text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text md:hidden"
+                      className="inline-flex items-center gap-0.5 text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text md:hidden group"
                       title={comment.tx_hash}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {`Posted on-chain${comment.created_at ? ` ${relativeTime(new Date(comment.created_at))}` : ''}`}
+                      <span className="underline-offset-2 group-hover:underline">
+                        {`Posted on-chain${comment.created_at ? ` ${relativeTime(new Date(comment.created_at))}` : ''}`}
+                      </span>
                       <IconLink className="w-2 h-2" />
                     </a>
                   ) : comment.created_at ? (

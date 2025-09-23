@@ -137,10 +137,12 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
               href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${postData.tx_hash}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text"
+              className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text group"
               title={postData?.tx_hash}
             >
-              {`Posted on-chain${post?.timestamp ? ` ${relativeTime(new Date(post.timestamp))}` : ''}`}
+              <span className="underline-offset-2 group-hover:underline">
+                {`Posted on-chain${post?.timestamp ? ` ${relativeTime(new Date(post.timestamp))}` : ''}`}
+              </span>
               <IconLink className="w-2.5 h-2.5" />
             </a>
           </div>
@@ -173,10 +175,12 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
                   href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${postData.tx_hash}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-0.5 md:hidden text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text"
+                  className="inline-flex items-center gap-0.5 md:hidden text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text group"
                   title={postData?.tx_hash}
                 >
-                  {`Posted on-chain${post?.timestamp ? ` ${relativeTime(new Date(post.timestamp))}` : ''}`}
+                  <span className="underline-offset-2 group-hover:underline">
+                    {`Posted on-chain${post?.timestamp ? ` ${relativeTime(new Date(post.timestamp))}` : ''}`}
+                  </span>
                   <IconLink className="w-2 h-2" />
                 </a>
               )}

@@ -64,7 +64,7 @@ export function TokenListCards({
     navigate(`/dex/pool?from=AE&to=${token.address}`);
   };
 
-  if (loading) {
+  if (loading && tokens.length === 0) {
     return (
       <div className="text-center p-[60px] bg-white/[0.02] border border-white/10 rounded-2xl backdrop-blur-[10px]">
         <div className="inline-flex items-center gap-3 text-gray-300 text-base font-medium">

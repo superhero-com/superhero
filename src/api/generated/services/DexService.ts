@@ -149,11 +149,13 @@ export class DexService {
     public static listAllDexTokens({
         orderBy,
         orderDirection,
+        search,
         limit,
         page,
     }: {
         orderBy?: 'pairs_count' | 'name' | 'symbol' | 'created_at',
         orderDirection?: 'ASC' | 'DESC',
+        search?: string,
         limit?: number,
         page?: number,
     }): CancelablePromise<Pagination> {
@@ -163,6 +165,7 @@ export class DexService {
             query: {
                 'order_by': orderBy,
                 'order_direction': orderDirection,
+                'search': search,
                 'limit': limit,
                 'page': page,
             },

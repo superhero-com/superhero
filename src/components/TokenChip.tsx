@@ -89,7 +89,7 @@ export const TokenChip = ({
                         (tokenData?.address == DEX_ADDRESSES.wae || tokenData?.is_ae || address == DEX_ADDRESSES.wae)
                             ? 'AE'
                             : tokenData?.symbol
-                            || 'TOKEN')}
+                            || address || 'TOKEN')}
             </span>
 
             {/* Token Name (if different from symbol) */}

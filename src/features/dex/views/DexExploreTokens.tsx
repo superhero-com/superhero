@@ -23,6 +23,7 @@ export default function DexExploreTokens() {
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState("");
 
   const { data, isLoading } = useQuery({
     queryFn: async () => {
@@ -31,10 +32,11 @@ export default function DexExploreTokens() {
         limit: limit,
         orderBy: sort,
         orderDirection: sortDirection,
+        search: search,
       });
       return result as unknown as PaginatedResponse<any>;
     },
-    queryKey: ["DexService.listAllDexTokens", sort, sortDirection, page, limit],
+    queryKey: ["DexService.listAllDexTokens", sort, sortDirection, page, limit, search],
   });
 
   return (
@@ -58,8 +60,8 @@ export default function DexExploreTokens() {
             tokens={data?.items ?? []}
             sort={tokenList.sort}
             onSortChange={tokenList.toggleSort}
-            search=""
-            onSearchChange={() => { }}
+            search={search}
+            onSearchChange={setSearch}
             loading={isLoading}
           />
         </div>
@@ -68,8 +70,8 @@ export default function DexExploreTokens() {
             tokens={data?.items ?? []}
             sort={tokenList.sort}
             onSortChange={tokenList.toggleSort}
-            search=""
-            onSearchChange={() => { }}
+            search={search}
+            onSearchChange={setSearch}
             loading={isLoading}
           />
         </div>

@@ -37,7 +37,7 @@ export function TokenListTable({
     navigate(`/dex/pool?from=AE&to=${token.address}`);
   };
 
-  if (loading) {
+  if (loading && tokens.length === 0) {
     return (
       <div style={{
         textAlign: 'center',

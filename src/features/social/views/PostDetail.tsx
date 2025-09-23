@@ -166,8 +166,8 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
 
           {/* Mobile: show time inside the left-line wrapper; desktop uses inline header */}
           <div className="relative">
-            <div className="hidden md:block absolute left-[23px] top-0 bottom-0 w-[1px] bg-white -z-10" />
-            <div className="border-l border-white ml-[23px] pl-[37px] md:border-none md:ml-0 md:pl-[48px]">
+            <div className="hidden md:block absolute left-[23px] top-0 bottom-0 w-[1px] bg-white/90 z-0 pointer-events-none" />
+            <div className="border-l border-white ml-[23px] pl-[37px] md:border-none md:ml-0 md:pl-[48px] relative z-10">
               {postData?.tx_hash && CONFIG.EXPLORER_URL && (
                 <a
                   href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${postData.tx_hash}`}

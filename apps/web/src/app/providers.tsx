@@ -6,6 +6,16 @@ import ToastProvider from "@super/components/ToastProvider";
 import { AeSdkProvider } from "@super/context/AeSdkProvider";
 import { OpenAPI } from "@super/api/generated";
 import "@super/i18n";
+import ModalProvider from "@super/components/ModalProvider";
+import dynamic from "next/dynamic";
+const PostModal = dynamic(() => import("@super/components/modals/PostModal"));
+const CookiesDialog = dynamic(() => import("@super/components/modals/CookiesDialog"));
+const TokenSelectModal = dynamic(() => import("@super/components/modals/TokenSelect"));
+const ImageGallery = dynamic(() => import("@super/components/modals/ImageGallery"));
+const FeedItemMenu = dynamic(() => import("@super/components/modals/FeedItemMenu"));
+const AlertModal = dynamic(() => import("@super/components/modals/AlertModal"));
+const TransactionConfirmModal = dynamic(() => import("@super/components/modals/TransactionConfirmModal"));
+const ConnectWalletModal = dynamic(() => import("@super/components/modals/ConnectWalletModal"));
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [client] = useState(() => new QueryClient());
@@ -14,7 +24,21 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={client}>
       <JotaiProvider>
         <ToastProvider>
-          <AeSdkProvider>{children}</AeSdkProvider>
+          <AeSdkProvider>
+            <ModalProvider
+              registry={{
+                post: PostModal as any,
+                "cookies-dialog": CookiesDialog as any,
+                "token-select": TokenSelectModal as any,
+                "image-gallery": ImageGallery as any,
+                "feed-item-menu": FeedItemMenu as any,
+                alert: AlertModal as any,
+                "transaction-confirm": TransactionConfirmModal as any,
+                "connect-wallet": ConnectWalletModal as any,
+              }}
+            />
+            {children}
+          </AeSdkProvider>
         </ToastProvider>
       </JotaiProvider>
     </QueryClientProvider>

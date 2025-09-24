@@ -1,7 +1,8 @@
 import { OpenAPI, PostsService, type PostDto } from "@super/api/generated";
 import Feed from "./shared/Feed";
-import CreatePost from "@super/features/social/components/CreatePost";
-import SortControls from "@super/features/social/components/SortControls";
+import dynamic from "next/dynamic";
+const CreatePost = dynamic(() => import("@super/features/social/components/CreatePost"), { ssr: false });
+const SortControls = dynamic(() => import("@super/features/social/components/SortControls"), { ssr: false });
 
 export const revalidate = 30;
 

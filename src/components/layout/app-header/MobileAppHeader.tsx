@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import SearchInput from '../../SearchInput';
-import { HeaderLogo, IconSearch } from '../../../icons';
+import { HeaderLogo, IconSearch } from '@super/icons/index-next';
 // import HeaderWalletButton from './HeaderWalletButton';
 import { navigationItems } from './navigationItems';
 import AddressAvatar from '../../AddressAvatar';

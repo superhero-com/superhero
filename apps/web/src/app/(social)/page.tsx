@@ -5,12 +5,15 @@ import ClientHomeTop from "./ClientHomeTop";
 export const revalidate = 30;
 export const dynamic = "force-dynamic";
 
-export default async function SocialHome({ searchParams }: { searchParams: Promise<{ sortBy?: string; search?: string; filterBy?: string }> }) {
+export default async function SocialHome({ searchParams }: { searchParams?: { [key: string]: string | string[] | undefined } }) {
   OpenAPI.BASE = process.env.NEXT_PUBLIC_API_BASE || "https://api.dev.tokensale.org";
-  const sp = await searchParams;
-  const sortBy = sp?.sortBy ?? "created_at";
-  const search = sp?.search ?? "";
-  const filterBy = sp?.filterBy ?? "all";
+  const get = (k: string) => {
+    const v = searchParams?.[k];
+    return Array.isArray(v) ? v[0] : v || undefined;
+  };
+  const sortBy = get("sortBy") ?? "created_at";
+  const search = get("search") ?? "";
+  const filterBy = get("filterBy") ?? "all";
   const page = 1;
   const limit = 10;
 

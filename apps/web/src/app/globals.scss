@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// Make shared SCSS variables and mixins available globally
+@use "@super/styles/variables.scss" as *;
+@use "@super/styles/mixins.scss" as *;
+
+// Import the original app global styles to match the pre-Next.js look
+@import "@super/styles/base.scss";
+@import "@super/styles/genz-components.scss";
+@import "@super/styles/mobile-optimizations.scss";
+
+

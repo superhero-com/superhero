@@ -8,6 +8,7 @@ import { OpenAPI } from "@super/api/generated";
 import "@super/i18n";
 import ModalProvider from "@super/components/ModalProvider";
 import dynamic from "next/dynamic";
+const BrowserRouter = dynamic(() => import("react-router-dom").then(m => m.BrowserRouter), { ssr: false });
 const PostModal = dynamic(() => import("@super/components/modals/PostModal"));
 const CookiesDialog = dynamic(() => import("@super/components/modals/CookiesDialog"));
 const TokenSelectModal = dynamic(() => import("@super/components/modals/TokenSelect"));
@@ -24,6 +25,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={client}>
       <JotaiProvider>
         <ToastProvider>
+          <BrowserRouter>
           <AeSdkProvider>
             <ModalProvider
               registry={{
@@ -39,6 +41,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             />
             {children}
           </AeSdkProvider>
+          </BrowserRouter>
         </ToastProvider>
       </JotaiProvider>
     </QueryClientProvider>

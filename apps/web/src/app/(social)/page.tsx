@@ -1,8 +1,6 @@
 import { OpenAPI, PostsService, type PostDto } from "@super/api/generated";
 import Feed from "./shared/Feed";
-import dynamic from "next/dynamic";
-const CreatePost = dynamic(() => import("@super/features/social/components/CreatePost"), { ssr: false });
-const SortControls = dynamic(() => import("@super/features/social/components/SortControls"), { ssr: false });
+import ClientHomeTop from "./ClientHomeTop";
 
 export const revalidate = 30;
 export const dynamic = "force-dynamic";
@@ -32,13 +30,7 @@ export default async function SocialHome({ searchParams }: { searchParams?: { so
 
   return (
     <div className="w-full">
-      <div className="hidden md:block">
-        {/* Note: CreatePost is a client component that relies on wallet; it will hydrate on client */}
-        {/* @ts-expect-error server-to-client boundary */}
-        <CreatePost onSuccess={async () => {}} />
-        {/* @ts-expect-error server-to-client boundary */}
-        <SortControls sortBy={sortBy} onSortChange={() => {}} />
-      </div>
+      <ClientHomeTop sortBy={sortBy} />
       <Feed initialItems={filtered} />
     </div>
   );

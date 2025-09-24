@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navigationItems } from "@super/components/layout/app-header/navigationItems";
 import HeaderWalletButton from "@super/components/layout/app-header/HeaderWalletButton";
-import HeaderLogo from "@super/svg/headerLogo.svg?react";
+import headerLogo from "@super/svg/headerLogo.svg";
 
 export default function LeftNavNext() {
   const pathname = usePathname();
@@ -11,7 +11,8 @@ export default function LeftNavNext() {
   return (
     <nav className="flex flex-col gap-2 pr-2 min-h-screen">
       <Link href="/" className="no-underline px-3 py-2 rounded-xl text-[var(--standard-font-color)] hover:bg-white/10 transition-colors w-fit" aria-label="Superhero Home">
-        <HeaderLogo className="h-8 w-auto" />
+        {/* Use plain img to avoid SVG React component pipeline in Next */}
+        <img src={headerLogo as unknown as string} alt="Superhero" className="h-8 w-auto" />
       </Link>
       <div className="grid gap-1">
         {navigationItems.map((item) => {

@@ -27,7 +27,7 @@ const nextConfig: NextConfig = {
       // Route icon barrel to shared Next-compatible icon wrappers
       "@super/icons": "@super/icons-next",
       "#icons": "@super/icons-next",
-      "@super/icons-next": path.resolve(__dirname, "../../src/icons-next.tsx"),
+      "@super/icons-next": path.resolve(__dirname, "../../src/icons/index-next.tsx"),
     },
   },
 };

@@ -22,8 +22,9 @@
     "paths": {
       "@/*": ["../../src/*"],
       "@super/*": ["../../src/*"],
-      "@super/icons": ["../../src/icons-next"],
-      "#icons": ["../../src/icons-next"],
+      "@super/icons": ["../../src/icons/index-next"],
+      "@super/icons-next": ["../../src/icons/index-next"],
+      "#icons": ["../../src/icons/index-next"],
       "@web/*": ["./src/*"]
     }
   },

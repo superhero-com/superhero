@@ -1,6 +1,5 @@
 import React from "react";
-import dynamic from "next/dynamic";
-const FooterSection = dynamic(() => import("./FooterSection"), { ssr: false });
+import FooterClient from "./FooterClient";
 
 type ShellProps = {
   left?: React.ReactNode;
@@ -51,7 +50,7 @@ export default function Shell({ left, right, children, containerClassName }: She
             <aside className="hidden lg:block sticky top-0 self-start min-w-0">
               <div className="min-h-screen flex flex-col">
                 <div className="min-w-0">{right}</div>
-                <FooterSection />
+                <FooterClient />
               </div>
             </aside>
           )}

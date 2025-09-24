@@ -20,6 +20,8 @@ interface AddressAvatarWithChainNameProps {
     isHoverEnabled?: boolean;
     avatarBackground?: boolean;
     hideFallbackName?: boolean;
+    secondary?: React.ReactNode;
+    contentClassName?: string;
 }
 
 export const AddressAvatarWithChainName = memo(({
@@ -32,7 +34,9 @@ export const AddressAvatarWithChainName = memo(({
     className,
     isHoverEnabled = true,
     avatarBackground = false,
-    hideFallbackName = false
+    hideFallbackName = false,
+    secondary,
+    contentClassName
 }: AddressAvatarWithChainNameProps) => {
     const navigate = useNavigate();
     const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(address);
@@ -103,7 +107,7 @@ export const AddressAvatarWithChainName = memo(({
                 </div>
             </div>
 
-            <div className="flex flex-col items-start min-w-0">
+            <div className={cn("flex flex-col items-start min-w-0", contentClassName)}>
                 {showAddressAndChainName && (
                     <span className="chain-name text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
                         <AddressFormatted
@@ -120,6 +124,7 @@ export const AddressAvatarWithChainName = memo(({
                         </div>
                     )}
                 </div>
+                {secondary}
             </div>
         </>
     )
@@ -210,7 +215,9 @@ export const AddressAvatarWithChainName = memo(({
     return prevProps.address === nextProps.address &&
         prevProps.size === nextProps.size &&
         prevProps.overlaySize === nextProps.overlaySize &&
-        prevProps.truncateAddress === nextProps.truncateAddress;
+        prevProps.truncateAddress === nextProps.truncateAddress &&
+        prevProps.secondary === nextProps.secondary &&
+        prevProps.contentClassName === nextProps.contentClassName;
 });
 
 AddressAvatarWithChainName.displayName = 'AddressAvatarWithChainName';

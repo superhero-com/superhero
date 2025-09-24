@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAeSdk, useWalletConnect, useModal } from '../hooks';
-import Favicon from '../svg/favicon.svg?react';
+import faviconUrl from '../svg/favicon.svg';
 import { AeButton } from './ui/ae-button';
 import { cn } from '@/lib/utils';
 
@@ -45,7 +45,7 @@ export default function ConnectWalletButton({ label = 'Connect Wallet', block, s
       style={style}
     >
       <span className="hidden sm:inline-flex items-center gap-2">
-        <Favicon className="w-4 h-4" />
+        <img src={faviconUrl as unknown as string} alt="" className="w-4 h-4" />
         {connectingWallet ? 'Connecting…' : label}
       </span>
       <span className="sm:hidden">

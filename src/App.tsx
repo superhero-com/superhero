@@ -55,9 +55,9 @@ export default function App() {
     return () => clearInterval(interval);
   }, [activeAccount]);
 
-  if (!sdkInitialized) {
-    return <div className="loading-fallback" />;
-  }
+  // Always call hooks such as useRoutes; avoid early-return to keep hook order stable
+  const loadingFallback = <div className="loading-fallback" />;
+  const element = useRoutes((sdkInitialized ? routes : ([{ path: "*", element: loadingFallback }] as any)) as any);
 
   return (
     <div className="app-container">
@@ -81,7 +81,7 @@ export default function App() {
         />
       </Suspense>
       <Suspense fallback={<div className="loading-fallback" />}>
-        <div className="app-routes-container">{useRoutes(routes as any)}</div>
+        <div className="app-routes-container">{element}</div>
       </Suspense>
     </div>
   );

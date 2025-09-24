@@ -1,5 +1,6 @@
 import React from "react";
-import FooterSection from "./FooterSection";
+import dynamic from "next/dynamic";
+const FooterSection = dynamic(() => import("./FooterSection"), { ssr: false });
 
 type ShellProps = {
   left?: React.ReactNode;

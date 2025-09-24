@@ -24,9 +24,10 @@ const nextConfig: NextConfig = {
     resolveAlias: {
       "@": path.resolve(__dirname, "../../src"),
       "@super": path.resolve(__dirname, "../../src"),
-      // Route icon barrel to shared Next-compatible icon wrappers to avoid React-SVG issues
-      "@super/icons": path.resolve(__dirname, "../../src/icons-next.tsx"),
-      "#icons": path.resolve(__dirname, "../../src/icons-next.tsx"),
+      // Route icon barrel to shared Next-compatible icon wrappers
+      "@super/icons": "@super/icons-next",
+      "#icons": "@super/icons-next",
+      "@super/icons-next": path.resolve(__dirname, "../../src/icons-next.tsx"),
     },
   },
 };

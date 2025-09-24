@@ -22,6 +22,8 @@
     "paths": {
       "@/*": ["../../src/*"],
       "@super/*": ["../../src/*"],
+      "@super/icons": ["../../src/icons-next"],
+      "#icons": ["../../src/icons-next"],
       "@web/*": ["./src/*"]
     }
   },

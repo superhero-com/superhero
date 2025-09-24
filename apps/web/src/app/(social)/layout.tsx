@@ -1,11 +1,12 @@
-import "../../globals.css";
 import type { ReactNode } from "react";
+import Shell from "@super/components/layout/Shell";
+import RightRail from "@super/components/layout/RightRail";
 
 export default function SocialLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen w-full max-w-[1080px] mx-auto p-3">
+    <Shell right={<RightRail />} containerClassName="max-w-[min(1200px,100%)]">
       {children}
-    </div>
+    </Shell>
   );
 }
 

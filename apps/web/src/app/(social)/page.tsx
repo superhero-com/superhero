@@ -1,5 +1,7 @@
 import { OpenAPI, PostsService, type PostDto } from "@super/api/generated";
 import Feed from "./shared/Feed";
+import CreatePost from "@super/features/social/components/CreatePost";
+import SortControls from "@super/features/social/components/SortControls";
 
 export const revalidate = 30;
 
@@ -26,7 +28,18 @@ export default async function SocialHome({ searchParams }: { searchParams?: { so
       ? items.filter(i => (i.total_comments ?? 0) > 0)
       : items;
 
-  return <Feed initialItems={filtered} />;
+  return (
+    <div className="w-full">
+      <div className="hidden md:block">
+        {/* Note: CreatePost is a client component that relies on wallet; it will hydrate on client */}
+        {/* @ts-expect-error server-to-client boundary */}
+        <CreatePost onSuccess={async () => {}} />
+        {/* @ts-expect-error server-to-client boundary */}
+        <SortControls sortBy={sortBy} onSortChange={() => {}} />
+      </div>
+      <Feed initialItems={filtered} />
+    </div>
+  );
 }
 
 

@@ -1,8 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-// Make shared SCSS variables and mixins available globally
+// Make shared SCSS variables and mixins available globally (must come first)
 @use "@super/styles/variables.scss" as *;
 @use "@super/styles/mixins.scss" as *;
 
@@ -10,5 +6,10 @@
 @import "@super/styles/base.scss";
 @import "@super/styles/genz-components.scss";
 @import "@super/styles/mobile-optimizations.scss";
+
+// Tailwind layers after base styles
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 

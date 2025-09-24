@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navigationItems } from "@super/components/layout/app-header/navigationItems";
 import HeaderWalletButton from "@super/components/layout/app-header/HeaderWalletButton";
-import { HeaderLogo } from "@super/icons";
+import HeaderLogo from "@super/svg/headerLogo.svg?react";
 
 export default function LeftNavNext() {
   const pathname = usePathname();

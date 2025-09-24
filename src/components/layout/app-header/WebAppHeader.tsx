@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { HeaderLogo } from '../../../icons';
+import { HeaderLogo } from '@super/icons/index-next';
 import HeaderWalletButton from './HeaderWalletButton';
 import { navigationItems } from './navigationItems';
 

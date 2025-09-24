@@ -4,7 +4,7 @@ import { memo, useCallback } from "react";
 import { PostDto } from "../../../api/generated";
 // Using shared glass card styles via `genz-card` to match wallet/AE price cards
 import { Badge } from "../../../components/ui/badge";
-import { IconComment, IconLink } from "#icons";
+import { IconComment, IconLink } from "@super/icons/index-next";
 import { linkify } from "../../../utils/linkify";
 import { useWallet } from "../../../hooks";
 import { relativeTime } from "../../../utils/time";

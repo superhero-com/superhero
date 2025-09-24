@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { IconClose, IconGif, IconImage, IconSmile } from "../../../icons";
+import { IconClose, IconGif, IconImage, IconSmile } from "#icons";
 import AeButton from "../../../components/AeButton";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";

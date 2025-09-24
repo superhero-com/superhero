@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TrendminerApi } from '../../api/backend';
-import MobileCard from '../MobileCard';
 import './TrendingPillsCarousel.scss';
 
 type TrendingTag = {
@@ -75,14 +74,18 @@ export default function TrendingPillsCarousel({ tagTokenMap = {} }: TrendingPill
     return null;
   }
 
-      const loop = [...tags, ...tags];
+    // Create seamless loop by duplicating tags exactly once
+    // This ensures when animation reaches -50%, it looks identical to start (0%)
+    const loop = [...tags, ...tags];
     // Faster rotation - reduced duration
-    const durationSec = Math.max(3, tags.length*2);
+    const durationSec = Math.max(3, tags.length * 1);
 
   return (
     <div className="trending-pills-carousel">
       <div className="carousel-container">
-        <div className="carousel-track" style={{ animationDuration: `${durationSec}s` }}>
+        <div className="carousel-track" style={{ 
+          animationDuration: `${durationSec}s`,
+        }}>
           {loop.map((tag, index) => {
             // Check if this tag has a tokenized version
             const hasToken = tagTokenMap && tagTokenMap[tag.tag];

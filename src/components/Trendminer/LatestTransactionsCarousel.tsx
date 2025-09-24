@@ -79,12 +79,8 @@ export default function LatestTransactionsCarousel() {
           const maxIndex = Math.max(0, items.length - 1 - itemsToShow);
 
           if (isMovingForward) {
-            console.log("isMovingForward", prev, maxIndex, itemsToShow);
             if (prev >= maxIndex - 1) {
               // Last item is now visible, pause and prepare to go backward
-              console.log(
-                "Last item is now visible, pause and prepare to go backward"
-              );
               setIsPaused(true);
               setTimeout(() => {
                 setIsMovingForward(false);
@@ -281,14 +277,13 @@ export default function LatestTransactionsCarousel() {
     const time = item.created_at
       ? new Date(item.created_at).toLocaleTimeString()
       : "";
-
     return (
       <div
         key={`${item.sale_address || item.token_address || "item"}-${index}`}
-        className="inline-flex items-center justify-between px-3 py-2 bg-black/5 border border-black/10 rounded-xl flex-shrink-0 transition-all duration-200 hover:bg-black/8 hover:border-black/15 hover:-translate-y-0.25 active:translate-y-0 sm:px-2.5 sm:py-1.5 sm:min-h-10"
+        className="flex flex-col items-center justify-between px-3 py-2 bg-gray-800 border border-black/10 rounded-xl flex-shrink-0 transition-all duration-200 hover:bg-black/8 hover:border-black/15 hover:-translate-y-0.25 active:translate-y-0 sm:px-2.5 sm:py-1.5 "
         style={{ minWidth: "200px", flexShrink: 0 }}
       >
-        <div className="flex flex-col gap-1 sm:gap-0.75 w-full">
+        <div className="flex flex-row lg:flex-col gap-1 sm:gap-0.75 w-full">
           <div className="flex justify-between items-center gap-2 sm:gap-1.5">
             <div
               className="px-1.5 py-0.75 rounded border text-[10px] font-bold uppercase tracking-wide whitespace-nowrap sm:px-1 sm:py-0.5 sm:text-[9px]"
@@ -300,7 +295,7 @@ export default function LatestTransactionsCarousel() {
             >
               {type.label}
             </div>
-            <div className="text-[10px] text-[var(--light-font-color)] opacity-70 whitespace-nowrap sm:text-[9px]">
+            <div className="hidden lg:block text-[10px] text-[var(--light-font-color)] opacity-70 whitespace-nowrap sm:text-[9px]">
               {time}
             </div>
           </div>
@@ -311,20 +306,19 @@ export default function LatestTransactionsCarousel() {
             </span>
             {item.amount && (
               <span className="text-[10px] font-medium text-blue-500 whitespace-nowrap sm:text-[9px]">
-                {Number(item.amount).toLocaleString()} AE
+                {Number(item.amount.ae).toLocaleString()} AE
               </span>
             )}
           </div>
-
-          {item.sale_address && (
+        </div>
+        {item.sale_address && (
             <a
               href={`/trendminer/tokens/${encodeURIComponent(tokenName)}`}
-              className="text-[10px] text-blue-500 no-underline font-medium transition-all duration-200 self-start whitespace-nowrap hover:text-blue-400 hover:underline sm:text-[9px] sm:p-1 sm:min-h-6 sm:flex sm:items-center"
+              className="text-[9px] text-blue-500 no-underline font-medium transition-all duration-200 self-start whitespace-nowrap hover:text-blue-400 hover:underline sm:text-[9px] p-1  flex items-center"
             >
               View Token →
             </a>
           )}
-        </div>
       </div>
     );
   };

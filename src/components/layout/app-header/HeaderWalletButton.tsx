@@ -6,7 +6,7 @@ import { useAccount } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
 import { useModal } from '../../../hooks';
-import Favicon from '../../../svg/favicon.svg?react';
+import faviconUrl from '../../../svg/favicon.svg';
 
 export default function HeaderWalletButton() {
   const { activeAccount } = useAeSdk();
@@ -30,7 +30,7 @@ export default function HeaderWalletButton() {
         size="default"
         className="gap-2 rounded-full"
       >
-        <Favicon className="w-4 h-4" />
+        <img src={faviconUrl as unknown as string} alt="" className="w-4 h-4" />
         Connect Wallet
       </AeButton>
     );

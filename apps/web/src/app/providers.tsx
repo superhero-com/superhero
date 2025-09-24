@@ -7,6 +7,7 @@ import { AeSdkProvider } from "@super/context/AeSdkProvider";
 import { OpenAPI } from "@super/api/generated";
 import "@super/i18n";
 import ModalProvider from "@super/components/ModalProvider";
+import { BrowserRouter } from "react-router-dom";
 import dynamic from "next/dynamic";
 const PostModal = dynamic(() => import("@super/components/modals/PostModal"));
 const CookiesDialog = dynamic(() => import("@super/components/modals/CookiesDialog"));
@@ -24,21 +25,23 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={client}>
       <JotaiProvider>
         <ToastProvider>
-          <AeSdkProvider>
-            <ModalProvider
-              registry={{
-                post: PostModal as any,
-                "cookies-dialog": CookiesDialog as any,
-                "token-select": TokenSelectModal as any,
-                "image-gallery": ImageGallery as any,
-                "feed-item-menu": FeedItemMenu as any,
-                alert: AlertModal as any,
-                "transaction-confirm": TransactionConfirmModal as any,
-                "connect-wallet": ConnectWalletModal as any,
-              }}
-            />
-            {children}
-          </AeSdkProvider>
+          <BrowserRouter>
+            <AeSdkProvider>
+              <ModalProvider
+                registry={{
+                  post: PostModal as any,
+                  "cookies-dialog": CookiesDialog as any,
+                  "token-select": TokenSelectModal as any,
+                  "image-gallery": ImageGallery as any,
+                  "feed-item-menu": FeedItemMenu as any,
+                  alert: AlertModal as any,
+                  "transaction-confirm": TransactionConfirmModal as any,
+                  "connect-wallet": ConnectWalletModal as any,
+                }}
+              />
+              {children}
+            </AeSdkProvider>
+          </BrowserRouter>
         </ToastProvider>
       </JotaiProvider>
     </QueryClientProvider>

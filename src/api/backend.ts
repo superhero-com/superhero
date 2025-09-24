@@ -155,9 +155,49 @@ async function fetchJson(path: string, init?: RequestInit) {
   if ((USE_MOCK || !base) && isDevLike) {
     return mockFetch(path);
   }
-  const url = base ? `${base}/${path}` : `/${path}`;
-  const res = await fetch(url, init);
+  // Normalize path and join with BACKEND_URL root (no forced /api prefix)
+  const normalizedPath = path.replace(/^\/+/, "");
+  const buildUrl = (prefixApi: boolean) => {
+    const p = prefixApi && !normalizedPath.startsWith('api/') ? `api/${normalizedPath}` : normalizedPath;
+    return base ? `${base}/${p}` : `/${p}`;
+  };
+
+  // First try as-is
+  let res = await fetch(buildUrl(false), init);
+  if (!res.ok && res.status === 404 && base) {
+    // Retry with /api/ prefix for backends that mount under /api
+    res = await fetch(buildUrl(true), init);
+  }
   if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Request failed: ${res.status} ${body || ''}`.trim());
+  }
+  return res.json();
+}
+
+// Same as fetchJson but returns null on 404 instead of throwing
+async function fetchJsonSoft(path: string, init?: RequestInit) {
+  const mode = (import.meta as any).env?.MODE;
+  const isDevLike = mode === 'development' || mode === 'test';
+  const base = (CONFIG.BACKEND_URL || '').replace(/\/$/, '');
+  if ((USE_MOCK || !base) && isDevLike) {
+    try {
+      return await mockFetch(path);
+    } catch {
+      return null;
+    }
+  }
+  const normalizedPath = path.replace(/^\/+/, "");
+  const buildUrl = (prefixApi: boolean) => {
+    const p = prefixApi && !normalizedPath.startsWith('api/') ? `api/${normalizedPath}` : normalizedPath;
+    return base ? `${base}/${p}` : `/${p}`;
+  };
+  let res = await fetch(buildUrl(false), init);
+  if (!res.ok && res.status === 404 && base) {
+    res = await fetch(buildUrl(true), init);
+  }
+  if (!res.ok) {
+    if (res.status === 404) return null;
     const body = await res.text().catch(() => '');
     throw new Error(`Request failed: ${res.status} ${body || ''}`.trim());
   }
@@ -266,8 +306,8 @@ export const Backend = {
   }),
   getTipStats: () => fetchJson('stats'),
   getCacheChainNames: () => fetchJson('cache/chainnames'),
-  getPrice: () => fetchJson('cache/price'),
-  getTopics: () => fetchJson('tips/topics'),
+  getPrice: () => fetchJsonSoft('cache/price'),
+  getTopics: () => fetchJsonSoft('tips/topics'),
   getTokenInfo: () => fetchJson('tokenCache/tokenInfo'),
   // WordBazaar-related endpoints (kept for compatibility with the original Vue app)
   getWordRegistry: (ordering?: string, direction?: string, search?: string) => {

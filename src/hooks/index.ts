@@ -7,6 +7,7 @@ export { useWallet } from './useWallet';
 export { useModal } from './useModal';
 export { useDex } from './useDex';
 export { useBackend } from './useBackend';
+export { useCurrencies } from './useCurrencies';
 export { useGovernance } from './useGovernance';
 export { useRecentActivities } from './useRecentActivities';
 export { useTransactionStatus, useMultipleTransactionStatus } from './useTransactionStatus';

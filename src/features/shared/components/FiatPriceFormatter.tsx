@@ -1,6 +1,6 @@
 import React from 'react';
 import { Decimal } from '../../../libs/decimal';
-import FractionFormatter, { FormattedFractionalPrice } from './FractionFormatter';
+import FractionFormatter, { FormattedFractionalPrice } from "@/features/shared/components/FractionFormatter";
 
 interface FiatPriceFormatterProps {
   fiatPrice: Decimal;

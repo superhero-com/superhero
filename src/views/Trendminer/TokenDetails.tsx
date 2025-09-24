@@ -392,17 +392,14 @@ export default function TokenDetails() {
       {/* Header */}
       <LatestTransactionsCarousel />
       <div className="mb-8">
-        <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
-          <div className="flex items-center gap-4 flex-wrap">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+        <div className="flex items-center justify-between gap-6 flex-wrap mb-4">
+          <div className="flex gap-10 md:gap-8 ">
+            <h1 
+            className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white m-0 bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent"
+            >
               #{data.name || data.symbol}{" "}
-              {data.symbol ? (
-                <span className="opacity-70 font-medium text-white/70">
-                  ({data.symbol})
-                </span>
-              ) : null}
             </h1>
-            <div className="px-3 py-2 rounded-xl bg-white/[0.05] border border-white/10 text-white/80 font-semibold text-sm backdrop-blur-[10px]">
+            <div className="p-2 rounded-xl bg-white/[0.05] border border-white/10 text-white/80 font-semibold text-xs md:text-sm backdrop-blur-[10px]">
               MC RANK {mcRank != null ? `#${mcRank}` : "—"}
             </div>
           </div>
@@ -474,7 +471,7 @@ export default function TokenDetails() {
                   24h
                 </div>
                 <div
-                  className={`text-lg font-bold ${
+                  className={`text-sm sm:text-lg font-bold ${
                     Number(performance?.price_change_24h ?? 0) >= 0
                       ? "text-green-400"
                       : "text-red-400"
@@ -486,7 +483,7 @@ export default function TokenDetails() {
               <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] text-center">
                 <div className="text-xs text-white/60 font-medium mb-1">7d</div>
                 <div
-                  className={`text-lg font-bold ${
+                  className={`text-sm sm:text-lg font-bold ${
                     Number(performance?.price_change_7d ?? 0) >= 0
                       ? "text-green-400"
                       : "text-red-400"
@@ -500,7 +497,7 @@ export default function TokenDetails() {
                   30d
                 </div>
                 <div
-                  className={`text-lg font-bold ${
+                  className={`text-sm sm:text-lg font-bold ${
                     Number(performance?.price_change_30d ?? 0) >= 0
                       ? "text-green-400"
                       : "text-red-400"
@@ -570,7 +567,7 @@ export default function TokenDetails() {
             <div className="flex gap-2 mb-6 bg-white/[0.05] border border-white/10 rounded-2xl p-1 backdrop-blur-[10px]">
               <button
                 onClick={() => setActiveTab("chat")}
-                className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                className={`flex-1 px-4 py-3 rounded-xl text-[10px] lg:text-sm font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                   activeTab === "chat"
                     ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white shadow-[0_4px_12px_rgba(255,107,107,0.3)]"
                     : "text-white/70 hover:text-white hover:bg-white/[0.05]"
@@ -580,17 +577,18 @@ export default function TokenDetails() {
               </button>
               <button
                 onClick={() => setActiveTab("tx")}
-                className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                className={`flex-1 px-3 py-3 rounded-xl text-[11px] lg:text-sm font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                   activeTab === "tx"
                     ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white shadow-[0_4px_12px_rgba(255,107,107,0.3)]"
                     : "text-white/70 hover:text-white hover:bg-white/[0.05]"
                 }`}
               >
-                Transactions
+                <span className="hidden lg:block">Transactions</span>
+                <span className="block lg:hidden">History</span>
               </button>
               <button
                 onClick={() => setActiveTab("holders")}
-                className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                className={`flex-1 px-4 py-3 rounded-xl text-[10px] lg:text-sm font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                   activeTab === "holders"
                     ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white shadow-[0_4px_12px_rgba(255,107,107,0.3)]"
                     : "text-white/70 hover:text-white hover:bg-white/[0.05]"

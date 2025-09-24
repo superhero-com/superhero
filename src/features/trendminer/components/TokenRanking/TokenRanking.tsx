@@ -208,7 +208,7 @@ export default function TokenRanking({ token }: TokenRankingProps) {
             
             <Link
               key={item.sale_address}
-              to={`/trendminer/${item.name}`}
+              to={`/trendminer/tokens/${item.name}`}
               className={`
                 flex items-center justify-between p-3 rounded-xl border transition-all duration-300 ease-out text-decoration-none
                 ${isCurrentToken 

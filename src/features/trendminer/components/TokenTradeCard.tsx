@@ -1,18 +1,18 @@
-import React, { useState } from "react";
+import { formatFractionalPrice } from "@/utils/common";
+import { COIN_SYMBOL } from "@/utils/constants";
+import { useState } from "react";
 import { Button } from "../../../components/ui/button";
-import { cn } from "../../../lib/utils";
 import WalletConnectBtn from "../../../components/WalletConnectBtn";
 import { useAeSdk } from "../../../hooks/useAeSdk";
+import { cn } from "../../../lib/utils";
+import FractionFormatter, { FormattedFractionalPrice } from "../../shared/components/FractionFormatter";
+import LivePriceFormatter from "../../shared/components/LivePriceFormatter";
 import { useTokenTrade } from "../hooks/useTokenTrade";
 import { TokenDto } from "../types";
-import { Decimal } from "../../../libs/decimal";
-import TradeTokenInput from "./TradeTokenInput";
-import MessageBox from "./MessageBox";
-import TransactionConfirmDetailRow from "./TransactionConfirmDetailRow";
 import ImpactBadge from "./ImpactBadge";
-import FractionFormatter from "./FractionFormatter";
-import LivePriceFormatter from "./LivePriceFormatter";
-import { COIN_SYMBOL } from "@/utils/constants";
+import MessageBox from "./MessageBox";
+import TradeTokenInput from "./TradeTokenInput";
+import TransactionConfirmDetailRow from "./TransactionConfirmDetailRow";
 
 interface TokenTradeCardProps {
   token: TokenDto;
@@ -52,10 +52,6 @@ export default function TokenTradeCard({
   } = useTokenTrade({ token });
 
   const currentStepText = isBuying ? "" : "1/2";
-
-  const formatFractionalPrice = (decimal: Decimal): string => {
-    return decimal.prettify();
-  };
 
   if (!token?.sale_address) {
     return null;
@@ -130,6 +126,7 @@ export default function TokenTradeCard({
               <LivePriceFormatter
                 aePrice={averageTokenPrice}
                 watchPrice={false}
+                className="mb-1"
               />
             </TransactionConfirmDetailRow>
           )}
@@ -165,7 +162,7 @@ export default function TokenTradeCard({
                   <div className="flex items-center">
                     {priceImpactDiff.isZero ? "" : isBuying ? "+" : "-"}
                     <FractionFormatter
-                      fractionalPrice={formatFractionalPrice(priceImpactDiff)}
+                      fractionalPrice={formatFractionalPrice(priceImpactDiff) as FormattedFractionalPrice}
                     />
                     &nbsp;{COIN_SYMBOL}
                   </div>

@@ -110,7 +110,7 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
     if (value.isZero) return '0.00';
     return `$${value.prettify(2)}`;
   };
-console.log('tokenBalance', tokenBalance);
+  
   return (
     <div 
       className={cn(

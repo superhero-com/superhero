@@ -2,6 +2,9 @@ import React from "react";
 import { Decimal } from "../../../libs/decimal";
 import LivePriceFormatter from "../../shared/components/LivePriceFormatter";
 import AddressChip from "@/components/AddressChip";
+import { PriceDto } from "@/api/generated";
+import PriceDataFormatter from "@/features/shared/components/PriceDataFormatter";
+import { toAe } from '@aeternity/aepp-sdk';
 
 interface TokenSummaryProps {
   token: {
@@ -27,27 +30,9 @@ export default function TokenSummary({
   holders,
   className = "",
 }: TokenSummaryProps) {
-  const formatAe = (n: number): string => {
-    if (!isFinite(n)) return "0 AE";
-    const normalized = n >= 1e12 ? n / 1e18 : n;
-    return `${normalized.toFixed(6)} AE`;
-  };
-
-  const formatTokenAmount = (
-    aettos: number,
-    decimals: number = 18,
-    fractionDigits = 0
-  ): string => {
-    if (!isFinite(aettos)) return "0";
-    const units = aettos / Math.pow(10, decimals);
-    return units.toLocaleString(undefined, {
-      maximumFractionDigits: fractionDigits,
-    });
-  };
 
   const getShortenValue = (value: string | number): string => {
-    const decimal = Decimal.from(value);
-    return decimal.shorten();
+    return Decimal.from(toAe(value)).shorten();
   };
 
   const formatLongDate = (dateString: string): string => {
@@ -85,20 +70,20 @@ export default function TokenSummary({
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
           <div className="text-xs text-white/60 font-medium mb-2">Price</div>
-          <LivePriceFormatter
-            aePrice={Decimal.from(token.price || 0)}
-            watchKey={token.sale_address}
-            className="justify-center"
+          <PriceDataFormatter
+            className="justify-center item-value"
+            watchPrice={token.sale_address ? true : false}
+            priceData={token.price_data as PriceDto}
           />
         </div>
         <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
           <div className="text-xs text-white/60 font-medium mb-2">
             Market Cap
           </div>
-          <LivePriceFormatter
-            aePrice={Decimal.from(token.market_cap || 0)}
+          <PriceDataFormatter
             watchKey={token.sale_address}
-            className="justify-center"
+            bignumber
+            priceData={token.market_cap_data}
           />
         </div>
       </div>
@@ -111,7 +96,7 @@ export default function TokenSummary({
               DAO Balance
             </div>
             <LivePriceFormatter
-              aePrice={Decimal.from(token.dao_balance)}
+              aePrice={Decimal.from(toAe(token.dao_balance))}
               watchKey={token.sale_address}
               className="justify-center"
             />
@@ -181,6 +166,7 @@ export default function TokenSummary({
             Open DAO
           </a>
         )}
+        <div className="flex gap-3 ">
         <a
           href="/trendminer/invite"
           className="inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white border border-white/10 bg-white/[0.05] no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0"
@@ -197,6 +183,7 @@ export default function TokenSummary({
         >
           View on æScan ↗
         </a>
+        </div>
       </div>
     </div>
   );

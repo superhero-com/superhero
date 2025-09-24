@@ -1,5 +1,7 @@
 import React from "react";
 import AddressChip from "../AddressChip";
+import PriceDataFormatter from "@/features/shared/components/PriceDataFormatter";
+import { PriceDto } from "@/api/generated";
 
 // Transaction function constants
 const TX_FUNCTIONS = {
@@ -108,26 +110,6 @@ export default function TokenTrades({
     }
   };
 
-  // Helper function to format amount (handle both strings, numbers, and price objects)
-  const formatAmount = (
-    amount: string | number | { [key: string]: number } | undefined
-  ): string => {
-    if (!amount) return "";
-
-    if (typeof amount === "string") return amount;
-    if (typeof amount === "number") return amount.toString();
-
-    // If it's a price object with multiple currencies, use 'ae' if available
-    if (typeof amount === "object" && amount !== null) {
-      if (amount.ae !== undefined) return amount.ae.toString();
-      if (amount.AE !== undefined) return amount.AE.toString();
-      // Fallback to first available value
-      const values = Object.values(amount);
-      if (values.length > 0) return values[0].toString();
-    }
-
-    return "";
-  };
 
   // Helper function to format token amount
   const formatTokenAmount = (
@@ -169,7 +151,7 @@ export default function TokenTrades({
           return (
             <div
               key={tx.tx_hash || tx.id || idx}
-              className={`flex justify-between items-center text-sm py-3 px-4 ${txStyling.bgColor} border ${txStyling.borderColor} rounded-xl transition-all duration-300 ${txStyling.hoverBg} hover:border-opacity-50`}
+              className={`flex flex-col sm:flex-row justify-between gap-2 items-start sm:items-center text-sm py-3 px-4 ${txStyling.bgColor} border ${txStyling.borderColor} rounded-xl transition-all duration-300 ${txStyling.hoverBg} hover:border-opacity-50`}
             >
               <div className="flex items-center gap-3">
                 <AddressChip
@@ -178,10 +160,10 @@ export default function TokenTrades({
                 />
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center w-full sm:w-auto justify-between sm:gap-4">
                 <div className="text-center">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm">{txStyling.icon}</span>
+                    <span className="hidden sm:block text-sm">{txStyling.icon}</span>
                     <span
                       className={`font-medium text-xs uppercase tracking-wide ${txStyling.textColor}`}
                     >
@@ -196,12 +178,10 @@ export default function TokenTrades({
                 </div>
 
                 <div className="text-right">
-                  {tx.amount && formatAmount(tx.amount) && (
-                    <div className={`font-semibold ${txStyling.textColor}`}>
-                      {formatAmount(tx.amount)} AE
-                    </div>
+                  {tx.amount && (
+                    <PriceDataFormatter watchPrice={true} priceData={tx.amount as PriceDto} />
                   )}
-                  <div className="text-white/60 text-xs mt-1">
+                  <div className="hidden lg:block text-white/60 text-xs mt-1">
                     {new Date(tx.created_at || Date.now()).toLocaleString()}
                   </div>
                 </div>
@@ -213,7 +193,7 @@ export default function TokenTrades({
 
       {!transactions.length && !loading && (
         <div className="text-center py-12">
-          <div className="text-white/40 text-lg mb-2">📈</div>
+          <div className="hidden md:block text-white/40 text-lg mb-2">📈</div>
           <div className="text-white/60 text-sm">No transactions yet</div>
           <div className="text-white/40 text-xs mt-1">
             Trades will appear here once the token starts trading

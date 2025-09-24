@@ -29,23 +29,41 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
   return (
     <div className="glass-card cursor-pointer w-full" onClick={handleItemClick}>
       <div className="flex gap-3">
-        <div className="flex-1 min-w-0 space-y-0 md:space-y-2">
-          <div className="flex flex-col gap-0 md:flex-row md:items-start md:justify-between md:gap-2">
+        <div className="flex-1 min-w-0 space-y-2 md:space-y-1">
+            <div className="flex flex-col gap-0 md:flex-row md:items-start md:justify-between md:gap-2">
             <div className="flex-1 min-w-0">
               <AddressAvatarWithChainName
                 address={authorAddress}
                 size={40}
                 overlaySize={20}
+                contentClassName="translate-y-[2px]"
+                secondary={(
+                  item.tx_hash && CONFIG.EXPLORER_URL ? (
+                    <a
+                      href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${item.tx_hash}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="md:hidden inline-flex items-center gap-0.5 text-[11px] leading-none text-light-font-color no-gradient-text group min-h-0 min-w-0 p-0 h-auto mt-1"
+                      title={item.tx_hash}
+                    >
+                      <span className="underline-offset-2 group-hover:underline">
+                        {`Posted on-chain${item.created_at ? ` ${relativeTime(new Date(item.created_at))}` : ''}`}
+                      </span>
+                      <IconLink className="w-2 h-2" />
+                    </a>
+                  ) : null
+                )}
               />
             </div>
             {item.tx_hash && CONFIG.EXPLORER_URL && (
-              <div className="mt-0 md:mt-0 md:flex md:items-center md:gap-2 md:flex-shrink-0">
+              <div className="hidden md:flex md:items-center md:gap-2 md:flex-shrink-0">
                 <a
                   href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${item.tx_hash}`}
                   target="_blank"
                   rel="noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-0.5 md:gap-1 text-[11px] md:text-xs leading-none md:leading-normal text-light-font-color hover:text-light-font-color no-gradient-text md:self-start group"
+                  className="inline-flex items-center gap-0.5 md:gap-1 text-[11px] md:text-xs leading-none md:leading-normal text-light-font-color hover:text-light-font-color no-gradient-text md:self-start group min-h-0 min-w-0 p-0 h-auto"
                   title={item.tx_hash}
                 >
                   <span className="underline-offset-2 group-hover:underline">

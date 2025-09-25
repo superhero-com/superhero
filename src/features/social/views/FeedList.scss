@@ -515,8 +515,8 @@
 @include mobile {
   .feed-item {
     grid-template-columns: 40px 1fr;
-    gap: 10px;
-    padding: 16px;
+    gap: 8px;
+    padding: 12px;
     border-radius: 14px;
     
     .avatar-container {
@@ -579,8 +579,8 @@
 @include mobile-small {
   .feed-item {
     grid-template-columns: 40px 1fr;
-    gap: 8px;
-    padding: 14px;
+    gap: 6px;
+    padding: 10px;
     border-radius: 12px;
     
     .avatar-container {

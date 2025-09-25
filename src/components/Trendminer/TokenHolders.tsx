@@ -41,7 +41,10 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
     ],
     queryFn: async (): Promise<PaginatedHoldersResponse> => {
       if (!token?.sale_address) {
-        return { items: [], meta: { totalItems: 0, totalPages: 0, currentPage: 1 } };
+        return {
+          items: [],
+          meta: { totalItems: 0, totalPages: 0, currentPage: 1 },
+        };
       }
 
       try {
@@ -52,7 +55,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
         });
 
         // Handle the response - it should be Pagination type but we need to cast it
-        if (response && typeof response === 'object' && 'items' in response) {
+        if (response && typeof response === "object" && "items" in response) {
           return response as PaginatedHoldersResponse;
         }
 
@@ -60,13 +63,20 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
         if (Array.isArray(response)) {
           return {
             items: response,
-            meta: { totalItems: response.length, totalPages: 1, currentPage: 1 }
+            meta: {
+              totalItems: response.length,
+              totalPages: 1,
+              currentPage: 1,
+            },
           };
         }
 
-        return { items: [], meta: { totalItems: 0, totalPages: 0, currentPage: 1 } };
+        return {
+          items: [],
+          meta: { totalItems: 0, totalPages: 0, currentPage: 1 },
+        };
       } catch (error) {
-        console.error('Failed to fetch token holders:', error);
+        console.error("Failed to fetch token holders:", error);
         throw error;
       }
     },
@@ -76,11 +86,14 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
   });
 
   // Table headers configuration
-  const headers = useMemo(() => [
-    { title: "Account", key: "address", sortable: false },
-    { title: token.name || "Balance", key: "balance", sortable: false },
-    { title: "%", key: "percentage", sortable: false },
-  ], [token.name]);
+  const headers = useMemo(
+    () => [
+      { title: "Account", key: "address", sortable: false },
+      { title: token.name || "Balance", key: "balance", sortable: false },
+      { title: "%", key: "percentage", sortable: false },
+    ],
+    [token.name]
+  );
 
   // Helper function to calculate percentage
   const getPercentage = (balance: string): Decimal => {
@@ -89,31 +102,6 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
     }
     try {
       return Decimal.from(balance).div(token.total_supply).mul(100);
-    } catch {
-      return Decimal.ZERO;
-    }
-  };
-
-  // Helper function to format percentage display
-  const formatPercentageDisplay = (balance: string): string => {
-    const percentage = getPercentage(balance);
-    
-    if (percentage.gt("0.01")) {
-      return percentage.prettify();
-    } else if (percentage.isZero) {
-      return "0";
-    } else {
-      return ">0.01";
-    }
-  };
-
-  // Helper function to convert balance to AE units for display
-  const getBalanceInAe = (balance: string): Decimal => {
-    if (!balance || balance === 'NaN') {
-      return Decimal.ZERO;
-    }
-    try {
-      return Decimal.from(toAe(balance));
     } catch {
       return Decimal.ZERO;
     }
@@ -135,7 +123,12 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
         {/* Table Header */}
         <div className="hidden md:grid grid-cols-3 gap-4 px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide">
           {headers.map((header) => (
-            <div key={header.key} className={`truncate ${header.key === 'percentage' ? 'text-right' : ''}`}>
+            <div
+              key={header.key}
+              className={`truncate ${
+                header.key === "percentage" ? "text-right" : ""
+              }`}
+            >
               {header.title}
             </div>
           ))}
@@ -145,9 +138,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
         <div className="divide-y divide-white/5">
           {holders.map((holder, idx) => {
             const percentage = getPercentage(holder.balance);
-            const balanceInAe = getBalanceInAe(holder.balance);
-            const rank = idx + 1;
-            
+
             return (
               <div
                 key={holder.id}
@@ -155,37 +146,60 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
               >
                 {/* Account */}
                 <div className="flex items-center gap-3">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">Account:</div>
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                    Account:
+                  </div>
                   <div className="min-w-0 flex-1">
-                    <AddressChip address={holder.address} linkToProfile={true} />
+                    <AddressChip
+                      address={holder.address}
+                      linkToProfile={true}
+                    />
                   </div>
                 </div>
 
                 {/* Balance */}
                 <div className="flex items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">Balance:</div>
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                    Balance:
+                  </div>
                   <div className="text-white">
                     <TokenPriceFormatter
                       hideSymbol={true}
                       token={token}
-                      price={balanceInAe}
-                      className="text-white font-medium"
+                      price={
+                        holder.balance !== "NaN"
+                          ? Decimal.from(toAe(holder.balance))
+                          : Decimal.ZERO
+                      }
+                      className="text-white text-xs sm:text-base font-medium"
                     />
                   </div>
                 </div>
 
                 {/* Percentage */}
+
                 <div className="flex items-center md:justify-end">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">%:</div>
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                    %:
+                  </div>
                   <div className="min-w-[80px] text-right">
-                    <div className="font-semibold text-white">
-                      {formatPercentageDisplay(holder.balance)}%
-                    </div>
+                    {percentage.gt("0.01") ? (
+                      <div className="font-semibold text-white">
+                        {percentage.prettify()}%
+                      </div>
+                    ) : percentage.isZero ? (
+                      <div>0%</div>
+                    ) : (
+                      <div>0.01%</div>
+                    )}
                     <div className="w-full bg-white/10 rounded-full h-1 mt-1">
-                      <div 
+                      <div
                         className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] h-1 rounded-full transition-all duration-500"
-                        style={{ 
-                          width: `${Math.min(Number(percentage.toString()), 100)}%` 
+                        style={{
+                          width: `${Math.min(
+                            Number(percentage.toString()),
+                            100
+                          )}%`,
                         }}
                       />
                     </div>
@@ -245,7 +259,11 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
                 className="px-2 py-1 rounded-lg bg-white/[0.05] border border-white/10 text-white text-sm focus:outline-none focus:border-[#4ecdc4] transition-colors"
               >
                 {[10, 20, 50, 100].map((option) => (
-                  <option key={option} value={option} className="bg-gray-800 text-white">
+                  <option
+                    key={option}
+                    value={option}
+                    className="bg-gray-800 text-white"
+                  >
                     {option}
                   </option>
                 ))}
@@ -253,8 +271,10 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
               <span>items per page</span>
             </div>
             <div>
-              Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} to{' '}
-              {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} holders
+              Showing{" "}
+              {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} to{" "}
+              {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}{" "}
+              holders
             </div>
           </div>
 

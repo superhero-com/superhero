@@ -4,7 +4,6 @@ import SocialLayout from "./components/layout/SocialLayout";
 
 const FeedList = lazy(() => import("./features/social/views/FeedList"));
 const Trending = lazy(() => import("./views/Trending"));
-const TrendTokens = lazy(() => import("./views/Trendminer/TokenList"));
 const TrendCloud = lazy(() => import("./views/Trendminer/TrendCloud"));
 const TrendCloudVisx = lazy(() => import("./views/Trendminer/TrendCloudVisx"));
 const TrendTokenDetails = lazy(() => import("./views/Trendminer/TokenDetails"));
@@ -66,7 +65,6 @@ export const routes: RouteObject[] = [
   { path: "/trending", element: <Trending /> },
   { path: "/trendminer", element: <TrendCloud /> },
   { path: "/trendminer/visx", element: <TrendCloudVisx /> },
-  { path: "/trendminer/tokens", element: <TrendTokens /> },
   { path: "/trendminer/tokens/:tokenName", element: <TrendTokenDetails /> },
   { path: "/tx-queue/:id", element: <TxQueue /> },
   { path: "/trendminer/invite", element: <TrendInvite /> },

@@ -73,7 +73,7 @@ export default function ConnectWalletModal({ onClose }: Props) {
         </div>
         <AeButton
           variant="default"
-          className="uppercase tracking-wide !bg-[#1161FE] text-white hover:!bg-[#0f53df] w-full sm:w-auto rounded-full"
+          className="uppercase tracking-wide !bg-[#1161FE] text-white hover:!bg-[#0f53df] w-full sm:w-auto rounded-xl sm:rounded-full"
           onClick={handleConnect}
           loading={connectingWallet}
           disabled={connectingWallet}

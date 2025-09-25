@@ -195,36 +195,51 @@ export default function MobileAppHeader() {
                   </div>
                 </div>
               ) : (
-                <AeButton onClick={handleConnect} className="w-full justify-center gap-2 bg-[#1161FE] hover:bg-[#1161FE] text-white border-none rounded-full">
+                <AeButton onClick={handleConnect} className="w-full justify-center gap-2 bg-[#1161FE] hover:bg-[#1161FE] text-white border-none rounded-xl sm:rounded-full">
                   Connect Wallet
                 </AeButton>
               )}
             </div>
 
             <nav className="flex flex-col py-5 px-6 gap-3 flex-1 sm:py-4 sm:px-6 sm:gap-2">
-              {navigationItems.map(item => (
-                item.isExternal ? (
-                  <a
-                    key={item.id}
-                    href={item.path}
-                    target="_blank"
-                    rel="noreferrer"
-                  className="flex items-center justify-center py-5 px-6 bg-white/5 rounded-2xl text-[var(--standard-font-color)] no-underline font-semibold transition-all duration-200 min-h-[60px] relative hover:bg-white/10 focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--custom-links-color)] focus-visible:outline-offset-2 sm:py-4 sm:px-5 sm:min-h-[56px]"
-                    onClick={handleNavigationClick}
-                  >
-                    <span className="text-lg sm:text-base">{item.label}</span>
-                  </a>
-                ) : (
-                  <Link
-                    key={item.id}
-                    to={item.path}
-                    onClick={handleNavigationClick}
-                    className="flex items-center justify-center py-5 px-6 bg-white/5 rounded-2xl text-[var(--standard-font-color)] no-underline font-semibold transition-all duration-200 min-h-[60px] relative hover:bg-white/10 focus:outline-none focus-visible:outline-2 focus-visible:outline-[var(--custom-links-color)] focus-visible:outline-offset-2 sm:py-4 sm:px-5 sm:min-h-[56px]"
-                  >
-                    <span className="text-lg sm:text-base">{item.label}</span>
-                  </Link>
-                )
-              ))}
+              {navigationItems.map(item => {
+                const commonClasses = "w-full no-underline font-semibold transition-all duration-200 h-[56px] sm:h-[52px] rounded-xl text-white text-base flex items-center justify-center px-5";
+                // Backgrounds inspired by desktop quick links (swapped as requested)
+                const bgFeed = "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-500/90 hover:to-blue-600/90";
+                const bgDex = "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-500/90 hover:to-teal-600/90";
+                const bgDefault = "bg-white/5 hover:bg-white/10";
+                const bgClass = item.id === 'home' ? bgFeed : item.id === 'dex' ? bgDex : bgDefault;
+
+                if (item.isExternal) {
+                  return (
+                    <div key={item.id} className={`${bgClass} rounded-xl`}>
+                      <a
+                        href={item.path}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`${commonClasses} bg-transparent`}
+                        style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}
+                        onClick={handleNavigationClick}
+                      >
+                        <span className="text-lg sm:text-base">{item.label}</span>
+                      </a>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={item.id} className={`${bgClass} rounded-xl`}>
+                    <Link
+                      to={item.path}
+                      onClick={handleNavigationClick}
+                      className={`${commonClasses} bg-transparent`}
+                      style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}
+                    >
+                      <span className="text-lg sm:text-base">{item.label}</span>
+                    </Link>
+                  </div>
+                );
+              })}
             </nav>
 
             {/* Footer from right rail inside mobile menu (compact) */}

@@ -503,7 +503,7 @@ export default function PostForm({
                     : "Post Comment"}
                 </AeButton>
               ) : (
-                <ConnectWalletButton block className="w-full md:w-auto" />
+                <ConnectWalletButton block className="w-full rounded-xl md:rounded-full" />
               )}
             </div>
           </div>

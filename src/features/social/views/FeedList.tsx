@@ -187,7 +187,7 @@ export default function FeedList({
         <SortControls
           sortBy={sortBy}
           onSortChange={handleSortChange}
-          className="sticky top-0 z-10 bg-black/20 backdrop-blur-md w-full"
+          className="sticky top-0 z-10 w-full"
         />
       </div>
 
@@ -197,7 +197,7 @@ export default function FeedList({
         <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
       </div>
 
-      <div className="w-full flex flex-col gap-2 md:gap-4">
+      <div className="w-full flex flex-col gap-4 md:gap-4">
         {renderEmptyState()}
         {renderFeedItems}
       </div>

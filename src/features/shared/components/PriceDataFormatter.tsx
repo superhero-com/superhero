@@ -1,16 +1,15 @@
-import React, { useMemo } from "react";
-import { PriceDto } from "../../../api/generated";
-import { Decimal } from "../../../libs/decimal";
-import { useWallet } from "../../../hooks/useWallet";
-import { useBackend } from "../../../hooks/useBackend";
-import PriceFormatter from "./PriceFormatter";
-import { toAe } from "@aeternity/aepp-sdk";
 import { useCurrencies } from "@/hooks/useCurrencies";
+import { toAe } from "@aeternity/aepp-sdk";
+import { useMemo } from "react";
+import { PriceDto } from "../../../api/generated";
+import { useBackend } from "../../../hooks/useBackend";
+import { Decimal } from "../../../libs/decimal";
+import PriceFormatter from "./PriceFormatter";
 
 interface PriceDataFormatterProps {
   priceData: PriceDto;
   bignumber?: boolean;
-  row?: boolean;
+  rowOnSm?: boolean;
   watchKey?: string;
   symbol?: string;
   watchPrice?: boolean;
@@ -30,7 +29,7 @@ interface PriceDataFormatterProps {
 export default function PriceDataFormatter({
   priceData,
   bignumber = false,
-  row = false,
+  rowOnSm = false,
   watchKey,
   ...props
 }: PriceDataFormatterProps) {
@@ -75,7 +74,7 @@ export default function PriceDataFormatter({
       aePrice={aePrice}
       fiatPrice={fiatPrice}
       watchKey={watchKey}
-      row={row}
+      rowOnSm={rowOnSm}
       {...props}
     />
   );

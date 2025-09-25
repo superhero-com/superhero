@@ -22,7 +22,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn }:
   );
 
   return (
-    <div className="bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl overflow-hidden">
+    <div className="md:bg-white/5 md:rounded-2xl md:border md:border-white/10 md:backdrop-blur-xl overflow-hidden">
       <table className="w-full bctsl-token-list-table">
         <thead>
           <tr>

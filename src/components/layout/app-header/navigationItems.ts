@@ -52,7 +52,7 @@ export const navigationItems: NavigationItem[] = [
   {
       id: 'trending',
       label: 'Trends',
-      path: '/trending',
+      path: '/trendminer/tokens',
       icon: '📈',
   },
   // {

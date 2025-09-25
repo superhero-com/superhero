@@ -68,15 +68,15 @@ export default function TokenSummary({
 
       {/* Price and Market Cap */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
+        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
           <div className="text-xs text-white/60 font-medium mb-2">Price</div>
           <PriceDataFormatter
-            className="justify-center item-value"
+            className="text-xs sm:text-base"
             watchPrice={token.sale_address ? true : false}
             priceData={token.price_data as PriceDto}
           />
         </div>
-        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
+        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
           <div className="text-xs text-white/60 font-medium mb-2">
             Market Cap
           </div>
@@ -84,6 +84,7 @@ export default function TokenSummary({
             watchKey={token.sale_address}
             bignumber
             priceData={token.market_cap_data}
+            className="text-xs sm:text-base"
           />
         </div>
       </div>
@@ -91,19 +92,19 @@ export default function TokenSummary({
       {/* DAO Balance and Total Supply */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         {token.dao_balance && (
-          <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
+          <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
             <div className="text-xs text-white/60 font-medium mb-2">
               DAO Balance
             </div>
             <LivePriceFormatter
               aePrice={Decimal.from(toAe(token.dao_balance))}
               watchKey={token.sale_address}
-              className="justify-center"
+              className="text-xs sm:text-base"
             />
           </div>
         )}
         {token.total_supply && (
-          <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
+          <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
             <div className="text-xs text-white/60 font-medium mb-2">
               Total Supply
             </div>

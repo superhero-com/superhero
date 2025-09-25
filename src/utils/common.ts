@@ -1,5 +1,7 @@
 import { Decimal } from "@/libs/decimal";
 import { FormattedFractionalPrice } from "./types";
+import moment, { Moment } from "moment";
+import { DATE_LONG } from "./constants";
 
 export async function fetchJson<T = any>(
   url: string,
@@ -55,4 +57,11 @@ export function formatFractionalPrice(input: Decimal): FormattedFractionalPrice 
     significantDigits: fractionalPart.substr(nonZeroIndex, 4),
     value,
   };
+}
+
+export function formatLongDate(value: string | Moment) {
+  const date = moment(value);
+  return date.isBefore(moment().subtract(1, "days"))
+    ? date.format(DATE_LONG)
+    : date.fromNow();
 }

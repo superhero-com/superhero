@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { TransactionsService } from "@/api/generated/services/TransactionsService";
-import { TransactionDto } from "@/api/generated/models/TransactionDto";
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import AddressChip from "../AddressChip";
 import PriceDataFormatter from "@/features/shared/components/PriceDataFormatter";
+import { formatLongDate } from "@/utils/common";
 
 // Transaction function constants
 const TX_FUNCTIONS = {
@@ -20,7 +20,7 @@ type TxFunction = (typeof TX_FUNCTIONS)[keyof typeof TX_FUNCTIONS];
 
 // Pagination response interface
 interface PaginatedTransactionsResponse {
-  items: TransactionDto[];
+  items: TokenDto[];
   meta: {
     totalItems: number;
     totalPages: number;
@@ -51,7 +51,10 @@ export default function TokenTrades({ token }: TokenTradesProps) {
     ],
     queryFn: async (): Promise<PaginatedTransactionsResponse> => {
       if (!token?.sale_address) {
-        return { items: [], meta: { totalItems: 0, totalPages: 0, currentPage: 1 } };
+        return {
+          items: [],
+          meta: { totalItems: 0, totalPages: 0, currentPage: 1 },
+        };
       }
 
       try {
@@ -62,7 +65,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
         });
 
         // Handle the response - it should be Pagination type but we need to cast it
-        if (response && typeof response === 'object' && 'items' in response) {
+        if (response && typeof response === "object" && "items" in response) {
           return response as PaginatedTransactionsResponse;
         }
 
@@ -70,13 +73,20 @@ export default function TokenTrades({ token }: TokenTradesProps) {
         if (Array.isArray(response)) {
           return {
             items: response,
-            meta: { totalItems: response.length, totalPages: 1, currentPage: 1 }
+            meta: {
+              totalItems: response.length,
+              totalPages: 1,
+              currentPage: 1,
+            },
           };
         }
 
-        return { items: [], meta: { totalItems: 0, totalPages: 0, currentPage: 1 } };
+        return {
+          items: [],
+          meta: { totalItems: 0, totalPages: 0, currentPage: 1 },
+        };
       } catch (error) {
-        console.error('Failed to fetch transactions:', error);
+        console.error("Failed to fetch transactions:", error);
         throw error;
       }
     },
@@ -86,15 +96,18 @@ export default function TokenTrades({ token }: TokenTradesProps) {
   });
 
   // Table headers configuration
-  const headers = useMemo(() => [
-    { title: "Account", key: "account", sortable: false },
-    { title: "Type", key: "tx_type", sortable: false },
-    { title: token.symbol || "Volume", key: "volume", sortable: false },
-    { title: "Unit Price", key: "price_data", sortable: false },
-    { title: "Total Price", key: "spent_amount_data", sortable: false },
-    { title: "Date", key: "created_at", sortable: false },
-    { title: "Transaction", key: "tx_hash", sortable: false },
-  ], [token.symbol]);
+  const headers = useMemo(
+    () => [
+      { title: "Account", key: "account", sortable: false },
+      { title: "Type", key: "tx_type", sortable: false },
+      { title: token.symbol || "Volume", key: "volume", sortable: false },
+      { title: "Unit Price", key: "price_data", sortable: false },
+      { title: "Total Price", key: "spent_amount_data", sortable: false },
+      { title: "Date", key: "created_at", sortable: false },
+      { title: "Transaction", key: "tx_hash", sortable: false },
+    ],
+    [token.symbol]
+  );
 
   // Function to get transaction type color
   function getTxFunctionCallColor(type: TxFunction) {
@@ -171,9 +184,9 @@ export default function TokenTrades({ token }: TokenTradesProps) {
   // Helper function to format volume
   const formatVolume = (volume: string | number): string => {
     if (!volume) return "0";
-    const num = typeof volume === 'string' ? parseFloat(volume) : volume;
+    const num = typeof volume === "string" ? parseFloat(volume) : volume;
     if (!isFinite(num)) return "0";
-    
+
     // Use a simple formatting approach similar to Decimal.prettify()
     if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";
     if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
@@ -181,14 +194,6 @@ export default function TokenTrades({ token }: TokenTradesProps) {
     return num.toFixed(2);
   };
 
-  // Helper function to format date
-  const formatLongDate = (dateString: string): string => {
-    try {
-      return new Date(dateString).toLocaleString();
-    } catch {
-      return dateString;
-    }
-  };
 
   // Handle page updates
   const updatePage = (page: number) => {
@@ -225,32 +230,45 @@ export default function TokenTrades({ token }: TokenTradesProps) {
         {/* Table Body */}
         <div className="divide-y divide-white/5">
           {transactions.map((transaction) => {
-            const txStyling = getTxStyling(transaction.tx_type);
-            
+            const txStyling = getTxStyling(transaction.tx_type || "");
+
             return (
               <div
                 key={transaction.id}
                 className="grid grid-cols-1 md:grid-cols-7 gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors"
               >
                 {/* Account */}
-                <div className="flex items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">Account:</div>
-                  <AddressChip address={transaction.account} linkToProfile={true} />
-                </div>
+                {transaction.address ? (
+                  <div className="flex items-center">
+                    <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                      Account:
+                    </div>
+                    <AddressChip
+                      address={transaction.address}
+                      linkToProfile={true}
+                    />
+                  </div>
+                ) : (
+                  <div></div>
+                )}
 
                 {/* Type */}
-                <div className="flex items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">Type:</div>
+                {transaction.tx_type ? <div className="flex items-center">
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                    Type:
+                  </div>
                   <div
                     className={`px-2 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${txStyling.textColor} ${txStyling.chipBg} border ${txStyling.borderColor}`}
                   >
                     {getDisplayName(transaction.tx_type)}
                   </div>
-                </div>
+                </div> : <div></div>}
 
                 {/* Volume */}
                 <div className="flex items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">Volume:</div>
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                    Volume:
+                  </div>
                   <div className="text-white font-medium">
                     {formatVolume(transaction.volume)}
                   </div>
@@ -258,19 +276,31 @@ export default function TokenTrades({ token }: TokenTradesProps) {
 
                 {/* Unit Price */}
                 <div className="flex items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">Unit Price:</div>
-                  <PriceDataFormatter watchPrice={false} priceData={transaction.price_data} />
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                    Unit Price:
+                  </div>
+                  <PriceDataFormatter
+                    watchPrice={false}
+                    priceData={transaction.unit_price}
+                  />
                 </div>
 
                 {/* Total Price */}
                 <div className="flex items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">Total:</div>
-                  <PriceDataFormatter watchPrice={false} priceData={transaction.spent_amount_data} />
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                    Total:
+                  </div>
+                  <PriceDataFormatter
+                    watchPrice={false}
+                    priceData={transaction.amount}
+                  />
                 </div>
 
                 {/* Date */}
                 <div className="flex items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">Date:</div>
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                    Date:
+                  </div>
                   <div className="text-white/70 text-sm">
                     {formatLongDate(transaction.created_at)}
                   </div>
@@ -278,8 +308,13 @@ export default function TokenTrades({ token }: TokenTradesProps) {
 
                 {/* Transaction Hash */}
                 <div className="flex items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">Tx:</div>
-                  <AddressChip address={transaction.tx_hash} linkToProfile={false} />
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                    Tx:
+                  </div>
+                  <AddressChip
+                    address={transaction.tx_hash}
+                    linkToProfile={false}
+                  />
                 </div>
               </div>
             );
@@ -308,7 +343,9 @@ export default function TokenTrades({ token }: TokenTradesProps) {
         {error && !isFetching && (
           <div className="text-center py-12">
             <div className="text-red-400 text-lg mb-2">⚠️</div>
-            <div className="text-red-400 text-sm">Failed to load transactions</div>
+            <div className="text-red-400 text-sm">
+              Failed to load transactions
+            </div>
             <button
               onClick={() => refetch()}
               className="mt-2 px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-xs hover:bg-red-500/30 transition-colors"
@@ -335,7 +372,11 @@ export default function TokenTrades({ token }: TokenTradesProps) {
                 className="px-2 py-1 rounded-lg bg-white/[0.05] border border-white/10 text-white text-sm focus:outline-none focus:border-[#4ecdc4] transition-colors"
               >
                 {[10, 20, 50, 100].map((option) => (
-                  <option key={option} value={option} className="bg-gray-800 text-white">
+                  <option
+                    key={option}
+                    value={option}
+                    className="bg-gray-800 text-white"
+                  >
                     {option}
                   </option>
                 ))}
@@ -343,8 +384,10 @@ export default function TokenTrades({ token }: TokenTradesProps) {
               <span>items per page</span>
             </div>
             <div>
-              Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} to{' '}
-              {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} transactions
+              Showing{" "}
+              {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} to{" "}
+              {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}{" "}
+              transactions
             </div>
           </div>
 

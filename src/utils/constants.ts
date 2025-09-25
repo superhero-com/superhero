@@ -11,6 +11,10 @@ export const NETWORK_ID_TESTNET = "ae_uat";
 export const NETWORK_TESTNET: INetwork = configs.networks[NETWORK_ID_TESTNET];
 export const NETWORK_MAINNET: INetwork = configs.networks[NETWORK_ID_MAINNET];
 
+export const DATE_LONG = "YYYY-MM-DD HH:mm";
+export const DATE_FULL = "YYYY-MM-DD HH:mm:ss";
+export const TIME_FULL = "HH:mm:ss";
+
 
 
 export const IS_FRAMED_AEPP = window.parent !== window;

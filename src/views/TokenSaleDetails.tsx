@@ -377,7 +377,7 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
         {/* Main Content (Right Column on Desktop, Full Width on Mobile) */}
         <div
           className={`${
-            isMobile ? "col-span-1" : "lg:col-span-2"
+            isMobile ? "col-span-1 mb-8" : "lg:col-span-2"
           } flex flex-col gap-6`}
         >
           {/* Token Header */}
@@ -496,14 +496,14 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
           </Card>
 
           {/* Tabs Section */}
-          <Card className="bg-white/[0.02] border-white/10">
+          <Card className="bg-white/[0.02] border-white/10 mb-6">
             <CardContent className="p-0">
               {/* Tab Headers */}
               <div className="flex border-b border-white/10">
                 {isMobile && (
                   <button
                     onClick={() => setActiveTab(TAB_DETAILS)}
-                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                    className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${
                       activeTab === TAB_DETAILS
                         ? "text-white border-b-2 border-[#4ecdc4]"
                         : "text-white/60 hover:text-white"
@@ -514,7 +514,7 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
                 )}
                 <button
                   onClick={() => setActiveTab(TAB_CHAT)}
-                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${
                     activeTab === TAB_CHAT
                       ? "text-white border-b-2 border-[#4ecdc4]"
                       : "text-white/60 hover:text-white"
@@ -524,7 +524,7 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
                 </button>
                 <button
                   onClick={() => setActiveTab(TAB_TRANSACTIONS)}
-                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${
                     activeTab === TAB_TRANSACTIONS
                       ? "text-white border-b-2 border-[#4ecdc4]"
                       : "text-white/60 hover:text-white"
@@ -534,7 +534,7 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
                 </button>
                 <button
                   onClick={() => setActiveTab(TAB_HOLDERS)}
-                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${
                     activeTab === TAB_HOLDERS
                       ? "text-white border-b-2 border-[#4ecdc4]"
                       : "text-white/60 hover:text-white"

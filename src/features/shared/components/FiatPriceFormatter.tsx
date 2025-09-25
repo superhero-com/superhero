@@ -1,7 +1,6 @@
-import React from 'react';
+import FractionFormatter from "@/features/shared/components/FractionFormatter";
+import { formatFractionalPrice } from '@/utils/common';
 import { Decimal } from '../../../libs/decimal';
-import FractionFormatter, { FormattedFractionalPrice } from "@/features/shared/components/FractionFormatter";
-
 interface FiatPriceFormatterProps {
   fiatPrice: Decimal;
   currencySymbol?: string;
@@ -15,24 +14,6 @@ export default function FiatPriceFormatter({
   currencySymbol = DEFAULT_CURRENCY_SYMBOL,
   className = '',
 }: FiatPriceFormatterProps) {
-  const formatFractionalPrice = (price: Decimal): FormattedFractionalPrice => {
-    const priceStr = price.toString();
-    const [integer, decimal] = priceStr.split('.');
-    
-    if (!decimal) {
-      return { number: integer };
-    }
-    
-    // Find significant digits (non-zero decimals)
-    const significantDigits = decimal.replace(/0+$/, '');
-    const zerosCount = decimal.length - significantDigits.length;
-    
-    return {
-      number: integer,
-      significantDigits: significantDigits || undefined,
-      zerosCount: zerosCount > 0 ? '0'.repeat(zerosCount) : undefined,
-    };
-  };
 
   return (
     <div className={`inline-flex items-center ${className}`}>

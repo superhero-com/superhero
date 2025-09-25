@@ -72,10 +72,10 @@ export default function TokenListTableRow({
       {/* Price */}
       <td className="cell cell-price px-1 px-lg-3 text-md-right">
         <div className="flex align-center md:block">
-          <div className="mobile-label block md:hidden text-white/60 w-12">Price:</div>
+          <div className="mobile-label block md:hidden text-white/60 w-16">Price:</div>
           <PriceDataFormatter
             priceData={token.price_data}
-            row={false}
+            rowOnSm
           />
 
         </div>
@@ -88,7 +88,7 @@ export default function TokenListTableRow({
           <PriceDataFormatter
             bignumber
             priceData={token.market_cap_data}
-            row={false}
+            rowOnSm
           />
         </div>
       </td>
@@ -202,7 +202,7 @@ export default function TokenListTableRow({
           .bctsl-token-list-table-row {
             display: grid;
             grid-template-columns: 42px 5fr 2fr;
-            grid-template-rows: 1fr 20px 20px;
+            grid-template-rows: 1fr 10px 10px;
             grid-template-areas:
               'rank name       chart'
               'rank price      chart'
@@ -211,7 +211,7 @@ export default function TokenListTableRow({
             padding-block: 8px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 1rem;
-            margin: 0.5rem;
+            margin: 0.5rem 0;
           }
 
           .cell-rank {

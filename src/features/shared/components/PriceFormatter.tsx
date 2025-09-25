@@ -12,7 +12,7 @@ interface PriceFormatterProps {
   priceLoading?: boolean;
   hideFiatPrice?: boolean;
   hideSymbol?: boolean;
-  row?: boolean;
+  rowOnSm?: boolean;
   className?: string;
 }
 
@@ -27,7 +27,7 @@ export default function PriceFormatter({
   priceLoading = false,
   hideFiatPrice = false,
   hideSymbol = false,
-  row = false,
+  rowOnSm = false,
   className = '',
 }: PriceFormatterProps) {
   const [priceJustIncreased, setPriceJustIncreased] = useState(false);
@@ -68,7 +68,7 @@ export default function PriceFormatter({
         priceJustDecreased ? 'text-red-400' : 
         priceJustIncreased ? 'text-green-400' : 
         'text-white'
-      } ${row ? 'items-center gap-1' : 'flex-col'} ${className}`}
+      } ${rowOnSm ? 'flex-row sm:flex-col items-center gap-1' : 'flex-col'} ${className}`}
     >
       <SymbolPriceFormatter
         aePrice={aePrice}
@@ -83,7 +83,7 @@ export default function PriceFormatter({
         <FiatPriceFormatter
           fiatPrice={fiatPrice}
           className={`fiat flex items-center gap-1 opacity-80 font-normal ${
-            row ? 'justify-end' : ''
+            rowOnSm ? 'justify-end' : ''
           }`}
         />
       )}

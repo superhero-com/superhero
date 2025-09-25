@@ -313,7 +313,7 @@ export default function TokenList() {
                 <br />
                 Build Communities.
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
+              {/* <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
                 <AeButton
                   variant="primary"
                   size="md"
@@ -356,7 +356,7 @@ export default function TokenList() {
                 <div className="w-full sm:w-auto">
                   <WalletConnectBtn />
                 </div>
-              </div>
+              </div> */}
               <div className="text-sm text-white/75 mt-2.5 max-w-[720px] overflow-hidden text-ellipsis leading-relaxed">
                 Tokenized trends are community tokens launched on a bonding
                 curve. Price moves with buys/sells, no order books. Each token

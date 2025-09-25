@@ -267,7 +267,7 @@ export default function PostForm({
       <div
         className={`max-w-[680px] mx-auto mb-5 md:mx-3 md:mb-4 ${className}`}
       >
-        <div className="bg-gradient-to-br from-white/8 to-white/3 border border-[var(--glass-border)] rounded-2xl p-5 transition-all duration-300 backdrop-blur-xl relative shadow-none md:rounded-2xl md:p-4">
+        <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl">
           <div className="text-center text-white/70">
             <p className="text-sm">Please connect your wallet to comment</p>
           </div>
@@ -285,7 +285,7 @@ export default function PostForm({
         isPost ? "w-full max-w-none" : "max-w-[680px] mx-auto md:mx-3"
       } mb-5 md:mb-4 ${className}`}
     >
-      <div className="bg-gradient-to-br from-white/8 to-white/3 border border-[var(--glass-border)] rounded-2xl p-5 transition-all duration-300 backdrop-blur-xl relative shadow-none md:rounded-2xl md:p-4">
+      <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="relative">
           <div className="flex flex-col gap-3">
             <div className="relative flex items-start gap-2 md:gap-2">
@@ -306,14 +306,59 @@ export default function PostForm({
                 placeholder={currentPlaceholder}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                className="bg-white/7 border border-white/14 rounded-2xl p-4 pb-10 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pb-10 md:text-base md:rounded-2xl"
+                className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-10 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pb-10 md:text-base"
                 style={{ minHeight }}
                 rows={2}
                 maxLength={characterLimit}
               />
+              {/* Mobile-only GIF button inside textarea corner */}
+              {showGifInput && (
+                <button
+                  type="button"
+                  className="md:hidden absolute bottom-2 left-2 inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0"
+                  title="GIF"
+                  ref={gifBtnRef}
+                  onClick={() => {
+                    setShowGif((s) => !s);
+                    setShowEmoji(false);
+                  }}
+                >
+                  <span className="uppercase tracking-wide">GIF</span>
+                </button>
+              )}
               {characterLimit && (
-                <div className="absolute bottom-3 right-4 text-white/60 text-sm font-semibold pointer-events-none">
+                <div className="absolute bottom-2 right-2 text-white/60 text-sm font-semibold pointer-events-none">
                   {text.length}/{characterLimit}
+                </div>
+              )}
+
+              {/* Mobile-only GIF popover anchored to input */}
+              {showGifInput && showGif && (
+                <div className="md:hidden absolute bottom-[110%] left-2 bg-gray-900 border border-white/12 rounded-2xl p-3.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-10 min-w-[240px]">
+                  <div className="font-bold mb-2.5 text-white">Add a GIF</div>
+                  <input
+                    type="url"
+                    placeholder="Paste GIF/Video URL"
+                    value={gifInput}
+                    onChange={(e) => setGifInput(e.target.value)}
+                    className="w-full bg-white/8 border border-white/16 rounded-xl p-2.5 text-white text-sm"
+                  />
+                  <div className="mt-2.5 flex justify-end gap-2.5">
+                    <button
+                      type="button"
+                      className="bg-white/8 border border-white/16 text-white px-3 py-2 rounded-xl cursor-pointer transition-all duration-200 hover:bg-white/12"
+                      onClick={() => setShowGif(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="bg-primary-400 text-black border border-primary-400 px-3 py-2 rounded-xl cursor-pointer transition-all duration-200"
+                      onClick={addGifFromUrl}
+                    >
+                      Add
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -351,17 +396,17 @@ export default function PostForm({
             )}
           </div>
 
-          <div className="flex flex-col gap-3 pt-2.5 relative md:flex-row md:items-center md:justify-between md:gap-3 md:pt-3">
+          <div className="flex flex-col gap-0 pt-0 relative -mt-1 md:mt-0 md:flex-row md:items-center md:justify-between md:gap-3 md:pt-3">
             {(showEmojiPicker || showGifInput) && (
               <div
-                className={`flex gap-2.5 relative justify-center md:justify-start ${
+                className={`hidden md:flex gap-2.5 relative justify-center md:justify-start ${
                   activeAccount ? (isPost ? "md:pl-[56px]" : "md:pl-[56px]") : ""
                 }`}
               >
                 {showEmojiPicker && (
                   <button
                     type="button"
-                    className="bg-white/5 border border-white/10 text-white/70 px-4 py-2.5 rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 flex-1 w-full md:flex-none md:w-auto md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm md:rounded-full"
+                    className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 flex-1 w-full md:flex-none md:w-auto md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
                     title="Emoji"
                     ref={emojiBtnRef}
                     onClick={() => {
@@ -377,7 +422,7 @@ export default function PostForm({
                 {showGifInput && (
                   <button
                     type="button"
-                    className="bg-white/5 border border-white/10 text-white/70 px-4 py-2.5 rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 flex-1 w-full md:flex-none md:w-auto md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm md:rounded-full"
+                    className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 flex-1 w-full md:flex-none md:w-auto md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
                     title="GIF"
                     ref={gifBtnRef}
                     onClick={() => {
@@ -423,14 +468,14 @@ export default function PostForm({
                     <div className="mt-2.5 flex justify-end gap-2.5 md:mt-3 md:gap-3">
                       <button
                         type="button"
-                        className="bg-white/8 border border-white/16 text-white px-3.5 py-2 rounded-xl cursor-pointer transition-all duration-200 hover:bg-white/12 md:px-4 md:py-3 md:min-h-[44px] md:rounded-xl md:text-sm"
+                        className="bg-white/8 border border-white/16 text-white px-3 py-2 rounded-xl cursor-pointer transition-all duration-200 hover:bg-white/12 md:px-4 md:py-3 md:min-h-[44px] md:rounded-xl md:text-sm"
                         onClick={() => setShowGif(false)}
                       >
                         Cancel
                       </button>
                       <button
                         type="button"
-                        className="bg-primary-400 text-black border border-primary-400 px-3.5 py-2 rounded-xl cursor-pointer transition-all duration-200 md:px-4 md:py-3 md:min-h-[44px] md:rounded-xl md:text-sm"
+                        className="bg-primary-400 text-black border border-primary-400 px-3 py-2 rounded-xl cursor-pointer transition-all duration-200 md:px-4 md:py-3 md:min-h-[44px] md:rounded-xl md:text-sm"
                         onClick={addGifFromUrl}
                       >
                         Add
@@ -447,7 +492,7 @@ export default function PostForm({
                   type="submit"
                   loading={isSubmitting}
                   disabled={!text.trim()}
-                  className="relative bg-[#1161FE] border-none text-white font-black px-7 py-2.5 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(0,0,0,0.3)] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base md:rounded-full"
+                  className="relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(0,0,0,0.3)] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
                 >
                   {isSubmitting
                     ? isPost

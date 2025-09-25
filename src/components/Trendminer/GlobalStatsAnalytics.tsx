@@ -1,47 +1,104 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { TrendminerApi } from '../../api/backend';
+import React, { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { AnalyticsService } from '@/api/generated';
+import { Decimal } from '@/libs/decimal';
+import { useCurrencies } from '@/hooks/useCurrencies';
+import { COIN_SYMBOL } from '@/utils/constants';
 
 export default function GlobalStatsAnalytics() {
-  const [last7Days, setLast7Days] = useState<number>(0);
-  const [totals, setTotals] = useState<{ total_market_cap_sum?: number; total_tokens?: number; total_created_tokens?: number } | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { getFiat, currentCurrencyInfo } = useCurrencies();
 
-  useEffect(() => {
-    let cancel = false;
-    async function load() {
-      setLoading(true);
-      try {
-        const toIso = (d: Date) => d.toISOString().slice(0, 10);
-        const end = new Date();
-        const start = new Date(Date.now() - 7 * 24 * 3600 * 1000);
-        const daily = await TrendminerApi.fetchJson(`/api/analytics/daily-trade-volume?start_date=${toIso(start)}&end_date=${toIso(end)}`);
-        const last24 = await TrendminerApi.fetchJson('/api/analytics/past-24-hours');
-        if (!cancel) {
-          const sum = Array.isArray(daily) ? daily.reduce((s: number, d: any) => s + Number(d.volume_ae || 0), 0) : 0;
-          setLast7Days(sum);
-          setTotals(last24 || {});
-        }
-      } finally {
-        if (!cancel) setLoading(false);
-      }
-    }
-    load();
-    return () => { cancel = true; };
-  }, []);
+  // Helper function to format dates as YYYY-MM-DD (equivalent to moment().format('YYYY-MM-DD'))
+  const formatDate = (date: Date): string => date.toISOString().slice(0, 10);
 
-  const items = useMemo(() => ([
-    { name: 'Total Market Cap', value: `${(totals?.total_market_cap_sum ?? 0).toLocaleString()} AE` },
-    { name: 'Volume (7d)', value: `${(last7Days ?? 0).toLocaleString()} AE` },
-    { name: 'Unique tokens', value: totals?.total_tokens ?? 0 },
-    { name: 'Created tokens (24h)', value: totals?.total_created_tokens ?? 0 },
-  ]), [totals, last7Days]);
+  // Fetch last 7 days trade volume data (matching Vue component date range)
+  const { data: todayTradeVolume } = useQuery({
+    queryFn: () => {
+      const end = new Date();
+      const start = new Date(Date.now() - 7 * 24 * 3600 * 1000); // 7 days back
+      return AnalyticsService.dailyTradeVolume({
+        startDate: formatDate(start),
+        endDate: formatDate(end),
+      });
+    },
+    queryKey: ['AnalyticsService.getTodayTradeVolume'],
+    staleTime: 1000 * 60, // 1 minute
+  });
+
+  // Fetch past 24 hours analytics data
+  const { data: last24HoursData } = useQuery({
+    queryFn: () => AnalyticsService.getPast24HoursAnalytics(),
+    queryKey: ['AnalyticsService.getPast24HoursAnalytics'],
+    staleTime: 1000 * 60, // 1 minute
+  });
+
+  // Computed values using Decimal for proper formatting (matching Vue component)
+  const totalMarketCapValue = useMemo(() =>
+    Decimal.from(last24HoursData?.total_market_cap_sum ?? 0),
+    [last24HoursData]
+  );
+
+  const last7DaysTradeVolumeValue = useMemo(() =>
+    Decimal.from(
+      Array.isArray(todayTradeVolume) 
+        ? todayTradeVolume.reduce((sum, day) => sum + Number(day.volume_ae || 0), 0) 
+        : 0
+    ),
+    [todayTradeVolume]
+  );
+
+  // Helper function to format fiat values (matching Vue component)
+  const formatFiat = (value: Decimal): string => {
+    return `${currentCurrencyInfo.symbol} ${value.shorten()}`;
+  };
+
+  // Stats items with both AE amounts and fiat values (matching Vue component structure)
+  const statsItems = useMemo((): { name: string; value: string | number; fiat?: string }[] => [
+    {
+      name: 'Total Market Cap',
+      value: `${totalMarketCapValue.shorten()} ${COIN_SYMBOL}`,
+      fiat: formatFiat(getFiat(totalMarketCapValue)),
+    },
+    {
+      name: 'Volume (7d)',
+      value: `${last7DaysTradeVolumeValue.shorten()} ${COIN_SYMBOL}`,
+      fiat: formatFiat(getFiat(last7DaysTradeVolumeValue)),
+    },
+    {
+      name: 'Unique tokens',
+      value: last24HoursData?.total_tokens ?? 0,
+    },
+    {
+      name: 'Created tokens (24h)',
+      value: last24HoursData?.total_created_tokens ?? 0,
+    },
+  ], [totalMarketCapValue, last7DaysTradeVolumeValue, last24HoursData, getFiat, formatFiat, currentCurrencyInfo]);
+
+  // Check if data is loading
+  const isLoading = !todayTradeVolume || !last24HoursData;
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      {items.map((it) => (
-        <div key={it.name} className="p-2 bg-black/5 dark:bg-white/5 rounded-lg">
-          <div className="text-xs opacity-80 mb-1">{it.name}</div>
-          <div className="font-extrabold text-sm sm:text-base">{loading ? '…' : (it.value as any)}</div>
+      {statsItems.map((item) => (
+        <div key={item.name} className="p-2 bg-black/5 dark:bg-white/5 rounded-lg">
+          <div className="text-xs opacity-80 mb-1">{item.name}</div>
+          <div className="font-extrabold text-sm sm:text-base">
+            {isLoading ? (
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-1"></div>
+                {item.fiat && <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded opacity-70"></div>}
+              </div>
+            ) : (
+              <>
+                {item.value}
+                {item.fiat && (
+                  <div className="text-xs font-normal opacity-70 mt-1">
+                    {item.fiat}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       ))}
     </div>

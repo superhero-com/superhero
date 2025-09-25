@@ -134,11 +134,11 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
       </div>
 
       {/* Sort Filter */}
-      <div className="flex gap-2 mt-4">
+      <div className="flex items-center gap-2 mt-4">
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as 'score' | 'source')}
-          className="px-3 py-2 bg-gray-800 text-white border border-gray-600 rounded-lg text-sm focus:outline-none focus:border-purple-400"
+          className="w-full px-3 py-2 bg-gray-800 text-white border border-gray-600 rounded-lg text-sm focus:outline-none focus:border-purple-400"
         >
           {sortBySelectItems.map((option) => (
             <option key={option.value} value={option.value}>

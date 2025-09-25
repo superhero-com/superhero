@@ -68,7 +68,7 @@ export default function PriceFormatter({
         priceJustDecreased ? 'text-red-400' : 
         priceJustIncreased ? 'text-green-400' : 
         'text-white'
-      } ${rowOnSm ? 'flex-row sm:flex-col items-center gap-1' : 'flex-col'} ${className}`}
+      } ${rowOnSm ? 'flex-row items-center gap-1' : 'flex-col'} ${className}`}
     >
       <SymbolPriceFormatter
         aePrice={aePrice}

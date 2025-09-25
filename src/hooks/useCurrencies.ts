@@ -69,8 +69,8 @@ export function useCurrencies() {
   const isLoadingPrice =  isLoadingRates || isLoadingAeternityData;
 
   const currentCurrencyRate = useMemo(
-    (): number => currencyRates[currentCurrencyCode] || currencyRates?.[currentCurrencyCode] || 0,
-    [currencyRates, currentCurrencyCode, currencyRates]
+    (): number => currencyRates?.[currentCurrencyCode] || 0,
+    [currencyRates, currentCurrencyCode]
   );
 
   const currentCurrencyInfo = useMemo(

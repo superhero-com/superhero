@@ -11,6 +11,7 @@ export async function fetchJson<T = any>(
   }
   return response.json();
 }
+
 /**
  * Formats a fractional price string into an object containing the number, zeros count,
  * significant digits, and a formatted value string.

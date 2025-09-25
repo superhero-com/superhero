@@ -32,12 +32,7 @@ export default function PriceDataFormatter({
   bignumber = false,
   row = false,
   watchKey,
-  symbol,
-  watchPrice = true,
-  priceLoading = false,
-  hideFiatPrice = false,
-  hideSymbol = false,
-  className = "",
+  ...props
 }: PriceDataFormatterProps) {
   const { currentCurrencyCode, getFiat } = useCurrencies();
   const { prices } = useBackend();
@@ -79,14 +74,9 @@ export default function PriceDataFormatter({
     <PriceFormatter
       aePrice={aePrice}
       fiatPrice={fiatPrice}
-      symbol={symbol}
-      watchPrice={watchPrice}
       watchKey={watchKey}
-      priceLoading={priceLoading}
-      hideFiatPrice={hideFiatPrice}
-      hideSymbol={hideSymbol}
       row={row}
-      className={className}
+      {...props}
     />
   );
 }

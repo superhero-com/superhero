@@ -1,6 +1,7 @@
 import React from 'react';
 import { Decimal } from '../../../libs/decimal';
 import FractionFormatter, { FormattedFractionalPrice } from './FractionFormatter';
+import { formatFractionalPrice } from '@/utils/common';
 
 interface SymbolPriceFormatterProps {
   aePrice: Decimal;
@@ -23,24 +24,6 @@ export default function SymbolPriceFormatter({
   priceJustDecreased = false,
   className = '',
 }: SymbolPriceFormatterProps) {
-  const formatFractionalPrice = (price: Decimal): FormattedFractionalPrice => {
-    const priceStr = price.toString();
-    const [integer, decimal] = priceStr.split('.');
-    
-    if (!decimal) {
-      return { number: integer };
-    }
-    
-    // Find significant digits (non-zero decimals)
-    const significantDigits = decimal.replace(/0+$/, '');
-    const zerosCount = decimal.length - significantDigits.length;
-    
-    return {
-      number: integer,
-      significantDigits: significantDigits || undefined,
-      zerosCount: zerosCount > 0 ? '0'.repeat(zerosCount) : undefined,
-    };
-  };
 
   return (
     <div className={`inline-flex items-center ${className}`}>

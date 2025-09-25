@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Backend, TrendminerApi } from "../../api/backend";
+import { useAccountBalances } from "../../hooks/useAccountBalances";
+import { useAeSdk } from "../../hooks/useAeSdk";
 import { useToast } from "../ToastProvider";
 import Sparkline from "../Trendminer/Sparkline";
-import TrendingSidebar from "../Trendminer/TrendingSidebar";
-import { useAeSdk } from "../../hooks/useAeSdk";
-import { useAccountBalances } from "../../hooks/useAccountBalances";
 
 import { useWallet } from "../../hooks";
 interface SearchSuggestion {
@@ -854,7 +853,6 @@ export default function RightRail({
       </div> */}
 
       {/* Explore Trends Sidebar (replaced with Trending sidebar) */}
-      {!hideTrends && <TrendingSidebar />}
 
       {/* Top Tokens */}
       {SHOW_RIGHT_RAIL_EXTRAS && topTokens.length > 0 && (

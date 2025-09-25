@@ -24,7 +24,7 @@ interface ChartResponse {
   timeframe?: string;
 }
 
-export default function TokenLineChart({
+export function TokenLineChart({
   saleAddress,
   height = 200,
   hideTimeframe = false,
@@ -153,3 +153,6 @@ export default function TokenLineChart({
     </div>
   );
 }
+
+
+export default TokenLineChart;

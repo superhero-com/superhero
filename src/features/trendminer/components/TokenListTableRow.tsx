@@ -2,7 +2,7 @@ import { PriceDataFormatter } from "@/features/shared/components";
 import { useMemo } from "react";
 import { TokenDto } from "../../../api/generated";
 import { AddressChip } from "../../../components/AddressChip";
-import TokenLineChart from "./TokenLineChart";
+import { TokenLineChart } from "./TokenLineChart";
 
 type PriceMovementTimeframe = '1D' | '7D' | '30D';
 
@@ -110,7 +110,7 @@ export default function TokenListTableRow({
           <div className="ml-auto chart max-w-[140px]">
             <TokenLineChart
               saleAddress={token.sale_address || tokenAddress}
-              height={120}
+              height={60}
               hideTimeframe={true}
             />
           </div>

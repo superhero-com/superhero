@@ -107,7 +107,6 @@
 - ✅ `components/Trendminer/MobileTest.tsx` - Migrated debug component with conditional styling
 - ✅ `components/Trendminer/TvCandles.tsx` - Migrated with Tailwind styling
 - ✅ `components/Trendminer/MobileTrendingTagCard.tsx` - Migrated with glassmorphism card styling and responsive design
-- ✅ `components/Trendminer/MobileTrendingTokenCard.tsx` - Migrated with hover animations and chart integration
 - ✅ `components/Trendminer/TokenMiniChart.tsx` - Migrated with loading state styling
 - ✅ `components/Trendminer/LatestTransactionsCarousel.tsx` - Migrated with infinite scroll animation and hover effects
 - ✅ `components/Trendminer/Sparkline.tsx` - Pure SVG component, no migration needed

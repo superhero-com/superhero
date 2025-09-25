@@ -9,13 +9,12 @@ type PriceMovementTimeframe = '1D' | '7D' | '30D';
 interface TokenListTableProps {
   pages?: Array<{ items: TokenDto[] }> | null;
   loading?: boolean;
+  showCollectionColumn?: boolean;
 }
 
-export default function TokenListTable({ pages, loading }: TokenListTableProps) {
+export default function TokenListTable({ pages, loading, showCollectionColumn }: TokenListTableProps) {
   const [performanceChartTimeframe, setPerformanceChartTimeframe] = useState<PriceMovementTimeframe>('30D');
 
-  // Show collection column if we have multiple collections (for now just show it)
-  const showCollectionColumn = true; // This would be determined by factory collections
 
   const allItems = useMemo(() => 
     pages?.length ? pages.map((page) => page.items).flat() : [],

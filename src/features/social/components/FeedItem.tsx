@@ -32,29 +32,58 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
         <div className="flex-1 min-w-0 space-y-2 md:space-y-1">
             <div className="flex flex-col gap-0 md:flex-row md:items-start md:justify-between md:gap-2">
             <div className="flex-1 min-w-0">
-              <AddressAvatarWithChainName
-                address={authorAddress}
-                size={40}
-                overlaySize={20}
-                contentClassName="translate-y-[2px]"
-                secondary={(
-                  item.tx_hash && CONFIG.EXPLORER_URL ? (
-                    <a
-                      href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${item.tx_hash}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="md:hidden inline-flex items-center gap-0.5 text-[11px] leading-none text-light-font-color no-gradient-text group min-h-0 min-w-0 p-0 h-auto mt-1"
-                      title={item.tx_hash}
-                    >
-                      <span className="underline-offset-2 group-hover:underline">
-                        {`Posted on-chain${item.created_at ? ` ${relativeTime(new Date(item.created_at))}` : ''}`}
-                      </span>
-                      <IconLink className="w-2 h-2" />
-                    </a>
-                  ) : null
-                )}
-              />
+              {/* Mobile: smaller avatar */}
+              <div className="md:hidden">
+                <AddressAvatarWithChainName
+                  address={authorAddress}
+                  size={32}
+                  overlaySize={16}
+                  contentClassName="translate-y-[2px]"
+                  secondary={(
+                    item.tx_hash && CONFIG.EXPLORER_URL ? (
+                      <a
+                        href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${item.tx_hash}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="md:hidden inline-flex items-center gap-0.5 text-[11px] leading-none text-light-font-color no-gradient-text group min-h-0 min-w-0 p-0 h-auto mt-1"
+                        title={item.tx_hash}
+                      >
+                        <span className="underline-offset-2 group-hover:underline">
+                          {`Posted on-chain${item.created_at ? ` ${relativeTime(new Date(item.created_at))}` : ''}`}
+                        </span>
+                        <IconLink className="w-2 h-2" />
+                      </a>
+                    ) : null
+                  )}
+                />
+              </div>
+              {/* Desktop/tablet: original avatar size */}
+              <div className="hidden md:block">
+                <AddressAvatarWithChainName
+                  address={authorAddress}
+                  size={40}
+                  overlaySize={20}
+                  contentClassName="translate-y-[2px]"
+                  secondary={(
+                    item.tx_hash && CONFIG.EXPLORER_URL ? (
+                      <a
+                        href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${item.tx_hash}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="md:hidden inline-flex items-center gap-0.5 text-[11px] leading-none text-light-font-color no-gradient-text group min-h-0 min-w-0 p-0 h-auto mt-1"
+                        title={item.tx_hash}
+                      >
+                        <span className="underline-offset-2 group-hover:underline">
+                          {`Posted on-chain${item.created_at ? ` ${relativeTime(new Date(item.created_at))}` : ''}`}
+                        </span>
+                        <IconLink className="w-2 h-2" />
+                      </a>
+                    ) : null
+                  )}
+                />
+              </div>
             </div>
             {item.tx_hash && CONFIG.EXPLORER_URL && (
               <div className="hidden md:flex md:items-center md:gap-2 md:flex-shrink-0">

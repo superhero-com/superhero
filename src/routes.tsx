@@ -3,7 +3,7 @@ import { RouteObject } from "react-router-dom";
 import SocialLayout from "./components/layout/SocialLayout";
 
 const FeedList = lazy(() => import("./features/social/views/FeedList"));
-const Trending = lazy(() => import("./views/Trending"));
+const TokenList = lazy(() => import("./features/trendminer/views/TokenList"));
 const TrendCloud = lazy(() => import("./views/Trendminer/TrendCloud"));
 const TrendCloudVisx = lazy(() => import("./views/Trendminer/TrendCloudVisx"));
 const TrendTokenDetails = lazy(() => import("./views/Trendminer/TokenDetails"));
@@ -62,7 +62,7 @@ export const routes: RouteObject[] = [
       { path: "users/:address", element: <UserProfile standalone={false} /> },
     ],
   },
-  { path: "/trending", element: <Trending /> },
+  { path: "/trendminer/tokens", element: <TokenList /> },
   { path: "/trendminer", element: <TrendCloud /> },
   { path: "/trendminer/visx", element: <TrendCloudVisx /> },
   { path: "/trendminer/tokens/:tokenName", element: <TrendTokenDetails /> },

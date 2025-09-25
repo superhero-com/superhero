@@ -15,6 +15,7 @@ const TrendAccountDetails = lazy(
   () => import("./views/Trendminer/AccountDetails")
 );
 const TrendCreate = lazy(() => import("./views/CreateTokenView"));
+const TokenSaleDetails = lazy(() => import("./views/TokenSaleDetails"));
 const PostDetail = lazy(() => import("./features/social/views/PostDetail"));
 const UserProfile = lazy(() => import("./views/UserProfile"));
 const Landing = lazy(() => import("./views/Landing"));
@@ -65,7 +66,7 @@ export const routes: RouteObject[] = [
   { path: "/trendminer/tokens", element: <TokenList /> },
   { path: "/trendminer", element: <TrendCloud /> },
   { path: "/trendminer/visx", element: <TrendCloudVisx /> },
-  { path: "/trendminer/tokens/:tokenName", element: <TrendTokenDetails /> },
+  { path: "/trendminer/tokens/:tokenName", element: <TokenSaleDetails /> },
   { path: "/tx-queue/:id", element: <TxQueue /> },
   { path: "/trendminer/invite", element: <TrendInvite /> },
   { path: "/trendminer/dao/:saleAddress", element: <TrendDao /> },

@@ -160,7 +160,6 @@
 - ✅ `views/Trendminer/Daos.tsx` - Migrated with glassmorphism cards, responsive grid layout and modern controls
 - ✅ `views/Trendminer/Dao.tsx` - Migrated with glassmorphism styling and modern form controls
 - ✅ `views/Trendminer/CreateToken.tsx` - Migrated with modern input styling and responsive layout
-- ✅ `views/Trendminer/TokenList.tsx` - Migrated with responsive grid and glassmorphism cards
 - ✅ `views/Trendminer/TokenDetails.tsx` - Migrated with comprehensive mobile-optimized layout and glassmorphism design
 - ✅ `views/Trendminer/Accounts.tsx` - Migrated with modern table styling and responsive layout
 - ✅ `views/Trendminer/TrendCloud.tsx` - Migrated with modern header controls and responsive design

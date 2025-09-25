@@ -46,7 +46,7 @@ export default function LivePriceFormatter({
       priceLoading={priceLoading}
       hideFiatPrice={hideFiatPrice}
       hideSymbol={hideSymbol}
-      row={row}
+      rowOnSm={row}
       className={className}
     />
   );

@@ -1,4 +1,4 @@
-import { BrowserWindowMessageConnection } from "@aeternity/aepp-sdk";
+import { BrowserWindowMessageConnection, Encoded } from "@aeternity/aepp-sdk";
 
 export interface INetwork {
   url: string;
@@ -77,4 +77,21 @@ export interface FormattedFractionalPrice {
   significantDigits?: string;
   /** A formatted string representing the fractional part with leading zeros */
   value?: string;
+}
+
+export type CollectionId = `${string}-${Encoded.AccountAddress}`;
+export type IAllowedNameChars = {
+  [key: string]: number[];
+};
+export interface ICollectionData {
+  id: CollectionId;
+  name: string;
+  description?: string;
+  allowed_name_length: string;
+  allowed_name_chars: IAllowedNameChars[];
+}
+
+export interface ICommunityFactorySchema {
+  address: string;
+  collections: Record<string, ICollectionData>;
 }

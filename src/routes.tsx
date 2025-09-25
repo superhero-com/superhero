@@ -14,7 +14,7 @@ const TrendAccounts = lazy(() => import("./views/Trendminer/Accounts"));
 const TrendAccountDetails = lazy(
   () => import("./views/Trendminer/AccountDetails")
 );
-const TrendCreate = lazy(() => import("./views/Trendminer/CreateToken"));
+const TrendCreate = lazy(() => import("./views/CreateTokenView"));
 const PostDetail = lazy(() => import("./features/social/views/PostDetail"));
 const UserProfile = lazy(() => import("./views/UserProfile"));
 const Landing = lazy(() => import("./views/Landing"));

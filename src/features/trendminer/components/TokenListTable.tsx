@@ -152,61 +152,11 @@ export default function TokenListTable({ pages, loading, showCollectionColumn }:
             display: none;
           }
 
-          .bctsl-token-list-table > tbody > tr {
-            display: grid;
-            grid-template-columns: 42px 5fr 2fr;
-            grid-template-rows: 1fr 20px 20px;
-            grid-template-areas:
-              'rank name       chart'
-              'rank price      chart'
-              'rank market-cap chart';
-            margin-top: 4px;
-            padding-block: 8px;
+          .bctsl-token-list-table > tbody > tr.mobile-only-card {
+            display: table-row;
           }
 
-          .cell-rank {
-            grid-area: rank;
-            padding-top: 4px;
-            font-size: 10px;
-            font-weight: normal;
-            letter-spacing: -0.1em;
-          }
-
-          .cell-name {
-            grid-area: name;
-          }
-
-          .cell-price {
-            grid-area: price;
-          }
-
-          .cell-market-cap {
-            grid-area: market-cap;
-          }
-
-          .cell-chart {
-            grid-area: chart;
-          }
-
-          .cell-collection,
-          .cell-address {
-            display: none;
-          }
-        }
-
-        /* On small screens put the chart below the token name */
-        @media screen and (max-width: 520px) {
-          .bctsl-token-list-table > tbody > tr {
-            grid-template-areas:
-              'rank name       name'
-              'rank price      chart'
-              'rank market-cap chart';
-          }
-        }
-
-        /* On tiny screens hide the chart */
-        @media screen and (max-width: 370px) {
-          .cell-chart {
+          .bctsl-token-list-table > tbody > tr:not(.mobile-only-card) {
             display: none;
           }
         }

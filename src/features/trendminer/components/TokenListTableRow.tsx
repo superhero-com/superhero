@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { TokenDto } from "../../../api/generated";
 import { AddressChip } from "../../../components/AddressChip";
 import { TokenLineChart } from "./TokenLineChart";
+import TokenMobileCard from "./TokenMobileCard";
 
 type PriceMovementTimeframe = '1D' | '7D' | '30D';
 
@@ -44,8 +45,24 @@ export default function TokenListTableRow({
 
   const collectionRank = useCollectionRank ? (token as any).collection_rank : rank;
 
+  // Show mobile card on screens smaller than 960px
   return (
-    <tr className="bctsl-token-list-table-row rounded relative bg-white/5 hover:bg-white/10 transition-colors">
+    <>
+      {/* Mobile card for small screens */}
+      <tr className="mobile-only-card md:hidden">
+        <td colSpan={8} className="p-0">
+          <TokenMobileCard
+            token={token}
+            useCollectionRank={useCollectionRank}
+            showCollectionColumn={showCollectionColumn}
+            rank={rank}
+            timeframe={timeframe}
+          />
+        </td>
+      </tr>
+
+      {/* Desktop table row for larger screens */}
+      <tr className="bctsl-token-list-table-row rounded relative bg-white/5 hover:bg-white/10 transition-colors hidden md:table-row">
       {/* Rank */}
       <td className="cell cell-rank pl-2 pl-md-4">
         <div className="rank text-sm font-medium text-white/90 font-bold opacity-50">
@@ -126,7 +143,7 @@ export default function TokenListTableRow({
         />
       </td>
 
-      <style jsx>{`
+      <style>{`
         .bctsl-token-list-table-row {
           position: relative;
           z-index: 1;
@@ -261,6 +278,7 @@ export default function TokenListTableRow({
           }
         }
       `}</style>
-    </tr>
+      </tr>
+    </>
   );
 }

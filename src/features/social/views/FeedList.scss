@@ -517,7 +517,7 @@
     grid-template-columns: 40px 1fr;
     gap: 8px;
     padding: 12px;
-    border-radius: 14px;
+    border-radius: 12px;
     
     .avatar-container {
       @include avatar-container(40px);
@@ -581,7 +581,7 @@
     grid-template-columns: 40px 1fr;
     gap: 6px;
     padding: 10px;
-    border-radius: 12px;
+    border-radius: 10px;
     
     .avatar-container {
       @include avatar-container(40px);

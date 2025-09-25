@@ -1,14 +1,11 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { TokenListTable } from "..";
 import { TrendminerApi } from "../../../api/backend";
 import { TokenDto } from "../../../api/generated";
-import AeButton from "../../../components/AeButton";
 import GlobalStatsAnalytics from "../../../components/Trendminer/GlobalStatsAnalytics";
-import TrendingPillsCarousel from "../../../components/Trendminer/TrendingPillsCarousel";
 import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
-import WalletConnectBtn from "../../../components/WalletConnectBtn";
-import { CONFIG } from "../../../config";
-import WebSocketClient from "../../../libs/WebSocketClient";
-import { TokenListTable } from "..";
+import TrendingPillsCarousel from "../../../components/Trendminer/TrendingPillsCarousel";
+import RepositoriesList from "../components/RepositoriesList";
 
 type TrendingTagItem = {
   tag: string;
@@ -45,7 +42,6 @@ type OrderByOption = typeof SORT[keyof typeof SORT];
 type CollectionOption = 'all' | 'word' | 'number';
 
 export default function TokenList() {
-  const [tags, setTags] = useState<TrendingTagItem[]>([]);
   const [collection, setCollection] = useState<CollectionOption>('all');
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore);
   const [ownedOnly, setOwnedOnly] = useState(false);
@@ -57,9 +53,6 @@ export default function TokenList() {
   const [tagTokenMap, setTagTokenMap] = useState<Record<string, TokenItem>>({});
   const [page, setPage] = useState(1);
   const loadMoreBtn = useRef<HTMLButtonElement>(null);
-
-  // WebSocket subscription
-  const [newTokenListenerSubscription, setNewTokenListenerSubscription] = useState<(() => void) | null>(null);
 
   const orderByOptions: SelectOptions<OrderByOption> = [
     {
@@ -178,101 +171,6 @@ export default function TokenList() {
   useEffect(() => {
     fetchTokens(1, true);
   }, [orderBy, orderByMapped, collection, search, orderDirection]);
-
-  // Load trending tags
-  useEffect(() => {
-    let cancelled = false;
-    async function loadTags() {
-      try {
-        const tagsResp = await TrendminerApi.listTrendingTags({
-          orderBy: "score",
-          orderDirection: "DESC",
-          limit: 50,
-        });
-        const tagsItems = Array.isArray(tagsResp?.items)
-          ? tagsResp.items
-          : Array.isArray(tagsResp)
-          ? tagsResp
-          : [];
-        const mappedTags = tagsItems.map((it: any) => ({
-          tag: it.tag ?? it.name ?? "",
-          score: Number(it.score ?? it.value ?? 0),
-          source: it.source || it.platform || undefined,
-        }));
-        if (!cancelled) {
-          setTags(mappedTags);
-        }
-      } catch (e) {
-        console.error("Failed to load trending tags:", e);
-      }
-    }
-    loadTags();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // Build tag-token mapping
-  useEffect(() => {
-    let cancelled = false;
-    async function checkTags() {
-      const top = tags.slice(0, 20);
-      const results = await Promise.allSettled(
-        top.map(async (t) => {
-          try {
-            const tok: any = await TrendminerApi.getToken(t.tag);
-            return [t.tag, tok] as const;
-          } catch {
-            return [t.tag, null] as const;
-          }
-        })
-      );
-      if (cancelled) return;
-      const map: Record<string, TokenItem> = {};
-      results.forEach((r) => {
-        if (r.status === "fulfilled" && r.value && r.value[1]) {
-          const [tag, tok] = r.value as any;
-          // Convert TokenDto to TokenItem
-          map[tag] = {
-            address: tok.address,
-            name: tok.name,
-            symbol: tok.symbol,
-            price: Number(tok.price || 0),
-            market_cap: Number(tok.market_cap || 0),
-            holders_count: tok.holders_count || 0,
-            sale_address: tok.sale_address,
-            trending_score: tok.trending_score,
-          };
-        }
-      });
-      setTagTokenMap(map);
-    }
-    if (tags.length) checkTags();
-    return () => {
-      cancelled = true;
-    };
-  }, [tags]);
-
-  // WebSocket setup
-  useEffect(() => {
-    if (CONFIG.TRENDMINER_WS_URL) {
-      WebSocketClient.connect(CONFIG.TRENDMINER_WS_URL);
-    }
-
-    const subscription = WebSocketClient.subscribe('TokenCreated', () => {
-      setTimeout(() => {
-        fetchTokens(1, true);
-      }, 4000);
-    });
-
-    setNewTokenListenerSubscription(() => subscription);
-
-    return () => {
-      if (subscription) {
-        subscription();
-      }
-    };
-  }, []);
 
   // Intersection observer for infinite loading
   useEffect(() => {
@@ -435,102 +333,7 @@ export default function TokenList() {
             <TokenListTable pages={data?.pages} loading={isFetching} />
           </div>
 
-          {/* Right: Explore Trends */}
-          <div className="bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl p-4 sm:p-6 h-fit xl:mt-0 mt-6">
-            <div className="text-lg sm:text-xl font-bold text-white mb-4">
-              Explore Trends
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 mb-4">
-              <select
-                className="px-2.5 py-1.5 bg-gray-800 text-white border border-gray-600 rounded-full text-sm focus:outline-none focus:border-purple-400"
-                defaultValue={"Most Trending"}
-              >
-                <option>Most Trending</option>
-                <option>Latest</option>
-              </select>
-              <input
-                placeholder="Search trends"
-                className="px-3 py-2 flex-1 bg-gray-800 text-white border border-gray-600 rounded-full text-sm focus:outline-none focus:border-purple-400 placeholder-white/50"
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3">
-              {tags.slice(0, 12).map((it) => {
-                const tok = tagTokenMap[it.tag];
-                return (
-                  <div
-                    key={it.tag}
-                    className="p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors"
-                  >
-                    <div className="font-semibold text-white mb-2 text-sm sm:text-base">
-                      #{it.tag.toUpperCase()}
-                    </div>
-                    <div className="flex items-center justify-between flex-wrap gap-2 text-sm">
-                      {!tok && (
-                        <>
-                          <span className="text-green-400 font-medium">
-                            ↑ {it.score.toLocaleString()}
-                          </span>
-                          {it.source && (
-                            <a
-                              href={`https://x.com/search?q=${encodeURIComponent(
-                                "#" + it.tag
-                              )}&src=typed_query`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-400 hover:text-blue-300 no-underline text-xs"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              via {it.source}
-                            </a>
-                          )}
-                        </>
-                      )}
-                      {tok ? (
-                        <>
-                          <div className="flex flex-col gap-1 min-w-0 flex-1">
-                            <span className="text-white/90 font-mono text-xs">
-                              {normalizeAe(Number(tok.price ?? 0)).toFixed(6)}{" "}
-                              AE
-                            </span>
-                            <span className="text-white/70 text-xs">
-                              Holders: {tok.holders_count ?? 0}
-                            </span>
-                          </div>
-                          <AeButton
-                            variant="accent"
-                            size="xs"
-                            outlined
-                            onClick={() =>
-                              (window.location.href = `/trendminer/tokens/${encodeURIComponent(
-                                tok.name || tok.address
-                              )}`)
-                            }
-                            className="flex-shrink-0"
-                          >
-                            View
-                          </AeButton>
-                        </>
-                      ) : (
-                        <AeButton
-                          variant="accent"
-                          size="xs"
-                          rounded
-                          onClick={() =>
-                            (window.location.href = `/trendminer/create?new=${encodeURIComponent(
-                              it.tag
-                            )}`)
-                          }
-                          className="px-2 py-1 rounded-full text-xs flex-shrink-0"
-                        >
-                          Tokenize
-                        </AeButton>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <RepositoriesList />
         </div>
 
         {/* Load More Button */}

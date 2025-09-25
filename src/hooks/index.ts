@@ -12,6 +12,7 @@ export { useGovernance } from './useGovernance';
 export { useRecentActivities } from './useRecentActivities';
 export { useTransactionStatus, useMultipleTransactionStatus } from './useTransactionStatus';
 export { useChart } from './useChart';
+export { useOwnedTokens } from './useOwnedTokens';
 
 // Re-export atoms for direct usage if needed
 export * from '../atoms/walletAtoms';

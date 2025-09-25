@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { TransactionsService } from "@/api/generated/services/TransactionsService";
+import { TransactionDto } from "@/api/generated/models/TransactionDto";
+import { TokenDto } from "@/api/generated/models/TokenDto";
 import AddressChip from "../AddressChip";
 import PriceDataFormatter from "@/features/shared/components/PriceDataFormatter";
-import { PriceDto } from "@/api/generated";
 
 // Transaction function constants
 const TX_FUNCTIONS = {
@@ -15,46 +18,84 @@ const TX_FUNCTIONS = {
 
 type TxFunction = (typeof TX_FUNCTIONS)[keyof typeof TX_FUNCTIONS];
 
-interface Transaction {
-  tx_hash?: string;
-  id?: string;
-  tx_type?: string;
-  created_at?: string;
-  amount?: string | number | { [key: string]: number };
-  token_amount?: string | number;
-  account_address?: string;
-  address?: string;
+// Pagination response interface
+interface PaginatedTransactionsResponse {
+  items: TransactionDto[];
+  meta: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+  };
 }
 
 interface TokenTradesProps {
-  transactions: Transaction[];
-  loading?: boolean;
-  hasMore?: boolean;
-  onLoadMore: () => void;
-  // Pagination props
-  currentPage?: number;
-  totalPages?: number;
-  itemsPerPage?: number;
-  itemsPerPageOptions?: number[];
-  totalItems?: number;
-  onPageChange?: (page: number) => void;
-  onItemsPerPageChange?: (itemsPerPage: number) => void;
+  token: TokenDto;
 }
 
-export default function TokenTrades({
-  transactions,
-  loading = false,
-  hasMore = true,
-  onLoadMore,
-  // Pagination props with defaults
-  currentPage = 1,
-  totalPages = 1,
-  itemsPerPage = 10,
-  itemsPerPageOptions = [10, 20, 50, 100],
-  totalItems = 0,
-  onPageChange,
-  onItemsPerPageChange,
-}: TokenTradesProps) {
+export default function TokenTrades({ token }: TokenTradesProps) {
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Fetch transactions using React Query with server-side pagination
+  const {
+    data,
+    isLoading: isFetching,
+    error,
+    refetch,
+  } = useQuery<PaginatedTransactionsResponse>({
+    queryKey: [
+      "TransactionsService.listTransactions",
+      token?.sale_address,
+      itemsPerPage,
+      currentPage,
+    ],
+    queryFn: async (): Promise<PaginatedTransactionsResponse> => {
+      if (!token?.sale_address) {
+        return { items: [], meta: { totalItems: 0, totalPages: 0, currentPage: 1 } };
+      }
+
+      try {
+        const response = await TransactionsService.listTransactions({
+          tokenAddress: token.sale_address,
+          limit: itemsPerPage,
+          page: currentPage,
+        });
+
+        // Handle the response - it should be Pagination type but we need to cast it
+        if (response && typeof response === 'object' && 'items' in response) {
+          return response as PaginatedTransactionsResponse;
+        }
+
+        // Fallback for different response formats
+        if (Array.isArray(response)) {
+          return {
+            items: response,
+            meta: { totalItems: response.length, totalPages: 1, currentPage: 1 }
+          };
+        }
+
+        return { items: [], meta: { totalItems: 0, totalPages: 0, currentPage: 1 } };
+      } catch (error) {
+        console.error('Failed to fetch transactions:', error);
+        throw error;
+      }
+    },
+    enabled: !!token?.sale_address,
+    staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: 60 * 1000, // 1 minute
+  });
+
+  // Table headers configuration
+  const headers = useMemo(() => [
+    { title: "Account", key: "account", sortable: false },
+    { title: "Type", key: "tx_type", sortable: false },
+    { title: token.symbol || "Volume", key: "volume", sortable: false },
+    { title: "Unit Price", key: "price_data", sortable: false },
+    { title: "Total Price", key: "spent_amount_data", sortable: false },
+    { title: "Date", key: "created_at", sortable: false },
+    { title: "Transaction", key: "tx_hash", sortable: false },
+  ], [token.symbol]);
+
   // Function to get transaction type color
   function getTxFunctionCallColor(type: TxFunction) {
     switch (type) {
@@ -80,45 +121,30 @@ export default function TokenTrades({
           bgColor: "bg-green-500/10",
           borderColor: "border-green-500/30",
           textColor: "text-green-400",
-          hoverBg: "hover:bg-green-500/20",
-          icon: "📈",
+          chipBg: "bg-green-500/20",
         };
       case "red":
         return {
           bgColor: "bg-red-500/10",
           borderColor: "border-red-500/30",
           textColor: "text-red-400",
-          hoverBg: "hover:bg-red-500/20",
-          icon: "📉",
+          chipBg: "bg-red-500/20",
         };
       case "yellow":
         return {
           bgColor: "bg-yellow-500/10",
           borderColor: "border-yellow-500/30",
           textColor: "text-yellow-400",
-          hoverBg: "hover:bg-yellow-500/20",
-          icon: "🏗️",
+          chipBg: "bg-yellow-500/20",
         };
       default:
         return {
           bgColor: "bg-white/[0.05]",
           borderColor: "border-white/10",
           textColor: "text-white",
-          hoverBg: "hover:bg-white/[0.08]",
-          icon: "🔄",
+          chipBg: "bg-white/[0.05]",
         };
     }
-  };
-
-
-  // Helper function to format token amount
-  const formatTokenAmount = (
-    tokenAmount: string | number | undefined
-  ): string => {
-    if (!tokenAmount) return "";
-    return typeof tokenAmount === "string"
-      ? tokenAmount
-      : tokenAmount.toString();
   };
 
   // Helper function to get display name for transaction type
@@ -142,93 +168,173 @@ export default function TokenTrades({
     }
   };
 
+  // Helper function to format volume
+  const formatVolume = (volume: string | number): string => {
+    if (!volume) return "0";
+    const num = typeof volume === 'string' ? parseFloat(volume) : volume;
+    if (!isFinite(num)) return "0";
+    
+    // Use a simple formatting approach similar to Decimal.prettify()
+    if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
+    if (num >= 1e3) return (num / 1e3).toFixed(2) + "K";
+    return num.toFixed(2);
+  };
+
+  // Helper function to format date
+  const formatLongDate = (dateString: string): string => {
+    try {
+      return new Date(dateString).toLocaleString();
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Handle page updates
+  const updatePage = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const transactions = data?.items || [];
+  const totalItems = data?.meta?.totalItems || 0;
+  const totalPages = data?.meta?.totalPages || 0;
+
+  // Retry mechanism for failed requests
+  React.useEffect(() => {
+    if (currentPage === 1 && !transactions.length && !isFetching && !error) {
+      const timer = setTimeout(() => {
+        refetch();
+      }, 10 * 1000); // 10 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [currentPage, transactions.length, isFetching, error, refetch]);
+
   return (
-    <div>
-      <div className="flex flex-col gap-3 mb-4">
-        {transactions.map((tx, idx) => {
-          const txStyling = getTxStyling(tx.tx_type || "");
-
-          return (
-            <div
-              key={tx.tx_hash || tx.id || idx}
-              className={`flex flex-col sm:flex-row justify-between gap-2 items-start sm:items-center text-sm py-3 px-4 ${txStyling.bgColor} border ${txStyling.borderColor} rounded-xl transition-all duration-300 ${txStyling.hoverBg} hover:border-opacity-50`}
-            >
-              <div className="flex items-center gap-3">
-                <AddressChip
-                  address={tx.address || tx.account_address || ""}
-                  linkToProfile={true}
-                />
-              </div>
-
-              <div className="flex items-center w-full sm:w-auto justify-between sm:gap-4">
-                <div className="text-center">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="hidden sm:block text-sm">{txStyling.icon}</span>
-                    <span
-                      className={`font-medium text-xs uppercase tracking-wide ${txStyling.textColor}`}
-                    >
-                      {getDisplayName(tx.tx_type || "")}
-                    </span>
-                  </div>
-                  {tx.token_amount && (
-                    <div className="text-white/60 text-xs mt-1">
-                      {formatTokenAmount(tx.token_amount)} tokens
-                    </div>
-                  )}
-                </div>
-
-                <div className="text-right">
-                  {tx.amount && (
-                    <PriceDataFormatter watchPrice={true} priceData={tx.amount as PriceDto} />
-                  )}
-                  <div className="hidden lg:block text-white/60 text-xs mt-1">
-                    {new Date(tx.created_at || Date.now()).toLocaleString()}
-                  </div>
-                </div>
-              </div>
+    <div className="space-y-4">
+      {/* Data Table */}
+      <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
+        {/* Table Header */}
+        <div className="hidden md:grid grid-cols-7 gap-4 px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide">
+          {headers.map((header) => (
+            <div key={header.key} className="truncate">
+              {header.title}
             </div>
-          );
-        })}
+          ))}
+        </div>
+
+        {/* Table Body */}
+        <div className="divide-y divide-white/5">
+          {transactions.map((transaction) => {
+            const txStyling = getTxStyling(transaction.tx_type);
+            
+            return (
+              <div
+                key={transaction.id}
+                className="grid grid-cols-1 md:grid-cols-7 gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors"
+              >
+                {/* Account */}
+                <div className="flex items-center">
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">Account:</div>
+                  <AddressChip address={transaction.account} linkToProfile={true} />
+                </div>
+
+                {/* Type */}
+                <div className="flex items-center">
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">Type:</div>
+                  <div
+                    className={`px-2 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${txStyling.textColor} ${txStyling.chipBg} border ${txStyling.borderColor}`}
+                  >
+                    {getDisplayName(transaction.tx_type)}
+                  </div>
+                </div>
+
+                {/* Volume */}
+                <div className="flex items-center">
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">Volume:</div>
+                  <div className="text-white font-medium">
+                    {formatVolume(transaction.volume)}
+                  </div>
+                </div>
+
+                {/* Unit Price */}
+                <div className="flex items-center">
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">Unit Price:</div>
+                  <PriceDataFormatter watchPrice={false} priceData={transaction.price_data} />
+                </div>
+
+                {/* Total Price */}
+                <div className="flex items-center">
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">Total:</div>
+                  <PriceDataFormatter watchPrice={false} priceData={transaction.spent_amount_data} />
+                </div>
+
+                {/* Date */}
+                <div className="flex items-center">
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">Date:</div>
+                  <div className="text-white/70 text-sm">
+                    {formatLongDate(transaction.created_at)}
+                  </div>
+                </div>
+
+                {/* Transaction Hash */}
+                <div className="flex items-center">
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">Tx:</div>
+                  <AddressChip address={transaction.tx_hash} linkToProfile={false} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Loading State */}
+        {isFetching && (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isFetching && !transactions.length && (
+          <div className="text-center py-12">
+            <div className="text-white/40 text-lg mb-2">📈</div>
+            <div className="text-white/60 text-sm">No transactions yet</div>
+            <div className="text-white/40 text-xs mt-1">
+              Trades will appear here once the token starts trading
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !isFetching && (
+          <div className="text-center py-12">
+            <div className="text-red-400 text-lg mb-2">⚠️</div>
+            <div className="text-red-400 text-sm">Failed to load transactions</div>
+            <button
+              onClick={() => refetch()}
+              className="mt-2 px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-xs hover:bg-red-500/30 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
       </div>
 
-      {!transactions.length && !loading && (
-        <div className="text-center py-12">
-          <div className="hidden md:block text-white/40 text-lg mb-2">📈</div>
-          <div className="text-white/60 text-sm">No transactions yet</div>
-          <div className="text-white/40 text-xs mt-1">
-            Trades will appear here once the token starts trading
-          </div>
-        </div>
-      )}
-
-      {loading && (
-        <div className="flex items-center justify-center py-8">
-          <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-        </div>
-      )}
-
-      {hasMore && !loading && transactions.length > 0 && !onPageChange && (
-        <button
-          onClick={onLoadMore}
-          className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/[0.05] text-white text-sm font-medium cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0"
-        >
-          Load more transactions
-        </button>
-      )}
-
       {/* Pagination Controls */}
-      {onPageChange && totalPages > 1 && (
-        <div className="mt-6 space-y-4">
+      {totalPages > 1 && (
+        <div className="space-y-4">
           {/* Items per page selector */}
           <div className="flex items-center justify-between text-sm text-white/60">
             <div className="flex items-center gap-2">
               <span>Show:</span>
               <select
                 value={itemsPerPage}
-                onChange={(e) => onItemsPerPageChange?.(Number(e.target.value))}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1); // Reset to first page
+                }}
                 className="px-2 py-1 rounded-lg bg-white/[0.05] border border-white/10 text-white text-sm focus:outline-none focus:border-[#4ecdc4] transition-colors"
               >
-                {itemsPerPageOptions.map((option) => (
+                {[10, 20, 50, 100].map((option) => (
                   <option key={option} value={option} className="bg-gray-800 text-white">
                     {option}
                   </option>
@@ -245,7 +351,7 @@ export default function TokenTrades({
           {/* Page navigation */}
           <div className="flex items-center justify-center gap-2">
             <button
-              onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+              onClick={() => updatePage(Math.max(1, currentPage - 1))}
               disabled={currentPage <= 1}
               className="px-3 py-2 rounded-lg border border-white/10 bg-white/[0.05] text-white text-sm font-medium cursor-pointer transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -269,7 +375,7 @@ export default function TokenTrades({
                 return (
                   <button
                     key={pageNum}
-                    onClick={() => onPageChange(pageNum)}
+                    onClick={() => updatePage(pageNum)}
                     className={`px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all duration-300 ${
                       currentPage === pageNum
                         ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white"
@@ -283,7 +389,7 @@ export default function TokenTrades({
             </div>
 
             <button
-              onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+              onClick={() => updatePage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage >= totalPages}
               className="px-3 py-2 rounded-lg border border-white/10 bg-white/[0.05] text-white text-sm font-medium cursor-pointer transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >

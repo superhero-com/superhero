@@ -62,7 +62,11 @@ export default function UserBadge(
             {name}
           </span>
           <span
-            className="address text-xs text-muted-foreground/40 font-mono tracking-wide underline decoration-muted-foreground/20 decoration-1 underline-offset-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px] min-w-0 flex-shrink"
+            className={cn(
+              "address text-muted-foreground/40 font-mono tracking-wide underline decoration-muted-foreground/20 decoration-1 underline-offset-2 whitespace-nowrap min-w-0 flex-shrink",
+              // Smaller + lighter font for full ak_ addresses; prevent ellipsis for them
+              address.startsWith('ak_') ? "text-[11px] font-light max-w-none overflow-visible" : "text-xs font-semibold overflow-hidden text-ellipsis max-w-[200px]"
+            )}
             title={address}
           >
             {formatAddress(address)}

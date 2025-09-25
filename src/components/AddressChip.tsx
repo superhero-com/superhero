@@ -92,8 +92,10 @@ export function AddressChip({
       
       {/* Address text */}
       <span className={cn(
-        "font-semibold tracking-wide",
-        large ? "text-sm" : "text-xs"
+        "tracking-wide whitespace-nowrap",
+        isAccount
+          ? (large ? "text-xs font-light font-mono" : "text-[10px] font-light font-mono")
+          : (large ? "text-sm font-semibold" : "text-xs font-semibold")
       )}>
         {formatAddress(address, large ? 8 : 6)}
       </span>

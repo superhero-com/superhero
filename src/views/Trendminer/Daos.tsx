@@ -1,7 +1,6 @@
 import { AeSdk, Node } from '@aeternity/aepp-sdk';
 import { useEffect, useMemo, useState } from 'react';
 import { TrendminerApi } from '../../api/backend';
-import TokenMiniChart from '../../components/Trendminer/TokenMiniChart';
 import { CONFIG } from '../../config';
 
 import { useAeSdk } from '../../hooks';
@@ -229,7 +228,7 @@ export default function Daos() {
               </div>
               
               <div className="mt-2 flex justify-end">
-                <TokenMiniChart address={t.sale_address || t.address} width={140} height={32} stroke="#ff6d15" />
+                TODO: chart
               </div>
               
               <div className="mt-2 grid grid-cols-2 gap-2 text-sm">

@@ -1,7 +1,8 @@
+import { PriceDataFormatter } from "@/features/shared/components";
 import { useMemo } from "react";
 import { TokenDto } from "../../../api/generated";
 import { AddressChip } from "../../../components/AddressChip";
-import TokenMiniChart from "../../../components/Trendminer/TokenMiniChart";
+import TokenLineChart from "./TokenLineChart";
 
 type PriceMovementTimeframe = '1D' | '7D' | '30D';
 
@@ -20,41 +21,6 @@ function parseCollectionName(collection: string): string {
   return collection || 'default';
 }
 
-// Helper function to normalize AE values  
-function normalizeAe(n: number): number {
-  if (!isFinite(n)) return 0;
-  return n >= 1e12 ? n / 1e18 : n;
-}
-
-// Component for price data formatting
-function PriceDataFormatter({ 
-  priceData, 
-  bigNumber = false, 
-  row = false 
-}: { 
-  priceData?: any; 
-  bigNumber?: boolean; 
-  row?: boolean; 
-}) {
-  const value = priceData?.amount || priceData?.value || 0;
-  const normalizedValue = normalizeAe(Number(value));
-  
-  return (
-    <div className={`${row ? 'flex flex-col' : 'text-right'} ${row ? 'text-xs' : 'text-sm'} font-mono text-white/90`}>
-      <span>
-        {bigNumber 
-          ? normalizedValue.toLocaleString()
-          : normalizedValue.toFixed(6)
-        } AE
-      </span>
-      {priceData?.percentage_change && (
-        <span className={`text-xs ${priceData.percentage_change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-          {priceData.percentage_change >= 0 ? '+' : ''}{priceData.percentage_change.toFixed(2)}%
-        </span>
-      )}
-    </div>
-  );
-}
 
 // Component for token label
 function TokenLabel({ children }: { children: React.ReactNode }) {
@@ -111,6 +77,7 @@ export default function TokenListTableRow({
             priceData={token.price_data}
             row={false}
           />
+
         </div>
       </td>
 
@@ -119,7 +86,7 @@ export default function TokenListTableRow({
         <div className="flex align-center md:block justify-between">
           <div className="mobile-label block md:hidden text-white/60 w-16">MC:</div>
           <PriceDataFormatter
-            bigNumber
+            bignumber
             priceData={token.market_cap_data}
             row={false}
           />
@@ -129,9 +96,9 @@ export default function TokenListTableRow({
       {/* Contract Address */}
       <td className="cell cell-address text-right px-1 px-lg-3">
         {tokenAddress && (
-          <AddressChip 
-            address={tokenAddress} 
-            copyable 
+          <AddressChip
+            address={tokenAddress}
+            copyable
             className="text-xs"
           />
         )}
@@ -141,12 +108,10 @@ export default function TokenListTableRow({
       <td className="cell cell-chart text-right pr-md-4">
         {tokenAddress && (
           <div className="ml-auto chart max-w-[140px]">
-            <TokenMiniChart
-              address={token.sale_address || tokenAddress}
-              width={120}
-              height={60}
-              stroke="#ff6d15"
-              timeframe={timeframe}
+            <TokenLineChart
+              saleAddress={token.sale_address || tokenAddress}
+              height={120}
+              hideTimeframe={true}
             />
           </div>
         )}

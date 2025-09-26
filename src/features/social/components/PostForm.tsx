@@ -283,7 +283,7 @@ export default function PostForm({
     <div
       className={`${
         isPost ? "w-full max-w-none" : "max-w-[680px] mx-auto md:mx-3"
-      } mb-5 md:mb-4 ${className}`}
+      } mb-2 md:mb-4 ${className}`}
     >
       <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="relative">

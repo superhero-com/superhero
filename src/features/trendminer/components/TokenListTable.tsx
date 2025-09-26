@@ -116,7 +116,9 @@ export default function TokenListTable({ pages, loading, showCollectionColumn }:
             width: 120px;
           }
 
-          .cell-price,
+          .cell-price {
+            width: 170px;
+          }
           .cell-market-cap,
           .cell-address {
             width: 170px;

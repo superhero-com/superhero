@@ -10,6 +10,7 @@ interface TokenLineChartProps {
   saleAddress: string;
   height?: number;
   hideTimeframe?: boolean;
+  timeframe?: string;
 }
 
 type PerformanceChartTimeframe = '1d' | '7d' | '30d';
@@ -28,22 +29,22 @@ export function TokenLineChart({
   saleAddress,
   height = 200,
   hideTimeframe = false,
+  timeframe = '30d',
 }: TokenLineChartProps) {
   const [loading, setLoading] = useState(false);
   const areaSeries = useRef<ISeriesApi<'Area'> | undefined>();
-  const [performanceChartTimeframe] = useState<PerformanceChartTimeframe>('30d');
 
   const { data } = useQuery({
     queryFn: () =>
       TransactionHistoricalService.getForPreview({
         address: saleAddress,
-        interval: performanceChartTimeframe,
+        interval: timeframe.toLowerCase() as PerformanceChartTimeframe,
       }),
     enabled: !!saleAddress,
     queryKey: [
       'TransactionHistoricalService.getForPreview',
       saleAddress,
-      performanceChartTimeframe,
+      timeframe,
     ],
     staleTime: 1000 * 60 * 5, // 5 minutes
   });

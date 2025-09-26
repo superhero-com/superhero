@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TokenListTable } from "..";
 import { TrendminerApi } from "../../../api/backend";
-import { TokenDto } from "../../../api/generated";
+import { TokenDto, TokensService } from "../../../api/generated";
 import GlobalStatsAnalytics from "../../../components/Trendminer/GlobalStatsAnalytics";
 import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
 import TrendingPillsCarousel from "../../../components/Trendminer/TrendingPillsCarousel";
@@ -124,20 +124,21 @@ export default function TokenList() {
   }
 
   async function fetchTokens(pageParam = 1, isInitial = false) {
+    console.log('fetchTokens', pageParam, isInitial);
     if (isInitial) {
       setIsFetching(true);
       setError(null);
     }
     
     try {
-      const response = await TrendminerApi.listTokens({
+      const response = await TokensService.listAll({
         orderBy: orderByMapped as any,
         orderDirection,
         collection: collection === 'all' ? undefined : collection,
         search: search || undefined,
         limit: 20,
         page: pageParam,
-      });
+      }) as any; // Cast to any since the generated type is incomplete
 
       const newItems = response?.items || [];
       const hasMore = response?.meta?.currentPage < response?.meta?.totalPages;
@@ -145,9 +146,23 @@ export default function TokenList() {
       if (isInitial || pageParam === 1) {
         setData({ pages: [{ items: newItems }] });
       } else {
-        setData(prev => ({
-          pages: prev ? [...prev.pages, { items: newItems }] : [{ items: newItems }]
-        }));
+        setData(prev => {
+          if (!prev) {
+            return { pages: [{ items: newItems }] };
+          }
+          
+          // Get all existing item addresses to prevent duplicates
+          const existingAddresses = new Set(
+            prev.pages.flatMap(page => page.items.map(item => item.address))
+          );
+          
+          // Filter out items that already exist
+          const uniqueNewItems = newItems.filter(item => !existingAddresses.has(item.address));
+          
+          return {
+            pages: [...prev.pages, { items: uniqueNewItems }]
+          };
+        });
       }
 
       setHasNextPage(hasMore);
@@ -169,7 +184,9 @@ export default function TokenList() {
 
   // Load initial data
   useEffect(() => {
-    fetchTokens(1, true);
+    if (!data?.pages?.length) {
+      fetchTokens(1, true);
+    }
   }, [orderBy, orderByMapped, collection, search, orderDirection]);
 
   // Intersection observer for infinite loading
@@ -190,7 +207,7 @@ export default function TokenList() {
     return () => {
       observer.disconnect();
     };
-  }, [hasNextPage, isFetching]);
+  }, [hasNextPage, isFetching, page]);
 
   function normalizeAe(n: number): number {
     if (!isFinite(n)) return 0;

@@ -28,7 +28,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
 
   return (
     <div
-      className="cursor-pointer w-screen -mx-[calc(100vw-100%)/2)] overflow-x-hidden md:w-full md:mx-0 border-b border-white/10 p-0 md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:backdrop-blur-[20px] md:rounded-[20px] md:transition-all md:duration-300 md:ease-out md:overflow-hidden md:hover:-translate-y-1"
+      className="cursor-pointer w-screen -mx-[calc((100vw-100%)/2)] overflow-x-hidden md:w-full md:mx-0 border-b border-white/10 p-0 md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:backdrop-blur-[20px] md:rounded-[20px] md:transition-all md:duration-300 md:ease-out md:overflow-hidden md:hover:-translate-y-1"
       onClick={handleItemClick}
     >
       <div className="p-3 md:p-5">
@@ -107,7 +107,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
               </div>
             )}
           </div>
-          <div className="ml-0 md:ml-3 md:pl-10 md:-mt-1 relative">
+          <div className="pl-[44px] md:ml-3 md:pl-10 md:-mt-1 relative">
             <div className="text-[15px] text-foreground leading-snug">
               {linkify(item.content, { knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}
             </div>

@@ -127,6 +127,7 @@ export default function TokenListTableRow({
               saleAddress={token.sale_address || tokenAddress}
               height={60}
               hideTimeframe={true}
+              timeframe={timeframe}
             />
           </div>
         )}

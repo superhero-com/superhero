@@ -44,7 +44,7 @@ export const configs: IAppConfigs = {
   avatarServiceUrl: "https://avatars.superherowallet.com/",
 
   features: {
-    trendminer: false,
+    trendminer: true,
   }
 };
 

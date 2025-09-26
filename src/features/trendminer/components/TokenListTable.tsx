@@ -22,14 +22,14 @@ export default function TokenListTable({ pages, loading, showCollectionColumn }:
   );
 
   return (
-    <div className="md:bg-white/5 md:rounded-2xl md:border md:border-white/10 md:backdrop-blur-xl overflow-hidden">
+    <div className="">
       <table className="w-full bctsl-token-list-table">
         <thead>
           <tr>
             <th className="cell-fake">
               {/* Fake column that fixes ::before problem on rows */}
             </th>
-            <th className="cell cell-rank text-xs opacity-50 text-left pr-2 pr-md-4 p-4">
+            <th className="cell cell-rank text-xs opacity-50 text-left pr-2 pr-md-4">
               <div title="Ranking based on current sort criteria">
                 Rank
               </div>
@@ -47,13 +47,13 @@ export default function TokenListTable({ pages, loading, showCollectionColumn }:
             <th className="cell cell-price text-xs opacity-50 text-left text-md-right py-1 px-1 px-lg-3">
               Price
             </th>
-            <th className="cell cell-market-cap text-xs opacity-50 text-right py-1 px-1 px-lg-3">
+            <th className="cell cell-market-cap text-xs opacity-50 text-left py-1 px-1 px-lg-3">
               Market Cap
             </th>
-            <th className="cell cell-address text-xs opacity-50 text-right py-1 px-1 px-lg-3">
+            <th className="cell cell-address text-xs opacity-50 text-left py-1 px-1 px-lg-3">
               Contract Address
             </th>
-            <th className="cell cell-chart text-xs text-right py-1 pl-3">
+            <th className="cell cell-chart text-xs text-right flex justify-center py-1 pl-3">
               <PerformanceTimeframeSelector 
                 value={performanceChartTimeframe}
                 onChange={setPerformanceChartTimeframe}
@@ -96,7 +96,6 @@ export default function TokenListTable({ pages, loading, showCollectionColumn }:
 
         .cell-name {
           width: auto;
-          font-size: 21px;
         }
 
         .cell-clickable-item {

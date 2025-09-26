@@ -25,7 +25,7 @@ function parseCollectionName(collection: string): string {
 // Component for token label
 function TokenLabel({ children }: { children: React.ReactNode }) {
     return (
-        <span className="px-2 py-1 bg-white/10 text-white/80 rounded-full text-xs font-medium">
+        <span className="px-2 py-1 bg-white/[0.08] text-white/80 rounded-full text-xs font-medium backdrop-blur-[10px]">
             {children}
         </span>
     );
@@ -49,7 +49,7 @@ export default function TokenMobileCard({
             clickable
             variant="filled"
             padding="medium"
-            className="mb-3 relative overflow-hidden"
+            className="mb-3 relative overflow-hidden bg-white/[0.02] border border-white/10 backdrop-blur-[20px] hover:bg-white/[0.05] transition-all duration-300"
         >
             {/* Top row: Rank, Name, Chart */}
             <div className="flex items-start justify-between mb-1">

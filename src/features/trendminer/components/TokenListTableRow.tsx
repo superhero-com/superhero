@@ -26,7 +26,7 @@ function parseCollectionName(collection: string): string {
 // Component for token label
 function TokenLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="px-2 py-1 bg-white/10 text-white/80 rounded-full text-xs font-medium">
+    <span className="px-2 py-1 bg-white/[0.08] text-white/80 rounded-full text-xs font-medium backdrop-blur-[10px]">
       {children}
     </span>
   );
@@ -62,17 +62,17 @@ export default function TokenListTableRow({
       </tr>
 
       {/* Desktop table row for larger screens */}
-      <tr className="bctsl-token-list-table-row rounded relative bg-white/5 hover:bg-white/10 transition-colors hidden md:table-row">
+      <tr className="bctsl-token-list-table-row rounded-xl relative  overflow-hidden border border-red backdrop-blur-[10px]  transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hidden md:table-row">
       {/* Rank */}
       <td className="cell cell-rank pl-2 pl-md-4">
-        <div className="rank text-sm font-medium text-white/90 font-bold opacity-50">
+        <div className="rank text-md font-bold text-white/90 opacity-50">
           {collectionRank}
         </div>
       </td>
 
       {/* Name */}
       <td className="cell cell-name px-1 px-lg-3">
-        <div className="token-name text-sm font-semibold text-white transition-colors">
+        <div className="token-name text-md font-bold text-white transition-colors">
           #{token.symbol || token.name}
         </div>
       </td>
@@ -92,7 +92,6 @@ export default function TokenListTableRow({
           <div className="mobile-label block md:hidden text-white/60 w-16">Price:</div>
           <PriceDataFormatter
             priceData={token.price_data}
-            rowOnSm
           />
 
         </div>
@@ -105,7 +104,6 @@ export default function TokenListTableRow({
           <PriceDataFormatter
             bignumber
             priceData={token.market_cap_data}
-            rowOnSm
           />
         </div>
       </td>
@@ -147,10 +145,11 @@ export default function TokenListTableRow({
         .bctsl-token-list-table-row {
           position: relative;
           z-index: 1;
-          transition: all 0.15s;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           /* Fix for Safari that doesn't support position: relative on tr */
           transform: translate(0, 0);
-          clip-path: inset(0);
+          
+
         }
 
         .bctsl-token-list-table-row::before,
@@ -160,18 +159,22 @@ export default function TokenListTableRow({
           position: absolute;
           z-index: -1;
           border-radius: inherit;
-          transition: all 0.15s;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          overflow: hidden;
+          background: linear-gradient(135deg, rgba(17, 97, 254, 0.01) 0%, rgba(255, 255, 255, 0.05) 100%);
         }
 
         .bctsl-token-list-table-row::before {
           inset: 0;
           opacity: 0;
-          background: linear-gradient(0deg, rgba(255, 255, 255, 0.2) 20%, rgba(255, 255, 255, 0) 100%);
+          background: linear-gradient(135deg, rgba(17, 97, 254, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+          border-radius: 12px;
+          
         }
 
         .bctsl-token-list-table-row::after {
           inset: 1px;
-          background-color: rgb(var(--surface));
         }
 
         .bctsl-token-list-table-row:hover::before {
@@ -179,23 +182,29 @@ export default function TokenListTableRow({
         }
 
         .bctsl-token-list-table-row:hover::after {
-          background-color: #2a2a2a;
+          background-color: rgba(255, 255, 255, 0.05);
         }
 
         .bctsl-token-list-table-row:hover .token-name {
-          color: rgb(var(--primary));
+          color: #1161FE;
+        }
+
+        .bctsl-token-list-table-row:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(17, 97, 254, 0.15);
         }
 
         .bctsl-token-list-table-row:active {
-          transform: translateY(3px);
+          transform: translateY(0);
         }
 
         .bctsl-token-list-table-row:active::after {
-          background-color: #333333;
+          background-color: rgba(255, 255, 255, 0.08);
         }
 
         .token-name {
-          transition: all 0.15s;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          color: white;
         }
 
         .cell-rank {
@@ -227,8 +236,10 @@ export default function TokenListTableRow({
             margin-top: 4px;
             padding-block: 8px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 1rem;
+            border-radius: 12px;
             margin: 0.5rem 0;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.02);
           }
 
           .cell-rank {

@@ -1,13 +1,14 @@
-import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
+import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarWithChainNameFeed";
 import { cn } from "@/lib/utils";
 import { memo, useCallback } from "react";
 import { PostDto } from "../../../api/generated";
 // Using shared glass card styles via `genz-card` to match wallet/AE price cards
 import { Badge } from "../../../components/ui/badge";
 import { IconComment, IconLink } from "../../../icons";
+import AddressFormatted from "../../../components/AddressFormatted";
 import { linkify } from "../../../utils/linkify";
 import { useWallet } from "../../../hooks";
-import { relativeTime } from "../../../utils/time";
+import { relativeTime, compactTime } from "../../../utils/time";
 import { CONFIG } from "../../../config";
 
 interface FeedItemProps {
@@ -21,61 +22,81 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
   const postId = item.id;
   const authorAddress = item.sender_address;
   const { chainNames } = useWallet();
+  const displayName = chainNames?.[authorAddress] || 'Legend';
 
   const handleItemClick = useCallback(() => {
     onItemClick(postId);
   }, [onItemClick, postId]);
 
   return (
-    <div className="glass-card cursor-pointer w-full" onClick={handleItemClick}>
-      <div className="flex gap-3">
-        <div className="flex-1 min-w-0 space-y-2 md:space-y-1">
-            <div className="flex flex-col gap-0 md:flex-row md:items-start md:justify-between md:gap-2">
-            <div className="flex-1 min-w-0">
-              <AddressAvatarWithChainName
+    <div
+      className="relative cursor-pointer w-screen -mx-[calc((100vw-100%)/2)] md:w-full md:mx-0 p-0 md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:backdrop-blur-[20px] md:rounded-[20px] md:transition-all md:duration-300 md:ease-out md:overflow-hidden md:hover:-translate-y-1"
+      onClick={handleItemClick}
+    >
+      <div className="p-4 md:p-5">
+        <div className="flex gap-2 items-start">
+          {/* Left column: avatar only, aligned to top */}
+          <div className="flex-shrink-0">
+            <div className="md:hidden">
+              <AddressAvatarWithChainNameFeed
+                address={authorAddress}
+                size={32}
+                overlaySize={16}
+                showAddressAndChainName={false}
+              />
+            </div>
+            <div className="hidden md:block">
+              <AddressAvatarWithChainNameFeed
                 address={authorAddress}
                 size={40}
                 overlaySize={20}
-                contentClassName="translate-y-[2px]"
-                secondary={(
-                  item.tx_hash && CONFIG.EXPLORER_URL ? (
-                    <a
-                      href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${item.tx_hash}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="md:hidden inline-flex items-center gap-0.5 text-[11px] leading-none text-light-font-color no-gradient-text group min-h-0 min-w-0 p-0 h-auto mt-1"
-                      title={item.tx_hash}
-                    >
-                      <span className="underline-offset-2 group-hover:underline">
-                        {`Posted on-chain${item.created_at ? ` ${relativeTime(new Date(item.created_at))}` : ''}`}
-                      </span>
-                      <IconLink className="w-2 h-2" />
-                    </a>
-                  ) : null
-                )}
+                showAddressAndChainName={false}
               />
             </div>
-            {item.tx_hash && CONFIG.EXPLORER_URL && (
-              <div className="hidden md:flex md:items-center md:gap-2 md:flex-shrink-0">
-                <a
-                  href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${item.tx_hash}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-0.5 md:gap-1 text-[11px] md:text-xs leading-none md:leading-normal text-light-font-color hover:text-light-font-color no-gradient-text md:self-start group min-h-0 min-w-0 p-0 h-auto"
-                  title={item.tx_hash}
-                >
-                  <span className="underline-offset-2 group-hover:underline">
-                    {`Posted on-chain${item.created_at ? ` ${relativeTime(new Date(item.created_at))}` : ''}`}
-                  </span>
-                  <IconLink className="w-2 h-2 md:w-2.5 md:h-2.5" />
-                </a>
-              </div>
-            )}
           </div>
-          <div className="ml-0 md:ml-3 md:pl-10 md:-mt-1 relative">
-            <div className="text-[15px] text-foreground leading-snug">
+
+          <div className="flex-1 min-w-0 space-y-2 md:space-y-3">
+            <div className="flex flex-col gap-0 md:flex-row md:items-start md:justify-between md:gap-2">
+              <div className="flex-1 min-w-0">
+                {/* Name + address (always visible) */}
+                <div className="min-w-0">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
+                      {displayName}
+                    </div>
+                    <div className="md:hidden text-[13px] leading-none text-white/70 ml-2 transition-none">
+                      {compactTime(item.created_at as unknown as string)}
+                    </div>
+                  </div>
+                  <div className="text-xs text-foreground/90 font-mono leading-tight">
+                    <AddressFormatted address={authorAddress} truncate={false} />
+                  </div>
+                  {/* Mobile on-chain link removed intentionally */}
+                </div>
+              </div>
+              {/* Desktop timestamp + on-chain link (stacked) */}
+              <div className="hidden md:flex md:flex-col md:items-end md:gap-1 ml-3">
+                <div className="text-xs text-white/60 leading-none whitespace-nowrap">
+                  {item.created_at ? relativeTime(new Date(item.created_at)) : ''}
+                </div>
+                {item.tx_hash && CONFIG.EXPLORER_URL && (
+                  <a
+                    href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${item.tx_hash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1 text-xs leading-none text-white/60 no-gradient-text"
+                    title={item.tx_hash}
+                  >
+                    <span>on-chain</span>
+                    <IconLink className="w-2 h-2" />
+                  </a>
+                )}
+              </div>
+            </div>
+            {/* Right-side block above handles on-chain link; remove duplicate area */}
+            <div className="ml-0 md:ml-0 md:pl-0 md:mt-2 relative">
+              <div className="text-[15px] text-foreground leading-snug">
               {linkify(item.content, { knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}
             </div>
 
@@ -106,7 +127,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
                 </div>
               )}
 
-            <div className="flex items-center justify-between mt-2 pt-2">
+              <div className="flex items-center justify-between mt-2 pt-2">
               <Badge
                 variant="outline"
                 className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 bg-transparent border-white/10 hover:border-white/20 transition-colors"
@@ -115,27 +136,18 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
                 {commentCount}
               </Badge>
               {/* On-chain link moved to header (top-left) */}
+              </div>
             </div>
           </div>
         </div>
       </div>
+      {/* Full-bleed divider on mobile */}
+      <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc((100vw-100%-16px)/-2)] w-screen h-px bg-white/10" />
     </div>
   );
 });
 
-// Memoized FeedItem with performance optimizations
-const MemoizedFeedItem = memo(FeedItem, (prevProps, nextProps) => {
-  // Deep comparison for optimal re-rendering
-  return (
-    prevProps.item.id === nextProps.item.id &&
-    prevProps.commentCount === nextProps.commentCount &&
-    prevProps.item.created_at === nextProps.item.created_at &&
-    JSON.stringify(prevProps.item.media) ===
-      JSON.stringify(nextProps.item.media)
-  );
-});
-
+// Simple memo to avoid heavy comparator parsing issues
 FeedItem.displayName = "FeedItem";
-MemoizedFeedItem.displayName = "MemoizedFeedItem";
 
-export default MemoizedFeedItem;
+export default memo(FeedItem);

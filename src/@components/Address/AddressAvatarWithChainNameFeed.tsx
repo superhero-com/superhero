@@ -9,7 +9,7 @@ import { useChainName } from '@/hooks/useChainName';
 import { cn } from '@/lib/utils';
 import { Decimal } from '@/libs/decimal';
 
-interface AddressAvatarWithChainNameProps {
+interface AddressAvatarWithChainNameFeedProps {
     address: string;
     size?: number;
     overlaySize?: number;
@@ -24,7 +24,7 @@ interface AddressAvatarWithChainNameProps {
     contentClassName?: string;
 }
 
-export const AddressAvatarWithChainName = memo(({
+export const AddressAvatarWithChainNameFeed = memo(({
     address,
     size = 36,
     overlaySize = 18,
@@ -37,19 +37,17 @@ export const AddressAvatarWithChainName = memo(({
     hideFallbackName = false,
     secondary,
     contentClassName
-}: AddressAvatarWithChainNameProps) => {
+}: AddressAvatarWithChainNameFeedProps) => {
     const navigate = useNavigate();
     const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(address);
     const { chainName } = useChainName(address);
 
-    // Hover state management (same as UserBadge)
     const [hover, setHover] = useState(false);
     const [visible, setVisible] = useState(false);
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const ref = useRef<HTMLDivElement | null>(null);
     const cardRef = useRef<HTMLDivElement | null>(null);
 
-    // Calculate position for hover card
     const updatePosition = () => {
         if (ref.current) {
             const rect = ref.current.getBoundingClientRect();
@@ -60,7 +58,6 @@ export const AddressAvatarWithChainName = memo(({
         }
     };
 
-    // Show card after 300ms delay when hovering
     useEffect(() => {
         if (!hover || !isHoverEnabled) {
             setVisible(false);
@@ -71,25 +68,12 @@ export const AddressAvatarWithChainName = memo(({
         return () => window.clearTimeout(id);
     }, [hover, isHoverEnabled]);
 
-    // Load balances when needed (only when showing balance or when hover card is visible)
     useEffect(() => {
         if (!address) return;
         if (showBalance || visible) {
             loadAccountData();
         }
     }, [address, showBalance, visible]);
-
-    // Handle click outside to close card
-    useEffect(() => {
-        function handleDocClick(e: MouseEvent) {
-            if (!cardRef.current) return;
-            if (cardRef.current.contains(e.target as Node)) return;
-            if (ref.current && ref.current.contains(e.target as Node)) return;
-            setVisible(false);
-        }
-        if (visible) document.addEventListener('click', handleDocClick);
-        return () => document.removeEventListener('click', handleDocClick);
-    }, [visible]);
 
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -107,7 +91,7 @@ export const AddressAvatarWithChainName = memo(({
                 </div>
             </div>
 
-            <div className={cn("flex flex-col items-start min-w-0 px-[12px] pb-[20px]", contentClassName)}>
+            <div className={cn("flex flex-col items-start min-w-0", contentClassName)}>
                 {showAddressAndChainName && (
                     <>
                         <span className="chain-name text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
@@ -122,13 +106,6 @@ export const AddressAvatarWithChainName = memo(({
                         </span>
                     </>
                 )}
-                <div>
-                    {showBalance && (
-                        <div className="text-sm font-bold text-white">
-                            {decimalBalance.prettify()} AE
-                        </div>
-                    )}
-                </div>
                 {secondary}
             </div>
         </>
@@ -146,18 +123,12 @@ export const AddressAvatarWithChainName = memo(({
                 {renderContent()}
             </div>
 
-            {/* Hover Card - Rendered as portal to avoid clipping */}
             {visible && createPortal(
                 <AeCard
                     ref={cardRef}
                     variant="glow"
                     className="min-w-[300px] max-w-[420px] shadow-card"
-                    style={{
-                        position: 'absolute',
-                        top: position.top,
-                        left: position.left,
-                        zIndex: 9999,
-                    }}
+                    style={{ position: 'absolute', top: position.top, left: position.left, zIndex: 9999 }}
                     onMouseEnter={() => setHover(true)}
                     onMouseLeave={() => setHover(false)}
                 >
@@ -165,29 +136,21 @@ export const AddressAvatarWithChainName = memo(({
                         <div>
                             <div className="flex gap-3 mb-3 align-center items-center">
                                 {renderContent()}
-
                             </div>
                             <div className="min-w-0 flex-1">
-                                {/* AE Balance */}
-                                <div className="text-xs text-muted-foreground mb-2">
-                                    <span className="font-semibold">AE Balance: </span>
-                                    <span className="font-mono">{decimalBalance ? `${decimalBalance.prettify()} AE` : 'Loading...'}</span>
-                                </div>
-
-                                {/* Top 3 Token Holdings */}
+                                {showBalance && (
+                                    <div className="text-xs text-muted-foreground mb-2">
+                                        <span className="font-semibold">AE Balance: </span>
+                                        <span className="font-mono">{decimalBalance ? `${decimalBalance.prettify()} AE` : 'Loading...'}</span>
+                                    </div>
+                                )}
                                 {aex9Balances.length > 0 && (
                                     <div className="text-xs text-muted-foreground">
                                         <div className="font-semibold mb-1">Tokens Holdings:</div>
                                         {aex9Balances
                                             .sort((a, b) => {
-                                                // Calculate decimal values for comparison using Decimal library
-                                                const balanceA = a.amount && a.decimals
-                                                    ? Decimal.from(a.amount).div(10 ** a.decimals)
-                                                    : Decimal.from(0);
-                                                const balanceB = b.amount && b.decimals
-                                                    ? Decimal.from(b.amount).div(10 ** b.decimals)
-                                                    : Decimal.from(0);
-                                                // Sort descending (highest first)
+                                                const balanceA = a.amount && a.decimals ? Decimal.from(a.amount).div(10 ** a.decimals) : Decimal.from(0);
+                                                const balanceB = b.amount && b.decimals ? Decimal.from(b.amount).div(10 ** b.decimals) : Decimal.from(0);
                                                 return balanceB.gt(balanceA) ? 1 : balanceB.lt(balanceA) ? -1 : 0;
                                             })
                                             .slice(0, 3)
@@ -216,7 +179,6 @@ export const AddressAvatarWithChainName = memo(({
         </span>
     );
 }, (prevProps, nextProps) => {
-    // Custom comparison for better performance
     return prevProps.address === nextProps.address &&
         prevProps.size === nextProps.size &&
         prevProps.overlaySize === nextProps.overlaySize &&
@@ -225,6 +187,8 @@ export const AddressAvatarWithChainName = memo(({
         prevProps.contentClassName === nextProps.contentClassName;
 });
 
-AddressAvatarWithChainName.displayName = 'AddressAvatarWithChainName';
+AddressAvatarWithChainNameFeed.displayName = 'AddressAvatarWithChainNameFeed';
 
-export default AddressAvatarWithChainName;
+export default AddressAvatarWithChainNameFeed;
+
+

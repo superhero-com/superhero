@@ -17,7 +17,7 @@
   padding-top: 18px;
 
   @include mobile {
-    padding-top: 80px;
+    padding-top: 84px;
   }
 }
 
@@ -42,12 +42,12 @@
   margin: 0 auto;
   
   @include mobile {
-    padding: 0 0.75rem;
+    padding: 0 0.5rem;
     max-width: 100%;
   }
   
   @include mobile-small {
-    padding: 0 0.5rem;
+    padding: 0 0.25rem;
   }
 }
 

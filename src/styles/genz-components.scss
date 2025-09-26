@@ -525,6 +525,12 @@
     border-radius: 16px;
   }
 
+  /* Reduce padding for feed cards on mobile */
+  .glass-card {
+    padding: 8px;
+    border-radius: 12px;
+  }
+
   .genz-btn {
     padding: 12px 24px;
     font-size: 0.8rem;

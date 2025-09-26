@@ -66,11 +66,10 @@ export function formatAddress(address: string, length = 6): string {
     return address; // Show full AENS names
   }
   
-  // Special formatting for Aeternity account addresses: ak_<first3> ... <last3>
-  const { valid, prefix, hash } = validateHash(address);
-  if (valid && prefix === Encoding.AccountAddress && hash) {
-    if (hash.length <= 6) return address;
-    return `${prefix}_${hash.slice(0, 3)}...${hash.slice(-3)}`;
+  // Show full Aeternity account addresses (ak_...) without truncation
+  const { valid, prefix } = validateHash(address);
+  if (valid && prefix === Encoding.AccountAddress) {
+    return address;
   }
   
   if (address.length <= length * 2 + 3) {

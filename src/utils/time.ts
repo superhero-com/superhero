@@ -25,4 +25,21 @@ export function relativeTime(input: string | number | Date | undefined): string 
   return rtf.format(diff < 0 ? -value : value, unit);
 }
 
+// Mobile-friendly compact time like 2m, 2h, 1d, 4d, 1w
+export function compactTime(input: string | number | Date | undefined): string {
+  if (!input) return '';
+  const now = Date.now();
+  const ts = new Date(input).getTime();
+  const seconds = Math.max(0, Math.floor((now - ts) / 1000));
+  if (seconds < 60) return `${Math.max(1, seconds)}s`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d`;
+  const weeks = Math.floor(days / 7);
+  return `${weeks}w`;
+}
+
 

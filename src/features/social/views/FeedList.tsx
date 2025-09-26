@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useEffect } from "react";
+import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { PostsService } from "../../../api/generated";
@@ -179,6 +179,22 @@ export default function FeedList({
     }
   }, []);
 
+  // Mobile: auto-load more when reaching bottom using IntersectionObserver
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!('IntersectionObserver' in window)) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    }, { root: null, rootMargin: '200px 0px', threshold: 0 });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   const content = (
     <div className="w-full">
       {/* Mobile: CreatePost first, then SortControls */}
@@ -187,7 +203,7 @@ export default function FeedList({
         <SortControls
           sortBy={sortBy}
           onSortChange={handleSortChange}
-          className="sticky top-0 z-10 bg-black/20 backdrop-blur-md w-full"
+          className="sticky top-0 z-10 w-full"
         />
       </div>
 
@@ -197,21 +213,26 @@ export default function FeedList({
         <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
       </div>
 
-      <div className="w-full gap-4 flex flex-col">
+      <div className="w-full flex flex-col gap-0 md:gap-4 -mx-2 md:mx-0">
         {renderEmptyState()}
         {renderFeedItems}
       </div>
 
       {hasNextPage && filteredAndSortedList.length > 0 && (
-        <div className="p-4 md:p-6 text-center">
-          <AeButton
-            loading={isFetchingNextPage}
-            onClick={() => fetchNextPage()}
-            className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
-          >
-            Load more
-          </AeButton>
-        </div>
+        <>
+          {/* Desktop: explicit load more button */}
+          <div className="hidden md:block p-4 md:p-6 text-center">
+            <AeButton
+              loading={isFetchingNextPage}
+              onClick={() => fetchNextPage()}
+              className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
+            >
+              Load more
+            </AeButton>
+          </div>
+          {/* Mobile: auto-load sentinel */}
+          <div id="feed-infinite-sentinel" className="md:hidden h-10" ref={sentinelRef} />
+        </>
       )}
     </div>
   );

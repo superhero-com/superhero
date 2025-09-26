@@ -8,7 +8,7 @@ import { IconComment, IconLink } from "../../../icons";
 import AddressFormatted from "../../../components/AddressFormatted";
 import { linkify } from "../../../utils/linkify";
 import { useWallet } from "../../../hooks";
-import { relativeTime } from "../../../utils/time";
+import { relativeTime, compactTime } from "../../../utils/time";
 import { CONFIG } from "../../../config";
 
 interface FeedItemProps {
@@ -60,28 +60,18 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
               <div className="flex-1 min-w-0">
                 {/* Name + address (always visible) */}
                 <div className="min-w-0">
-                  <div className="text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
-                    {displayName}
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
+                      {displayName}
+                    </div>
+                    <div className="md:hidden text-[14px] text-light-font-color ml-2">
+                      {compactTime(item.created_at as unknown as string)}
+                    </div>
                   </div>
                   <div className="text-xs text-foreground/90 font-mono leading-tight">
                     <AddressFormatted address={authorAddress} truncate={false} />
                   </div>
-                  {/* Mobile on-chain link below names */}
-                  {item.tx_hash && CONFIG.EXPLORER_URL && (
-                    <a
-                      href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${item.tx_hash}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="md:hidden inline-flex items-center gap-0.5 text-[11px] leading-none text-light-font-color no-gradient-text group min-h-0 min-w-0 p-0 h-auto mt-1"
-                      title={item.tx_hash}
-                    >
-                      <span className="underline-offset-2 group-hover:underline">
-                        {`Posted on-chain${item.created_at ? ` ${relativeTime(new Date(item.created_at))}` : ''}`}
-                      </span>
-                      <IconLink className="w-2 h-2" />
-                    </a>
-                  )}
+                  {/* Mobile on-chain link removed intentionally */}
                 </div>
 
                 {/* Desktop on-chain link on the right */}
@@ -96,7 +86,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
                       title={item.tx_hash}
                     >
                       <span className="underline-offset-2 group-hover:underline">
-                        {`Posted on-chain${item.created_at ? ` ${relativeTime(new Date(item.created_at))}` : ''}`}
+                        {item.created_at ? relativeTime(new Date(item.created_at)) : ''}
                       </span>
                       <IconLink className="w-2 h-2 md:w-2.5 md:h-2.5" />
                     </a>

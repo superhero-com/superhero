@@ -181,9 +181,6 @@ class WebSocketClient {
   }
 
   connect(url: string) {
-    console.log('==============');
-    console.log('connect::', url);
-    console.log('==============');
     if (this.socketClient) {
       this.disconnect();
     }

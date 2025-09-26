@@ -74,3 +74,21 @@ export const AETERNITY_TOKEN_BASE_DATA = {
       symbol: 'XAU',
     },
   ];
+
+  export const PRICE_MOVEMENT_TIMEFRAMES = ["1d", "7d", "30d"] as const;
+
+  export const TX_FUNCTIONS = {
+    buy: "buy",
+    sell: "sell",
+    create_community: "create_community",
+    register_invitation_code: "register_invitation_code",
+    redeem_invitation_code: "redeem_invitation_code",
+  } as const;
+
+  export const WEB_SOCKET_CHANNELS = {
+    TokenCreated: "token-created",
+    TokenUpdated: "token-updated",
+    TokenTransaction: "token-transaction",
+    TokenHistory: "token-history",
+  };
+  export const WEB_SOCKET_RECONNECT_TIMEOUT = 1000;

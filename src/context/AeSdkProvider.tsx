@@ -8,6 +8,7 @@ import configs from "../configs";
 import { NETWORK_MAINNET } from "../utils/constants";
 import { INetwork } from "../utils/types";
 import { createDeepLinkUrl } from "../utils/url";
+import WebSocketClient from "@/libs/WebSocketClient";
 
 export const AeSdkContext = createContext<{
     aeSdk: AeSdkAepp,
@@ -86,6 +87,9 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
         }, 30000);
         getCurrentGeneration(_aeSdk);
         setSdkInitialized(true);
+
+        WebSocketClient.disconnect();
+        WebSocketClient.connect(activeNetwork.websocketUrl);
     }
 
     function getCurrentGeneration(sdk?: AeSdkAepp) {

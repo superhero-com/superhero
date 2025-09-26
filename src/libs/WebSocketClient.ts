@@ -35,18 +35,8 @@ class WebSocketClient {
     if (!this.socketClient) {
       return;
     }
-    this.socketClient.on("connect", () => {
-      this.handleWebsocketOpen();
-    });
-    this.socketClient.on("disconnect", () => {
-      this.handleWebsocketClose();
-    });
-    this.socketClient.on("connect_error", (error: any) => {
-      console.error("WebSocket connection error:", error);
-    });
-    this.socketClient.on("error", (error: any) => {
-      console.error("WebSocket error:", error);
-    });
+    this.socketClient.on('connect', () => this.handleWebsocketOpen());
+    this.socketClient.on('disconnect', () => this.handleWebsocketClose());
     this.socketClient.on(WEB_SOCKET_CHANNELS.TokenCreated, (message: any) => {
       this.handleWebsocketMessage({
         subscription: WEB_SOCKET_CHANNELS.TokenCreated,
@@ -59,19 +49,16 @@ class WebSocketClient {
         payload: message,
       });
     });
-    this.socketClient.on(
-      WEB_SOCKET_CHANNELS.TokenTransaction,
-      (message: any) => {
-        this.handleWebsocketMessage({
-          subscription: WEB_SOCKET_CHANNELS.TokenTransaction,
-          payload: message,
-        });
-        this.handleWebsocketMessage({
-          subscription: `${WEB_SOCKET_CHANNELS.TokenTransaction}::${message.sale_address}`,
-          payload: message,
-        });
-      },
-    );
+    this.socketClient.on(WEB_SOCKET_CHANNELS.TokenTransaction, (message: any) => {
+      this.handleWebsocketMessage({
+        subscription: WEB_SOCKET_CHANNELS.TokenTransaction,
+        payload: message,
+      });
+      this.handleWebsocketMessage({
+        subscription: `${WEB_SOCKET_CHANNELS.TokenTransaction}::${message.sale_address}`,
+        payload: message,
+      });
+    });
     this.socketClient.on(WEB_SOCKET_CHANNELS.TokenHistory, (message: any) => {
       this.handleWebsocketMessage({
         subscription: `${WEB_SOCKET_CHANNELS.TokenHistory}::${message.sale_address}`,
@@ -91,7 +78,7 @@ class WebSocketClient {
         if (!this.socketClient) {
           return;
         }
-        this.socketClient.emit("message", message);
+        this.socketClient.emit('message', message);
       });
     } catch (error) {
       console.log(error);
@@ -109,13 +96,8 @@ class WebSocketClient {
     return this.isWsConnected;
   }
 
-  subscribeForChannel(
-    message: IWebSocketSubscriptionMessage,
-    callback: (payload: any) => void,
-  ) {
-    const location = message.target
-      ? `${message.payload}::${message.target}`
-      : message.payload;
+  subscribeForChannel(message: IWebSocketSubscriptionMessage, callback: (payload: any) => void) {
+    const location = message.target ? `${message.payload}::${message.target}` : message.payload;
     const uuid = genUuid();
     if (!this.subscribers[location]) {
       this.subscribers[location] = {};
@@ -126,10 +108,7 @@ class WebSocketClient {
     };
   }
 
-  subscribeForTokenUpdates(
-    sale_address: string,
-    callback: (payload: ITransaction) => void,
-  ) {
+  subscribeForTokenUpdates(sale_address: string, callback: (payload: ITransaction) => void) {
     return this.subscribeForChannel(
       {
         payload: WEB_SOCKET_CHANNELS.TokenUpdated,
@@ -148,10 +127,7 @@ class WebSocketClient {
     );
   }
 
-  subscribeForTokenHistories(
-    sale_address: string,
-    callback: (payload: any) => void,
-  ) {
+  subscribeForTokenHistories(sale_address: string, callback: (payload: any) => void) {
     return this.subscribeForChannel(
       {
         payload: WEB_SOCKET_CHANNELS.TokenHistory,
@@ -162,10 +138,7 @@ class WebSocketClient {
   }
 
   subscribeToNewTokenSales(callback: (payload: ITransaction) => void) {
-    return this.subscribeForChannel(
-      { payload: WEB_SOCKET_CHANNELS.TokenCreated },
-      callback,
-    );
+    return this.subscribeForChannel({ payload: WEB_SOCKET_CHANNELS.TokenCreated }, callback);
   }
 
   private handleWebsocketMessage(message: any) {
@@ -184,11 +157,11 @@ class WebSocketClient {
       }
 
       // Call all subscribers for the channel
-      Object.values(
-        this.subscribers[data.subscription as WebSocketChannelName],
-      ).forEach((subscriberCb) => subscriberCb(data.payload));
+      Object.values(this.subscribers[data.subscription as WebSocketChannelName]).forEach(
+        (subscriberCb) => subscriberCb(data.payload),
+      );
     } catch (error) {
-      console.error("WebSocket message handling error:", error);
+      console.log(error);
     }
   }
 
@@ -198,16 +171,19 @@ class WebSocketClient {
     }
     try {
       this.socketClient.disconnect();
-      this.socketClient.off("connect", this.handleWebsocketOpen);
-      this.socketClient.off("disconnect", this.handleWebsocketClose);
-      this.socketClient.off("message", this.handleWebsocketMessage);
-    } catch (error) {
+      this.socketClient.off('connect', this.handleWebsocketOpen);
+      this.socketClient.off('disconnect', this.handleWebsocketClose);
+      this.socketClient.off('message', this.handleWebsocketMessage);
+    } catch {
       //
     }
     this.socketClient = undefined;
   }
 
   connect(url: string) {
+    console.log('==============');
+    console.log('connect::', url);
+    console.log('==============');
     if (this.socketClient) {
       this.disconnect();
     }

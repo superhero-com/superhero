@@ -18,7 +18,7 @@ export default function ChartClock({ className = '', ...props }: ChartClockProps
     const interval = setInterval(() => {
       const connected = WebSocketClient.isConnected();
       setIsConnected(connected);
-      
+      console.log('connected', connected);
       // Only update time if connected
       if (connected) {
         setCurrentTime(moment());

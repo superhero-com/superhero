@@ -320,13 +320,13 @@ export default function TokenDetails() {
 
   useEffect(() => {
     if (!data?.sale_address) return;
-    const unsub = WebSocketClient.subscribe(
+    const unsub = WebSocketClient.subscribeForTokenHistories(
       `TokenUpdated::${data.sale_address}`,
       (payload) => {
         setData((prev: any) => ({ ...(prev || {}), ...payload }));
       }
     );
-    const unsub2 = WebSocketClient.subscribe(
+    const unsub2 = WebSocketClient.subscribeForTokenHistories(
       `TokenHistory::${data.sale_address}`,
       (tx: any) => {
         setCandleSeries((curr) => {

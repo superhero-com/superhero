@@ -30,6 +30,8 @@ import TvCandles from "../components/Trendminer/TvCandles";
 import { TokenTradeCard, TokenRanking } from "../features/trendminer";
 import { TokenSummary } from "../features/bcl/components";
 import { TokenDto as TrendminerTokenDto } from "../features/trendminer/types";
+import TokenCandlestickChartSkeleton from "@/components/skeletons/TokenDetails/TokenCandlestickChartSkeleton";
+import TokenCandlestickChart from "@/components/charts/TokenCandlestickChart";
 
 interface TokenSaleDetailsProps {}
 
@@ -134,125 +136,6 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
     };
   }, [token]);
 
-  // Load additional data
-//   useEffect(() => {
-//     if (!token?.sale_address) return;
-
-//     let cancelled = false;
-
-//     const loadAdditionalData = async () => {
-//       try {
-//         // Load performance data
-//         const perfData = await TrendminerApi.getTokenPerformance(
-//           tokenName || ""
-//         );
-//         if (!cancelled) setPerformance(perfData);
-//       } catch (error) {
-//         console.error("Failed to load performance data:", error);
-//       }
-
-//       try {
-//         // Load holders
-//         const holdersData = await TrendminerApi.listTokenHolders(
-//           token.sale_address,
-//           {
-//             limit: 10,
-//             page: 1,
-//           }
-//         );
-//         if (!cancelled) {
-//           const list = holdersData?.items ?? holdersData ?? [];
-//           setHolders(list);
-//           if (list.length < 10) setHoldersEnd(true);
-//         }
-//       } catch (error) {
-//         console.error("Failed to load holders:", error);
-//       }
-
-//       try {
-//         // Load transactions
-//         const txData = await TrendminerApi.listTokenTransactions(
-//           token.sale_address,
-//           {
-//             limit: 10,
-//             page: 1,
-//           }
-//         );
-//         if (!cancelled) {
-//           const list = txData?.items ?? txData ?? [];
-//           setTransactions(list);
-//           if (list.length < 10) setTxEnd(true);
-//         }
-//       } catch (error) {
-//         console.error("Failed to load transactions:", error);
-//       }
-
-//       try {
-//         // Load chart data
-//         const chartData = await TrendminerApi.getTokenHistory(
-//           token.sale_address,
-//           {
-//             interval: intervalSec,
-//             convertTo: "ae",
-//             limit: 200,
-//             page: 1,
-//           }
-//         );
-//         if (!cancelled) {
-//           const items = Array.isArray(chartData?.pages)
-//             ? chartData.pages.flat()
-//             : Array.isArray(chartData)
-//             ? chartData
-//             : [];
-//           const mapped = items
-//             .map((it: any) => ({
-//               time: new Date(it.timeClose).getTime(),
-//               open: Number(it.quote.open),
-//               high: Number(it.quote.high),
-//               low: Number(it.quote.low),
-//               close: Number(it.quote.close),
-//               volume: Number(it.quote.volume),
-//             }))
-//             .sort((a: any, b: any) => a.time - b.time);
-//           setCandleSeries(mapped);
-//         }
-//       } catch (error) {
-//         console.error("Failed to load chart data:", error);
-//       }
-//     };
-
-//     loadAdditionalData();
-
-//     return () => {
-//       cancelled = true;
-//     };
-//   }, [token?.sale_address, tokenName, intervalSec]);
-
-  // Handle token deployment success
-//   useEffect(() => {
-//     if (token && isTokenNewlyCreated) {
-//       // Remove from recently created tokens
-//       try {
-//         const recentTokens = JSON.parse(
-//           localStorage.getItem("recentlyCreatedTokens") || "[]"
-//         );
-//         const updatedTokens = recentTokens.filter(
-//           (name: string) => name !== token.name
-//         );
-//         localStorage.setItem(
-//           "recentlyCreatedTokens",
-//           JSON.stringify(updatedTokens)
-//         );
-//         setShowDeployedMessage(true);
-//       } catch (error) {
-//         console.error("Failed to update recently created tokens:", error);
-//       }
-//     }
-//   }, [token, isTokenNewlyCreated]);
-
-
-
-  // Render loading state
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-48 p-10 text-center">
@@ -451,50 +334,58 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
           </Card>
 
           {/* Chart */}
-          <Card className="bg-white/[0.02] border-white/10">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-                Price Chart
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4 rounded-2xl overflow-hidden bg-white/[0.05] border border-white/10">
-                <TvCandles
-                  candles={candleSeries}
-                  height={isMobile ? 250 : 400}
-                />
-              </div>
-
-              {/* Time interval buttons */}
-              <div className="flex gap-2 flex-wrap">
-                {[
-                  ["1m", 60],
-                  ["5m", 5 * 60],
-                  ["15m", 15 * 60],
-                  ["1h", 60 * 60],
-                  ["4h", 4 * 60 * 60],
-                  ["D", 24 * 60 * 60],
-                  ["W", 7 * 24 * 60 * 60],
-                  ["M", 30 * 24 * 60 * 60],
-                ].map(([label, sec]) => (
-                  <Button
-                    key={label as string}
-                    variant={intervalSec === sec ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setIntervalSec(sec as number)}
-                    className={
-                      intervalSec === sec
-                        ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4]"
-                        : "border-white/20 bg-white/5 text-white hover:bg-white/10"
-                    }
-                  >
-                    {label as string}
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
+          {
+            isLoading || isTokenPending ? (
+              <TokenCandlestickChartSkeleton />
+            ) : (
+                <Card className="bg-white/[0.02] border-white/10">
+          <TokenCandlestickChart token={token} />
           </Card>
+        //   <Card className="bg-white/[0.02] border-white/10">
+        //     <CardHeader>
+        //       <CardTitle className="text-xl font-bold bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+        //         Price Chart
+        //       </CardTitle>
+        //     </CardHeader>
+        //     <CardContent>
+        //       <div className="mb-4 rounded-2xl overflow-hidden bg-white/[0.05] border border-white/10">
+        //         <TvCandles
+        //           candles={candleSeries}
+        //           height={isMobile ? 250 : 400}
+        //         />
+        //       </div>
 
+        //       {/* Time interval buttons */}
+        //       <div className="flex gap-2 flex-wrap">
+        //         {[
+        //           ["1m", 60],
+        //           ["5m", 5 * 60],
+        //           ["15m", 15 * 60],
+        //           ["1h", 60 * 60],
+        //           ["4h", 4 * 60 * 60],
+        //           ["D", 24 * 60 * 60],
+        //           ["W", 7 * 24 * 60 * 60],
+        //           ["M", 30 * 24 * 60 * 60],
+        //         ].map(([label, sec]) => (
+        //           <Button
+        //             key={label as string}
+        //             variant={intervalSec === sec ? "default" : "outline"}
+        //             size="sm"
+        //             onClick={() => setIntervalSec(sec as number)}
+        //             className={
+        //               intervalSec === sec
+        //                 ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4]"
+        //                 : "border-white/20 bg-white/5 text-white hover:bg-white/10"
+        //             }
+        //           >
+        //             {label as string}
+        //           </Button>
+        //         ))}
+        //       </div>
+        //     </CardContent>
+        //   </Card>
+            )
+          }
           {/* Tabs Section */}
           <Card className="bg-white/[0.02] border-white/10 mb-6">
             <CardContent className="p-0">

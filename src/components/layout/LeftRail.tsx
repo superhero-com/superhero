@@ -192,7 +192,7 @@ export default function LeftRail() {
     loadLiveTransactions();
 
     // WebSocket subscriptions for real-time updates
-    const unsub1 = WebSocketClient.subscribe("TokenTransaction", (tx) => {
+    const unsub1 = WebSocketClient.subscribeForTokenHistories("TokenTransaction", (tx) => {
       setLiveTransactions((prev) =>
         [
           {
@@ -206,7 +206,7 @@ export default function LeftRail() {
       );
     });
 
-    const unsub2 = WebSocketClient.subscribe("TokenCreated", (payload) => {
+    const unsub2 = WebSocketClient.subscribeForTokenHistories("TokenCreated", (payload) => {
       setLiveTransactions((prev) =>
         [
           {

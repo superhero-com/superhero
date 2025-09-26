@@ -139,7 +139,7 @@ export default function LatestTransactionsCarousel() {
     }
     load();
     const t = window.setInterval(load, 30000);
-    const unsub1 = WebSocketClient.subscribe("TokenTransaction", (tx) => {
+    const unsub1 = WebSocketClient.subscribeForTokenHistories("TokenTransaction", (tx) => {
       const sale = tx?.sale_address || tx?.token_address;
       if (sale && !tx?.token_name) {
         resolveTokenName(sale).then((nm) => {
@@ -153,7 +153,7 @@ export default function LatestTransactionsCarousel() {
         setItems((prev) => [tx, ...prev].slice(0, 16));
       }
     });
-    const unsub2 = WebSocketClient.subscribe("TokenCreated", (payload) => {
+    const unsub2 = WebSocketClient.subscribeForTokenHistories("TokenCreated", (payload) => {
       const item = {
         sale_address: payload?.sale_address || payload?.address,
         token_name: payload?.name,

@@ -1,22 +1,21 @@
+import LatestTransactionsCarousel from "@/components/Trendminer/LatestTransactionsCarousel";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { TrendminerApi } from "../../api/backend";
-import Sparkline from "../../components/Trendminer/Sparkline";
-import TokenTrades from "../../components/Trendminer/TokenTrades";
-import TokenHolders from "../../components/Trendminer/TokenHolders";
 import CommentsList from "../../components/Trendminer/CommentsList";
+import Sparkline from "../../components/Trendminer/Sparkline";
+import Token24hChange from "../../components/Trendminer/Token24hChange";
+import TokenHolders from "../../components/Trendminer/TokenHolders";
+import TokenTrades from "../../components/Trendminer/TokenTrades";
 import TvCandles from "../../components/Trendminer/TvCandles";
 import ShareModal from "../../components/ui/ShareModal";
-import { CONFIG } from "../../config";
+import { TokenSummary } from "../../features/bcl/components";
+import { TokenRanking, TokenTradeCard } from "../../features/trendminer";
 import {
   QualiChatService,
   type QualiMessage,
 } from "../../libs/QualiChatService";
 import WebSocketClient from "../../libs/WebSocketClient";
-import { TokenTradeCard, TokenRanking } from "../../features/trendminer";
-import { TokenSummary } from "../../features/bcl/components";
-import LatestTransactionsCarousel from "@/components/Trendminer/LatestTransactionsCarousel";
-import Token24hChange from "../../components/Trendminer/Token24hChange";
 
 export default function TokenDetails() {
   const params = useParams();
@@ -24,7 +23,6 @@ export default function TokenDetails() {
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const wsUrl = CONFIG.TRENDMINER_WS_URL || "";
   const [holders, setHolders] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"chat" | "tx" | "holders">("chat");
@@ -313,10 +311,6 @@ export default function TokenDetails() {
     };
   }, [addressOrName, data?.sale_address]);
 
-  useEffect(() => {
-    if (!wsUrl) return;
-    WebSocketClient.connect(wsUrl);
-  }, [wsUrl]);
 
   useEffect(() => {
     if (!data?.sale_address) return;

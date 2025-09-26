@@ -109,13 +109,18 @@ export const AddressAvatarWithChainName = memo(({
 
             <div className={cn("flex flex-col items-start min-w-0", contentClassName)}>
                 {showAddressAndChainName && (
-                    <span className="chain-name text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
-                        <AddressFormatted
-                            address={chainName || address}
-                            truncate={false}
-                            className={className}
-                        />
-                    </span>
+                    <>
+                        <span className="chain-name text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
+                            {chainName || 'Legend'}
+                        </span>
+                        <span className="text-xs text-foreground/90 font-mono leading-tight">
+                            <AddressFormatted
+                                address={address}
+                                truncate={false}
+                                className={className}
+                            />
+                        </span>
+                    </>
                 )}
                 <div>
                     {showBalance && (
@@ -133,7 +138,7 @@ export const AddressAvatarWithChainName = memo(({
         <span className="relative inline-flex items-center" style={{ zIndex: 'auto' }}>
             <div
                 ref={ref}
-                className={cn("flex items-center gap-3 cursor-pointer transition-colors hover:text-foreground", className)}
+                className={cn("flex items-center cursor-pointer transition-colors hover:text-foreground", className)}
                 onMouseEnter={() => setHover(true)}
                 onMouseLeave={() => setHover(false)}
                 onClick={handleClick}

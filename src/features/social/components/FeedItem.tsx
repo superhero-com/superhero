@@ -30,7 +30,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
 
   return (
     <div
-      className="cursor-pointer w-screen -mx-[calc((100vw-100%)/2)] overflow-x-hidden md:w-full md:mx-0 border-b border-white/10 p-0 md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:backdrop-blur-[20px] md:rounded-[20px] md:transition-all md:duration-300 md:ease-out md:overflow-hidden md:hover:-translate-y-1"
+      className="relative cursor-pointer w-screen -mx-[calc((100vw-100%)/2)] md:w-full md:mx-0 p-0 md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:backdrop-blur-[20px] md:rounded-[20px] md:transition-all md:duration-300 md:ease-out md:overflow-hidden md:hover:-translate-y-1"
       onClick={handleItemClick}
     >
       <div className="p-4 md:p-5">
@@ -141,6 +141,8 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
           </div>
         </div>
       </div>
+      {/* Full-bleed divider on mobile */}
+      <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc((100vw-100%-16px)/-2)] w-screen h-px bg-white/10" />
     </div>
   );
 });

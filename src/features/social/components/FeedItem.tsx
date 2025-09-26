@@ -1,4 +1,4 @@
-import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
+import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarWithChainNameFeed";
 import { cn } from "@/lib/utils";
 import { memo, useCallback } from "react";
 import { PostDto } from "../../../api/generated";
@@ -38,7 +38,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
           {/* Left column: avatar only, aligned to top */}
           <div className="flex-shrink-0">
             <div className="md:hidden">
-              <AddressAvatarWithChainName
+              <AddressAvatarWithChainNameFeed
                 address={authorAddress}
                 size={32}
                 overlaySize={16}
@@ -46,7 +46,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
               />
             </div>
             <div className="hidden md:block">
-              <AddressAvatarWithChainName
+              <AddressAvatarWithChainNameFeed
                 address={authorAddress}
                 size={40}
                 overlaySize={20}
@@ -64,7 +64,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
                     <div className="text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
                       {displayName}
                     </div>
-                    <div className="md:hidden text-[14px] text-light-font-color ml-2">
+                    <div className="md:hidden text-[13px] leading-none text-white/70 ml-2 transition-none">
                       {compactTime(item.created_at as unknown as string)}
                     </div>
                   </div>

@@ -12,12 +12,12 @@ interface FractionFormatterProps {
 
 export default function FractionFormatter({ fractionalPrice }: FractionFormatterProps) {
   return (
-    <div className="flex items-center">
+    <div className="fraction-formatter flex items-center">
       <div>{fractionalPrice.number}</div>
       {fractionalPrice.zerosCount && (
         <div 
-          className="text-xs px-0.5"
-          style={{ marginTop: '5px', fontSize: '12px' }}
+          className="text-xs"
+          style={{ marginTop: '5px', fontSize: '12px', padding: '0 2px' }}
         >
           {fractionalPrice.zerosCount}
         </div>

@@ -107,8 +107,6 @@ src/components/Trendminer/
 ├── MobileTrendingBanner.scss
 ├── MobileTrendingControls.tsx
 ├── MobileTrendingControls.scss
-├── MobileTrendingTokenCard.tsx
-├── MobileTrendingTokenCard.scss
 ├── MobileTrendingTagCard.tsx
 ├── MobileTrendingTagCard.scss
 ├── MobileTrendingPagination.tsx

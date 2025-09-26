@@ -1,3 +1,5 @@
+import configs from "@/configs";
+
 export interface NavigationItem {
   id: string;
   label: string;
@@ -49,12 +51,12 @@ export const navigationItems: NavigationItem[] = [
       },
     ],
   },
-  // {
-  //     id: 'trending',
-  //     label: 'Trends',
-  //     path: '/trending',
-  //     icon: '📈',
-  // },
+  configs.features.trendminer && {
+      id: 'trending',
+      label: 'Trends',
+      path: '/trendminer/tokens',
+      icon: '📈',
+  },
   // {
   //     id: 'invite',
   //     label: 'Invite & Earn',

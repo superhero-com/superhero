@@ -408,7 +408,7 @@ export function PoolCandlestickChart({
   useEffect(() => {
     if (!pairAddress) return;
 
-    subscription.current = WebSocketClient.subscribe(
+    subscription.current = WebSocketClient.subscribeForTokenHistories(
       `PairTransaction::${pairAddress}`,
       (tx: any) => {
         if (!candlestickSeries.current || !volumeSeries.current || !marketCapSeries.current) return;

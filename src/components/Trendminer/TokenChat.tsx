@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { cn } from '../../lib/utils';
 import { QualiChatService, type QualiMessage } from '../../libs/QualiChatService';
 import AeButton from '../AeButton';
+import AddressChip from '../AddressChip';
 
 type Props = { token: { name: string; address: string } };
 
@@ -71,7 +72,11 @@ export default function TokenChat({ token }: Props) {
               className="border border-white/20 rounded-lg p-2.5 bg-white/5"
             >
               <div className="text-xs opacity-80 flex justify-between mb-0.5 text-white/80">
-                <span>{m.sender || 'user'}</span>
+                <AddressChip
+                  address={m.sender || 'user'}
+                  linkToProfile={true}
+                  large={true}
+                />
                 <span>{formatTs(m.origin_server_ts)}</span>
               </div>
               <div className="text-sm text-white">

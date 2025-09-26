@@ -109,8 +109,6 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             }, 100);
         });
 
-        console.log("[AeSdkProvider] addStaticAccount aeSdk", address, aeSdkRef.current);
-        console.log("[AeSdkProvider] addStaticAccount", address, staticAeSdkRef.current);
         setActiveAccount(address);
         staticAeSdkRef.current.addAccount(
             {

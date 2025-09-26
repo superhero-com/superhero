@@ -1,110 +1,45 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { cn } from "../../lib/utils";
-import { TrendminerApi } from "../../api/backend";
-import WebSocketClient from "../../libs/WebSocketClient";
-import MobileCard from "../MobileCard";
+import AddressChip from "../AddressChip";
+import {
+  useLatestTransactions,
+} from "@/hooks/useLatestTransactions";
 
 export default function LatestTransactionsCarousel() {
-  const [items, setItems] = useState<any[]>([]);
+  const { latestTransactions } = useLatestTransactions();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const [isMovingForward, setIsMovingForward] = useState(true);
-  const [isPaused, setIsPaused] = useState(false);
   const [itemsToShow, setItemsToShow] = useState(4); // Number of items visible at once
-  const [gapSize, setGapSize] = useState(8); // Gap size in pixels (gap-2 = 8px, gap-1 = 4px)
-  const nameCacheRef = useRef<Map<string, string>>(new Map());
+  const [gapSize, setGapSize] = useState(8); // Gap size in pixels
   const autoplayRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  async function resolveTokenName(
-    address: string
-  ): Promise<string | undefined> {
-    if (!address) return undefined;
-    const cache = nameCacheRef.current;
-    if (cache.has(address)) return cache.get(address);
-    try {
-      const tok = await TrendminerApi.getToken(address);
-      const name = tok?.name || tok?.symbol;
-      if (name) cache.set(address, name);
-      return name;
-    } catch {
-      return undefined;
-    }
-  }
 
-  async function enrichNames(list: any[]): Promise<any[]> {
-    const unknowns = Array.from(
-      new Set(
-        list
-          .map((it) => ({
-            addr: it.sale_address || it.token_address,
-            has: !!(it.token_name || it.name || it.symbol),
-          }))
-          .filter((x) => x.addr && !x.has)
-          .map((x) => x.addr as string)
-      )
-    );
-    await Promise.all(
-      unknowns.slice(0, 12).map((addr) => resolveTokenName(addr))
-    );
-    return list.map((it) => {
-      if (it.token_name || it.name || it.symbol) return it;
-      const addr = it.sale_address || it.token_address;
-      const cached = addr ? nameCacheRef.current.get(addr) : undefined;
-      return cached ? { ...it, token_name: cached } : it;
-    });
-  }
-
-  // Responsive breakpoints
+  // Responsive breakpoints - aligned with Vue component
   const updateItemsToShow = useCallback(() => {
     const width = window.innerWidth;
-    if (width >= 1680) setItemsToShow(6);
+    if (width >= 1680) setItemsToShow(7); // Match Vue: 7 items
     else if (width >= 1280) setItemsToShow(5);
     else if (width >= 900) setItemsToShow(4);
     else if (width >= 700) setItemsToShow(3);
     else setItemsToShow(2);
 
-    // Set gap size based on screen size (sm: gap-1 = 4px, default: gap-2 = 8px)
-    if (width >= 640) setGapSize(8); // gap-2
-    else setGapSize(4); // gap-1
+    // Set gap size based on screen size
+    if (width >= 640) setGapSize(8);
+    else setGapSize(4);
   }, []);
 
-  // Pendulum autoplay - shows multiple items, pauses when last item is visible
+  // Simple continuous autoplay - aligned with Vue component behavior
   const startAutoplay = useCallback(() => {
     if (autoplayRef.current) clearInterval(autoplayRef.current);
-    if (!isHovered && !isPaused && items.length > itemsToShow) {
+    if (!isHovered && latestTransactions.length > itemsToShow) {
       autoplayRef.current = setInterval(() => {
         setCurrentIndex((prev) => {
-          // Maximum index where last item is still visible
-          const maxIndex = Math.max(0, items.length - 1 - itemsToShow);
-
-          if (isMovingForward) {
-            if (prev >= maxIndex - 1) {
-              // Last item is now visible, pause and prepare to go backward
-              setIsPaused(true);
-              setTimeout(() => {
-                setIsMovingForward(false);
-                setIsPaused(false);
-              }, 2000); // Pause for 2 seconds when last item appears
-              return prev;
-            }
-            return prev + 1;
-          } else {
-            if (prev <= 0) {
-              // Back to beginning, pause and prepare to go forward
-              setIsPaused(true);
-              setTimeout(() => {
-                setIsMovingForward(true);
-                setIsPaused(false);
-              }, 2000); // Pause for 2 seconds at the beginning
-              return prev;
-            }
-            return prev - 1;
-          }
+          const maxIndex = latestTransactions.length - itemsToShow;
+          return prev >= maxIndex ? 0 : prev + 1;
         });
-      }, 2000);
+      }, 2000); // Match Vue's 2000ms autoplay
     }
-  }, [isHovered, isPaused, items.length, itemsToShow, isMovingForward]);
+  }, [isHovered, latestTransactions.length, itemsToShow]);
 
   const stopAutoplay = useCallback(() => {
     if (autoplayRef.current) {
@@ -113,62 +48,7 @@ export default function LatestTransactionsCarousel() {
     }
   }, []);
 
-  useEffect(() => {
-    let cancel = false;
-    async function load() {
-      try {
-        const [txResp, createdResp] = await Promise.all([
-          TrendminerApi.fetchJson("/api/transactions?limit=10"),
-          TrendminerApi.fetchJson(
-            "/api/tokens?order_by=created_at&order_direction=DESC&limit=6"
-          ),
-        ]);
-        const txItems = txResp?.items ?? txResp ?? [];
-        const createdItems = (createdResp?.items ?? createdResp ?? []).map(
-          (t: any) => ({
-            sale_address: t.sale_address || t.address,
-            token_name: t.name,
-            type: "CREATED",
-            created_at: t.created_at,
-          })
-        );
-        let list = [...createdItems, ...txItems].slice(0, 16);
-        list = await enrichNames(list);
-        if (!cancel) setItems(list);
-      } catch {}
-    }
-    load();
-    const t = window.setInterval(load, 30000);
-    const unsub1 = WebSocketClient.subscribeForTokenHistories("TokenTransaction", (tx) => {
-      const sale = tx?.sale_address || tx?.token_address;
-      if (sale && !tx?.token_name) {
-        resolveTokenName(sale).then((nm) => {
-          if (nm)
-            setItems((prev) =>
-              [{ ...tx, token_name: nm }, ...prev].slice(0, 16)
-            );
-          else setItems((prev) => [tx, ...prev].slice(0, 16));
-        });
-      } else {
-        setItems((prev) => [tx, ...prev].slice(0, 16));
-      }
-    });
-    const unsub2 = WebSocketClient.subscribeForTokenHistories("TokenCreated", (payload) => {
-      const item = {
-        sale_address: payload?.sale_address || payload?.address,
-        token_name: payload?.name,
-        type: "CREATED",
-        created_at: payload?.created_at || Date.now(),
-      };
-      setItems((prev) => [item, ...prev].slice(0, 16));
-    });
-    return () => {
-      cancel = true;
-      window.clearInterval(t);
-      unsub1();
-      unsub2();
-    };
-  }, []);
+  // Data fetching is now handled by useLatestTransactions hook
 
   // Handle responsive breakpoints
   useEffect(() => {
@@ -187,35 +67,38 @@ export default function LatestTransactionsCarousel() {
   // Reset current index when items change
   useEffect(() => {
     setCurrentIndex(0);
-    setIsMovingForward(true);
-    setIsPaused(false);
-  }, [items.length]);
+  }, [latestTransactions.length]);
 
-  if (!items.length) {
-    // Show loading state with responsive loading placeholders
+  if (!latestTransactions.length) {
+    // Show loading state with improved styling
     return (
-      <div className="w-full my-1 overflow-hidden sm:my-0.75">
+      <div className="w-full overflow-hidden mb-4">
         <div className="relative w-full">
-          <div className="flex gap-1 py-2 sm:gap-0.5">
+          <div className="flex">
             {[...Array(itemsToShow)].map((_, i) => (
               <div
                 key={i}
-                className="inline-flex items-center px-3 py-2 bg-black/5 border border-black/10 rounded-xl flex-shrink-0 transition-all duration-200 min-w-fit opacity-60 pointer-events-none sm:px-2.5 sm:py-1.5"
-                style={{ width: `200px` }}
+                className="mr-2 flex-shrink-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden opacity-60 animate-pulse"
+                style={{ minWidth: "200px", width: "200px" }}
               >
-                <div className="flex flex-col gap-1 sm:gap-0.75 w-full">
-                  <div className="flex justify-between items-center gap-2 sm:gap-1.5">
-                    <div className="px-1.5 py-0.75 rounded border text-[10px] font-bold uppercase tracking-wide border-gray-400 text-gray-400 bg-gray-400/10 whitespace-nowrap sm:px-1 sm:py-0.5 sm:text-[9px] animate-pulse">
-                      CREATED
+                <div className="p-3 sm:p-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="px-2 py-1 rounded bg-gray-400/20 text-transparent text-[9px]">
+                      LOADING
                     </div>
-                    <div className="text-[10px] text-[var(--light-font-color)] opacity-70 whitespace-nowrap sm:text-[9px] animate-pulse">
-                      --:--:--
+                    <div className="text-[10px] text-transparent bg-gray-400/20 rounded">
+                      ••••••
                     </div>
                   </div>
-                  <div className="flex justify-between items-center gap-1.5 sm:gap-1">
-                    <span className="text-xs font-semibold text-[var(--primary-color)] flex-1 overflow-hidden text-ellipsis whitespace-nowrap sm:text-[11px] animate-pulse">
-                      Loading...
-                    </span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex-1">
+                      <div className="text-[11px] text-transparent bg-gray-400/20 rounded">
+                        Loading token...
+                      </div>
+                    </div>
+                    <div className="text-[14px] text-transparent bg-gray-400/20 rounded">
+                      •••
+                    </div>
                   </div>
                 </div>
               </div>
@@ -226,120 +109,160 @@ export default function LatestTransactionsCarousel() {
     );
   }
 
-  function normalizeType(tx: any): {
-    label: "BUY" | "SELL" | "CREATED" | "TX";
+  // Transaction type mapping aligned with Vue component
+  function getTransactionType(
+    type: string
+  ): "BOUGHT" | "SOLD" | "CREATED" | "TX" {
+    switch (type) {
+      case "sell":
+        return "SOLD";
+      case "buy":
+        return "BOUGHT";
+      case "create_community":
+        return "CREATED";
+      default:
+        return "TX";
+    }
+  }
+
+  function getTransactionColor(type: string): {
     color: string;
     bg: string;
     border: string;
   } {
-    const raw = String(
+    switch (type) {
+      case "sell":
+        return {
+          color: "#ef4444", // error/red
+          bg: "rgba(239,68,68,0.15)",
+          border: "rgba(239,68,68,0.35)",
+        };
+      case "buy":
+        return {
+          color: "#22c55e", // success/green
+          bg: "rgba(34,197,94,0.15)",
+          border: "rgba(34,197,94,0.35)",
+        };
+      case "create_community":
+        return {
+          color: "#f59e0b", // warning/orange
+          bg: "rgba(245,158,11,0.15)",
+          border: "rgba(245,158,11,0.35)",
+        };
+      default:
+        return {
+          color: "#6b7280",
+          bg: "rgba(107,114,128,0.15)",
+          border: "rgba(107,114,128,0.35)",
+        };
+    }
+  }
+
+  function normalizeType(tx: any): {
+    label: "BOUGHT" | "SOLD" | "CREATED" | "TX";
+    color: string;
+    bg: string;
+    border: string;
+  } {
+    const txType = String(
       tx?.type ||
-        tx?.tx_type ||
-        tx?.txType ||
-        tx?.action ||
-        tx?.function ||
-        tx?.fn ||
-        tx?.tx?.function ||
-        ""
+      tx?.tx_type ||
+      tx?.txType ||
+      tx?.action ||
+      tx?.function ||
+      tx?.fn ||
+      ""
     ).toLowerCase();
-    if (raw.includes("buy"))
-      return {
-        label: "BUY",
-        color: "#1e7d2d",
-        bg: "rgba(113,217,69,0.15)",
-        border: "rgba(113,217,69,0.35)",
-      };
-    if (raw.includes("sell"))
-      return {
-        label: "SELL",
-        color: "#b91c1c",
-        bg: "rgba(239,68,68,0.15)",
-        border: "rgba(239,68,68,0.35)",
-      };
-    if (raw.includes("create"))
-      return {
-        label: "CREATED",
-        color: "#0b63c7",
-        bg: "rgba(59,130,246,0.15)",
-        border: "rgba(59,130,246,0.35)",
-      };
+
+    const label = getTransactionType(txType);
+    const colors = getTransactionColor(txType);
+
     return {
-      label: "TX",
-      color: "#3b3b3b",
-      bg: "rgba(0,0,0,0.06)",
-      border: "rgba(0,0,0,0.12)",
+      label,
+      ...colors,
     };
   }
 
   const renderItem = (item: any, index: number) => {
     const type = normalizeType(item);
-    const tokenName = item.token_name || item.name || item.symbol || "Unknown";
-    const time = item.created_at
-      ? new Date(item.created_at).toLocaleTimeString()
-      : "";
+    const tokenName =
+      item.token?.name ||
+      item.token_name ||
+      item.name ||
+      item.symbol ||
+      "Unknown";
+    const saleAddress =
+      item.token?.sale_address ||
+      item.sale_address ||
+      item.token_address ||
+      item.address;
+    const volume = item.volume || item.amount?.ae || "0";
+
     return (
       <div
-        key={`${item.sale_address || item.token_address || "item"}-${index}`}
-        className="flex flex-col items-center justify-between px-3 py-2 bg-gray-800 border border-black/10 rounded-xl flex-shrink-0 transition-all duration-200 hover:bg-black/8 hover:border-black/15 hover:-translate-y-0.25 active:translate-y-0 sm:px-2.5 sm:py-1.5 "
-        style={{ minWidth: "200px", flexShrink: 0 }}
+        key={`${saleAddress || "item"}-${index}`}
+        className="mr-2 flex-shrink-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden transition-all duration-200 hover:bg-white/8 hover:border-white/20 hover:scale-[1.02] cursor-pointer"
+        style={{ minWidth: "200px", width: "200px" }}
+        onClick={() => {
+          if (saleAddress) {
+            window.location.href = `/trendminer/tokens/${encodeURIComponent(
+              tokenName
+            )}`;
+          }
+        }}
       >
-        <div className="flex flex-row lg:flex-col gap-1 sm:gap-0.75 w-full">
-          <div className="flex justify-between items-center gap-2 sm:gap-1.5">
+        <div className="p-3 sm:p-2">
+          {/* Header with type chip and address */}
+          <div className="flex items-center justify-between mb-2">
             <div
-              className="px-1.5 py-0.75 rounded border text-[10px] font-bold uppercase tracking-wide whitespace-nowrap sm:px-1 sm:py-0.5 sm:text-[9px]"
+              className="px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wide whitespace-nowrap"
               style={{
                 color: type.color,
                 backgroundColor: type.bg,
                 borderColor: type.border,
+                border: `1px solid ${type.border}`,
               }}
             >
               {type.label}
             </div>
-            <div className="hidden lg:block text-[10px] text-[var(--light-font-color)] opacity-70 whitespace-nowrap sm:text-[9px]">
-              {time}
-            </div>
+            {saleAddress && <AddressChip address={saleAddress} />}
           </div>
 
-          <div className="flex justify-between items-center gap-1.5 sm:gap-1">
-            <span className="text-xs font-semibold text-[var(--primary-color)] flex-1 overflow-hidden text-ellipsis whitespace-nowrap sm:text-[11px]">
-              #{tokenName}
-            </span>
-            {item.amount && (
-              <span className="text-[10px] font-medium text-blue-500 whitespace-nowrap sm:text-[9px]">
-                {Number(item.amount.ae).toLocaleString()} AE
-              </span>
+          {/* Token info and volume */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] font-semibold text-white/90 truncate">
+                {tokenName}
+              </div>
+            </div>
+            {Number(volume) > 0 && (
+              <div className="text-[14px] font-bold text-blue-400 whitespace-nowrap">
+                {Number(volume).toLocaleString()}
+              </div>
             )}
           </div>
         </div>
-        {item.sale_address && (
-            <a
-              href={`/trendminer/tokens/${encodeURIComponent(tokenName)}`}
-              className="text-[9px] text-blue-500 no-underline font-medium transition-all duration-200 self-start whitespace-nowrap hover:text-blue-400 hover:underline sm:text-[9px] p-1  flex items-center"
-            >
-              View Token →
-            </a>
-          )}
       </div>
     );
   };
 
   return (
-    <div className="w-full my-1 overflow-hidden sm:my-0.75">
+    <div className="w-full overflow-hidden mb-4">
       <div className="relative w-full">
         <div
           ref={containerRef}
-          className="flex gap-2 py-2 transition-transform duration-1000 ease-in-out sm:gap-1"
+          className="flex transition-transform duration-1000 ease-in-out"
           style={{
             transform: `translateX(-${currentIndex * (200 + gapSize)}px)`,
-            width: `${items.length * (200 + gapSize) - gapSize}px`,
-            direction: "ltr",
+            width: `${latestTransactions.length * (200 + gapSize)}px`,
+            direction: "rtl", // Match Vue component RTL direction
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onTouchStart={() => setIsHovered(true)}
           onTouchEnd={() => setIsHovered(false)}
         >
-          {items.map((item, index) => renderItem(item, index))}
+          {latestTransactions.map((item, index) => renderItem(item, index))}
         </div>
       </div>
     </div>

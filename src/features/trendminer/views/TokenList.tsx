@@ -198,9 +198,9 @@ export default function TokenList() {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+    <div className="max-w-[1400px] mx-auto min-h-screen  text-white">
       {/* Banner */}
-      <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border-b border-white/10 backdrop-blur-xl">
+      <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] mx-4 mt-4 mb-6">
         <div className="max-w-[1400px] mx-auto p-4 sm:p-6">
           <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
             <div className="min-w-0 flex-1">
@@ -274,7 +274,7 @@ export default function TokenList() {
       <TrendingPillsCarousel tagTokenMap={tagTokenMap} />
 
       {/* Main content */}
-      <div className="max-w-[1400px] mx-auto p-4 sm:p-6">
+      <div className="max-w-[1400px] mx-auto">
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6">
           {/* Left: Token List */}
           <div className="min-w-0">
@@ -287,12 +287,12 @@ export default function TokenList() {
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 {/* Collection Filter */}
                 <select
-                  className="px-3 py-2 bg-gray-800 text-white border border-gray-600 rounded-lg text-sm focus:outline-none focus:border-purple-400"
+                  className="px-3 py-2 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05]"
                   value={collection}
                   onChange={(e) => updateCollection(e.target.value as CollectionOption)}
                 >
                   {collectionOptions.map((option) => (
-                    <option key={option.value} value={option.value} disabled={option.disabled}>
+                    <option key={option.value} value={option.value} disabled={option.disabled} className="bg-gray-900">
                       {option.title}
                     </option>
                   ))}
@@ -300,12 +300,12 @@ export default function TokenList() {
 
                 {/* OrderBy Filter */}
                 <select
-                  className="px-3 py-2 bg-gray-800 text-white border border-gray-600 rounded-lg text-sm focus:outline-none focus:border-purple-400"
+                  className="px-3 py-2 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05]"
                   value={orderBy}
                   onChange={(e) => updateOrderBy(e.target.value as OrderByOption)}
                 >
                   {orderByOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
+                    <option key={option.value} value={option.value} className="bg-gray-900">
                       {option.title}
                     </option>
                   ))}
@@ -316,15 +316,15 @@ export default function TokenList() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search tokens"
-                  className="px-3 py-2 w-full sm:min-w-[200px] sm:max-w-[280px] bg-gray-800 text-white border border-gray-600 rounded-lg text-sm focus:outline-none focus:border-purple-400 placeholder-white/50"
+                  className="px-3 py-2 w-full sm:min-w-[200px] sm:max-w-[280px] bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none focus:border-[#1161FE] placeholder-white/50 transition-all duration-300 hover:bg-white/[0.05]"
                 />
               </div>
             </div>
 
             {/* Message Box for no results */}
             {(!data?.pages?.length || !data?.pages[0].items.length) && !isFetching && (
-              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-center text-red-400 mb-4">
-                <h3 className="font-semibold mb-2">No Token Sales</h3>
+              <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 text-center text-white/80 mb-4">
+                <h3 className="font-semibold mb-2 text-white">No Token Sales</h3>
                 <p>No tokens found matching your criteria.</p>
               </div>
             )}
@@ -343,9 +343,18 @@ export default function TokenList() {
               ref={loadMoreBtn}
               onClick={fetchNextPage}
               disabled={isFetching}
-              className="px-6 py-3 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed border border-white/20 rounded-full text-white font-medium transition-colors"
+              className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                isFetching
+                  ? 'bg-white/10 cursor-not-allowed opacity-60'
+                  : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0'
+              }`}
             >
-              {isFetching ? 'Loading...' : 'Load More'}
+              {isFetching ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Loading...
+                </div>
+              ) : 'Load More'}
             </button>
           </div>
         )}

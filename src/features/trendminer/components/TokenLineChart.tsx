@@ -75,9 +75,9 @@ export function TokenLineChart({
     onChartReady: (chartInstance) => {
       const seriesOptions: AreaSeriesPartialOptions = {
         priceLineVisible: false,
-        lineColor: 'rgb(244, 193, 12)',
-        topColor: 'rgba(244, 193, 12, 0.2)',
-        bottomColor: 'rgba(244, 193, 12, 0)',
+        lineColor: 'rgb(17, 97, 254)',
+        topColor: 'rgba(17, 97, 254, 0.2)',
+        bottomColor: 'rgba(17, 97, 254, 0.01)',
         lineWidth: 2,
         crosshairMarkerVisible: false,
         baseLineVisible: true,

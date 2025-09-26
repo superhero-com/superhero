@@ -94,7 +94,6 @@ export function TokenLineChart({
       if ((data as ChartResponse)?.result?.length) {
         updateSeriesData(data as ChartResponse);
       }
-      console.log('chartInstance', chartInstance);
       setLoading(false);
     },
   });

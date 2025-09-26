@@ -55,7 +55,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
             </div>
           </div>
 
-          <div className="flex-1 min-w-0 space-y-2 md:space-y-1">
+          <div className="flex-1 min-w-0 space-y-2 md:space-y-3">
             <div className="flex flex-col gap-0 md:flex-row md:items-start md:justify-between md:gap-2">
               <div className="flex-1 min-w-0">
                 {/* Name + address (always visible) */}
@@ -73,28 +73,29 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
                   </div>
                   {/* Mobile on-chain link removed intentionally */}
                 </div>
-
-                {/* Desktop on-chain link on the right */}
+              </div>
+              {/* Desktop timestamp + on-chain link (stacked) */}
+              <div className="hidden md:flex md:flex-col md:items-end md:gap-1 ml-3">
+                <div className="text-xs text-white/60 leading-none whitespace-nowrap">
+                  {item.created_at ? relativeTime(new Date(item.created_at)) : ''}
+                </div>
                 {item.tx_hash && CONFIG.EXPLORER_URL && (
-                  <div className="hidden md:flex md:items-center md:gap-2 md:flex-shrink-0">
-                    <a
-                      href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${item.tx_hash}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center gap-0.5 md:gap-1 text-[11px] md:text-xs leading-none md:leading-normal text-light-font-color hover:text-light-font-color no-gradient-text md:self-start group min-h-0 min-w-0 p-0 h-auto"
-                      title={item.tx_hash}
-                    >
-                      <span className="underline-offset-2 group-hover:underline">
-                        {item.created_at ? relativeTime(new Date(item.created_at)) : ''}
-                      </span>
-                      <IconLink className="w-2 h-2 md:w-2.5 md:h-2.5" />
-                    </a>
-                  </div>
+                  <a
+                    href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${item.tx_hash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1 text-xs leading-none text-white/60 no-gradient-text"
+                    title={item.tx_hash}
+                  >
+                    <span>on-chain</span>
+                    <IconLink className="w-2 h-2" />
+                  </a>
                 )}
               </div>
             </div>
-            <div className="ml-0 md:ml-3 md:pl-10 md:-mt-1 relative">
+            {/* Right-side block above handles on-chain link; remove duplicate area */}
+            <div className="ml-0 md:ml-0 md:pl-0 md:mt-2 relative">
               <div className="text-[15px] text-foreground leading-snug">
               {linkify(item.content, { knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}
             </div>

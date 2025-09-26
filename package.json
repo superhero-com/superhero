@@ -28,6 +28,7 @@
     "axios": "^1.6.5",
     "bctsl-sdk": "github:bctsl/bctsl-sdk#v1.0.0",
     "bignumber.js": "^9.0.1",
+    "camelcase-keys-deep": "^0.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dex-contracts-v2": "git+https://git@github.com/aeternity/dex-contracts-v2#69f800fece02da1444af7f0d6622fec356a15496",
@@ -48,6 +49,7 @@
     "sophia-bonding-curve": "git+https://git@github.com/aeternity/BondingCurve#1.0.0-alpha.3",
     "tailwind-merge": "^3.3.1",
     "tipping-contract": "git+https://git@github.com/aeternity/tipping-contract#v5.0.0-alpha2",
+    "uuid": "^13.0.0",
     "wordbazaar-contracts": "git+https://git@github.com/aeternity/wordbazaar-contracts#v0.0.4-alpha4",
     "zustand": "^4.5.2"
   },

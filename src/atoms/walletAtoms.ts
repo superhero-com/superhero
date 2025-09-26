@@ -1,3 +1,4 @@
+import { CurrencyCode } from '@/utils/types';
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { WalletInfo } from 'node_modules/@aeternity/aepp-sdk/es/aepp-wallet-communication/rpc/types';
@@ -11,7 +12,7 @@ export interface TokenBalance {
 // Core wallet state atoms with persistence
 export const addressAtom = atomWithStorage<string | null>('wallet:address', null);
 export const balanceAtom = atomWithStorage<Record<string, number>>('wallet:balance', {});
-export const selectedCurrencyAtom = atomWithStorage<'eur' | 'usd' | 'cny'>('wallet:currency', 'eur');
+export const selectedCurrencyAtom = atomWithStorage<CurrencyCode>('wallet:currency', 'usd');
 export const tokenBalancesAtom = atomWithStorage<TokenBalance[]>('wallet:tokenBalances', []);
 export const tokenPricesAtom = atomWithStorage<Record<string, string>>('wallet:tokenPrices', {});
 export const cookiesConsentAtom = atomWithStorage<Record<string, boolean>>('wallet:cookiesConsent', {});

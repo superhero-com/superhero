@@ -29,5 +29,9 @@ export type TokenDto = {
     total_supply: string;
     dao_balance: string;
     created_at: string;
+    tx_type: string;
+    volume: string;
+    amount: PriceDto;
+    unit_price: PriceDto;
 };
 

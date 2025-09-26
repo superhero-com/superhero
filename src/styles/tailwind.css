@@ -120,3 +120,6 @@
   animation: truncate-scroll var(--animation-duration, 10s) var(--animation-delay, 1s) infinite linear !important;
 }
 
+#tv-attr-logo {
+  display: none;
+}

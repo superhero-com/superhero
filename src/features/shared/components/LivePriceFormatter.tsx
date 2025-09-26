@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Decimal } from '../../../libs/decimal';
 import PriceFormatter from './PriceFormatter';
+import { useCurrencies } from '@/hooks/useCurrencies';
 
 interface LivePriceFormatterProps {
   aePrice: Decimal;
@@ -16,11 +17,7 @@ interface LivePriceFormatterProps {
 }
 
 // Mock fiat conversion - in a real app, this would come from a currency service
-const getFiatPrice = (aePrice: Decimal): Decimal => {
-  // Mock conversion rate: 1 AE = $0.05 (this should come from a real API)
-  const mockRate = 0.05;
-  return aePrice.mul(Decimal.from(mockRate));
-};
+
 
 export default function LivePriceFormatter({
   aePrice,
@@ -34,8 +31,9 @@ export default function LivePriceFormatter({
   row = false,
   className = '',
 }: LivePriceFormatterProps) {
+  const { getFiat } = useCurrencies();
   const computedFiatPrice = useMemo(() => {
-    return fiatPrice || getFiatPrice(aePrice);
+    return getFiat(aePrice);
   }, [aePrice, fiatPrice]);
 
   return (
@@ -48,7 +46,7 @@ export default function LivePriceFormatter({
       priceLoading={priceLoading}
       hideFiatPrice={hideFiatPrice}
       hideSymbol={hideSymbol}
-      row={row}
+      rowOnSm={row}
       className={className}
     />
   );

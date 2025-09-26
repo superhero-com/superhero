@@ -49,6 +49,7 @@
     "sophia-bonding-curve": "git+https://git@github.com/aeternity/BondingCurve#1.0.0-alpha.3",
     "tailwind-merge": "^3.3.1",
     "tipping-contract": "git+https://git@github.com/aeternity/tipping-contract#v5.0.0-alpha2",
+    "uuid": "^13.0.0",
     "wordbazaar-contracts": "git+https://git@github.com/aeternity/wordbazaar-contracts#v0.0.4-alpha4",
     "zustand": "^4.5.2"
   },

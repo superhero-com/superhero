@@ -1,4 +1,9 @@
 import { BrowserWindowMessageConnection, Encoded } from "@aeternity/aepp-sdk";
+import {
+  PRICE_MOVEMENT_TIMEFRAMES,
+  TX_FUNCTIONS,
+  WEB_SOCKET_CHANNELS,
+} from "@/utils/constants";
 
 export interface INetwork {
   url: string;
@@ -94,4 +99,95 @@ export interface ICollectionData {
 export interface ICommunityFactorySchema {
   address: string;
   collections: Record<string, ICollectionData>;
+}
+
+export interface ITopHeader {
+  hash: string;
+  height: number;
+  pofHash: string;
+  prevHash: string;
+  prevKeyHash: string;
+  signature: string;
+  stateHash: string;
+  time: number;
+  txsHash: string;
+  version: number;
+}
+export interface ITransaction {
+  blockHeight: number;
+  claim: any; // TODO find type
+  hash: Encoded.TxHash;
+  incomplete?: boolean;
+  microIndex: number;
+  microTime: number;
+  pending: boolean; // There are cases that not only the IPendingTransaction can be pending
+  rawTx?: any; // TODO find type
+  tipUrl?: string;
+  transactionOwner?: Encoded.AccountAddress;
+  tx: ITx;
+  url?: string;
+}
+
+export type WebSocketChannelName = ObjectValues<typeof WEB_SOCKET_CHANNELS>;
+
+export interface IWebSocketSubscriptionMessage {
+  payload: WebSocketChannelName;
+  target?: string;
+}
+export interface ITxArguments {
+  type: "tuple" | "list" | "int";
+  value: any; // TODO find type, this was not correct: (string | number | any[])
+}
+/**
+ * Convert `key: val` objects into union of values.
+ */
+export type ObjectValues<T> = T[keyof T];
+/**
+ * TxFunction names coming directly from the API or ready to be sent.
+ */
+export type TxFunctionRaw = ObjectValues<typeof TX_FUNCTIONS>;
+/**
+ * TxFunctions used internally by the app.
+ */
+export type TxFunctionParsed = keyof typeof TX_FUNCTIONS;
+
+export type TxFunction = TxFunctionRaw | TxFunctionParsed;
+export interface ITx {
+  abiVersion: number;
+  accountId?: Encoded.AccountAddress;
+  amount: number;
+  arguments: ITxArguments[];
+  callData?: string; // TODO find source
+  callerId: Encoded.AccountAddress;
+  code: string;
+  commitmentId: any;
+  contractId: Encoded.ContractAddress;
+  fee: number;
+  function?: TxFunction;
+  gaId?: string; // Generalized Account ID
+  gas: number;
+  gasPrice: number;
+  gasUsed: number;
+  log?: any[]; // TODO find source
+  name: any;
+  nameFee: number;
+  nameId: any;
+  nameSalt: string;
+  nonce: number;
+  payerId?: string;
+  payload?: string;
+  pointers: any;
+  result: string;
+  return: ITxArguments;
+  returnType: string;
+  recipientId?: string;
+  senderId?: string;
+  selectedTokenContractId?: string;
+  tag?: Tag; // Allows to establish the transaction type
+  type: TxType; // Custom property we add after unpacking the Tx
+  tx?: {
+    signatures: string[];
+    tx: ITx;
+  };
+  VSN: string;
 }

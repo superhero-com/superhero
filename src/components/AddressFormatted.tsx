@@ -97,7 +97,7 @@ export function AddressFormatted({
     <span className={cn(
       className,
       // Smaller font for ak_ full addresses; even smaller on mobile
-      address.startsWith('ak_') && 'text-[9px] md:text-[11px] font-light font-mono'
+      address.startsWith('ak_') && 'text-[8.5px] md:text-[11px] font-light font-mono'
     )}>{formatAddress(address)}</span>
   );
 }

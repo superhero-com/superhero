@@ -27,8 +27,12 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
   }, [onItemClick, postId]);
 
   return (
-    <div className="glass-card cursor-pointer w-full" onClick={handleItemClick}>
-      <div className="flex gap-3">
+    <div
+      className="cursor-pointer w-screen -mx-[calc(100vw-100%)/2)] overflow-x-hidden md:w-full md:mx-0 border-b border-white/10 p-0 md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:backdrop-blur-[20px] md:rounded-[20px] md:transition-all md:duration-300 md:ease-out md:overflow-hidden md:hover:-translate-y-1"
+      onClick={handleItemClick}
+    >
+      <div className="p-3 md:p-5">
+        <div className="flex gap-3">
         <div className="flex-1 min-w-0 space-y-2 md:space-y-1">
             <div className="flex flex-col gap-0 md:flex-row md:items-start md:justify-between md:gap-2">
             <div className="flex-1 min-w-0">
@@ -147,24 +151,14 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
             </div>
           </div>
         </div>
+        {/* Close flex wrapper */}
+        </div>
       </div>
     </div>
   );
 });
 
-// Memoized FeedItem with performance optimizations
-const MemoizedFeedItem = memo(FeedItem, (prevProps, nextProps) => {
-  // Deep comparison for optimal re-rendering
-  return (
-    prevProps.item.id === nextProps.item.id &&
-    prevProps.commentCount === nextProps.commentCount &&
-    prevProps.item.created_at === nextProps.item.created_at &&
-    JSON.stringify(prevProps.item.media) ===
-      JSON.stringify(nextProps.item.media)
-  );
-});
-
+// Simple memo to avoid heavy comparator parsing issues
 FeedItem.displayName = "FeedItem";
-MemoizedFeedItem.displayName = "MemoizedFeedItem";
 
-export default MemoizedFeedItem;
+export default memo(FeedItem);

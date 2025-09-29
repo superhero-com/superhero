@@ -3,6 +3,11 @@ import AddressChip from "../AddressChip";
 import {
   useLatestTransactions,
 } from "@/hooks/useLatestTransactions";
+import { TX_FUNCTIONS } from "@/utils/constants";
+import { Decimal } from "@/libs/decimal";
+import { AddressAvatarWithChainName } from "@/@components/Address/AddressAvatarWithChainName";
+import { Avatar } from "../ui/avatar";
+import AddressAvatar from "../AddressAvatar";
 
 export default function LatestTransactionsCarousel() {
   const { latestTransactions } = useLatestTransactions();
@@ -78,26 +83,38 @@ export default function LatestTransactionsCarousel() {
             {[...Array(itemsToShow)].map((_, i) => (
               <div
                 key={i}
-                className="mr-2 flex-shrink-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden opacity-60 animate-pulse"
-                style={{ minWidth: "200px", width: "200px" }}
+                className="mr-2 flex-shrink-0 border border-white/10 rounded-[20px] overflow-hidden opacity-60 animate-pulse shadow-lg"
+                style={{
+                  minWidth: "200px",
+                  width: "200px",
+                  background: "linear-gradient(135deg, rgba(107,114,128,0.08), rgba(75,85,99,0.12))"
+                }}
               >
-                <div className="p-3 sm:p-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="px-2 py-1 rounded bg-gray-400/20 text-transparent text-[9px]">
-                      LOADING
-                    </div>
-                    <div className="text-[10px] text-transparent bg-gray-400/20 rounded">
-                      ••••••
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex-1">
-                      <div className="text-[11px] text-transparent bg-gray-400/20 rounded">
-                        Loading token...
+                <div className="p-2">
+                  {/* Address Avatar & Address - First Row */}
+                  <div className="mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 bg-gray-400/20 rounded-full"></div>
+                      <div className="text-[12px] text-transparent bg-gray-400/20 rounded">
+                        ak_••••••••••••••••
                       </div>
                     </div>
-                    <div className="text-[14px] text-transparent bg-gray-400/20 rounded">
+                  </div>
+
+                  {/* Token Name - Second Row */}
+                  <div className="mb-2">
+                    <div className="text-[16px] sm:text-[15px] text-transparent bg-gray-400/20 rounded">
+                      Loading token name...
+                    </div>
+                  </div>
+                  
+                  {/* Transaction Type and Volume - Third Row */}
+                  <div className="flex flex-row-reverse items-center justify-between gap-2">
+                    <div className="text-[13px] text-transparent bg-gray-400/20 rounded">
                       •••
+                    </div>
+                    <div className="px-2.5 py-1 rounded-md bg-gray-400/20 text-transparent text-[9px]">
+                      LOADING
                     </div>
                   </div>
                 </div>
@@ -110,59 +127,82 @@ export default function LatestTransactionsCarousel() {
   }
 
   // Transaction type mapping aligned with Vue component
-  function getTransactionType(
-    type: string
-  ): "BOUGHT" | "SOLD" | "CREATED" | "TX" {
+  function getTransactionType(type: string) {
     switch (type) {
-      case "sell":
-        return "SOLD";
-      case "buy":
-        return "BOUGHT";
-      case "create_community":
-        return "CREATED";
+      case TX_FUNCTIONS.sell:
+        return 'sold';
+      case TX_FUNCTIONS.buy:
+        return 'bought';
+      case TX_FUNCTIONS.create_community:
+        return 'created';
       default:
-        return "TX";
+        return '';
     }
   }
 
-  function getTransactionColor(type: string): {
+  function getTransactionColor(type: string) {
+    switch (type) {
+      case TX_FUNCTIONS.sell:
+        return 'error';
+      case TX_FUNCTIONS.buy:
+        return 'success';
+      case TX_FUNCTIONS.create_community:
+        return 'warning';
+      default:
+        return '';
+    }
+  }
+
+  function getColorValues(colorType: string): {
     color: string;
     bg: string;
     border: string;
+    cardBg: string;
+    textGradient: string;
   } {
-    switch (type) {
-      case "sell":
+    switch (colorType) {
+      case 'error':
         return {
           color: "#ef4444", // error/red
           bg: "rgba(239,68,68,0.15)",
           border: "rgba(239,68,68,0.35)",
+          cardBg: "linear-gradient(135deg, rgba(239,68,68,0.08), rgba(220,38,38,0.12))",
+          textGradient: "bg-gradient-to-r from-red-400 via-red-500 to-red-600",
         };
-      case "buy":
+      case 'success':
         return {
           color: "#22c55e", // success/green
           bg: "rgba(34,197,94,0.15)",
           border: "rgba(34,197,94,0.35)",
+          cardBg: "linear-gradient(135deg, rgba(34,197,94,0.08), rgba(21,128,61,0.12))",
+          textGradient: "bg-gradient-to-r from-green-400 via-green-500 to-emerald-600",
         };
-      case "create_community":
+      case 'warning':
         return {
           color: "#f59e0b", // warning/orange
           bg: "rgba(245,158,11,0.15)",
           border: "rgba(245,158,11,0.35)",
+          cardBg: "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(217,119,6,0.12))",
+          textGradient: "bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-600",
         };
       default:
         return {
           color: "#6b7280",
           bg: "rgba(107,114,128,0.15)",
           border: "rgba(107,114,128,0.35)",
+          cardBg: "linear-gradient(135deg, rgba(107,114,128,0.08), rgba(75,85,99,0.12))",
+          textGradient: "bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600",
         };
     }
   }
 
   function normalizeType(tx: any): {
-    label: "BOUGHT" | "SOLD" | "CREATED" | "TX";
+    label: string;
     color: string;
     bg: string;
     border: string;
+    cardBg: string;
+    textGradient: string;
   } {
     const txType = String(
       tx?.type ||
@@ -175,10 +215,11 @@ export default function LatestTransactionsCarousel() {
     ).toLowerCase();
 
     const label = getTransactionType(txType);
-    const colors = getTransactionColor(txType);
+    const colorType = getTransactionColor(txType);
+    const colors = getColorValues(colorType);
 
     return {
-      label,
+      label: label.toUpperCase() || 'TX',
       ...colors,
     };
   }
@@ -201,8 +242,12 @@ export default function LatestTransactionsCarousel() {
     return (
       <div
         key={`${saleAddress || "item"}-${index}`}
-        className="mr-2 flex-shrink-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden transition-all duration-200 hover:bg-white/8 hover:border-white/20 hover:scale-[1.02] cursor-pointer"
-        style={{ minWidth: "200px", width: "200px" }}
+        className="mr-2 flex-shrink-0 border border-white/10 rounded-[8px] overflow-hidden transition-all duration-300 hover:border-white/25 hover:scale-[1.02] cursor-pointer shadow-lg hover:shadow-xl"
+        style={{
+          minWidth: "200px",
+          background: type.cardBg,
+
+        }}
         onClick={() => {
           if (saleAddress) {
             window.location.href = `/trendminer/tokens/${encodeURIComponent(
@@ -211,35 +256,40 @@ export default function LatestTransactionsCarousel() {
           }
         }}
       >
-        <div className="p-3 sm:p-2">
-          {/* Header with type chip and address */}
-          <div className="flex items-center justify-between mb-2">
-            <div
-              className="px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wide whitespace-nowrap"
-              style={{
-                color: type.color,
-                backgroundColor: type.bg,
-                borderColor: type.border,
-                border: `1px solid ${type.border}`,
-              }}
-            >
-              {type.label}
-            </div>
-            {saleAddress && <AddressChip address={saleAddress} />}
-          </div>
-
-          {/* Token info and volume */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <div className="text-[11px] font-semibold text-white/90 truncate">
-                {tokenName}
+        <div className="p-2">
+          {/* Address Avatar & Address - First Row */}
+          <div className="mb-2">
+            <div className="flex flex-row-reverse items-center gap-2">
+              <div className="flex flex-row-reverse items-center gap-2 text-[12px] font-medium text-white/80">
+                <AddressAvatar address={item.address} size={20} />
+                <span className="truncate">{`${item.address.slice(0, 7)}...${item.address.slice(-4)}`}</span>
+              </div>
+              <div
+                className="px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wide whitespace-nowrap shadow-sm"
+                style={{
+                  color: type.color,
+                  backgroundColor: type.bg,
+                  borderColor: type.border,
+                  border: `1px solid ${type.border}`,
+                }}
+              >
+                {type.label}
               </div>
             </div>
+          </div>
+          {/* Token Name - Second Row */}
+
+
+          {/* Transaction Type and Volume - Third Row */}
+          <div className="flex flex-row-reverse items-center justify-between gap-2">
             {Number(volume) > 0 && (
-              <div className="text-[14px] font-bold text-blue-400 whitespace-nowrap">
-                {Number(volume).toLocaleString()}
+              <div className={`text-[13px] font-bold ${type.textGradient} bg-clip-text text-transparent whitespace-nowrap`}>
+                {Decimal.from(volume).shorten()}
               </div>
             )}
+            <div className={`text-[16px] sm:text-[15px] font-bold ${type.textGradient} bg-clip-text text-transparent truncate`}>
+              {tokenName}
+            </div>
           </div>
         </div>
       </div>

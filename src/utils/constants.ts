@@ -83,6 +83,10 @@ export const AETERNITY_TOKEN_BASE_DATA = {
     create_community: "create_community",
     register_invitation_code: "register_invitation_code",
     redeem_invitation_code: "redeem_invitation_code",
+
+    transfer: "transfer",
+    mint: "mint",
+    burn: "burn",
   } as const;
 
   export const WEB_SOCKET_CHANNELS = {

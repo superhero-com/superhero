@@ -47,7 +47,10 @@ export default function HeaderWalletButton() {
             size={36}
             overlaySize={18}
             showBalance={true}
-            showAddressAndChainName={true}
+            showAddressAndChainName={false}
+            showPrimaryOnly={true}
+            hideFallbackName={true}
+            contentClassName="px-2 pb-0"
             className="max-w-[160px] md:max-w-[min(100%,250px)]"
           />
         </div>

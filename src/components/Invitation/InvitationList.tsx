@@ -1,13 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { useAeSdk } from "../../hooks";
-import { getAffiliationTreasury } from "../../libs/affiliation";
-import {
-  getActiveAccountInviteList,
-  getSecretKeyByInvitee,
-  prepareInviteLink,
-  removeStoredInvite,
-} from "../../libs/invitation";
+import { useAeSdk } from "@/hooks";
+import { Encoded, toAe } from "@aeternity/aepp-sdk";
+import { getAffiliationTreasury } from "@/libs/affiliation";
 import AeButton from "../AeButton";
+import camelCaseKeysDeep from "camelcase-keys-deep";
 import { Badge } from "../ui/badge";
 import {
   Dialog,
@@ -18,37 +14,43 @@ import {
 } from "../ui/dialog";
 import { Checkbox } from "../ui/checkbox";
 import CopyText from "../ui/CopyText";
-import { cn } from "../../lib/utils";
+import { cn } from "@/lib/utils";
 import AddressChip from "../AddressChip";
-import { Decimal } from "../../libs/decimal";
-import LivePriceFormatter from "../../features/shared/components/LivePriceFormatter";
-
-type Tx = {
-  tx?: { function?: string; arguments?: any[] };
-  hash?: string;
-  microTime?: number;
-};
+import { Decimal } from "@/libs/decimal";
+import LivePriceFormatter from "@/features/shared/components/LivePriceFormatter";
+import {
+  TX_FUNCTIONS,
+  DATE_LONG,
+  INVITATIONS_CONTRACT,
+} from "@/utils/constants";
+import { ITransaction } from "@/utils/types";
+import { useInvitation } from "@/hooks/useInvitation";
+import moment from "moment";
+import { fetchJson } from "@/utils/common";
 
 interface InvitationStatus {
   hash: string;
   status: "created" | "claimed" | "revoked";
   invitee: string;
   date?: string;
-  amount: number;
+  amount: string;
   revoked: boolean;
   revokedAt?: string;
   revokeTxHash?: string;
   claimed: boolean;
-  invitationSecretKey?: string;
+  secretKey?: string;
 }
 
 export default function InvitationList() {
-  const { sdk, activeAccount } = useAeSdk();
-  const [transactions, setTransactions] = useState<Tx[]>([]);
-  const [claimedMap, setClaimedMap] = useState<Record<string, boolean>>({});
-  const [revoking, setRevoking] = useState<string | null>(null);
+  const { sdk, activeAccount, activeNetwork } = useAeSdk();
+  const [transactionList, setTransactionList] = useState<ITransaction[]>([]);
+  const [claimedInvitations, setClaimedInvitations] = useState<
+    Record<string, boolean>
+  >({});
+  const [revokingInvitationInvitee, setRevokingInvitationInvitee] = useState<
+    string | null
+  >(null);
   const [loading, setLoading] = useState(false);
-  const [showLinks, setShowLinks] = useState(false);
   const [showInvitationDialog, setShowInvitationDialog] = useState(false);
   const [selectedInvitation, setSelectedInvitation] =
     useState<InvitationStatus | null>(null);
@@ -56,20 +58,18 @@ export default function InvitationList() {
   const [recentlyRevokedInvitations, setRecentlyRevokedInvitations] = useState<
     string[]
   >([]);
+  const { activeAccountInviteList, prepareInviteLink, removeStoredInvite } =
+    useInvitation();
 
-  const list = useMemo(
-    () => getActiveAccountInviteList(activeAccount),
-    [activeAccount]
-  );
-  const getInvitationRevokeStatus = (invitee: string) => {
+  function getInvitationRevokeStatus(invitee: string): ITransaction | boolean {
     return (
-      transactions.find(
+      transactionList.find(
         (tx) =>
-          tx?.tx?.function === "revoke_invitation_code" &&
+          tx?.tx?.function === TX_FUNCTIONS.register_invitation_code &&
           tx?.tx?.arguments?.[0]?.value === invitee
       ) || recentlyRevokedInvitations.includes(invitee)
     );
-  };
+  }
   const determineInvitationStatus = (
     claimed: boolean,
     hasRevokeTx: any
@@ -78,87 +78,92 @@ export default function InvitationList() {
     if (hasRevokeTx) return "revoked";
     return "created";
   };
+  /**
+   * Retrieves the secret key for an invitation
+   * @param invitee - The invitee address
+   * @returns The invitation secret key if found
+   */
+  function getInvitationSecretKey(invitee: string): string | undefined {
+    return activeAccountInviteList.find((item) => item.invitee === invitee)
+      ?.secretKey;
+  }
 
-  const formatDate = (microTime: number): string => {
-    const date = new Date(microTime);
-    const now = new Date();
-    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  /**
+   * Determines the status and details of an invitation
+   * @param invitee - The invitee address
+   * @param transaction - The registration transaction
+   * @returns Formatted invitation status object
+   */
+  function getInvitationStatus(
+    invitee: Encoded.AccountAddress,
+    transaction: ITransaction
+  ): InvitationStatus {
+    const revokeStatus = getInvitationRevokeStatus(invitee);
+    const claimed = claimedInvitations[invitee];
+    const status = determineInvitationStatus(claimed, revokeStatus);
+    const secretKey = getInvitationSecretKey(invitee);
 
-    if (date > oneDayAgo) {
-      // Show relative time for recent dates
-      const diffMs = now.getTime() - date.getTime();
-      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-      const diffMinutes = Math.floor(diffMs / (1000 * 60));
-
-      if (diffHours > 0) {
-        return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-      } else if (diffMinutes > 0) {
-        return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
-      } else {
-        return "Just now";
-      }
-    } else {
-      // Show full date for older dates
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    }
-  };
+    return {
+      hash: transaction.hash,
+      status,
+      invitee,
+      date: moment(transaction.microTime).format(DATE_LONG),
+      amount: Decimal.from(toAe(transaction.tx.arguments[2].value)).prettify(),
+      revoked: !!revokeStatus,
+      ...(typeof revokeStatus === "object" && {
+        revokedAt: moment(revokeStatus.microTime).format(DATE_LONG),
+        revokeTxHash: revokeStatus.hash,
+      }),
+      claimed,
+      secretKey,
+    };
+  }
   const invitations = useMemo(() => {
-    const result: InvitationStatus[] = [];
-    for (const tx of transactions) {
-      if (tx?.tx?.function !== "register_invitation_code") continue;
+    const formattedInvitations: InvitationStatus[] = [];
+    for (const transaction of transactionList) {
+      if (transaction?.tx?.function !== TX_FUNCTIONS.register_invitation_code)
+        continue;
       const invitees =
-        tx.tx.arguments?.[0]?.value?.map((x: any) => x.value) || [];
-      const amount = Number(tx.tx.arguments?.[2]?.value || 0) / 1e18;
+        transaction.tx.arguments?.[0]?.value?.map((item: any) => item.value) ||
+        [];
+      // const amount = Number(transaction.tx.arguments?.[2]?.value || 0) / 1e18;
       for (const invitee of invitees) {
-        const secret = getSecretKeyByInvitee(activeAccount, invitee);
-        const revokeStatus = getInvitationRevokeStatus(invitee);
-        const claimed = Boolean(claimedMap[invitee]);
-        const status = determineInvitationStatus(claimed, revokeStatus);
-        result.push({
-          hash: tx.hash || "",
-          status,
-          invitee,
-          amount,
-          date: tx.microTime ? formatDate(tx.microTime) : undefined,
-          revoked: !!revokeStatus,
-          claimed,
-          invitationSecretKey: secret,
-        });
+        const invitationStatus = getInvitationStatus(invitee, transaction);
+        formattedInvitations.push(invitationStatus);
       }
     }
-    return result;
-  }, [transactions, activeAccount, claimedMap, recentlyRevokedInvitations]);
+    return formattedInvitations;
+  }, [
+    transactionList,
+    activeAccount,
+    claimedInvitations,
+    recentlyRevokedInvitations,
+  ]);
 
   // Recursive function to load all transactions with pagination
   const loadTransactionsFromMiddleware = async (
     url: string,
-    _transactionList: Tx[] = []
-  ): Promise<Tx[]> => {
-    const response = await fetch(url);
-    const json = await response.json();
-    const transactions: Tx[] = Array.isArray(json?.data) ? json.data : [];
+    _transactionList: ITransaction[] = []
+  ): Promise<ITransaction[]> => {
+    const response = await fetchJson(url);
+    const transactions: ITransaction[] = response.data
+      ? (camelCaseKeysDeep(response.data) as unknown as ITransaction[])
+      : [];
     _transactionList.push(...transactions);
 
-    if (json.next) {
-      const { CONFIG } = await import("../../config");
+    if (response.next) {
       return await loadTransactionsFromMiddleware(
-        `${CONFIG.MIDDLEWARE_URL}${json.next}`,
+        `${activeNetwork.middlewareUrl}${response.next}`,
         _transactionList
       );
     }
     return _transactionList;
   };
 
-  const loadAccountInvitations = async (address: string): Promise<Tx[]> => {
-    const { CONFIG } = await import("../../config");
-    const contract = "ct_2GG42rs2FDPTXuUCWHMn98bu5Ab6mgNxY7KdGAKUNsrLqutNxZ";
-    const url = `${CONFIG.MIDDLEWARE_URL}/v3/transactions?contract=${contract}&caller_id=${address}`;
+  const loadAccountInvitations = async (
+    address: string
+  ): Promise<ITransaction[]> => {
+    const url = `${activeNetwork.middlewareUrl}/v3/transactions?contract=${INVITATIONS_CONTRACT}&caller_id=${address}`;
     return await loadTransactionsFromMiddleware(url);
   };
 
@@ -167,10 +172,13 @@ export default function InvitationList() {
     setLoading(true);
     try {
       const data = await loadAccountInvitations(activeAccount);
-      setTransactions(data);
+      setTransactionList(data);
+      await loadClaimedInvitations();
+      setLoading(false);
     } catch (error) {
       console.error("Failed to load invitation data:", error);
-      setTransactions([]);
+      setTransactionList([]);
+      setLoading(false);
     } finally {
       setLoading(false);
     }
@@ -180,65 +188,51 @@ export default function InvitationList() {
     refreshInvitationData();
   }, [activeAccount]);
 
-  const loadClaimedInvitations = async () => {
-    const map: Record<string, boolean> = {};
-
-    // Get unique invitees from transactions
-    const uniqueInvitees = new Set<string>();
-    transactions.forEach((t) => {
-      if (t?.tx?.function === "register_invitation_code") {
-        t?.tx?.arguments?.[0]?.value?.forEach((it: any) =>
-          uniqueInvitees.add(it.value)
-        );
-      }
-    });
-
-    // Check each invitee's transaction history for redeem transactions
+  async function loadClaimedInvitations() {
     await Promise.all(
-      Array.from(uniqueInvitees).map(async (invitee) => {
-        try {
-          const inviteeTransactions = await loadAccountInvitations(invitee);
-          const hasRedeemTx = inviteeTransactions.some(
-            (tx) => tx?.tx?.function === "redeem_invitation_code"
-          );
-          map[invitee] = hasRedeemTx;
-        } catch (error) {
-          console.error(
-            `Failed to check claimed status for ${invitee}:`,
-            error
-          );
-          map[invitee] = false;
-        }
+      invitations.map(async (invitation) => {
+        const inviteeTransactions = await loadAccountInvitations(
+          invitation.invitee
+        );
+        inviteeTransactions.forEach((tx: ITransaction) => {
+          if (tx?.tx?.function === TX_FUNCTIONS.redeem_invitation_code) {
+            setClaimedInvitations((prev) => ({
+              ...prev,
+              [invitation.invitee]: true,
+            }));
+          }
+        });
       })
     );
-
-    setClaimedMap(map);
-  };
+  }
 
   useEffect(() => {
-    if (transactions.length > 0) {
+    if (transactionList.length > 0) {
       loadClaimedInvitations();
     }
-  }, [transactions]);
+  }, [transactionList]);
 
-  async function revoke(invitee: string) {
-    setRevoking(invitee);
+  async function revokeInvitation(invitee: InvitationStatus) {
+    setRevokingInvitationInvitee(invitee.invitee);
     try {
-      const treasury = await getAffiliationTreasury(sdk as any);
-      await (treasury as any).revokeInvitationCode(invitee);
-      setRecentlyRevokedInvitations((prev) => [...prev, invitee]);
-      removeStoredInvite(activeAccount, invitee);
+      const affiliationTreasury = await getAffiliationTreasury(sdk as any);
+      await (affiliationTreasury as any).revokeInvitationCode(invitee.invitee);
+      setRecentlyRevokedInvitations((prev) => [...prev, invitee.invitee]);
+      removeStoredInvite(invitee.invitee as `ak_${string}`, invitee.secretKey);
     } catch (error: any) {
       console.error("Failed to revoke invitation:", error);
       if (error.message?.includes("INVITATION_NOT_REGISTERED")) {
-        removeStoredInvite(activeAccount, invitee);
+        removeStoredInvite(
+          invitee.invitee as `ak_${string}`,
+          invitee.secretKey
+        );
       } else if (error.message?.includes("ALREADY_REDEEMED")) {
         alert("Invitation already claimed or revoked");
         // Refresh data
         refreshInvitationData();
       }
     } finally {
-      setRevoking(null);
+      setRevokingInvitationInvitee(null);
     }
   }
 
@@ -348,8 +342,9 @@ export default function InvitationList() {
 
                 {/* Actions */}
                 <div className="flex gap-2 justify-end">
-                  {!loading && invitation.status === "created" &&
-                    invitation.invitationSecretKey && (
+                  {!loading &&
+                    invitation.status === "created" &&
+                    invitation.secretKey && (
                       <AeButton
                         onClick={() => showInvitationLink(invitation)}
                         variant="ghost"
@@ -361,14 +356,16 @@ export default function InvitationList() {
                     )}
                   {invitation.status === "created" && (
                     <AeButton
-                      onClick={() => revoke(invitation.invitee)}
-                      disabled={revoking === invitation.invitee}
-                      loading={revoking === invitation.invitee}
+                      onClick={() => revokeInvitation(invitation)}
+                      disabled={
+                        revokingInvitationInvitee === invitation.invitee
+                      }
+                      loading={revokingInvitationInvitee === invitation.invitee}
                       variant="ghost"
                       size="small"
                       className="text-xs text-red-400 hover:text-red-300"
                     >
-                      {revoking === invitation.invitee
+                      {revokingInvitationInvitee === invitation.invitee
                         ? "Revoking..."
                         : "Revoke"}
                     </AeButton>
@@ -394,12 +391,10 @@ export default function InvitationList() {
             </DialogDescription>
           </DialogHeader>
 
-          {selectedInvitation?.invitationSecretKey && (
+          {selectedInvitation?.secretKey && (
             <div className="space-y-4">
               <CopyText
-                value={prepareInviteLink(
-                  selectedInvitation.invitationSecretKey
-                )}
+                value={prepareInviteLink(selectedInvitation.secretKey)}
                 bordered
                 className="w-full"
               />

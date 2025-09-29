@@ -75,6 +75,7 @@ export const AETERNITY_TOKEN_BASE_DATA = {
     },
   ];
 
+  export const INVITATIONS_CONTRACT = 'ct_2GG42rs2FDPTXuUCWHMn98bu5Ab6mgNxY7KdGAKUNsrLqutNxZ';
 
   export const TX_FUNCTIONS = {
     buy: "buy",

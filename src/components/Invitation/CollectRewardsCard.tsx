@@ -3,6 +3,8 @@ import { Alert, AlertDescription } from "../ui/alert";
 import { AlertCircle } from "lucide-react";
 import { useAeSdk } from "../../hooks/useAeSdk";
 import { getAffiliationTreasury } from "../../libs/affiliation";
+import { Decimal } from "../../libs/decimal";
+import LivePriceFormatter from "@/features/shared/components/LivePriceFormatter";
 
 const MIN_INVITEES = 4;
 const MIN_SPENT_AE = 10;
@@ -17,7 +19,9 @@ export default function CollectRewardsCard({
   const { sdk, activeAccount } = useAeSdk();
 
   // State
-  const [accumulatedRewardsAe, setAccumulatedRewardsAe] = useState<number>(0);
+  const [accumulatedRewardsAe, setAccumulatedRewardsAe] = useState<Decimal>(
+    Decimal.ZERO
+  );
   const [numberOfUniqueInvitees, setNumberOfUniqueInvitees] =
     useState<number>(0);
   const [collectingReward, setCollectingReward] = useState(false);
@@ -31,7 +35,8 @@ export default function CollectRewardsCard({
 
   // Check if eligible for rewards
   const isEligibleForRewards =
-    numberOfUniqueInvitees >= MIN_INVITEES && accumulatedRewardsAe > 0;
+    numberOfUniqueInvitees >= MIN_INVITEES &&
+    accumulatedRewardsAe.gt(Decimal.ZERO);
 
   // Calculate accumulated rewards
   const calculateAccumulatedRewards = useCallback(async () => {
@@ -43,10 +48,10 @@ export default function CollectRewardsCard({
         activeAccount
       );
       const rewardsAe = Number(rewards) / 1e18;
-      setAccumulatedRewardsAe(rewardsAe);
+      setAccumulatedRewardsAe(Decimal.from(rewardsAe));
     } catch (error) {
       console.error("Failed to calculate accumulated rewards:", error);
-      setAccumulatedRewardsAe(0);
+      setAccumulatedRewardsAe(Decimal.ZERO);
     }
   }, [activeAccount, sdk]);
 
@@ -117,7 +122,6 @@ export default function CollectRewardsCard({
     calculateUniqueInvitees,
   ]);
 
-
   return (
     <div className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
       {/* Header */}
@@ -172,9 +176,12 @@ export default function CollectRewardsCard({
             <span className="text-sm md:text-base text-slate-400 font-medium uppercase tracking-wider break-words">
               Available Rewards
             </span>
-            <span className="text-3xl md:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent text-shadow-[0_0_20px_rgba(255,107,107,0.3)] break-words">
-              {accumulatedRewardsAe.toFixed(4)} AE
-            </span>
+            <LivePriceFormatter
+              row
+              aePrice={Decimal.from(accumulatedRewardsAe.toString())}
+              watchPrice={false}
+              className="gap-4 text-3xl md:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent text-shadow-[0_0_20px_rgba(255,107,107,0.3)] break-words"
+            />
           </div>
 
           {/* Error Message */}

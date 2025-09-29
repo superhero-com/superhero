@@ -1,17 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TrendminerApi } from '../../api/backend';
+import CollectRewardsCard from '../../components/Invitation/CollectRewardsCard';
 import InvitationList from '../../components/Invitation/InvitationList';
+import InviteAndEarnCard from '../../components/Invitation/InviteAndEarnCard';
 import RightRail from '../../components/layout/RightRail';
 import Shell from '../../components/layout/Shell';
-import WalletConnectBtn from '../../components/WalletConnectBtn';
-import CollectRewardsCard from '../../components/Invitation/CollectRewardsCard';
-import { getAffiliationTreasury } from '../../libs/affiliation';
-import { addGeneratedInvites } from '../../libs/invitation';
-import InviteAndEarnCard from '../../components/Invitation/InviteAndEarnCard';
-import { useAeSdk, useWallet } from '../../hooks';
-import { Decimal } from '../../libs/decimal';
+import { useAeSdk } from '../../hooks';
 export default function Invite() {
-  const { sdk, activeAccount } = useAeSdk();
+  const { activeAccount } = useAeSdk();
   const [rows, setRows] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -19,20 +15,9 @@ export default function Invite() {
   const [hasMore, setHasMore] = useState(true);
   const [orderBy, setOrderBy] = useState<'amount' | 'created_at'>('created_at');
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
-  // Generate invite(s)
-  const [amountAe, setAmountAe] = useState<number | ''>('');
-  const [count, setCount] = useState<number>(1);
-  const [generating, setGenerating] = useState(false);
-  const [inviteLinks, setInviteLinks] = useState<string[]>([]);
-  // Rewards
-  const [accumulatedRewardsAe, setAccumulatedRewardsAe] = useState<number>(0);
-  const [uniqueInviteesCount, setUniqueInviteesCount] = useState<number>(0);
-  const [withdrawing, setWithdrawing] = useState(false);
-  const address = useWallet().address;
   const [showInfo, setShowInfo] = useState<boolean>(() => {
     try { return localStorage.getItem('invite_info_dismissed') !== '1'; } catch { return true; }
   });
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   async function fetchPage(targetPage: number, reset = false) {
     if (loading) return;
@@ -63,88 +48,6 @@ export default function Invite() {
     return () => { cancelled = true; };
   }, [orderBy, orderDirection]);
 
-  async function generateInvites(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setInviteLinks([]);
-    try {
-      const amt = Number(amountAe || 0);
-      if (!Number.isFinite(amt) || amt <= 0) throw new Error('Enter amount');
-      if (!Number.isFinite(count) || count < 1) throw new Error('Enter count');
-      setGenerating(true);
-
-      if (!sdk) throw new Error('Connect your wallet first');
-      const treasury = await getAffiliationTreasury(sdk);
-      // Generate in-memory keypairs via aepp-sdk
-      const mod = await import('@aeternity/aepp-sdk');
-      const keys = new Array(count).fill(0).map(() => mod.generateKeyPair());
-      const invitees = keys.map((k: any) => k.publicKey);
-      const redemptionFeeCover = 10n ** 15n;
-      console.log('amt::', amt);
-      const inviteAmount = BigInt(Decimal.from(amt).bigNumber);
-      await treasury.registerInvitationCode(invitees, redemptionFeeCover, inviteAmount);
-      // await treasury.registerInvitationCode(invitees, redemptionFeeCover, aeToAettos(amt));
-      const links = keys.map((k: any) => `${location.protocol}//${location.host}#invite_code=${k.secretKey}`);
-      setInviteLinks(links);
-      if (sdk?.addresses) {
-        const inviter = sdk.addresses()[0];
-        addGeneratedInvites(inviter, keys.map((k: any) => ({ invitee: k.publicKey, secretKey: k.secretKey, amount: amt })));
-      }
-      setAmountAe('');
-    } catch (e: any) {
-      console.log('generateInvites error::', e);
-      setError(e?.message || 'Failed to create invitations');
-    } finally {
-      setGenerating(false);
-    }
-  }
-
-  async function refreshRewards() {
-    setError(null);
-    try {
-      if (!sdk) return;
-      if (!activeAccount) return;
-      const treasury = await getAffiliationTreasury(sdk);
-      const acc = await treasury.getAccumulatedRewards(activeAccount);
-      const uniq = await treasury.getUniqueInvitee(activeAccount).catch(() => null);
-      const ae = Number(acc) / 1e18;
-      setAccumulatedRewardsAe(ae);
-      const thresholdReached = !!(uniq && uniq.ThresholdReached);
-      const waitingSize = uniq?.WaitingForInvitations?.[0]?.size || 0;
-      setUniqueInviteesCount(thresholdReached ? 4 : waitingSize);
-    } catch (e: any) {
-      // swallow errors; UI will show zero
-    }
-  }
-
-  useEffect(() => { refreshRewards(); }, []);
-
-  async function withdrawRewards() {
-    setWithdrawing(true);
-    setError(null);
-    try {
-      const treasury = await getAffiliationTreasury(sdk);
-      await treasury.withdraw();
-      await refreshRewards();
-    } catch (e: any) {
-      setError(e?.message || 'Failed to withdraw');
-    } finally {
-      setWithdrawing(false);
-    }
-  }
-
-  const copyToClipboard = async (text: string, index: number) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedIndex(index);
-      setTimeout(() => setCopiedIndex(null), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
-  };
-
-  const progressPercentage = Math.min((uniqueInviteesCount / 4) * 100, 100);
-  const isEligibleForRewards = uniqueInviteesCount >= 4 && accumulatedRewardsAe > 0;
 
   return (
     <Shell right={<RightRail />}>
@@ -227,12 +130,12 @@ export default function Invite() {
         </div>
 
         {/* User Invitations */}
-        {!!address && (
+        {activeAccount && (
           <div className="mb-12">
             <h3 className="text-3xl md:text-4xl lg:text-5xl font-extrabold m-0 mb-8 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent text-center break-words">
               Your Invitations
             </h3>
-            <InvitationList activeAddress={address} />
+            <InvitationList />
           </div>
         )}
 

@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { TokenListTable } from "..";
-import { TrendminerApi } from "../../../api/backend";
+import { TokenListTable, TrendminerBanner } from "..";
 import { TokenDto, TokensService } from "../../../api/generated";
-import GlobalStatsAnalytics from "../../../components/Trendminer/GlobalStatsAnalytics";
 import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
 import TrendingPillsCarousel from "../../../components/Trendminer/TrendingPillsCarousel";
 import RepositoriesList from "../components/RepositoriesList";
+
 
 type TrendingTagItem = {
   tag: string;
@@ -216,75 +215,7 @@ export default function TokenList() {
 
   return (
     <div className="max-w-[1400px] mx-auto min-h-screen  text-white">
-      {/* Banner */}
-      <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] mx-4 mt-4 mb-6">
-        <div className="max-w-[1400px] mx-auto p-4 sm:p-6">
-          <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
-            <div className="min-w-0 flex-1">
-              <div className="text-center text-2xl sm:text-3xl lg:text-left lg:text-4xl font-bold leading-tight bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600 bg-clip-text text-transparent">
-                Tokenize Trends.
-                <br />
-                Own the Hype.
-                <br />
-                Build Communities.
-              </div>
-              {/* <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
-                <AeButton
-                  variant="primary"
-                  size="md"
-                  rounded
-                  onClick={() => (window.location.href = "/trendminer/create")}
-                >
-                  Tokenize a Trend
-                </AeButton>
-                <AeButton
-                  variant="secondary"
-                  size="md"
-                  rounded
-                  outlined
-                  onClick={() =>
-                    window.open("https://wallet.superhero.com", "_blank")
-                  }
-                >
-                  Get Superhero Wallet ↘
-                </AeButton>
-                <div className="flex gap-2 sm:gap-3">
-                  <AeButton
-                    variant="accent"
-                    size="md"
-                    rounded
-                    onClick={() => (window.location.href = "/trendminer/daos")}
-                  >
-                    Explore DAOs
-                  </AeButton>
-                  <AeButton
-                    variant="ghost"
-                    size="md"
-                    rounded
-                    onClick={() =>
-                      (window.location.href = "/trendminer/invite")
-                    }
-                  >
-                    Invite & Earn
-                  </AeButton>
-                </div>
-                <div className="w-full sm:w-auto">
-                  <WalletConnectBtn />
-                </div>
-              </div> */}
-              <div className="text-sm text-white/75 mt-2.5 max-w-[720px] overflow-hidden text-ellipsis leading-relaxed">
-                Tokenized trends are community tokens launched on a bonding
-                curve. Price moves with buys/sells, no order books. Each token
-                mints a DAO treasury that can fund initiatives via on-chain
-                votes. Connect your wallet to trade and participate.
-              </div>
-            </div>
-            <div className="min-w-[300px] flex-shrink-0 lg:mt-8">
-              <GlobalStatsAnalytics />
-            </div>
-          </div>
-        </div>
-      </div>
+      <TrendminerBanner />
 
       <LatestTransactionsCarousel />
 

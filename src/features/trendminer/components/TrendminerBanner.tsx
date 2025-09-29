@@ -9,7 +9,7 @@ export default function TrendminerBanner() {
       <div className="max-w-[1400px] mx-auto p-4 sm:p-6">
         <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
           <div className="min-w-0 flex-1">
-            <div className="text-center text-2xl sm:text-3xl lg:text-left lg:text-4xl font-bold leading-tight bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600 bg-clip-text text-transparent">
+            <div className="text-center text-2xl sm:text-3xl lg:text-left lg:text-4xl font-bold leading-tight text-white">
               Tokenize Trends.
               <br />
               Own the Hype.

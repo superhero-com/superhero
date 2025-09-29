@@ -8,112 +8,113 @@ import { Decimal } from "@/libs/decimal";
 import { AddressAvatarWithChainName } from "@/@components/Address/AddressAvatarWithChainName";
 import { Avatar } from "../ui/avatar";
 import AddressAvatar from "../AddressAvatar";
+import './LatestTransactionsCarousel.scss';
 
 export default function LatestTransactionsCarousel() {
   const { latestTransactions } = useLatestTransactions();
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [itemsToShow, setItemsToShow] = useState(4); // Number of items visible at once for loading state
+  const [screenWidth, setScreenWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  const [scrollPosition, setScrollPosition] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const [itemsToShow, setItemsToShow] = useState(4); // Number of items visible at once
-  const [gapSize, setGapSize] = useState(8); // Gap size in pixels
-  const autoplayRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number>();
 
 
-  // Responsive breakpoints - aligned with Vue component
-  const updateItemsToShow = useCallback(() => {
+  // Responsive breakpoints for loading state and screen width tracking
+  const updateResponsiveValues = useCallback(() => {
     const width = window.innerWidth;
-    if (width >= 1680) setItemsToShow(7); // Match Vue: 7 items
+    setScreenWidth(width);
+    
+    if (width >= 1680) setItemsToShow(7);
     else if (width >= 1280) setItemsToShow(5);
     else if (width >= 900) setItemsToShow(4);
     else if (width >= 700) setItemsToShow(3);
     else setItemsToShow(2);
-
-    // Set gap size based on screen size
-    if (width >= 640) setGapSize(8);
-    else setGapSize(4);
-  }, []);
-
-  // Simple continuous autoplay - aligned with Vue component behavior
-  const startAutoplay = useCallback(() => {
-    if (autoplayRef.current) clearInterval(autoplayRef.current);
-    if (!isHovered && latestTransactions.length > itemsToShow) {
-      autoplayRef.current = setInterval(() => {
-        setCurrentIndex((prev) => {
-          const maxIndex = latestTransactions.length - itemsToShow;
-          return prev >= maxIndex ? 0 : prev + 1;
-        });
-      }, 2000); // Match Vue's 2000ms autoplay
-    }
-  }, [isHovered, latestTransactions.length, itemsToShow]);
-
-  const stopAutoplay = useCallback(() => {
-    if (autoplayRef.current) {
-      clearInterval(autoplayRef.current);
-      autoplayRef.current = null;
-    }
   }, []);
 
   // Data fetching is now handled by useLatestTransactions hook
 
-  // Handle responsive breakpoints
+  // Smooth scrolling animation
+  const startScrolling = useCallback(() => {
+    if (!latestTransactions.length || isHovered) return;
+    
+    const scroll = () => {
+      setScrollPosition(prev => {
+        const cardWidth = 208; // 200px card + 8px gap
+        const totalWidth = latestTransactions.length * cardWidth;
+        const newPosition = prev + 1.5; // Adjust speed here (pixels per frame)
+        
+        // Reset to 0 when we've scrolled through half the content (since we duplicate items)
+        if (newPosition >= totalWidth) {
+          return 0;
+        }
+        return newPosition;
+      });
+      
+      if (!isHovered) {
+        animationRef.current = requestAnimationFrame(scroll);
+      }
+    };
+    
+    animationRef.current = requestAnimationFrame(scroll);
+  }, [latestTransactions.length, isHovered]);
+
+  const stopScrolling = useCallback(() => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = undefined;
+    }
+  }, []);
+
+  // Handle responsive breakpoints for loading state and screen width
   useEffect(() => {
-    updateItemsToShow();
-    const handleResize = () => updateItemsToShow();
+    updateResponsiveValues();
+    const handleResize = () => updateResponsiveValues();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [updateItemsToShow]);
+  }, [updateResponsiveValues]);
 
-  // Handle autoplay
+  // Handle scrolling animation
   useEffect(() => {
-    startAutoplay();
-    return () => stopAutoplay();
-  }, [startAutoplay, stopAutoplay]);
+    startScrolling();
+    return () => stopScrolling();
+  }, [startScrolling, stopScrolling]);
 
-  // Reset current index when items change
+  // Reset scroll position when transactions change
   useEffect(() => {
-    setCurrentIndex(0);
+    setScrollPosition(0);
   }, [latestTransactions.length]);
 
   if (!latestTransactions.length) {
     // Show loading state with improved styling
     return (
-      <div className="w-full overflow-hidden mb-4">
-        <div className="relative w-full">
-          <div className="flex">
+      <div className="latest-transactions-carousel">
+        <div className="transactions-carousel-container">
+          <div className="transactions-loading">
             {[...Array(itemsToShow)].map((_, i) => (
-              <div
-                key={i}
-                className="mr-2 flex-shrink-0 border border-white/10 rounded-[20px] overflow-hidden opacity-60 animate-pulse shadow-lg"
-                style={{
-                  minWidth: "200px",
-                  width: "200px",
-                  background: "linear-gradient(135deg, rgba(107,114,128,0.08), rgba(75,85,99,0.12))"
-                }}
-              >
-                <div className="p-2">
+              <div key={i} className="transaction-skeleton">
+                <div className="skeleton-content">
                   {/* Address Avatar & Address - First Row */}
-                  <div className="mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 bg-gray-400/20 rounded-full"></div>
-                      <div className="text-[12px] text-transparent bg-gray-400/20 rounded">
+                  <div className="skeleton-address-row">
+                    <div className="skeleton-address-content">
+                      <div className="skeleton-avatar"></div>
+                      <div className="skeleton-address">
                         ak_••••••••••••••••
                       </div>
                     </div>
                   </div>
 
                   {/* Token Name - Second Row */}
-                  <div className="mb-2">
-                    <div className="text-[16px] sm:text-[15px] text-transparent bg-gray-400/20 rounded">
-                      Loading token name...
-                    </div>
+                  <div className="skeleton-token-name">
+                    Loading token name...
                   </div>
                   
                   {/* Transaction Type and Volume - Third Row */}
-                  <div className="flex flex-row-reverse items-center justify-between gap-2">
-                    <div className="text-[13px] text-transparent bg-gray-400/20 rounded">
+                  <div className="skeleton-details-row">
+                    <div className="skeleton-volume">
                       •••
                     </div>
-                    <div className="px-2.5 py-1 rounded-md bg-gray-400/20 text-transparent text-[9px]">
+                    <div className="skeleton-badge">
                       LOADING
                     </div>
                   </div>
@@ -242,11 +243,9 @@ export default function LatestTransactionsCarousel() {
     return (
       <div
         key={`${saleAddress || "item"}-${index}`}
-        className="mr-2 flex-shrink-0 border border-white/10 rounded-[8px] overflow-hidden transition-all duration-300 hover:border-white/25 hover:scale-[1.02] cursor-pointer shadow-lg hover:shadow-xl"
+        className="transaction-card"
         style={{
-          minWidth: "200px",
           background: type.cardBg,
-
         }}
         onClick={() => {
           if (saleAddress) {
@@ -256,16 +255,16 @@ export default function LatestTransactionsCarousel() {
           }
         }}
       >
-        <div className="p-2">
+        <div className="transaction-card-content">
           {/* Address Avatar & Address - First Row */}
-          <div className="mb-2">
-            <div className="flex flex-row-reverse items-center gap-2">
-              <div className="flex flex-row-reverse items-center gap-2 text-[12px] font-medium text-white/80">
+          <div className="transaction-address-row">
+            <div className="transaction-address-content">
+              <div className="transaction-address-info">
                 <AddressAvatar address={item.address} size={20} />
-                <span className="truncate">{`${item.address.slice(0, 7)}...${item.address.slice(-4)}`}</span>
+                <span>{`${item.address.slice(0, 7)}...${item.address.slice(-4)}`}</span>
               </div>
               <div
-                className="px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wide whitespace-nowrap shadow-sm"
+                className="transaction-type-badge"
                 style={{
                   color: type.color,
                   backgroundColor: type.bg,
@@ -277,17 +276,15 @@ export default function LatestTransactionsCarousel() {
               </div>
             </div>
           </div>
-          {/* Token Name - Second Row */}
-
 
           {/* Transaction Type and Volume - Third Row */}
-          <div className="flex flex-row-reverse items-center justify-between gap-2">
+          <div className="transaction-details-row">
             {Number(volume) > 0 && (
-              <div className={`text-[13px] font-bold ${type.textGradient} bg-clip-text text-transparent whitespace-nowrap`}>
+              <div className={`transaction-volume ${type.textGradient} bg-clip-text text-transparent`}>
                 {Decimal.from(volume).shorten()}
               </div>
             )}
-            <div className={`text-[16px] sm:text-[15px] font-bold ${type.textGradient} bg-clip-text text-transparent truncate`}>
+            <div className={`transaction-token-name ${type.textGradient} bg-clip-text text-transparent`}>
               {tokenName}
             </div>
           </div>
@@ -296,23 +293,24 @@ export default function LatestTransactionsCarousel() {
     );
   };
 
+  // Create seamless loop by duplicating transactions exactly once
+  const loop = [...latestTransactions, ...latestTransactions];
+
   return (
-    <div className="w-full overflow-hidden mb-4">
-      <div className="relative w-full">
+    <div className="latest-transactions-carousel">
+      <div className="transactions-carousel-container">
         <div
           ref={containerRef}
-          className="flex transition-transform duration-1000 ease-in-out"
+          className="transactions-carousel-track-smooth"
           style={{
-            transform: `translateX(-${currentIndex * (200 + gapSize)}px)`,
-            width: `${latestTransactions.length * (200 + gapSize)}px`,
-            direction: "rtl", // Match Vue component RTL direction
+            transform: `translateX(-${scrollPosition}px)`,
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onTouchStart={() => setIsHovered(true)}
           onTouchEnd={() => setIsHovered(false)}
         >
-          {latestTransactions.map((item, index) => renderItem(item, index))}
+          {loop.map((item, index) => renderItem(item, index))}
         </div>
       </div>
     </div>

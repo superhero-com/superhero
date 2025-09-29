@@ -1,0 +1,87 @@
+import React from "react";
+import AeButton from "../../../components/AeButton";
+import WalletConnectBtn from "../../../components/WalletConnectBtn";
+import GlobalStatsAnalytics from "../../../components/Trendminer/GlobalStatsAnalytics";
+
+export default function TrendminerBanner() {
+  return (
+    <div className="rounded-[24px] mt-4 mb-6" style={{ background: 'linear-gradient(90deg, rgba(244, 193, 12, 0.1), rgba(255, 109, 21, 0.1))' }}>
+      <div className="max-w-[1400px] mx-auto p-4 sm:p-6">
+        <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="text-center text-2xl sm:text-3xl lg:text-left lg:text-4xl font-bold leading-tight bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600 bg-clip-text text-transparent">
+              Tokenize Trends.
+              <br />
+              Own the Hype.
+              <br />
+              Build Communities.
+            </div>
+            <div className="flex flex-col gap-3 mt-4">
+              {/* First row: Tokenize a Trend + Get Superhero Wallet */}
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <AeButton
+                  variant="primary"
+                  size="md"
+                  rounded
+                  onClick={() => (window.location.href = "/trendminer/create")}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  TOKENIZE A TREND
+                </AeButton>
+                <AeButton
+                  variant="secondary"
+                  size="md"
+                  outlined
+                  onClick={() =>
+                    window.open("https://wallet.superhero.com", "_blank")
+                  }
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  Get Superhero Wallet ↘
+                </AeButton>
+              </div>
+
+              {/* Second row: Explore DAOs + Invite & Earn */}
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <AeButton
+                  variant="accent"
+                  size="md"
+                  rounded
+                  onClick={() => (window.location.href = "/trendminer/daos")}
+                  className="bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  EXPLORE DAOS
+                </AeButton>
+                <AeButton
+                  variant="ghost"
+                  size="md"
+                  rounded
+                  onClick={() =>
+                    (window.location.href = "/trendminer/invite")
+                  }
+                  className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  INVITE & EARN
+                </AeButton>
+              </div>
+
+              {/* Third row: Connect Wallet */}
+              <div className="w-full sm:w-auto">
+                <WalletConnectBtn />
+              </div>
+            </div>
+            <div className="text-sm text-white/75 mt-2.5 max-w-[720px] overflow-hidden text-ellipsis leading-relaxed">
+              Tokenized trends are community tokens launched on a bonding
+              curve. Price moves with buys/sells, no order books. Each token
+              mints a DAO treasury that can fund initiatives via on-chain
+              votes. Connect your wallet to trade and participate.
+            </div>
+          </div>
+          <div className="min-w-[300px] flex-shrink-0 lg:mt-8">
+            <GlobalStatsAnalytics />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

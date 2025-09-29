@@ -48,7 +48,6 @@ export default function TokenList() {
   const [isFetching, setIsFetching] = useState(false);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tagTokenMap, setTagTokenMap] = useState<Record<string, TokenItem>>({});
   const [page, setPage] = useState(1);
   const loadMoreBtn = useRef<HTMLButtonElement>(null);
 
@@ -218,7 +217,7 @@ export default function TokenList() {
 
       <LatestTransactionsCarousel />
 
-      <TrendingPillsCarousel tagTokenMap={tagTokenMap} />
+      <TrendingPillsCarousel />
 
       {/* Main content */}
       <div className="max-w-[1400px] mx-auto">

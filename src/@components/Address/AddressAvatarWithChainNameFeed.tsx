@@ -30,7 +30,7 @@ export const AddressAvatarWithChainNameFeed = memo(({
     overlaySize = 18,
     showAddressAndChainName = true,
     showBalance = false,
-    truncateAddress = true,
+    truncateAddress = false,
     className,
     isHoverEnabled = true,
     avatarBackground = false,
@@ -94,10 +94,10 @@ export const AddressAvatarWithChainNameFeed = memo(({
             <div className={cn("flex flex-col items-start min-w-0", contentClassName)}>
                 {showAddressAndChainName && (
                     <>
-                        <span className="chain-name text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
+                        <span className="chain-name text-[14px] md:text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
                             {chainName || 'Legend'}
                         </span>
-                        <span className="text-xs text-foreground/90 font-mono leading-tight">
+                        <span className="text-xs text-white/70 font-mono leading-[0.9]">
                             <AddressFormatted
                                 address={address}
                                 truncate={false}

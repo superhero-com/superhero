@@ -34,7 +34,7 @@ export const AddressAvatarWithChainName = memo(({
     showAddressAndChainName = true,
     showPrimaryOnly = false,
     showBalance = false,
-    truncateAddress = true,
+    truncateAddress = false,
     className,
     isHoverEnabled = true,
     avatarBackground = false,
@@ -116,7 +116,7 @@ export const AddressAvatarWithChainName = memo(({
                     (() => {
                         const displayName = chainName || (!hideFallbackName ? 'Legend' : '');
                         return displayName ? (
-                            <span className="chain-name text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
+                            <span className="chain-name text-[14px] md:text-[15px] font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
                                 {displayName}
                             </span>
                         ) : (
@@ -134,14 +134,14 @@ export const AddressAvatarWithChainName = memo(({
                 ) : (
                     showAddressAndChainName && (
                         <>
-                            <span className="chain-name text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
+                            <span className="chain-name text-[14px] md:text-[15px] font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
                                 {chainName || (hideFallbackName ? '' : 'Legend')}
                             </span>
-                            <span className="text-xs text-foreground/90 font-mono leading-tight no-gradient-text">
+                            <span className="text-xs text-white/70 font-mono leading-[0.9] no-gradient-text">
                                 <AddressFormatted
                                     address={address}
-                                    truncate={!!truncateAddress}
-                                    truncateFixed={!!truncateAddress}
+                                    truncate={false}
+                                    truncateFixed={false}
                                     className={className}
                                 />
                             </span>

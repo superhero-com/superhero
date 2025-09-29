@@ -81,6 +81,12 @@ export default function MobileAppHeader() {
     }
   }, [showOverlay, showSearch]);
 
+  // Active route helper for mobile nav buttons
+  const isActiveRoute = (path: string) => {
+    if (path === '/') return pathname === '/';
+    return pathname.startsWith(path);
+  };
+
   return (
     <div className="z-[1100] fixed top-0 left-0 right-0 w-full md:hidden pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] border-b" style={{
       backgroundColor: 'rgba(12, 12, 20, 0.5)',
@@ -174,18 +180,29 @@ export default function MobileAppHeader() {
 
             <div className="py-4 px-6 border-b border-white/10 sm:py-3 sm:px-5">
               {activeAccount ? (
-                <div className="flex items-center gap-3">
-                  <AddressAvatarWithChainName
-                    isHoverEnabled={false}
-                    address={activeAccount}
-                    size={40}
-                    overlaySize={18}
-                    showBalance={true}
-                    showAddressAndChainName={false}
-                    showPrimaryOnly={true}
-                    hideFallbackName={true}
-                    contentClassName="px-2 pb-0"
-                  />
+                <div>
+                  <div className="flex items-center gap-3">
+                    <AddressAvatarWithChainName
+                      isHoverEnabled={false}
+                      address={activeAccount}
+                      size={40}
+                      overlaySize={18}
+                      showBalance={true}
+                      showAddressAndChainName={false}
+                      showPrimaryOnly={true}
+                      hideFallbackName={true}
+                      contentClassName="px-2 pb-0"
+                    />
+                  </div>
+                  <div className="mt-3">
+                    <AeButton
+                      onClick={handleLogout}
+                      className="w-full justify-center bg-white/5 border border-white/10 rounded-xl"
+                      variant="ghost"
+                    >
+                      Disconnect
+                    </AeButton>
+                  </div>
                 </div>
               ) : (
                 <AeButton onClick={handleConnect} className="w-full justify-center gap-2 bg-[#1161FE] hover:bg-[#1161FE] text-white border-none rounded-xl sm:rounded-full">
@@ -197,15 +214,11 @@ export default function MobileAppHeader() {
             <nav className="flex flex-col py-5 px-6 gap-3 flex-1 sm:py-4 sm:px-6 sm:gap-2">
               {navigationItems.map(item => {
                 const commonClasses = "w-full no-underline font-semibold transition-all duration-200 h-[56px] sm:h-[52px] rounded-xl text-white text-base flex items-center justify-center px-5";
-                // Backgrounds inspired by desktop quick links (swapped as requested)
-                const bgFeed = "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-500/90 hover:to-blue-600/90";
-                const bgDex = "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-500/90 hover:to-teal-600/90";
-                const bgDefault = "bg-white/5 hover:bg-white/10";
-                const bgClass = item.id === 'home' ? bgFeed : item.id === 'dex' ? bgDex : bgDefault;
+                const baseBg = "bg-white/5 hover:bg-white/10";
 
                 if (item.isExternal) {
                   return (
-                    <div key={item.id} className={`${bgClass} rounded-xl`}>
+                    <div key={item.id} className={`${baseBg} rounded-xl`}>
                       <a
                         href={item.path}
                         target="_blank"
@@ -221,7 +234,7 @@ export default function MobileAppHeader() {
                 }
 
                 return (
-                  <div key={item.id} className={`${bgClass} rounded-xl`}>
+                  <div key={item.id} className={`${baseBg} rounded-xl ${isActiveRoute(item.path) ? 'ring-2 ring-[var(--accent-color)]' : ''}`}>
                     <Link
                       to={item.path}
                       onClick={handleNavigationClick}

@@ -174,25 +174,18 @@ export default function MobileAppHeader() {
 
             <div className="py-4 px-6 border-b border-white/10 sm:py-3 sm:px-5">
               {activeAccount ? (
-                <div>
+                <div className="flex items-center gap-3">
                   <AddressAvatarWithChainName
                     isHoverEnabled={false}
                     address={activeAccount}
                     size={40}
                     overlaySize={18}
                     showBalance={true}
-                    showAddressAndChainName={true}
+                    showAddressAndChainName={false}
+                    showPrimaryOnly={true}
                     hideFallbackName={true}
+                    contentClassName="px-2 pb-0"
                   />
-                  <div className="mt-3">
-                    <AeButton
-                      onClick={handleLogout}
-                      className="w-full justify-center bg-white/5 border border-white/10 rounded-xl"
-                      variant="ghost"
-                    >
-                      Disconnect
-                    </AeButton>
-                  </div>
                 </div>
               ) : (
                 <AeButton onClick={handleConnect} className="w-full justify-center gap-2 bg-[#1161FE] hover:bg-[#1161FE] text-white border-none rounded-xl sm:rounded-full">

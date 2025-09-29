@@ -1,19 +1,18 @@
-import React, { useState, useCallback, useRef } from "react";
+import { AlertCircle } from "lucide-react";
+import React, { useCallback, useRef, useState } from "react";
+import { useAccount } from "../../hooks/useAccount";
+import { useAeSdk } from "../../hooks/useAeSdk";
+import { getAffiliationTreasury } from "../../libs/affiliation";
+import { Decimal } from "../../libs/decimal";
+import { addGeneratedInvites, prepareInviteLink } from "../../libs/invitation";
+import WalletConnectBtn from "../WalletConnectBtn";
+import CopyText from "../ui/CopyText";
 import { AeButton } from "../ui/ae-button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Checkbox } from "../ui/checkbox";
-import { Copy, Check, AlertCircle } from "lucide-react";
-import { useAeSdk } from "../../hooks/useAeSdk";
-import { useAccount } from "../../hooks/useAccount";
-import { useWalletConnect } from "../../hooks/useWalletConnect";
-import { useModal } from "../../hooks/useModal";
-import { getAffiliationTreasury } from "../../libs/affiliation";
-import { addGeneratedInvites, prepareInviteLink } from "../../libs/invitation";
-import { Decimal } from "../../libs/decimal";
-import WalletConnectBtn from "../WalletConnectBtn";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 
 interface InviteAndEarnCardProps {
   className?: string;
@@ -24,8 +23,6 @@ export default function InviteAndEarnCard({
 }: InviteAndEarnCardProps) {
   const { sdk, activeAccount } = useAeSdk();
   const { decimalBalance } = useAccount();
-  const { connectWallet, connectingWallet } = useWalletConnect();
-  const { openModal } = useModal();
 
   // Form state
   const [amount, setAmount] = useState<string>("");
@@ -37,7 +34,6 @@ export default function InviteAndEarnCard({
   const [copyInviteLinkDialog, setCopyInviteLinkDialog] = useState(false);
   const [invitationLinks, setInvitationLinks] = useState<string[]>([]);
   const [linkHasBeenCopied, setLinkHasBeenCopied] = useState(false);
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   // Refs
   const amountInputRef = useRef<HTMLInputElement>(null);
@@ -54,10 +50,6 @@ export default function InviteAndEarnCard({
       return false;
     }
   }, [decimalBalance, amount, invitesNumber]);
-
-  const handleConnect = () => {
-    openModal({ name: "connect-wallet" });
-  };
 
   const generateInviteLink = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,16 +134,6 @@ export default function InviteAndEarnCard({
     setTimeout(() => {
       setLinkHasBeenCopied(false);
     }, 500);
-  };
-
-  const copyToClipboard = async (text: string, index: number) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedIndex(index);
-      setTimeout(() => setCopiedIndex(null), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
   };
 
   return (
@@ -305,30 +287,12 @@ export default function InviteAndEarnCard({
             {/* Links */}
             <div className="space-y-3 max-h-60 overflow-y-auto">
               {invitationLinks.map((link, index) => (
-                <div
+                <CopyText
                   key={index}
-                  className="flex items-center gap-2 p-3 bg-muted rounded-lg"
-                >
-                  <Input
-                    value={link}
-                    readOnly
-                    className="flex-1 text-xs font-mono bg-transparent border-none focus-visible:ring-0"
-                    onFocus={(e) => e.currentTarget.select()}
-                  />
-                  <AeButton
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(link, index)}
-                    className="flex-shrink-0"
-                  >
-                    {copiedIndex === index ? (
-                      <Check className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </AeButton>
-                </div>
+                  value={link}
+                  bordered
+                  className="w-full"
+                />
               ))}
             </div>
 

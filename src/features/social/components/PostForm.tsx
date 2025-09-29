@@ -287,7 +287,7 @@ export default function PostForm({
     >
       <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="relative">
-          <div className="flex flex-col gap-3 md:grid md:grid-cols-[56px_1fr] md:gap-x-2 md:gap-y-3">
+          <div className="flex flex-col gap-3 md:grid md:grid-cols-[56px_1fr] md:gap-x-0 md:gap-y-3">
             {activeAccount && (
               <div className="hidden md:block">
                 <AddressAvatarWithChainName
@@ -300,7 +300,7 @@ export default function PostForm({
                 />
               </div>
             )}
-            <div className="md:col-start-2">
+            <div className={activeAccount ? "md:col-start-2" : "md:col-span-2"}>
               <div className="relative">
               <textarea
                 ref={textareaRef}

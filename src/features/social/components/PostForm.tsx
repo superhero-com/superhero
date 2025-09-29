@@ -283,7 +283,7 @@ export default function PostForm({
   const isDesktopViewport = typeof window !== 'undefined'
     && typeof window.matchMedia === 'function'
     && window.matchMedia('(min-width: 768px)').matches;
-  const computedMinHeight = isDesktopViewport ? minHeight : '76px';
+  const computedMinHeight = isDesktopViewport ? minHeight : '88px';
 
   return (
     <div

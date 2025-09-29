@@ -4,6 +4,7 @@ import InvitationList from '../../components/Invitation/InvitationList';
 import RightRail from '../../components/layout/RightRail';
 import Shell from '../../components/layout/Shell';
 import WalletConnectBtn from '../../components/WalletConnectBtn';
+import CollectRewardsCard from '../../components/Invitation/CollectRewardsCard';
 import { getAffiliationTreasury } from '../../libs/affiliation';
 import { addGeneratedInvites } from '../../libs/invitation';
 import InviteAndEarnCard from '../../components/Invitation/InviteAndEarnCard';
@@ -222,70 +223,7 @@ export default function Invite() {
           <InviteAndEarnCard />
 
           {/* Rewards Card */}
-          <div className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
-            <div className="flex items-center gap-4 mb-6 flex-wrap">
-              <div className="text-3xl md:text-4xl lg:text-5xl drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] flex-shrink-0">
-                💰
-              </div>
-              <h3 className="m-0 text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
-                Your Rewards
-              </h3>
-            </div>
-
-            <div className="flex flex-col gap-8">
-              {/* Progress Section */}
-              <div className="flex flex-col gap-5 p-5 md:p-6 lg:p-8 bg-white/3 rounded-2xl border border-white/5">
-                <div className="flex justify-between items-center font-semibold text-base md:text-lg lg:text-xl flex-wrap gap-2">
-                  <span>Progress to rewards</span>
-                  <span className="text-teal-400 font-bold text-lg md:text-xl lg:text-2xl text-shadow-[0_0_10px_rgba(78,205,196,0.5)] break-words">
-                    {uniqueInviteesCount}/4 invitees
-                  </span>
-                </div>
-                <div className="w-full h-3 bg-white/10 rounded-md overflow-hidden relative before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:animate-[shimmer_2s_infinite]">
-                  <div
-                    className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-md transition-all duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)] relative z-10"
-                    style={{ width: `${progressPercentage}%` }}
-                  ></div>
-                </div>
-                <div className="text-center font-semibold text-slate-400 text-sm md:text-base p-2 rounded-lg bg-white/2 break-words">
-                  {uniqueInviteesCount >= 4 ? '🎉 Eligible for rewards!' : `${4 - uniqueInviteesCount} more invitees needed`}
-                </div>
-              </div>
-
-              {/* Rewards Display */}
-              <div className="flex flex-col gap-6">
-                <div className="flex flex-col gap-3 text-center p-5 md:p-6 lg:p-8 bg-white/3 rounded-2xl border border-white/5">
-                  <span className="text-sm md:text-base text-slate-400 font-medium uppercase tracking-wider break-words">
-                    Available Rewards
-                  </span>
-                  <span className="text-3xl md:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent text-shadow-[0_0_20px_rgba(255,107,107,0.3)] break-words">
-                    {accumulatedRewardsAe.toFixed(4)} AE
-                  </span>
-                </div>
-
-                <button
-                  onClick={withdrawRewards}
-                  disabled={withdrawing || !isEligibleForRewards}
-                  className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold uppercase tracking-wider break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${
-                    isEligibleForRewards 
-                      ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-pink-500/40'
-                      : 'opacity-50 cursor-not-allowed bg-gray-600 transform-none'
-                  }`}
-                >
-                  {withdrawing ? (
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 border-2 border-transparent border-t-current rounded-full animate-spin"></div>
-                      Withdrawing...
-                    </div>
-                  ) : !isEligibleForRewards ? (
-                    'Not eligible yet'
-                  ) : (
-                    'Collect rewards'
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
+          <CollectRewardsCard />
         </div>
 
         {/* User Invitations */}

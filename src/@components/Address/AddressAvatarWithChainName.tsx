@@ -14,6 +14,9 @@ interface AddressAvatarWithChainNameProps {
     size?: number;
     overlaySize?: number;
     showAddressAndChainName?: boolean;
+    // When true, show only one primary line: chain name if available,
+    // otherwise the address. Useful for compact header displays.
+    showPrimaryOnly?: boolean;
     showBalance?: boolean;
     truncateAddress?: boolean;
     className?: string;
@@ -29,6 +32,7 @@ export const AddressAvatarWithChainName = memo(({
     size = 36,
     overlaySize = 18,
     showAddressAndChainName = true,
+    showPrimaryOnly = false,
     showBalance = false,
     truncateAddress = true,
     className,
@@ -108,19 +112,40 @@ export const AddressAvatarWithChainName = memo(({
             </div>
 
             <div className={cn("flex flex-col items-start min-w-0 px-[12px] pb-[20px]", contentClassName)}>
-                {showAddressAndChainName && (
-                    <>
-                        <span className="chain-name text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
-                            {chainName || 'Legend'}
-                        </span>
-                        <span className="text-xs text-foreground/90 font-mono leading-tight">
-                            <AddressFormatted
-                                address={address}
-                                truncate={false}
-                                className={className}
-                            />
-                        </span>
-                    </>
+                {showPrimaryOnly ? (
+                    (() => {
+                        const displayName = chainName || (!hideFallbackName ? 'Legend' : '');
+                        return displayName ? (
+                            <span className="chain-name text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
+                                {displayName}
+                            </span>
+                        ) : (
+                            <span className="text-xs text-foreground/90 font-mono leading-tight">
+                                <AddressFormatted
+                                    address={address}
+                                    truncate={!!truncateAddress}
+                                    truncateFixed={!!truncateAddress}
+                                    className={className}
+                                />
+                            </span>
+                        );
+                    })()
+                ) : (
+                    showAddressAndChainName && (
+                        <>
+                            <span className="chain-name text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
+                                {chainName || (hideFallbackName ? '' : 'Legend')}
+                            </span>
+                            <span className="text-xs text-foreground/90 font-mono leading-tight">
+                                <AddressFormatted
+                                    address={address}
+                                    truncate={!!truncateAddress}
+                                    truncateFixed={!!truncateAddress}
+                                    className={className}
+                                />
+                            </span>
+                        </>
+                    )
                 )}
                 <div>
                     {showBalance && (

@@ -12,7 +12,6 @@ interface TokenMobileCardProps {
     useCollectionRank?: boolean;
     showCollectionColumn?: boolean;
     rank: number;
-    timeframe?: PriceMovementTimeframe;
 }
 
 // Helper function to parse collection name
@@ -36,7 +35,6 @@ export default function TokenMobileCard({
     useCollectionRank = false,
     showCollectionColumn = false,
     rank,
-    timeframe = '30D'
 }: TokenMobileCardProps) {
     const tokenAddress = useMemo(() => {
         return token.address;

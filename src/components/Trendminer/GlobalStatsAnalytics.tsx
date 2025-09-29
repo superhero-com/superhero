@@ -80,7 +80,7 @@ export default function GlobalStatsAnalytics() {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {statsItems.map((item) => (
-        <div key={item.name} className="p-2 bg-black/5 dark:bg-white/5 rounded-lg">
+        <div key={item.name} className="p-2">
           <div className="text-xs opacity-80 mb-1">{item.name}</div>
           <div className="font-extrabold text-sm sm:text-base">
             {isLoading ? (

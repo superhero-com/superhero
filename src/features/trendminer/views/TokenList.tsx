@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { TokenListTable } from "..";
-import { TrendminerApi } from "../../../api/backend";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { TokenListTable, TrendminerBanner } from "..";
 import { TokenDto, TokensService } from "../../../api/generated";
-import GlobalStatsAnalytics from "../../../components/Trendminer/GlobalStatsAnalytics";
 import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
 import TrendingPillsCarousel from "../../../components/Trendminer/TrendingPillsCarousel";
 import RepositoriesList from "../components/RepositoriesList";
+import { useAccount } from "../../../hooks";
 
 type TrendingTagItem = {
   tag: string;
@@ -36,23 +36,32 @@ const SORT = {
   oldest: 'oldest',
   holdersCount: 'holders_count',
   trendingScore: 'trending_score',
+  name: 'name',
+  price: 'price',
 } as const;
 
 type OrderByOption = typeof SORT[keyof typeof SORT];
-type CollectionOption = 'all' | 'word' | 'number';
+type CollectionOption = 'all' | string; // Can be 'all' or specific collection addresses
 
 export default function TokenList() {
+  const { activeAccount } = useAccount();
+  
   const [collection, setCollection] = useState<CollectionOption>('all');
-  const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore);
+  const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore); // Default to trending score like Vue
+  const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
   const [ownedOnly, setOwnedOnly] = useState(false);
   const [search, setSearch] = useState("");
-  const [data, setData] = useState<{ pages: Array<{ items: TokenDto[] }> } | null>(null);
-  const [isFetching, setIsFetching] = useState(false);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [tagTokenMap, setTagTokenMap] = useState<Record<string, TokenItem>>({});
-  const [page, setPage] = useState(1);
+  const [searchThrottled, setSearchThrottled] = useState("");
   const loadMoreBtn = useRef<HTMLButtonElement>(null);
+  
+  // Throttle search input (2000ms delay like Vue)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setSearchThrottled(search);
+    }, 2000);
+    
+    return () => clearTimeout(timeoutId);
+  }, [search]);
 
   const orderByOptions: SelectOptions<OrderByOption> = [
     {
@@ -62,6 +71,14 @@ export default function TokenList() {
     {
       title: 'Market Cap',
       value: SORT.marketCap,
+    },
+    {
+      title: 'Price',
+      value: SORT.price,
+    },
+    {
+      title: 'Name',
+      value: SORT.name,
     },
     {
       title: 'Newest',
@@ -77,25 +94,8 @@ export default function TokenList() {
     },
   ];
 
-  const collectionOptions: SelectOptions<CollectionOption> = [
-    {
-      title: 'All Tokens',
-      value: 'all',
-    },
-    {
-      title: 'Word Tokens',
-      value: 'word',
-    },
-    {
-      title: 'Number Tokens',
-      value: 'number',
-    },
-  ];
-
-  const activeCollectionOption = useMemo(() =>
-    collectionOptions.find((option) => option.value === collection),
-    [collection]
-  );
+  // Remove hardcoded collection options - these should be dynamic based on available collections
+  // For now, just use 'all' as the Vue implementation shows collection can be any string
 
   const activeSortOption = useMemo(() =>
     orderByOptions.find((option) => option.value === orderBy),
@@ -109,91 +109,80 @@ export default function TokenList() {
     return orderBy;
   }, [orderBy]);
 
-  const orderDirection = useMemo((): 'ASC' | 'DESC' => {
-    return orderBy === SORT.oldest ? 'ASC' : 'DESC';
-  }, [orderBy]);
+  const finalOrderDirection = useMemo((): 'ASC' | 'DESC' => {
+    // For date-based sorting, override the direction
+    if (orderBy === SORT.oldest) return 'ASC';
+    if (orderBy === SORT.newest) return 'DESC';
+    // For other fields, use the state
+    return orderDirection;
+  }, [orderBy, orderDirection]);
+
+  const ownerAddress = useMemo(() => {
+    return ownedOnly ? activeAccount : undefined;
+  }, [ownedOnly, activeAccount]);
+
+  const { data, isFetching, fetchNextPage, hasNextPage, refetch } =
+    useInfiniteQuery({
+      initialPageParam: 1,
+      queryFn: ({ pageParam = 1 }) =>
+        TokensService.listAll({
+          orderBy: orderByMapped as any,
+          orderDirection: finalOrderDirection,
+          collection: collection === 'all' ? undefined : (collection as any),
+          search: searchThrottled || undefined,
+          ownerAddress: ownerAddress,
+          limit: 20,
+          page: pageParam,
+        }),
+      getNextPageParam: (lastPage: any, allPages, lastPageParam) =>
+        lastPage?.meta?.currentPage === lastPage?.meta?.totalPages
+          ? undefined
+          : lastPageParam + 1,
+      queryKey: [
+        "TokensService.listAll",
+        orderBy,
+        orderByMapped,
+        finalOrderDirection,
+        collection,
+        searchThrottled,
+        ownerAddress,
+      ],
+      staleTime: 1000 * 60, // 1 minute
+    });
 
   function updateCollection(val: CollectionOption) {
     setCollection(val);
-    setPage(1);
   }
 
   function updateOrderBy(val: OrderByOption) {
     setOrderBy(val);
-    setPage(1);
+    setOrderDirection('DESC'); // Reset to default direction when using dropdown
   }
 
-  async function fetchTokens(pageParam = 1, isInitial = false) {
-    console.log('fetchTokens', pageParam, isInitial);
-    if (isInitial) {
-      setIsFetching(true);
-      setError(null);
-    }
-    
-    try {
-      const response = await TokensService.listAll({
-        orderBy: orderByMapped as any,
-        orderDirection,
-        collection: collection === 'all' ? undefined : collection,
-        search: search || undefined,
-        limit: 20,
-        page: pageParam,
-      }) as any; // Cast to any since the generated type is incomplete
-
-      const newItems = response?.items || [];
-      const hasMore = response?.meta?.currentPage < response?.meta?.totalPages;
-
-      if (isInitial || pageParam === 1) {
-        setData({ pages: [{ items: newItems }] });
+  function handleSort(sortKey: OrderByOption) {
+    if (orderBy === sortKey || 
+        (orderBy === 'newest' && sortKey === 'oldest') || 
+        (orderBy === 'oldest' && sortKey === 'newest')) {
+      // Toggle direction if same column (or newest/oldest pair)
+      if (sortKey === 'newest' || sortKey === 'oldest') {
+        // For date-based sorting, toggle between newest and oldest
+        setOrderBy(orderBy === 'newest' ? 'oldest' : 'newest');
       } else {
-        setData(prev => {
-          if (!prev) {
-            return { pages: [{ items: newItems }] };
-          }
-          
-          // Get all existing item addresses to prevent duplicates
-          const existingAddresses = new Set(
-            prev.pages.flatMap(page => page.items.map(item => item.address))
-          );
-          
-          // Filter out items that already exist
-          const uniqueNewItems = newItems.filter(item => !existingAddresses.has(item.address));
-          
-          return {
-            pages: [...prev.pages, { items: uniqueNewItems }]
-          };
-        });
+        // For other columns, toggle the direction
+        setOrderDirection(orderDirection === 'DESC' ? 'ASC' : 'DESC');
       }
-
-      setHasNextPage(hasMore);
-      setPage(pageParam);
-    } catch (e: any) {
-      setError(e?.message || "Failed to load tokens");
-    } finally {
-      if (isInitial) {
-        setIsFetching(false);
-      }
+    } else {
+      // Set new column with default DESC direction
+      setOrderBy(sortKey);
+      setOrderDirection('DESC');
     }
   }
-
-  const fetchNextPage = () => {
-    if (hasNextPage && !isFetching) {
-      fetchTokens(page + 1);
-    }
-  };
-
-  // Load initial data
-  useEffect(() => {
-    if (!data?.pages?.length) {
-      fetchTokens(1, true);
-    }
-  }, [orderBy, orderByMapped, collection, search, orderDirection]);
 
   // Intersection observer for infinite loading
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.intersectionRatio === 1) {
+        if (entry.intersectionRatio === 1 && hasNextPage && !isFetching) {
           fetchNextPage();
         }
       },
@@ -207,7 +196,7 @@ export default function TokenList() {
     return () => {
       observer.disconnect();
     };
-  }, [hasNextPage, isFetching, page]);
+  }, [hasNextPage, isFetching, fetchNextPage]);
 
   function normalizeAe(n: number): number {
     if (!isFinite(n)) return 0;
@@ -215,83 +204,15 @@ export default function TokenList() {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto min-h-screen  text-white">
-      {/* Banner */}
-      <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] mx-4 mt-4 mb-6">
-        <div className="max-w-[1400px] mx-auto p-4 sm:p-6">
-          <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
-            <div className="min-w-0 flex-1">
-              <div className="text-center text-2xl sm:text-3xl lg:text-left lg:text-4xl font-bold leading-tight bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600 bg-clip-text text-transparent">
-                Tokenize Trends.
-                <br />
-                Own the Hype.
-                <br />
-                Build Communities.
-              </div>
-              {/* <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
-                <AeButton
-                  variant="primary"
-                  size="md"
-                  rounded
-                  onClick={() => (window.location.href = "/trendminer/create")}
-                >
-                  Tokenize a Trend
-                </AeButton>
-                <AeButton
-                  variant="secondary"
-                  size="md"
-                  rounded
-                  outlined
-                  onClick={() =>
-                    window.open("https://wallet.superhero.com", "_blank")
-                  }
-                >
-                  Get Superhero Wallet ↘
-                </AeButton>
-                <div className="flex gap-2 sm:gap-3">
-                  <AeButton
-                    variant="accent"
-                    size="md"
-                    rounded
-                    onClick={() => (window.location.href = "/trendminer/daos")}
-                  >
-                    Explore DAOs
-                  </AeButton>
-                  <AeButton
-                    variant="ghost"
-                    size="md"
-                    rounded
-                    onClick={() =>
-                      (window.location.href = "/trendminer/invite")
-                    }
-                  >
-                    Invite & Earn
-                  </AeButton>
-                </div>
-                <div className="w-full sm:w-auto">
-                  <WalletConnectBtn />
-                </div>
-              </div> */}
-              <div className="text-sm text-white/75 mt-2.5 max-w-[720px] overflow-hidden text-ellipsis leading-relaxed">
-                Tokenized trends are community tokens launched on a bonding
-                curve. Price moves with buys/sells, no order books. Each token
-                mints a DAO treasury that can fund initiatives via on-chain
-                votes. Connect your wallet to trade and participate.
-              </div>
-            </div>
-            <div className="min-w-[300px] flex-shrink-0 lg:mt-8">
-              <GlobalStatsAnalytics />
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
+      <TrendminerBanner />
 
       <LatestTransactionsCarousel />
 
-      <TrendingPillsCarousel tagTokenMap={tagTokenMap} />
+      <TrendingPillsCarousel />
 
       {/* Main content */}
-      <div className="max-w-[1400px] mx-auto">
+      <div className="">
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6">
           {/* Left: Token List */}
           <div className="min-w-0">
@@ -302,19 +223,6 @@ export default function TokenList() {
 
               {/* FILTERS */}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                {/* Collection Filter */}
-                <select
-                  className="px-3 py-2 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05]"
-                  value={collection}
-                  onChange={(e) => updateCollection(e.target.value as CollectionOption)}
-                >
-                  {collectionOptions.map((option) => (
-                    <option key={option.value} value={option.value} disabled={option.disabled} className="bg-gray-900">
-                      {option.title}
-                    </option>
-                  ))}
-                </select>
-
                 {/* OrderBy Filter */}
                 <select
                   className="px-3 py-2 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05]"
@@ -327,6 +235,20 @@ export default function TokenList() {
                     </option>
                   ))}
                 </select>
+
+                {/* Owned by me */}
+                {activeAccount && (
+                  <button
+                    onClick={() => setOwnedOnly(!ownedOnly)}
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
+                      ownedOnly
+                        ? 'bg-[#1161FE] text-white border border-[#1161FE]'
+                        : 'bg-white/[0.02] text-white border border-white/10 hover:bg-white/[0.05]'
+                    }`}
+                  >
+                    Show Owned Only
+                  </button>
+                )}
 
                 {/* Search */}
                 <input
@@ -347,7 +269,13 @@ export default function TokenList() {
             )}
 
             {/* Token List Table */}
-            <TokenListTable pages={data?.pages} loading={isFetching} />
+            <TokenListTable 
+              pages={data?.pages} 
+              loading={isFetching} 
+              orderBy={orderBy}
+              orderDirection={finalOrderDirection}
+              onSort={handleSort}
+            />
           </div>
 
           <RepositoriesList />
@@ -358,13 +286,12 @@ export default function TokenList() {
           <div className="text-center pt-2 pb-4">
             <button
               ref={loadMoreBtn}
-              onClick={fetchNextPage}
+              onClick={() => fetchNextPage()}
               disabled={isFetching}
-              className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                isFetching
+              className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isFetching
                   ? 'bg-white/10 cursor-not-allowed opacity-60'
                   : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0'
-              }`}
+                }`}
             >
               {isFetching ? (
                 <div className="flex items-center justify-center gap-2">

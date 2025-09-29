@@ -57,12 +57,13 @@ export const navigationItems: NavigationItem[] = [
       path: '/trendminer/tokens',
       icon: '📈',
   },
-  // {
-  //     id: 'invite',
-  //     label: 'Invite & Earn',
-  //     path: '/trendminer/invite',
-  //     icon: '🎁',
-  // },
+
+  {
+      id: 'invite',
+      label: 'Invite & Earn',
+      path: '/trendminer/invite',
+      icon: '🎁',
+  },
   // {
   //     id: 'governance',
   //     label: 'Governance & Voting',

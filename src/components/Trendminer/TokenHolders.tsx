@@ -145,16 +145,14 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
                 className="grid grid-cols-1 md:grid-cols-3 gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors"
               >
                 {/* Account */}
-                <div className="flex items-center gap-3">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                <div className="flex items-center">
+                    <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
                     Account:
                   </div>
-                  <div className="min-w-0 flex-1">
                     <AddressChip
                       address={holder.address}
                       linkToProfile={true}
                     />
-                  </div>
                 </div>
 
                 {/* Balance */}

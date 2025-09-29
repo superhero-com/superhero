@@ -164,7 +164,7 @@ export default function InviteAndEarnCard({
           Generate Invites
         </h3>
       </div>
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-4 md:gap-16 ">
         {/* Description */}
         <div className="space-y-4 text-sm text-muted-foreground text-center sm:text-left">
           <p>

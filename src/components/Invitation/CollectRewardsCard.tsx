@@ -131,7 +131,7 @@ export default function CollectRewardsCard({
       </div>
 
       {/* Content */}
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-4">
         {/* Description */}
         <div className="space-y-4 text-sm text-muted-foreground">
           <p>

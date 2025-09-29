@@ -143,7 +143,7 @@ const CommentItem = memo(({
               </div>
 
               <div className='w-full border-l border-white ml-[20px] pl-[32px] pr-4 md:pr-6 -mt-[1px] md:border-none md:ml-0 md:pl-[52px] relative z-10'>
-                <div className="text-[15px] text-foreground leading-snug">
+                <div className="text-[14px] md:text-[15px] text-foreground leading-snug">
                   {linkify(comment.content, { knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}
                 </div>
 

@@ -167,8 +167,8 @@ export default function MobileAppHeader() {
       {showOverlay && (
         <div className="fixed inset-0 bg-black/80 flex items-start justify-end z-[1100] animate-[fadeIn_0.2s_ease-out] backdrop-blur-[4px] sm:items-start sm:justify-center" onClick={() => setShowOverlay(false)}>
           <div className="z-[1101] text-[var(--light-font-color)] relative w-full max-w-[320px] h-screen bg-[var(--background-color)] flex flex-col overflow-y-auto animate-[slideInRight_0.3s_ease-out] shadow-[-10px_0_30px_rgba(0,0,0,0.3)] sm:max-w-full sm:w-full sm:animate-[slideInUp_0.3s_ease-out] sm:shadow-[0_-10px_30px_rgba(0,0,0,0.3)]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between py-5 px-6 pb-4 border-b border-white/10 sm:py-4 sm:px-5 sm:pb-3">
-              <h2 className="m-0 text-xl font-semibold text-[var(--standard-font-color)] sm:text-lg">Menu</h2>
+            <div className="flex items-center justify-between h-[70px] px-6 border-b border-white/10 sm:px-5">
+              <h2 className="m-0 text-xl font-semibold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent sm:text-lg">Menu</h2>
               <button
                 className="bg-white/10 border-none text-[var(--standard-font-color)] w-11 h-11 rounded-full flex items-center justify-center text-lg cursor-pointer transition-all duration-200 hover:bg-white/20 focus:bg-white/20 active:scale-95 sm:w-10 sm:h-10 sm:text-base"
                 onClick={() => setShowOverlay(false)}

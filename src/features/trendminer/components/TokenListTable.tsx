@@ -13,7 +13,6 @@ interface TokenListTableProps {
 }
 
 export default function TokenListTable({ pages, loading, showCollectionColumn }: TokenListTableProps) {
-  const [performanceChartTimeframe, setPerformanceChartTimeframe] = useState<PriceMovementTimeframe>('30D');
 
 
   const allItems = useMemo(() => 
@@ -50,14 +49,11 @@ export default function TokenListTable({ pages, loading, showCollectionColumn }:
             <th className="cell cell-market-cap text-xs opacity-50 text-left py-1 px-1 px-lg-3">
               Market Cap
             </th>
-            <th className="cell cell-address text-xs opacity-50 text-left py-1 px-1 px-lg-3">
-              Contract Address
+            <th className="cell cell-holders text-xs opacity-50 text-left py-1 px-1 px-lg-3">
+              Holders
             </th>
             <th className="cell cell-chart text-xs text-right flex justify-center py-1 pl-3">
-              <PerformanceTimeframeSelector 
-                value={performanceChartTimeframe}
-                onChange={setPerformanceChartTimeframe}
-              />
+              <PerformanceTimeframeSelector  />
             </th>
             <th className="cell-link">{/* Links placeholder column */}</th>
           </tr>
@@ -77,7 +73,6 @@ export default function TokenListTable({ pages, loading, showCollectionColumn }:
                 token={token}
                 showCollectionColumn={showCollectionColumn}
                 rank={index + 1}
-                timeframe={performanceChartTimeframe}
               />
             ))}
           </tbody>
@@ -120,16 +115,16 @@ export default function TokenListTable({ pages, loading, showCollectionColumn }:
             width: 170px;
           }
           .cell-market-cap,
-          .cell-address {
+          .cell-holders {
             width: 170px;
           }
 
           .cell-chart {
-            width: 170px;
+            width: 210px;
           }
 
           .cell-chart .chart {
-            max-width: 140px;
+            max-width: 180px;
           }
 
           .cell-link {

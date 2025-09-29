@@ -1,18 +1,15 @@
 import { PriceDataFormatter } from "@/features/shared/components";
 import { useMemo } from "react";
 import { TokenDto } from "../../../api/generated";
-import { AddressChip } from "../../../components/AddressChip";
 import { TokenLineChart } from "./TokenLineChart";
 import TokenMobileCard from "./TokenMobileCard";
 
-type PriceMovementTimeframe = '1D' | '7D' | '30D';
 
 interface TokenListTableRowProps {
   token: TokenDto;
   useCollectionRank?: boolean;
   showCollectionColumn?: boolean;
   rank: number;
-  timeframe?: PriceMovementTimeframe;
 }
 
 // Helper function to parse collection name
@@ -37,7 +34,6 @@ export default function TokenListTableRow({
   useCollectionRank = false,
   showCollectionColumn = false,
   rank,
-  timeframe = '30D'
 }: TokenListTableRowProps) {
   const tokenAddress = useMemo(() => {
     return token.address;
@@ -56,23 +52,25 @@ export default function TokenListTableRow({
             useCollectionRank={useCollectionRank}
             showCollectionColumn={showCollectionColumn}
             rank={rank}
-            timeframe={timeframe}
           />
         </td>
       </tr>
 
       {/* Desktop table row for larger screens */}
-      <tr className="bctsl-token-list-table-row rounded-xl relative  overflow-hidden border border-red backdrop-blur-[10px]  transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hidden md:table-row">
+      <tr className="bctsl-token-list-table-row rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hidden md:table-row">
+      {/* Fake cell to match header structure */}
+      <td className="cell-fake"></td>
+      
       {/* Rank */}
       <td className="cell cell-rank pl-2 pl-md-4">
-        <div className="rank text-md font-bold text-white/90 opacity-50">
+        <div className="rank text-md font-bold bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-transparent opacity-50">
           {collectionRank}
         </div>
       </td>
 
       {/* Name */}
       <td className="cell cell-name px-1 px-lg-3">
-        <div className="token-name text-md font-bold text-white transition-colors">
+        <div className="token-name text-md font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent transition-colors">
           #{token.symbol || token.name}
         </div>
       </td>
@@ -90,10 +88,11 @@ export default function TokenListTableRow({
       <td className="cell cell-price px-1 px-lg-3 text-md-right">
         <div className="flex align-center md:block">
           <div className="mobile-label block md:hidden text-white/60 w-16">Price:</div>
-          <PriceDataFormatter
-            priceData={token.price_data}
-          />
-
+          <div className="bg-gradient-to-r  text-sm from-yellow-400 to-cyan-500 bg-clip-text text-transparent">
+            <PriceDataFormatter
+              priceData={token.price_data}
+            />
+          </div>
         </div>
       </td>
 
@@ -101,28 +100,26 @@ export default function TokenListTableRow({
       <td className="cell cell-market-cap px-1 px-lg-3 text-md-right">
         <div className="flex align-center md:block justify-between">
           <div className="mobile-label block md:hidden text-white/60 w-16">MC:</div>
-          <PriceDataFormatter
-            bignumber
-            priceData={token.market_cap_data}
-          />
+          <div className="bg-gradient-to-r text-sm  from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+            <PriceDataFormatter
+              bignumber
+              priceData={token.market_cap_data}
+            />
+          </div>
         </div>
       </td>
 
-      {/* Contract Address */}
-      <td className="cell cell-address text-right px-1 px-lg-3">
-        {tokenAddress && (
-          <AddressChip
-            address={tokenAddress}
-            copyable
-            className="text-xs"
-          />
-        )}
+      {/* Holders */}
+      <td className="cell cell-holders text-left px-1 px-lg-3">
+        <div className="bg-gradient-to-r from-blue-400 to-green-500 bg-clip-text text-transparent font-medium">
+          {token.holders_count?.toLocaleString() || '0'}
+        </div>
       </td>
 
       {/* Chart */}
       <td className="cell cell-chart text-right pr-md-4">
         {tokenAddress && (
-          <div className="ml-auto chart max-w-[140px]">
+            <div className="ml-auto chart max-w-[180px]">
             <TokenLineChart
               saleAddress={token.sale_address || tokenAddress}
               height={60}
@@ -152,41 +149,11 @@ export default function TokenListTableRow({
 
         }
 
-        .bctsl-token-list-table-row::before,
-        .bctsl-token-list-table-row::after {
-          content: '';
-          display: block;
-          position: absolute;
-          z-index: -1;
-          border-radius: inherit;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          overflow: hidden;
-          background: linear-gradient(135deg, rgba(17, 97, 254, 0.01) 0%, rgba(255, 255, 255, 0.05) 100%);
-        }
-
-        .bctsl-token-list-table-row::before {
-          inset: 0;
-          opacity: 0;
-          background: linear-gradient(135deg, rgba(17, 97, 254, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-          border-radius: 12px;
-          
-        }
-
-        .bctsl-token-list-table-row::after {
-          inset: 1px;
-        }
-
-        .bctsl-token-list-table-row:hover::before {
-          opacity: 1;
-        }
-
-        .bctsl-token-list-table-row:hover::after {
-          background-color: rgba(255, 255, 255, 0.05);
-        }
 
         .bctsl-token-list-table-row:hover .token-name {
-          color: #1161FE;
+          background: linear-gradient(to right, #fb923c, #fbbf24);
+          -webkit-background-clip: text;
+          background-clip: text;
         }
 
         .bctsl-token-list-table-row:hover {
@@ -204,7 +171,6 @@ export default function TokenListTableRow({
 
         .token-name {
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          color: white;
         }
 
         .cell-rank {
@@ -235,11 +201,7 @@ export default function TokenListTableRow({
               'rank market-cap chart';
             margin-top: 4px;
             padding-block: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
             margin: 0.5rem 0;
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.02);
           }
 
           .cell-rank {
@@ -267,7 +229,7 @@ export default function TokenListTableRow({
           }
 
           .cell-collection,
-          .cell-address {
+          .cell-holders {
             display: none;
           }
         }

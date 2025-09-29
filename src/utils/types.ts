@@ -1,9 +1,10 @@
-import { BrowserWindowMessageConnection, Encoded } from "@aeternity/aepp-sdk";
+import { BrowserWindowMessageConnection, Encoded, Tag } from "@aeternity/aepp-sdk";
 import {
   PRICE_MOVEMENT_TIMEFRAMES,
   TX_FUNCTIONS,
   WEB_SOCKET_CHANNELS,
 } from "@/utils/constants";
+import { CancelablePromise } from "@/api/generated/core/CancelablePromise";
 
 export interface INetwork {
   url: string;
@@ -150,6 +151,7 @@ export type TxFunctionRaw = ObjectValues<typeof TX_FUNCTIONS>;
  * TxFunctions used internally by the app.
  */
 export type TxFunctionParsed = keyof typeof TX_FUNCTIONS;
+export type TxType = 'ContractCreateTx' | 'ContractCallTx';
 
 export type TxFunction = TxFunctionRaw | TxFunctionParsed;
 export interface ITx {
@@ -191,3 +193,17 @@ export interface ITx {
   };
   VSN: string;
 }
+
+/**
+ * TODO remove when src/api/generated/models/Pagination.ts updated
+ */
+export type CustomPagination<I> = CancelablePromise<{
+  items: I[];
+  meta: {
+    currentPage: number;
+    itemCount: number;
+    itemsPerPage: number;
+    totalItems: number;
+    totalPages: number;
+  };
+}>;

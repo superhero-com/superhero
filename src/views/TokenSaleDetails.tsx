@@ -267,16 +267,16 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
           <Card className="bg-white/[0.02] border-white/10">
             <CardContent className="p-6">
               <div className="flex items-center justify-between gap-4 mb-4">
-                <div className="flex items-center gap-4 flex-1">
+                <div className="flex items-center gap-4 flex-1 flex-wrap">
                   <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
                     #{token.symbol || token.name}
                   </h1>
 
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
                     {token.rank && (
                       <Badge
                         variant="secondary"
-                        className="bg-white/10 text-white"
+                        className="bg-white/10 text-white text-[9px] sm:text-xs"
                       >
                         MC RANK #{token.rank}
                       </Badge>
@@ -334,58 +334,13 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
           </Card>
 
           {/* Chart */}
-          {
-            isLoading || isTokenPending ? (
-              <TokenCandlestickChartSkeleton />
-            ) : (
-                <Card className="bg-white/[0.02] border-white/10">
-          <TokenCandlestickChart token={token} />
-          </Card>
-        //   <Card className="bg-white/[0.02] border-white/10">
-        //     <CardHeader>
-        //       <CardTitle className="text-xl font-bold bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-        //         Price Chart
-        //       </CardTitle>
-        //     </CardHeader>
-        //     <CardContent>
-        //       <div className="mb-4 rounded-2xl overflow-hidden bg-white/[0.05] border border-white/10">
-        //         <TvCandles
-        //           candles={candleSeries}
-        //           height={isMobile ? 250 : 400}
-        //         />
-        //       </div>
-
-        //       {/* Time interval buttons */}
-        //       <div className="flex gap-2 flex-wrap">
-        //         {[
-        //           ["1m", 60],
-        //           ["5m", 5 * 60],
-        //           ["15m", 15 * 60],
-        //           ["1h", 60 * 60],
-        //           ["4h", 4 * 60 * 60],
-        //           ["D", 24 * 60 * 60],
-        //           ["W", 7 * 24 * 60 * 60],
-        //           ["M", 30 * 24 * 60 * 60],
-        //         ].map(([label, sec]) => (
-        //           <Button
-        //             key={label as string}
-        //             variant={intervalSec === sec ? "default" : "outline"}
-        //             size="sm"
-        //             onClick={() => setIntervalSec(sec as number)}
-        //             className={
-        //               intervalSec === sec
-        //                 ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4]"
-        //                 : "border-white/20 bg-white/5 text-white hover:bg-white/10"
-        //             }
-        //           >
-        //             {label as string}
-        //           </Button>
-        //         ))}
-        //       </div>
-        //     </CardContent>
-        //   </Card>
-            )
-          }
+          {isLoading || isTokenPending ? (
+            <TokenCandlestickChartSkeleton />
+          ) : (
+            <Card className="bg-white/[0.02] border-white/10">
+              <TokenCandlestickChart token={token} />
+            </Card>
+          )}
           {/* Tabs Section */}
           <Card className="bg-white/[0.02] border-white/10 mb-6">
             <CardContent className="p-0">
@@ -445,21 +400,13 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
                   </div>
                 )}
 
-                {activeTab === TAB_CHAT && (
-                  <CommentsList
-                    token={token}
-                  />
-                )}
+                {activeTab === TAB_CHAT && <CommentsList token={token} />}
 
                 {activeTab === TAB_TRANSACTIONS && (
                   <TokenTrades token={token} />
                 )}
 
-                {activeTab === TAB_HOLDERS && (
-                  <TokenHolders
-                    token={token}
-                  />
-                )}
+                {activeTab === TAB_HOLDERS && <TokenHolders token={token} />}
               </div>
             </CardContent>
           </Card>

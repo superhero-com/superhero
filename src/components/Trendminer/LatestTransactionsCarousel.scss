@@ -1,0 +1,328 @@
+@use '../../styles/variables.scss' as *;
+@use '../../styles/mixins.scss' as *;
+
+.latest-transactions-carousel {
+  width: 100%;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  
+  @include mobile {
+    margin-bottom: 0.75rem;
+  }
+}
+
+.transactions-carousel-container {
+  position: relative;
+  width: 100%;
+}
+
+.transactions-carousel-track {
+  display: flex;
+  gap: 8px;
+  animation: transactions-scroll linear infinite;
+  will-change: transform;
+  
+  @include mobile {
+    gap: 4px;
+    // Faster animation for mobile
+    animation-duration: 25s !important;
+  }
+  
+  @keyframes transactions-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  
+  // Pause animation on hover for better UX
+  &:hover {
+    animation-play-state: paused;
+  }
+  
+  // Pause animation on touch for mobile
+  @include mobile {
+    &:active {
+      animation-play-state: paused;
+    }
+  }
+}
+
+.transactions-carousel-track-smooth {
+  display: flex;
+  gap: 8px;
+  will-change: transform;
+  transition: none; // Remove any transitions for smooth animation
+  
+  @include mobile {
+    gap: 4px;
+  }
+}
+
+.transaction-card {
+  flex-shrink: 0;
+  min-width: 200px;
+  width: 200px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: scale(1.02);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+  
+  @include mobile {
+    min-width: 180px;
+    width: 180px;
+    border-radius: 6px;
+  }
+}
+
+.transaction-card-content {
+  padding: 8px;
+  
+  @include mobile {
+    padding: 6px;
+  }
+}
+
+.transaction-address-row {
+  margin-bottom: 8px;
+  
+  @include mobile {
+    margin-bottom: 6px;
+  }
+}
+
+.transaction-address-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  @include mobile {
+    gap: 6px;
+  }
+}
+
+.transaction-address-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  
+  @include mobile {
+    gap: 6px;
+    font-size: 11px;
+  }
+  
+  span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.transaction-type-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  @include mobile {
+    padding: 3px 8px;
+    font-size: 8px;
+    border-radius: 4px;
+  }
+}
+
+.transaction-details-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  
+  @include mobile {
+    gap: 6px;
+  }
+}
+
+.transaction-volume {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  
+  @include mobile {
+    font-size: 12px;
+  }
+}
+
+.transaction-token-name {
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
+  @include mobile {
+    font-size: 15px;
+  }
+  
+  @include tablet {
+    font-size: 15px;
+  }
+}
+
+// Loading skeleton styles
+.transactions-loading {
+  display: flex;
+  gap: 8px;
+  
+  @include mobile {
+    gap: 4px;
+  }
+}
+
+.transaction-skeleton {
+  flex-shrink: 0;
+  min-width: 200px;
+  width: 200px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  opacity: 0.6;
+  background: linear-gradient(135deg, rgba(107,114,128,0.08), rgba(75,85,99,0.12));
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
+  @include mobile {
+    min-width: 180px;
+    width: 180px;
+    border-radius: 6px;
+  }
+  
+  .skeleton-content {
+    padding: 8px;
+    
+    @include mobile {
+      padding: 6px;
+    }
+  }
+  
+  .skeleton-address-row {
+    margin-bottom: 8px;
+    
+    .skeleton-address-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      .skeleton-avatar {
+        width: 20px;
+        height: 20px;
+        background: rgba(156, 163, 175, 0.2);
+        border-radius: 50%;
+        animation: skeleton-pulse 1.5s ease-in-out infinite;
+      }
+      
+      .skeleton-address {
+        font-size: 12px;
+        color: transparent;
+        background: rgba(156, 163, 175, 0.2);
+        border-radius: 4px;
+        animation: skeleton-pulse 1.5s ease-in-out infinite;
+      }
+    }
+  }
+  
+  .skeleton-token-name {
+    margin-bottom: 8px;
+    font-size: 16px;
+    color: transparent;
+    background: rgba(156, 163, 175, 0.2);
+    border-radius: 4px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    
+    @include mobile {
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+  }
+  
+  .skeleton-details-row {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    
+    .skeleton-volume {
+      font-size: 13px;
+      color: transparent;
+      background: rgba(156, 163, 175, 0.2);
+      border-radius: 4px;
+      animation: skeleton-pulse 1.5s ease-in-out infinite;
+    }
+    
+    .skeleton-badge {
+      padding: 4px 10px;
+      background: rgba(156, 163, 175, 0.2);
+      border-radius: 6px;
+      font-size: 9px;
+      color: transparent;
+      animation: skeleton-pulse 1.5s ease-in-out infinite;
+      
+      @include mobile {
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 8px;
+      }
+    }
+  }
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .transactions-carousel-track {
+    animation: none;
+  }
+  
+  .transaction-card:hover {
+    transform: none;
+  }
+  
+  .transaction-skeleton,
+  .skeleton-avatar,
+  .skeleton-address,
+  .skeleton-token-name,
+  .skeleton-volume,
+  .skeleton-badge {
+    animation: none;
+  }
+}
+
+// Additional mobile optimizations
+@include mobile {
+  .transactions-carousel-track {
+    // Faster animation for mobile
+    animation-duration: 30s !important;
+  }
+  
+  // Add touch scrolling support
+  .transactions-carousel-container {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}

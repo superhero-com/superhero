@@ -5,14 +5,16 @@ import { ISeriesApi, AreaSeriesPartialOptions, UTCTimestamp, AreaSeries } from '
 
 import { useChart } from '../../../hooks/useChart';
 import { TransactionHistoricalService } from '../../../api/generated';
+import { performanceChartTimeframeAtom, PriceMovementTimeframe } from '../atoms';
+import { useAtomValue } from 'jotai';
 
 interface TokenLineChartProps {
   saleAddress: string;
   height?: number;
   hideTimeframe?: boolean;
+  timeframe?: string;
 }
 
-type PerformanceChartTimeframe = '1d' | '7d' | '30d';
 
 interface ChartDataItem {
   end_time: string;
@@ -31,13 +33,13 @@ export function TokenLineChart({
 }: TokenLineChartProps) {
   const [loading, setLoading] = useState(false);
   const areaSeries = useRef<ISeriesApi<'Area'> | undefined>();
-  const [performanceChartTimeframe] = useState<PerformanceChartTimeframe>('30d');
+  const performanceChartTimeframe = useAtomValue(performanceChartTimeframeAtom);
 
   const { data } = useQuery({
     queryFn: () =>
       TransactionHistoricalService.getForPreview({
         address: saleAddress,
-        interval: performanceChartTimeframe,
+        interval: performanceChartTimeframe as PriceMovementTimeframe,
       }),
     enabled: !!saleAddress,
     queryKey: [
@@ -75,9 +77,9 @@ export function TokenLineChart({
     onChartReady: (chartInstance) => {
       const seriesOptions: AreaSeriesPartialOptions = {
         priceLineVisible: false,
-        lineColor: 'rgb(17, 97, 254)',
-        topColor: 'rgba(17, 97, 254, 0.2)',
-        bottomColor: 'rgba(17, 97, 254, 0.01)',
+        lineColor: 'rgb(245, 158, 11)',
+        topColor: 'rgba(245, 158, 11, 0.2)',
+        bottomColor: 'rgba(245, 158, 11, 0.01)',
         lineWidth: 2,
         crosshairMarkerVisible: false,
         baseLineVisible: true,
@@ -90,20 +92,19 @@ export function TokenLineChart({
       });
 
       chartInstance.timeScale().fitContent();
-
-      if ((data as ChartResponse)?.result?.length) {
-        updateSeriesData(data as ChartResponse);
-      }
       setLoading(false);
     },
   });
 
   // Watch for data changes
   useEffect(() => {
-    if (!data?.result?.length) {
+    console.log('Data changed:', data?.result, 'timeframe:', performanceChartTimeframe);
+    if (!data?.result?.length || !areaSeries.current) {
       return;
     }
-    areaSeries.current?.setData([]);
+    // Clear existing data first
+    areaSeries.current.setData([]);
+    // Update with new data
     updateSeriesData(data as ChartResponse);
   }, [data]);
 

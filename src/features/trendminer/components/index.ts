@@ -8,3 +8,4 @@ export { default as FractionFormatter } from '@/features/shared/components/Fract
 export { default as LivePriceFormatter } from './LivePriceFormatter';
 export { default as TokenRanking } from './TokenRanking';
 export { default as TokenMobileCard } from './TokenMobileCard';
+export { default as TrendminerBanner } from './TrendminerBanner';

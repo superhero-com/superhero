@@ -17,8 +17,8 @@ export const configs: IAppConfigs = {
     ae_mainnet: {
       name: "Mainnet",
       networkId: "ae_mainnet",
-      apiUrl: process.env.VUE_APP_MAINNET_API || "",
-      websocketUrl: process.env.VUE_APP_MAINNET_WS || "",
+      apiUrl: process.env.VUE_APP_MAINNET_API || "https://api.dev.trendminer.fun/",
+      websocketUrl: process.env.VUE_APP_MAINNET_WS || "https://api.dev.trendminer.fun/",
       url: "https://mainnet.aeternity.io",
       middlewareUrl: "https://mainnet.aeternity.io/mdw",
       explorerUrl: "https://aescan.io",

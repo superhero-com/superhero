@@ -75,7 +75,7 @@ export const AETERNITY_TOKEN_BASE_DATA = {
     },
   ];
 
-  export const PRICE_MOVEMENT_TIMEFRAMES = ["1d", "7d", "30d"] as const;
+  export const INVITATIONS_CONTRACT = 'ct_2GG42rs2FDPTXuUCWHMn98bu5Ab6mgNxY7KdGAKUNsrLqutNxZ';
 
   export const TX_FUNCTIONS = {
     buy: "buy",
@@ -83,6 +83,10 @@ export const AETERNITY_TOKEN_BASE_DATA = {
     create_community: "create_community",
     register_invitation_code: "register_invitation_code",
     redeem_invitation_code: "redeem_invitation_code",
+
+    transfer: "transfer",
+    mint: "mint",
+    burn: "burn",
   } as const;
 
   export const WEB_SOCKET_CHANNELS = {
@@ -91,4 +95,12 @@ export const AETERNITY_TOKEN_BASE_DATA = {
     TokenTransaction: "token-transaction",
     TokenHistory: "token-history",
   };
+
   export const WEB_SOCKET_RECONNECT_TIMEOUT = 1000;
+
+
+
+export const PRICE_MOVEMENT_TIMEFRAMES = ["1d", "7d", "30d"] as const;
+export type PriceMovementTimeframe = (typeof PRICE_MOVEMENT_TIMEFRAMES)[number];
+
+export const PRICE_MOVEMENT_TIMEFRAME_DEFAULT: PriceMovementTimeframe = "30d";

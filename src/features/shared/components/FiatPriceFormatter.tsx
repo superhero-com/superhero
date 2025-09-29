@@ -17,7 +17,7 @@ export default function FiatPriceFormatter({
 
   return (
     <div className={`inline-flex items-center ${className}`}>
-      <div className="text-white/80">{currencySymbol}</div>
+      <div className={className}>{currencySymbol}</div>
       <FractionFormatter fractionalPrice={formatFractionalPrice(fiatPrice)} />
     </div>
   );

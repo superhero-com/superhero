@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { TokenListTable, TrendminerBanner } from "..";
 import { TokenDto, TokensService } from "../../../api/generated";
 import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
 import TrendingPillsCarousel from "../../../components/Trendminer/TrendingPillsCarousel";
 import RepositoriesList from "../components/RepositoriesList";
+import { useAccount } from "../../../hooks";
 
 type TrendingTagItem = {
   tag: string;
@@ -37,19 +39,26 @@ const SORT = {
 } as const;
 
 type OrderByOption = typeof SORT[keyof typeof SORT];
-type CollectionOption = 'all' | 'word' | 'number';
+type CollectionOption = 'all' | string; // Can be 'all' or specific collection addresses
 
 export default function TokenList() {
+  const { activeAccount } = useAccount();
+  
   const [collection, setCollection] = useState<CollectionOption>('all');
-  const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.marketCap);
+  const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore); // Default to trending score like Vue
   const [ownedOnly, setOwnedOnly] = useState(false);
   const [search, setSearch] = useState("");
-  const [data, setData] = useState<{ pages: Array<{ items: TokenDto[] }> } | null>(null);
-  const [isFetching, setIsFetching] = useState(false);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+  const [searchThrottled, setSearchThrottled] = useState("");
   const loadMoreBtn = useRef<HTMLButtonElement>(null);
+  
+  // Throttle search input (2000ms delay like Vue)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setSearchThrottled(search);
+    }, 2000);
+    
+    return () => clearTimeout(timeoutId);
+  }, [search]);
 
   const orderByOptions: SelectOptions<OrderByOption> = [
     {
@@ -74,25 +83,8 @@ export default function TokenList() {
     },
   ];
 
-  const collectionOptions: SelectOptions<CollectionOption> = [
-    {
-      title: 'All Tokens',
-      value: 'all',
-    },
-    {
-      title: 'Word Tokens',
-      value: 'word',
-    },
-    {
-      title: 'Number Tokens',
-      value: 'number',
-    },
-  ];
-
-  const activeCollectionOption = useMemo(() =>
-    collectionOptions.find((option) => option.value === collection),
-    [collection]
-  );
+  // Remove hardcoded collection options - these should be dynamic based on available collections
+  // For now, just use 'all' as the Vue implementation shows collection can be any string
 
   const activeSortOption = useMemo(() =>
     orderByOptions.find((option) => option.value === orderBy),
@@ -110,87 +102,51 @@ export default function TokenList() {
     return orderBy === SORT.oldest ? 'ASC' : 'DESC';
   }, [orderBy]);
 
+  const ownerAddress = useMemo(() => {
+    return ownedOnly ? activeAccount : undefined;
+  }, [ownedOnly, activeAccount]);
+
+  const { data, isFetching, fetchNextPage, hasNextPage, refetch } =
+    useInfiniteQuery({
+      initialPageParam: 1,
+      queryFn: ({ pageParam = 1 }) =>
+        TokensService.listAll({
+          orderBy: orderByMapped as any,
+          orderDirection: orderDirection,
+          collection: collection === 'all' ? undefined : (collection as any),
+          search: searchThrottled || undefined,
+          ownerAddress: ownerAddress,
+          limit: 20,
+          page: pageParam,
+        }),
+      getNextPageParam: (lastPage: any, allPages, lastPageParam) =>
+        lastPage?.meta?.currentPage === lastPage?.meta?.totalPages
+          ? undefined
+          : lastPageParam + 1,
+      queryKey: [
+        "TokensService.listAll",
+        orderBy,
+        orderByMapped,
+        collection,
+        searchThrottled,
+        ownerAddress,
+      ],
+      staleTime: 1000 * 60, // 1 minute
+    });
+
   function updateCollection(val: CollectionOption) {
     setCollection(val);
-    setPage(1);
   }
 
   function updateOrderBy(val: OrderByOption) {
     setOrderBy(val);
-    setPage(1);
   }
-
-  async function fetchTokens(pageParam = 1, isInitial = false) {
-    console.log('fetchTokens', pageParam, isInitial);
-    if (isInitial) {
-      setIsFetching(true);
-      setError(null);
-    }
-
-    try {
-      const response = await TokensService.listAll({
-        orderBy: orderByMapped as any,
-        orderDirection,
-        collection: collection === 'all' ? undefined : collection,
-        search: search || undefined,
-        limit: 20,
-        page: pageParam,
-      }) as any; // Cast to any since the generated type is incomplete
-
-      const newItems = response?.items || [];
-      const hasMore = response?.meta?.currentPage < response?.meta?.totalPages;
-
-      if (isInitial || pageParam === 1) {
-        setData({ pages: [{ items: newItems }] });
-      } else {
-        setData(prev => {
-          if (!prev) {
-            return { pages: [{ items: newItems }] };
-          }
-
-          // Get all existing item addresses to prevent duplicates
-          const existingAddresses = new Set(
-            prev.pages.flatMap(page => page.items.map(item => item.address))
-          );
-
-          // Filter out items that already exist
-          const uniqueNewItems = newItems.filter(item => !existingAddresses.has(item.address));
-
-          return {
-            pages: [...prev.pages, { items: uniqueNewItems }]
-          };
-        });
-      }
-
-      setHasNextPage(hasMore);
-      setPage(pageParam);
-    } catch (e: any) {
-      setError(e?.message || "Failed to load tokens");
-    } finally {
-      if (isInitial) {
-        setIsFetching(false);
-      }
-    }
-  }
-
-  const fetchNextPage = () => {
-    if (hasNextPage && !isFetching) {
-      fetchTokens(page + 1);
-    }
-  };
-
-  // Load initial data
-  useEffect(() => {
-    if (!data?.pages?.length) {
-      fetchTokens(1, true);
-    }
-  }, [orderBy, orderByMapped, collection, search, orderDirection]);
 
   // Intersection observer for infinite loading
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.intersectionRatio === 1) {
+        if (entry.intersectionRatio === 1 && hasNextPage && !isFetching) {
           fetchNextPage();
         }
       },
@@ -204,7 +160,7 @@ export default function TokenList() {
     return () => {
       observer.disconnect();
     };
-  }, [hasNextPage, isFetching, page]);
+  }, [hasNextPage, isFetching, fetchNextPage]);
 
   function normalizeAe(n: number): number {
     if (!isFinite(n)) return 0;
@@ -231,19 +187,6 @@ export default function TokenList() {
 
               {/* FILTERS */}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                {/* Collection Filter */}
-                <select
-                  className="px-3 py-2 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05]"
-                  value={collection}
-                  onChange={(e) => updateCollection(e.target.value as CollectionOption)}
-                >
-                  {collectionOptions.map((option) => (
-                    <option key={option.value} value={option.value} disabled={option.disabled} className="bg-gray-900">
-                      {option.title}
-                    </option>
-                  ))}
-                </select>
-
                 {/* OrderBy Filter */}
                 <select
                   className="px-3 py-2 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05]"
@@ -256,6 +199,20 @@ export default function TokenList() {
                     </option>
                   ))}
                 </select>
+
+                {/* Owned by me */}
+                {activeAccount && (
+                  <button
+                    onClick={() => setOwnedOnly(!ownedOnly)}
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
+                      ownedOnly
+                        ? 'bg-[#1161FE] text-white border border-[#1161FE]'
+                        : 'bg-white/[0.02] text-white border border-white/10 hover:bg-white/[0.05]'
+                    }`}
+                  >
+                    Show Owned Only
+                  </button>
+                )}
 
                 {/* Search */}
                 <input
@@ -287,7 +244,7 @@ export default function TokenList() {
           <div className="text-center pt-2 pb-4">
             <button
               ref={loadMoreBtn}
-              onClick={fetchNextPage}
+              onClick={() => fetchNextPage()}
               disabled={isFetching}
               className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isFetching
                   ? 'bg-white/10 cursor-not-allowed opacity-60'

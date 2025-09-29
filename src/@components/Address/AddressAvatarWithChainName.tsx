@@ -120,13 +120,14 @@ export const AddressAvatarWithChainName = memo(({
                                 {displayName}
                             </span>
                         ) : (
-                            <span className="text-xs text-foreground/90 font-mono leading-tight">
-                                <AddressFormatted
-                                    address={address}
-                                    truncate={!!truncateAddress}
-                                    truncateFixed={!!truncateAddress}
-                                    className={className}
-                                />
+                            <span
+                                className={cn(
+                                    'text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent leading-tight font-sans',
+                                    className,
+                                )}
+                                title={address}
+                            >
+                                {`${address.slice(0, 6)}...${address.slice(-6)}`}
                             </span>
                         );
                     })()
@@ -136,7 +137,7 @@ export const AddressAvatarWithChainName = memo(({
                             <span className="chain-name text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
                                 {chainName || (hideFallbackName ? '' : 'Legend')}
                             </span>
-                            <span className="text-xs text-foreground/90 font-mono leading-tight">
+                            <span className="text-xs text-foreground/90 font-mono leading-tight no-gradient-text">
                                 <AddressFormatted
                                     address={address}
                                     truncate={!!truncateAddress}

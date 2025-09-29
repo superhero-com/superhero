@@ -40,7 +40,7 @@ export default function HeaderWalletButton() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <div>
+        <div className="inline-flex w-auto">
           <AddressAvatarWithChainName
             isHoverEnabled={false}
             address={activeAccount}
@@ -51,17 +51,20 @@ export default function HeaderWalletButton() {
             showPrimaryOnly={true}
             hideFallbackName={true}
             contentClassName="px-2 pb-0"
-            className="max-w-[160px] md:max-w-[min(100%,250px)]"
+            className="w-auto"
           />
         </div>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className="w-80 p-4" align="end">
+      <DropdownMenuContent className="min-w-[560px] p-4" align="end">
         <AddressAvatarWithChainName
           isHoverEnabled={false}
           address={activeAccount}
-          size={36}
+          size={40}
           overlaySize={18}
+          showAddressAndChainName={true}
+          truncateAddress={false}
+          contentClassName="px-3 pb-2"
         />
 
         <DropdownMenuSeparator className="my-3" />

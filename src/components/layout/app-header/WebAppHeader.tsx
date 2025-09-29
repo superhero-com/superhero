@@ -36,7 +36,7 @@ export default function WebAppHeader() {
   // Dropdown menus removed; show only top-level links
 
   return (
-    <header className="sticky top-0 z-[1000] hidden md:block border-b" style={{ 
+    <header className="sticky top-0 z-[1000] hidden md:block border-b relative" style={{ 
       backgroundColor: 'rgba(12, 12, 20, 0.5)',
       backdropFilter: 'blur(14px)',
       WebkitBackdropFilter: 'blur(14px)',
@@ -107,10 +107,11 @@ export default function WebAppHeader() {
             )
           ))}
         </nav>
+      </div>
 
-        <div className="flex items-center gap-4">
-          <HeaderWalletButton />
-        </div>
+      {/* Right-anchored account area (outside max-width container) */}
+      <div className="absolute inset-y-0 right-6 flex items-center gap-4">
+        <HeaderWalletButton />
       </div>
     </header>
   );

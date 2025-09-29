@@ -36,6 +36,8 @@ const SORT = {
   oldest: 'oldest',
   holdersCount: 'holders_count',
   trendingScore: 'trending_score',
+  name: 'name',
+  price: 'price',
 } as const;
 
 type OrderByOption = typeof SORT[keyof typeof SORT];
@@ -46,6 +48,7 @@ export default function TokenList() {
   
   const [collection, setCollection] = useState<CollectionOption>('all');
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore); // Default to trending score like Vue
+  const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
   const [ownedOnly, setOwnedOnly] = useState(false);
   const [search, setSearch] = useState("");
   const [searchThrottled, setSearchThrottled] = useState("");
@@ -68,6 +71,14 @@ export default function TokenList() {
     {
       title: 'Market Cap',
       value: SORT.marketCap,
+    },
+    {
+      title: 'Price',
+      value: SORT.price,
+    },
+    {
+      title: 'Name',
+      value: SORT.name,
     },
     {
       title: 'Newest',
@@ -98,9 +109,13 @@ export default function TokenList() {
     return orderBy;
   }, [orderBy]);
 
-  const orderDirection = useMemo((): 'ASC' | 'DESC' => {
-    return orderBy === SORT.oldest ? 'ASC' : 'DESC';
-  }, [orderBy]);
+  const finalOrderDirection = useMemo((): 'ASC' | 'DESC' => {
+    // For date-based sorting, override the direction
+    if (orderBy === SORT.oldest) return 'ASC';
+    if (orderBy === SORT.newest) return 'DESC';
+    // For other fields, use the state
+    return orderDirection;
+  }, [orderBy, orderDirection]);
 
   const ownerAddress = useMemo(() => {
     return ownedOnly ? activeAccount : undefined;
@@ -112,7 +127,7 @@ export default function TokenList() {
       queryFn: ({ pageParam = 1 }) =>
         TokensService.listAll({
           orderBy: orderByMapped as any,
-          orderDirection: orderDirection,
+          orderDirection: finalOrderDirection,
           collection: collection === 'all' ? undefined : (collection as any),
           search: searchThrottled || undefined,
           ownerAddress: ownerAddress,
@@ -127,6 +142,7 @@ export default function TokenList() {
         "TokensService.listAll",
         orderBy,
         orderByMapped,
+        finalOrderDirection,
         collection,
         searchThrottled,
         ownerAddress,
@@ -140,6 +156,26 @@ export default function TokenList() {
 
   function updateOrderBy(val: OrderByOption) {
     setOrderBy(val);
+    setOrderDirection('DESC'); // Reset to default direction when using dropdown
+  }
+
+  function handleSort(sortKey: OrderByOption) {
+    if (orderBy === sortKey || 
+        (orderBy === 'newest' && sortKey === 'oldest') || 
+        (orderBy === 'oldest' && sortKey === 'newest')) {
+      // Toggle direction if same column (or newest/oldest pair)
+      if (sortKey === 'newest' || sortKey === 'oldest') {
+        // For date-based sorting, toggle between newest and oldest
+        setOrderBy(orderBy === 'newest' ? 'oldest' : 'newest');
+      } else {
+        // For other columns, toggle the direction
+        setOrderDirection(orderDirection === 'DESC' ? 'ASC' : 'DESC');
+      }
+    } else {
+      // Set new column with default DESC direction
+      setOrderBy(sortKey);
+      setOrderDirection('DESC');
+    }
   }
 
   // Intersection observer for infinite loading
@@ -233,7 +269,13 @@ export default function TokenList() {
             )}
 
             {/* Token List Table */}
-            <TokenListTable pages={data?.pages} loading={isFetching} />
+            <TokenListTable 
+              pages={data?.pages} 
+              loading={isFetching} 
+              orderBy={orderBy}
+              orderDirection={finalOrderDirection}
+              onSort={handleSort}
+            />
           </div>
 
           <RepositoriesList />

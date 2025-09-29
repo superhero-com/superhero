@@ -1,24 +1,19 @@
+import { useAtom } from "jotai";
 import { useState } from "react";
+import { performanceChartTimeframeAtom, PriceMovementTimeframe } from "../atoms";
+import { PRICE_MOVEMENT_TIMEFRAMES } from "@/utils/constants";
 
-type PriceMovementTimeframe = '1D' | '7D' | '30D';
 
-const PRICE_MOVEMENT_TIMEFRAMES: PriceMovementTimeframe[] = ['1D', '7D', '30D'];
-const PRICE_MOVEMENT_TIMEFRAME_DEFAULT: PriceMovementTimeframe = '30D';
 
-interface PerformanceTimeframeSelectorProps {
-  value?: PriceMovementTimeframe;
-  onChange?: (value: PriceMovementTimeframe) => void;
-}
 
-export default function PerformanceTimeframeSelector({
-  value = PRICE_MOVEMENT_TIMEFRAME_DEFAULT,
-  onChange
-}: PerformanceTimeframeSelectorProps) {
+export default function PerformanceTimeframeSelector() {
   const [isOpen, setIsOpen] = useState(false);
+  const [value, setValue] = useAtom(performanceChartTimeframeAtom);
 
   const handleUpdate = (newValue: PriceMovementTimeframe) => {
-    onChange?.(newValue);
+    setValue(newValue);
     setIsOpen(false);
+    console.log('newValue', newValue);
   };
 
   return (
@@ -28,10 +23,10 @@ export default function PerformanceTimeframeSelector({
         className="period-selector-button bg-transparent border-none text-white/70 hover:text-white/90 transition-colors text-right font-normal text-sm opacity-70 tracking-tight cursor-pointer flex items-center gap-1"
       >
         <span className="uppercase">{value}</span>
-        <svg 
-          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
-          fill="none" 
-          stroke="currentColor" 
+        <svg
+          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
           viewBox="0 0 24 24"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -41,11 +36,11 @@ export default function PerformanceTimeframeSelector({
       {isOpen && (
         <>
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 z-10" 
+          <div
+            className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          
+
           {/* Menu */}
           <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-20 min-w-[80px]">
             <div className="py-1">

@@ -516,7 +516,7 @@ export default function TokenCandlestickChart({
               <Button
                 key={interval.value}
                 variant={intervalBy?.value === interval.value ? "default" : "ghost"}
-                size="sm"
+                size="xs"
                 className="pl-0 text-xs"
                 onClick={() => onChangeInterval(interval)}
               >

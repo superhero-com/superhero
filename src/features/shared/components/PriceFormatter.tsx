@@ -64,11 +64,10 @@ export default function PriceFormatter({
 
   return (
     <div
-      className={`price-formatter flex font-medium ${
-        priceJustDecreased ? 'text-red-400' : 
-        priceJustIncreased ? 'text-green-400' : 
-        'text-white'
-      } ${rowOnSm ? 'flex-row items-center gap-1' : 'flex-col'} ${className}`}
+      className={`price-formatter flex font-medium ${priceJustDecreased ? 'text-red-400' :
+        priceJustIncreased ? 'text-green-400' :
+          null
+        } ${rowOnSm ? 'flex-row items-center gap-1' : 'flex-col'} ${className}`}
     >
       <SymbolPriceFormatter
         aePrice={aePrice}
@@ -82,9 +81,8 @@ export default function PriceFormatter({
       {!hideFiatPrice && (
         <FiatPriceFormatter
           fiatPrice={fiatPrice}
-          className={`fiat flex items-center gap-1 opacity-80 font-normal ${
-            rowOnSm ? 'justify-end' : ''
-          }`}
+          className={`fiat flex items-center gap-1 font-normal ${rowOnSm ? 'justify-end' : ''
+            }`}
         />
       )}
     </div>

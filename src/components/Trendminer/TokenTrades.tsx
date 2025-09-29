@@ -5,18 +5,7 @@ import { TokenDto } from "@/api/generated/models/TokenDto";
 import AddressChip from "../AddressChip";
 import PriceDataFormatter from "@/features/shared/components/PriceDataFormatter";
 import { formatLongDate } from "@/utils/common";
-
-// Transaction function constants
-const TX_FUNCTIONS = {
-  buy: "buy",
-  sell: "sell",
-  transfer: "transfer",
-  mint: "mint",
-  burn: "burn",
-  create_community: "create_community",
-} as const;
-
-type TxFunction = (typeof TX_FUNCTIONS)[keyof typeof TX_FUNCTIONS];
+import { TX_FUNCTIONS } from "@/utils/constants";
 
 // Pagination response interface
 interface PaginatedTransactionsResponse {

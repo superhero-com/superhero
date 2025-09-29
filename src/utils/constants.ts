@@ -75,7 +75,6 @@ export const AETERNITY_TOKEN_BASE_DATA = {
     },
   ];
 
-  export const PRICE_MOVEMENT_TIMEFRAMES = ["1d", "7d", "30d"] as const;
 
   export const TX_FUNCTIONS = {
     buy: "buy",
@@ -95,4 +94,12 @@ export const AETERNITY_TOKEN_BASE_DATA = {
     TokenTransaction: "token-transaction",
     TokenHistory: "token-history",
   };
+
   export const WEB_SOCKET_RECONNECT_TIMEOUT = 1000;
+
+
+
+export const PRICE_MOVEMENT_TIMEFRAMES = ["1d", "7d", "30d"] as const;
+export type PriceMovementTimeframe = (typeof PRICE_MOVEMENT_TIMEFRAMES)[number];
+
+export const PRICE_MOVEMENT_TIMEFRAME_DEFAULT: PriceMovementTimeframe = "30d";

@@ -41,7 +41,7 @@ type CollectionOption = 'all' | 'word' | 'number';
 
 export default function TokenList() {
   const [collection, setCollection] = useState<CollectionOption>('all');
-  const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore);
+  const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.marketCap);
   const [ownedOnly, setOwnedOnly] = useState(false);
   const [search, setSearch] = useState("");
   const [data, setData] = useState<{ pages: Array<{ items: TokenDto[] }> } | null>(null);
@@ -212,7 +212,7 @@ export default function TokenList() {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto min-h-screen  text-white">
+    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
       <TrendminerBanner />
 
       <LatestTransactionsCarousel />
@@ -220,7 +220,7 @@ export default function TokenList() {
       <TrendingPillsCarousel />
 
       {/* Main content */}
-      <div className="max-w-[1400px] mx-auto">
+      <div className="">
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6">
           {/* Left: Token List */}
           <div className="min-w-0">

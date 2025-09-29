@@ -6,7 +6,7 @@ import Shell from '../../components/layout/Shell';
 import WalletConnectBtn from '../../components/WalletConnectBtn';
 import { getAffiliationTreasury } from '../../libs/affiliation';
 import { addGeneratedInvites } from '../../libs/invitation';
-
+import InviteAndEarnCard from '../../components/Invitation/InviteAndEarnCard';
 import { useAeSdk, useWallet } from '../../hooks';
 import { Decimal } from '../../libs/decimal';
 export default function Invite() {
@@ -218,108 +218,8 @@ export default function Invite() {
         {/* Main Action Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Generate Invites Card */}
-          <div className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
-            <div className="flex items-center gap-4 mb-6 flex-wrap">
-              <div className="text-3xl md:text-4xl lg:text-5xl drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] flex-shrink-0">
-                🎯
-              </div>
-              <h3 className="m-0 text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
-                Generate Invites
-              </h3>
-            </div>
-
-            <div className="mb-6 p-4 bg-white/3 rounded-xl border border-white/5">
-              <WalletConnectBtn />
-            </div>
-
-            <form onSubmit={generateInvites} className="flex flex-col gap-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-3 min-w-0">
-                  <label className="flex flex-col gap-3 min-w-0">
-                    <span className="text-xs md:text-sm font-semibold text-slate-400 uppercase tracking-wider break-words">
-                      Amount per invite (AE)
-                    </span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={amountAe}
-                      onChange={(e) => setAmountAe(e.target.value === '' ? '' : Number(e.target.value))}
-                      placeholder="0.0"
-                      className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 lg:p-5 text-white text-sm md:text-base transition-all duration-300 outline-none font-medium w-full box-border focus:border-[var(--neon-teal)] focus:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus:bg-white/8 focus:-translate-y-px placeholder:text-slate-400 placeholder:opacity-60"
-                    />
-                  </label>
-                </div>
-                <div className="flex flex-col gap-3 min-w-0">
-                  <label className="flex flex-col gap-3 min-w-0">
-                    <span className="text-xs md:text-sm font-semibold text-slate-400 uppercase tracking-wider break-words">
-                      Number of invites
-                    </span>
-                    <input
-                      type="number"
-                      min={1}
-                      step={1}
-                      value={count}
-                      onChange={(e) => setCount(Math.max(1, Number(e.target.value || 1)))}
-                      className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 lg:p-5 text-white text-sm md:text-base transition-all duration-300 outline-none font-medium w-full box-border focus:border-[var(--neon-teal)] focus:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus:bg-white/8 focus:-translate-y-px placeholder:text-slate-400 placeholder:opacity-60"
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={generating || !address}
-                className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold flex items-center justify-center gap-3 uppercase tracking-wider relative overflow-hidden break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${
-                  !address 
-                    ? 'opacity-50 cursor-not-allowed bg-gray-600 transform-none'
-                    : 'bg-gradient-to-r from-[var(--neon-teal)] to-blue-500 text-white shadow-lg shadow-[rgba(0,255,157,0.3)] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[rgba(0,255,157,0.4)] before:content-[\'\'] before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:transition-all before:duration-500 hover:before:left-full'
-                }`}
-              >
-                {generating ? (
-                  <>
-                    <div className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 border-2 border-transparent border-t-current rounded-full animate-spin"></div>
-                    Creating invites...
-                  </>
-                ) : !address ? (
-                  'Connect wallet to generate'
-                ) : (
-                  'Generate invite links'
-                )}
-              </button>
-            </form>
-
-            {/* Generated Links */}
-            {inviteLinks.length > 0 && (
-              <div className="mt-8 pt-8 border-t border-white/10">
-                <h4 className="m-0 mb-6 text-xl md:text-2xl lg:text-3xl font-bold text-[var(--neon-teal)] break-words">
-                  Generated Invite Links
-                </h4>
-                <div className="flex flex-col gap-4">
-                  {inviteLinks.map((link, i) => (
-                    <div key={i} className="flex gap-3 items-stretch flex-wrap">
-                      <input
-                        value={link}
-                        readOnly
-                        className="flex-1 min-w-[200px] bg-white/3 border border-white/5 rounded-lg p-4 text-slate-400 font-mono text-xs md:text-sm leading-relaxed break-all resize-y min-h-12"
-                        onFocus={(e) => e.currentTarget.select()}
-                      />
-                      <button
-                        onClick={() => copyToClipboard(link, i)}
-                        className={`${
-                          copiedIndex === i 
-                            ? 'bg-green-500 shadow-lg shadow-green-500/30' 
-                            : 'bg-[var(--neon-teal)] shadow-lg shadow-[rgba(0,255,157,0.3)] hover:bg-[rgba(0,255,157,0.9)] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[rgba(0,255,157,0.4)]'
-                        } border-0 rounded-lg p-4 text-white cursor-pointer transition-all duration-300 text-base md:text-lg min-w-10 min-h-10 md:min-w-12 md:min-h-12 lg:min-w-14 lg:min-h-14 flex items-center justify-center flex-shrink-0`}
-                      >
-                        {copiedIndex === i ? '✓' : '📋'}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          
+          <InviteAndEarnCard />
 
           {/* Rewards Card */}
           <div className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">

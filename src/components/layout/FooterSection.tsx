@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Backend, TrendminerApi } from '../../api/backend';
 import configs from '../../configs';
+import { useNavigate } from 'react-router-dom';
 
 export default function FooterSection({ compact = false }: { compact?: boolean }) {
+  const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [apiStatus, setApiStatus] = useState<{
     backend: 'online' | 'offline' | 'checking';
@@ -63,7 +65,7 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
         <div className={`${compact ? 'text-xs w-full text-center order-1' : 'hidden'}`} style={{ color: 'var(--light-font-color)' }}>Superhero is Open Source</div>
         <nav className={`${compact ? 'w-full order-2 ml-0 justify-center gap-x-2 gap-y-1' : 'ml-auto'} flex flex-wrap ${compact ? '' : 'gap-3'} md:ml-0 md:order-1 md:justify-center md:gap-2 sm:gap-1.5`}>
           <a
-            href="/terms"
+            onClick={() => navigate('/terms')}
             className={`no-underline min-h-0 ${compact ? 'text-xs py-0.5 px-2' : 'text-sm py-1.5 px-3'} rounded-lg transition-all duration-200 whitespace-nowrap md:text-[13px] md:py-1.5 md:px-2.5 sm:text-xs sm:py-1 sm:px-2`}
             style={{ color: 'var(--light-font-color)' }}
             onMouseEnter={(e) => {
@@ -78,7 +80,7 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
             Terms of Use
           </a>
           <a
-            href="/privacy"
+            onClick={() => navigate('/privacy')}
             className={`no-underline min-h-0 ${compact ? 'text-xs py-0.5 px-2' : 'text-sm py-1.5 px-3'} rounded-lg transition-all duration-200 whitespace-nowrap md:text-[13px] md:py-1.5 md:px-2.5 sm:text-xs sm:py-1 sm:px-2`}
             style={{ color: 'var(--light-font-color)' }}
             onMouseEnter={(e) => {

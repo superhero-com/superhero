@@ -22,7 +22,7 @@ jobs:
       VERSION: ${{ inputs.VERSION }}
       CONTAINER_NAME: "production-superhero-mainnet"
     secrets:
-      DEPLOY_HOST: "api.superhero.com"
+      DEPLOY_HOST: ${{ secrets.PROD_DEPLOY_HOST }}
       DEPLOY_KEY: ${{ secrets.PROD_DEPLOY_KEY }}
       DEPLOY_USERNAME: ${{ secrets.PROD_DEPLOY_USERNAME }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}

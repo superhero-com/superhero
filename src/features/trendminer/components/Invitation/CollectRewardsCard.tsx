@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Alert, AlertDescription } from "../ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { useAeSdk } from "../../hooks/useAeSdk";
-import { getAffiliationTreasury } from "../../libs/affiliation";
-import { Decimal } from "../../libs/decimal";
+import { useAeSdk } from "@/hooks/useAeSdk";
+import { getAffiliationTreasury } from "@/libs/affiliation";
+import { Decimal } from "@/libs/decimal";
 import LivePriceFormatter from "@/features/shared/components/LivePriceFormatter";
 
 const MIN_INVITEES = 4;

@@ -58,7 +58,7 @@ export const navigationItems: NavigationItem[] = [
       icon: '📈',
   },
 
-  {
+  configs.features.trendminer && {
       id: 'invite',
       label: 'Invite & Earn',
       path: '/trendminer/invite',

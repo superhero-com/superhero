@@ -1,19 +1,15 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import AddressChip from "../AddressChip";
 import {
   useLatestTransactions,
 } from "@/hooks/useLatestTransactions";
 import { TX_FUNCTIONS } from "@/utils/constants";
 import { Decimal } from "@/libs/decimal";
-import { AddressAvatarWithChainName } from "@/@components/Address/AddressAvatarWithChainName";
-import { Avatar } from "../ui/avatar";
 import AddressAvatar from "../AddressAvatar";
 import './LatestTransactionsCarousel.scss';
 
 export default function LatestTransactionsCarousel() {
   const { latestTransactions } = useLatestTransactions();
   const [itemsToShow, setItemsToShow] = useState(4); // Number of items visible at once for loading state
-  const [screenWidth, setScreenWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -23,7 +19,6 @@ export default function LatestTransactionsCarousel() {
   // Responsive breakpoints for loading state and screen width tracking
   const updateResponsiveValues = useCallback(() => {
     const width = window.innerWidth;
-    setScreenWidth(width);
     
     if (width >= 1680) setItemsToShow(7);
     else if (width >= 1280) setItemsToShow(5);

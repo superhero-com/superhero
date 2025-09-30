@@ -1,6 +1,8 @@
 import { useAccount } from '@/hooks';
 import BigNumber from 'bignumber.js';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { Decimal } from '../../../libs/decimal';
 import {
@@ -10,7 +12,32 @@ import {
   toAe,
   toDecimals
 } from '../../../utils/bondingCurve';
-import { TokenDto, TokenTradeState } from '../types';
+import { TokenDto } from '../types';
+import {
+  tokenTradeTokenAtom,
+  userBalanceAtom,
+  loadingTransactionAtom,
+  isBuyingAtom,
+  isAllowSellingAtom,
+  tokenAAtom,
+  tokenBAtom,
+  tokenAFocusedAtom,
+  nextPriceAtom,
+  slippageAtom,
+  successTxDataAtom,
+  tokenTradeActionsAtom,
+  averageTokenPriceAtom,
+  priceImpactDiffAtom,
+  priceImpactPercentAtom,
+  estimatedNextTokenPriceImpactDifferenceFormattedPercentageAtom,
+} from '../../../atoms/tokenTradeAtoms';
+import {
+  setupContractInstance,
+  fetchUserTokenBalance,
+  getTokenSymbolName,
+  getContractInstances,
+} from '../libs/tokenTradeContract';
+import { CONFIG } from '../../../config';
 
 // Constants from Vue implementation
 const PROTOCOL_DAO_AFFILIATION_FEE = 0.05;
@@ -21,20 +48,34 @@ interface UseTokenTradeProps {
 }
 
 export function useTokenTrade({ token }: UseTokenTradeProps) {
-  const { sdk, activeAccount } = useAeSdk();
+  const { sdk, activeAccount, staticAeSdk } = useAeSdk();
   const { decimalBalance: spendableAeBalance } = useAccount();
+  const queryClient = useQueryClient();
   
-  const [state, setState] = useState<TokenTradeState>({
-    tokenAFocused: false,
-    isBuying: true,
-    isAllowSelling: false,
-    loadingTransaction: false,
-    nextPrice: Decimal.ZERO,
-    userBalance: '0',
-    slippage: 1.0,
-  });
+  // Atoms
+  const [tokenA, setTokenA] = useAtom(tokenAAtom);
+  const [tokenB, setTokenB] = useAtom(tokenBAtom);
+  const [tokenAFocused, setTokenAFocused] = useAtom(tokenAFocusedAtom);
+  const [isBuying, setIsBuying] = useAtom(isBuyingAtom);
+  const [isAllowSelling, setIsAllowSelling] = useAtom(isAllowSellingAtom);
+  const [loadingTransaction, setLoadingTransaction] = useAtom(loadingTransactionAtom);
+  const [nextPrice, setNextPrice] = useAtom(nextPriceAtom);
+  const [userBalance, setUserBalance] = useAtom(userBalanceAtom);
+  const [slippage, setSlippage] = useAtom(slippageAtom);
+  const [successTxData, setSuccessTxData] = useAtom(successTxDataAtom);
+  const [storeToken, setStoreToken] = useAtom(tokenTradeTokenAtom);
+  
+  // Computed values
+  const averageTokenPrice = useAtomValue(averageTokenPriceAtom);
+  const priceImpactDiff = useAtomValue(priceImpactDiffAtom);
+  const priceImpactPercent = useAtomValue(priceImpactPercentAtom);
+  const estimatedNextTokenPriceImpactDifferenceFormattedPercentage = useAtomValue(estimatedNextTokenPriceImpactDifferenceFormattedPercentageAtom);
+  
+  // Actions
+  const dispatch = useSetAtom(tokenTradeActionsAtom);
 
   const tokenRef = useRef<TokenDto>(token);
+  const errorMessage = useRef<string | undefined>();
 
   // Calculate next price using bonding curve
   const calculateNextPrice = useCallback((currentSupply: Decimal) => {
@@ -47,12 +88,12 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
           ),
         ),
       );
-      setState(prev => ({ ...prev, nextPrice: price }));
+      setNextPrice(price);
     } catch (error) {
       console.error('Error calculating bonding curve price:', error);
-      setState(prev => ({ ...prev, nextPrice: Decimal.ZERO }));
+      setNextPrice(Decimal.ZERO);
     }
-  }, []);
+  }, [setNextPrice]);
 
   // Calculate token cost based on bonding curve
   const calculateTokenCost = useCallback((amount?: number, _isBuying = false, _isUsingToken = false): number => {
@@ -103,228 +144,326 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     tokenRef.current = token;
   }, [token]);
 
+  // Setup contract instance when token or SDK changes
+  const { data: contractInstances } = useQuery({
+    queryKey: ['tokenTrade', 'contractSetup', token.sale_address, !!sdk],
+    queryFn: async () => {
+      if (!token.sale_address) return null;
+      const currentSdk = sdk || staticAeSdk;
+      if (!currentSdk) return null;
+      
+      try {
+        return await setupContractInstance(currentSdk, token);
+      } catch (error) {
+        console.error('Error setting up contract instance:', error);
+        return null;
+      }
+    },
+    enabled: !!token.sale_address && !!(sdk || staticAeSdk),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Fetch user balance when account or contract changes
+  const { data: fetchedUserBalance } = useQuery({
+    queryKey: ['tokenTrade', 'userBalance', token.sale_address, activeAccount],
+    queryFn: async () => {
+      if (!contractInstances?.tokenSaleInstance || !activeAccount || !token) {
+        return '0';
+      }
+      
+      try {
+        return await fetchUserTokenBalance(
+          contractInstances.tokenSaleInstance,
+          token,
+          activeAccount
+        );
+      } catch (error) {
+        console.error('Error fetching user balance:', error);
+        return '0';
+      }
+    },
+    enabled: !!contractInstances?.tokenSaleInstance && !!activeAccount,
+    staleTime: 30 * 1000, // 30 seconds
+  });
+
+  // Update user balance when fetched
+  useEffect(() => {
+    if (fetchedUserBalance !== undefined) {
+      dispatch({ type: 'SET_USER_BALANCE', value: fetchedUserBalance });
+    }
+  }, [fetchedUserBalance, dispatch]);
+
   // Watch tokenA changes and calculate tokenB automatically
   useEffect(() => {
     if (
-      state.tokenA === undefined ||
-      state.tokenA <= 0 ||
-      !state.tokenAFocused ||
-      !tokenRef.current.sale_address
+      tokenA === undefined ||
+      tokenA <= 0 ||
+      !tokenAFocused ||
+      !tokenRef.current.sale_address ||
+      !contractInstances?.tokenSaleInstance
     ) {
       return;
     }
 
     const calculatedTokenB = calculateTokenCost(
-      state.tokenA,
-      state.isBuying,
-      !state.isBuying
+      tokenA,
+      isBuying,
+      !isBuying
     );
 
-    setState(prev => ({
-      ...prev,
-      tokenB: calculatedTokenB
-    }));
-  }, [state.tokenA, state.isBuying, state.tokenAFocused, calculateTokenCost]);
+    dispatch({ type: 'SET_TOKEN_B', value: calculatedTokenB });
+  }, [tokenA, isBuying, tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance, dispatch]);
 
   // Watch tokenB changes and calculate tokenA automatically  
   useEffect(() => {
     if (
-      state.tokenB === undefined ||
-      state.tokenB <= 0 ||
-      state.tokenAFocused ||
-      !tokenRef.current.sale_address
+      tokenB === undefined ||
+      tokenB <= 0 ||
+      tokenAFocused ||
+      !tokenRef.current.sale_address ||
+      !contractInstances?.tokenSaleInstance
     ) {
       return;
     }
 
     const calculatedTokenA = calculateTokenCost(
-      state.tokenB,
-      state.isBuying,
-      state.isBuying
+      tokenB,
+      isBuying,
+      isBuying
     );
 
-    setState(prev => ({
-      ...prev,
-      tokenA: calculatedTokenA
-    }));
-  }, [state.tokenB, state.isBuying, state.tokenAFocused, calculateTokenCost]);
+    dispatch({ type: 'SET_TOKEN_A', value: calculatedTokenA });
+  }, [tokenB, isBuying, tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance, dispatch]);
 
   const resetFormState = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      tokenA: undefined,
-      tokenB: undefined,
-      errorMessage: undefined,
-      successTxData: undefined,
-      loadingTransaction: false,
-      nextPrice: Decimal.ZERO,
-    }));
-  }, []);
+    dispatch({ type: 'RESET_FORM_DATA' });
+    errorMessage.current = undefined;
+    dispatch({ type: 'SET_LOADING_TRANSACTION', value: false });
+  }, [dispatch]);
 
-  const switchTradeView = useCallback((isBuying: boolean) => {
-    setState(prev => ({
-      ...prev,
-      isBuying,
-      tokenA: undefined,
-      tokenB: undefined,
-    }));
-  }, []);
+  const switchTradeView = useCallback((newIsBuying: boolean) => {
+    dispatch({ type: 'SET_IS_BUYING', value: newIsBuying });
+    dispatch({ type: 'SET_TOKEN_A', value: undefined });
+    dispatch({ type: 'SET_TOKEN_B', value: undefined });
+  }, [dispatch]);
 
   const updateToken = useCallback((newToken: TokenDto) => {
     tokenRef.current = newToken;
+    dispatch({ type: 'SET_TOKEN', value: newToken });
     resetFormState();
-  }, [resetFormState]);
+  }, [resetFormState, dispatch]);
 
   const setTokenAmount = useCallback((amount: number | undefined, isTokenA: boolean) => {
-    setState(prev => ({
-      ...prev,
-      [isTokenA ? 'tokenA' : 'tokenB']: amount,
-      tokenAFocused: isTokenA,
-    }));
-  }, []);
-
-  const setSlippage = useCallback((slippage: number) => {
-    setState(prev => ({ ...prev, slippage }));
-  }, []);
-
-  // Calculate average token price
-  const averageTokenPrice = (): Decimal => {
-    if (!state.tokenA || !state.tokenB || state.tokenA <= 0) {
-      return state.isBuying
-        ? Decimal.from(tokenRef.current?.price || 0)
-        : Decimal.from(tokenRef.current?.sell_price || 0);
+    if (isTokenA) {
+      dispatch({ type: 'SET_TOKEN_A', value: amount });
+      dispatch({ type: 'SET_TOKEN_A_FOCUSED', value: true });
+    } else {
+      dispatch({ type: 'SET_TOKEN_B', value: amount });
+      dispatch({ type: 'SET_TOKEN_A_FOCUSED', value: false });
     }
-    const tokenA = Decimal.from(state.tokenA);
-    const tokenB = Decimal.from(state.tokenB);
-    return state.isBuying ? tokenA.div(tokenB) : tokenB.div(tokenA);
-  };
+  }, [dispatch]);
 
-  // Calculate price impact
-  const priceImpactDiff = (): Decimal => {
-    if (!state.tokenA || !state.tokenB || state.tokenA <= 0) {
-      return Decimal.ZERO;
-    }
-    const currentPrice = Decimal.from(tokenRef.current?.price || 0);
-    const diff = state.nextPrice.sub(currentPrice);
-    if (diff.lt(0) || !state.isBuying) {
-      return currentPrice.sub(state.nextPrice);
-    }
-    return diff;
-  };
-
-  // Calculate price impact percentage
-  const priceImpactPercent = (): Decimal => {
-    const currentPrice = Decimal.from(tokenRef.current?.price || 0);
-    if (state.nextPrice.isZero || currentPrice.isZero) {
-      return Decimal.ZERO;
-    }
-    return priceImpactDiff().div(currentPrice).mul(100);
-  };
-
-  // Calculate formatted percentage for display
-  const estimatedNextTokenPriceImpactDifferenceFormattedPercentage = (): string => {
-    const percentValue = priceImpactPercent();
-    return percentValue.gt(Decimal.from(1))
-      ? percentValue.prettify(2)
-      : percentValue.prettify();
-  };
 
   // Calculate protocol DAO reward for buying
-  const protocolTokenReward = (): number => {
-    if (!state.isBuying) return 0;
-    const aeValue = state.isBuying ? state.tokenA || 0 : state.tokenB || 0;
+  const protocolTokenReward = useCallback((): number => {
+    if (!isBuying) return 0;
+    const aeValue = isBuying ? tokenA || 0 : tokenB || 0;
     return Math.round(
       (1 - PROTOCOL_DAO_AFFILIATION_FEE) * PROTOCOL_DAO_TOKEN_AE_RATIO * aeValue * 100
     ) / 100;
-  };
-
+  }, [isBuying, tokenA, tokenB]);
 
   // Check if user has insufficient balance
-  const isInsufficientBalance = (): boolean => {
-    if (state.isBuying) {
-      return Decimal.from(state.tokenA || 0).gt(spendableAeBalance);
+  const isInsufficientBalance = useCallback((): boolean => {
+    if (isBuying) {
+      return Decimal.from(tokenA || 0).gt(spendableAeBalance);
     } else {
-      return Decimal.from(state.tokenB || 0).gt(Decimal.from(state.userBalance || '0'));
+      return Decimal.from(tokenB || 0).gt(Decimal.from(userBalance || '0'));
     }
-  };
+  }, [isBuying, tokenA, tokenB, spendableAeBalance, userBalance]);
+
+  // Buy tokens
+  const buy = useCallback(async () => {
+    errorMessage.current = undefined;
+    if (!contractInstances?.tokenSaleInstance) {
+      errorMessage.current = 'Contract not initialized';
+      return;
+    }
+
+    if (!tokenB || +tokenB === 0) {
+      errorMessage.current = 'Amount not set';
+      return;
+    }
+
+    dispatch({ type: 'SET_LOADING_TRANSACTION', value: true });
+    try {
+      const buyResult = await contractInstances.tokenSaleInstance.buy(
+        tokenB,
+        undefined,
+        slippage,
+      ) as any;
+      
+      const mints: any[] = buyResult.decodedEvents.filter((data: any) => data.name === 'Mint');
+      const _userBalance = await onTransactionComplete();
+      const protocolSymbol = await getTokenSymbolName(
+        mints[0].contract.address, 
+        CONFIG.MIDDLEWARE_URL
+      );
+      
+      dispatch({ type: 'SET_SUCCESS_TX_DATA', value: {
+        isBuying: true,
+        destAmount: Decimal.from(toAe(mints.at(-1).args[1])),
+        sourceAmount: Decimal.from(
+          toAe(buyResult.decodedEvents.find((data: any) => data.name === 'Buy').args[0]),
+        ),
+        symbol: token.symbol || '',
+        protocolReward: Decimal.from(toAe(mints[0].args[1])),
+        protocolSymbol,
+        userBalance: Decimal.from(_userBalance),
+      }});
+    } catch (error: any) {
+      errorMessage.current = error?.message;
+    }
+    dispatch({ type: 'SET_LOADING_TRANSACTION', value: false });
+  }, [contractInstances?.tokenSaleInstance, tokenB, slippage, token.symbol, dispatch]);
+
+  // Sell tokens
+  const sell = useCallback(async () => {
+    errorMessage.current = undefined;
+    if (!contractInstances?.tokenSaleInstance) {
+      errorMessage.current = 'Contract not initialized';
+      return;
+    }
+
+    if (!tokenA || +tokenA === 0) {
+      errorMessage.current = 'Amount not set';
+      return;
+    }
+
+    dispatch({ type: 'SET_LOADING_TRANSACTION', value: true });
+    try {
+      setIsAllowSelling(true);
+
+      const countTokenDecimals = await contractInstances.tokenSaleInstance.createSellAllowance(
+        tokenA?.toString(),
+      );
+
+      setIsAllowSelling(false);
+
+      const sellResult = await contractInstances.tokenSaleInstance.sellWithExistingAllowance(
+        countTokenDecimals,
+        slippage,
+      ) as any;
+      
+      const _userBalance = await onTransactionComplete();
+      dispatch({ type: 'SET_SUCCESS_TX_DATA', value: {
+        isBuying: false,
+        destAmount: Decimal.from(
+          toAe(sellResult.decodedEvents.find((data: any) => data.name === 'Burn').args[1]),
+        ),
+        sourceAmount: Decimal.from(
+          toAe(sellResult.decodedEvents.find((data: any) => data.name === 'Sell').args[0]),
+        ),
+        symbol: token.symbol || '',
+        userBalance: Decimal.from(_userBalance),
+      }});
+
+      await onTransactionComplete();
+    } catch (error: any) {
+      errorMessage.current = error?.message;
+    }
+    dispatch({ type: 'SET_LOADING_TRANSACTION', value: false });
+  }, [contractInstances?.tokenSaleInstance, tokenA, slippage, token.symbol, dispatch]);
+
+  // Handle transaction completion
+  const onTransactionComplete = useCallback(async () => {
+    queryClient.invalidateQueries({
+      queryKey: ['TokensService.findByAddress', token.sale_address],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ['MiddlewareService.getTxsByScope', token.sale_address],
+    });
+    
+    // Refetch user balance
+    if (contractInstances?.tokenSaleInstance && activeAccount) {
+      const balance = await fetchUserTokenBalance(
+        contractInstances.tokenSaleInstance,
+        token,
+        activeAccount
+      );
+      dispatch({ type: 'SET_USER_BALANCE', value: balance });
+      return balance;
+    }
+    return '0';
+  }, [queryClient, token.sale_address, contractInstances?.tokenSaleInstance, activeAccount, token, dispatch]);
 
   const placeTokenTradeOrder = useCallback(async (tokenToTrade: TokenDto) => {
-    setState(prev => ({ ...prev, loadingTransaction: true, errorMessage: undefined }));
+    dispatch({ type: 'SET_LOADING_TRANSACTION', value: true });
+    errorMessage.current = undefined;
     
     try {
-      // This is a simplified implementation
-      // In a real app, this would integrate with the blockchain SDK
-      
       if (!sdk || !activeAccount) {
         throw new Error('Wallet not connected');
       }
 
-      if (state.isBuying && (!state.tokenB || state.tokenB <= 0)) {
-        throw new Error('Amount not set');
+      // Update token reference and store
+      tokenRef.current = tokenToTrade;
+      dispatch({ type: 'SET_TOKEN', value: tokenToTrade });
+
+      // Setup contract if needed
+      if (contractInstances?.tokenSaleInstance?.address !== tokenToTrade.sale_address) {
+        // Contract will be setup by the query hook
+        return;
       }
 
-      if (!state.isBuying && (!state.tokenA || state.tokenA <= 0)) {
-        throw new Error('Amount not set');
+      if (isBuying) {
+        await buy();
+      } else {
+        await sell();
       }
-
-      // Simulate transaction processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      const destAmount = state.isBuying ? Decimal.from(state.tokenA || 0) : Decimal.from(state.tokenB || 0);
-      const sourceAmount = state.isBuying ? Decimal.from(state.tokenB || 0) : Decimal.from(state.tokenA || 0);
-
-      setState(prev => ({
-        ...prev,
-        successTxData: {
-          isBuying: state.isBuying,
-          destAmount,
-          sourceAmount,
-          symbol: tokenToTrade.symbol || '',
-          protocolReward: state.isBuying ? Decimal.from(protocolTokenReward()) : undefined,
-          protocolSymbol: 'BCL',
-          userBalance: Decimal.from(state.userBalance),
-        },
-        loadingTransaction: false,
-      }));
-
     } catch (error: any) {
-      setState(prev => ({
-        ...prev,
-        errorMessage: error.message,
-        loadingTransaction: false,
-      }));
+      errorMessage.current = error.message;
+      dispatch({ type: 'SET_LOADING_TRANSACTION', value: false });
+    } finally {
+      // Reset form data
+      dispatch({ type: 'RESET_FORM_DATA' });
     }
-  }, [sdk, activeAccount, state.isBuying, state.tokenA, state.tokenB, state.userBalance]);
+  }, [sdk, activeAccount, contractInstances?.tokenSaleInstance, isBuying, buy, sell, dispatch]);
 
   return {
     // State
-    tokenA: state.tokenA,
-    tokenB: state.tokenB,
-    tokenAFocused: state.tokenAFocused,
-    isBuying: state.isBuying,
-    isAllowSelling: state.isAllowSelling,
-    loadingTransaction: state.loadingTransaction,
-    nextPrice: state.nextPrice,
-    userBalance: state.userBalance,
-    slippage: state.slippage,
-    errorMessage: state.errorMessage,
-    successTxData: state.successTxData,
+    tokenA,
+    tokenB,
+    tokenAFocused,
+    isBuying,
+    isAllowSelling,
+    loadingTransaction,
+    nextPrice,
+    userBalance,
+    slippage,
+    errorMessage: errorMessage.current,
+    successTxData,
     
     // Computed values
-    averageTokenPrice: averageTokenPrice(),
-    priceImpactDiff: priceImpactDiff(),
-    priceImpactPercent: priceImpactPercent(),
-    estimatedNextTokenPriceImpactDifferenceFormattedPercentage: estimatedNextTokenPriceImpactDifferenceFormattedPercentage(),
+    averageTokenPrice,
+    priceImpactDiff,
+    priceImpactPercent,
+    estimatedNextTokenPriceImpactDifferenceFormattedPercentage,
     protocolTokenReward: protocolTokenReward(),
-    spendableAeBalance: spendableAeBalance,
+    spendableAeBalance,
     isInsufficientBalance: isInsufficientBalance(),
+    
+    // Contract instances
+    contractInstances,
     
     // Actions
     resetFormState,
     switchTradeView,
     updateToken,
     setTokenAmount,
-    setSlippage,
+    setSlippage: setSlippage,
     placeTokenTradeOrder,
+    buy,
+    sell,
   };
 }

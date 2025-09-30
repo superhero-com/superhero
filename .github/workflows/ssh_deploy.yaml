@@ -23,6 +23,9 @@ on:
       DEPLOY_KEY:
         description: "SSH key to use for ssh"
         required: true
+      HOST_PORT:
+        description: "Host port"
+        required: true
       DOCKERHUB_USERNAME:
         description: "Dockerhub username"
         required: true
@@ -62,6 +65,6 @@ jobs:
               --log-opt max-size=100m \
               --log-opt max-file=30 \
               -v $HOST_DATA_DIR/superconfig.json:/srv/public/superconfig.json \
-              -p 3000:80 \
+              -p ${{secrets.HOST_PORT}}:80 \
               -e NODE_ENV=production \
               ${{ secrets.DOCKERHUB_REPO }}:${{ inputs.VERSION }}

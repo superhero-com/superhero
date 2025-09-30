@@ -6,11 +6,11 @@ on:
       VERSION:
         description: "Version to deploy (dockerhub tag)"
         required: false
-        default: "latest"
+        default: "main"
         type: string
       CONTAINER_NAME:
         description: "Container name"
-        default: "superhero-api"
+        default: "superhero"
         required: false
         type: string
     secrets:

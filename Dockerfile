@@ -16,11 +16,6 @@ WORKDIR /srv
 COPY --from=builder /app/dist /srv
 
 # Dump Caddyfile
-RUN echo ":80 {\n\
-  root * /srv\n\
-  file_server\n\
-  try_files {path} /index.html\n\
-}" > /etc/caddy/Caddyfile
-
+RUN printf ":80 {\n  root * /srv\n  file_server\n  try_files {path} /index.html\n}" > /etc/caddy/Caddyfile
 EXPOSE 80
-CMD ["caddy", "run"]
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]

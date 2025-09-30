@@ -271,7 +271,7 @@ export default function CreateTokenView() {
 
   if (loading) {
     return (
-      <div className="max-w-[1400px] mx-auto min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+      <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
         <div className="p-6">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-700 rounded w-1/3 mb-4"></div>
@@ -316,7 +316,7 @@ export default function CreateTokenView() {
             </div>
 
             {/* Right Side - Create Token Form */}
-            <div className="min-w-[400px] max-w-[500px] flex-shrink-0">
+            <div className="max-w-[500px] flex-shrink-0">
               <div className="bg-white/5 rounded-[24px] border border-white/10 backdrop-blur-xl p-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))' }}>
                 {!activeFactorySchema ? (
                   <div className="space-y-4">

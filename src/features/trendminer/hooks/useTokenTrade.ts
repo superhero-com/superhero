@@ -1,17 +1,16 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useAccount } from '@/hooks';
 import BigNumber from 'bignumber.js';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { Decimal } from '../../../libs/decimal';
-import { TokenDto, TokenTradeState } from '../types';
 import {
   calculateBuyPriceWithAffiliationFee,
   calculateSellReturn,
   calculateTokensFromAE,
-  toDecimals,
-  toAe
+  toAe,
+  toDecimals
 } from '../../../utils/bondingCurve';
-import { useUserBalance } from '../../../hooks/useUserBalance';
-import { useAccount } from '@/hooks';
+import { TokenDto, TokenTradeState } from '../types';
 
 // Constants from Vue implementation
 const PROTOCOL_DAO_AFFILIATION_FEE = 0.05;

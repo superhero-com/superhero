@@ -71,15 +71,34 @@ export default function ConnectWalletModal({ onClose }: Props) {
           <Favicon className="w-8 h-8" />
           <div className="text-lg font-semibold">Superhero Wallet</div>
         </div>
-        <AeButton
-          variant="default"
-          className="uppercase tracking-wide !bg-[#1161FE] text-white hover:!bg-[#0f53df] w-full sm:w-auto rounded-xl sm:rounded-full"
-          onClick={handleConnect}
-          loading={connectingWallet}
-          disabled={connectingWallet}
-        >
-          {connectingWallet ? 'Connecting…' : 'CONNECT WALLET'}
-        </AeButton>
+        <div className="w-full sm:w-auto flex flex-col items-center sm:items-end gap-2">
+          <div className="text-center sm:text-right text-xs sm:text-[13px] text-white/70 leading-relaxed">
+            By connecting your wallet you agree to the{' '}
+            <a
+              href="/terms"
+              className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
+            >
+              Terms of Use
+            </a>
+            {' '}and{' '}
+            <a
+              href="/privacy"
+              className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
+            >
+              Privacy Policy
+            </a>
+            .
+          </div>
+          <AeButton
+            variant="default"
+            className="uppercase tracking-wide !bg-[#1161FE] text-white hover:!bg-[#0f53df] w-full sm:w-auto rounded-xl sm:rounded-full"
+            onClick={handleConnect}
+            loading={connectingWallet}
+            disabled={connectingWallet}
+          >
+            {connectingWallet ? 'Connecting…' : 'CONNECT WALLET'}
+          </AeButton>
+        </div>
       </div>
 
       <div className="mt-6 sm:mt-10 text-center sm:text-left">
@@ -102,24 +121,7 @@ export default function ConnectWalletModal({ onClose }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 sm:mt-8 text-center text-xs sm:text-[13px] text-white/70 leading-relaxed">
-        By connecting your wallet you agree to the
-        {' '}
-        <a
-          href="/terms"
-          className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
-        >
-          Terms of Use
-        </a>
-        {' '}and{' '}
-        <a
-          href="/privacy"
-          className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
-        >
-          Privacy Policy
-        </a>
-        {' '}and certify that you are over 18 years old.
-      </div>
+      
     </div>
   );
 }

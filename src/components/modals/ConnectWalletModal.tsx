@@ -105,9 +105,19 @@ export default function ConnectWalletModal({ onClose }: Props) {
       <div className="mt-6 sm:mt-8 text-center text-xs sm:text-[13px] text-white/70 leading-relaxed">
         By connecting your wallet you agree to the
         {' '}
-        <a href="/terms" className="no-underline hover:underline" style={{ color: 'var(--custom-links-color)' }}>Terms of Use</a>
+        <a
+          href="/terms"
+          className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
+        >
+          Terms of Use
+        </a>
         {' '}and{' '}
-        <a href="/privacy" className="no-underline hover:underline" style={{ color: 'var(--custom-links-color)' }}>Privacy Policy</a>
+        <a
+          href="/privacy"
+          className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
+        >
+          Privacy Policy
+        </a>
         {' '}and certify that you are over 18 years old.
       </div>
     </div>

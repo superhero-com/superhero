@@ -174,11 +174,12 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         if (foundToken && !cancelled) {
           setTokenOut(foundToken);
         }
-      } else if (!tokenOut && !toParam) {
-        // Default: WTT as output token
-        const wtt = tokens.find((t) => (t.symbol || '').toUpperCase() === 'WTT') || null;
-        setTokenOut(wtt || tokens[0] || null);
-      }
+      } 
+      // else if (!tokenOut && !toParam && tokens.length > 0) {
+      //   // Default: WTT as output token
+      //   const wtt = tokens.find((t) => (t.symbol || '').toUpperCase() === 'WTT') || null;
+      //   setTokenOut(wtt || tokens[2] || null);
+      // }
     };
 
     initializeTokens();

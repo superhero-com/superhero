@@ -96,9 +96,9 @@ export default function AddLiquidityForm() {
     if (!selectedTokenA && !tokenA && tokens.length) {
       setTokenA(tokens[2] || tokens[0]);
     }
-    if (!selectedTokenB && !tokenB && tokens.length) {
-      setTokenB(tokens[0] || tokens[1]);
-    }
+    // if (!selectedTokenB && !tokenB && tokens.length) {
+    //   setTokenB(tokens[0] || tokens[1]);
+    // }
   }, [tokens, selectedTokenA, selectedTokenB]);
 
   // Update hook state when tokens change

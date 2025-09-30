@@ -212,7 +212,7 @@ export default function MobileAppHeader() {
             </div>
 
             <nav className="flex flex-col py-5 px-6 gap-3 flex-1 sm:py-4 sm:px-6 sm:gap-2">
-              {navigationItems.map(item => {
+              {navigationItems.filter(item => !!item.id).map(item => {
                 const commonClasses = "w-full no-underline font-semibold transition-all duration-200 h-[56px] sm:h-[52px] rounded-xl text-white text-base flex items-center justify-center px-5";
                 const baseBg = "bg-white/5 hover:bg-white/10";
 

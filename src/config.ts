@@ -2,8 +2,8 @@ import { Encoded } from "@aeternity/aepp-sdk";
 
 export type AppConfig = {
   BACKEND_URL: string;
-  TRENDMINER_API_URL?: string;
-  TRENDMINER_WS_URL?: string;
+  SUPERHERO_API_URL?: string;
+  SUPERHERO_WS_URL?: string;
   NODE_URL: string;
   WALLET_URL: string;
   MIDDLEWARE_URL: string;
@@ -29,8 +29,8 @@ export type AppConfig = {
 
 const defaultConfig: AppConfig = {
   BACKEND_URL: '',
-  TRENDMINER_API_URL: '',
-  TRENDMINER_WS_URL: '',
+  SUPERHERO_API_URL: '',
+  SUPERHERO_WS_URL: '',
   NODE_URL: '',
   WALLET_URL: '',
   MIDDLEWARE_URL: '',
@@ -68,8 +68,8 @@ function normalizeKeys(raw: Record<string, any>): Partial<AppConfig> {
   const get = (...keys: string[]) => keys.map((k) => raw[k]).find((v) => v !== undefined);
   return Object.fromEntries(Object.entries({
     BACKEND_URL: get('BACKEND_URL', 'VUE_APP_BACKEND_URL', 'VITE_BACKEND_URL'),
-    TRENDMINER_API_URL: get('TRENDMINER_API_URL', 'VUE_APP_TRENDMINER_API_URL', 'VITE_TRENDMINER_API_URL'),
-    TRENDMINER_WS_URL: get('TRENDMINER_WS_URL', 'VUE_APP_TRENDMINER_WS_URL', 'VITE_TRENDMINER_WS_URL'),
+    SUPERHERO_API_URL: get('SUPERHERO_API_URL', 'VUE_APP_SUPERHERO_API_URL', 'VITE_SUPERHERO_API_URL'),
+    SUPERHERO_WS_URL: get('SUPERHERO_WS_URL', 'VUE_APP_SUPERHERO_WS_URL', 'VITE_SUPERHERO_WS_URL'),
     NODE_URL: get('NODE_URL', 'VUE_APP_NODE_URL', 'VITE_NODE_URL'),
     WALLET_URL: get('WALLET_URL', 'VUE_APP_WALLET_URL', 'VITE_WALLET_URL'),
     MIDDLEWARE_URL: get('MIDDLEWARE_URL', 'VUE_APP_MIDDLEWARE_URL', 'VITE_MIDDLEWARE_URL'),

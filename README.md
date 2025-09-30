@@ -49,7 +49,7 @@ Key modules live under:
 At runtime, the app loads `public/superconfig.json`. Adjust endpoints and feature flags without rebuilding. Keys commonly used:
 
 - `BACKEND_URL` — application backend
-- `TRENDMINER_API_URL` / `TRENDMINER_WS_URL` — analytics REST and WebSocket endpoints
+- `SUPERHERO_API_URL` / `SUPERHERO_WS_URL` — analytics REST and WebSocket endpoints
 - `NODE_URL` / `MIDDLEWARE_URL` — Aeternity node and middleware
 - `WALLET_URL` — default wallet endpoint
 - `GOVERNANCE_API_URL` — governance backend

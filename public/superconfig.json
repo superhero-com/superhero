@@ -1,7 +1,7 @@
 {
   "BACKEND_URL": "https://raendom-backend.z52da5wt.xyz",
-  "TRENDMINER_API_URL": "https://api.dev.trendminer.fun",
-  "TRENDMINER_WS_URL": "https://ws.dev.trendminer.fun",
+  "SUPERHERO_API_URL": "https://api.superhero.com",
+  "SUPERHERO_WS_URL": "https://api.superhero.com",
   "NODE_URL": "https://mdw.wordcraft.fun",
   "WALLET_URL": "https://wallet.superhero.com",
   "MIDDLEWARE_URL": "https://mdw.wordcraft.fun/mdw",

@@ -371,70 +371,66 @@ export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
             <TokenCandlestickChart token={token} className="w-full" />
           )}
           {/* Tabs Section */}
-          <Card className="bg-white/[0.02] border-white/10 mb-6">
-            <CardContent className="p-0">
-              {/* Tab Headers */}
-              <div className="flex border-b border-white/10">
-                {isMobile && (
-                  <button
-                    onClick={() => setActiveTab(TAB_DETAILS)}
-                    className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_DETAILS
-                      ? "text-white border-b-2 border-[#4ecdc4]"
-                      : "text-white/60 hover:text-white"
-                      }`}
-                  >
-                    Info
-                  </button>
-                )}
-                <button
-                  onClick={() => setActiveTab(TAB_CHAT)}
-                  className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_CHAT
-                    ? "text-white border-b-2 border-[#4ecdc4]"
-                    : "text-white/60 hover:text-white"
-                    }`}
-                >
-                  Chat
-                </button>
-                <button
-                  onClick={() => setActiveTab(TAB_TRANSACTIONS)}
-                  className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_TRANSACTIONS
-                    ? "text-white border-b-2 border-[#4ecdc4]"
-                    : "text-white/60 hover:text-white"
-                    }`}
-                >
-                  {isMobile ? "History" : "Transactions"}
-                </button>
-                <button
-                  onClick={() => setActiveTab(TAB_HOLDERS)}
-                  className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_HOLDERS
-                    ? "text-white border-b-2 border-[#4ecdc4]"
-                    : "text-white/60 hover:text-white"
-                    }`}
-                >
-                  Holders ({token.holders_count || 0})
-                </button>
+          {/* Tab Headers */}
+          <div className="flex border-b border-white/10">
+            {isMobile && (
+              <button
+                onClick={() => setActiveTab(TAB_DETAILS)}
+                className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_DETAILS
+                  ? "text-white border-b-2 border-[#4ecdc4]"
+                  : "text-white/60 hover:text-white"
+                  }`}
+              >
+                Info
+              </button>
+            )}
+            <button
+              onClick={() => setActiveTab(TAB_CHAT)}
+              className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_CHAT
+                ? "text-white border-b-2 border-[#4ecdc4]"
+                : "text-white/60 hover:text-white"
+                }`}
+            >
+              Chat
+            </button>
+            <button
+              onClick={() => setActiveTab(TAB_TRANSACTIONS)}
+              className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_TRANSACTIONS
+                ? "text-white border-b-2 border-[#4ecdc4]"
+                : "text-white/60 hover:text-white"
+                }`}
+            >
+              {isMobile ? "History" : "Transactions"}
+            </button>
+            <button
+              onClick={() => setActiveTab(TAB_HOLDERS)}
+              className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_HOLDERS
+                ? "text-white border-b-2 border-[#4ecdc4]"
+                : "text-white/60 hover:text-white"
+                }`}
+            >
+              Holders ({token.holders_count || 0})
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          <div className="p-4 md:p-6">
+            {isMobile && activeTab === TAB_DETAILS && (
+              <div className="space-y-4">
+                <TokenSummary
+                  token={{ ...token, decimals: Number(token.decimals) }}
+                />
               </div>
+            )}
 
-              {/* Tab Content */}
-              <div className="p-4 md:p-6">
-                {isMobile && activeTab === TAB_DETAILS && (
-                  <div className="space-y-4">
-                    <TokenSummary
-                      token={{ ...token, decimals: Number(token.decimals) }}
-                    />
-                  </div>
-                )}
+            {activeTab === TAB_CHAT && <CommentsList token={token} />}
 
-                {activeTab === TAB_CHAT && <CommentsList token={token} />}
+            {activeTab === TAB_TRANSACTIONS && (
+              <TokenTrades token={token} />
+            )}
 
-                {activeTab === TAB_TRANSACTIONS && (
-                  <TokenTrades token={token} />
-                )}
-
-                {activeTab === TAB_HOLDERS && <TokenHolders token={token} />}
-              </div>
-            </CardContent>
-          </Card>
+            {activeTab === TAB_HOLDERS && <TokenHolders token={token} />}
+          </div>
         </div>
       </div>
 

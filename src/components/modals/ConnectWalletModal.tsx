@@ -66,13 +66,32 @@ export default function ConnectWalletModal({ onClose }: Props) {
 
   return (
     <div className="text-foreground p-2 sm:p-0 text-center sm:text-left">
+      {/* Desktop/tablet: top-wide notice */}
+      <div className="hidden sm:block w-full text-center text-[12px] text-white/60 leading-relaxed mb-3">
+        By connecting your wallet you agree to the{' '}
+        <a
+          href="/terms"
+          className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
+        >
+          Terms of Use
+        </a>
+        {' '}and{' '}
+        <a
+          href="/privacy"
+          className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
+        >
+          Privacy Policy
+        </a>
+        .
+      </div>
       <div className="flex flex-col sm:flex-row items-center sm:items-center justify-center sm:justify-between gap-4">
         <div className="flex items-center gap-3 justify-center w-full sm:w-auto">
           <Favicon className="w-8 h-8" />
           <div className="text-lg font-semibold">Superhero Wallet</div>
         </div>
-        <div className="w-full sm:w-auto flex flex-col items-center sm:items-end gap-2">
-          <div className="text-center sm:text-right text-xs sm:text-[13px] text-white/70 leading-relaxed">
+        <div className="w-full sm:w-auto flex flex-col items-center sm:items-end gap-3 sm:gap-2">
+          {/* Mobile-only notice above button with larger gap */}
+          <div className="sm:hidden text-center text-xs text-white/70 leading-relaxed">
             By connecting your wallet you agree to the{' '}
             <a
               href="/terms"

@@ -1,6 +1,9 @@
-import React, { useRef, forwardRef, useImperativeHandle, useState, useEffect } from 'react';
-import { cn } from '../../../lib/utils';
+import FractionFormatter from '@/features/shared/components/FractionFormatter';
+import { formatFractionalPrice } from '@/utils/common';
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Button } from '../../../components/ui/button';
+import { useCurrencies } from '../../../hooks/useCurrencies';
+import { cn } from '../../../lib/utils';
 import { Decimal } from '../../../libs/decimal';
 
 interface AssetInputProps {
@@ -47,14 +50,20 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
   className = '',
 }, ref) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  
+  const { getFiat, currentCurrencyInfo } = useCurrencies();
+
+
   // Internal state for handling decimal input (like Vue model)
   const [internalValue, setInternalValue] = useState<string>(String(modelValue));
+
+  const fiatPrice = useMemo(() => {
+    return getFiat(isCoin ? Decimal.from(modelValue) : aeValue);
+  }, [modelValue, aeValue, isCoin]);
 
   // Update internal value when modelValue changes (similar to Vue watcher)
   useEffect(() => {
     const value = String(modelValue);
-    
+
     if (value.includes('e')) {
       // Handle scientific notation
       setInternalValue(Decimal.from(modelValue).prettify(6));
@@ -73,23 +82,23 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
   const sanitizeValue = (value: string): string => {
     // Remove commas and negative signs, but keep decimal points and numbers
     let sanitized = value.replace(/[^0-9.]/g, '');
-    
+
     // Ensure only one decimal point
     const parts = sanitized.split('.');
     if (parts.length > 2) {
       sanitized = parts[0] + '.' + parts.slice(1).join('');
     }
-    
+
     return sanitized;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
     const sanitizedValue = sanitizeValue(rawValue);
-    
+
     // Update internal value immediately for better UX
     setInternalValue(rawValue);
-    
+
     // Only emit sanitized value to parent
     onUpdateModelValue?.(sanitizedValue);
   };
@@ -110,9 +119,9 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
     if (value.isZero) return '0.00';
     return `$${value.prettify(2)}`;
   };
-  
+
   return (
-    <div 
+    <div
       className={cn(
         'asset-input',
         `color-${color}`,
@@ -162,8 +171,8 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
           <div className="flex items-center justify-between mt-2">
             {isCoin ? (
               <div className="flex items-center gap-1 text-sm text-white/70">
-                <span>USD</span>
-                <span>{formatFiatPrice(aeValue)}</span>
+                <span>{currentCurrencyInfo.symbol} </span>
+                <FractionFormatter fractionalPrice={formatFractionalPrice(fiatPrice) as any} />
               </div>
             ) : (
               <div className="text-sm text-white/70">
@@ -171,7 +180,7 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
                 <span>{Decimal.from(tokenBalance).prettify()}</span>
               </div>
             )}
-            
+
             {maxBtnAllowed && parseInt(tokenBalance, 10) > 0 && (
               <Button
                 variant="outline"

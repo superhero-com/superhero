@@ -349,7 +349,7 @@ export default function PostForm({
                 )}
                 {/* Mobile-only GIF popover anchored to button */}
                 {showGifInput && showGif && (
-                  <div className="md:hidden absolute top-0 left-2 bg-gray-900 border border-white/12 rounded-2xl p-3.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-30 min-w-[240px] max-w-[calc(100vw-2rem)] right-2">
+                  <div className="popover md:hidden absolute top-0 left-2 bg-gray-900 border border-white/12 rounded-2xl p-3.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-30 min-w-[240px] max-w-[calc(100vw-2rem)] right-2">
                     <div className="font-bold mb-2.5 text-white">Add a GIF</div>
                     <input
                       type="url"

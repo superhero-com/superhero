@@ -1,9 +1,12 @@
-import { AeSdk } from "@aeternity/aepp-sdk";
+import { AeSdk, toAe } from "@aeternity/aepp-sdk";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { TrendminerApi } from "../../api/backend";
 import AeButton from "../../components/AeButton";
 import { useAeSdk } from "../../hooks";
+import { TokensService } from "@/api/generated";
+import { Decimal } from "@/libs/decimal";
+import { LivePriceFormatter } from "@/features/shared/components";
 
 let bctsl: any;
 async function ensureBctsl() {
@@ -26,11 +29,6 @@ export default function Dao() {
     description?: string;
     link?: string;
   }>({ type: "VotePayout", value: "" });
-  
-  // Read-only SDK fallback so we can display DAO info without wallet
-  let cachedReadOnlySdk: AeSdk | null = null;
-
-  
 
   useEffect(() => {
     let cancel = false;
@@ -39,7 +37,9 @@ export default function Dao() {
       setError(null);
       try {
         if (saleAddress) {
-          const tok = await TrendminerApi.getToken(saleAddress);
+          const tok = await TokensService.findByAddress({
+            address: saleAddress,
+          });
           if (!cancel) setToken(tok || null);
         }
       } catch (e: any) {
@@ -110,19 +110,25 @@ export default function Dao() {
         >
           ← Back to token sale
         </Link>
-        <div className="font-bold text-white">
-          Treasury:{" "}
-          {balance != null
-            ? `${balance.toLocaleString(undefined, {
-                maximumFractionDigits: 6,
-              })} AE`
-            : "—"}
+        <div className="flex flex-row gap-2 items-center font-bold text-white">
+          <div className="font-bold opacity-80 text-white/80">Treasury</div>
+          <div className="font-bold text-white">
+            {token.dao_balance ? (
+              <LivePriceFormatter
+                aePrice={Decimal.from(toAe(token.dao_balance))}
+                watchKey={token.sale_address}
+                className="text-xs sm:text-base"
+                hideFiatPrice={true}
+              />
+            ) : (
+              "—"
+            )}
+          </div>
         </div>
       </div>
 
       {loading && <div className="p-4 text-white/80">Loading…</div>}
       {error && <div className="p-4 text-red-400">{error}</div>}
-
       {!loading && !error && (
         <div className="grid grid-cols-1 gap-4 mt-3">
           <div className="flex flex-wrap gap-3 text-sm">
@@ -147,15 +153,17 @@ export default function Dao() {
               </div>
             )}
             {token?.market_cap != null && (
-              <div>
+              <div className="flex flex-row gap-2 items-center">
                 <span className="opacity-75 text-xs text-white/75">
                   Market Cap:
                 </span>{" "}
                 <strong className="text-white">
-                  {(Number(token.market_cap) / 1e18).toLocaleString(undefined, {
-                    maximumFractionDigits: 2,
-                  })}{" "}
-                  AE
+                  <LivePriceFormatter
+                    aePrice={Decimal.from(toAe(token.market_cap))}
+                    watchKey={token.sale_address}
+                    className="text-xs"
+                    hideFiatPrice={true}
+                  />
                 </strong>
               </div>
             )}

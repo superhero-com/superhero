@@ -6,9 +6,7 @@ import { useAeSdk } from "../../hooks";
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import { Decimal } from "@/libs/decimal";
 import { toAe } from "@/utils/bondingCurve";
-import {
-  LivePriceFormatter,
-} from "@/features/shared/components";
+import { LivePriceFormatter } from "@/features/shared/components";
 import AddressChip from "@/components/AddressChip";
 import { TokenLineChart } from "@/features/trendminer/components/TokenLineChart";
 
@@ -158,7 +156,9 @@ export default function Daos() {
       {isFetching && (
         <div className="text-center py-8 text-white/80">Loading…</div>
       )}
-      {error && <div className="text-center py-8 text-red-400">{error.message}</div>}
+      {error && (
+        <div className="text-center py-8 text-red-400">{error.message}</div>
+      )}
 
       <div className="text-sm opacity-80 mt-2 mb-4 text-white/85">
         DAOs hold protocol fees collected from trades. Each card shows the
@@ -184,7 +184,6 @@ export default function Daos() {
                     <div className="text-xs px-2 py-1 rounded-full bg-purple-500/25 border border-purple-500/50 text-white w-fit">
                       Owned
                     </div>
-                    
                   )}
                 </div>
                 <a
@@ -197,14 +196,13 @@ export default function Daos() {
                 </a>
               </div>
 
-              {/* <div className="mt-2 flex justify-end">TODO: chart</div> */}
-              <div className="ml-auto chart max-w-[180px]">
-            <TokenLineChart
-              saleAddress={t.sale_address || t.address}
-              height={60}
-              hideTimeframe={true}
-            />
-          </div>
+              <div className="pb-2 border-b border-white/10">
+                    <TokenLineChart
+                        saleAddress={t.sale_address || t.address}
+                        height={48}
+                        hideTimeframe={true}
+                    />
+                </div>
 
               <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
                 <div>
@@ -275,9 +273,7 @@ export default function Daos() {
 
               <div className="flex justify-between items-center gap-2 mt-2">
                 <div className="text-xs opacity-80 text-white/80">Sale</div>
-                <AddressChip
-                  address={t.sale_address}
-                />
+                <AddressChip address={t.sale_address} />
               </div>
 
               <div className="flex justify-between items-center gap-2 mt-2">

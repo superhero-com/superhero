@@ -2,7 +2,8 @@ import type { IAppConfigs } from "../utils/types";
 
 export const configs: IAppConfigs = {
   app: {
-    name: process.env.VUE_APP_NAME || "",
+    // name: process.env.VUE_APP_NAME || "",
+    name: "Superhero",
     logo: {
       width: "187px",
       height: "30px",

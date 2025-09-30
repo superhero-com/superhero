@@ -61,11 +61,12 @@ export default function App() {
 
   return (
     <div className="app-container">
+      
+      <GlobalNewAccountEducation />
+      <AppHeader />
       <div className="app-content">
         <CollectInvitationLinkCard />
       </div>
-      <GlobalNewAccountEducation />
-      <AppHeader />
       <Suspense fallback={<div className="loading-fallback" />}>
         <ModalProvider
           registry={{

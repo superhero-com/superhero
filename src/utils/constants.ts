@@ -1,6 +1,8 @@
 import configs from "../configs";
 import { INetwork, ICurrency } from "./types";
 
+
+export const SETTINGS = configs
 /**
  * Default `networkId` values returned by the Node after establishing the connection.
  * Nodes returns different values when connecting to the Hyperchains.

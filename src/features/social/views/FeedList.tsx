@@ -145,7 +145,7 @@ export default function FeedList({
 
   // Memoized render function for better performance
   const renderFeedItems = useMemo(() => {
-    return filteredAndSortedList.map((item) => {
+    return filteredAndSortedList.map((item, index) => {
       const postId = item.id;
       const authorAddress = item.sender_address;
       const commentCount = item.total_comments ?? 0;
@@ -157,6 +157,7 @@ export default function FeedList({
           item={item}
           commentCount={commentCount}
           onItemClick={handleItemClick}
+          isFirst={index === 0}
         />
       );
     });

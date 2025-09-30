@@ -15,10 +15,11 @@ interface FeedItemProps {
   item: PostDto;
   commentCount: number;
   onItemClick: (postId: string) => void;
+  isFirst?: boolean;
 }
 
 // Component: Individual Feed Item
-const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
+const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: FeedItemProps) => {
   const postId = item.id;
   const authorAddress = item.sender_address;
   const { chainNames } = useWallet();
@@ -33,7 +34,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
       className="relative cursor-pointer w-screen -mx-[calc((100vw-100%)/2)] md:w-full md:mx-0 p-0 md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:backdrop-blur-[20px] md:rounded-[20px] md:transition-all md:duration-300 md:ease-out md:overflow-hidden md:hover:-translate-y-1"
       onClick={handleItemClick}
     >
-      <div className="p-4 md:p-5">
+      <div className={cn("p-4 md:p-5", isFirst && "pt-1")}> 
         <div className="flex gap-2 items-start">
           {/* Left column: avatar only, aligned to top */}
           <div className="flex-shrink-0">

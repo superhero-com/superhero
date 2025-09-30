@@ -16,8 +16,8 @@ export default function Invite() {
   });
 
   return (
-    <Shell right={<RightRail />}>
-      <div className="max-w-7xl mx-auto px-4 py-2">
+    <Shell>
+      <div className="mx-auto px-4 py-2">
         {/* Hero Section */}
         <div className="text-center mb-4 py-2">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold m-0 leading-tight">
@@ -79,7 +79,7 @@ export default function Invite() {
                 onClick={() => {
                   try {
                     localStorage.setItem("invite_info_dismissed", "1");
-                  } catch {}
+                  } catch { }
                   setShowInfo(false);
                 }}
                 className="bg-white/10 border border-white/20 text-white text-base md:text-lg lg:text-xl cursor-pointer p-3 rounded-xl transition-all duration-300 flex-shrink-0 min-w-10 min-h-10 md:min-w-12 md:min-h-12 lg:min-w-14 lg:min-h-14 flex items-center justify-center backdrop-blur-lg hover:bg-pink-500/20 hover:border-pink-400 hover:text-pink-400 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-pink-500/30 active:translate-y-0"
@@ -90,7 +90,7 @@ export default function Invite() {
           </div>
         )}
         {/* Main Action Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        <div className="space-y-8 mb-12">
           {/* Generate Invites Card */}
           <InviteAndEarnCard />
           {/* Rewards Card */}

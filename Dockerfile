@@ -19,7 +19,7 @@ COPY --from=builder /app/dist /srv
 RUN echo ":80 {\n\
   root * /srv\n\
   file_server\n\
-  rewrite * /index.html\n\
+  try_files {path} /index.html\n\
 }" > /etc/caddy/Caddyfile
 
 EXPOSE 80

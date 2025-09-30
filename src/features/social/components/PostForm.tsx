@@ -318,56 +318,73 @@ export default function PostForm({
                 rows={2}
                 maxLength={characterLimit}
               />
-              {/* Mobile-only GIF button inside textarea corner */}
-              {showGifInput && (
-                <button
-                  type="button"
-                  className="md:hidden absolute bottom-5 left-2 inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0"
-                  title="GIF"
-                  ref={gifBtnRef}
-                  onClick={() => {
-                    setShowGif((s) => !s);
-                    setShowEmoji(false);
-                  }}
-                >
-                  <span className="uppercase tracking-wide">GIF</span>
-                </button>
-              )}
+              
+              <div className="md:hidden absolute bottom-5 left-2">
+                {/* Mobile-only GIF button inside textarea corner */}
+                {showGifInput && (
+                  <button
+                    type="button"
+                    className="md:hidden  inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
+                    title="GIF"
+                    ref={gifBtnRef}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowGif((s) => !s);
+                      setShowEmoji(false);
+                    }}
+                    onTouchStart={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowGif((s) => !s);
+                      setShowEmoji(false);
+                    }}
+                  >
+                    <span className="uppercase tracking-wide">GIF</span>
+                  </button>
+                )}
+                {/* Mobile-only GIF popover anchored to button */}
+                {showGifInput && showGif && (
+                  <div className="md:hidden absolute top-0 left-2 bg-gray-900 border border-white/12 rounded-2xl p-3.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-30 min-w-[240px] max-w-[calc(100vw-2rem)] right-2">
+                    <div className="font-bold mb-2.5 text-white">Add a GIF</div>
+                    <input
+                      type="url"
+                      placeholder="Paste GIF/Video URL"
+                      value={gifInput}
+                      onChange={(e) => setGifInput(e.target.value)}
+                      className="w-full bg-white/8 border border-white/16 rounded-xl p-2.5 text-white text-sm"
+                    />
+                    <div className="mt-2.5 flex justify-end gap-2.5">
+                      <button
+                        type="button"
+                        className="bg-white/8 border border-white/16 text-white px-3 py-2 rounded-xl cursor-pointer transition-all duration-200 hover:bg-white/12"
+                        onClick={() => setShowGif(false)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className="bg-primary-400 text-black border border-primary-400 px-3 py-2 rounded-xl cursor-pointer transition-all duration-200"
+                        onClick={addGifFromUrl}
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
               {characterLimit && (
                 <div className="absolute bottom-4 right-2 md:bottom-4 md:right-4 text-white/60 text-sm font-semibold pointer-events-none select-none">
                   {text.length}/{characterLimit}
                 </div>
               )}
 
-              {/* Mobile-only GIF popover anchored to input */}
-              {showGifInput && showGif && (
-                <div className="md:hidden absolute bottom-[110%] left-2 bg-gray-900 border border-white/12 rounded-2xl p-3.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-10 min-w-[240px]">
-                  <div className="font-bold mb-2.5 text-white">Add a GIF</div>
-                  <input
-                    type="url"
-                    placeholder="Paste GIF/Video URL"
-                    value={gifInput}
-                    onChange={(e) => setGifInput(e.target.value)}
-                    className="w-full bg-white/8 border border-white/16 rounded-xl p-2.5 text-white text-sm"
-                  />
-                  <div className="mt-2.5 flex justify-end gap-2.5">
-                    <button
-                      type="button"
-                      className="bg-white/8 border border-white/16 text-white px-3 py-2 rounded-xl cursor-pointer transition-all duration-200 hover:bg-white/12"
-                      onClick={() => setShowGif(false)}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      className="bg-primary-400 text-black border border-primary-400 px-3 py-2 rounded-xl cursor-pointer transition-all duration-200"
-                      onClick={addGifFromUrl}
-                    >
-                      Add
-                    </button>
-                  </div>
-                </div>
-              )}
+
+             
               </div>
 
               {(showEmojiPicker || showGifInput) && (

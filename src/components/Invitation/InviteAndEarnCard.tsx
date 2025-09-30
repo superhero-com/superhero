@@ -146,9 +146,9 @@ export default function InviteAndEarnCard({
           Generate Invites
         </h3>
       </div>
-      <div className="flex flex-col gap-4 md:gap-16 ">
-        {/* Description */}
-        <div className="space-y-4 text-sm text-muted-foreground text-center sm:text-left">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+        {/* Description - Left Side */}
+        <div className="flex-1 space-y-4 text-sm text-muted-foreground">
           <p>
             When you invite your friends to join the platform, you help us
             create a vibrant, interconnected ecosystem. As a token of
@@ -171,100 +171,102 @@ export default function InviteAndEarnCard({
           </p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={generateInviteLink} className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Amount Input */}
-            <div className="space-y-2">
-              <Label
-                htmlFor="amount"
-                className="text-xs md:text-sm font-semibold text-slate-400 tracking-wider break-words"
-              >
-                Amount per invite (AE)
-              </Label>
-              <Input
-                id="amount"
-                ref={amountInputRef}
-                type="number"
-                min="0"
-                step="any"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.0"
-                disabled={!activeAccount}
-                className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 lg:p-5 text-white text-sm md:text-base transition-all duration-300 outline-none font-medium w-full box-border focus:border-[var(--neon-teal)] focus:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus:bg-white/8 focus:-translate-y-px placeholder:text-slate-400 placeholder:opacity-60"
-              />
+        {/* Form - Right Side */}
+        <div className="flex-1">
+          <form onSubmit={generateInviteLink} className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Amount Input */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="amount"
+                  className="text-xs md:text-sm font-semibold text-slate-400 tracking-wider break-words"
+                >
+                  Amount per invite (AE)
+                </Label>
+                <Input
+                  id="amount"
+                  ref={amountInputRef}
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.0"
+                  disabled={!activeAccount}
+                  className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 lg:p-5 text-white text-sm md:text-base transition-all duration-300 outline-none font-medium w-full box-border focus:border-[var(--neon-teal)] focus:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus:bg-white/8 focus:-translate-y-px placeholder:text-slate-400 placeholder:opacity-60"
+                />
+              </div>
+
+              {/* Number of Invites Input */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="invites"
+                  className="text-xs md:text-sm font-semibold text-slate-400 tracking-wider break-words"
+                >
+                  Number of invites
+                </Label>
+                <Input
+                  id="invites"
+                  ref={invitesInputRef}
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={invitesNumber}
+                  onChange={(e) =>
+                    setInvitesNumber(Math.max(1, Number(e.target.value || 1)))
+                  }
+                  disabled={!activeAccount}
+                  className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 lg:p-5 text-white text-sm md:text-base transition-all duration-300 outline-none font-medium w-full box-border focus:border-[var(--neon-teal)] focus:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus:bg-white/8 focus:-translate-y-px placeholder:text-slate-400 placeholder:opacity-60"
+                />
+              </div>
             </div>
 
-            {/* Number of Invites Input */}
-            <div className="space-y-2">
-              <Label
-                htmlFor="invites"
-                className="text-xs md:text-sm font-semibold text-slate-400 tracking-wider break-words"
+            {/* Error Messages */}
+            {errorMessage && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{errorMessage}</AlertDescription>
+              </Alert>
+            )}
+
+            {!hasEnoughBalance() && amount && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Not enough balance. You need{" "}
+                  {Decimal.from(amount || 0)
+                    .mul(invitesNumber)
+                    .toString()}{" "}
+                  AE.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Submit Button */}
+            {activeAccount ? (
+              <button
+                type="submit"
+                disabled={generatingInviteLink || !activeAccount}
+                className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold flex items-center justify-center gap-3 uppercase tracking-wider relative overflow-hidden break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${
+                  !activeAccount
+                    ? "opacity-50 cursor-not-allowed bg-gray-600 transform-none"
+                    : "bg-gradient-to-r from-[var(--neon-teal)] to-blue-500 text-white shadow-lg shadow-[rgba(0,255,157,0.3)] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[rgba(0,255,157,0.4)] before:content-[''] before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:transition-all before:duration-500 hover:before:left-full"
+                }`}
               >
-                Number of invites
-              </Label>
-              <Input
-                id="invites"
-                ref={invitesInputRef}
-                type="number"
-                min="1"
-                step="1"
-                value={invitesNumber}
-                onChange={(e) =>
-                  setInvitesNumber(Math.max(1, Number(e.target.value || 1)))
-                }
-                disabled={!activeAccount}
-                className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 lg:p-5 text-white text-sm md:text-base transition-all duration-300 outline-none font-medium w-full box-border focus:border-[var(--neon-teal)] focus:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus:bg-white/8 focus:-translate-y-px placeholder:text-slate-400 placeholder:opacity-60"
-              />
-            </div>
-          </div>
-
-          {/* Error Messages */}
-          {errorMessage && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{errorMessage}</AlertDescription>
-            </Alert>
-          )}
-
-          {!hasEnoughBalance() && amount && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Not enough balance. You need{" "}
-                {Decimal.from(amount || 0)
-                  .mul(invitesNumber)
-                  .toString()}{" "}
-                AE.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Submit Button */}
-          {activeAccount ? (
-            <button
-              type="submit"
-              disabled={generatingInviteLink || !activeAccount}
-              className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold flex items-center justify-center gap-3 uppercase tracking-wider relative overflow-hidden break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${
-                !activeAccount
-                  ? "opacity-50 cursor-not-allowed bg-gray-600 transform-none"
-                  : "bg-gradient-to-r from-[var(--neon-teal)] to-blue-500 text-white shadow-lg shadow-[rgba(0,255,157,0.3)] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[rgba(0,255,157,0.4)] before:content-[''] before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:transition-all before:duration-500 hover:before:left-full"
-              }`}
-            >
-              {generatingInviteLink ? (
-                <>
-                  <div className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 border-2 border-transparent border-t-current rounded-full animate-spin"></div>
-                  Creating invites...
-                </>
-              ) : (
-                "Generate invite links"
-              )}
-            </button>
-          ) : (
-            <WalletConnectBtn label="Connect wallet to generate" />
-          )}
-        </form>
+                {generatingInviteLink ? (
+                  <>
+                    <div className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 border-2 border-transparent border-t-current rounded-full animate-spin"></div>
+                    Creating invites...
+                  </>
+                ) : (
+                  "Generate invite links"
+                )}
+              </button>
+            ) : (
+              <WalletConnectBtn label="Connect wallet to generate" />
+            )}
+          </form>
+        </div>
       </div>
 
       {/* Copy Invite Link Dialog */}

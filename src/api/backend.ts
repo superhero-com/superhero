@@ -3,8 +3,8 @@ import { CONFIG } from '../config';
 // Trendminer API client
 export const TrendminerApi = {
   async fetchJson(path: string, init?: RequestInit) {
-    const base = (CONFIG.TRENDMINER_API_URL || '').replace(/\/$/, '');
-    if (!base) throw new Error('TRENDMINER_API_URL not configured');
+    const base = (CONFIG.SUPERHERO_API_URL || '').replace(/\/$/, '');
+    if (!base) throw new Error('SUPERHERO_API_URL not configured');
     const url = `${base}${path.startsWith('/') ? '' : '/'}${path}`;
     const res = await fetch(url, init);
     if (!res.ok) {
@@ -189,7 +189,7 @@ function mockFetch(path: string) {
 
 // API function for new posts endpoint
 export async function fetchPosts(limit: number = 5) {
-  const response = await fetch(`https://api.dev.tokensale.org/api/posts?limit=${limit}`);
+  const response = await fetch(`https://api.superhero.com/api/posts?limit=${limit}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch posts: ${response.status}`);
   }

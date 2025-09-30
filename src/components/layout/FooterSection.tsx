@@ -54,8 +54,8 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
     s === 'online'
       ? 'var(--neon-green)'
       : s === 'offline'
-      ? 'var(--neon-pink)'
-      : 'var(--neon-yellow)';
+        ? 'var(--neon-pink)'
+        : 'var(--neon-yellow)';
 
   return (
     <footer className={`${compact ? 'border-t mt-3 py-3' : 'border-t mt-6 py-4 md:py-5 md:mt-8'}`} style={{ borderTopColor: 'var(--search-nav-border-color)' }}>
@@ -122,9 +122,13 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
             <span style={{ color: statusColor(apiStatus.backend) }}>
               {`${statusEmoji(apiStatus.backend)} Backend`}
             </span>
-            <span style={{ color: statusColor(apiStatus.trendminer) }}>
-              {`${statusEmoji(apiStatus.trendminer)} Trendminer`}
-            </span>
+            {
+              configs.features.trendminer && (
+                <span style={{ color: statusColor(apiStatus.trendminer) }}>
+                  {`${statusEmoji(apiStatus.trendminer)} Trendminer`}
+                </span>
+              )
+            }
             <span style={{ color: statusColor(apiStatus.dex) }}>
               {`${statusEmoji(apiStatus.dex)} DEX`}
             </span>

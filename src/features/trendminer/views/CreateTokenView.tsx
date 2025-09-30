@@ -7,17 +7,17 @@ import { createCommunity } from "bctsl-sdk";
 import BigNumber from "bignumber.js";
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { TrendminerApi } from '../api/backend';
-import AeButton from '../components/AeButton';
-import ConnectWalletButton from '../components/ConnectWalletButton';
-import { Input } from '../components/ui/input';
-import { useAeSdk } from '../hooks/useAeSdk';
-import { useCommunityFactory } from '../hooks/useCommunityFactory';
+import { TrendminerApi } from '../../../api/backend';
+import AeButton from '../../../components/AeButton';
+import ConnectWalletButton from '../../../components/ConnectWalletButton';
+import { Input } from '../../../components/ui/input';
+import { useAeSdk } from '../../../hooks/useAeSdk';
+import { useCommunityFactory } from '../../../hooks/useCommunityFactory';
 import type {
   CollectionId,
   IAllowedNameChars,
   ICollectionData,
-} from '../utils/types';
+} from '../../../utils/types';
 
 // Debounce hook
 function useDebounce<T>(value: T, delay: number): T {

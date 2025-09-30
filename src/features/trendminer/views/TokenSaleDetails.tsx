@@ -27,17 +27,18 @@ import Token24hChange from "../../../components/Trendminer/Token24hChange";
 import TvCandles from "../../../components/Trendminer/TvCandles";
 
 // Feature components
-import { 
-  TokenTradeCard, 
+import {
+  TokenTradeCard,
   TokenRanking,
-  TokenCandlestickChartSkeleton, 
-  TokenSaleSidebarSkeleton 
+  TokenCandlestickChartSkeleton,
+  TokenSaleSidebarSkeleton
 } from "../";
 import { TokenSummary } from "../../bcl/components";
 import { TokenDto as TrendminerTokenDto } from "../types";
 import TokenCandlestickChart from "@/components/charts/TokenCandlestickChart";
+import { useLiveTokenData } from "../hooks/useLiveTokenData";
 
-interface TokenSaleDetailsProps {}
+interface TokenSaleDetailsProps { }
 
 // Tab constants
 const TAB_DETAILS = "details";
@@ -51,8 +52,8 @@ type TabType =
   | typeof TAB_TRANSACTIONS
   | typeof TAB_HOLDERS;
 
-  //
-export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
+//
+export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
   const { tokenName } = useParams<{ tokenName: string }>();
   const navigate = useNavigate();
   const { activeAccount } = useAeSdk();
@@ -86,7 +87,7 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
   const {
     isError,
     isLoading,
-    data: token,
+    data: _token,
     error,
   } = useQuery<TokenDto | null>({
     queryKey: ["TokensService.findByAddress", tokenName],
@@ -108,6 +109,15 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
     staleTime: 60000,
     enabled: !!tokenName,
   });
+
+  const { tokenData } = useLiveTokenData({ token: _token });
+
+  const token = useMemo(() => {
+    return {
+      ..._token,
+      ...(tokenData || {}),
+    };
+  }, [tokenData, _token]);
 
   // Derived states
   const isTokenPending = isTokenNewlyCreated && !token;
@@ -270,9 +280,8 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
 
         {/* Main Content (Right Column on Desktop, Full Width on Mobile) */}
         <div
-          className={`${
-            isMobile ? "col-span-1 mb-8" : "lg:col-span-2"
-          } flex flex-col gap-6`}
+          className={`${isMobile ? "col-span-1 mb-8" : "lg:col-span-2"
+            } flex flex-col gap-6`}
         >
           {/* Token Header */}
           <Card className="bg-white/[0.02] border-white/10">
@@ -339,8 +348,8 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
                 <div className="text-white/80">
                   <span>
                     {descriptionExpanded ||
-                    !isMobile ||
-                    token.metaInfo.description.length <= 150
+                      !isMobile ||
+                      token.metaInfo.description.length <= 150
                       ? token.metaInfo.description
                       : `${token.metaInfo.description.substring(0, 150)}...`}
                   </span>
@@ -377,42 +386,38 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
                 {isMobile && (
                   <button
                     onClick={() => setActiveTab(TAB_DETAILS)}
-                    className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${
-                      activeTab === TAB_DETAILS
-                        ? "text-white border-b-2 border-[#4ecdc4]"
-                        : "text-white/60 hover:text-white"
-                    }`}
+                    className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_DETAILS
+                      ? "text-white border-b-2 border-[#4ecdc4]"
+                      : "text-white/60 hover:text-white"
+                      }`}
                   >
                     Info
                   </button>
                 )}
                 <button
                   onClick={() => setActiveTab(TAB_CHAT)}
-                  className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${
-                    activeTab === TAB_CHAT
-                      ? "text-white border-b-2 border-[#4ecdc4]"
-                      : "text-white/60 hover:text-white"
-                  }`}
+                  className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_CHAT
+                    ? "text-white border-b-2 border-[#4ecdc4]"
+                    : "text-white/60 hover:text-white"
+                    }`}
                 >
                   Chat
                 </button>
                 <button
                   onClick={() => setActiveTab(TAB_TRANSACTIONS)}
-                  className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${
-                    activeTab === TAB_TRANSACTIONS
-                      ? "text-white border-b-2 border-[#4ecdc4]"
-                      : "text-white/60 hover:text-white"
-                  }`}
+                  className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_TRANSACTIONS
+                    ? "text-white border-b-2 border-[#4ecdc4]"
+                    : "text-white/60 hover:text-white"
+                    }`}
                 >
                   {isMobile ? "History" : "Transactions"}
                 </button>
                 <button
                   onClick={() => setActiveTab(TAB_HOLDERS)}
-                  className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${
-                    activeTab === TAB_HOLDERS
-                      ? "text-white border-b-2 border-[#4ecdc4]"
-                      : "text-white/60 hover:text-white"
-                  }`}
+                  className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_HOLDERS
+                    ? "text-white border-b-2 border-[#4ecdc4]"
+                    : "text-white/60 hover:text-white"
+                    }`}
                 >
                   Holders ({token.holders_count || 0})
                 </button>

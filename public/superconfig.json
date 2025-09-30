@@ -1,7 +1,7 @@
 {
   "BACKEND_URL": "https://raendom-backend.z52da5wt.xyz",
-  "SUPERHERO_API_URL": "https://api.dev.tokensale.org",
-  "SUPERHERO_WS_URL": "https://api.dev.tokensale.org",
+  "SUPERHERO_API_URL": "https://api.superhero.com",
+  "SUPERHERO_WS_URL": "https://api.superhero.com",
   "NODE_URL": "https://mdw.wordcraft.fun",
   "WALLET_URL": "https://wallet.superhero.com",
   "MIDDLEWARE_URL": "https://mdw.wordcraft.fun/mdw",

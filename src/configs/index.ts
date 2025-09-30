@@ -18,8 +18,8 @@ export const configs: IAppConfigs = {
     ae_mainnet: {
       name: "Mainnet",
       networkId: "ae_mainnet",
-      apiUrl: process.env.VUE_APP_MAINNET_API || "https://api.dev.tokensale.org/",
-      websocketUrl: process.env.VUE_APP_MAINNET_WS || "https://api.dev.tokensale.org/",
+      apiUrl: process.env.VUE_APP_MAINNET_API || "https://api.superhero.com/",
+      websocketUrl: process.env.VUE_APP_MAINNET_WS || "https://api.superhero.com/",
       url: "https://mdw.wordcraft.fun",
       middlewareUrl: "https://mdw.wordcraft.fun/mdw",
       explorerUrl: "https://aescan.io",

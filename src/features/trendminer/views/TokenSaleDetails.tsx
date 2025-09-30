@@ -1,42 +1,36 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { TokensService } from "../../../api/generated/services/TokensService";
+import { useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { TokenDto } from "../../../api/generated/models/TokenDto";
-import { TrendminerApi } from "../../../api/backend";
-import { CONFIG } from "../../../config";
+import { TokensService } from "../../../api/generated/services/TokensService";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { useOwnedTokens } from "../../../hooks/useOwnedTokens";
 
 // Components
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import ConnectWalletButton from "../../../components/ConnectWalletButton";
-import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
 import CommentsList from "../../../components/Trendminer/CommentsList";
+import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
+import Token24hChange from "../../../components/Trendminer/Token24hChange";
 import TokenHolders from "../../../components/Trendminer/TokenHolders";
 import TokenTrades from "../../../components/Trendminer/TokenTrades";
+import { Badge } from "../../../components/ui/badge";
+import { Button } from "../../../components/ui/button";
+import {
+  Card,
+  CardContent
+} from "../../../components/ui/card";
 import ShareModal from "../../../components/ui/ShareModal";
-import Token24hChange from "../../../components/Trendminer/Token24hChange";
-import TvCandles from "../../../components/Trendminer/TvCandles";
 
 // Feature components
+import TokenCandlestickChart from "@/components/charts/TokenCandlestickChart";
 import {
-  TokenTradeCard,
-  TokenRanking,
   TokenCandlestickChartSkeleton,
-  TokenSaleSidebarSkeleton
+  TokenRanking,
+  TokenSaleSidebarSkeleton,
+  TokenTradeCard
 } from "../";
 import { TokenSummary } from "../../bcl/components";
-import { TokenDto as TrendminerTokenDto } from "../types";
-import TokenCandlestickChart from "@/components/charts/TokenCandlestickChart";
 import { useLiveTokenData } from "../hooks/useLiveTokenData";
+import { TokenDto as TrendminerTokenDto } from "../types";
 
 interface TokenSaleDetailsProps { }
 

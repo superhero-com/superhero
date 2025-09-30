@@ -6,7 +6,6 @@ const FeedList = lazy(() => import("./features/social/views/FeedList"));
 const TokenList = lazy(() => import("./features/trendminer/views/TokenList"));
 const TrendCloud = lazy(() => import("./views/Trendminer/TrendCloud"));
 const TrendCloudVisx = lazy(() => import("./views/Trendminer/TrendCloudVisx"));
-const TrendTokenDetails = lazy(() => import("./views/Trendminer/TokenDetails"));
 const TrendInvite = lazy(() => import("./views/Trendminer/Invite"));
 const TrendDao = lazy(() => import("./views/Trendminer/Dao"));
 const TrendDaos = lazy(() => import("./views/Trendminer/Daos"));

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendminerApi } from '../../../../api/backend';
 import { Decimal } from '../../../../libs/decimal';
+import { toAe } from '@aeternity/aepp-sdk';
 
 interface TokenRankingProps {
   token: {
@@ -119,7 +120,7 @@ export default function TokenRanking({ token }: TokenRankingProps) {
   function getDecimalValue(value: string): Decimal {
     try {
       // Convert from aettos to AE (assuming 18 decimals)
-      return Decimal.from(value).div(Decimal.from(10).pow(18));
+      return Decimal.from(toAe(value));
     } catch {
       return Decimal.from(0);
     }

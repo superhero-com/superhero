@@ -26,6 +26,7 @@ export const AeSdkContext = createContext<{
     setTransactionsQueue: (queue: Record<string, { status: string; tx: Encoded.Transaction; signUrl: string }>) => void,
     initSdk: () => void,
     scanForAccounts: () => void,
+    nodes: { instance: Node; name: string }[],
 }>(null);
 
 const nodes: { instance: Node; name: string }[] = Object.values(
@@ -242,6 +243,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             setTransactionsQueue,
             initSdk,
             scanForAccounts,
+            nodes,
         }}>
             {children}
         </AeSdkContext.Provider>

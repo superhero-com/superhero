@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Alert, AlertDescription } from "../ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { useAeSdk } from "../../hooks/useAeSdk";
-import { getAffiliationTreasury } from "../../libs/affiliation";
-import { Decimal } from "../../libs/decimal";
+import { useAeSdk } from "@/hooks/useAeSdk";
+import { getAffiliationTreasury } from "@/libs/affiliation";
+import { Decimal } from "@/libs/decimal";
 import LivePriceFormatter from "@/features/shared/components/LivePriceFormatter";
 
 const MIN_INVITEES = 4;
@@ -130,89 +130,89 @@ export default function CollectRewardsCard({
           💰
         </div>
         <h3 className="m-0 text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
-          Your Rewards
+          Collect your rewards
         </h3>
       </div>
 
       {/* Content */}
-      <div className="flex flex-col gap-4">
-        {/* Description */}
-        <div className="space-y-4 text-sm text-muted-foreground">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+        {/* Description - Left Side */}
+        <div className="flex-1 space-y-4 text-sm text-muted-foreground">
           <p>
-            Collect rewards when at least {MIN_INVITEES} of your invitees have
-            spent a minimum of {MIN_SPENT_AE} AE on token purchases.
+            To access participation rewards, contributors may invite others to explore the platform. If at least {MIN_INVITEES} of their invitees engage with the ecosystem (e.g., by minting or transacting with tokens), the contributor becomes eligible to unlock optional rewards.
           </p>
           <p className="text-xs opacity-60">
-            Rewards are calculated based on the transaction activity of your
-            invited network and can be withdrawn once eligibility requirements
-            are met.
+            Rewards can be claimed manually at any time for the current or previous calendar month. Unclaimed rewards beyond this window will be permanently removed to maintain system balance.
           </p>
         </div>
 
-        {/* Progress Section */}
-        <div className="flex flex-col gap-5 p-5 md:p-6 lg:p-8 bg-white/3 rounded-2xl border border-white/5">
-          <div className="flex justify-between items-center font-semibold text-base md:text-lg lg:text-xl flex-wrap gap-2">
-            <span>Progress to rewards</span>
-            <span className="text-teal-400 font-bold text-lg md:text-xl lg:text-2xl text-shadow-[0_0_10px_rgba(78,205,196,0.5)] break-words">
-              {numberOfUniqueInvitees}/{MIN_INVITEES} invitees
-            </span>
-          </div>
-          <div className="w-full h-3 bg-white/10 rounded-md overflow-hidden relative before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:animate-[shimmer_2s_infinite]">
-            <div
-              className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-md transition-all duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)] relative z-10"
-              style={{ width: `${progressPercentage}%` }}
-            ></div>
-          </div>
-          <div className="text-center font-semibold text-slate-400 text-sm md:text-base p-2 rounded-lg bg-white/2 break-words">
-            {numberOfUniqueInvitees >= MIN_INVITEES
-              ? "🎉 Eligible for rewards!"
-              : `${MIN_INVITEES - numberOfUniqueInvitees} more invitees needed`}
-          </div>
-        </div>
-
-        {/* Rewards Display */}
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col gap-3 text-center p-5 md:p-6 lg:p-8 bg-white/3 rounded-2xl border border-white/5">
-            <span className="text-sm md:text-base text-slate-400 font-medium uppercase tracking-wider break-words">
-              Available Rewards
-            </span>
-            <LivePriceFormatter
-              row
-              aePrice={Decimal.from(accumulatedRewardsAe.toString())}
-              watchPrice={false}
-              className="gap-4 text-3xl md:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent text-shadow-[0_0_20px_rgba(255,107,107,0.3)] break-words"
-            />
+        {/* Progress and Actions - Right Side */}
+        <div className="flex-1 flex flex-col gap-6">
+          {/* Progress Section */}
+          <div className="flex flex-col gap-3 p-4 bg-white/3 rounded-xl border border-white/5">
+            <div className="flex justify-between items-center font-semibold text-sm md:text-base flex-wrap gap-2">
+              <span>Progress to rewards</span>
+              <span className="text-teal-400 font-bold text-base md:text-lg text-shadow-[0_0_10px_rgba(78,205,196,0.5)] break-words">
+                {numberOfUniqueInvitees}/{MIN_INVITEES} invitees
+              </span>
+            </div>
+            <div className="w-full h-2 bg-white/10 rounded-md overflow-hidden relative before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:animate-[shimmer_2s_infinite]">
+              <div
+                className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-md transition-all duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)] relative z-10"
+                style={{ width: `${progressPercentage}%` }}
+              ></div>
+            </div>
+            <div className="text-center font-medium text-slate-400 text-xs md:text-sm p-1 rounded-lg bg-white/2 break-words">
+              {numberOfUniqueInvitees >= MIN_INVITEES
+                ? "🎉 Eligible for rewards!"
+                : `${MIN_INVITEES - numberOfUniqueInvitees} more invitees needed`}
+            </div>
           </div>
 
-          {/* Error Message */}
-          {errorMessage && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{errorMessage}</AlertDescription>
-            </Alert>
-          )}
+          {/* Rewards Display */}
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-2 text-center p-4 bg-white/3 rounded-xl border border-white/5">
+              <span className="text-xs md:text-sm text-slate-400 font-medium uppercase tracking-wider break-words">
+                Available Rewards
+              </span>
+              <LivePriceFormatter
+                row
+                aePrice={Decimal.from(accumulatedRewardsAe.toString())}
+                watchPrice={false}
+                className="gap-2 text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent text-shadow-[0_0_20px_rgba(255,107,107,0.3)] break-words"
+              />
+            </div>
 
-          {/* Collect Button */}
-          <button
-            onClick={onCollectReward}
-            disabled={collectingReward || !isEligibleForRewards}
-            className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold uppercase tracking-wider break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${
-              isEligibleForRewards
-                ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-pink-500/40"
-                : "opacity-50 cursor-not-allowed bg-gray-600 transform-none"
-            }`}
-          >
-            {collectingReward ? (
-              <div className="flex items-center justify-center gap-3">
-                <div className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 border-2 border-transparent border-t-current rounded-full animate-spin"></div>
-                Withdrawing...
-              </div>
-            ) : !isEligibleForRewards ? (
-              "Not eligible yet"
-            ) : (
-              "Collect rewards"
+            {/* Error Message */}
+            {errorMessage && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{errorMessage}</AlertDescription>
+              </Alert>
             )}
-          </button>
+
+            {/* Collect Button */}
+            <button
+              onClick={onCollectReward}
+              disabled={collectingReward || !isEligibleForRewards}
+              className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold uppercase tracking-wider break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${
+                isEligibleForRewards
+                  ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-pink-500/40"
+                  : "opacity-50 cursor-not-allowed bg-gray-600 transform-none"
+              }`}
+            >
+              {collectingReward ? (
+                <div className="flex items-center justify-center gap-3">
+                  <div className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 border-2 border-transparent border-t-current rounded-full animate-spin"></div>
+                  Withdrawing...
+                </div>
+              ) : !isEligibleForRewards ? (
+                "Not eligible yet"
+              ) : (
+                "Collect rewards"
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

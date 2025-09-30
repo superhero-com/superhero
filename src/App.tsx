@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect } from "react";
 import { useRoutes } from "react-router-dom";
 import GlobalNewAccountEducation from "./components/GlobalNewAccountEducation";
-import CollectInvitationLinkCard from "./components/Invitation/CollectInvitationLinkCard";
+import { CollectInvitationLinkCard } from "./features/trendminer/components/Invitation";
 import ModalProvider from "./components/ModalProvider";
 import { useAeSdk, useAccount, useWalletConnect } from "./hooks";
 import { routes } from "./routes";
@@ -61,11 +61,12 @@ export default function App() {
 
   return (
     <div className="app-container">
+      
+      <GlobalNewAccountEducation />
+      <AppHeader />
       <div className="app-content">
         <CollectInvitationLinkCard />
       </div>
-      <GlobalNewAccountEducation />
-      <AppHeader />
       <Suspense fallback={<div className="loading-fallback" />}>
         <ModalProvider
           registry={{

@@ -28,5 +28,5 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
       DOCKERHUB_REPO: ${{ secrets.DOCKERHUB_REPO }}
-      HOST_PORT: 3003
+      HOST_PORT: "3003"
   

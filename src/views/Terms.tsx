@@ -55,16 +55,16 @@ export default function Terms() {
         your private keys and wallets, as the Website operates in a decentralised manner, leaving full control of assets
         and keys with you. All use of the Website occurs directly on the blockchain via a decentralised protocol, with
         users retaining full responsibility for safeguarding their assets and transaction decisions. Nothing on the
-        Website constitutes financial or investment advice. Users are solely responsible for their investments. It is
-        the sole responsibility of users to assess the risks associated with the use of the Website, including but not
-        limited to market volatility, changes in regulation, and potential technological vulnerabilities. The Website is
-        provided "as is" and "as available," without warranties of any kind, whether express or implied. To the fullest
-        extent permitted by law, the Website and its contributors disclaim all liability for direct, indirect,
-        incidental, or consequential damages arising out of or in connection with the use of the Website, including but
-        not limited to loss of funds, data, or profits. You are responsible for ensuring that your use of the Website
-        complies with the laws and regulations applicable to it. As the Website is open-source, deployments may be
-        operated independently by community members. Superhero.com is not responsible for the operation, modification,
-        or compliance of third-party or community-run instances.
+        Website constitutes guidance or professional advice. Users are solely responsible for the use of their assets
+        and activities conducted through the protocol. It is the sole responsibility of users to assess the risks
+        associated with the use of the Website, including but not limited to market volatility, changes in regulation,
+        and potential technological vulnerabilities. The Website is provided "as is" and "as available," without
+        warranties of any kind, whether express or implied. To the fullest extent permitted by law, the Website and its
+        contributors disclaim all liability for direct, indirect, incidental, or consequential damages arising out of or
+        in connection with the use of the Website, including but not limited to loss of funds, data, or profits. You are
+        responsible for ensuring that your use of the Website complies with the laws and regulations applicable to it.
+        As the Website is open-source, deployments may be operated independently by community members. Superhero.com is
+        not responsible for the operation, modification, or compliance of third-party or community-run instances.
       </p>
 
       <h3 className="text-xl font-semibold text-white mb-2">IV. Copyright notice regarding third-party links</h3>
@@ -108,18 +108,44 @@ export default function Terms() {
         Superhero.com, its affiliates, contributors, developers, officers, directors, employees, contractors, and agents
         (collectively, the “Indemnified Parties”) from and against any and all claims, demands, actions, proceedings,
         investigations, liabilities, damages, losses, costs, and expenses (including reasonable attorneys’ fees) arising
-        out of or relating to: your access to or use of the Website, Interface, or the underlying decentralised
-        protocol; any transactions you initiate, authorise, or execute via the blockchain using the Website; your
-        violation of these Terms of Use or any applicable laws, regulations, or third-party rights; your misuse of the
-        Website, including attempts to access data or services in an unauthorised manner; your failure to comply with
-        any tax, reporting, or regulatory obligations associated with your use of the Website; any information, data, or
-        content you submit, post, or transmit through the Website; and any fraudulent, negligent, or unlawful conduct by
-        you in connection with your use of the Website. You acknowledge and agree that the decentralised nature of the
-        protocol means that the Indemnified Parties have no control over, and accept no responsibility for, on-chain
-        transactions, and that you bear full responsibility for securing your private keys, digital assets, and
-        compliance with applicable legal and regulatory requirements. This indemnity will apply regardless of whether
-        the claims arise out of contract, tort (including negligence), strict liability, or other legal theory, and will
-        survive your use of the Website and termination of these Terms.
+        out of or relating to:
+      </p>
+      <ol className="list-decimal pl-6 text-white/80 mb-4 leading-relaxed space-y-2">
+        <li>
+          <span className="font-semibold">Your use of the Website</span>
+          <ul className="list-disc pl-5 mt-1 space-y-1">
+            <li>Your access to or use of the Website, Interface, or the underlying decentralised protocol;</li>
+            <li>Any transactions you initiate, authorise, or execute via the blockchain using the Website;</li>
+          </ul>
+        </li>
+        <li>
+          <span className="font-semibold">Breach of Terms / Misuse</span>
+          <ul className="list-disc pl-5 mt-1 space-y-1">
+            <li>Your violation of these Terms of Use or any applicable laws, regulations, or third-party rights;</li>
+            <li>Your misuse of the Website, including attempts to access data or services in an unauthorised manner;</li>
+          </ul>
+        </li>
+        <li>
+          <span className="font-semibold">Regulatory and Tax Matters</span>
+          <ul className="list-disc pl-5 mt-1 space-y-1">
+            <li>Your failure to comply with any tax, reporting, or regulatory obligations associated with your use of the Website;</li>
+          </ul>
+        </li>
+        <li>
+          <span className="font-semibold">User Content and Conduct</span>
+          <ul className="list-disc pl-5 mt-1 space-y-1">
+            <li>Any information, data, or content you submit, post, or transmit through the Website;</li>
+            <li>Any fraudulent, negligent, or unlawful conduct by you in connection with your use of the Website.</li>
+          </ul>
+        </li>
+      </ol>
+      <p className="text-white/80 mb-4 leading-relaxed">
+        You acknowledge and agree that the decentralised nature of the protocol means that the Indemnified Parties have
+        no control over, and accept no responsibility for, on-chain transactions, and that you bear full responsibility
+        for securing your private keys, digital assets, and compliance with applicable legal and regulatory
+        requirements. This indemnity will apply regardless of whether the claims arise out of contract, tort (including
+        negligence), strict liability, or other legal theory, and will survive your use of the Website and termination of
+        these Terms.
       </p>
 
       <h3 className="text-xl font-semibold text-white mb-2">VII. Governing Law and Jurisdiction</h3>

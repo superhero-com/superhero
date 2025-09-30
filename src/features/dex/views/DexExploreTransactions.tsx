@@ -37,7 +37,7 @@ export default function DexExploreTransactions() {
   });
 
   return (
-    <div className="mx-auto md:p-5 flex flex-col gap-6 md:gap-8 min-h-screen">
+    <div className="mx-auto md:px-5 md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
       {/* Main Content Card */}
       <div className="grid grid-cols-1 gap-6 md:gap-8 items-start">
         {/* Header */}
@@ -52,7 +52,7 @@ export default function DexExploreTransactions() {
 
         <div className="overflow-x-auto">
           {/* Compact Filter Controls */}
-          <div className="bg-white/[0.03] border border-glass-border rounded-xl p-3 px-4 mb-5 backdrop-blur-[15px] shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
+          <div className="bg-transparent border-none rounded-none p-0 md:bg-white/[0.03] md:border md:border-glass-border md:rounded-xl md:p-3 md:px-4 mb-5 md:backdrop-blur-[15px] md:shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
             {/* Compact Filter Layout */}
             <div style={{
               display: 'flex',

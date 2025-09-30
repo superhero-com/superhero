@@ -15,10 +15,11 @@ interface FeedItemProps {
   item: PostDto;
   commentCount: number;
   onItemClick: (postId: string) => void;
+  isFirst?: boolean;
 }
 
 // Component: Individual Feed Item
-const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
+const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: FeedItemProps) => {
   const postId = item.id;
   const authorAddress = item.sender_address;
   const { chainNames } = useWallet();
@@ -33,7 +34,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
       className="relative cursor-pointer w-screen -mx-[calc((100vw-100%)/2)] md:w-full md:mx-0 p-0 md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:backdrop-blur-[20px] md:rounded-[20px] md:transition-all md:duration-300 md:ease-out md:overflow-hidden md:hover:-translate-y-1"
       onClick={handleItemClick}
     >
-      <div className="p-4 md:p-5">
+      <div className={cn("p-4 md:p-5", isFirst && "pt-1")}> 
         <div className="flex gap-2 items-start">
           {/* Left column: avatar only, aligned to top */}
           <div className="flex-shrink-0">
@@ -61,14 +62,14 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
                 {/* Name + address (always visible) */}
                 <div className="min-w-0">
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
+                    <div className="text-[14px] md:text-[15px] font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
                       {displayName}
                     </div>
                     <div className="md:hidden text-[13px] leading-none text-white/70 ml-2 transition-none">
                       {compactTime(item.created_at as unknown as string)}
                     </div>
                   </div>
-                  <div className="text-xs text-foreground/90 font-mono leading-tight">
+                  <div className="text-xs text-foreground/90 font-mono leading-[0.9]">
                     <AddressFormatted address={authorAddress} truncate={false} />
                   </div>
                   {/* Mobile on-chain link removed intentionally */}
@@ -96,7 +97,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick }: FeedItemProps) => {
             </div>
             {/* Right-side block above handles on-chain link; remove duplicate area */}
             <div className="ml-0 md:ml-0 md:pl-0 md:mt-2 relative">
-              <div className="text-[15px] text-foreground leading-snug">
+              <div className="text-[14px] md:text-[15px] text-foreground leading-snug">
               {linkify(item.content, { knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}
             </div>
 

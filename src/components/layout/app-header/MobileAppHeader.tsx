@@ -81,6 +81,12 @@ export default function MobileAppHeader() {
     }
   }, [showOverlay, showSearch]);
 
+  // Active route helper for mobile nav buttons
+  const isActiveRoute = (path: string) => {
+    if (path === '/') return pathname === '/';
+    return pathname.startsWith(path);
+  };
+
   return (
     <div className="z-[1100] fixed top-0 left-0 right-0 w-full md:hidden pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] border-b" style={{
       backgroundColor: 'rgba(12, 12, 20, 0.5)',
@@ -161,8 +167,8 @@ export default function MobileAppHeader() {
       {showOverlay && (
         <div className="fixed inset-0 bg-black/80 flex items-start justify-end z-[1100] animate-[fadeIn_0.2s_ease-out] backdrop-blur-[4px] sm:items-start sm:justify-center" onClick={() => setShowOverlay(false)}>
           <div className="z-[1101] text-[var(--light-font-color)] relative w-full max-w-[320px] h-screen bg-[var(--background-color)] flex flex-col overflow-y-auto animate-[slideInRight_0.3s_ease-out] shadow-[-10px_0_30px_rgba(0,0,0,0.3)] sm:max-w-full sm:w-full sm:animate-[slideInUp_0.3s_ease-out] sm:shadow-[0_-10px_30px_rgba(0,0,0,0.3)]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between py-5 px-6 pb-4 border-b border-white/10 sm:py-4 sm:px-5 sm:pb-3">
-              <h2 className="m-0 text-xl font-semibold text-[var(--standard-font-color)] sm:text-lg">Menu</h2>
+            <div className="flex items-center justify-between h-[70px] px-6 border-b border-white/10 sm:px-5">
+              <h2 className="m-0 text-xl font-semibold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent sm:text-lg">Menu</h2>
               <button
                 className="bg-white/10 border-none text-[var(--standard-font-color)] w-11 h-11 rounded-full flex items-center justify-center text-lg cursor-pointer transition-all duration-200 hover:bg-white/20 focus:bg-white/20 active:scale-95 sm:w-10 sm:h-10 sm:text-base"
                 onClick={() => setShowOverlay(false)}
@@ -175,15 +181,19 @@ export default function MobileAppHeader() {
             <div className="py-4 px-6 border-b border-white/10 sm:py-3 sm:px-5">
               {activeAccount ? (
                 <div>
-                  <AddressAvatarWithChainName
-                    isHoverEnabled={false}
-                    address={activeAccount}
-                    size={40}
-                    overlaySize={18}
-                    showBalance={true}
-                    showAddressAndChainName={true}
-                    hideFallbackName={true}
-                  />
+                  <div className="flex items-center gap-3">
+                    <AddressAvatarWithChainName
+                      isHoverEnabled={false}
+                      address={activeAccount}
+                      size={40}
+                      overlaySize={18}
+                      showBalance={true}
+                      showAddressAndChainName={false}
+                      showPrimaryOnly={true}
+                      hideFallbackName={true}
+                      contentClassName="px-2 pb-0"
+                    />
+                  </div>
                   <div className="mt-3">
                     <AeButton
                       onClick={handleLogout}
@@ -204,15 +214,11 @@ export default function MobileAppHeader() {
             <nav className="flex flex-col py-5 px-6 gap-3 flex-1 sm:py-4 sm:px-6 sm:gap-2">
               {navigationItems.map(item => {
                 const commonClasses = "w-full no-underline font-semibold transition-all duration-200 h-[56px] sm:h-[52px] rounded-xl text-white text-base flex items-center justify-center px-5";
-                // Backgrounds inspired by desktop quick links (swapped as requested)
-                const bgFeed = "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-500/90 hover:to-blue-600/90";
-                const bgDex = "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-500/90 hover:to-teal-600/90";
-                const bgDefault = "bg-white/5 hover:bg-white/10";
-                const bgClass = item.id === 'home' ? bgFeed : item.id === 'dex' ? bgDex : bgDefault;
+                const baseBg = "bg-white/5 hover:bg-white/10";
 
                 if (item.isExternal) {
                   return (
-                    <div key={item.id} className={`${bgClass} rounded-xl`}>
+                    <div key={item.id} className={`${baseBg} rounded-xl`}>
                       <a
                         href={item.path}
                         target="_blank"
@@ -228,7 +234,7 @@ export default function MobileAppHeader() {
                 }
 
                 return (
-                  <div key={item.id} className={`${bgClass} rounded-xl`}>
+                  <div key={item.id} className={`${baseBg} rounded-xl ${isActiveRoute(item.path) ? 'ring-2 ring-[var(--accent-color)]' : ''}`}>
                     <Link
                       to={item.path}
                       onClick={handleNavigationClick}

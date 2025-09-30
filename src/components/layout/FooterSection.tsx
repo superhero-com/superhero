@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Backend, TrendminerApi } from '../../api/backend';
 import configs from '../../configs';
 import { useNavigate } from 'react-router-dom';
@@ -69,12 +70,12 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
             className={`no-underline min-h-0 ${compact ? 'text-xs py-0.5 px-2' : 'text-sm py-1.5 px-3'} rounded-lg transition-all duration-200 whitespace-nowrap md:text-[13px] md:py-1.5 md:px-2.5 sm:text-xs sm:py-1 sm:px-2`}
             style={{ color: 'var(--light-font-color)' }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'var(--custom-links-color)';
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+              (e.currentTarget as HTMLAnchorElement).style.color = 'var(--custom-links-color)';
+              (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'var(--light-font-color)';
-              e.currentTarget.style.backgroundColor = 'transparent';
+              (e.currentTarget as HTMLAnchorElement).style.color = 'var(--light-font-color)';
+              (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent';
             }}
           >
             Terms of Use
@@ -84,16 +85,16 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
             className={`no-underline min-h-0 ${compact ? 'text-xs py-0.5 px-2' : 'text-sm py-1.5 px-3'} rounded-lg transition-all duration-200 whitespace-nowrap md:text-[13px] md:py-1.5 md:px-2.5 sm:text-xs sm:py-1 sm:px-2`}
             style={{ color: 'var(--light-font-color)' }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'var(--custom-links-color)';
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+              (e.currentTarget as HTMLAnchorElement).style.color = 'var(--custom-links-color)';
+              (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'var(--light-font-color)';
-              e.currentTarget.style.backgroundColor = 'transparent';
+              (e.currentTarget as HTMLAnchorElement).style.color = 'var(--light-font-color)';
+              (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent';
             }}
           >
             Privacy Policy
-          </a>
+          </Link>
           <a
             href="https://github.com/superhero-com/superhero"
             target="_blank"

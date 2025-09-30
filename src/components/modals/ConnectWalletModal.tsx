@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { AeButton } from '@/components/ui/ae-button';
 import { useWalletConnect } from '@/hooks';
 import chromeLogoUrl from '@/svg/brands/chrome-logo.svg';
@@ -69,19 +70,19 @@ export default function ConnectWalletModal({ onClose }: Props) {
       {/* Desktop/tablet: top-wide notice */}
       <div className="hidden sm:block w-full text-center text-[12px] text-white/60 leading-relaxed mb-3">
         By connecting your wallet you agree to the{' '}
-        <a
-          href="/terms"
+        <Link
+          to="/terms"
           className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
         >
           Terms of Use
-        </a>
+        </Link>
         {' '}and{' '}
-        <a
-          href="/privacy"
+        <Link
+          to="/privacy"
           className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
         >
           Privacy Policy
-        </a>
+        </Link>
         .
       </div>
       <div className="flex flex-col sm:flex-row items-center sm:items-center justify-center sm:justify-between gap-4">
@@ -93,19 +94,19 @@ export default function ConnectWalletModal({ onClose }: Props) {
           {/* Mobile-only notice above button with larger gap */}
           <div className="sm:hidden text-center text-xs text-white/70 leading-relaxed px-2">
             By connecting your wallet you agree to the{' '}
-            <a
-              href="/terms"
+            <Link
+              to="/terms"
               className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
             >
               Terms of Use
-            </a>
+            </Link>
             {' '}and{' '}
-            <a
-              href="/privacy"
+            <Link
+              to="/privacy"
               className="no-underline bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent hover:opacity-90"
             >
               Privacy Policy
-            </a>
+            </Link>
             .
           </div>
           <AeButton

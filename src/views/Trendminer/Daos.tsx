@@ -169,7 +169,7 @@ export default function Daos() {
           return (
             <div
               className={`border rounded-2xl p-4 bg-gradient-to-b from-gray-800/85 to-gray-900/70 text-white shadow-lg transition-all duration-150 hover:-translate-y-1 hover:shadow-2xl ${
-                activeAccount === t.sale_address
+                activeAccount === t.owner_address
                   ? "border-purple-500/50 shadow-purple-500/25 relative"
                   : "border-black/20"
               }`}
@@ -180,7 +180,7 @@ export default function Daos() {
                   <div className="font-black text-white text-lg tracking-wide">
                     {t.symbol}
                   </div>
-                  {activeAccount === t.sale_address && (
+                  {activeAccount === t.owner_address && (
                     <div className="text-xs px-2 py-1 rounded-full bg-purple-500/25 border border-purple-500/50 text-white w-fit">
                       Owned
                     </div>

@@ -67,8 +67,8 @@ export function formatAddress(address: string, length = 6, truncate = false): st
   }
   
   // Show full Aeternity account addresses (ak_...) without truncation
-  const { valid, prefix } = validateHash(address);
-  if (!valid || prefix !== Encoding.AccountAddress) {
+  const { valid } = validateHash(address);
+  if (!valid) {
     return address;
   }
   

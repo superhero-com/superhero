@@ -14,5 +14,13 @@ RUN npm run build
 FROM caddy:2-alpine
 WORKDIR /srv
 COPY --from=builder /app/dist /srv
+
+# Dump Caddyfile
+RUN echo ":80 {\n\
+  root * /srv\n\
+  file_server\n\
+  rewrite * /index.html\n\
+}" > /etc/caddy/Caddyfile
+
 EXPOSE 80
-CMD ["caddy", "file-server", "--root", "/srv", "--listen", ":80"]
+CMD ["caddy", "run"]

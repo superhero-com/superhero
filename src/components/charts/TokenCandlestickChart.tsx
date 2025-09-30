@@ -10,14 +10,12 @@ import moment from "moment";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { TokenDto, TransactionHistoricalService } from '@/api/generated';
-import { COIN_SYMBOL, DATE_FULL } from '@/utils/constants';
-import { CONFIG } from '@/config';
+import { COIN_SYMBOL } from '@/utils/constants';
 import { useChart } from '@/hooks/useChart';
 import { useCurrencies } from '@/hooks/useCurrencies';
 import { Decimal } from '@/libs/decimal';
 import WebSocketClient from '@/libs/WebSocketClient';
-import { Button } from '@/components/ui/button';
-import ChartClock from './Partials/ChartClock';
+import AeButton from '../AeButton';
 import { cn } from '@/lib/utils';
 
 interface IInterval {
@@ -49,6 +47,7 @@ const intervals: IInterval[] = [
   { label: "M", value: 31 * 24 * 60 * 60 },
 ];
 
+//
 export default function TokenCandlestickChart({
   token,
   height = 400,
@@ -58,7 +57,6 @@ export default function TokenCandlestickChart({
   const chartControls = useRef<HTMLDivElement>(null);
   const [useCurrentCurrency, setUseCurrentCurrency] = useState(false);
   const [intervalBy, setIntervalBy] = useState<IInterval>(intervals[1]); // Default to 5m
-  const [fullScreenMode, setFullScreenMode] = useState(false);
 
   // Chart series refs
   const candlestickSeries = useRef<ISeriesApi<"Candlestick"> | null>(null);
@@ -72,11 +70,10 @@ export default function TokenCandlestickChart({
 
   const { currentCurrencyInfo } = useCurrencies();
   const saleAddress = token?.sale_address;
-  const isSmallScreen = window.innerWidth <= 960;
 
-  const convertTo = useMemo(() => 
-    useCurrentCurrency 
-      ? currentCurrencyInfo.code.toLowerCase() 
+  const convertTo = useMemo(() =>
+    useCurrentCurrency
+      ? currentCurrencyInfo.code.toLowerCase()
       : "ae",
     [useCurrentCurrency, currentCurrencyInfo]
   );
@@ -110,7 +107,7 @@ export default function TokenCandlestickChart({
     return percentage < 0.01 ? percentage.toFixed(3) : percentage.toFixed(2);
   }, [currentCandlePrice]);
 
-  const isTrendingUp = useMemo(() => 
+  const isTrendingUp = useMemo(() =>
     currentCandlePrice ? currentCandlePrice.open <= currentCandlePrice.close : true,
     [currentCandlePrice]
   );
@@ -123,12 +120,14 @@ export default function TokenCandlestickChart({
         textColor: "white",
         background: {
           topColor: "rgba(0, 0, 0, 0.00)",
-          bottomColor: "rgba(0, 0, 0, 0.03)",
+          bottomColor: "rgba(0, 0, 0, 0.13)",
           type: ColorType.VerticalGradient,
         },
       },
       localization: {
-        timeFormatter: (time) => moment.unix(time as number).format(DATE_FULL),
+        timeFormatter: (time: any) => {
+          return moment.unix(time).format('MMM DD, HH:mm');
+        },
       },
     },
     onChartReady: (chartInstance) => {
@@ -236,7 +235,7 @@ export default function TokenCandlestickChart({
 
     // Merge all pages
     const newData = pages.reduce((acc, page) => [...acc, ...page], []);
-    
+
     const formattedData = newData
       .map((item: any) => ({
         time: moment(item.timeClose).unix(),
@@ -265,7 +264,7 @@ export default function TokenCandlestickChart({
         time: item.time,
         value: item.volume,
         market_cap: Number(item.market_cap) ?? 0,
-        color: index === 0 || isGreen ? "#238444" : "#9D2138",
+        color: index === 0 || isGreen ? "#2BCC61" : "#F5274E",
       };
     });
 
@@ -296,35 +295,6 @@ export default function TokenCandlestickChart({
     refetch();
   }, [refetch]);
 
-  // Handle fullscreen toggle
-  const toggleFullScreen = useCallback(async () => {
-    const elem = chartWrapper.current;
-    const dimensions = chartControls.current?.getBoundingClientRect();
-
-    if (!elem || !dimensions) return;
-
-    if (fullScreenMode) {
-      setFullScreenMode(false);
-      if (document.exitFullscreen) {
-        await document.exitFullscreen();
-      }
-    } else {
-      setFullScreenMode(true);
-      if (elem.requestFullscreen) {
-        await elem.requestFullscreen();
-      }
-
-      setTimeout(() => {
-        if (chart) {
-          chart.applyOptions({
-            height: window.innerHeight - dimensions.height,
-          });
-          chart.timeScale().resetTimeScale();
-          chart.timeScale().fitContent();
-        }
-      }, 100);
-    }
-  }, [fullScreenMode, chart]);
 
   // Handle real-time updates via WebSocket
   useEffect(() => {
@@ -338,7 +308,7 @@ export default function TokenCandlestickChart({
         const currentData = candlestickSeries.current.data();
         const currentVolumeData = volumeSeries.current.data();
         const currentMarketCapData = marketCapSeries.current.data();
-        
+
         const latestCandle = currentData.length > 0 ? currentData[currentData.length - 1] : null;
         const latestVolume = currentVolumeData.length > 0 ? currentVolumeData[currentVolumeData.length - 1] : null;
         const latestMarketCap = currentMarketCapData.length > 0 ? currentMarketCapData[currentMarketCapData.length - 1] : null;
@@ -346,8 +316,8 @@ export default function TokenCandlestickChart({
         const currentPrice = Number(tx.data.buy_price[convertTo]);
         const currentTime = Math.floor(Date.now() / 1000);
 
-        if (latestCandle && latestVolume && latestMarketCap && 
-            currentTime - (latestCandle.time as number) < intervalBy.value) {
+        if (latestCandle && latestVolume && latestMarketCap &&
+          currentTime - (latestCandle.time as number) < intervalBy.value) {
           // Update existing candle
           const candleData = latestCandle as any;
           candlestickSeries.current.update({
@@ -367,20 +337,20 @@ export default function TokenCandlestickChart({
           volumeSeries.current.update({
             time: volumeData.time,
             value: newVolume,
-            color: isGreen ? "#238444" : "#9D2138",
+            color: isGreen ? "#2BCC61" : "#F5274E",
           });
 
           const marketCapData = latestMarketCap as any;
           marketCapSeries.current.update({
             time: marketCapData.time,
             value: newMarketCap,
-            color: isGreen ? "#238444" : "#9D2138",
+            color: isGreen ? "#2BCC61" : "#F5274E",
           });
         } else {
           // Create new candle
           const candleData = latestCandle as any;
           const previousClose = candleData ? candleData.close : currentPrice;
-          
+
           candlestickSeries.current.update({
             time: currentTime as any,
             open: previousClose,
@@ -392,13 +362,13 @@ export default function TokenCandlestickChart({
           volumeSeries.current.update({
             time: currentTime as any,
             value: parseInt(tx.data.volume),
-            color: "#238444",
+            color: "#2BCC61",
           });
 
           marketCapSeries.current.update({
             time: currentTime as any,
             value: Number(tx.data.market_cap[convertTo]),
-            color: "#238444",
+            color: "#2BCC61",
           });
         }
       }
@@ -420,147 +390,113 @@ export default function TokenCandlestickChart({
     <div
       ref={chartWrapper}
       className={cn(
-        "relative bg-[var(--secondary-color)] rounded-lg",
-        isSmallScreen && "text-sm",
+        "max-w-[100%] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[12px] shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden",
         className
       )}
     >
-      <div className="chart-container relative h-full">
-        <div ref={chartContainer} className="lw-chart h-full rounded-md relative">
-          {/* Chart Info Overlay */}
-          <div
-            className={cn(
-              "absolute z-20 top-0 left-0 right-24 pt-4 pl-4",
-              "bg-gradient-to-b from-[var(--secondary-color)] via-[var(--secondary-color)]/75 to-transparent",
-              isSmallScreen && "relative bg-none"
-            )}
-          >
-            {/* Token Name */}
-            <div className="flex flex-wrap items-end gap-1 leading-5">
-              <div className="text-base font-bold">
-                {token?.symbol}<span className="font-sans text-xl mx-1">/</span>{COIN_SYMBOL}
+      <div className="relative" style={{ height }}>
+        <div ref={chartContainer} className="w-full h-full" />
+
+        {/* Chart Info Overlay */}
+        <div className="hidden sm:block absolute top-0 left-0 4 z-20 p-4 bg-gradient-to-b from-background/10 via-background/2 to-transparent backdrop-blur-sm">
+          <div className="flex flex-wrap items-end gap-1 mb-2">
+            <div className="text-lg font-bold text-foreground flex items-center gap-2">
+              {token?.symbol}<span className="font-sans text-xl mx-1">/</span>{COIN_SYMBOL}
+            </div>
+            <div className="flex gap-1 pb-1 pl-2 text-xs text-muted-foreground">
+              <div>on</div>
+              <div>Æternity</div>
+              <div>·</div>
+              <div>{intervalBy.label}</div>
+            </div>
+          </div>
+
+          {currentCandlePrice && (
+            <div className="text-sm">
+              <div className="flex gap-4 flex-wrap mb-2">
+                <div className="flex gap-2">
+                  <span className="text-muted-foreground">
+                    O{' '}
+                    <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
+                      {currentCandlePrice.open.toFixed(6)}
+                    </span>
+                  </span>
+                  <span className="text-muted-foreground">
+                    H{' '}
+                    <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
+                      {currentCandlePrice.high.toFixed(6)}
+                    </span>
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-muted-foreground">
+                    L{' '}
+                    <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
+                      {currentCandlePrice.low.toFixed(6)}
+                    </span>
+                  </span>
+                  <span className="text-muted-foreground">
+                    C{' '}
+                    <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
+                      {currentCandlePrice.close.toFixed(6)}
+                    </span>
+                  </span>
+                </div>
+                <div className="pl-2">
+                  <span className={`font-bold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
+                    {isTrendingUp ? '+' : ''}
+                    {(currentCandlePrice.close - currentCandlePrice.open).toFixed(6)} (
+                    {isTrendingUp ? '+' : ''}
+                    {currentCandleMovePercentage}%)
+                  </span>
+                </div>
               </div>
-              <div className="flex gap-1 pb-0.5 text-sm text-gray-400">
-                <span>on</span>
-                <span>Æternity</span>
-                <span>·</span>
-                <span>{intervalBy.label}</span>
+              <div className="flex gap-4">
+                <div className="text-muted-foreground">
+                  Vol{' '}
+                  <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
+                    {currentCandleVolume ? Decimal.from(currentCandleVolume).shorten() : 0}
+                  </span>
+                </div>
+                <div className="text-muted-foreground">
+                  MCap{' '}
+                  <span className={`font-semibold font-mono ${isTrendingUp ? 'text-green-500' : 'text-red-500'}`}>
+                    {currentCandleMarketCap ? Decimal.from(currentCandleMarketCap).shorten() : 0}
+                  </span>
+                </div>
               </div>
             </div>
+          )}
+        </div>
+      </div>
 
-            {/* Price Legends */}
-            {currentCandlePrice && (
-              <div className={cn("mt-2 text-sm", isSmallScreen && "text-xs")}>
-                <div className="flex gap-1 flex-col sm:flex-row flex-wrap">
-                  <div className="flex gap-1">
-                    <div>
-                      O <span className={isTrendingUp ? "text-green-400" : "text-red-400"}>
-                        {currentCandlePrice.open.toFixed(6)}
-                      </span>
-                    </div>
-                    <div>
-                      H <span className={isTrendingUp ? "text-green-400" : "text-red-400"}>
-                        {currentCandlePrice.high.toFixed(6)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <div>
-                      L <span className={isTrendingUp ? "text-green-400" : "text-red-400"}>
-                        {currentCandlePrice.low.toFixed(6)}
-                      </span>
-                    </div>
-                    <div>
-                      C <span className={isTrendingUp ? "text-green-400" : "text-red-400"}>
-                        {currentCandlePrice.close.toFixed(6)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="pl-1">
-                    <span className={isTrendingUp ? "text-green-400" : "text-red-400"}>
-                      {isTrendingUp ? "+" : ""}{(currentCandlePrice.close - currentCandlePrice.open).toFixed(6)} 
-                      ({isTrendingUp ? "+" : ""}{currentCandleMovePercentage}%)
-                    </span>
-                  </div>
-                </div>
-                <div className="flex gap-2 mt-1">
-                  <div>
-                    Vol <span className={isTrendingUp ? "text-green-400" : "text-red-400"}>
-                      {currentCandleVolume ? Decimal.from(currentCandleVolume).shorten() : 0}
-                    </span>
-                  </div>
-                  <div>
-                    MC <span className={isTrendingUp ? "text-green-400" : "text-red-400"}>
-                      {currentCandleMarketCap ? Decimal.from(currentCandleMarketCap).shorten() : 0}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+      {/* Chart Controls */}
+      <div
+        ref={chartControls}
+        className="flex flex-row flex-wrap items-center justify-between p-2 border-t border-white/10 bg-white/[0.05] backdrop-blur-[10px]"
+      >
+        <div className="flex flex-row flex-wrap items-center gap-0 sm:gap-2">
+          {intervals.map((interval) => (
+            <AeButton
+              key={interval.value}
+              variant={intervalBy?.value === interval.value ? 'primary' : 'secondary-dark'}
+              size="small"
+              onClick={() => onChangeInterval(interval)}
+              className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+              style={{
+                minWidth: 32,
+                fontSize: 11,
+                fontWeight: 600
+              }}
+            >
+              {interval.label}
+            </AeButton>
+          ))}
         </div>
 
-        {/* Chart Controls */}
-        <div
-          ref={chartControls}
-          className={cn(
-            "flex pl-2 pb-1 border-t pt-1",
-            !isSmallScreen 
-              ? "flex-row items-center flex-wrap gap-2 justify-between"
-              : "px-2 flex-col flex-col-reverse"
-          )}
-        >
-          {/* Interval Buttons */}
-          <div className="flex flex-wrap items-center">
-            {intervals.map((interval) => (
-              <Button
-                key={interval.value}
-                variant={intervalBy?.value === interval.value ? "default" : "ghost"}
-                size="xs"
-                className="pl-0 text-xs"
-                onClick={() => onChangeInterval(interval)}
-              >
-                {interval.label}
-              </Button>
-            ))}
-          </div>
-
-          {/* Right Controls */}
-          <div
-            className={cn(
-              "flex items-center gap-1",
-              isSmallScreen 
-                ? "justify-between" 
-                : "pr-4"
-            )}
-          >
-            <ChartClock className={cn("text-sm", !isSmallScreen && "px-2")} />
-            {!isSmallScreen && <div className="text-gray-500">|</div>}
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-sm py-0 uppercase"
-              onClick={() => setUseCurrentCurrency(!useCurrentCurrency)}
-            >
-              <span className={!useCurrentCurrency ? "text-primary font-bold" : ""}>
-                {COIN_SYMBOL}
-              </span>
-              /<span className={useCurrentCurrency ? "text-primary font-bold" : ""}>
-                {currentCurrencyInfo.code}
-              </span>
-            </Button>
-
-            {!isSmallScreen && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-sm py-0"
-                onClick={toggleFullScreen}
-              >
-                {fullScreenMode ? "⛶" : "⛶"}
-              </Button>
-            )}
+        <div className="flex items-center gap-3">
+          <div className="text-white/60 text-xs font-mono font-medium">
+            {moment().format('HH:mm:ss')}
           </div>
         </div>
       </div>

@@ -1,39 +1,38 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { TokensService } from "../api/generated/services/TokensService";
-import { TokenDto } from "../api/generated/models/TokenDto";
-import { TrendminerApi } from "../api/backend";
-import { CONFIG } from "../config";
-import { useAeSdk } from "../hooks/useAeSdk";
-import { useOwnedTokens } from "../hooks/useOwnedTokens";
+import { useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { TokenDto } from "../../../api/generated/models/TokenDto";
+import { TokensService } from "../../../api/generated/services/TokensService";
+import { useAeSdk } from "../../../hooks/useAeSdk";
+import { useOwnedTokens } from "../../../hooks/useOwnedTokens";
 
 // Components
+import CommentsList from "../../../components/Trendminer/CommentsList";
+import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
+import Token24hChange from "../../../components/Trendminer/Token24hChange";
+import TokenHolders from "../../../components/Trendminer/TokenHolders";
+import TokenTrades from "../../../components/Trendminer/TokenTrades";
+import { Badge } from "../../../components/ui/badge";
+import { Button } from "../../../components/ui/button";
 import {
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import ConnectWalletButton from "../components/ConnectWalletButton";
-import LatestTransactionsCarousel from "../components/Trendminer/LatestTransactionsCarousel";
-import CommentsList from "../components/Trendminer/CommentsList";
-import TokenHolders from "../components/Trendminer/TokenHolders";
-import TokenTrades from "../components/Trendminer/TokenTrades";
-import ShareModal from "../components/ui/ShareModal";
-import Token24hChange from "../components/Trendminer/Token24hChange";
-import TvCandles from "../components/Trendminer/TvCandles";
+  CardContent
+} from "../../../components/ui/card";
+import ShareModal from "../../../components/ui/ShareModal";
 
 // Feature components
-import { TokenTradeCard, TokenRanking } from "../features/trendminer";
-import { TokenSummary } from "../features/bcl/components";
-import { TokenDto as TrendminerTokenDto } from "../features/trendminer/types";
-import TokenCandlestickChartSkeleton from "@/components/skeletons/TokenDetails/TokenCandlestickChartSkeleton";
 import TokenCandlestickChart from "@/components/charts/TokenCandlestickChart";
+import {
+  TokenCandlestickChartSkeleton,
+  TokenRanking,
+  TokenSaleSidebarSkeleton,
+  TokenTradeCard
+} from "../";
+import { TokenSummary } from "../../bcl/components";
+import { useLiveTokenData } from "../hooks/useLiveTokenData";
+import { TokenDto as TrendminerTokenDto } from "../types";
 
-interface TokenSaleDetailsProps {}
+interface TokenSaleDetailsProps { }
 
 // Tab constants
 const TAB_DETAILS = "details";
@@ -47,7 +46,8 @@ type TabType =
   | typeof TAB_TRANSACTIONS
   | typeof TAB_HOLDERS;
 
-export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
+//
+export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
   const { tokenName } = useParams<{ tokenName: string }>();
   const navigate = useNavigate();
   const { activeAccount } = useAeSdk();
@@ -81,7 +81,7 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
   const {
     isError,
     isLoading,
-    data: token,
+    data: _token,
     error,
   } = useQuery<TokenDto | null>({
     queryKey: ["TokensService.findByAddress", tokenName],
@@ -103,6 +103,15 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
     staleTime: 60000,
     enabled: !!tokenName,
   });
+
+  const { tokenData } = useLiveTokenData({ token: _token });
+
+  const token = useMemo(() => {
+    return {
+      ..._token,
+      ...(tokenData || {}),
+    };
+  }, [tokenData, _token]);
 
   // Derived states
   const isTokenPending = isTokenNewlyCreated && !token;
@@ -148,7 +157,7 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
   // Render error state (token not found)
   if (isError && !isTokenNewlyCreated) {
     return (
-      <div className="max-w-4xl mx-auto p-4 md:p-6">
+      <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
         <div className="text-center relative z-10 py-16">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Token{" "}
@@ -215,7 +224,7 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-6 text-white">
+    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
       <LatestTransactionsCarousel />
 
       {/* Deploy Success Message */}
@@ -247,72 +256,94 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Desktop Sidebar (Left Column) */}
-        {!isMobile && trendminerToken && (
+        {!isMobile && (
           <div className="lg:col-span-1 flex flex-col gap-6">
-            <TokenTradeCard token={trendminerToken} />
-            <TokenSummary
-              token={{ ...token, decimals: Number(token.decimals) }}
-            />
-            <TokenRanking token={token} />
+            {isLoading || isTokenPending ? (
+              <TokenSaleSidebarSkeleton boilerplate={isTokenPending} />
+            ) : trendminerToken ? (
+              <>
+                <TokenTradeCard token={trendminerToken} />
+                <TokenSummary
+                  token={{ ...token, decimals: Number(token.decimals) }}
+                />
+                <TokenRanking token={token} />
+              </>
+            ) : null}
           </div>
         )}
 
         {/* Main Content (Right Column on Desktop, Full Width on Mobile) */}
         <div
-          className={`${
-            isMobile ? "col-span-1 mb-8" : "lg:col-span-2"
-          } flex flex-col gap-6`}
+          className={`${isMobile ? "col-span-1 mb-8" : "lg:col-span-2"
+            } flex flex-col gap-6`}
         >
           {/* Token Header */}
           <Card className="bg-white/[0.02] border-white/10">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between gap-4 mb-4">
-                <div className="flex items-center gap-4 flex-1 flex-wrap">
-                  <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-                    #{token.symbol || token.name}
-                  </h1>
-
+            <div className="p-2">
+              {isLoading || isTokenPending ? (
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-lg w-48 h-8" />
+                    <div className="flex items-center gap-2">
+                      {Array.from({ length: isTokenPending ? 1 : 2 }).map((_, index) => (
+                        <div key={index} className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-full px-3 py-1 w-20 h-6" />
+                      ))}
+                    </div>
+                  </div>
                   <div className="flex items-center gap-2">
-                    {token.rank && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-white/10 text-white text-[9px] sm:text-xs"
-                      >
-                        MC RANK #{token.rank}
-                      </Badge>
-                    )}
-                    {ownsThisToken && (
-                      <Badge className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4]">
-                        Owned
-                      </Badge>
-                    )}
+                    <div className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-lg w-16 h-8" />
+                    <div className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-lg w-8 h-8" />
                   </div>
                 </div>
+              ) : (
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent leading-tight">
+                      #{token.symbol || token.name}
+                    </h1>
 
-                <div className="flex items-center gap-2">
-                  <Token24hChange
-                    tokenAddress={token.address || token.sale_address}
-                    createdAt={token.created_at}
-                    performance24h={performance}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowShareModal(true)}
-                    className="border-white/20 bg-white/5 text-white hover:bg-white/10"
-                  >
-                    🔗
-                  </Button>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {token.rank && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-gradient-to-r from-slate-600/80 to-slate-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm"
+                        >
+                          RANK #{token.rank}
+                        </Badge>
+                      )}
+                      {ownsThisToken && (
+                        <Badge className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm">
+                          OWNED
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Token24hChange
+                      tokenAddress={token.address || token.sale_address}
+                      createdAt={token.created_at}
+                      performance24h={performance}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowShareModal(true)}
+                      className="border-white/20 bg-white/5 text-white hover:bg-white/10 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md"
+                    >
+                      🔗
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Description */}
-              {token.metaInfo?.description && (
-                <div className="text-white/80">
+              {!isLoading && !isTokenPending && token.metaInfo?.description && (
+                <div className="text-white/75 text-sm leading-relaxed mt-3 max-w-[720px]">
                   <span>
                     {descriptionExpanded ||
-                    !isMobile ||
-                    token.metaInfo.description.length <= 150
+                      !isMobile ||
+                      token.metaInfo.description.length <= 150
                       ? token.metaInfo.description
                       : `${token.metaInfo.description.substring(0, 150)}...`}
                   </span>
@@ -323,93 +354,83 @@ export default function TokenSaleDetails({}: TokenSaleDetailsProps) {
                       onClick={() =>
                         setDescriptionExpanded(!descriptionExpanded)
                       }
-                      className="text-[#4ecdc4] hover:text-white ml-2"
+                      className="text-purple-400 hover:text-white ml-2 p-0 h-auto font-medium underline-offset-2 hover:underline"
                     >
                       {descriptionExpanded ? "Show Less" : "Show More"}
                     </Button>
                   )}
                 </div>
               )}
-            </CardContent>
+            </div>
           </Card>
 
           {/* Chart */}
           {isLoading || isTokenPending ? (
-            <TokenCandlestickChartSkeleton />
+            <TokenCandlestickChartSkeleton boilerplate={isTokenPending} />
           ) : (
-            <Card className="bg-white/[0.02] border-white/10">
-              <TokenCandlestickChart token={token} />
-            </Card>
+            <TokenCandlestickChart token={token} className="w-full" />
           )}
           {/* Tabs Section */}
-          <Card className="bg-white/[0.02] border-white/10 mb-6">
-            <CardContent className="p-0">
-              {/* Tab Headers */}
-              <div className="flex border-b border-white/10">
-                {isMobile && (
-                  <button
-                    onClick={() => setActiveTab(TAB_DETAILS)}
-                    className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${
-                      activeTab === TAB_DETAILS
-                        ? "text-white border-b-2 border-[#4ecdc4]"
-                        : "text-white/60 hover:text-white"
-                    }`}
-                  >
-                    Info
-                  </button>
-                )}
-                <button
-                  onClick={() => setActiveTab(TAB_CHAT)}
-                  className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${
-                    activeTab === TAB_CHAT
-                      ? "text-white border-b-2 border-[#4ecdc4]"
-                      : "text-white/60 hover:text-white"
+          {/* Tab Headers */}
+          <div className="flex border-b border-white/10">
+            {isMobile && (
+              <button
+                onClick={() => setActiveTab(TAB_DETAILS)}
+                className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_DETAILS
+                  ? "text-white border-b-2 border-[#4ecdc4]"
+                  : "text-white/60 hover:text-white"
                   }`}
-                >
-                  Chat
-                </button>
-                <button
-                  onClick={() => setActiveTab(TAB_TRANSACTIONS)}
-                  className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${
-                    activeTab === TAB_TRANSACTIONS
-                      ? "text-white border-b-2 border-[#4ecdc4]"
-                      : "text-white/60 hover:text-white"
-                  }`}
-                >
-                  {isMobile ? "History" : "Transactions"}
-                </button>
-                <button
-                  onClick={() => setActiveTab(TAB_HOLDERS)}
-                  className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${
-                    activeTab === TAB_HOLDERS
-                      ? "text-white border-b-2 border-[#4ecdc4]"
-                      : "text-white/60 hover:text-white"
-                  }`}
-                >
-                  Holders ({token.holders_count || 0})
-                </button>
+              >
+                Info
+              </button>
+            )}
+            <button
+              onClick={() => setActiveTab(TAB_CHAT)}
+              className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_CHAT
+                ? "text-white border-b-2 border-[#4ecdc4]"
+                : "text-white/60 hover:text-white"
+                }`}
+            >
+              Chat
+            </button>
+            <button
+              onClick={() => setActiveTab(TAB_TRANSACTIONS)}
+              className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_TRANSACTIONS
+                ? "text-white border-b-2 border-[#4ecdc4]"
+                : "text-white/60 hover:text-white"
+                }`}
+            >
+              {isMobile ? "History" : "Transactions"}
+            </button>
+            <button
+              onClick={() => setActiveTab(TAB_HOLDERS)}
+              className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_HOLDERS
+                ? "text-white border-b-2 border-[#4ecdc4]"
+                : "text-white/60 hover:text-white"
+                }`}
+            >
+              Holders ({token.holders_count || 0})
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          <div className="p-4 md:p-6">
+            {isMobile && activeTab === TAB_DETAILS && (
+              <div className="space-y-4">
+                <TokenSummary
+                  token={{ ...token, decimals: Number(token.decimals) }}
+                />
               </div>
+            )}
 
-              {/* Tab Content */}
-              <div className="p-4 md:p-6">
-                {isMobile && activeTab === TAB_DETAILS && (
-                  <div className="space-y-4">
-                    <TokenSummary
-                      token={{ ...token, decimals: Number(token.decimals) }}
-                    />
-                  </div>
-                )}
+            {activeTab === TAB_CHAT && <CommentsList token={token} />}
 
-                {activeTab === TAB_CHAT && <CommentsList token={token} />}
+            {activeTab === TAB_TRANSACTIONS && (
+              <TokenTrades token={token} />
+            )}
 
-                {activeTab === TAB_TRANSACTIONS && (
-                  <TokenTrades token={token} />
-                )}
-
-                {activeTab === TAB_HOLDERS && <TokenHolders token={token} />}
-              </div>
-            </CardContent>
-          </Card>
+            {activeTab === TAB_HOLDERS && <TokenHolders token={token} />}
+          </div>
         </div>
       </div>
 

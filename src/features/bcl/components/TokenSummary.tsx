@@ -133,17 +133,17 @@ export default function TokenSummary({
       {/* Contract Addresses */}
       <div className="flex flex-col gap-3 mb-6">
         {(token.address || token.contract_address) && (
-          <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
-            <div className="text-xs text-white/60 font-medium mb-2">
-              Contract Address
+          <div className="flex items-center gap-2 justify-between bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
+            <div className="text-xs text-white/60 font-medium">
+              Contract Address:
             </div>
             <AddressChip address={token.address} linkToExplorer />
           </div>
         )}
         {token.sale_address && (
-          <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
-            <div className="text-xs text-white/60 font-medium mb-2">
-              Sale Address
+          <div className="flex items-center gap-2 justify-between bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
+            <div className="text-xs text-white/60 font-medium">
+              Sale Address:
             </div>
             <AddressChip address={token.sale_address} linkToExplorer />
           </div>

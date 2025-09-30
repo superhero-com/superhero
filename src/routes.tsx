@@ -6,7 +6,6 @@ const FeedList = lazy(() => import("./features/social/views/FeedList"));
 const TokenList = lazy(() => import("./features/trendminer/views/TokenList"));
 const TrendCloud = lazy(() => import("./views/Trendminer/TrendCloud"));
 const TrendCloudVisx = lazy(() => import("./views/Trendminer/TrendCloudVisx"));
-const TrendTokenDetails = lazy(() => import("./views/Trendminer/TokenDetails"));
 const TrendInvite = lazy(() => import("./views/Trendminer/Invite"));
 const TrendDao = lazy(() => import("./views/Trendminer/Dao"));
 const TrendDaos = lazy(() => import("./views/Trendminer/Daos"));
@@ -14,8 +13,8 @@ const TrendAccounts = lazy(() => import("./views/Trendminer/Accounts"));
 const TrendAccountDetails = lazy(
   () => import("./views/Trendminer/AccountDetails")
 );
-const TrendCreate = lazy(() => import("./views/CreateTokenView"));
-const TokenSaleDetails = lazy(() => import("./views/TokenSaleDetails"));
+const TrendCreate = lazy(() => import("./features/trendminer/views/CreateTokenView"));
+const TokenSaleDetails = lazy(() => import("./features/trendminer/views/TokenSaleDetails"));
 const PostDetail = lazy(() => import("./features/social/views/PostDetail"));
 const UserProfile = lazy(() => import("./views/UserProfile"));
 const Landing = lazy(() => import("./views/Landing"));

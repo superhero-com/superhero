@@ -59,16 +59,16 @@ export function validateHash(fullHash?: string): ValidatedHash {
 /**
  * Formats an address for display by truncating the middle
  */
-export function formatAddress(address: string, length = 6): string {
+export function formatAddress(address: string, length = 6, truncate = false): string {
   if (!address) return '';
   
-  if (address.endsWith(AE_AENS_DOMAIN)) {
+  if (address.endsWith(AE_AENS_DOMAIN) || !truncate) {
     return address; // Show full AENS names
   }
   
   // Show full Aeternity account addresses (ak_...) without truncation
-  const { valid, prefix } = validateHash(address);
-  if (valid && prefix === Encoding.AccountAddress) {
+  const { valid } = validateHash(address);
+  if (!valid) {
     return address;
   }
   

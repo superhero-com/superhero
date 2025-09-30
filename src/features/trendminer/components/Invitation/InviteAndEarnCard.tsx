@@ -1,18 +1,17 @@
 import { AlertCircle } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
-import { useAccount } from "../../hooks/useAccount";
-import { useAeSdk } from "../../hooks/useAeSdk";
-import { getAffiliationTreasury } from "../../libs/affiliation";
-import { Decimal } from "../../libs/decimal";
-import { addGeneratedInvites, prepareInviteLink } from "../../libs/invitation";
-import WalletConnectBtn from "../WalletConnectBtn";
-import CopyText from "../ui/CopyText";
-import { AeButton } from "../ui/ae-button";
-import { Alert, AlertDescription } from "../ui/alert";
-import { Checkbox } from "../ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
+import { useAccount } from "../../../../hooks/useAccount";
+import { useAeSdk } from "../../../../hooks/useAeSdk";
+import { Decimal } from "../../../../libs/decimal";
+import { useInvitations } from "../../hooks/useInvitations";
+import WalletConnectBtn from "../../../../components/WalletConnectBtn";
+import CopyText from "../../../../components/ui/CopyText";
+import { AeButton } from "../../../../components/ui/ae-button";
+import { Alert, AlertDescription } from "../../../../components/ui/alert";
+import { Checkbox } from "../../../../components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../../../components/ui/dialog";
+import { Input } from "../../../../components/ui/input";
+import { Label } from "../../../../components/ui/label";
 
 interface InviteAndEarnCardProps {
   className?: string;
@@ -21,8 +20,9 @@ interface InviteAndEarnCardProps {
 export default function InviteAndEarnCard({
   className,
 }: InviteAndEarnCardProps) {
-  const { sdk, activeAccount } = useAeSdk();
+  const { activeAccount } = useAeSdk();
   const { decimalBalance } = useAccount();
+  const { generateInviteKeys, prepareInviteLink } = useInvitations();
 
   // Form state
   const [amount, setAmount] = useState<string>("");
@@ -69,54 +69,18 @@ export default function InviteAndEarnCard({
         throw new Error("Please create at least one invite");
       }
 
-      if (!sdk) {
-        throw new Error(
-          "SDK not initialized. Please connect your wallet and try again."
-        );
-      }
-
       if (!activeAccount) {
         throw new Error(
           "No active account. Please connect your wallet and try again."
         );
       }
 
-      // Get treasury contract
-      const treasury = await getAffiliationTreasury(sdk as any);
-
-      // Generate in-memory keypairs via aepp-sdk
-      const mod = await import("@aeternity/aepp-sdk");
-      const keys = new Array(invitesNumber)
-        .fill(0)
-        .map(() => mod.generateKeyPair());
-      const invitees = keys.map((k: any) => k.publicKey);
-
-      const redemptionFeeCover = 10n ** 15n;
-      const inviteAmount = BigInt(Decimal.from(amountValue).bigNumber);
-
-      // Register invitation codes on the blockchain
-      await treasury.registerInvitationCode(
-        invitees,
-        redemptionFeeCover,
-        inviteAmount
-      );
-
+      // Use the shared hook to generate invite keys
+      const secretKeys = await generateInviteKeys(amountValue, invitesNumber);
+      
       // Generate invitation links
-      const links = keys.map((k: any) => prepareInviteLink(k.secretKey));
+      const links = secretKeys.map((secretKey) => prepareInviteLink(secretKey));
       setInvitationLinks(links);
-
-      // Store invites locally
-      if (sdk?.addresses) {
-        const inviter = sdk.addresses()[0];
-        addGeneratedInvites(
-          inviter,
-          keys.map((k: any) => ({
-            invitee: k.publicKey,
-            secretKey: k.secretKey,
-            amount: amountValue,
-          }))
-        );
-      }
 
       // Reset form and show dialog
       setAmount("");

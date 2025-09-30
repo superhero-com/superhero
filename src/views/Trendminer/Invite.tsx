@@ -1,7 +1,9 @@
 import { useState } from "react";
-import CollectRewardsCard from "../../components/Invitation/CollectRewardsCard";
-import InvitationList from "../../components/Invitation/InvitationList";
-import InviteAndEarnCard from "../../components/Invitation/InviteAndEarnCard";
+import { 
+  CollectRewardsCard, 
+  InvitationList, 
+  InviteAndEarnCard 
+} from "../../features/trendminer/components/Invitation";
 import RightRail from "../../components/layout/RightRail";
 import Shell from "../../components/layout/Shell";
 import { useAeSdk } from "../../hooks";

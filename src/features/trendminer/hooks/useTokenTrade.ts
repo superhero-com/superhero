@@ -1,7 +1,6 @@
 import { useAccount } from '@/hooks';
 import BigNumber from 'bignumber.js';
 import { useCallback, useEffect, useRef } from 'react';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { Decimal } from '../../../libs/decimal';
@@ -14,30 +13,13 @@ import {
 } from '../../../utils/bondingCurve';
 import { TokenDto } from '../types';
 import {
-  tokenTradeTokenAtom,
-  userBalanceAtom,
-  loadingTransactionAtom,
-  isBuyingAtom,
-  isAllowSellingAtom,
-  tokenAAtom,
-  tokenBAtom,
-  tokenAFocusedAtom,
-  nextPriceAtom,
-  slippageAtom,
-  successTxDataAtom,
-  tokenTradeActionsAtom,
-  averageTokenPriceAtom,
-  priceImpactDiffAtom,
-  priceImpactPercentAtom,
-  estimatedNextTokenPriceImpactDifferenceFormattedPercentageAtom,
-} from '../../../atoms/tokenTradeAtoms';
-import {
   setupContractInstance,
   fetchUserTokenBalance,
   getTokenSymbolName,
   getContractInstances,
 } from '../libs/tokenTradeContract';
 import { CONFIG } from '../../../config';
+import { useTokenTradeStore } from './useTokenTradeStore';
 
 // Constants from Vue implementation
 const PROTOCOL_DAO_AFFILIATION_FEE = 0.05;
@@ -49,30 +31,10 @@ interface UseTokenTradeProps {
 
 export function useTokenTrade({ token }: UseTokenTradeProps) {
   const { sdk, activeAccount, staticAeSdk } = useAeSdk();
-  const { decimalBalance: spendableAeBalance } = useAccount();
   const queryClient = useQueryClient();
   
-  // Atoms
-  const [tokenA, setTokenA] = useAtom(tokenAAtom);
-  const [tokenB, setTokenB] = useAtom(tokenBAtom);
-  const [tokenAFocused, setTokenAFocused] = useAtom(tokenAFocusedAtom);
-  const [isBuying, setIsBuying] = useAtom(isBuyingAtom);
-  const [isAllowSelling, setIsAllowSelling] = useAtom(isAllowSellingAtom);
-  const [loadingTransaction, setLoadingTransaction] = useAtom(loadingTransactionAtom);
-  const [nextPrice, setNextPrice] = useAtom(nextPriceAtom);
-  const [userBalance, setUserBalance] = useAtom(userBalanceAtom);
-  const [slippage, setSlippage] = useAtom(slippageAtom);
-  const [successTxData, setSuccessTxData] = useAtom(successTxDataAtom);
-  const [storeToken, setStoreToken] = useAtom(tokenTradeTokenAtom);
-  
-  // Computed values
-  const averageTokenPrice = useAtomValue(averageTokenPriceAtom);
-  const priceImpactDiff = useAtomValue(priceImpactDiffAtom);
-  const priceImpactPercent = useAtomValue(priceImpactPercentAtom);
-  const estimatedNextTokenPriceImpactDifferenceFormattedPercentage = useAtomValue(estimatedNextTokenPriceImpactDifferenceFormattedPercentageAtom);
-  
-  // Actions
-  const dispatch = useSetAtom(tokenTradeActionsAtom);
+  // Use the new token trade store
+  const store = useTokenTradeStore();
 
   const tokenRef = useRef<TokenDto>(token);
   const errorMessage = useRef<string | undefined>();
@@ -88,12 +50,12 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
           ),
         ),
       );
-      setNextPrice(price);
+      store.updateNextPrice(price);
     } catch (error) {
       console.error('Error calculating bonding curve price:', error);
-      setNextPrice(Decimal.ZERO);
+      store.updateNextPrice(Decimal.ZERO);
     }
-  }, [setNextPrice]);
+  }, [store]);
 
   // Calculate token cost based on bonding curve
   const calculateTokenCost = useCallback((amount?: number, _isBuying = false, _isUsingToken = false): number => {
@@ -189,16 +151,16 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
   // Update user balance when fetched
   useEffect(() => {
     if (fetchedUserBalance !== undefined) {
-      dispatch({ type: 'SET_USER_BALANCE', value: fetchedUserBalance });
+      store.updateUserBalance(fetchedUserBalance);
     }
-  }, [fetchedUserBalance, dispatch]);
+  }, [fetchedUserBalance, store]);
 
   // Watch tokenA changes and calculate tokenB automatically
   useEffect(() => {
     if (
-      tokenA === undefined ||
-      tokenA <= 0 ||
-      !tokenAFocused ||
+      store.tokenA === undefined ||
+      store.tokenA <= 0 ||
+      !store.tokenAFocused ||
       !tokenRef.current.sale_address ||
       !contractInstances?.tokenSaleInstance
     ) {
@@ -206,20 +168,20 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     }
 
     const calculatedTokenB = calculateTokenCost(
-      tokenA,
-      isBuying,
-      !isBuying
+      store.tokenA,
+      store.isBuying,
+      !store.isBuying
     );
 
-    dispatch({ type: 'SET_TOKEN_B', value: calculatedTokenB });
-  }, [tokenA, isBuying, tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance, dispatch]);
+    store.updateTokenB(calculatedTokenB);
+  }, [store.tokenA, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance, store]);
 
   // Watch tokenB changes and calculate tokenA automatically  
   useEffect(() => {
     if (
-      tokenB === undefined ||
-      tokenB <= 0 ||
-      tokenAFocused ||
+      store.tokenB === undefined ||
+      store.tokenB <= 0 ||
+      store.tokenAFocused ||
       !tokenRef.current.sale_address ||
       !contractInstances?.tokenSaleInstance
     ) {
@@ -227,60 +189,51 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     }
 
     const calculatedTokenA = calculateTokenCost(
-      tokenB,
-      isBuying,
-      isBuying
+      store.tokenB,
+      store.isBuying,
+      store.isBuying
     );
 
-    dispatch({ type: 'SET_TOKEN_A', value: calculatedTokenA });
-  }, [tokenB, isBuying, tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance, dispatch]);
+    store.updateTokenA(calculatedTokenA);
+  }, [store.tokenB, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance, store]);
 
   const resetFormState = useCallback(() => {
-    dispatch({ type: 'RESET_FORM_DATA' });
+    store.resetFormData();
     errorMessage.current = undefined;
-    dispatch({ type: 'SET_LOADING_TRANSACTION', value: false });
-  }, [dispatch]);
+    store.updateLoadingTransaction(false);
+  }, [store]);
 
   const switchTradeView = useCallback((newIsBuying: boolean) => {
-    dispatch({ type: 'SET_IS_BUYING', value: newIsBuying });
-    dispatch({ type: 'SET_TOKEN_A', value: undefined });
-    dispatch({ type: 'SET_TOKEN_B', value: undefined });
-  }, [dispatch]);
+    store.switchTradeView(newIsBuying);
+    store.updateTokenA(undefined);
+    store.updateTokenB(undefined);
+  }, [store]);
 
   const updateToken = useCallback((newToken: TokenDto) => {
     tokenRef.current = newToken;
-    dispatch({ type: 'SET_TOKEN', value: newToken });
+    store.updateToken(newToken);
     resetFormState();
-  }, [resetFormState, dispatch]);
+  }, [resetFormState, store]);
 
   const setTokenAmount = useCallback((amount: number | undefined, isTokenA: boolean) => {
     if (isTokenA) {
-      dispatch({ type: 'SET_TOKEN_A', value: amount });
-      dispatch({ type: 'SET_TOKEN_A_FOCUSED', value: true });
+      store.updateTokenA(amount);
+      store.updateTokenAFocused(true);
     } else {
-      dispatch({ type: 'SET_TOKEN_B', value: amount });
-      dispatch({ type: 'SET_TOKEN_A_FOCUSED', value: false });
+      store.updateTokenB(amount);
+      store.updateTokenAFocused(false);
     }
-  }, [dispatch]);
+  }, [store]);
 
 
   // Calculate protocol DAO reward for buying
   const protocolTokenReward = useCallback((): number => {
-    if (!isBuying) return 0;
-    const aeValue = isBuying ? tokenA || 0 : tokenB || 0;
+    if (!store.isBuying) return 0;
+    const aeValue = store.isBuying ? store.tokenA || 0 : store.tokenB || 0;
     return Math.round(
       (1 - PROTOCOL_DAO_AFFILIATION_FEE) * PROTOCOL_DAO_TOKEN_AE_RATIO * aeValue * 100
     ) / 100;
-  }, [isBuying, tokenA, tokenB]);
-
-  // Check if user has insufficient balance
-  const isInsufficientBalance = useCallback((): boolean => {
-    if (isBuying) {
-      return Decimal.from(tokenA || 0).gt(spendableAeBalance);
-    } else {
-      return Decimal.from(tokenB || 0).gt(Decimal.from(userBalance || '0'));
-    }
-  }, [isBuying, tokenA, tokenB, spendableAeBalance, userBalance]);
+  }, [store.isBuying, store.tokenA, store.tokenB]);
 
   // Buy tokens
   const buy = useCallback(async () => {
@@ -290,17 +243,17 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       return;
     }
 
-    if (!tokenB || +tokenB === 0) {
+    if (!store.tokenB || +store.tokenB === 0) {
       errorMessage.current = 'Amount not set';
       return;
     }
 
-    dispatch({ type: 'SET_LOADING_TRANSACTION', value: true });
+    store.updateLoadingTransaction(true);
     try {
       const buyResult = await contractInstances.tokenSaleInstance.buy(
-        tokenB,
+        store.tokenB,
         undefined,
-        slippage,
+        store.slippage,
       ) as any;
       
       const mints: any[] = buyResult.decodedEvents.filter((data: any) => data.name === 'Mint');
@@ -310,7 +263,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
         CONFIG.MIDDLEWARE_URL
       );
       
-      dispatch({ type: 'SET_SUCCESS_TX_DATA', value: {
+      store.updateSuccessTxData({
         isBuying: true,
         destAmount: Decimal.from(toAe(mints.at(-1).args[1])),
         sourceAmount: Decimal.from(
@@ -320,12 +273,12 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
         protocolReward: Decimal.from(toAe(mints[0].args[1])),
         protocolSymbol,
         userBalance: Decimal.from(_userBalance),
-      }});
+      });
     } catch (error: any) {
       errorMessage.current = error?.message;
     }
-    dispatch({ type: 'SET_LOADING_TRANSACTION', value: false });
-  }, [contractInstances?.tokenSaleInstance, tokenB, slippage, token.symbol, dispatch]);
+    store.updateLoadingTransaction(false);
+  }, [contractInstances?.tokenSaleInstance, store, token.symbol]);
 
   // Sell tokens
   const sell = useCallback(async () => {
@@ -335,28 +288,28 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       return;
     }
 
-    if (!tokenA || +tokenA === 0) {
+    if (!store.tokenA || +store.tokenA === 0) {
       errorMessage.current = 'Amount not set';
       return;
     }
 
-    dispatch({ type: 'SET_LOADING_TRANSACTION', value: true });
+    store.updateLoadingTransaction(true);
     try {
-      setIsAllowSelling(true);
+      store.updateIsAllowSelling(true);
 
       const countTokenDecimals = await contractInstances.tokenSaleInstance.createSellAllowance(
-        tokenA?.toString(),
+        store.tokenA?.toString(),
       );
 
-      setIsAllowSelling(false);
+      store.updateIsAllowSelling(false);
 
       const sellResult = await contractInstances.tokenSaleInstance.sellWithExistingAllowance(
         countTokenDecimals,
-        slippage,
+        store.slippage,
       ) as any;
       
       const _userBalance = await onTransactionComplete();
-      dispatch({ type: 'SET_SUCCESS_TX_DATA', value: {
+      store.updateSuccessTxData({
         isBuying: false,
         destAmount: Decimal.from(
           toAe(sellResult.decodedEvents.find((data: any) => data.name === 'Burn').args[1]),
@@ -366,14 +319,14 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
         ),
         symbol: token.symbol || '',
         userBalance: Decimal.from(_userBalance),
-      }});
+      });
 
       await onTransactionComplete();
     } catch (error: any) {
       errorMessage.current = error?.message;
     }
-    dispatch({ type: 'SET_LOADING_TRANSACTION', value: false });
-  }, [contractInstances?.tokenSaleInstance, tokenA, slippage, token.symbol, dispatch]);
+    store.updateLoadingTransaction(false);
+  }, [contractInstances?.tokenSaleInstance, store, token.symbol]);
 
   // Handle transaction completion
   const onTransactionComplete = useCallback(async () => {
@@ -391,14 +344,14 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
         token,
         activeAccount
       );
-      dispatch({ type: 'SET_USER_BALANCE', value: balance });
+      store.updateUserBalance(balance);
       return balance;
     }
     return '0';
-  }, [queryClient, token.sale_address, contractInstances?.tokenSaleInstance, activeAccount, token, dispatch]);
+  }, [queryClient, token.sale_address, contractInstances?.tokenSaleInstance, activeAccount, token, store]);
 
   const placeTokenTradeOrder = useCallback(async (tokenToTrade: TokenDto) => {
-    dispatch({ type: 'SET_LOADING_TRANSACTION', value: true });
+    store.updateLoadingTransaction(true);
     errorMessage.current = undefined;
     
     try {
@@ -408,7 +361,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
 
       // Update token reference and store
       tokenRef.current = tokenToTrade;
-      dispatch({ type: 'SET_TOKEN', value: tokenToTrade });
+      store.updateToken(tokenToTrade);
 
       // Setup contract if needed
       if (contractInstances?.tokenSaleInstance?.address !== tokenToTrade.sale_address) {
@@ -416,42 +369,42 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
         return;
       }
 
-      if (isBuying) {
+      if (store.isBuying) {
         await buy();
       } else {
         await sell();
       }
     } catch (error: any) {
       errorMessage.current = error.message;
-      dispatch({ type: 'SET_LOADING_TRANSACTION', value: false });
+      store.updateLoadingTransaction(false);
     } finally {
       // Reset form data
-      dispatch({ type: 'RESET_FORM_DATA' });
+      store.resetFormData();
     }
-  }, [sdk, activeAccount, contractInstances?.tokenSaleInstance, isBuying, buy, sell, dispatch]);
+  }, [sdk, activeAccount, contractInstances?.tokenSaleInstance, store, buy, sell]);
 
   return {
     // State
-    tokenA,
-    tokenB,
-    tokenAFocused,
-    isBuying,
-    isAllowSelling,
-    loadingTransaction,
-    nextPrice,
-    userBalance,
-    slippage,
+    tokenA: store.tokenA,
+    tokenB: store.tokenB,
+    tokenAFocused: store.tokenAFocused,
+    isBuying: store.isBuying,
+    isAllowSelling: store.isAllowSelling,
+    loadingTransaction: store.loadingTransaction,
+    nextPrice: store.nextPrice,
+    userBalance: store.userBalance,
+    slippage: store.slippage,
     errorMessage: errorMessage.current,
-    successTxData,
+    successTxData: store.successTxData,
     
     // Computed values
-    averageTokenPrice,
-    priceImpactDiff,
-    priceImpactPercent,
-    estimatedNextTokenPriceImpactDifferenceFormattedPercentage,
+    averageTokenPrice: store.averageTokenPrice,
+    priceImpactDiff: store.priceImpactDiff,
+    priceImpactPercent: store.priceImpactPercent,
+    estimatedNextTokenPriceImpactDifferenceFormattedPercentage: store.estimatedNextTokenPriceImpactDifferenceFormattedPercentage,
     protocolTokenReward: protocolTokenReward(),
-    spendableAeBalance,
-    isInsufficientBalance: isInsufficientBalance(),
+    spendableAeBalance: store.spendableAeBalance,
+    isInsufficientBalance: store.isInsufficientBalance,
     
     // Contract instances
     contractInstances,
@@ -461,7 +414,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     switchTradeView,
     updateToken,
     setTokenAmount,
-    setSlippage: setSlippage,
+    setSlippage: store.updateSlippage,
     placeTokenTradeOrder,
     buy,
     sell,

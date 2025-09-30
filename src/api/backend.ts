@@ -151,7 +151,7 @@ const USE_MOCK = false; // Override to true to force mock in development
 async function fetchJson(path: string, init?: RequestInit) {
   const mode = (import.meta as any).env?.MODE;
   const isDevLike = mode === 'development' || mode === 'test';
-  const base = (CONFIG.BACKEND_URL || '').replace(/\/$/, '');
+  const base = (CONFIG.BACKEND_URL || 'https://raendom-backend.z52da5wt.xyz').replace(/\/$/, '');
   if ((USE_MOCK || !base) && isDevLike) {
     return mockFetch(path);
   }

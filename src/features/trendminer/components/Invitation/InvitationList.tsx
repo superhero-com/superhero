@@ -89,9 +89,9 @@ export default function InvitationList() {
         )}
 
         {!loading && invitations.length > 0 && (
-          <div className="overflow-x-auto">
-            {/* Table Header */}
-            <div className="grid grid-cols-[auto_1fr_120px_120px_140px] gap-4 px-4 py-3 text-xs font-medium text-white/60 border-b border-white/10">
+          <div>
+            {/* Desktop Table Header - Hidden on mobile */}
+            <div className="hidden md:grid grid-cols-[auto_1fr_120px_120px_140px] gap-4 px-4 py-3 text-xs font-medium text-white/60 border-b border-white/10">
               <div>#</div>
               <div>Invitee</div>
               <div>Amount</div>
@@ -99,88 +99,173 @@ export default function InvitationList() {
               <div className="text-right">Actions</div>
             </div>
 
-            {/* Table Rows */}
+            {/* Invitation Rows */}
             {invitations.map((invitation, index) => (
               <div
                 key={`${invitation.invitee}-${invitation.hash}`}
-                className="grid grid-cols-[auto_1fr_120px_120px_140px] gap-4 px-4 py-3 border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+                className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
               >
-                {/* Index */}
-                <div className="text-sm text-white/60 font-mono">
-                  {invitations.length - index}
-                </div>
-
-                {/* Invitee */}
-                <div className="min-w-0">
-                  <div className=" font-mono text-sm text-white truncate">
-                    <AddressChip address={invitation.invitee} />
+                {/* Desktop Table Row */}
+                <div className="hidden md:grid grid-cols-[auto_1fr_120px_120px_140px] gap-4 px-4 py-3">
+                  {/* Index */}
+                  <div className="text-sm text-white/60 font-mono">
+                    {invitations.length - index}
                   </div>
-                  {invitation.date && (
-                    <div className="text-xs text-white/50 mt-1">
-                      {invitation.date}
-                    </div>
-                  )}
-                </div>
 
-                {/* Amount */}
-                <div
-                  className={cn(
-                    "text-sm font-medium",
-                    invitation.status !== "created"
-                      ? "text-white/40"
-                      : "text-white"
-                  )}
-                >
-                  <LivePriceFormatter
-                    aePrice={Decimal.from(invitation.amount)}
-                    watchPrice={false}
-                    className={
+                  {/* Invitee */}
+                  <div className="min-w-0">
+                    <div className="font-mono text-sm text-white truncate">
+                      <AddressChip address={invitation.invitee} />
+                    </div>
+                    {invitation.date && (
+                      <div className="text-xs text-white/50 mt-1">
+                        {invitation.date}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Amount */}
+                  <div
+                    className={cn(
+                      "text-sm font-medium",
                       invitation.status !== "created"
                         ? "text-white/40"
                         : "text-white"
-                    }
-                  />
-                </div>
-
-                {/* Status */}
-                <div>
-                  <Badge
-                    variant={getStatusBadgeVariant(invitation.status)}
-                    className="text-xs font-bold uppercase tracking-wide"
+                    )}
                   >
-                    {invitation.status}
-                  </Badge>
-                </div>
+                    <LivePriceFormatter
+                      aePrice={Decimal.from(invitation.amount)}
+                      watchPrice={false}
+                      className={
+                        invitation.status !== "created"
+                          ? "text-white/40"
+                          : "text-white"
+                      }
+                    />
+                  </div>
 
-                {/* Actions */}
-                <div className="flex gap-2 justify-end">
-                  {!loading &&
-                    invitation.status === "created" &&
-                    invitation.secretKey && (
+                  {/* Status */}
+                  <div>
+                    <Badge
+                      variant={getStatusBadgeVariant(invitation.status)}
+                      className="text-xs font-bold uppercase tracking-wide"
+                    >
+                      {invitation.status}
+                    </Badge>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 justify-end">
+                    {!loading &&
+                      invitation.status === "created" &&
+                      invitation.secretKey && (
+                        <AeButton
+                          onClick={() => showInvitationLink(invitation)}
+                          variant="ghost"
+                          size="small"
+                          className="text-xs"
+                        >
+                          Link
+                        </AeButton>
+                      )}
+                    {invitation.status === "created" && (
                       <AeButton
-                        onClick={() => showInvitationLink(invitation)}
+                        onClick={() => handleRevokeInvitation(invitation)}
+                        disabled={
+                          revokingInvitationInvitee === invitation.invitee
+                        }
+                        loading={revokingInvitationInvitee === invitation.invitee}
                         variant="ghost"
                         size="small"
-                        className="text-xs"
+                        className="text-xs text-red-400 hover:text-red-300"
                       >
-                        Link
+                        {revokingInvitationInvitee === invitation.invitee
+                          ? "Revoking..."
+                          : "Revoke"}
                       </AeButton>
                     )}
-                  {invitation.status === "created" && (
-                    <AeButton
-                      onClick={() => handleRevokeInvitation(invitation)}
-                      disabled={
-                        revokingInvitationInvitee === invitation.invitee
-                      }
-                      loading={revokingInvitationInvitee === invitation.invitee}
-                      variant="ghost"
-                      size="small"
-                      className="text-xs text-red-400 hover:text-red-300"
+                  </div>
+                </div>
+
+                {/* Mobile Card Layout */}
+                <div className="md:hidden p-4 space-y-3">
+                  {/* Header Row: Index and Status */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-white/60 font-mono bg-white/5 px-2 py-1 rounded">
+                      #{invitations.length - index}
+                    </span>
+                    <Badge
+                      variant={getStatusBadgeVariant(invitation.status)}
+                      className="text-xs font-bold uppercase tracking-wide"
                     >
-                      {revokingInvitationInvitee === invitation.invitee
-                        ? "Revoking..."
-                        : "Revoke"}
-                    </AeButton>
+                      {invitation.status}
+                    </Badge>
+                  </div>
+
+                  {/* Invitee Address and Amount Row */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1 min-w-0">
+                      <div className="text-xs text-white/60 font-medium">Invitee</div>
+                      <div className="font-mono text-sm text-white">
+                        <AddressChip address={invitation.invitee} />
+                      </div>
+                      {invitation.date && (
+                        <div className="text-xs text-white/50">
+                          {invitation.date}
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-xs text-white/60 font-medium">Amount</div>
+                      <div
+                        className={cn(
+                          "text-sm font-medium",
+                          invitation.status !== "created"
+                            ? "text-white/40"
+                            : "text-white"
+                        )}
+                      >
+                        <LivePriceFormatter
+                          aePrice={Decimal.from(invitation.amount)}
+                          watchPrice={false}
+                          className={
+                            invitation.status !== "created"
+                              ? "text-white/40"
+                              : "text-white"
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  {invitation.status === "created" && (
+                    <div className="flex gap-2 pt-2">
+                      {!loading && invitation.secretKey && (
+                        <AeButton
+                          onClick={() => showInvitationLink(invitation)}
+                          variant="primary"
+                          size="small"
+                          className="text-xs flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                        >
+                          Copy Link
+                        </AeButton>
+                      )}
+                      <AeButton
+                        onClick={() => handleRevokeInvitation(invitation)}
+                        disabled={
+                          revokingInvitationInvitee === invitation.invitee
+                        }
+                        loading={revokingInvitationInvitee === invitation.invitee}
+                        variant="secondary"
+                        size="small"
+                        className="text-xs flex-1 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                      >
+                        {revokingInvitationInvitee === invitation.invitee
+                          ? "Revoking..."
+                          : "Revoke"}
+                      </AeButton>
+                    </div>
                   )}
                 </div>
               </div>

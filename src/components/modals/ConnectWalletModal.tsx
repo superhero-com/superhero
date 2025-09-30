@@ -91,7 +91,7 @@ export default function ConnectWalletModal({ onClose }: Props) {
         </div>
         <div className="w-full sm:w-auto flex flex-col items-center sm:items-end gap-3 sm:gap-2">
           {/* Mobile-only notice above button with larger gap */}
-          <div className="sm:hidden text-center text-xs text-white/70 leading-relaxed">
+          <div className="sm:hidden text-center text-xs text-white/70 leading-relaxed px-2">
             By connecting your wallet you agree to the{' '}
             <a
               href="/terms"

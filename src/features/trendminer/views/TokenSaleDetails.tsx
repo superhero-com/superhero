@@ -279,47 +279,47 @@ export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
         >
           {/* Token Header */}
           <Card className="bg-white/[0.02] border-white/10">
-            <CardContent className="p-6">
+            <div className="p-2">
               {isLoading || isTokenPending ? (
-                <div className="flex items-center justify-between gap-4 mb-4">
-                  <div className="flex items-center gap-4 flex-1 flex-wrap">
-                    <div className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded w-52 h-10" />
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-lg w-48 h-8" />
                     <div className="flex items-center gap-2">
-                      {Array.from({ length: isTokenPending ? 1 : 3 }).map((_, index) => (
-                        <div key={index} className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded w-16 h-6 opacity-70" />
+                      {Array.from({ length: isTokenPending ? 1 : 2 }).map((_, index) => (
+                        <div key={index} className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-full px-3 py-1 w-20 h-6" />
                       ))}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded w-8 h-8" />
-                    <div className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded w-8 h-8" />
+                    <div className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-lg w-16 h-8" />
+                    <div className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-lg w-8 h-8" />
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-between gap-4 mb-4">
-                  <div className="flex items-center gap-4 flex-1 flex-wrap">
-                    <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent leading-tight">
                       #{token.symbol || token.name}
                     </h1>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {token.rank && (
                         <Badge
                           variant="secondary"
-                          className="bg-white/10 text-white text-[9px] sm:text-xs"
+                          className="bg-gradient-to-r from-slate-600/80 to-slate-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm"
                         >
-                          MC RANK #{token.rank}
+                          RANK #{token.rank}
                         </Badge>
                       )}
                       {ownsThisToken && (
-                        <Badge className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4]">
-                          Owned
+                        <Badge className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm">
+                          OWNED
                         </Badge>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <Token24hChange
                       tokenAddress={token.address || token.sale_address}
                       createdAt={token.created_at}
@@ -329,7 +329,7 @@ export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
                       variant="outline"
                       size="sm"
                       onClick={() => setShowShareModal(true)}
-                      className="border-white/20 bg-white/5 text-white hover:bg-white/10"
+                      className="border-white/20 bg-white/5 text-white hover:bg-white/10 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md"
                     >
                       🔗
                     </Button>
@@ -339,7 +339,7 @@ export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
 
               {/* Description */}
               {!isLoading && !isTokenPending && token.metaInfo?.description && (
-                <div className="text-white/80">
+                <div className="text-white/75 text-sm leading-relaxed mt-3 max-w-[720px]">
                   <span>
                     {descriptionExpanded ||
                       !isMobile ||
@@ -354,14 +354,14 @@ export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
                       onClick={() =>
                         setDescriptionExpanded(!descriptionExpanded)
                       }
-                      className="text-[#4ecdc4] hover:text-white ml-2"
+                      className="text-purple-400 hover:text-white ml-2 p-0 h-auto font-medium underline-offset-2 hover:underline"
                     >
                       {descriptionExpanded ? "Show Less" : "Show More"}
                     </Button>
                   )}
                 </div>
               )}
-            </CardContent>
+            </div>
           </Card>
 
           {/* Chart */}

@@ -163,8 +163,9 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
           setTokenIn(foundToken);
         }
       } else if (!tokenIn && !fromParam) {
-        // Default to tokens[2] if no URL param and no current selection
-        setTokenIn(tokens[2] || null);
+        // Default: AE as input token
+        const ae = tokens.find((t) => t.is_ae) || null;
+        setTokenIn(ae || tokens[0] || null);
       }
 
       // Set tokenOut based on URL param or default
@@ -174,8 +175,9 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
           setTokenOut(foundToken);
         }
       } else if (!tokenOut && !toParam) {
-        // Default to tokens[0] if no URL param and no current selection
-        setTokenOut(tokens[0] || null);
+        // Default: WTT as output token
+        const wtt = tokens.find((t) => (t.symbol || '').toUpperCase() === 'WTT') || null;
+        setTokenOut(wtt || tokens[0] || null);
       }
     };
 

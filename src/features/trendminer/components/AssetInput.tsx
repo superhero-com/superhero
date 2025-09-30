@@ -144,10 +144,11 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
             onFocus={handleFocus}
             disabled={disabled}
             className={cn(
-              "flex-1 input w-full text-xl leading-7 p-3 h-7 text-ellipsis whitespace-nowrap overflow-hidden",
+              "flex-1 input w-full text-xl leading-7 h-7 text-ellipsis whitespace-nowrap overflow-hidden",
               "border-none outline-none bg-transparent text-white placeholder-white/60",
               "focus:border-none focus:outline-none focus:ring-0",
-              "min-w-[40%]"
+              "min-w-[40%]",
+              "shadow-none"
             )}
             placeholder="0.00"
             autoFocus

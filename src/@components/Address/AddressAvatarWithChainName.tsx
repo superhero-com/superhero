@@ -127,7 +127,7 @@ export const AddressAvatarWithChainName = memo(({
                                 )}
                                 title={address}
                             >
-                                {`${address.slice(0, 6)}...${address.slice(-6)}`}
+                                {`${address?.slice(0, 6)}...${address?.slice(-6)}`}
                             </span>
                         );
                     })()

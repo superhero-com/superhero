@@ -368,9 +368,7 @@ export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
           {isLoading || isTokenPending ? (
             <TokenCandlestickChartSkeleton boilerplate={isTokenPending} />
           ) : (
-            <Card className="bg-white/[0.02] border-white/10">
-              <TokenCandlestickChart token={token} />
-            </Card>
+            <TokenCandlestickChart token={token} className="w-full" />
           )}
           {/* Tabs Section */}
           <Card className="bg-white/[0.02] border-white/10 mb-6">

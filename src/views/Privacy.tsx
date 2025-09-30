@@ -1,10 +1,18 @@
 import React from 'react';
+import { AeButton } from '@/components/ui/ae-button';
+import { useNavigate } from 'react-router-dom';
 import FooterSection from '../components/layout/FooterSection';
 
 export default function Privacy() {
+  const navigate = useNavigate();
   return (
     <>
     <div className="max-w-[980px] mx-auto p-4">
+      <div className="mb-4">
+        <AeButton onClick={() => { (window.history.length > 1) ? navigate(-1) : navigate('/'); }} variant="ghost" size="sm" outlined className="!border !border-solid !border-white/15 hover:!border-white/35">
+          ← Back
+        </AeButton>
+      </div>
       <h2 className="text-2xl font-bold text-white mb-2">PRIVACY POLICY</h2>
       <p className="text-white/70 mb-6">The present Privacy Policy was last updated on 29th of September 2025.</p>
 

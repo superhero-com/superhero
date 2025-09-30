@@ -22,9 +22,10 @@ jobs:
       VERSION: ${{ inputs.VERSION }}
       CONTAINER_NAME: "staging-superhero-mainnet"
     secrets:
-      DEPLOY_HOST: "api.stag.superhero.com"
+      DEPLOY_HOST: "${{ secrets.STAG_DEPLOY_HOST }}"
       DEPLOY_KEY: ${{ secrets.STAG_DEPLOY_KEY }}
       DEPLOY_USERNAME: ${{ secrets.STAG_DEPLOY_USERNAME }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
       DOCKERHUB_REPO: ${{ secrets.DOCKERHUB_REPO }}
+      HOST_PORT: 3003

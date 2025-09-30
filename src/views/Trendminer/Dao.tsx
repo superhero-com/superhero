@@ -1,13 +1,13 @@
-import { AeSdk } from '@aeternity/aepp-sdk';
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { TrendminerApi } from '../../api/backend';
-import AeButton from '../../components/AeButton';
-import { useAeSdk } from '../../hooks';
+import { AeSdk } from "@aeternity/aepp-sdk";
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { TrendminerApi } from "../../api/backend";
+import AeButton from "../../components/AeButton";
+import { useAeSdk } from "../../hooks";
 
 let bctsl: any;
 async function ensureBctsl() {
-  if (!bctsl) bctsl = await import('bctsl-sdk');
+  if (!bctsl) bctsl = await import("bctsl-sdk");
   return bctsl;
 }
 
@@ -20,11 +20,17 @@ export default function Dao() {
   const [daoState, setDaoState] = useState<any | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
-  const [newVote, setNewVote] = useState<{ type: string; value?: string; description?: string; link?: string }>({ type: 'VotePayout', value: '' });
-
+  const [newVote, setNewVote] = useState<{
+    type: string;
+    value?: string;
+    description?: string;
+    link?: string;
+  }>({ type: "VotePayout", value: "" });
+  
   // Read-only SDK fallback so we can display DAO info without wallet
   let cachedReadOnlySdk: AeSdk | null = null;
 
+  
 
   useEffect(() => {
     let cancel = false;
@@ -37,13 +43,15 @@ export default function Dao() {
           if (!cancel) setToken(tok || null);
         }
       } catch (e: any) {
-        if (!cancel) setError(e?.message || 'Failed to load DAO');
+        if (!cancel) setError(e?.message || "Failed to load DAO");
       } finally {
         if (!cancel) setLoading(false);
       }
     }
     load();
-    return () => { cancel = true; };
+    return () => {
+      cancel = true;
+    };
   }, [saleAddress]);
 
   async function refreshDao() {
@@ -61,7 +69,9 @@ export default function Dao() {
     }
   }
 
-  useEffect(() => { refreshDao(); }, [saleAddress]);
+  useEffect(() => {
+    refreshDao();
+  }, [saleAddress]);
 
   async function createVote() {
     if (!saleAddress) return;
@@ -73,14 +83,14 @@ export default function Dao() {
       const metadata: any = {
         subject_type: newVote.type,
         subject_value: newVote.value,
-        description: newVote.description || '',
-        link: newVote.link || '',
+        description: newVote.description || "",
+        link: newVote.link || "",
         subject: { [newVote.type]: [newVote.value] },
       };
       await dao.addVote(metadata);
       await refreshDao();
     } catch (e: any) {
-      setError(e?.message || 'Failed to create vote');
+      setError(e?.message || "Failed to create vote");
     } finally {
       setCreating(false);
     }
@@ -94,14 +104,19 @@ export default function Dao() {
         </div>
       )}
       <div className="flex justify-between items-center mb-4">
-        <Link 
-          to={`/trendminer/tokens/${encodeURIComponent(saleAddress || '')}`}
+        <Link
+          to={`/trendminer/tokens/${encodeURIComponent(saleAddress || "")}`}
           className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
         >
           ← Back to token sale
         </Link>
         <div className="font-bold text-white">
-          Treasury: {balance != null ? `${balance.toLocaleString(undefined, { maximumFractionDigits: 6 })} AE` : '—'}
+          Treasury:{" "}
+          {balance != null
+            ? `${balance.toLocaleString(undefined, {
+                maximumFractionDigits: 6,
+              })} AE`
+            : "—"}
         </div>
       </div>
 
@@ -112,29 +127,44 @@ export default function Dao() {
         <div className="grid grid-cols-1 gap-4 mt-3">
           <div className="flex flex-wrap gap-3 text-sm">
             <div>
-              <span className="opacity-75 text-xs text-white/75">Proposals:</span>{' '}
+              <span className="opacity-75 text-xs text-white/75">
+                Proposals:
+              </span>{" "}
               <strong className="text-white">
-                {Array.isArray((daoState as any)?.votes) ? (daoState as any).votes.length : 0}
+                {Array.isArray((daoState as any)?.votes)
+                  ? (daoState as any).votes.length
+                  : 0}
               </strong>
             </div>
             {token?.holders_count != null && (
               <div>
-                <span className="opacity-75 text-xs text-white/75">Holders:</span>{' '}
-                <strong className="text-white">{Number(token.holders_count).toLocaleString()}</strong>
+                <span className="opacity-75 text-xs text-white/75">
+                  Holders:
+                </span>{" "}
+                <strong className="text-white">
+                  {Number(token.holders_count).toLocaleString()}
+                </strong>
               </div>
             )}
             {token?.market_cap != null && (
               <div>
-                <span className="opacity-75 text-xs text-white/75">Market Cap:</span>{' '}
+                <span className="opacity-75 text-xs text-white/75">
+                  Market Cap:
+                </span>{" "}
                 <strong className="text-white">
-                  {(Number(token.market_cap) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 2 })} AE
+                  {(Number(token.market_cap) / 1e18).toLocaleString(undefined, {
+                    maximumFractionDigits: 2,
+                  })}{" "}
+                  AE
                 </strong>
               </div>
             )}
             <div>
-              <a 
-                href={`https://aescan.io/contracts/${encodeURIComponent(saleAddress || '')}?type=call-transactions`} 
-                target="_blank" 
+              <a
+                href={`https://aescan.io/contracts/${encodeURIComponent(
+                  saleAddress || ""
+                )}?type=call-transactions`}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
               >
@@ -143,46 +173,55 @@ export default function Dao() {
             </div>
           </div>
           <div className="text-sm opacity-80 text-white/80 leading-relaxed">
-            The DAO manages the token's treasury. Holders can create proposals and vote. Approved proposals can be applied
-            to execute on-chain actions such as payouts.
+            The DAO manages the token's treasury. Holders can create proposals
+            and vote. Approved proposals can be applied to execute on-chain
+            actions such as payouts.
           </div>
           <div className="border border-white/10 rounded-xl p-3 bg-black/20 backdrop-blur-lg text-white shadow-lg">
             <div className="font-extrabold mb-2 text-white">Create Vote</div>
             <div className="grid gap-2">
-              <select 
-                className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50" 
-                value={newVote.type} 
-                onChange={(e) => setNewVote((v) => ({ ...v, type: e.target.value }))}
+              <select
+                className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
+                value={newVote.type}
+                onChange={(e) =>
+                  setNewVote((v) => ({ ...v, type: e.target.value }))
+                }
               >
                 <option value="VotePayout">Payout</option>
                 <option value="Generic">Generic</option>
               </select>
-              <input 
-                placeholder="Subject value (address or data)" 
-                value={newVote.value} 
-                onChange={(e) => setNewVote((v) => ({ ...v, value: e.target.value }))} 
+              <input
+                placeholder="Subject value (address or data)"
+                value={newVote.value}
+                onChange={(e) =>
+                  setNewVote((v) => ({ ...v, value: e.target.value }))
+                }
                 className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
               />
-              <input 
-                placeholder="Description (optional)" 
-                value={newVote.description || ''} 
-                onChange={(e) => setNewVote((v) => ({ ...v, description: e.target.value }))} 
+              <input
+                placeholder="Description (optional)"
+                value={newVote.description || ""}
+                onChange={(e) =>
+                  setNewVote((v) => ({ ...v, description: e.target.value }))
+                }
                 className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
               />
-              <input 
-                placeholder="Link (optional)" 
-                value={newVote.link || ''} 
-                onChange={(e) => setNewVote((v) => ({ ...v, link: e.target.value }))} 
+              <input
+                placeholder="Link (optional)"
+                value={newVote.link || ""}
+                onChange={(e) =>
+                  setNewVote((v) => ({ ...v, link: e.target.value }))
+                }
                 className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
               />
-              <AeButton 
-                onClick={createVote} 
-                disabled={creating} 
-                loading={creating} 
-                size="small" 
+              <AeButton
+                onClick={createVote}
+                disabled={creating}
+                loading={creating}
+                size="small"
                 variant="primary"
               >
-                {creating ? 'Creating…' : 'Create vote'}
+                {creating ? "Creating…" : "Create vote"}
               </AeButton>
             </div>
           </div>
@@ -190,9 +229,17 @@ export default function Dao() {
           <div className="border border-white/10 rounded-xl p-3 bg-black/20 backdrop-blur-lg text-white shadow-lg">
             <div className="font-extrabold mb-2 text-white">Votes</div>
             {!daoState && <div className="text-slate-400">No votes yet</div>}
-            {daoState && Array.isArray(daoState.votes) && daoState.votes.map((vote: any, index: number) => (
-              <DaoVoteItem key={index} saleAddress={saleAddress!} vote={vote} id={index} onChanged={refreshDao} />
-            ))}
+            {/* {daoState &&
+              Array.isArray(daoState.votes) &&
+              daoState.votes.map((vote: any, index: number) => (
+                <DaoVoteItem
+                  key={index}
+                  saleAddress={saleAddress!}
+                  vote={vote}
+                  id={index}
+                  onChanged={refreshDao}
+                />
+              ))} */}
           </div>
         </div>
       )}
@@ -200,13 +247,24 @@ export default function Dao() {
   );
 }
 
-function DaoVoteItem({ saleAddress, vote, id, onChanged }: { saleAddress: string; vote: any; id: number; onChanged: () => void }) {
+function DaoVoteItem({
+  saleAddress,
+  vote,
+  id,
+  onChanged,
+}: {
+  saleAddress: string;
+  vote: any;
+  id: number;
+  onChanged: () => void;
+}) {
   const { sdk } = useAeSdk();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function action(fn: (dao: any) => Promise<any>) {
-    setLoading(true); setError(null);
+    setLoading(true);
+    setError(null);
     try {
       const { initFallBack } = await ensureBctsl();
       const factory = await initFallBack(sdk, saleAddress);
@@ -214,53 +272,57 @@ function DaoVoteItem({ saleAddress, vote, id, onChanged }: { saleAddress: string
       await fn(dao);
       await onChanged();
     } catch (e: any) {
-      setError(e?.message || 'Action failed');
-    } finally { setLoading(false); }
+      setError(e?.message || "Action failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <div className="border border-white/10 rounded-xl p-3 mb-2 bg-black/20 backdrop-blur-lg text-white">
       <div className="flex justify-between items-center mb-2">
         <div className="text-sm text-white/80">Vote #{id}</div>
-        <div className="text-sm text-white">State: {(vote && vote[0]) || '—'}</div>
+        <div className="text-sm text-white">
+          State: {(vote && vote[0]) || "—"}
+        </div>
       </div>
       <div className="flex flex-wrap gap-2 mt-2">
-        <AeButton 
-          disabled={loading} 
-          onClick={() => action((dao) => dao.vote(true))} 
-          size="small" 
+        <AeButton
+          disabled={loading}
+          onClick={() => action((dao) => dao.vote(true))}
+          size="small"
           variant="success"
         >
           Vote Yes
         </AeButton>
-        <AeButton 
-          disabled={loading} 
-          onClick={() => action((dao) => dao.vote(false))} 
-          size="small" 
+        <AeButton
+          disabled={loading}
+          onClick={() => action((dao) => dao.vote(false))}
+          size="small"
           variant="error"
         >
           Vote No
         </AeButton>
-        <AeButton 
-          disabled={loading} 
-          onClick={() => action((dao) => dao.revokeVote())} 
-          size="small" 
+        <AeButton
+          disabled={loading}
+          onClick={() => action((dao) => dao.revokeVote())}
+          size="small"
           variant="warning"
         >
           Revoke
         </AeButton>
-        <AeButton 
-          disabled={loading} 
-          onClick={() => action((dao) => dao.withdraw())} 
-          size="small" 
+        <AeButton
+          disabled={loading}
+          onClick={() => action((dao) => dao.withdraw())}
+          size="small"
           variant="secondary"
         >
           Withdraw
         </AeButton>
-        <AeButton 
-          disabled={loading} 
-          onClick={() => action((dao) => dao.apply())} 
-          size="small" 
+        <AeButton
+          disabled={loading}
+          onClick={() => action((dao) => dao.apply())}
+          size="small"
           variant="accent"
         >
           Apply
@@ -270,5 +332,3 @@ function DaoVoteItem({ saleAddress, vote, id, onChanged }: { saleAddress: string
     </div>
   );
 }
-
-

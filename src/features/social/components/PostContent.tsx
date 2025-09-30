@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { Backend } from '../../../api/backend';
 import { cn } from '@/lib/utils';
-import { linkify } from '../../../utils/linkify';
+import { linkify, formatUrl, truncateEnd } from '../../../utils/linkify';
 import { useWallet } from '../../../hooks';
 
 interface PostContentProps {
@@ -26,8 +26,9 @@ const PostContent = memo(({ post }: PostContentProps) => {
         target="_blank" 
         rel="noreferrer" 
         className="inline-flex items-center text-sm text-accent hover:text-accent/80 transition-colors underline decoration-accent/30 hover:decoration-accent/60 underline-offset-2"
+        title={post.url}
       >
-        {post.url}
+        {truncateEnd(formatUrl(post.url), 60)}
       </a>
     )}
     

@@ -14,6 +14,9 @@ interface AddressAvatarWithChainNameProps {
     size?: number;
     overlaySize?: number;
     showAddressAndChainName?: boolean;
+    // When true, show only one primary line: chain name if available,
+    // otherwise the address. Useful for compact header displays.
+    showPrimaryOnly?: boolean;
     showBalance?: boolean;
     truncateAddress?: boolean;
     className?: string;
@@ -29,8 +32,9 @@ export const AddressAvatarWithChainName = memo(({
     size = 36,
     overlaySize = 18,
     showAddressAndChainName = true,
+    showPrimaryOnly = false,
     showBalance = false,
-    truncateAddress = true,
+    truncateAddress = false,
     className,
     isHoverEnabled = true,
     avatarBackground = false,
@@ -108,19 +112,41 @@ export const AddressAvatarWithChainName = memo(({
             </div>
 
             <div className={cn("flex flex-col items-start min-w-0 px-[12px] pb-[20px]", contentClassName)}>
-                {showAddressAndChainName && (
-                    <>
-                        <span className="chain-name text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
-                            {chainName || 'Legend'}
-                        </span>
-                        <span className="text-xs text-foreground/90 font-mono leading-tight">
-                            <AddressFormatted
-                                address={address}
-                                truncate={false}
-                                className={className}
-                            />
-                        </span>
-                    </>
+                {showPrimaryOnly ? (
+                    (() => {
+                        const displayName = chainName || (!hideFallbackName ? 'Legend' : '');
+                        return displayName ? (
+                            <span className="chain-name text-[14px] md:text-[15px] font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
+                                {displayName}
+                            </span>
+                        ) : (
+                            <span
+                                className={cn(
+                                    'text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent leading-tight font-sans',
+                                    className,
+                                )}
+                                title={address}
+                            >
+                                {`${address.slice(0, 6)}...${address.slice(-6)}`}
+                            </span>
+                        );
+                    })()
+                ) : (
+                    showAddressAndChainName && (
+                        <>
+                            <span className="chain-name text-[14px] md:text-[15px] font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
+                                {chainName || (hideFallbackName ? '' : 'Legend')}
+                            </span>
+                            <span className="text-xs text-white/70 font-mono leading-[0.9] no-gradient-text">
+                                <AddressFormatted
+                                    address={address}
+                                    truncate={false}
+                                    truncateFixed={false}
+                                    className={className}
+                                />
+                            </span>
+                        </>
+                    )
                 )}
                 <div>
                     {showBalance && (

@@ -43,7 +43,7 @@ export default function WebAppHeader() {
       borderBottomColor: 'rgba(255, 255, 255, 0.14)',
       boxShadow: '0 6px 28px rgba(0,0,0,0.35)'
     }}>
-      <div className="flex items-center gap-6 px-6 h-16 max-w-[min(1536px,100%)] mx-auto md:px-5 md:gap-5">
+      <div className="flex items-center gap-6 px-6 h-16 max-w-[min(1400px,100%)] mx-auto md:px-5 md:gap-5">
         <Link to="/" className="flex items-center no-underline" style={{ color: 'var(--standard-font-color)' }} aria-label="Superhero Home">
           <HeaderLogo className="h-8 w-auto" />
         </Link>
@@ -108,7 +108,8 @@ export default function WebAppHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-4">
+        {/* Right area lives inside the boxed header container */}
+        <div className="ml-auto flex items-center gap-4 justify-end">
           <HeaderWalletButton />
         </div>
       </div>

@@ -25,7 +25,13 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
         <a
           href={`/users/${name}`}
           key={`aens-${name}-${offset}`}
-          className="font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent no-underline hover:underline"
+          className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+          style={{
+            WebkitTextFillColor: 'currentColor',
+            WebkitBackgroundClip: 'initial',
+            backgroundClip: 'initial',
+            background: 'none',
+          }}
         >
           {match}
         </a>
@@ -57,7 +63,13 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
         <a
           href={`/users/${address}`}
           key={`acc-${address}-${idx}-${off}`}
-          className="font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent no-underline hover:underline"
+          className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+          style={{
+            WebkitTextFillColor: 'currentColor',
+            WebkitBackgroundClip: 'initial',
+            backgroundClip: 'initial',
+            background: 'none',
+          }}
         >
           {display}
         </a>
@@ -93,28 +105,21 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
             key={`${href}-${idx}-${off}`}
             target="_blank"
             rel="noopener noreferrer"
+            className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words no-underline"
             style={{
               display: 'inline',
-              verticalAlign: 'baseline',
               lineHeight: 'inherit',
               margin: 0,
               padding: 0,
+              WebkitTextFillColor: 'currentColor',
+              WebkitBackgroundClip: 'initial',
+              backgroundClip: 'initial',
+              background: 'none',
+              verticalAlign: 'baseline',
             }}
             title={m}
           >
-            <span
-              style={{
-                display: 'inline-block',
-                maxWidth: '100%',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                verticalAlign: '-0.3em',
-                lineHeight: 'inherit',
-              }}
-            >
-              {display}
-            </span>
+            {display}
           </a>
         );
       }
@@ -127,7 +132,7 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
   return finalParts;
 }
 
-function formatUrl(url: string): string {
+export function formatUrl(url: string): string {
   try {
     const withProtocol = url.startsWith('http') ? url : `https://${url}`;
     const u = new URL(withProtocol);
@@ -139,7 +144,7 @@ function formatUrl(url: string): string {
   }
 }
 
-function truncateEnd(text: string, max: number): string {
+export function truncateEnd(text: string, max: number): string {
   if (text.length <= max) return text;
   return text.slice(0, Math.max(0, max - 1)) + '…';
 }

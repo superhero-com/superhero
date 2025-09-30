@@ -282,7 +282,7 @@ export default function TokenDetail() {
 
 
   return (
-    <div className="mx-auto md:p-5 flex flex-col gap-6 md:gap-8 min-h-screen">
+    <div className="mx-auto md:px-5 md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
       <div className="grid grid-cols-1 gap-6 md:gap-8 items-start">
       <div className="flex flex-col gap-6">
         {/* Token Detail Card */}

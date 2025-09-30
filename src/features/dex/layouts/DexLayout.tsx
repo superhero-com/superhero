@@ -181,9 +181,9 @@ export default function DexLayout({ children }: DexLayoutProps) {
 
   return (
     <>
-      <div className="min-h-screen w-full max-w-[min(1536px,100%)] mx-auto flex flex-col pb-24 lg:pb-0">
-        <div className="flex-grow grid grid-cols-1 gap-4 p-2 px-4 md:gap-3 md:p-2 md:px-3 lg:gap-4 lg:p-2 lg:px-4 sm:gap-2 sm:p-1 sm:px-2 lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)]">
-          <aside className="hidden lg:block sticky top-0 self-start min-w-0">
+      <div className="min-h-screen w-full max-w-[min(1400px,100%)] mx-auto flex flex-col pb-24 lg:pb-0">
+        <div className="flex-grow grid grid-cols-1 gap-0 p-1 px-2 md:gap-0 md:p-1 md:px-2 lg:gap-0 lg:p-1 lg:px-2 sm:gap-0 sm:p-1 sm:px-1 lg:grid-cols-[minmax(200px,260px)_minmax(560px,1fr)]">
+          <aside className="hidden lg:block sticky top-0 self-start min-w-0 w-full">
             <div className="dex-sidebar">
               <div className="dex-nav-section">
                 <div className="dex-nav-buttons">
@@ -200,7 +200,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
             </div>
           </aside>
 
-          <main className="min-w-0 overflow-hidden">
+          <main className="min-w-0 overflow-hidden pt-1">
             {children}
           </main>
         </div>

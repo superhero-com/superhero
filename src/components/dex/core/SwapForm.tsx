@@ -155,6 +155,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       const searchParams = new URLSearchParams(location.search);
       const fromParam = searchParams.get('from');
       const toParam = searchParams.get('to');
+      const defaultToAddress = 'ct_KeTvHnhU85vuuQMMZocaiYkPL9tkoavDRT3Jsy47LK2YqLHYb'; // WTT
 
       // Set tokenIn based on URL param or default
       if (fromParam && !tokenIn) {
@@ -174,12 +175,13 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         if (foundToken && !cancelled) {
           setTokenOut(foundToken);
         }
-      } 
-      // else if (!tokenOut && !toParam && tokens.length > 0) {
-      //   // Default: WTT as output token
-      //   const wtt = tokens.find((t) => (t.symbol || '').toUpperCase() === 'WTT') || null;
-      //   setTokenOut(wtt || tokens[2] || null);
-      // }
+      } else if (!tokenOut && !toParam) {
+        // Default: WTT as output token when no URL param provided
+        const wtt = await findTokenByAddressOrSymbol(defaultToAddress);
+        if (wtt && !cancelled) {
+          setTokenOut(wtt);
+        }
+      }
     };
 
     initializeTokens();

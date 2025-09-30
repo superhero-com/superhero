@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { TokensService } from "../api/generated/services/TokensService";
-import { TokenDto } from "../api/generated/models/TokenDto";
-import { TrendminerApi } from "../api/backend";
-import { CONFIG } from "../config";
-import { useAeSdk } from "../hooks/useAeSdk";
-import { useOwnedTokens } from "../hooks/useOwnedTokens";
+import { TokensService } from "../../../api/generated/services/TokensService";
+import { TokenDto } from "../../../api/generated/models/TokenDto";
+import { TrendminerApi } from "../../../api/backend";
+import { CONFIG } from "../../../config";
+import { useAeSdk } from "../../../hooks/useAeSdk";
+import { useOwnedTokens } from "../../../hooks/useOwnedTokens";
 
 // Components
 import {
@@ -14,17 +14,17 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import ConnectWalletButton from "../components/ConnectWalletButton";
-import LatestTransactionsCarousel from "../components/Trendminer/LatestTransactionsCarousel";
-import CommentsList from "../components/Trendminer/CommentsList";
-import TokenHolders from "../components/Trendminer/TokenHolders";
-import TokenTrades from "../components/Trendminer/TokenTrades";
-import ShareModal from "../components/ui/ShareModal";
-import Token24hChange from "../components/Trendminer/Token24hChange";
-import TvCandles from "../components/Trendminer/TvCandles";
+} from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
+import ConnectWalletButton from "../../../components/ConnectWalletButton";
+import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
+import CommentsList from "../../../components/Trendminer/CommentsList";
+import TokenHolders from "../../../components/Trendminer/TokenHolders";
+import TokenTrades from "../../../components/Trendminer/TokenTrades";
+import ShareModal from "../../../components/ui/ShareModal";
+import Token24hChange from "../../../components/Trendminer/Token24hChange";
+import TvCandles from "../../../components/Trendminer/TvCandles";
 
 // Feature components
 import { 
@@ -32,9 +32,9 @@ import {
   TokenRanking,
   TokenCandlestickChartSkeleton, 
   TokenSaleSidebarSkeleton 
-} from "../features/trendminer";
-import { TokenSummary } from "../features/bcl/components";
-import { TokenDto as TrendminerTokenDto } from "../features/trendminer/types";
+} from "../";
+import { TokenSummary } from "../../bcl/components";
+import { TokenDto as TrendminerTokenDto } from "../types";
 import TokenCandlestickChart from "@/components/charts/TokenCandlestickChart";
 
 interface TokenSaleDetailsProps {}

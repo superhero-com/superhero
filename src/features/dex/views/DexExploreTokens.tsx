@@ -40,9 +40,9 @@ export default function DexExploreTokens() {
   });
 
   return (
-    <div className="p-0">
-      {/* Main Content Card */}
-      <div className="max-w-[1200px] mx-2 md:mx-auto bg-glass-bg border border-glass-border backdrop-blur-[20px] rounded-2xl md:rounded-[24px] p-4 md:p-6 shadow-glass relative overflow-hidden">
+    <div className="p-0 mx-auto md:px-5 md:pt-0">
+      {/* Main Content Container (no card) */}
+      <div className="max-w-[1200px] mx-2 md:mx-auto bg-transparent border-none rounded-none p-0 md:p-0 shadow-none relative overflow-visible backdrop-blur-0">
         {/* Header Card */}
         <div className="mb-6">
           <h1 className="text-xl md:text-2xl font-bold m-0 mb-3 sh-dex-title">

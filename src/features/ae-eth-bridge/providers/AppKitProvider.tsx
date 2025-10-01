@@ -11,9 +11,9 @@ const networks = BridgeConstants.isMainnet
     : [sepolia] as [AppKitNetwork, ...AppKitNetwork[]];
 
 const metadata = {
-    name: 'AE Bridge',
-    description: 'aeternity/Ethereum Bridge',
-    url: 'https://ae-bridge.com/',
+    name: 'Superhero',
+    description: 'Superhero Aeternity/Ethereum Bridge',
+    url: 'https://superhero.com/',
     icons: [],
 };
 

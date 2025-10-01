@@ -260,7 +260,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
         </div>
 
         {/* Content */}
-        <div className="flex-grow grid grid-cols-1 gap-0 p-1 px-2 md:gap-0 md:p-1 md:px-2">
+        <div className="flex-grow grid grid-cols-1 gap-0 p-1 px-2 md:gap-0 md:p-1 md:px-4">
           <main className="min-w-0 overflow-hidden pt-1">
             {children}
           </main>

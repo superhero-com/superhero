@@ -83,7 +83,7 @@ export const routes: RouteObject[] = [
 
   // New DEX Routes with Layout
   {
-    path: "/dex",
+    path: "/defi",
     element: (
       <DexLayout>
         <DexSwap />
@@ -91,7 +91,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/dex/swap",
+    path: "/defi/swap",
     element: (
       <DexLayout>
         <DexSwap />
@@ -99,7 +99,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/dex/wrap",
+    path: "/defi/wrap",
     element: (
       <DexLayout>
         <DexWrap />
@@ -107,7 +107,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/dex/buy-ae-with-eth",
+    path: "/defi/buy-ae-with-eth",
     element: (
       <DexLayout>
         <DexBridge />
@@ -115,7 +115,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/dex/pool",
+    path: "/defi/pool",
     element: (
       <DexLayout>
         <Pool />
@@ -123,7 +123,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/dex/pool/add-tokens",
+    path: "/defi/pool/add-tokens",
     element: (
       <DexLayout>
         <AddTokens />
@@ -131,7 +131,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/dex/explore/tokens",
+    path: "/defi/explore/tokens",
     element: (
       <DexLayout>
         <DexExploreTokens />
@@ -139,7 +139,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/dex/explore/tokens/:tokenAddress",
+    path: "/defi/explore/tokens/:tokenAddress",
     element: (
       <DexLayout>
         <TokenDetail />
@@ -147,7 +147,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/dex/explore/pools",
+    path: "/defi/explore/pools",
     element: (
       <DexLayout>
         <DexExplorePools />
@@ -155,7 +155,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/dex/explore/pools/:poolAddress",
+    path: "/defi/explore/pools/:poolAddress",
     element: (
       <DexLayout>
         <PoolDetail />
@@ -163,7 +163,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/dex/explore/transactions",
+    path: "/defi/explore/transactions",
     element: (
       <DexLayout>
         <DexExploreTransactions />

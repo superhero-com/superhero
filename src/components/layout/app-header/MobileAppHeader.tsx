@@ -270,7 +270,7 @@ export default function MobileAppHeader() {
                     {index === 1 && (
                       <div className={`${baseBg} rounded-xl`}>
                         <Link
-                          to="/dex/buy-ae-with-eth"
+                  to="/defi/buy-ae-with-eth"
                           onClick={handleNavigationClick}
                           className={`${commonClasses} bg-transparent`}
                           style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}

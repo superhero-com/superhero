@@ -290,7 +290,7 @@ export default function PoolDetail() {
               <AeButton
                 onClick={() =>
                   navigate(
-                    `/dex/swap?from=${pool?.token0?.address}&to=${pool?.token1?.address}`
+                    `/defi/swap?from=${pool?.token0?.address}&to=${pool?.token1?.address}`
                   )
                 }
                 variant="secondary-dark"
@@ -301,7 +301,7 @@ export default function PoolDetail() {
               <AeButton
                 onClick={() =>
                   navigate(
-                    `/dex/pool?from=${pool?.token0?.address}&to=${pool?.token1?.address}`
+                    `/defi/pool?from=${pool?.token0?.address}&to=${pool?.token1?.address}`
                   )
                 }
                 variant="secondary-dark"
@@ -311,7 +311,7 @@ export default function PoolDetail() {
               </AeButton>
               <AeButton
                 onClick={() =>
-                  navigate(`/dex/explore/tokens/${pool?.token0?.address}`)
+                  navigate(`/defi/explore/tokens/${pool?.token0?.address}`)
                 }
                 variant="secondary-dark"
                 size="medium"
@@ -320,7 +320,7 @@ export default function PoolDetail() {
               </AeButton>
               <AeButton
                 onClick={() =>
-                  navigate(`/dex/explore/tokens/${pool?.token1?.address}`)
+                  navigate(`/defi/explore/tokens/${pool?.token1?.address}`)
                 }
                 variant="secondary-dark"
                 size="medium"

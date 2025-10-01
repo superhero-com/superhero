@@ -1,8 +1,7 @@
-import BigNumber from 'bignumber.js';
-import { BrowserProvider } from 'ethers';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppKitProvider } from '@reown/appkit/react';
-import { Eip1193Provider } from 'ethers';
+import BigNumber from 'bignumber.js';
+import { BrowserProvider, Eip1193Provider } from 'ethers';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useToast } from '@/components/ToastProvider';
 import { Button } from '@/components/ui/button';
@@ -20,22 +19,22 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import ViewContainer from '@/features/shared/layout/ViewContainer';
 import { useAeSdk } from '@/hooks/useAeSdk';
+import { useRecentActivities } from '@/hooks/useRecentActivities';
 
-import BridgeTokenSelector from '../components/BridgeTokenSelector';
-import ConnectEthereumWallet from '../components/ConnectEthereumWallet';
-import { AppKitProvider } from '../providers/AppKitProvider';
+import ConnectWalletButton from '@/components/ConnectWalletButton';
+import BridgeTokenSelector from './BridgeTokenSelector';
+import ConnectEthereumWallet from './ConnectEthereumWallet';
 import { BRIDGE_USAGE_INTERVAL_IN_HOURS, BridgeConstants } from '../constants';
 import { useBridge } from '../hooks/useBridge';
 import { useTokenBalances } from '../hooks/useTokenBalances';
+import { AppKitProvider } from '../providers/AppKitProvider';
 import * as Aeternity from '../services/aeternity';
 import * as Ethereum from '../services/ethereum';
 import { Asset, BRIDGE_AETERNITY_ACTION_TYPE, BRIDGE_ETH_ACTION_TYPE, BRIDGE_TOKEN_ACTION_TYPE, BridgeAction, Direction } from '../types';
 import { addTokenToEthereumWallet } from '../utils/addTokenToEthereumWallet';
 import { getTxUrl } from '../utils/getTxUrl';
 import { Logger } from '../utils/logger';
-import ConnectWalletButton from '@/components/ConnectWalletButton';
 
 const checkEvmNetworkHasEnoughBalance = async (asset: any, normalizedAmount: BigNumber, walletProvider: Eip1193Provider) => {
     if (asset.symbol === 'WAE') return true;
@@ -135,11 +134,12 @@ const getTokenDisplayName = (asset: any, direction: Direction) => {
     return symbol;
 };
 
-export default function AeEthBridge() {
+export function AeEthBridge() {
     const { push: showToast } = useToast();
     const { asset, assets, direction, updateAsset, updateDirection, isMainnet } = useBridge();
     const { sdk, activeAccount } = useAeSdk();
     const { walletProvider } = useAppKitProvider<Eip1193Provider>('eip155');
+    const { addActivity } = useRecentActivities();
 
     const [buttonBusy, setButtonBusy] = useState(false);
     const [confirming, setConfirming] = useState(false);
@@ -147,7 +147,6 @@ export default function AeEthBridge() {
     const [bridgeActionSummary, setBridgeActionSummary] = useState<BridgeAction | null>(null);
     const [destination, setDestination] = useState<string>('');
     const [amount, setAmount] = useState<string>('');
-    const [ethereumAddress, setEthereumAddress] = useState<string>('');
     const [ethereumAccounts, setEthereumAccounts] = useState<string[]>([]);
     const [selectedEthAccount, setSelectedEthAccount] = useState<string>('');
 
@@ -200,7 +199,9 @@ export default function AeEthBridge() {
             // Set first account as selected if none selected
             if (accounts.length > 0 && !selectedEthAccount) {
                 setSelectedEthAccount(accounts[0]);
-                setEthereumAddress(accounts[0]);
+                setTimeout(() => {
+                    refetchBalances()
+                }, 500)
             }
         } catch (error) {
             Logger.error('Error fetching Ethereum accounts:', error);
@@ -217,7 +218,6 @@ export default function AeEthBridge() {
 
     const handleEthAccountChange = useCallback((account: string) => {
         setSelectedEthAccount(account);
-        setEthereumAddress(account);
         // Balance will be automatically refetched by the useTokenBalances hook
     }, []);
 
@@ -225,7 +225,6 @@ export default function AeEthBridge() {
         setEthereumAccounts(accounts);
         if (accounts.length > 0) {
             setSelectedEthAccount(accounts[0]);
-            setEthereumAddress(accounts[0]);
         }
     }, []);
 
@@ -236,7 +235,6 @@ export default function AeEthBridge() {
     const handleEthereumWalletDisconnected = useCallback(() => {
         setEthereumAccounts([]);
         setSelectedEthAccount('');
-        setEthereumAddress('');
         Logger.log('Ethereum wallet disconnected');
     }, []);
 
@@ -538,6 +536,22 @@ export default function AeEthBridge() {
                 await bridgeOutResult.wait(1);
                 setConfirmingMsg('Bridge transaction confirmed!');
                 Logger.log('Bridge transaction confirmed');
+                console.log('==== bridgeOutResult==', bridgeOutResult);
+
+                // Add bridge activity to recent activities
+                addActivity({
+                    type: 'bridge',
+                    hash: bridgeOutResult.hash,
+                    account: activeAccount ?? destination,
+                    tokenIn: asset.symbol,
+                    tokenOut: direction === Direction.EthereumToAeternity ? `æ${asset.symbol}` : asset.symbol,
+                    amountIn: normalizedAmount.shiftedBy(-asset.decimals).toString(),
+                    amountOut: normalizedAmount.shiftedBy(-asset.decimals).toString(),
+                    status: {
+                        confirmed: true,
+                        blockNumber: bridgeOutResult.blockNumber,
+                    },
+                });
             } catch (e: any) {
                 Logger.error('Bridge transaction error:', e);
                 let errorMsg = e.message || 'Bridge transaction failed';
@@ -675,6 +689,21 @@ export default function AeEthBridge() {
                 allowanceTxHash,
                 bridgeTxHash: bridge_out_call.hash,
             });
+
+            // Add bridge activity to recent activities
+            addActivity({
+                type: 'bridge',
+                hash: bridge_out_call.hash,
+                account: aeternityAddress ?? destination,
+                tokenIn: `æ${asset.symbol}`,
+                tokenOut: asset.symbol,
+                amountIn: normalizedAmount.shiftedBy(-asset.decimals).toString(),
+                amountOut: normalizedAmount.shiftedBy(-asset.decimals).toString(),
+                status: {
+                    confirmed: true,
+                    blockNumber: bridge_out_call?.txData?.blockHeight,
+                },
+            });
         } catch (e: any) {
             Logger.error(e);
             showSnackMessage(e.message);
@@ -704,9 +733,9 @@ export default function AeEthBridge() {
 
     return (
         <AppKitProvider>
-            <ViewContainer>
+            <>
                 <div className="flex justify-center">
-                    <div className="w-full max-w-[min(480px,100vw)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden box-border">
+                    <div className="w-full mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden box-border">
                         {/* Header */}
                         <div className="flex justify-between items-center mb-4 sm:mb-6 min-w-0">
                             <h2 className="text-lg sm:text-xl font-bold m-0 sh-dex-title min-w-0 flex-shrink">
@@ -1102,7 +1131,9 @@ export default function AeEthBridge() {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-            </ViewContainer>
+            </>
         </AppKitProvider>
     );
 }
+
+export default AeEthBridge;

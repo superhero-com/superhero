@@ -693,20 +693,19 @@ export default function AeEthBridge() {
             });
 
             // Add bridge activity to recent activities
-            if (aeternityAddress) {
-                addActivity({
-                    type: 'bridge',
-                    hash: bridge_out_call.hash,
-                    account: aeternityAddress,
-                    tokenIn: `æ${asset.symbol}`,
-                    tokenOut: asset.symbol,
-                    amountIn: normalizedAmount.shiftedBy(-asset.decimals).toString(),
-                    amountOut: normalizedAmount.shiftedBy(-asset.decimals).toString(),
-                    status: {
-                        confirmed: true,
-                    },
-                });
-            }
+            addActivity({
+                type: 'bridge',
+                hash: bridge_out_call.hash,
+                account: aeternityAddress ?? destination,
+                tokenIn: `æ${asset.symbol}`,
+                tokenOut: asset.symbol,
+                amountIn: normalizedAmount.shiftedBy(-asset.decimals).toString(),
+                amountOut: normalizedAmount.shiftedBy(-asset.decimals).toString(),
+                status: {
+                    confirmed: true,
+                    blockNumber: bridge_out_call?.txData?.blockHeight,
+                },
+            });
         } catch (e: any) {
             Logger.error(e);
             showSnackMessage(e.message);

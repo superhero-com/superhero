@@ -1,14 +1,13 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { BrowserProvider } from 'ethers';
-import BigNumber from 'bignumber.js';
-import { Asset, Direction } from '../types';
-import { BridgeConstants } from '../constants';
-import * as Aeternity from '../services/aeternity';
-import * as Ethereum from '../services/ethereum';
-import { fetchAddressInfo, getAllTokenBalancesFromEthplorer } from '../services/ethplorer';
 import { AeSdk, AeSdkAepp } from '@aeternity/aepp-sdk';
+import BigNumber from 'bignumber.js';
+import { BrowserProvider } from 'ethers';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { getTokenBalance } from '../../../libs/dex';
+import { BridgeConstants } from '../constants';
+import * as Ethereum from '../services/ethereum';
+import { fetchAddressInfo, getAllTokenBalancesFromEthplorer } from '../services/ethplorer';
+import { Asset, Direction } from '../types';
 
 interface UseTokenBalancesProps {
   assets: Asset[];
@@ -27,7 +26,7 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
   const sdkRef = useRef(sdk);
   const aeAccountRef = useRef(aeAccount);
   const ethAccountRef = useRef(ethAccount);
-  
+
   // Get activeNetwork from useAeSdk hook
   const { activeNetwork } = useAeSdk();
 
@@ -91,19 +90,19 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
             console.log('[useTokenBalances] Fetching ETH balances via Ethplorer API...');
             const ethplorerData = await fetchAddressInfo(currentEthAccount);
             const ethplorerBalances = getAllTokenBalancesFromEthplorer(ethplorerData, currentAssets, BridgeConstants.ethereum.default_eth);
-            
+
             // Merge Ethplorer balances into newEthBalances
             Object.assign(newEthBalances, ethplorerBalances);
             console.log('[useTokenBalances] Ethplorer API balances:', ethplorerBalances);
           } catch (ethplorerError) {
             console.warn('[useTokenBalances] Ethplorer API failed, falling back to contract calls:', ethplorerError);
-            
+
             // Fallback to individual contract calls
             if (!(window as any).ethereum) return;
 
             const provider = new BrowserProvider((window as any).ethereum, {
-                name: 'Ethereum Bridge',
-                chainId: parseInt(BridgeConstants.ethereum.ethChainId, 16),
+              name: 'Ethereum Bridge',
+              chainId: parseInt(BridgeConstants.ethereum.ethChainId, 16),
             });
             const signer = await provider.getSigner();
             const userAddress = await signer.getAddress();
@@ -126,13 +125,13 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
                         BridgeConstants.ethereum.asset_abi,
                         signer
                       );
-                      
+
                       // Simple timeout approach
                       const balancePromise = tokenContract.balanceOf(userAddress);
-                      const timeoutPromise = new Promise((_, reject) => 
+                      const timeoutPromise = new Promise((_, reject) =>
                         setTimeout(() => reject(new Error(`Balance fetch timeout for ${asset.symbol}`)), 8000)
                       );
-                      
+
                       const balance = await Promise.race([balancePromise, timeoutPromise]);
                       const balanceFormatted = new BigNumber(balance.toString())
                         .shiftedBy(-asset.decimals)
@@ -162,7 +161,7 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
           // Fetch all AEX-9 balances from middleware API (same approach as useAccountBalances)
           const url = `/v3/accounts/${currentAeAccount}/aex9/balances?limit=100`;
           const middlewareBalances = await _loadAex9DataFromMdw(url, []);
-          
+
           // Create a map of contract addresses to balances for quick lookup
           const balanceMap = new Map();
           middlewareBalances.forEach((balance: any) => {
@@ -193,7 +192,6 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
                 } else {
                   // AEX-9 token - check middleware first, fallback to contract call
                   const middlewareBalance = balanceMap.get(asset.aeAddress);
-                  console.log('middlewareBalance', middlewareBalance, balanceMap);
                   if (middlewareBalance) {
                     // Use middleware data
                     const balanceFormatted = new BigNumber(middlewareBalance.amount)
@@ -254,7 +252,12 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
 
       // Fetch both networks in parallel
       await Promise.all([fetchEthereumBalances(), fetchAeternityBalances()]);
-      console.log('[useTokenBalances] Balance fetch complete', { aeBalances: newAeBalances, ethBalances: newEthBalances });
+      console.log('[useTokenBalances] Balance fetch complete', {
+        currentAeAccount,
+        aeBalances: newAeBalances,
+        currentEthAccount,
+        ethBalances: newEthBalances
+      });
     } catch (error) {
       console.error('Error fetching token balances:', error);
     } finally {

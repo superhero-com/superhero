@@ -135,7 +135,7 @@ export default function GlobalNewAccountEducation() {
               <span style={{ fontSize: 13, fontWeight: 600, color: '#4ecdc4' }}>Quick Start Guide:</span>
             </div>
             <div style={{ fontSize: 12, color: '#b8c5d6', lineHeight: 1.4 }}>
-              1. <strong>Bridge ETH</strong> from Ethereum to get AE tokens<br/>
+              1. <strong>Swap ETH</strong> from Ethereum to get AE tokens<br/>
               2. <strong>Visit the DEX</strong> to start trading<br/>
               3. <strong>Explore</strong> the æternity ecosystem! 🎉
             </div>

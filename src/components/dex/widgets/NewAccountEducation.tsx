@@ -101,7 +101,7 @@ export default function NewAccountEducation() {
                   alignItems: 'center',
                   gap: 6
                 }}>
-                  🌉 Bridge ETH from Ethereum
+                  🌉 Swap ETH from Ethereum
                 </div>
                 <div style={{ 
                   fontSize: 14, 
@@ -159,7 +159,7 @@ export default function NewAccountEducation() {
                   lineHeight: 1.5,
                   fontWeight: 400
                 }}>
-                  Scroll down to find the "Bridge ETH → AE" widget. Enter your ETH amount and follow the 
+                  Scroll down to find the "Swap ETH → AE" widget. Enter your ETH amount and follow the 
                   simple steps - it's super easy! ⚡
                 </div>
               </div>

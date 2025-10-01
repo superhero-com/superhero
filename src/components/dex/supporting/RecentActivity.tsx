@@ -183,7 +183,7 @@ export default function RecentActivity({
 
   if (!activities.length) {
     return (
-      <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] shadow-[0_4px_20px_rgba(0,0,0,0.1)] mt-4">
+      <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
         <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-white/10">
           <span className="text-base">📊</span>
           <span className="text-base font-bold text-white flex-1">
@@ -204,7 +204,7 @@ export default function RecentActivity({
   }
 
   return (
-    <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] shadow-[0_4px_20px_rgba(0,0,0,0.1)] mt-4">
+    <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
       <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-white/10">
         <span className="text-base">📊</span>
         <span className="text-base font-bold text-white flex-1">

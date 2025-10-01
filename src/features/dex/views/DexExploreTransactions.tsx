@@ -37,7 +37,7 @@ export default function DexExploreTransactions() {
   });
 
   return (
-    <div className="mx-auto md:px-5 md:pt-0 flex flex-col gap-6 md:gap-8 min-h-screen">
+    <div className="mx-auto md:pt-0 md:px-2 flex flex-col gap-6 md:gap-8 min-h-screen">
       {/* Main Content Card */}
       <div className="grid grid-cols-1 gap-6 md:gap-8 items-start">
         {/* Header */}

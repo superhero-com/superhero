@@ -1169,10 +1169,10 @@ export default function RightRail({
           </button>
           <button
             className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(59,130,246,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            onClick={() => navigate('/dex/bridge')}
-            title="Bridge Ether to AE"
+            onClick={() => navigate('/dex/buy-ae-with-eth')}
+            title="Buy AE with ETH"
           >
-            🌉 Bridge Ether
+            🌉 Buy AE with ETH
           </button>
           <button
             className="bg-gradient-to-r from-amber-500 to-orange-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(245,158,11,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"

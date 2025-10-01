@@ -36,7 +36,7 @@ const navigationItems: NavigationItem[] = [
     id: 'bridge',
     label: 'BUY AE',
     icon: '🌉',
-    path: '/dex/swap-eth-to-ae',
+    path: '/dex/buy-ae-with-eth',
     description: 'Buy AE with ETH'
   }
 ];

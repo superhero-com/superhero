@@ -107,7 +107,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/dex/swap-eth-to-ae",
+    path: "/dex/buy-ae-with-eth",
     element: (
       <DexLayout>
         <DexBridge />

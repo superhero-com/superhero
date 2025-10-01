@@ -352,7 +352,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   }, [swapLoading, amountIn, amountOut, tokenIn, tokenOut, hasInsufficientBalance, routeInfo.path.length, hasNoLiquidity]);
 
   return (
-    <div className="w-full sm:w-[480px] mx-auto bg-transparent border-none backdrop-blur-0 rounded-none p-0 shadow-none relative overflow-hidden flex-shrink-0 md:bg-white/[0.02] md:border md:border-white/10 md:backdrop-blur-[20px] md:rounded-[24px] md:p-6 md:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+    <div className="w-full sm:w-[480px] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden flex-shrink-0">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold m-0 sh-dex-title">

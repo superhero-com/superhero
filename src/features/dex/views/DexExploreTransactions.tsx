@@ -199,8 +199,6 @@ export default function DexExploreTransactions() {
             />
           )}
           initialParams={{
-            limit: 10,
-            page: 1,
             orderBy: 'created_at',
             orderDirection: 'DESC',
             txType: filters.txType,

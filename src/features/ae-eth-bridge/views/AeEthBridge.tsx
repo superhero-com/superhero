@@ -1,8 +1,7 @@
-import BigNumber from 'bignumber.js';
-import { BrowserProvider } from 'ethers';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppKitProvider } from '@reown/appkit/react';
-import { Eip1193Provider } from 'ethers';
+import BigNumber from 'bignumber.js';
+import { BrowserProvider, Eip1193Provider } from 'ethers';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useToast } from '@/components/ToastProvider';
 import { Button } from '@/components/ui/button';
@@ -20,23 +19,22 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import ViewContainer from '@/features/shared/layout/ViewContainer';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useRecentActivities } from '@/hooks/useRecentActivities';
 
+import ConnectWalletButton from '@/components/ConnectWalletButton';
 import BridgeTokenSelector from '../components/BridgeTokenSelector';
 import ConnectEthereumWallet from '../components/ConnectEthereumWallet';
-import { AppKitProvider } from '../providers/AppKitProvider';
 import { BRIDGE_USAGE_INTERVAL_IN_HOURS, BridgeConstants } from '../constants';
 import { useBridge } from '../hooks/useBridge';
 import { useTokenBalances } from '../hooks/useTokenBalances';
+import { AppKitProvider } from '../providers/AppKitProvider';
 import * as Aeternity from '../services/aeternity';
 import * as Ethereum from '../services/ethereum';
 import { Asset, BRIDGE_AETERNITY_ACTION_TYPE, BRIDGE_ETH_ACTION_TYPE, BRIDGE_TOKEN_ACTION_TYPE, BridgeAction, Direction } from '../types';
 import { addTokenToEthereumWallet } from '../utils/addTokenToEthereumWallet';
 import { getTxUrl } from '../utils/getTxUrl';
 import { Logger } from '../utils/logger';
-import ConnectWalletButton from '@/components/ConnectWalletButton';
 
 const checkEvmNetworkHasEnoughBalance = async (asset: any, normalizedAmount: BigNumber, walletProvider: Eip1193Provider) => {
     if (asset.symbol === 'WAE') return true;
@@ -136,7 +134,7 @@ const getTokenDisplayName = (asset: any, direction: Direction) => {
     return symbol;
 };
 
-export default function AeEthBridge() {
+export function AeEthBridge() {
     const { push: showToast } = useToast();
     const { asset, assets, direction, updateAsset, updateDirection, isMainnet } = useBridge();
     const { sdk, activeAccount } = useAeSdk();
@@ -735,9 +733,9 @@ export default function AeEthBridge() {
 
     return (
         <AppKitProvider>
-            <ViewContainer>
+            <>
                 <div className="flex justify-center">
-                    <div className="w-full max-w-[min(480px,100vw)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden box-border">
+                    <div className="w-full mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden box-border">
                         {/* Header */}
                         <div className="flex justify-between items-center mb-4 sm:mb-6 min-w-0">
                             <h2 className="text-lg sm:text-xl font-bold m-0 sh-dex-title min-w-0 flex-shrink">
@@ -1133,7 +1131,9 @@ export default function AeEthBridge() {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-            </ViewContainer>
+            </>
         </AppKitProvider>
     );
 }
+
+export default AeEthBridge;

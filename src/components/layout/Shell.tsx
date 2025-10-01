@@ -25,7 +25,7 @@ export default function Shell({ left, right, children, containerClassName }: She
       >
         <div
           className={[
-            "flex-grow grid grid-cols-1 gap-4 p-1 px-2 md:gap-3 md:p-2 md:px-3 lg:gap-4 lg:gap-x-8 lg:p-2 lg:px-4 sm:gap-2 sm:p-1 sm:px-2",
+            "flex-grow grid grid-cols-1 gap-4 p-1 px-2 md:gap-3 md:p-2 md:px-3 lg:gap-4 lg:gap-x-8 lg:p-2 lg:pb-0 lg:px-4 sm:gap-2 sm:p-1 sm:px-2",
             // lg layout widths similar to X: ~280 | 600-720 | 320
             hasLeft && hasRight
               ? "lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)_minmax(300px,360px)]"
@@ -47,10 +47,12 @@ export default function Shell({ left, right, children, containerClassName }: She
           <main className="min-w-0 overflow-visible">{children}</main>
 
           {hasRight && (
-            <aside className="hidden lg:block sticky top-0 self-start min-w-0">
-              <div className="min-h-screen flex flex-col">
-                <div className="min-w-0">{right}</div>
-                <FooterSection />
+            <aside className="hidden lg:block min-w-0">
+              <div className="sticky top-[80px]">
+                <div className="max-h-[calc(100vh-80px)] overflow-y-hidden hover:overflow-y-auto overscroll-contain">
+                  <div className="min-w-0">{right}</div>
+                  <FooterSection />
+                </div>
               </div>
             </aside>
           )}

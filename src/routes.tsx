@@ -95,7 +95,7 @@ export const routes: RouteObject[] = [
     path: "/dex/swap",
     element: (
       <DexLayout>
-        <DexWrap />
+        <DexSwap />
       </DexLayout>
     ),
   },

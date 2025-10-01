@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { DexTokenDto, PairDto } from "../../../api/generated";
 import SwapForm from "../../../components/dex/core/SwapForm";
 import RecentActivity from "../../../components/dex/supporting/RecentActivity";
-import NewAccountEducation from "../../../components/dex/widgets/NewAccountEducation";
 import PoolCandlestickChart from "../components/charts/PoolCandlestickChart";
 
 export default function DexSwap() {
@@ -33,8 +32,7 @@ export default function DexSwap() {
           <RecentActivity />
         </div>
       </div>
-      {/* New Account Education */}
-      <NewAccountEducation />
+      {/* New Account Education hidden on DEX */}
     </div>
   );
 }

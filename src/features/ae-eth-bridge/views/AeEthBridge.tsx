@@ -822,7 +822,7 @@ export default function AeEthBridge() {
                         <label className="text-xs text-white/60 font-medium uppercase tracking-wider block mb-2">
                             You'll Receive
                         </label>
-                        <div className="text-white" style={{ fontSize: '10px' }}>
+                        <div className="text-white overflow-hidden text-ellipsis" style={{ fontSize: '10px' }}>
                             {getDestinationTokenValue()}
                         </div>
                     </div>

@@ -19,7 +19,7 @@ export const navigationItems: NavigationItem[] = [
   {
     id: "dex",
     label: "DeFi",
-    path: "/defi/swap",
+    path: "/defi",
     icon: "💱",
     children: [
       { id: "dex-swap", label: "SWAP", path: "/defi/swap", icon: "🔄" },

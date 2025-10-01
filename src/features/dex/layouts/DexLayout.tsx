@@ -26,18 +26,18 @@ const navigationItems: NavigationItem[] = [
     description: 'Convert AE ↔ WAE'
   },
   {
-    id: 'bridge',
-    label: 'BUY AE',
-    icon: '🌉',
-    path: '/dex/swap-eth-to-ae',
-    description: 'Buy AE with ETH'
-  },
-  {
     id: 'pool',
     label: 'POOL',
     icon: '💧',
     path: '/dex/pool',
     description: 'Manage liquidity positions'
+  },
+  {
+    id: 'bridge',
+    label: 'BUY AE',
+    icon: '🌉',
+    path: '/dex/swap-eth-to-ae',
+    description: 'Buy AE with ETH'
   }
 ];
 

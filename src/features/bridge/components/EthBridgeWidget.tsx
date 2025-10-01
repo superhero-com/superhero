@@ -146,7 +146,7 @@ export default function EthBridgeWidget() {
       {/* Header */}
       <div className="flex justify-between items-center mb-4 sm:mb-6 min-w-0">
         <h2 className="text-lg sm:text-xl font-bold m-0 sh-dex-title min-w-0 flex-shrink">
-          Bridge ETH → AE
+          Swap ETH → AE
         </h2>
 
         <div className="text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-[10px] transition-all duration-300 ease-out font-medium flex-shrink-0">
@@ -287,11 +287,11 @@ export default function EthBridgeWidget() {
                   ethBridgeStep === 'waiting' ? 'Waiting for æETH…' :
                     ethBridgeStep === 'swapping' ? 'Swapping…' : 'Processing…'}
             </div>
-          ) : 'Bridge & Swap'}
+          ) : 'Swap ETH → AE'}
         </button>
       ) : (
         <ConnectWalletButton
-          label="Connect Wallet to Bridge"
+          label="Connect Wallet to Swap ETH"
           block
           variant="dex"
           className="w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase cursor-pointer shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"

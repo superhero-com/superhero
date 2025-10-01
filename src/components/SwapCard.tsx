@@ -205,7 +205,7 @@ export default function SwapCard() {
                 }
               />
 
-              <div className="text-center text-xl opacity-60 text-white/60">↓</div>
+              <div className="text-center text-xl opacity-60 text-white/60">⬇️</div>
 
               <MobileInput
                 label="To (AE)"

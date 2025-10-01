@@ -147,7 +147,6 @@ export default function AeEthBridge() {
     const [bridgeActionSummary, setBridgeActionSummary] = useState<BridgeAction | null>(null);
     const [destination, setDestination] = useState<string>('');
     const [amount, setAmount] = useState<string>('');
-    const [ethereumAddress, setEthereumAddress] = useState<string>('');
     const [ethereumAccounts, setEthereumAccounts] = useState<string[]>([]);
     const [selectedEthAccount, setSelectedEthAccount] = useState<string>('');
 
@@ -200,7 +199,9 @@ export default function AeEthBridge() {
             // Set first account as selected if none selected
             if (accounts.length > 0 && !selectedEthAccount) {
                 setSelectedEthAccount(accounts[0]);
-                setEthereumAddress(accounts[0]);
+                setTimeout(() => {
+                    refetchBalances()
+                }, 500)
             }
         } catch (error) {
             Logger.error('Error fetching Ethereum accounts:', error);
@@ -217,7 +218,6 @@ export default function AeEthBridge() {
 
     const handleEthAccountChange = useCallback((account: string) => {
         setSelectedEthAccount(account);
-        setEthereumAddress(account);
         // Balance will be automatically refetched by the useTokenBalances hook
     }, []);
 
@@ -225,7 +225,6 @@ export default function AeEthBridge() {
         setEthereumAccounts(accounts);
         if (accounts.length > 0) {
             setSelectedEthAccount(accounts[0]);
-            setEthereumAddress(accounts[0]);
         }
     }, []);
 
@@ -236,7 +235,6 @@ export default function AeEthBridge() {
     const handleEthereumWalletDisconnected = useCallback(() => {
         setEthereumAccounts([]);
         setSelectedEthAccount('');
-        setEthereumAddress('');
         Logger.log('Ethereum wallet disconnected');
     }, []);
 

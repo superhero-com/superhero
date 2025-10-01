@@ -11,16 +11,18 @@ export default function DexSwap() {
   // todo get selected pool address3
   return (
     <div className="mx-auto md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
-      {/* Main Content */}
-      <div className="flex gap-5 items-start w-full flex-col md:flex-row md:gap-6">
-        <div className="grid grid-cols-1 gap-6 md:gap-8 items-start">
+      {/* Main Content - unified layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[480px_minmax(560px,1fr)] gap-6 md:gap-8 items-start w-full">
+        {/* Left card (Swap) */}
+        <div className="order-1 lg:order-1">
           <SwapForm
             onPairSelected={setSelectedPair}
             onFromTokenSelected={setFromToken}
           />
         </div>
 
-        <div className="flex-1 min-w-0 w-full flex flex-col gap-6">
+        {/* Right column (Chart + Recent Activity) */}
+        <div className="order-2 lg:order-2 w-full min-w-0 flex flex-col gap-6">
           {!!selectedPair?.address && (
             <PoolCandlestickChart
               pairAddress={selectedPair?.address}

@@ -299,10 +299,10 @@ export default function TokenDetail() {
 
           {/* Action Buttons */}
           <div className="flex gap-2 mb-6 flex-wrap">
-            <AeButton onClick={() => navigate(`/dex/swap?from=AE&to=${tokenAddress}`)} variant="secondary-dark" size="medium">
+            <AeButton onClick={() => navigate(`/defi/swap?from=AE&to=${tokenAddress}`)} variant="secondary-dark" size="medium">
               Swap
             </AeButton>
-            <AeButton onClick={() => navigate(`/dex/pool?from=AE&to=${tokenAddress}`)} variant="secondary-dark" size="medium">
+            <AeButton onClick={() => navigate(`/defi/pool?from=AE&to=${tokenAddress}`)} variant="secondary-dark" size="medium">
               Add Liquidity
             </AeButton>
           </div>

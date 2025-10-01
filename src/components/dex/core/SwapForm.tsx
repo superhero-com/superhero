@@ -354,7 +354,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   return (
     <div className="w-full sm:w-[480px] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden flex-shrink-0">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-2">
         <h2 className="text-xl font-bold m-0 sh-dex-title">
           Swap Tokens
         </h2>
@@ -368,6 +368,9 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
           </button>
         </DexSettings>
       </div>
+      <p className="m-0 mb-4 text-sm text-white/60 leading-relaxed">
+        Swap AEX-9 tokens on the æternity blockchain securely and efficiently.
+      </p>
 
       {/* Token Input From */}
       <div className="mb-2">
@@ -484,9 +487,8 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <ConnectWalletButton
           label="CONNECT WALLET"
           variant="dex"
-          className="text-sm"
+          className="text-sm w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
           block
-          className="w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
         />
       )}
 

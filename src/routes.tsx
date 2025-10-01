@@ -116,9 +116,11 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/bridge",
+    path: "/defi/bridge",
     element: (
-      <AeEthBridge />
+      <DexLayout>
+        <AeEthBridge />
+      </DexLayout>
     ),
   },
   {

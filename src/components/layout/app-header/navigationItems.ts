@@ -24,8 +24,9 @@ export const navigationItems: NavigationItem[] = [
     children: [
       { id: "dex-swap", label: "SWAP", path: "/defi/swap", icon: "🔄" },
       { id: "dex-wrap", label: "WRAP", path: "/defi/wrap", icon: "📦" },
+      { id: "dex-bridge", label: "BRIDGE", path: "/defi/bridge", icon: "🌉" },
       {
-        id: "dex-bridge",
+        id: "dex-buy-ae",
         label: "BUY AE",
         path: "/defi/buy-ae-with-eth",
         icon: "💎",
@@ -50,12 +51,6 @@ export const navigationItems: NavigationItem[] = [
         icon: "📋",
       },
     ],
-  },
-  {
-    id: "bridge ",
-    label: "BRIDGE",
-    path: "/bridge",
-    icon: "💱",
   },
   configs.features.trendminer && {
       id: 'trending',

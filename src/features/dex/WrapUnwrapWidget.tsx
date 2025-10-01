@@ -119,7 +119,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
       )}
     >
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-2">
         <h2 className="text-xl font-bold m-0 sh-dex-title">
           (Un)Wrap AE
         </h2>
@@ -156,6 +156,11 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
           </Button>
         </div>
       </div>
+
+      {/* Description */}
+      <p className="m-0 mb-4 text-sm text-white/60 leading-relaxed">
+        Wrap AE into WAE (and unwrap) for compatibility with DeFi protocols.
+      </p>
 
       {/* Balance Display */}
       <Card className="bg-white/[0.03] border-white/10 rounded-2xl mb-5 backdrop-blur-[10px]">

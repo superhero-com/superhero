@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import ViewContainer from '@/features/shared/layout/ViewContainer';
 import { useAeSdk } from '@/hooks/useAeSdk';
+import { useRecentActivities } from '@/hooks/useRecentActivities';
 
 import BridgeTokenSelector from '../components/BridgeTokenSelector';
 import ConnectEthereumWallet from '../components/ConnectEthereumWallet';
@@ -140,6 +141,7 @@ export default function AeEthBridge() {
     const { asset, assets, direction, updateAsset, updateDirection, isMainnet } = useBridge();
     const { sdk, activeAccount } = useAeSdk();
     const { walletProvider } = useAppKitProvider<Eip1193Provider>('eip155');
+    const { addActivity } = useRecentActivities();
 
     const [buttonBusy, setButtonBusy] = useState(false);
     const [confirming, setConfirming] = useState(false);
@@ -536,6 +538,22 @@ export default function AeEthBridge() {
                 await bridgeOutResult.wait(1);
                 setConfirmingMsg('Bridge transaction confirmed!');
                 Logger.log('Bridge transaction confirmed');
+                console.log('==== bridgeOutResult==', bridgeOutResult);
+
+                // Add bridge activity to recent activities
+                addActivity({
+                    type: 'bridge',
+                    hash: bridgeOutResult.hash,
+                    account: activeAccount ?? destination,
+                    tokenIn: asset.symbol,
+                    tokenOut: direction === Direction.EthereumToAeternity ? `æ${asset.symbol}` : asset.symbol,
+                    amountIn: normalizedAmount.shiftedBy(-asset.decimals).toString(),
+                    amountOut: normalizedAmount.shiftedBy(-asset.decimals).toString(),
+                    status: {
+                        confirmed: true,
+                        blockNumber: bridgeOutResult.blockNumber,
+                    },
+                });
             } catch (e: any) {
                 Logger.error('Bridge transaction error:', e);
                 let errorMsg = e.message || 'Bridge transaction failed';
@@ -673,6 +691,22 @@ export default function AeEthBridge() {
                 allowanceTxHash,
                 bridgeTxHash: bridge_out_call.hash,
             });
+
+            // Add bridge activity to recent activities
+            if (aeternityAddress) {
+                addActivity({
+                    type: 'bridge',
+                    hash: bridge_out_call.hash,
+                    account: aeternityAddress,
+                    tokenIn: `æ${asset.symbol}`,
+                    tokenOut: asset.symbol,
+                    amountIn: normalizedAmount.shiftedBy(-asset.decimals).toString(),
+                    amountOut: normalizedAmount.shiftedBy(-asset.decimals).toString(),
+                    status: {
+                        confirmed: true,
+                    },
+                });
+            }
         } catch (e: any) {
             Logger.error(e);
             showSnackMessage(e.message);

@@ -396,7 +396,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
           disabled={swapLoading || !tokenIn || !tokenOut}
           className="w-12 h-12 rounded-full border border-white/10 bg-white/[0.08] backdrop-blur-[10px] text-white cursor-pointer flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(0,0,0,0.25)] z-[2] relative hover:bg-white/[0.12] hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:-translate-y-0.5 hover:rotate-180 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:rotate-0"
         >
-          ↕️
+          ⬇️
         </button>
       </div>
 
@@ -482,8 +482,9 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         </button>
       ) : (
         <ConnectWalletButton
-          label="Connect wallet"
+          label="CONNECT WALLET"
           variant="dex"
+          className="text-sm"
           block
           className="w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
         />

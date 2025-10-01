@@ -13,6 +13,7 @@ import moment from 'moment';
 import { useQuery } from '@tanstack/react-query';
 import { Decimal } from '../../../../libs/decimal';
 import { TokenChip } from '../../../../components/TokenChip';
+import { DEX_ADDRESSES } from '@/libs/dex';
 
 interface PoolCandlestickChartProps {
   pairAddress: string;
@@ -76,7 +77,14 @@ export function PoolCandlestickChart({
 
   useEffect(() => {
     if (fromTokenAddress) {
-      setFromToken(fromTokenAddress === pair?.token0?.address ? 'token0' : 'token1');
+      const isAe = fromTokenAddress === 'ae';
+      if (isAe) {
+        const WAE_ADDRESS = DEX_ADDRESSES.wae;
+        setFromToken(pair?.token0?.address === WAE_ADDRESS ? 'token0' : 'token1');
+      } else {
+
+        setFromToken(fromTokenAddress === pair?.token0?.address ? 'token0' : 'token1');
+      }
     }
   }, [fromTokenAddress, pair]);
 

@@ -12,11 +12,11 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   {
-    id: 'wrap',
-    label: 'WRAP',
-    icon: '📦',
-    path: '/defi/wrap',
-    description: 'Convert AE ↔ WAE'
+    id: 'swap',
+    label: 'SWAP',
+    icon: '🔄',
+    path: '/defi/swap',
+    description: 'Trade any supported AEX-9 tokens'
   },
   {
     id: 'pool',
@@ -26,11 +26,11 @@ const navigationItems: NavigationItem[] = [
     description: 'Manage liquidity positions'
   },
   {
-    id: 'swap',
-    label: 'SWAP',
-    icon: '🔄',
-    path: '/defi/swap',
-    description: 'Trade any supported AEX-9 tokens'
+    id: 'wrap',
+    label: 'WRAP',
+    icon: '📦',
+    path: '/defi/wrap',
+    description: 'Convert AE ↔ WAE'
   },
   {
     id: 'bridge',

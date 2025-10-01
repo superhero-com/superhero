@@ -1,17 +1,89 @@
-import React from 'react';
-import { useTransactionList } from '../../../components/explore/hooks/useTransactionList';
-import { TransactionCard } from '../../../components/TransactionCard';
-import { CONFIG } from '../../../config';
+import React, { useState } from 'react';
+import { DataTable, useDataTable, DataTableResponse } from '../../shared/components/DataTable';
+import { DexService } from '../../../api/generated';
+import { TransactionCard } from '../components/TransactionCard';
+import { Button } from '../../../components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
+import { Input } from '../../../components/ui/input';
+import { PairTransactionDto } from '../../../api/generated/models/PairTransactionDto';
 
+// Transaction types mapping with meaningful names
+const TX_TYPES = [
+  { value: 'all', label: 'All Types' },
+  { value: 'swap_exact_tokens_for_tokens', label: 'Token to Token Swap (Exact)' },
+  { value: 'swap_tokens_for_exact_tokens', label: 'Token to Token Swap (For Exact)' },
+  { value: 'swap_exact_ae_for_tokens', label: 'AE to Token Swap (Exact)' },
+  { value: 'swap_exact_tokens_for_ae', label: 'Token to AE Swap (Exact)' },
+  { value: 'swap_tokens_for_exact_ae', label: 'Token to AE Swap (For Exact)' },
+  { value: 'swap_ae_for_exact_tokens', label: 'AE to Token Swap (For Exact)' },
+  { value: 'add_liquidity', label: 'Add Liquidity (Token Pairs)' },
+  { value: 'add_liquidity_ae', label: 'Add Liquidity (AE Pairs)' },
+  { value: 'remove_liquidity', label: 'Remove Liquidity (Token Pairs)' },
+  { value: 'remove_liquidity_ae', label: 'Remove Liquidity (AE Pairs)' },
+];
+
+// Wrapper function to convert API response to DataTable format
+const fetchTransactions = async (params: any): Promise<DataTableResponse<any>> => {
+  const response = await DexService.listAllPairTransactions({
+    ...params,
+    txType: params.txType !== 'all' ? params.txType : undefined,
+    pairAddress: params.pairAddress || undefined,
+    accountAddress: params.accountAddress || undefined,
+  });
+
+  // The API response is already in the correct format, just cast it
+  return response as unknown as DataTableResponse<any>;
+};
+
+// Advanced example showing how to use DataTable with filters and custom parameters
 export default function DexExploreTransactions() {
-  const transactionList = useTransactionList();
+  const [filters, setFilters] = useState({
+    txType: 'all',
+    pairAddress: '',
+    accountAddress: '',
+  });
+
+  const { data, isLoading, params, updateParams, resetParams } = useDataTable<PairTransactionDto>(
+    (params) => fetchTransactions({
+      ...params,
+      txType: filters.txType,
+      pairAddress: filters.pairAddress,
+      accountAddress: filters.accountAddress,
+    }),
+    {
+      limit: 10,
+      page: 1,
+      orderBy: 'created_at',
+      orderDirection: 'DESC',
+    }
+  );
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    // Reset to first page when filters change
+    updateParams({ page: 1 });
+  };
+
+  const handleApplyFilters = () => {
+    // Trigger a refetch with new filters
+    updateParams({ page: 1 });
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      txType: 'all',
+      pairAddress: '',
+      accountAddress: '',
+    });
+    resetParams();
+  };
 
   // Convert explore Transaction to TransactionData format for TransactionCard
   const convertToTransactionData = (tx: any): any => ({
     hash: tx.transactionHash || tx.txHash || '',
-    type: tx.type === 'swap' ? 'SwapTokens' as const : 
-          tx.type === 'add' ? 'PairMint' as const :
-          tx.type === 'create' ? 'CreatePair' as const : 'SwapTokens' as const,
+    type: tx.type === 'swap' ? 'SwapTokens' as const :
+      tx.type === 'add' ? 'PairMint' as const :
+        tx.type === 'create' ? 'CreatePair' as const : 'SwapTokens' as const,
     pairAddress: tx.pairAddress,
     senderAccount: tx.senderAccount,
     reserve0: tx.reserve0,
@@ -24,13 +96,11 @@ export default function DexExploreTransactions() {
     transactionHash: tx.transactionHash,
     transactionIndex: tx.transactionIndex,
     logIndex: tx.logIndex,
-    // Add any missing USD value fields if available
     delta0UsdValue: tx.delta0UsdValue,
     delta1UsdValue: tx.delta1UsdValue,
     txUsdFee: tx.txUsdFee
   });
 
-  // Get transaction token symbols from the transaction data
   const getTransactionTokens = (tx: any) => ({
     token0Symbol: tx.tokenInSymbol || tx.token0Symbol || 'Token A',
     token1Symbol: tx.tokenOutSymbol || tx.token1Symbol || 'Token B'
@@ -38,286 +108,112 @@ export default function DexExploreTransactions() {
 
   return (
     <div className="mx-auto md:pt-0 md:px-2 flex flex-col gap-6 md:gap-8 min-h-screen">
-      {/* Main Content Card */}
       <div className="grid grid-cols-1 gap-6 md:gap-8 items-start">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-xl md:text-2xl font-bold m-0 mb-3 sh-dex-title">
-            Explore Transactions
+            Advanced Transaction Explorer
           </h1>
           <p className="text-sm md:text-base text-light-font-color m-0 opacity-80 leading-6">
-            Track recent swaps, liquidity additions, and removals across the DEX.
+            Filter and explore DEX transactions with advanced controls.
           </p>
         </div>
 
-        <div className="overflow-x-auto">
-          {/* Compact Filter Controls */}
-          <div className="bg-transparent border-none rounded-none p-0 md:bg-white/[0.03] md:border md:border-glass-border md:rounded-xl md:p-3 md:px-4 mb-5 md:backdrop-blur-[15px] md:shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
-            {/* Compact Filter Layout */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 16,
-              flexWrap: 'wrap'
-            }}>
-              {/* Left: Filter & Sort Label + Controls */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: 12
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6
-                }}>
-                  <div style={{
-                    width: 3,
-                    height: 16,
-                    background: 'var(--primary-gradient)',
-                    borderRadius: 2
-                  }}></div>
-                  <span style={{
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: 'var(--standard-font-color)',
-                    background: 'var(--primary-gradient)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text'
-                  }}>
-                    Filter Transactions
-                  </span>
-                </div> 
-                
-                {/* Type Dropdown */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 16
-                }}>
-                  <span style={{
-                    fontSize: 12,
-                    color: 'var(--light-font-color)',
-                    fontWeight: 500
-                  }}>Type:</span>
-                  <div style={{
-                    position: 'relative',
-                    display: 'inline-block'
-                  }}>
-                    <select 
-                      value={transactionList.type} 
-                      onChange={(e) => transactionList.setType(e.target.value as any)}
-                      style={{ 
-                        appearance: 'none',
-                        WebkitAppearance: 'none',
-                        MozAppearance: 'none',
-                        padding: '6px 28px 6px 12px', 
-                        borderRadius: 8, 
-                        background: 'var(--glass-bg)', 
-                        color: 'var(--standard-font-color)', 
-                        border: '1px solid var(--glass-border)',
-                        backdropFilter: 'blur(10px)',
-                        fontSize: 13,
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        outline: 'none',
-                        minWidth: 80,
-                        backgroundImage: 'none'
-                      }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--accent-color)';
-                        e.currentTarget.style.boxShadow = '0 0 0 2px rgba(76, 175, 80, 0.1)';
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--glass-border)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
-                    >
-                      <option value="all">All</option>
-                      <option value="swap">Swaps</option>
-                      <option value="add">Adds</option>
-                      <option value="remove">Removes</option>
-                    </select>
-                    <div style={{
-                      position: 'absolute',
-                      right: 8,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      pointerEvents: 'none',
-                      color: 'var(--light-font-color)',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: 16,
-                      height: 16,
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: 4,
-                      transition: 'all 0.3s ease'
-                    }}>
-                      ▼
-                    </div>
-                  </div>
-                  
-                  <span style={{
-                    fontSize: 12,
-                    color: 'var(--light-font-color)',
-                    fontWeight: 500,
-                    marginLeft: 8
-                  }}>Window:</span>
-                  <div style={{
-                    position: 'relative',
-                    display: 'inline-block'
-                  }}>
-                    <select 
-                      value={transactionList.window} 
-                      onChange={(e) => transactionList.setWindow(e.target.value as any)}
-                      style={{ 
-                        appearance: 'none',
-                        WebkitAppearance: 'none',
-                        MozAppearance: 'none',
-                        padding: '6px 28px 6px 12px', 
-                        borderRadius: 8, 
-                        background: 'var(--glass-bg)', 
-                        color: 'var(--standard-font-color)', 
-                        border: '1px solid var(--glass-border)',
-                        backdropFilter: 'blur(10px)',
-                        fontSize: 13,
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        outline: 'none',
-                        minWidth: 60,
-                        backgroundImage: 'none'
-                      }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--accent-color)';
-                        e.currentTarget.style.boxShadow = '0 0 0 2px rgba(76, 175, 80, 0.1)';
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.borderColor = 'var(--glass-border)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
-                    >
-                      <option value="24h">24h</option>
-                      <option value="7d">7d</option>
-                    </select>
-                    <div style={{
-                      position: 'absolute',
-                      right: 8,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      pointerEvents: 'none',
-                      color: 'var(--light-font-color)',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: 16,
-                      height: 16,
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: 4,
-                      transition: 'all 0.3s ease'
-                    }}>
-                      ▼
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right: Results Counter */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                background: 'rgba(76, 175, 80, 0.1)',
-                padding: '6px 10px',
-                borderRadius: 16,
-                border: '1px solid rgba(76, 175, 80, 0.2)',
-                flexShrink: 0
-              }}>
-                <div style={{
-                  width: 5,
-                  height: 5,
-                  borderRadius: '50%',
-                  background: 'var(--accent-color)',
-                  animation: 'pulse 2s infinite'
-                }}></div>
-                <span style={{
-                  fontSize: 11,
-                  color: 'var(--accent-color)',
-                  fontWeight: 600
-                }}>
-                  {transactionList.transactions.length} {transactionList.transactions.length === 1 ? 'transaction' : 'transactions'}
-                </span>
-              </div>
+        {/* Filter Controls */}
+        <div className="bg-white/[0.03] border border-glass-border rounded-xl p-4 backdrop-blur-[15px] shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Transaction Type Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Transaction Type</label>
+              <Select
+                value={filters.txType}
+                onValueChange={(value) => handleFilterChange('txType', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TX_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </div>
 
-          {/* Transaction Cards */}
-          <div className="flex flex-col gap-4">
-            {transactionList.transactions.map((tx, i) => (
-              <TransactionCard
-                key={tx.transactionHash || i}
-                transaction={convertToTransactionData(tx)}
-                getTransactionTokens={getTransactionTokens}
+            {/* Pair Address Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Pair Address</label>
+              <Input
+                placeholder="Enter pair address"
+                value={filters.pairAddress}
+                onChange={(e) => handleFilterChange('pairAddress', e.target.value)}
               />
-            ))}
-          </div>
+            </div>
 
-          {transactionList.transactions.length === 0 && !transactionList.loading && (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: 60,
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid var(--glass-border)',
-              borderRadius: 16,
-              backdropFilter: 'blur(10px)',
-              marginTop: 20
-            }}>
-              <div style={{
-                color: 'var(--light-font-color)',
-                fontSize: 16,
-                fontWeight: 500,
-                marginBottom: 8
-              }}>
-                No transactions found
-              </div>
-              <div style={{
-                color: 'var(--light-font-color)',
-                fontSize: 14,
-                opacity: 0.7
-              }}>
-                Try adjusting your filter criteria
+            {/* Account Address Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Account Address</label>
+              <Input
+                placeholder="Enter account address"
+                value={filters.accountAddress}
+                onChange={(e) => handleFilterChange('accountAddress', e.target.value)}
+              />
+            </div>
+
+            {/* Filter Actions */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Actions</label>
+              <div className="flex gap-2">
+                <Button onClick={handleApplyFilters} size="sm">
+                  Apply
+                </Button>
+                <Button onClick={handleClearFilters} variant="outline" size="sm">
+                  Clear
+                </Button>
               </div>
             </div>
-          )}
+          </div>
         </div>
-      </div>
 
-      {/* Add keyframes for pulse animation */}
-      <style>{`
-        @keyframes pulse {
-          0% {
-            opacity: 1;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.5;
-            transform: scale(1.2);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-      `}</style>
+        {/* Results Summary */}
+        {data && (
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              Showing {data.items.length} of {data.meta.totalItems} transactions
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Page {data.meta.currentPage} of {data.meta.totalPages}
+            </div>
+          </div>
+        )}
+
+        {/* DataTable Implementation */}
+        <DataTable
+          queryFn={(params) => fetchTransactions({
+            ...params,
+            txType: filters.txType,
+            pairAddress: filters.pairAddress,
+            accountAddress: filters.accountAddress,
+          })}
+          renderRow={({ item, index }) => (
+            <TransactionCard
+              key={item.tx_hash || index}
+              transaction={item}
+            />
+          )}
+          initialParams={{
+            limit: 10,
+            page: 1,
+            orderBy: 'created_at',
+            orderDirection: 'DESC',
+          }}
+          itemsPerPage={10}
+          emptyMessage="No transactions found matching your criteria."
+          className="space-y-4"
+        />
+      </div>
     </div>
   );
 }

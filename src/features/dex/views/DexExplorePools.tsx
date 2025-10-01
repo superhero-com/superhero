@@ -47,7 +47,7 @@ export default function DexExplorePools() {
   });
 
   return (
-    <div className="p-0 mx-auto md:px-5 md:pt-0">
+    <div className="p-0 mx-auto md:pt-0">
       {/* Main Content Card */}
       <div className="grid grid-cols-1 gap-6 md:gap-8 items-start">
         {/* Header */}

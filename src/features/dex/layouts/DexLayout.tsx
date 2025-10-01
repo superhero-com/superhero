@@ -181,34 +181,93 @@ export default function DexLayout({ children }: DexLayoutProps) {
 
   return (
     <>
-      <div className="min-h-screen w-full max-w-[min(1400px,100%)] mx-auto flex flex-col pb-24 lg:pb-0">
-        <div className="flex-grow grid grid-cols-1 gap-0 p-1 px-2 md:gap-0 md:p-1 md:px-2 lg:gap-0 lg:p-1 lg:px-2 sm:gap-0 sm:p-1 sm:px-1 lg:grid-cols-[minmax(200px,260px)_minmax(560px,1fr)]">
-          <aside className="hidden lg:block sticky top-0 self-start min-w-0 w-full">
-            <div className="dex-sidebar">
-              <div className="dex-nav-section">
-                <div className="dex-nav-buttons">
-                  {navigationItems.map((item) => renderNavigationButton(item))}
-                </div>
-              </div>
+      <div className="min-h-screen w-full max-w-[min(1400px,100%)] mx-auto flex flex-col pb-24 md:pb-0">
+        {/* Top pill navigation for tablet/desktop */}
+        <div className="hidden md:block sticky top-0 z-30 md:h-[50px]">
+          <div className="w-full px-2 py-2 md:px-3 md:py-0 h-full flex items-center">
+            <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+              {navigationItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavigation(item.path)}
+                  aria-label={item.label}
+                  title={item.description}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: 9999,
+                    border: isActiveRoute(item.path)
+                      ? '1.5px solid var(--accent-color, #4caf50)'
+                      : '1px solid rgba(255,255,255,0.08)',
+                    background: isActiveRoute(item.path)
+                      ? 'rgba(76, 175, 80, 0.12)'
+                      : 'rgba(255,255,255,0.06)',
+                    color: isActiveRoute(item.path)
+                      ? 'var(--standard-font-color, #ffffff)'
+                      : 'var(--light-font-color, #9aa)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    boxShadow: 'none',
+                    backdropFilter: 'blur(10px)'
+                  }}
+                >
+                  <span style={{ fontSize: 16 }}>{item.icon}</span>
+                  <span>{item.label}</span>
+                </button>
+              ))}
 
-              <div className="dex-nav-section">
-                <div className="dex-section-title">Explore</div>
-                <div className="dex-nav-buttons">
-                  {exploreItems.map((item) => renderNavigationButton(item))}
-                </div>
+              {/* Explore group */}
+              <div className="hidden md:flex items-center gap-2 md:ml-2">
+                <span style={{
+                  fontSize: 12,
+                  opacity: 0.7,
+                  paddingLeft: 6,
+                  paddingRight: 4
+                }}>Explore</span>
+                {exploreItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => handleNavigation(item.path)}
+                    aria-label={item.label}
+                    title={item.description}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: 9999,
+                      border: isActiveRoute(item.path)
+                        ? '1.5px solid var(--accent-color, #4caf50)'
+                        : '1px solid rgba(255,255,255,0.08)',
+                      background: isActiveRoute(item.path)
+                        ? 'rgba(76, 175, 80, 0.12)'
+                        : 'rgba(255,255,255,0.06)',
+                      color: isActiveRoute(item.path)
+                        ? 'var(--standard-font-color, #ffffff)'
+                        : 'var(--light-font-color, #9aa)',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      boxShadow: 'none'
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
               </div>
             </div>
-          </aside>
+          </div>
+        </div>
 
+        {/* Content */}
+        <div className="flex-grow grid grid-cols-1 gap-0 p-1 px-2 md:gap-0 md:p-1 md:px-2">
           <main className="min-w-0 overflow-hidden pt-1">
             {children}
           </main>
         </div>
       </div>
 
-      {/* Mobile: Horizontal bottom navigation (kept) */}
+      {/* Mobile: Horizontal bottom navigation (kept for small screens) */}
       <div
-        className="block lg:hidden w-full fixed bottom-0 left-0 right-0 z-[900] p-2 pb-3 border-t"
+        className="block md:hidden w-full fixed bottom-0 left-0 right-0 z-[900] p-2 pb-3 border-t"
         style={{
           backgroundColor: 'rgba(12, 12, 20, 0.5)',
           backdropFilter: 'blur(12px)',

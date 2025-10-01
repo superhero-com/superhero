@@ -15,28 +15,28 @@ const navigationItems: NavigationItem[] = [
     id: 'swap',
     label: 'SWAP',
     icon: '🔄',
-    path: '/dex/swap',
+    path: '/defi/swap',
     description: 'Trade any supported AEX-9 tokens'
-  },
-  {
-    id: 'wrap',
-    label: 'WRAP',
-    icon: '📦',
-    path: '/dex/wrap',
-    description: 'Convert AE ↔ WAE'
   },
   {
     id: 'pool',
     label: 'POOL',
     icon: '💧',
-    path: '/dex/pool',
+    path: '/defi/pool',
     description: 'Manage liquidity positions'
+  },
+  {
+    id: 'wrap',
+    label: 'WRAP',
+    icon: '📦',
+    path: '/defi/wrap',
+    description: 'Convert AE ↔ WAE'
   },
   {
     id: 'bridge',
     label: 'BUY AE',
-    icon: '🌉',
-    path: '/dex/buy-ae-with-eth',
+    icon: '💎',
+    path: '/defi/buy-ae-with-eth',
     description: 'Buy AE with ETH'
   }
 ];
@@ -46,21 +46,21 @@ const exploreItems: NavigationItem[] = [
     id: 'tokens',
     label: 'Tokens',
     icon: '🪙',
-    path: '/dex/explore/tokens',
+    path: '/defi/explore/tokens',
     description: 'Browse all available tokens'
   },
   {
     id: 'pools',
     label: 'Pools',
     icon: '🏊',
-    path: '/dex/explore/pools',
+    path: '/defi/explore/pools',
     description: 'Explore liquidity pools'
   },
   {
     id: 'transactions',
     label: 'Transactions',
     icon: '📋',
-    path: '/dex/explore/transactions',
+    path: '/defi/explore/transactions',
     description: 'Track recent activity'
   }
 ];
@@ -103,7 +103,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
       id: 'explore',
       label: 'Explore',
       icon: '🔍',
-      path: '/dex/explore',
+      path: '/defi/explore',
       description: 'Explore tokens, pools, and transactions'
     }
   ];

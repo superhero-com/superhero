@@ -49,7 +49,7 @@ const SortControls = memo(
           size="xs"
           noShadow={true}
           className={cn(
-            "rounded-full px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24",
+            "rounded-full px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24 md:uppercase",
             sortBy === "latest"
               ? "bg-[#1161FE] text-white hover:bg-[#1161FE] focus:bg-[#1161FE]"
               : "text-white/70 hover:text-white hover:bg-white/10 focus:text-white focus:bg-white/10"
@@ -63,7 +63,7 @@ const SortControls = memo(
           size="xs"
           noShadow={true}
           className={cn(
-            "rounded-full px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24",
+            "rounded-full px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24 md:uppercase",
             sortBy === "hot"
               ? "bg-[#1161FE] text-white hover:bg-[#1161FE] focus:bg-[#1161FE]"
               : "text-white/70 hover:text-white hover:bg-white/10 focus:text-white focus:bg-white/10"

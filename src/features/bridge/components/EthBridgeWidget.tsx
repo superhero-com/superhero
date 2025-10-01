@@ -153,14 +153,15 @@ export default function EthBridgeWidget({ embedded = false }: EthBridgeWidgetPro
     <div 
     className={
       embedded
-        ? "w-full max-w-full mx-auto bg-transparent border-none rounded-none p-0 shadow-none relative overflow-hidden box-border"
-        : "w-full max-w-[min(480px,100vw)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden box-border"
+        ? "w-full max-w-full mx-auto bg-transparent border-none rounded-none p-0 shadow-none relative overflow-visible box-border"
+        : "w-full max-w-[min(480px,100vw)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-visible box-border"
     }
     >
       {/* Header */}
       <div className="flex justify-between items-center mb-2 sm:mb-4 min-w-0">
-        <h2 className="text-lg sm:text-xl font-bold m-0 sh-dex-title min-w-0 flex-shrink">
-          Buy AE with ETH
+        <h2 className="m-0 text-base font-bold min-w-0 flex-shrink flex items-center gap-2">
+          <span className="text-base">💎</span>
+          <span>Buy AE with ETH</span>
         </h2>
 
         <div className={`text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10 ${chipBg} transition-all duration-300 ease-out font-medium flex-shrink-0`}>
@@ -307,10 +308,10 @@ export default function EthBridgeWidget({ embedded = false }: EthBridgeWidgetPro
         </button>
       ) : (
         <ConnectWalletButton
-          label={embedded ? "Connect wallet" : "Connect Wallet to Buy AE"}
+          label={embedded ? "CONNECT WALLET" : "CONNECT WALLET TO BUY AE"}
           block
+          className="text-sm"
           variant="dex"
-          className="w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase cursor-pointer shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
         />
       )}
 

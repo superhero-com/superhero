@@ -37,13 +37,13 @@ export default function DexTabs() {
   const navigate = useNavigate();
   const path = location.pathname;
 
-  const isDex = path.startsWith('/dex') || path.startsWith('/swap');
+  const isDex = path.startsWith('/defi') || path.startsWith('/swap');
   const isPool = path.startsWith('/pool');
   const isExplore = path.startsWith('/explore');
 
   return (
     <div className="flex gap-3 mb-6 items-center flex-wrap justify-center md:gap-2 md:mb-5 sm:gap-1.5 sm:mb-4">
-      <Tab label="Dex" active={isDex} onClick={() => navigate('/dex')} />
+      <Tab label="DeFi" active={isDex} onClick={() => navigate('/defi')} />
       <Tab label="Pool" active={isPool} onClick={() => navigate('/pool')} />
       <Tab label="Explore" active={isExplore} onClick={() => navigate('/explore')} />
       <div className="ml-auto" />

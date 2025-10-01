@@ -182,7 +182,7 @@ export default function SwapCard() {
                 className="large block"
                 green
               >
-                Connect Wallet
+                <span className="text-sm">CONNECT WALLET</span>
               </AeButton>
             ) : (
               <div className="text-xs opacity-80 text-center text-white/80">
@@ -205,7 +205,7 @@ export default function SwapCard() {
                 }
               />
 
-              <div className="text-center text-xl opacity-60 text-white/60">↓</div>
+              <div className="text-center text-xl opacity-60 text-white/60">⬇️</div>
 
               <MobileInput
                 label="To (AE)"

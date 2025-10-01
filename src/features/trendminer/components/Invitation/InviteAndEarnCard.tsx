@@ -227,7 +227,7 @@ export default function InviteAndEarnCard({
                 )}
               </button>
             ) : (
-              <WalletConnectBtn label="Connect wallet to generate" />
+              <WalletConnectBtn label="CONNECT WALLET TO GENERATE" className="text-sm" />
             )}
           </form>
         </div>

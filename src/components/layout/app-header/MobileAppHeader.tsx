@@ -139,9 +139,12 @@ export default function MobileAppHeader() {
           <div className="flex-grow md:hidden" />
 
           <button
-            className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
-            onClick={handleMenuToggle}
+            className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-transparent shadow-none active:shadow-none focus:shadow-none outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0"
+            onClick={(e) => { handleMenuToggle(); try { (e.currentTarget as HTMLButtonElement).blur(); } catch {} }}
+            onTouchEnd={(e) => { try { (e.currentTarget as HTMLButtonElement).blur(); } catch {} }}
             aria-label="Open Menu"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            tabIndex={-1}
           >
             <span className="flex items-center gap-2">
               <svg
@@ -167,14 +170,34 @@ export default function MobileAppHeader() {
       {showOverlay && (
         <div className="fixed inset-0 bg-black/80 flex items-start justify-end z-[1100] animate-[fadeIn_0.2s_ease-out] backdrop-blur-[4px] sm:items-start sm:justify-center" onClick={() => setShowOverlay(false)}>
           <div className="z-[1101] text-[var(--light-font-color)] relative w-full max-w-[320px] h-screen bg-[var(--background-color)] flex flex-col overflow-y-auto animate-[slideInRight_0.3s_ease-out] shadow-[-10px_0_30px_rgba(0,0,0,0.3)] sm:max-w-full sm:w-full sm:animate-[slideInUp_0.3s_ease-out] sm:shadow-[0_-10px_30px_rgba(0,0,0,0.3)]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between h-[70px] px-6 border-b border-white/10 sm:px-5">
-              <h2 className="m-0 text-xl font-semibold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent sm:text-lg">Menu</h2>
-              <button
-                className="bg-white/10 border-none text-[var(--standard-font-color)] w-11 h-11 rounded-full flex items-center justify-center text-lg cursor-pointer transition-all duration-200 hover:bg-white/20 focus:bg-white/20 active:scale-95 sm:w-10 sm:h-10 sm:text-base"
-                onClick={() => setShowOverlay(false)}
-                aria-label="Close menu"
+            <div className="flex items-center justify-between h-[70px] px-3 border-b border-white/10 sm:px-3">
+              <h2
+                className="m-0 px-4 text-md font-semibold uppercase tracking-[0.02em] !text-white/80 !bg-transparent"
+                style={{
+                  color: 'rgba(255,255,255,0.8)',
+                  background: 'transparent',
+                  backgroundImage: 'none',
+                  WebkitTextFillColor: 'rgba(255,255,255,0.8)',
+                  WebkitBackgroundClip: 'initial' as any,
+                }}
               >
-                ✕
+                Menu
+              </h2>
+              <button
+                className="bg-white/10 border-none text-[var(--standard-font-color)] w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center leading-none cursor-pointer transition-all duration-200 hover:bg-white/20 focus:bg-white/20 active:scale-95 sm:w-10 sm:h-10 outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 shadow-none focus:shadow-none active:shadow-none"
+                onClick={(e) => { setShowOverlay(false); try { (e.currentTarget as HTMLButtonElement).blur(); } catch {} }}
+                aria-label="Close menu"
+                tabIndex={-1}
+              >
+                <svg
+                  className="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                </svg>
               </button>
             </div>
 
@@ -205,35 +228,30 @@ export default function MobileAppHeader() {
                   </div>
                 </div>
               ) : (
-                <AeButton onClick={handleConnect} className="w-full justify-center gap-2 bg-[#1161FE] hover:bg-[#1161FE] text-white border-none rounded-xl sm:rounded-full">
-                  Connect Wallet
+                <AeButton onClick={handleConnect} className="w-full justify-center gap-2 bg-[#1161FE] hover:bg-[#1161FE] text-white border-none rounded-xl sm:rounded-full text-sm">
+                  CONNECT WALLET
                 </AeButton>
               )}
             </div>
 
             <nav className="flex flex-col py-5 px-6 gap-3 flex-1 sm:py-4 sm:px-6 sm:gap-2">
-              {navigationItems.filter(item => !!item.id).map(item => {
+              {navigationItems.filter(item => !!item.id).map((item, index) => {
                 const commonClasses = "w-full no-underline font-semibold transition-all duration-200 h-[56px] sm:h-[52px] rounded-xl text-white text-base flex items-center justify-center px-5";
                 const baseBg = "bg-white/5 hover:bg-white/10";
-
-                if (item.isExternal) {
-                  return (
-                    <div key={item.id} className={`${baseBg} rounded-xl`}>
-                      <a
-                        href={item.path}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={`${commonClasses} bg-transparent`}
-                        style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}
-                        onClick={handleNavigationClick}
-                      >
-                        <span className="text-lg sm:text-base">{item.label}</span>
-                      </a>
-                    </div>
-                  );
-                }
-
-                return (
+                const node = item.isExternal ? (
+                  <div key={item.id} className={`${baseBg} rounded-xl`}>
+                    <a
+                      href={item.path}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={`${commonClasses} bg-transparent`}
+                      style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}
+                      onClick={handleNavigationClick}
+                    >
+                      <span className="text-lg sm:text-base">{item.label}</span>
+                    </a>
+                  </div>
+                ) : (
                   <div key={item.id} className={`${baseBg} rounded-xl ${isActiveRoute(item.path) ? 'ring-2 ring-[var(--accent-color)]' : ''}`}>
                     <Link
                       to={item.path}
@@ -244,6 +262,24 @@ export default function MobileAppHeader() {
                       <span className="text-lg sm:text-base">{item.label}</span>
                     </Link>
                   </div>
+                );
+
+                return (
+                  <React.Fragment key={`nav-${item.id}`}>
+                    {node}
+                    {index === 1 && (
+                      <div className={`${baseBg} rounded-xl`}>
+                        <Link
+                  to="/defi/buy-ae-with-eth"
+                          onClick={handleNavigationClick}
+                          className={`${commonClasses} bg-transparent`}
+                          style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}
+                        >
+                          <span className="text-lg sm:text-base">Buy AE</span>
+                        </Link>
+                      </div>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </nav>

@@ -138,7 +138,7 @@ export default function Swap() {
           <a href="https://swap.superhero.com" target="_blank" rel="noreferrer" className="underline text-purple-400 hover:text-purple-300">Learn more</a>
         </p>
         {!activeAccount ? (
-          <AeButton onClick={connectWallet} size="large">Connect Wallet</AeButton>
+          <AeButton onClick={connectWallet}>CONNECT WALLET</AeButton>
         ) : (
           <div className="text-xs text-white/80">Address: {activeAccount}</div>
         )}
@@ -158,7 +158,7 @@ export default function Swap() {
           </div>
         </div>
 
-        <div className="text-center text-white/60 text-lg">↓</div>
+        <div className="text-center text-white/60 text-lg">⬇️</div>
 
         <div className="grid gap-2 border border-gray-600 rounded-lg p-3 bg-white/5 backdrop-blur-sm">
           <div className="text-white/90 font-medium">To (AE)</div>

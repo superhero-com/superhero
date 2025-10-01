@@ -154,7 +154,7 @@ export default function BuyAeWidget({ embedded = false }: EthBridgeWidgetProps) 
     className={
       embedded
         ? "w-full max-w-full mx-auto bg-transparent border-none rounded-none p-0 shadow-none relative overflow-visible box-border"
-        : "w-full max-w-[min(480px,100vw)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-visible box-border"
+        : "w-full max-w-[min(480px,100vw)] mx-auto bg-transparent border-0 p-0 relative overflow-visible box-border sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]"
     }
     >
       {/* Header */}

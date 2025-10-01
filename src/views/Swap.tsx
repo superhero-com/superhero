@@ -158,7 +158,7 @@ export default function Swap() {
           </div>
         </div>
 
-        <div className="text-center text-white/60 text-lg">↓</div>
+        <div className="text-center text-white/60 text-lg">⬇️</div>
 
         <div className="grid gap-2 border border-gray-600 rounded-lg p-3 bg-white/5 backdrop-blur-sm">
           <div className="text-white/90 font-medium">To (AE)</div>

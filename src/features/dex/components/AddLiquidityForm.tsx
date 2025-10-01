@@ -279,7 +279,7 @@ export default function AddLiquidityForm() {
     hasInsufficientBalance;
 
   return (
-    <div className="max-w-[min(480px,100%)] mx-auto bg-transparent border-none backdrop-blur-0 rounded-none p-0 shadow-none relative overflow-hidden md:bg-white/[0.02] md:border md:border-white/10 md:backdrop-blur-[20px] md:rounded-[24px] md:p-6 md:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+    <div className="max-w-[min(480px,100%)] bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>

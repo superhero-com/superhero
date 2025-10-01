@@ -107,7 +107,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/dex/bridge",
+    path: "/dex/buy-ae-with-eth",
     element: (
       <DexLayout>
         <DexBridge />

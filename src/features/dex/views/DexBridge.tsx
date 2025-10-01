@@ -1,5 +1,5 @@
 import React from "react";
-import { EthBridgeWidget } from "../../bridge";
+import { BuyAeWidget } from "../../bridge";
 import RecentActivity from "../../../components/dex/supporting/RecentActivity";
 
 //
@@ -9,7 +9,7 @@ export default function DexBridge() {
       <div className="grid grid-cols-1 lg:grid-cols-[480px_minmax(560px,1fr)] gap-6 md:gap-8 items-start w-full">
         {/* Left card (Bridge) */}
         <div className="order-1 lg:order-1">
-          <EthBridgeWidget />
+          <BuyAeWidget />
         </div>
 
         {/* Right column (Recent Activity) */}

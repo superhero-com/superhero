@@ -49,7 +49,7 @@ export default function DexExplorePools() {
   return (
     <div className="p-0 mx-auto md:pt-0 md:px-2 ">
       {/* Main Content Card */}
-      <div className="grid grid-cols-1 gap-6 md:gap-8 items-start">
+      <div className="grid grid-cols-1 items-start">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-xl md:text-2xl font-bold m-0 mb-3 sh-dex-title">

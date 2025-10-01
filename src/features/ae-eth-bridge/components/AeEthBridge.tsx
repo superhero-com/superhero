@@ -735,9 +735,9 @@ export function AeEthBridge() {
         <AppKitProvider>
             <>
                 <div className="flex justify-center">
-                    <div className="w-full mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden box-border">
+                    <div className="w-full mx-auto bg-transparent border-0 p-0 relative overflow-hidden box-border sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
                         {/* Header */}
-                        <div className="flex justify-between items-center mb-4 sm:mb-6 min-w-0">
+                        <div className="flex justify-between items-center mb-2 sm:mb-3 min-w-0">
                             <h2 className="text-lg sm:text-xl font-bold m-0 sh-dex-title min-w-0 flex-shrink">
                                 Bridge ETH ⇆ AE
 
@@ -746,6 +746,15 @@ export function AeEthBridge() {
                             <div className="text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-[10px] transition-all duration-300 ease-out font-medium flex-shrink-0">
                                 {direction === Direction.AeternityToEthereum ? 'AE → ETH' : 'ETH → AE'}
                             </div>
+                        </div>
+
+                        {/* Description */}
+                        <div className="mb-4 sm:mb-5">
+                            <p className="m-0 text-sm text-white/60 leading-relaxed">
+                                The Bridge enables secure transfers of tokens and native assets between Ethereum
+                                and æternity. It supports popular ERC‑20/AEX‑9 tokens as well as native ETH and AE.
+                                Choose a direction below, connect your wallets, and bridge in minutes.
+                            </p>
                         </div>
 
                         {/* Mainnet Warning */}

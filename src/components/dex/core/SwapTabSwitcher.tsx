@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import SwapForm from './SwapForm';
 import { WrapUnwrapWidget } from '../../../features/dex';
-import { EthBridgeWidget } from '../../../features/bridge';
+import { BuyAeWidget } from '../../../features/bridge';
 import { AeButton } from '../../ui/ae-button';
 import { AeCard, AeCardContent } from '../../ui/ae-card';
 import { Badge } from '../../ui/badge';
@@ -37,7 +37,7 @@ const tabs: TabConfig[] = [
     label: 'ETH Bridge',
     icon: '🌉',
     description: 'Bridge ETH to æternity',
-    component: EthBridgeWidget
+    component: BuyAeWidget
   }
 ];
 

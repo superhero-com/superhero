@@ -266,7 +266,7 @@ export default function PoolDetail() {
   // Main render (modified from TokenDetail)
   return (
     <div className="mx-auto md:px-5 md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
-      <div className="grid grid-cols-1 gap-6 md:gap-8 items-start">
+      <div className="grid grid-cols-1 items-start">
         <div className="flex flex-col gap-6">
           {/* Pool Detail Card (modified from Token Detail Card) */}
           <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] relative overflow-hidden">

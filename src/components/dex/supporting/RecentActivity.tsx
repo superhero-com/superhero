@@ -196,7 +196,7 @@ export default function RecentActivity({
             No recent activities
           </div>
           <div className="text-xs opacity-80">
-            Your DEX transactions will appear here
+            Your DeFi transactions will appear here
           </div>
         </div>
       </div>

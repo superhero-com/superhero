@@ -26,7 +26,7 @@ export const navigationItems: NavigationItem[] = [
       { id: "dex-wrap", label: "WRAP", path: "/dex/wrap", icon: "📦" },
       {
         id: "dex-bridge",
-        label: "SWAP ETH",
+        label: "BUY AE",
         path: "/dex/swap-eth-to-ae",
         icon: "🌉",
       },

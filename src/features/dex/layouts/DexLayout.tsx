@@ -27,10 +27,10 @@ const navigationItems: NavigationItem[] = [
   },
   {
     id: 'bridge',
-    label: 'SWAP ETH',
+    label: 'BUY AE',
     icon: '🌉',
     path: '/dex/swap-eth-to-ae',
-    description: 'Swap ETH to AE via bridge'
+    description: 'Buy AE with ETH'
   },
   {
     id: 'pool',

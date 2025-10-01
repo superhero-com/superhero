@@ -323,11 +323,11 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
                   window.open(`${activeNetwork.explorerUrl}/transactions/${transaction.tx_hash}`, '_blank');
                 }
               }}
-              className="h-8 gap-1 px-2 text-xs transition-colors hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-700"
+              className="h-4 gap-1 px-4 text-xs transition-colors hover:border-black/40 hover:bg-black/10"
               aria-label="Open in Explorer"
             >
-              <ExternalLink className="h-3.5 w-3.5" />
-              Explorer
+              <ExternalLink className="h-2.5 w-3.5" />
+              aescan
             </Button>
           </div>
         </div>

@@ -7,7 +7,11 @@ import ConnectWalletButton from '../../../components/ConnectWalletButton';
 
 import { useDex, useAeSdk, useRecentActivities } from '../../../hooks';
 
-export default function EthBridgeWidget() {
+interface EthBridgeWidgetProps {
+  embedded?: boolean; // renders without outer card/padding for sidebars
+}
+
+export default function EthBridgeWidget({ embedded = false }: EthBridgeWidgetProps) {
   const { activeAccount, sdk } = useAeSdk();
   const slippagePct = useDex().slippagePct;
   const deadlineMins = useDex().deadlineMins;
@@ -138,18 +142,28 @@ export default function EthBridgeWidget() {
 
   const isDisabled = ethBridgeProcessing || !activeAccount || !ethBridgeIn || Number(ethBridgeIn) <= 0;
 
+  const sectionBase = 'border border-white/10 rounded-2xl p-3 sm:p-4';
+  const sectionBg = embedded ? 'bg-transparent' : 'bg-white/[0.05] backdrop-blur-[10px]';
+  const sectionSpacingSmall = 'mb-2';
+  const sectionSpacingLarge = 'mb-4 sm:mb-5';
+  const chipBg = embedded ? 'bg-transparent' : 'bg-white/[0.02] backdrop-blur-[10px]';
+  const circleBg = embedded ? 'bg-transparent' : 'bg-white/[0.08] backdrop-blur-[10px]';
+
   return (
     <div 
-    className="w-full max-w-[min(480px,100vw)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden box-border"
-    // className="grid grid-cols-1 lg:grid-cols-[2fr_480px] gap-6 md:gap-8 items-start border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden box-border"
+    className={
+      embedded
+        ? "w-full max-w-full mx-auto bg-transparent border-none rounded-none p-0 shadow-none relative overflow-hidden box-border"
+        : "w-full max-w-[min(480px,100vw)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden box-border"
+    }
     >
       {/* Header */}
-      <div className="flex justify-between items-center mb-4 sm:mb-6 min-w-0">
+      <div className="flex justify-between items-center mb-2 sm:mb-4 min-w-0">
         <h2 className="text-lg sm:text-xl font-bold m-0 sh-dex-title min-w-0 flex-shrink">
           Buy AE with ETH
         </h2>
 
-        <div className="text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-[10px] transition-all duration-300 ease-out font-medium flex-shrink-0">
+        <div className={`text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10 ${chipBg} transition-all duration-300 ease-out font-medium flex-shrink-0`}>
           Cross-chain
         </div>
       </div>
@@ -160,7 +174,7 @@ export default function EthBridgeWidget() {
       </p>
 
       {/* From Input - ETH */}
-      <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-2 backdrop-blur-[10px]">
+      <div className={`${sectionBase} ${sectionBg} ${sectionSpacingSmall} sm:pt-0`}>
         <div className="flex justify-between items-center mb-2 min-w-0">
           <label className="text-xs text-white/60 font-medium uppercase tracking-wider flex-shrink-0">
             From
@@ -187,7 +201,7 @@ export default function EthBridgeWidget() {
             className="flex-1 !bg-transparent !bg-none ![background:none] !border-none text-white text-xl sm:text-2xl font-semibold !outline-none focus:!outline-none active:!outline-none !shadow-none ![box-shadow:none] focus:!shadow-none active:!shadow-none !ring-0 focus:!ring-0 active:!ring-0 !backdrop-blur-0 ![backdrop-filter:none] !p-0 !min-h-0 !rounded-none min-w-0 overflow-hidden !appearance-none"
           />
 
-          <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 rounded-xl border border-white/10 flex-shrink-0">
+          <div className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${embedded ? 'bg-transparent' : 'bg-white/10'} rounded-xl border border-white/10 flex-shrink-0`}>
             <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-[#627eea] to-[#8a92b2] flex items-center justify-center text-white text-xs font-bold">
               Ξ
             </div>
@@ -198,15 +212,17 @@ export default function EthBridgeWidget() {
         </div>
       </div>
 
-      {/* Bridge Arrow */}
-      <div className="flex justify-center my-3 sm:my-4 relative">
-        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-white/10 bg-white/[0.08] backdrop-blur-[10px] text-white flex items-center justify-center text-lg sm:text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(0,0,0,0.25)] z-[2] relative">
-          🌉
+      {/* Bridge Arrow (hidden when embedded) */}
+      {!embedded && (
+        <div className="flex justify-center my-3 sm:my-4 relative">
+          <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-white/10 ${circleBg} text-white flex items-center justify-center text-lg sm:text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(0,0,0,0.25)] z-[2] relative`}>
+            🌉
+          </div>
         </div>
-      </div>
+      )}
 
       {/* To Output - AE */}
-      <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-5 backdrop-blur-[10px]">
+      <div className={`${sectionBase} ${sectionBg} ${sectionSpacingLarge}`}>
         <div className="flex justify-between items-center mb-2 min-w-0">
           <label className="text-xs text-white/60 font-medium uppercase tracking-wider flex-shrink-0">
             To (Estimated)
@@ -221,7 +237,7 @@ export default function EthBridgeWidget() {
             {ethBridgeQuoting ? 'Quoting…' : (ethBridgeOutAe || '0.0')}
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 rounded-xl border border-white/10 flex-shrink-0">
+          <div className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${embedded ? 'bg-transparent' : 'bg-white/10'} rounded-xl border border-white/10 flex-shrink-0`}>
             <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-red-400 to-red-300 flex items-center justify-center text-white text-xs font-bold">
               Æ
             </div>
@@ -234,7 +250,7 @@ export default function EthBridgeWidget() {
 
       {/* Bridge Process Info */}
       {ethBridgeStep !== 'idle' && (
-        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-5 backdrop-blur-[10px]">
+        <div className={`${sectionBase} ${sectionBg} ${sectionSpacingLarge}`}>
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-white/60">
               Bridge Status
@@ -291,7 +307,7 @@ export default function EthBridgeWidget() {
         </button>
       ) : (
         <ConnectWalletButton
-          label="Connect Wallet to Buy AE"
+          label={embedded ? "Connect wallet" : "Connect Wallet to Buy AE"}
           block
           variant="dex"
           className="w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase cursor-pointer shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"

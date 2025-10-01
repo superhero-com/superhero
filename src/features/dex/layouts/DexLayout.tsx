@@ -27,10 +27,10 @@ const navigationItems: NavigationItem[] = [
   },
   {
     id: 'bridge',
-    label: 'BRIDGE',
+    label: 'SWAP ETH',
     icon: '🌉',
     path: '/dex/bridge',
-    description: 'Bridge ETH to æternity'
+    description: 'Swap ETH to AE via bridge'
   },
   {
     id: 'pool',

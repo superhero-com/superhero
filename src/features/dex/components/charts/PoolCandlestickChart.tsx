@@ -495,7 +495,7 @@ export function PoolCandlestickChart({
 
   if (hasError) {
     return (
-      <div className={`${className} max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden flex flex-col items-center justify-center text-center`} style={{ height }}>
+      <div className={`${className} w-full mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden flex flex-col items-center justify-center text-center`} style={{ height }}>
         <div className="text-base text-red-400 mb-4 font-medium">
           Failed to load chart data
         </div>
@@ -511,7 +511,7 @@ export function PoolCandlestickChart({
   }
 
   return (
-    <div className={`${className} max-w-[100%] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden`}>
+    <div className={`${className} w-full mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden`}>
       <div className="relative" style={{ height }}>
         {/* Chart Info Overlay */}
         <div className="hidden sm:block absolute top-0 left-0 right-24 z-20 p-5 bg-gradient-to-b from-background/50 via-background/15 to-transparent backdrop-blur-sm">

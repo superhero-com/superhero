@@ -47,15 +47,17 @@ export function DataTable<T>({
   const [params, setParams] = useState<DataTableParams>({
     page: 1,
     limit: itemsPerPage,
-    ...initialParams,
   });
 
   // Create a stable query key that includes the queryFn to trigger refetch when filters change
-  const queryKey = useMemo(() => ['DataTable', params, queryFn], [params, queryFn]);
+  const queryKey = useMemo(() => ['DataTable', params, initialParams, queryFn], [params, initialParams, queryFn]);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey,
-    queryFn: () => queryFn(params),
+    queryFn: () => queryFn({
+      ...params,
+      ...initialParams,
+    }),
     placeholderData: (previousData) => previousData,
   });
 
@@ -121,7 +123,7 @@ export function DataTable<T>({
   return (
     <div className={`space-y-4 ${className}`}>
       {/* Data Table Content */}
-      <div className="space-y-2">
+      <div className="space-y-4">
         {data.items.map((item, index) => (
           <div key={index}>
             {renderRow({ item, index })}

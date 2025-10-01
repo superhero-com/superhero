@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DexService } from '../../../api/generated';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { DataTable, DataTableResponse } from '../../shared/components/DataTable';
 import { TransactionCard } from '../components/TransactionCard';
+import { Search, Filter, X, RefreshCw, Hash, User } from 'lucide-react';
 
 // Transaction types mapping with meaningful names
 const TX_TYPES = [
@@ -54,12 +55,11 @@ export default function DexExploreTransactions() {
     });
   };
 
-
   return (
     <div className="mx-auto md:pt-0 md:px-2 flex flex-col gap-6 md:gap-8 min-h-screen">
       <div className="grid grid-cols-1 gap-6 md:gap-8 items-start">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mt-2">
           <h1 className="text-xl md:text-2xl font-bold m-0 mb-3 sh-dex-title">
             Advanced Transaction Explorer
           </h1>
@@ -68,23 +68,60 @@ export default function DexExploreTransactions() {
           </p>
         </div>
 
-        {/* Filter Controls */}
-        <div className="bg-white/[0.03] border border-glass-border rounded-xl p-4 backdrop-blur-[15px] shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Enhanced Filter Controls */}
+        <div className="bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-glass-border rounded-2xl p-6 backdrop-blur-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+          {/* Filter Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Filter className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">Advanced Filters</h3>
+                <p className="text-sm text-muted-foreground">Refine your transaction search</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleClearFilters}
+                variant="outline"
+                size="sm"
+                className="gap-2 hover:bg-destructive/10 hover:border-destructive/20 hover:text-destructive"
+              >
+                <X className="h-4 w-4" />
+                Clear All
+              </Button>
+            </div>
+          </div>
+
+          {/* Filter Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Transaction Type Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">Transaction Type</label>
+            <div className="space-y-3">
+              <label className="flex  items-center gap-2 text-sm font-medium text-foreground">
+                <div className="p-1 bg-blue-500/10 rounded">
+                  <RefreshCw className="h-3 w-3 text-blue-500" />
+                </div>
+                Transaction Type
+              </label>
               <Select
                 value={filters.txType}
                 onValueChange={(value) => handleFilterChange('txType', value)}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                <SelectTrigger className="py-4 h-14 bg-white/[0.05] border-white/10 hover:bg-white/[0.08] transition-colors">
+                  <SelectValue placeholder="Select transaction type" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[300px]">
                   {TX_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                    <SelectItem key={type.value} value={type.value} className="py-3">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{type.label}</span>
+                        {type.value !== 'all' && (
+                          <span className="text-xs text-muted-foreground mt-1">
+                            {type.value.replace(/_/g, ' ')}
+                          </span>
+                        )}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -92,32 +129,60 @@ export default function DexExploreTransactions() {
             </div>
 
             {/* Pair Address Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">Pair Address</label>
-              <Input
-                placeholder="Enter pair address"
-                value={filters.pairAddress}
-                onChange={(e) => handleFilterChange('pairAddress', e.target.value)}
-              />
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <div className="p-1 bg-green-500/10 rounded">
+                  <Hash className="h-3 w-3 text-green-500" />
+                </div>
+                Pair Address
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Enter pair contract address"
+                  value={filters.pairAddress}
+                  onChange={(e) => handleFilterChange('pairAddress', e.target.value)}
+                  className="pl-10 h-11 bg-white/[0.05] border-white/10 focus:bg-white/[0.08] transition-colors"
+                />
+                {filters.pairAddress && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleFilterChange('pairAddress', '')}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-destructive/10"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* Account Address Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">Account Address</label>
-              <Input
-                placeholder="Enter account address"
-                value={filters.accountAddress}
-                onChange={(e) => handleFilterChange('accountAddress', e.target.value)}
-              />
-            </div>
-
-            {/* Filter Actions */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">Actions</label>
-              <div className="flex gap-2">
-                <Button onClick={handleClearFilters} variant="outline" size="sm">
-                  Clear
-                </Button>
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <div className="p-1 bg-purple-500/10 rounded">
+                  <User className="h-3 w-3 text-purple-500" />
+                </div>
+                Account Address
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Enter account address"
+                  value={filters.accountAddress}
+                  onChange={(e) => handleFilterChange('accountAddress', e.target.value)}
+                  className="pl-10 h-11 bg-white/[0.05] border-white/10 focus:bg-white/[0.08] transition-colors"
+                />
+                {filters.accountAddress && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleFilterChange('accountAddress', '')}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-destructive/10"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -126,12 +191,7 @@ export default function DexExploreTransactions() {
 
         {/* DataTable Implementation */}
         <DataTable
-          queryFn={(params) => fetchTransactions({
-            ...params,
-            txType: filters.txType,
-            pairAddress: filters.pairAddress,
-            accountAddress: filters.accountAddress,
-          })}
+          queryFn={fetchTransactions}
           renderRow={({ item, index }) => (
             <TransactionCard
               key={item.tx_hash || index}
@@ -143,6 +203,9 @@ export default function DexExploreTransactions() {
             page: 1,
             orderBy: 'created_at',
             orderDirection: 'DESC',
+            txType: filters.txType,
+            pairAddress: filters.pairAddress,
+            accountAddress: filters.accountAddress,
           }}
           itemsPerPage={10}
           emptyMessage="No transactions found matching your criteria."

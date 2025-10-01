@@ -295,7 +295,7 @@ export default function CollectInvitationLinkCard({
                         </AeButton>
                       ) : (
                         <ConnectWalletButton
-                          label="Connect Wallet"
+                          label="CONNECT WALLET"
                           variant="default"
                         />
                       )}

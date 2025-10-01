@@ -206,7 +206,7 @@ export default function MobileAppHeader() {
                 </div>
               ) : (
                 <AeButton onClick={handleConnect} className="w-full justify-center gap-2 bg-[#1161FE] hover:bg-[#1161FE] text-white border-none rounded-xl sm:rounded-full">
-                  Connect Wallet
+                  CONNECT WALLET
                 </AeButton>
               )}
             </div>

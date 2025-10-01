@@ -31,7 +31,7 @@ export default function HeaderWalletButton() {
         className="gap-2 rounded-xl sm:rounded-full"
       >
         <Favicon className="w-4 h-4" />
-        Connect Wallet
+        CONNECT WALLET
       </AeButton>
     );
   }

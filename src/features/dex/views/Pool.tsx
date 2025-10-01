@@ -159,11 +159,13 @@ function PoolContent() {
               )}
             </div>
           </div>
+          {/* Recent Activity under Your Liquidity Positions */}
+          <div className="mt-6">
+            <RecentActivity />
+          </div>
         </div>
       </div>
 
-      {/* Bottom Row - Recent Activity */}
-      <RecentActivity />
     </div>
   );
 }

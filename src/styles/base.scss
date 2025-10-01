@@ -316,7 +316,7 @@ textarea {
   background: var(--glass-bg);
   color: $standard_font_color;
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(10px);
+  // backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 16px 20px;
   line-height: 1.2;
@@ -342,9 +342,9 @@ select:focus,
 .flat-select:focus,
 input:focus,
 textarea:focus {
-  border-color: var(--neon-teal);
-  background: var(--glass-bg);
-  box-shadow: 0 0 0 3px rgba(0, 255, 157, 0.2), var(--glass-shadow);
+  // border-color: var(--neon-teal);
+  // background: var(--glass-bg);
+  // box-shadow: 0 0 0 3px rgba(0, 255, 157, 0.2), var(--glass-shadow);
   transform: translateY(-2px);
 }
 

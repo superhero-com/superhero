@@ -35,6 +35,7 @@ import { Asset, BRIDGE_AETERNITY_ACTION_TYPE, BRIDGE_ETH_ACTION_TYPE, BRIDGE_TOK
 import { addTokenToEthereumWallet } from '../utils/addTokenToEthereumWallet';
 import { getTxUrl } from '../utils/getTxUrl';
 import { Logger } from '../utils/logger';
+import ConnectWalletButton from '@/components/ConnectWalletButton';
 
 const checkEvmNetworkHasEnoughBalance = async (asset: any, normalizedAmount: BigNumber, walletProvider: Eip1193Provider) => {
     if (asset.symbol === 'WAE') return true;
@@ -709,7 +710,8 @@ export default function AeEthBridge() {
                         {/* Header */}
                         <div className="flex justify-between items-center mb-4 sm:mb-6 min-w-0">
                             <h2 className="text-lg sm:text-xl font-bold m-0 sh-dex-title min-w-0 flex-shrink">
-                                Bridge AE {'<->'} ETH
+                                Bridge ETH ⇆ AE
+
                             </h2>
 
                             <div className="text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-[10px] transition-all duration-300 ease-out font-medium flex-shrink-0">
@@ -725,27 +727,23 @@ export default function AeEthBridge() {
                         )}
 
                         {/* Network & Token Selection */}
-                        <div className="grid grid-cols-2 gap-2 mb-4">
-                            <div>
-                                <label className="text-xs text-white/60 font-medium uppercase tracking-wider block mb-2">
-                                    From Network
-                                </label>
-                                <Select value={direction} onValueChange={handleDirectionChange}>
-                                    <SelectTrigger className="bg-white/[0.05] border-white/10 rounded-xl h-10">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value={Direction.AeternityToEthereum}>
-                                            æternity {!isMainnet && 'Testnet'}
-                                        </SelectItem>
-                                        <SelectItem value={Direction.EthereumToAeternity}>
-                                            Ethereum {!isMainnet && 'Sepolia Testnet'}
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-
+                        <div className='mb-4'>
+                            <label className="text-xs text-white/60 font-medium uppercase tracking-wider block mb-2">
+                                From Network
+                            </label>
+                            <Select value={direction} onValueChange={handleDirectionChange}>
+                                <SelectTrigger className="bg-white/[0.05] border-white/10 rounded-xl h-10">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={Direction.AeternityToEthereum}>
+                                        æternity {!isMainnet && 'Testnet'}
+                                    </SelectItem>
+                                    <SelectItem value={Direction.EthereumToAeternity}>
+                                        Ethereum {!isMainnet && 'Sepolia Testnet'}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         {/* Ethereum Account Selector - Only show when bridging from Ethereum */}
@@ -802,7 +800,7 @@ export default function AeEthBridge() {
                                     )
                                 ) : (
                                     <div className="bg-white/[0.05] border border-white/10 rounded-xl h-10 flex items-center px-4 text-white/40 text-sm">
-                                        No Ethereum accounts connected
+                                        No Ethereum account connected
                                     </div>
                                 )}
                             </div>
@@ -839,7 +837,7 @@ export default function AeEthBridge() {
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
                                     step="0.000001"
-                                    className="px-4 flex-1 bg-transparent border-none text-white text-xl sm:text-2xl font-semibold outline-none min-w-0 overflow-hidden"
+                                    className="flex-1 bg-transparent border-none text-white text-xl sm:text-2xl font-semibold outline-none min-w-0 overflow-hidden shadow-none"
                                 />
 
                                 <BridgeTokenSelector
@@ -876,15 +874,35 @@ export default function AeEthBridge() {
 
                         {/* Destination Address */}
                         <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-5 backdrop-blur-[10px]">
-                            <label className="text-xs text-white/60 font-medium uppercase tracking-wider block mb-2">
-                                Destination {direction === Direction.EthereumToAeternity ? 'æternity' : 'Ethereum'} Address
-                            </label>
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="text-xs text-white/60 font-medium uppercase tracking-wider block mb-2">
+                                    Destination {direction === Direction.EthereumToAeternity ? 'æternity' : 'Ethereum'} Address
+                                </label>
+                                {(activeAccount && direction === Direction.EthereumToAeternity) && (
+                                    <button
+                                        onClick={() => {
+                                            if (direction === Direction.EthereumToAeternity) {
+                                                // Bridging from Ethereum to Aeternity, use Aeternity account
+                                                setDestination(activeAccount);
+                                            } else {
+                                                // Bridging from Aeternity to Ethereum, use Ethereum account
+                                                if (selectedEthAccount) {
+                                                    setDestination(selectedEthAccount);
+                                                }
+                                            }
+                                        }}
+                                        className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa] bg-[#4ecdc4]/10 hover:bg-[#4ecdc4]/20 border border-[#4ecdc4]/30 hover:border-[#4ecdc4]/50 rounded-lg px-2 py-1 transition-all duration-200 font-medium"
+                                    >
+                                        use connected account
+                                    </button>
+                                )}
+                            </div>
                             <input
                                 type="text"
                                 value={destination}
                                 onChange={(e) => setDestination(e.target.value)}
                                 placeholder={direction === Direction.EthereumToAeternity ? 'ak_...' : '0x...'}
-                                className={`px-4 w-full bg-transparent border-none text-white text-sm font-mono outline-none ${!isValidDestination && destination ? 'text-red-400' : ''
+                                className={`w-full bg-transparent border-none text-white text-sm font-mono outline-none shadow-none ${!isValidDestination && destination ? 'text-red-400' : ''
                                     }`}
                             />
                             {!isValidDestination && destination && (
@@ -926,14 +944,20 @@ export default function AeEthBridge() {
                             </div>
                         )}
 
-                        {/* Bridge Button */}
-                        {direction === Direction.EthereumToAeternity && ethereumAccounts.length === 0 ? (
-                            <ConnectEthereumWallet
-                                onConnected={handleEthereumWalletConnected}
-                                onDisconnected={handleEthereumWalletDisconnected}
-                                onError={handleEthereumWalletError}
-                            />
-                        ) : (
+                        <div className='grid gap-2'>
+                            {/* Bridge Button */}
+                            {(direction === Direction.EthereumToAeternity && ethereumAccounts.length === 0) && (
+                                <ConnectEthereumWallet
+                                    onConnected={handleEthereumWalletConnected}
+                                    onDisconnected={handleEthereumWalletDisconnected}
+                                    onError={handleEthereumWalletError}
+                                />
+                            )}
+
+                            {(direction === Direction.AeternityToEthereum && !activeAccount) && (
+                                <ConnectWalletButton />
+                            )}
+
                             <button
                                 onClick={direction === Direction.AeternityToEthereum ? bridgeToEvm : bridgeToAeternity}
                                 disabled={buttonBusy || !isBridgeContractEnabled || !hasOperatorEnoughBalance || !isValidDestination || !amount || parseFloat(amount) <= 0 || (direction === Direction.EthereumToAeternity && ethereumAccounts.length === 0)}
@@ -953,7 +977,7 @@ export default function AeEthBridge() {
                                     </div>
                                 ) : `Bridge to ${direction === Direction.AeternityToEthereum ? 'Ethereum' : 'æternity'}`}
                             </button>
-                        )}
+                        </div>
                     </div>
                 </div>
 

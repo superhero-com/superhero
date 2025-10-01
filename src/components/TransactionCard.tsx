@@ -37,6 +37,9 @@ interface TransactionCardProps {
   };
 }
 
+/**
+ * @deprecated Use TransactionCard from features/dex/components instead
+ */
 export const TransactionCard: React.FC<TransactionCardProps> = ({
   transaction: tx,
   getTransactionTokens

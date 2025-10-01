@@ -220,7 +220,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
               ))}
 
               {/* Explore group */}
-              <div className="hidden md:flex items-center gap-2 md:ml-2 md:mr-8">
+              <div className="hidden md:flex items-center gap-2 md:pl-[76px]">
                 <span style={{
                   fontSize: 12,
                   opacity: 0.7,

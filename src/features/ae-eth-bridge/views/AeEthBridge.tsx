@@ -963,7 +963,7 @@ export default function AeEthBridge() {
                                 disabled={buttonBusy || !isBridgeContractEnabled || !hasOperatorEnoughBalance || !isValidDestination || !amount || parseFloat(amount) <= 0 || (direction === Direction.EthereumToAeternity && ethereumAccounts.length === 0)}
                                 className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${buttonBusy || !isBridgeContractEnabled || !hasOperatorEnoughBalance || !isValidDestination || !amount || parseFloat(amount) <= 0 || (direction === Direction.EthereumToAeternity && ethereumAccounts.length === 0)
                                     ? 'bg-white/10 cursor-not-allowed opacity-60'
-                                    : 'bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0'
+                                    : 'bg-black hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0'
                                     }`}
                             >
                                 {buttonBusy ? (

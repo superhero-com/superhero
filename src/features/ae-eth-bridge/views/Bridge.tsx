@@ -1,5 +1,5 @@
 import { RecentActivity } from "@/components/dex";
-import { AeEthBridge } from "./AeEthBridge";
+import { AeEthBridge } from "../components/AeEthBridge";
 
 export default function Bridge() {
     return (

@@ -195,9 +195,10 @@ export default function DexLayout({ children }: DexLayoutProps) {
                   style={{
                     padding: '10px 14px',
                     borderRadius: 9999,
+                    // Keep border width constant to avoid layout shift
                     border: isActiveRoute(item.path)
                       ? '1.5px solid var(--accent-color, #4caf50)'
-                      : '1px solid rgba(255,255,255,0.08)',
+                      : '1.5px solid rgba(255,255,255,0.08)',
                     background: isActiveRoute(item.path)
                       ? 'rgba(76, 175, 80, 0.12)'
                       : 'rgba(255,255,255,0.06)',
@@ -219,7 +220,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
               ))}
 
               {/* Explore group */}
-              <div className="hidden md:flex items-center gap-2 md:ml-2">
+              <div className="hidden md:flex items-center gap-2 md:ml-2 md:mr-8">
                 <span style={{
                   fontSize: 12,
                   opacity: 0.7,
@@ -234,10 +235,11 @@ export default function DexLayout({ children }: DexLayoutProps) {
                     title={item.description}
                     style={{
                       padding: '8px 12px',
-                      borderRadius: 9999,
-                      border: isActiveRoute(item.path)
-                        ? '1.5px solid var(--accent-color, #4caf50)'
-                        : '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 9999,
+                    // Keep border width constant to avoid layout shift
+                    border: isActiveRoute(item.path)
+                      ? '1.5px solid var(--accent-color, #4caf50)'
+                      : '1.5px solid rgba(255,255,255,0.08)',
                       background: isActiveRoute(item.path)
                         ? 'rgba(76, 175, 80, 0.12)'
                         : 'rgba(255,255,255,0.06)',

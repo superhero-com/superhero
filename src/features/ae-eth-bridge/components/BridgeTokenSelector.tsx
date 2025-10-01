@@ -78,7 +78,7 @@ export default function BridgeTokenSelector({
               onClick={() => {
                 setSearchValue('');
               }}
-              className={`min-w-[max(120px,100%)] py-2.5 px-4 rounded-xl border border-white/10 text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 ease-out flex items-center justify-center gap-2 normal-case ${disabled || loading
+              className={`flex-1 max-w-[max(120px,100%)] py-2.5 px-4 rounded-xl border border-white/10 text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 ease-out flex items-center justify-center gap-2 normal-case ${disabled || loading
                 ? 'cursor-not-allowed opacity-50 bg-white/[0.05]'
                 : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(78,205,196,0.3)]'
                 } ${selected

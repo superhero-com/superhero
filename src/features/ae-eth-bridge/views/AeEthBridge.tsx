@@ -808,7 +808,7 @@ export default function AeEthBridge() {
 
 
                         {/* Amount Input */}
-                        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-2 backdrop-blur-[10px]">
+                        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 backdrop-blur-[10px]">
                             <div className="flex justify-between items-center mb-2 min-w-0">
                                 <label className="text-xs text-white/60 font-medium uppercase tracking-wider flex-shrink-0">
                                     Amount
@@ -863,7 +863,7 @@ export default function AeEthBridge() {
                         </div>
 
                         {/* Destination Token Info */}
-                        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-2 backdrop-blur-[10px]">
+                        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 backdrop-blur-[10px]">
                             <label className="text-xs text-white/60 font-medium uppercase tracking-wider block mb-2">
                                 You'll Receive
                             </label>
@@ -958,25 +958,33 @@ export default function AeEthBridge() {
                                 <ConnectWalletButton />
                             )}
 
-                            <button
-                                onClick={direction === Direction.AeternityToEthereum ? bridgeToEvm : bridgeToAeternity}
-                                disabled={buttonBusy || !isBridgeContractEnabled || !hasOperatorEnoughBalance || !isValidDestination || !amount || parseFloat(amount) <= 0 || (direction === Direction.EthereumToAeternity && ethereumAccounts.length === 0)}
-                                className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${buttonBusy || !isBridgeContractEnabled || !hasOperatorEnoughBalance || !isValidDestination || !amount || parseFloat(amount) <= 0 || (direction === Direction.EthereumToAeternity && ethereumAccounts.length === 0)
-                                    ? 'bg-white/10 cursor-not-allowed opacity-60'
-                                    : 'bg-black hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0'
-                                    }`}
-                            >
-                                {buttonBusy ? (
-                                    <div className="flex items-center justify-center gap-2">
-                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                        {confirming
-                                            ? (confirmingMsg === 'Approving allowance' || confirmingMsg === 'Creating allowance' || confirmingMsg === 'Updating allowance'
-                                                ? 'Approving...'
-                                                : 'Bridging...')
-                                            : 'Processing...'}
-                                    </div>
-                                ) : `Bridge to ${direction === Direction.AeternityToEthereum ? 'Ethereum' : 'æternity'}`}
-                            </button>
+                            {
+                                (
+                                    (direction === Direction.AeternityToEthereum && activeAccount)
+                                    || (direction === Direction.EthereumToAeternity && ethereumAccounts.length > 0)
+                                ) && (
+                                    <button
+                                        onClick={direction === Direction.AeternityToEthereum ? bridgeToEvm : bridgeToAeternity}
+                                        disabled={buttonBusy || !isBridgeContractEnabled || !hasOperatorEnoughBalance || !isValidDestination || !amount || parseFloat(amount) <= 0 || (direction === Direction.EthereumToAeternity && ethereumAccounts.length === 0)}
+                                        className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${buttonBusy || !isBridgeContractEnabled || !hasOperatorEnoughBalance || !isValidDestination || !amount || parseFloat(amount) <= 0 || (direction === Direction.EthereumToAeternity && ethereumAccounts.length === 0)
+                                            ? 'bg-white/10 cursor-not-allowed opacity-60'
+                                            : 'bg-black hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0'
+                                            }`}
+                                    >
+                                        {buttonBusy ? (
+                                            <div className="flex items-center justify-center gap-2">
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                {confirming
+                                                    ? (confirmingMsg === 'Approving allowance' || confirmingMsg === 'Creating allowance' || confirmingMsg === 'Updating allowance'
+                                                        ? 'Approving...'
+                                                        : 'Bridging...')
+                                                    : 'Processing...'}
+                                            </div>
+                                        ) : `Bridge to ${direction === Direction.AeternityToEthereum ? 'Ethereum' : 'æternity'}`}
+                                    </button>
+                                )
+                            }
+
                         </div>
                     </div>
                 </div>

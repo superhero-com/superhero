@@ -5,7 +5,7 @@ import { useAccountBalances } from "../../hooks/useAccountBalances";
 import { useAeSdk } from "../../hooks/useAeSdk";
 import { useToast } from "../ToastProvider";
 import Sparkline from "../Trendminer/Sparkline";
-import { EthBridgeWidget } from "../../features/bridge";
+import { BuyAeWidget } from "../../features/bridge";
 
 import { useWallet } from "../../hooks";
 interface SearchSuggestion {
@@ -1196,7 +1196,7 @@ export default function RightRail({
 
       {/* Buy AE with ETH widget (compact) */}
       <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-4 shadow-[var(--glass-shadow)]">
-        <EthBridgeWidget embedded={true} />
+        <BuyAeWidget embedded={true} />
       </div>
     </div>
   );

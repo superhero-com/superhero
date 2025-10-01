@@ -11,7 +11,7 @@ interface EthBridgeWidgetProps {
   embedded?: boolean; // renders without outer card/padding for sidebars
 }
 
-export default function EthBridgeWidget({ embedded = false }: EthBridgeWidgetProps) {
+export default function BuyAeWidget({ embedded = false }: EthBridgeWidgetProps) {
   const { activeAccount, sdk } = useAeSdk();
   const slippagePct = useDex().slippagePct;
   const deadlineMins = useDex().deadlineMins;

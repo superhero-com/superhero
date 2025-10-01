@@ -20,17 +20,17 @@ export default function DexSwap() {
           />
         </div>
 
-        {!!selectedPair?.address && (
-          <div className="flex-1 min-w-0 w-full">
+        <div className="flex-1 min-w-0 w-full flex flex-col gap-6">
+          {!!selectedPair?.address && (
             <PoolCandlestickChart
               pairAddress={selectedPair?.address}
               fromTokenAddress={fromToken?.address}
               height={460}
             />
-          </div>
-        )}
+          )}
+          <RecentActivity />
+        </div>
       </div>
-      <RecentActivity />
       {/* New Account Education */}
       <NewAccountEducation />
     </div>

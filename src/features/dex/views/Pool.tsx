@@ -133,7 +133,7 @@ function PoolContent() {
                   </div>
                   {!activeAccount && (
                     <ConnectWalletButton
-                      label="Connect wallet"
+                      label="CONNECT WALLET"
                       variant="dex"
                       className="px-6 py-3 rounded-xl border-none bg-[#1161FE] text-white text-sm font-semibold shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
                     />

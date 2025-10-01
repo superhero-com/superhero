@@ -46,10 +46,10 @@ export default function ConnectWalletButton({ label = 'Connect Wallet', block, s
     >
       <span className="hidden sm:inline-flex items-center gap-2">
         <Favicon className="w-4 h-4" />
-        {connectingWallet ? 'Connecting…' : label}
+        {(connectingWallet ? 'Connecting…' : label).toUpperCase()}
       </span>
       <span className="sm:hidden">
-        {connectingWallet ? 'Connecting…' : label}
+        {(connectingWallet ? 'Connecting…' : label).toUpperCase()}
       </span>
     </AeButton>
   );

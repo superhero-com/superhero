@@ -307,7 +307,7 @@ export default function EthBridgeWidget({ embedded = false }: EthBridgeWidgetPro
         </button>
       ) : (
         <ConnectWalletButton
-          label={embedded ? "Connect wallet" : "Connect Wallet to Buy AE"}
+          label={embedded ? "CONNECT WALLET" : "CONNECT WALLET TO BUY AE"}
           block
           variant="dex"
           className="w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase cursor-pointer shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"

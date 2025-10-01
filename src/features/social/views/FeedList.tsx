@@ -180,7 +180,7 @@ export default function FeedList({
     }
   }, []);
 
-  // Mobile: auto-load more when reaching bottom using IntersectionObserver
+  // Auto-load more when reaching bottom using IntersectionObserver (all screens)
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!('IntersectionObserver' in window)) return;
@@ -191,7 +191,7 @@ export default function FeedList({
       if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
         fetchNextPage();
       }
-    }, { root: null, rootMargin: '200px 0px', threshold: 0 });
+    }, { root: null, rootMargin: '600px 0px', threshold: 0 });
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
@@ -231,8 +231,8 @@ export default function FeedList({
               Load more
             </AeButton>
           </div>
-          {/* Mobile: auto-load sentinel */}
-          <div id="feed-infinite-sentinel" className="md:hidden h-10" ref={sentinelRef} />
+          {/* Auto-load sentinel for all breakpoints */}
+          <div id="feed-infinite-sentinel" className="h-10" ref={sentinelRef} />
         </>
       )}
     </div>

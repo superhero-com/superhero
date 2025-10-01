@@ -19,13 +19,6 @@ const navigationItems: NavigationItem[] = [
     description: 'Trade any supported AEX-9 tokens'
   },
   {
-    id: 'pool',
-    label: 'POOL',
-    icon: '💧',
-    path: '/defi/pool',
-    description: 'Manage liquidity positions'
-  },
-  {
     id: 'wrap',
     label: 'WRAP',
     icon: '📦',
@@ -33,7 +26,21 @@ const navigationItems: NavigationItem[] = [
     description: 'Convert AE ↔ WAE'
   },
   {
+    id: 'pool',
+    label: 'POOL',
+    icon: '💧',
+    path: '/defi/pool',
+    description: 'Manage liquidity positions'
+  },
+  {
     id: 'bridge',
+    label: 'BRIDGE',
+    icon: '🌉',
+    path: '/defi/bridge',
+    description: 'Bridge tokens between Ethereum and æternity'
+  },
+  {
+    id: 'buy-ae',
     label: 'BUY AE',
     icon: '💎',
     path: '/defi/buy-ae-with-eth',

@@ -159,10 +159,16 @@ export default function EthBridgeWidget({ embedded = false }: EthBridgeWidgetPro
     >
       {/* Header */}
       <div className="flex justify-between items-center mb-2 sm:mb-4 min-w-0">
-        <h2 className="m-0 text-base font-bold min-w-0 flex-shrink flex items-center gap-2">
-          <span className="text-base">💎</span>
-          <span>Buy AE with ETH</span>
-        </h2>
+        {embedded ? (
+          <h2 className="m-0 text-base font-bold min-w-0 flex-shrink flex items-center gap-2">
+            <span className="text-base">💎</span>
+            <span>Buy AE with ETH</span>
+          </h2>
+        ) : (
+          <h2 className="text-lg sm:text-xl font-bold m-0 sh-dex-title min-w-0 flex-shrink">
+            Buy AE with ETH
+          </h2>
+        )}
 
         <div className={`text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10 ${chipBg} transition-all duration-300 ease-out font-medium flex-shrink-0`}>
           Cross-chain

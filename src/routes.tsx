@@ -40,6 +40,7 @@ const DexExplorePools = lazy(
 const DexExploreTransactions = lazy(
   () => import("./features/dex/views/DexExploreTransactions")
 );
+const AeEthBridge = lazy(() => import("./features/ae-eth-bridge/views/AeEthBridge"));
 
 // Legacy DEX components (for backward compatibility)
 const Swap = lazy(() => import("./views/Swap"));
@@ -112,6 +113,12 @@ export const routes: RouteObject[] = [
       <DexLayout>
         <DexBridge />
       </DexLayout>
+    ),
+  },
+  {
+    path: "/bridge",
+    element: (
+      <AeEthBridge />
     ),
   },
   {

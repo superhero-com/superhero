@@ -23,6 +23,8 @@
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.3",
+    "@reown/appkit": "^1.8.8",
+    "@reown/appkit-adapter-ethers": "^1.8.8",
     "@tanstack/react-query": "^5.85.5",
     "@visx/wordcloud": "^3.10.0",
     "aeternity-fungible-token": "git+https://git@github.com/aeternity/aeternity-fungible-token#v2.2.0",

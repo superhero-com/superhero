@@ -24,8 +24,8 @@ function PoolContent() {
     <div className="mx-auto md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
       {/* Top Row - Forms and Positions */}
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_480px] gap-6 md:gap-8 items-start">
-        {/* Mobile: Forms First, Desktop: Positions First */}
-        <div className="lg:order-2 order-1">
+        {/* Mobile: Forms First, Desktop: Forms First (swapped) */}
+        <div className="lg:order-1 order-1">
           {/* Right Column - Liquidity Forms */}
           <div id="liquidity-forms-section" className="lg:sticky lg:top-5 flex flex-col gap-6">
             {currentAction === 'remove' ? (
@@ -36,8 +36,8 @@ function PoolContent() {
           </div>
         </div>
 
-        {/* Mobile: Positions Second, Desktop: Positions First */}
-        <div className="lg:order-1 order-1">
+        {/* Mobile: Positions Second, Desktop: Positions Second */}
+        <div className="lg:order-2 order-2">
           <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
             {/* Header */}
             <div className="mb-6">

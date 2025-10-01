@@ -184,7 +184,7 @@ export default function EthBridgeWidget() {
             placeholder="0.0"
             value={ethBridgeIn}
             onChange={(e) => setEthBridgeIn(e.target.value)}
-            className="flex-1 bg-transparent border-none text-white text-xl sm:text-2xl font-semibold outline-none min-w-0 overflow-hidden"
+            className="flex-1 !bg-transparent !bg-none ![background:none] !border-none text-white text-xl sm:text-2xl font-semibold !outline-none focus:!outline-none active:!outline-none !shadow-none ![box-shadow:none] focus:!shadow-none active:!shadow-none !ring-0 focus:!ring-0 active:!ring-0 !backdrop-blur-0 ![backdrop-filter:none] !p-0 !min-h-0 !rounded-none min-w-0 overflow-hidden !appearance-none"
           />
 
           <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 rounded-xl border border-white/10 flex-shrink-0">
@@ -200,7 +200,7 @@ export default function EthBridgeWidget() {
 
       {/* Bridge Arrow */}
       <div className="flex justify-center my-3 sm:my-4 relative">
-        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] border-2 border-white/10 text-white flex items-center justify-center text-lg sm:text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(255,107,107,0.3)] z-[2] relative hover:shadow-[0_8px_24px_rgba(255,107,107,0.4)] hover:-translate-y-0.5">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-white/10 bg-white/[0.08] backdrop-blur-[10px] text-white flex items-center justify-center text-lg sm:text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(0,0,0,0.25)] z-[2] relative">
           🌉
         </div>
       </div>
@@ -293,7 +293,8 @@ export default function EthBridgeWidget() {
         <ConnectWalletButton
           label="Connect Wallet to Bridge"
           block
-          className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white text-sm sm:text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(255,107,107,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
+          variant="dex"
+          className="w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase cursor-pointer shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
         />
       )}
 

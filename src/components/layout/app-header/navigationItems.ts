@@ -51,6 +51,12 @@ export const navigationItems: NavigationItem[] = [
       },
     ],
   },
+  {
+    id: "bridge ",
+    label: "BRIDGE",
+    path: "/bridge",
+    icon: "💱",
+  },
   configs.features.trendminer && {
       id: 'trending',
       label: 'Trends',

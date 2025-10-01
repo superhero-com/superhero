@@ -198,10 +198,6 @@ export default function TokenList() {
     };
   }, [hasNextPage, isFetching, fetchNextPage]);
 
-  function normalizeAe(n: number): number {
-    if (!isFinite(n)) return 0;
-    return n >= 1e12 ? n / 1e18 : n;
-  }
 
   return (
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">

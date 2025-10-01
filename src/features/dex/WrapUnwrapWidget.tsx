@@ -284,8 +284,8 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
         <ConnectWalletButton
           label="CONNECT WALLET"
           variant="dex"
+          className="text-sm"
           block
-          className="w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
         />
       )}
     </div>

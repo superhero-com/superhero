@@ -182,7 +182,7 @@ export default function SwapCard() {
                 className="large block"
                 green
               >
-                CONNECT WALLET
+                <span className="text-sm">CONNECT WALLET</span>
               </AeButton>
             ) : (
               <div className="text-xs opacity-80 text-center text-white/80">

@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { HeaderLogo } from '../../../icons';
 import HeaderWalletButton from './HeaderWalletButton';
 import { navigationItems } from './navigationItems';
+import DropdownMenu from './DropdownMenu';
+import ViewContainer from '@/features/shared/layout/ViewContainer';
 
 
 export default function WebAppHeader() {
@@ -36,83 +38,101 @@ export default function WebAppHeader() {
   // Dropdown menus removed; show only top-level links
 
   return (
-    <header className="sticky top-0 z-[1000] hidden md:block border-b" style={{ 
+    <header className="sticky top-0 z-[1000] hidden md:block border-b" style={{
       backgroundColor: 'rgba(12, 12, 20, 0.5)',
       backdropFilter: 'blur(14px)',
       WebkitBackdropFilter: 'blur(14px)',
       borderBottomColor: 'rgba(255, 255, 255, 0.14)',
       boxShadow: '0 6px 28px rgba(0,0,0,0.35)'
     }}>
-      <div className="flex items-center gap-6 px-6 h-16 max-w-[min(1400px,100%)] mx-auto md:px-5 md:gap-5">
-        <Link to="/" className="flex items-center no-underline" style={{ color: 'var(--standard-font-color)' }} aria-label="Superhero Home">
-          <HeaderLogo className="h-8 w-auto" />
-        </Link>
+      <ViewContainer>
+        <div className="flex items-center gap-6 h-16 md:gap-5">
+          <Link to="/" className="flex items-center no-underline" style={{ color: 'var(--standard-font-color)' }} aria-label="Superhero Home">
+            <HeaderLogo className="h-8 w-auto" />
+          </Link>
 
-        <nav className="flex items-center gap-6 flex-grow md:gap-5 relative">
-          {navigationItems.map(item => (
-            item.isExternal ? (
-              <a
-                key={item.id}
-                href={item.path}
-                target="_blank"
-                rel="noreferrer"
-                className={`no-underline font-medium px-3 py-2 rounded-lg transition-all duration-200 relative ${
-                  isActiveRoute(item.path) 
-                    ? 'after:content-[""] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-0.5 after:rounded-sm'
-                    : ''
-                }`}
-                style={{
-                  color: isActiveRoute(item.path) ? 'var(--custom-links-color)' : 'var(--light-font-color)',
-                  backgroundColor: isActiveRoute(item.path) ? 'rgba(0,255,157,0.1)' : 'transparent',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActiveRoute(item.path)) {
-                    e.currentTarget.style.color = 'var(--standard-font-color)';
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActiveRoute(item.path)) {
-                    e.currentTarget.style.color = 'var(--light-font-color)';
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
-              >
-                {item.label}
-                {isActiveRoute(item.path) && (
-                  <span 
-                    className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
-                    style={{ backgroundColor: 'var(--custom-links-color)' }}
+          <nav className="flex items-center gap-6 flex-grow md:gap-5 relative">
+            {navigationItems.map(item => {
+              // Render dropdown menu for items with children
+              if (item.children && item.children.length > 0) {
+                return (
+                  <DropdownMenu
+                    key={item.id}
+                    item={item}
+                    isActiveRoute={isActiveRoute}
                   />
-                )}
-              </a>
-            ) : (
-              <Link
-                key={item.id}
-                to={item.path}
-                className={`no-underline font-medium px-3 py-2 rounded-lg transition-all duration-200 relative`}
-                style={{
-                  color: isActiveRoute(item.path) ? 'var(--custom-links-color)' : 'var(--light-font-color)',
-                  backgroundColor: isActiveRoute(item.path) ? 'rgba(0,255,157,0.1)' : 'transparent',
-                }}
-              >
-                {item.label}
-                {isActiveRoute(item.path) && (
-                  <span 
-                    className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
-                    style={{ backgroundColor: 'var(--custom-links-color)' }}
-                  />
-                )}
-              </Link>
-            )
-          ))}
-        </nav>
+                );
+              }
 
-        {/* Right area lives inside the boxed header container */}
-        <div className="ml-auto flex items-center gap-4 justify-end">
-          <HeaderWalletButton />
+              // Render external links
+              if (item.isExternal) {
+                return (
+                  <a
+                    key={item.id}
+                    href={item.path}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`no-underline font-medium px-3 py-2 rounded-lg transition-all duration-200 relative ${isActiveRoute(item.path)
+                      ? 'after:content-[""] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-0.5 after:rounded-sm'
+                      : ''
+                      }`}
+                    style={{
+                      color: isActiveRoute(item.path) ? 'var(--custom-links-color)' : 'var(--light-font-color)',
+                      backgroundColor: isActiveRoute(item.path) ? 'rgba(0,255,157,0.1)' : 'transparent',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActiveRoute(item.path)) {
+                        e.currentTarget.style.color = 'var(--standard-font-color)';
+                        e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActiveRoute(item.path)) {
+                        e.currentTarget.style.color = 'var(--light-font-color)';
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }
+                    }}
+                  >
+                    {item.label}
+                    {isActiveRoute(item.path) && (
+                      <span
+                        className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
+                        style={{ backgroundColor: 'var(--custom-links-color)' }}
+                      />
+                    )}
+                  </a>
+                );
+              }
+
+              // Render regular internal links
+              return (
+                <Link
+                  key={item.id}
+                  to={item.path}
+                  className={`no-underline font-medium px-3 py-2 rounded-lg transition-all duration-200 relative`}
+                  style={{
+                    color: isActiveRoute(item.path) ? 'var(--custom-links-color)' : 'var(--light-font-color)',
+                    backgroundColor: isActiveRoute(item.path) ? 'rgba(0,255,157,0.1)' : 'transparent',
+                  }}
+                >
+                  {item.label}
+                  {isActiveRoute(item.path) && (
+                    <span
+                      className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
+                      style={{ backgroundColor: 'var(--custom-links-color)' }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Right area lives inside the boxed header container */}
+          <div className="ml-auto flex items-center gap-4 justify-end">
+            <HeaderWalletButton />
+          </div>
         </div>
-      </div>
+      </ViewContainer>
     </header>
   );
 }

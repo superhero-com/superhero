@@ -4,13 +4,14 @@ import SwapForm from "../../../components/dex/core/SwapForm";
 import RecentActivity from "../../../components/dex/supporting/RecentActivity";
 import NewAccountEducation from "../../../components/dex/widgets/NewAccountEducation";
 import PoolCandlestickChart from "../components/charts/PoolCandlestickChart";
+import ViewContainer from "@/features/shared/layout/ViewContainer";
 
 export default function DexSwap() {
   const [selectedPair, setSelectedPair] = useState<PairDto | null>(null);
   const [fromToken, setFromToken] = useState<DexTokenDto | null>(null);
   // todo get selected pool address3
   return (
-    <div className="mx-auto md:px-5 md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
+    <ViewContainer>
       {/* Main Content */}
       <div className="flex gap-5 items-start w-full flex-col md:flex-row md:gap-6">
         <div className="grid grid-cols-1 gap-6 md:gap-8 items-start">
@@ -30,9 +31,9 @@ export default function DexSwap() {
           </div>
         )}
       </div>
-      <RecentActivity />
+      {/* <RecentActivity /> */}
       {/* New Account Education */}
-      <NewAccountEducation />
-    </div>
+      {/* <NewAccountEducation /> */}
+    </ViewContainer>
   );
 }

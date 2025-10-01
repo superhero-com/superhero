@@ -85,17 +85,13 @@ export const routes: RouteObject[] = [
   {
     path: "/dex",
     element: (
-      <DexLayout>
-        <DexSwap />
-      </DexLayout>
+      <DexSwap />
     ),
   },
   {
     path: "/dex/swap",
     element: (
-      <DexLayout>
-        <DexSwap />
-      </DexLayout>
+      <DexSwap />
     ),
   },
   {

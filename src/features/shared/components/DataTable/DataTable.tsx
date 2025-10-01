@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DataTablePagination } from './DataTablePagination';
 
@@ -50,8 +50,11 @@ export function DataTable<T>({
     ...initialParams,
   });
 
+  // Create a stable query key that includes the queryFn to trigger refetch when filters change
+  const queryKey = useMemo(() => ['DataTable', params, queryFn], [params, queryFn]);
+
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['DataTable', params],
+    queryKey,
     queryFn: () => queryFn(params),
     placeholderData: (previousData) => previousData,
   });
@@ -149,8 +152,11 @@ export function useDataTable<T>(
     ...initialParams,
   });
 
+  // Create a stable query key that includes the queryFn to trigger refetch when filters change
+  const queryKey = useMemo(() => ['DataTable', params, queryFn], [params, queryFn]);
+
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['DataTable', params],
+    queryKey,
     queryFn: () => queryFn(params),
     placeholderData: (previousData) => previousData,
   });

@@ -23,8 +23,8 @@ import { useAeSdk } from '@/hooks/useAeSdk';
 import { useRecentActivities } from '@/hooks/useRecentActivities';
 
 import ConnectWalletButton from '@/components/ConnectWalletButton';
-import BridgeTokenSelector from '../components/BridgeTokenSelector';
-import ConnectEthereumWallet from '../components/ConnectEthereumWallet';
+import BridgeTokenSelector from './BridgeTokenSelector';
+import ConnectEthereumWallet from './ConnectEthereumWallet';
 import { BRIDGE_USAGE_INTERVAL_IN_HOURS, BridgeConstants } from '../constants';
 import { useBridge } from '../hooks/useBridge';
 import { useTokenBalances } from '../hooks/useTokenBalances';

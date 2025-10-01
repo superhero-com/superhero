@@ -129,9 +129,10 @@
 }
 
 .right-section { 
-  position: sticky; 
-  top: 64px; 
-  align-self: start;
+  /* neutralized sticky/scroll; handled in layout container */
+  position: static; 
+  top: auto; 
+  align-self: auto;
   min-width: 0;
   
   // Super Sexy Scrollbars for Right Section
@@ -354,8 +355,7 @@
     padding: 8px 16px;
   }
   
-  .left-section,
-  .right-section {
+  .left-section {
     position: sticky;
     top: 64px;
     max-height: calc(100vh - 80px);

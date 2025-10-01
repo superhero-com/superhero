@@ -40,7 +40,7 @@ export default function DexExploreTokens() {
   });
 
   return (
-    <div className="p-0 mx-auto md:px-5 md:pt-0">
+    <div className="p-0 mx-auto md:pt-0">
       {/* Main Content Container (no card) */}
       <div className="max-w-[1200px] mx-2 md:mx-auto bg-transparent border-none rounded-none p-0 md:p-0 shadow-none relative overflow-visible backdrop-blur-0">
         {/* Header Card */}

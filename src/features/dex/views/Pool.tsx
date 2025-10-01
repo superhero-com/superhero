@@ -21,7 +21,7 @@ function PoolContent() {
   };
 
   return (
-    <div className="mx-auto md:px-5 md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
+    <div className="mx-auto md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
       {/* Top Row - Forms and Positions */}
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_480px] gap-6 md:gap-8 items-start">
         {/* Mobile: Forms First, Desktop: Positions First */}

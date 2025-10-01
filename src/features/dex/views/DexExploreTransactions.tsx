@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
-import { DataTable, useDataTable, DataTableResponse } from '../../shared/components/DataTable';
+import { useState } from 'react';
 import { DexService } from '../../../api/generated';
-import { TransactionCard } from '../components/TransactionCard';
 import { Button } from '../../../components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Input } from '../../../components/ui/input';
-import { PairTransactionDto } from '../../../api/generated/models/PairTransactionDto';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
+import { DataTable, DataTableResponse } from '../../shared/components/DataTable';
+import { TransactionCard } from '../components/TransactionCard';
 
 // Transaction types mapping with meaningful names
 const TX_TYPES = [
@@ -43,30 +42,8 @@ export default function DexExploreTransactions() {
     accountAddress: '',
   });
 
-  const { data, isLoading, params, updateParams, resetParams } = useDataTable<PairTransactionDto>(
-    (params) => fetchTransactions({
-      ...params,
-      txType: filters.txType,
-      pairAddress: filters.pairAddress,
-      accountAddress: filters.accountAddress,
-    }),
-    {
-      limit: 10,
-      page: 1,
-      orderBy: 'created_at',
-      orderDirection: 'DESC',
-    }
-  );
-
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
-    // Reset to first page when filters change
-    updateParams({ page: 1 });
-  };
-
-  const handleApplyFilters = () => {
-    // Trigger a refetch with new filters
-    updateParams({ page: 1 });
   };
 
   const handleClearFilters = () => {
@@ -75,36 +52,8 @@ export default function DexExploreTransactions() {
       pairAddress: '',
       accountAddress: '',
     });
-    resetParams();
   };
 
-  // Convert explore Transaction to TransactionData format for TransactionCard
-  const convertToTransactionData = (tx: any): any => ({
-    hash: tx.transactionHash || tx.txHash || '',
-    type: tx.type === 'swap' ? 'SwapTokens' as const :
-      tx.type === 'add' ? 'PairMint' as const :
-        tx.type === 'create' ? 'CreatePair' as const : 'SwapTokens' as const,
-    pairAddress: tx.pairAddress,
-    senderAccount: tx.senderAccount,
-    reserve0: tx.reserve0,
-    reserve1: tx.reserve1,
-    deltaReserve0: tx.deltaReserve0,
-    deltaReserve1: tx.deltaReserve1,
-    height: tx.height,
-    microBlockHash: tx.microBlockHash,
-    microBlockTime: tx.microBlockTime,
-    transactionHash: tx.transactionHash,
-    transactionIndex: tx.transactionIndex,
-    logIndex: tx.logIndex,
-    delta0UsdValue: tx.delta0UsdValue,
-    delta1UsdValue: tx.delta1UsdValue,
-    txUsdFee: tx.txUsdFee
-  });
-
-  const getTransactionTokens = (tx: any) => ({
-    token0Symbol: tx.tokenInSymbol || tx.token0Symbol || 'Token A',
-    token1Symbol: tx.tokenOutSymbol || tx.token1Symbol || 'Token B'
-  });
 
   return (
     <div className="mx-auto md:pt-0 md:px-2 flex flex-col gap-6 md:gap-8 min-h-screen">
@@ -166,9 +115,6 @@ export default function DexExploreTransactions() {
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">Actions</label>
               <div className="flex gap-2">
-                <Button onClick={handleApplyFilters} size="sm">
-                  Apply
-                </Button>
                 <Button onClick={handleClearFilters} variant="outline" size="sm">
                   Clear
                 </Button>
@@ -177,17 +123,6 @@ export default function DexExploreTransactions() {
           </div>
         </div>
 
-        {/* Results Summary */}
-        {data && (
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              Showing {data.items.length} of {data.meta.totalItems} transactions
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Page {data.meta.currentPage} of {data.meta.totalPages}
-            </div>
-          </div>
-        )}
 
         {/* DataTable Implementation */}
         <DataTable

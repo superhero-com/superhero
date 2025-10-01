@@ -297,6 +297,7 @@ export default function CollectInvitationLinkCard({
                         <ConnectWalletButton
                           label="CONNECT WALLET"
                           variant="default"
+                          className="text-sm"
                         />
                       )}
 

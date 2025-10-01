@@ -21,15 +21,15 @@ export default function ConnectWalletButton({ label = 'Connect Wallet', block, s
   
   const dexClasses = cn(
     // Mobile (default): superhero blue with card-like radius
-    'bg-[#1161FE] text-white border-none rounded-xl',
+    'bg-[#1161FE] text-white border-none rounded-xl text-sm',
     // Desktop+: elegant dark/glass pill with icon
-    'sm:bg-black/80 sm:text-white sm:border sm:border-white/10 sm:backdrop-blur-[10px] sm:hover:bg-black/70 sm:!rounded-full',
+    'sm:bg-black/80 sm:text-white sm:border sm:border-white/10 sm:backdrop-blur-[10px] sm:hover:bg-black/70 sm:!rounded-full sm:text-sm',
     'sm:shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:sm:shadow-[0_12px_32px_rgba(0,0,0,0.45)]'
   );
 
   const baseClasses = cn(
-    'rounded-xl sm:rounded-full border-border bg-card backdrop-blur-sm backdrop-saturate-120 hover:bg-card/80 hover:shadow-md',
-    'sm:bg-card sm:hover:bg-card/80 sm:text-inherit',
+    'rounded-xl sm:rounded-full border-border bg-card backdrop-blur-sm backdrop-saturate-120 hover:bg-card/80 hover:shadow-md text-sm',
+    'sm:bg-card sm:hover:bg-card/80 sm:text-sm',
     'bg-[#1161FE] text-white border-none rounded-xl sm:rounded-full'
   );
 

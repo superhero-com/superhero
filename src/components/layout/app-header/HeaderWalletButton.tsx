@@ -28,7 +28,7 @@ export default function HeaderWalletButton() {
         loading={false}
         variant="default"
         size="default"
-        className="gap-2 rounded-xl sm:rounded-full"
+        className="gap-2 rounded-xl sm:rounded-full text-sm"
       >
         <Favicon className="w-4 h-4" />
         CONNECT WALLET

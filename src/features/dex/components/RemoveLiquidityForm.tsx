@@ -61,7 +61,7 @@ export default function RemoveLiquidityForm() {
   if (!address) {
     return (
       <div className="max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.1)] text-center">
-        <ConnectWalletButton label="CONNECT WALLET" variant="dex" />
+        <ConnectWalletButton label="CONNECT WALLET" variant="dex" className="text-sm" />
       </div>
     );
   }

@@ -514,7 +514,7 @@ export function PoolCandlestickChart({
     <div className={`${className} w-full mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden`}>
       <div className="relative" style={{ height }}>
         {/* Chart Info Overlay */}
-        <div className="hidden sm:block absolute top-0 left-0 right-24 z-20 p-5 bg-gradient-to-b from-background/50 via-background/15 to-transparent backdrop-blur-sm">
+        <div className="hidden sm:block absolute top-0 left-0 right-24 z-20 p-5 bg-gradient-to-b from-background/50 via-background/15 to-transparent">
           <div className="flex flex-wrap items-end gap-1 mb-2">
             <div className="text-lg font-bold text-foreground flex items-center gap-2">
               <TokenChip

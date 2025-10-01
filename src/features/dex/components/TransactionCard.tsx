@@ -157,9 +157,9 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
 
   const formatTokenAmount = (amount: string, decimals: number) => {
     const num = Decimal.from(amount);
-    const divisor = Math.pow(10, decimals);
-    const result = num.div(divisor);
-    return Decimal.from(result.toString()).shorten();
+    // const divisor = Math.pow(10, decimals);
+    // const result = num.div(divisor);
+    return Decimal.from(amount).div(10 ** decimals).prettify();
   };
 
   const dividerAccent = isLiquidityTransaction ? 'from-teal-500/20' : hasSwapInfo ? 'from-blue-500/20' : 'from-gray-500/20';
@@ -200,7 +200,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
 
             <Badge
               className={[
-                'border px-2.5 py-1 rounded-full',
+                'border px-2.5 py-1 rounded-full hidden md:block',
                 'shadow-sm',
                 txConfig.color,
                 txConfig.chip,

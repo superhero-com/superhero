@@ -710,7 +710,7 @@ function formatTokenBalance(balance: any, decimals: any): string {
     if (balance === null || balance === undefined) return "0";
     const raw = String(balance).replace(/[,\s]/g, "");
     const hasDot = /\./.test(raw);
-    const fractional = hasDot ? (raw.split(".")[1] || "") : "";
+    const fractional = hasDot ? raw.split(".")[1] || "" : "";
     const hasNonZeroFraction = /[1-9]/.test(fractional);
     let decsNum = Number(decimals);
 
@@ -719,15 +719,21 @@ function formatTokenBalance(balance: any, decimals: any): string {
       return Decimal.from(raw).prettify(2);
     }
 
+    // If it has .00 (or only zeros) fractional, treat as base units integer
+    let integerBaseUnits = raw;
+    if (hasDot && !hasNonZeroFraction) {
+      integerBaseUnits = raw.split(".")[0];
+    }
+
     // Heuristic: if it's a very long integer, it's almost certainly base units with 18 decimals
-    if (!hasDot && raw.length >= 19) {
-      const normalized = fromAettos(raw, 18);
+    if (!/\./.test(integerBaseUnits) && integerBaseUnits.length >= 19) {
+      const normalized = fromAettos(integerBaseUnits, 18);
       return Decimal.from(normalized).prettify(2);
     }
 
     // Fallback: use provided decimals if valid (>0), otherwise assume 18
     if (!Number.isFinite(decsNum) || decsNum <= 0) decsNum = 18;
-    const normalized = hasDot ? raw : fromAettos(raw, decsNum);
+    const normalized = fromAettos(integerBaseUnits, decsNum);
     return Decimal.from(normalized).prettify(2);
   } catch {
     try {

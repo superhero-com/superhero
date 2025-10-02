@@ -1,14 +1,14 @@
-import { TokensService } from '@/api/generated';
-import AeButton from '@/components/AeButton';
-import VoteSubject from '@/features/trendminer/components/Dao/VoteSubject';
-import { useDaoVote } from '@/features/trendminer/hooks/useDaoVote';
-import { useAeSdk } from '@/hooks';
-import { ensureAddress, ensureString } from '@/utils/common';
-import { Encoded, Encoding } from '@aeternity/aepp-sdk';
-import { useQuery } from '@tanstack/react-query';
-import { Link, useParams } from 'react-router-dom';
-import VotersTable from '../../features/trendminer/components/Dao/VotersTable';
-
+import { TokensService } from "@/api/generated";
+import AeButton from "@/components/AeButton";
+import VoteSubject from "@/features/trendminer/components/Dao/VoteSubject";
+import { useDaoVote } from "@/features/trendminer/hooks/useDaoVote";
+import { useAeSdk } from "@/hooks";
+import { ensureAddress, ensureString } from "@/utils/common";
+import { Encoded, Encoding } from "@aeternity/aepp-sdk";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useParams } from "react-router-dom";
+import VotersTable from "../../features/trendminer/components/Dao/VotersTable";
+import { Decimal } from "@/libs/decimal";
 
 export default function VoteView() {
   const { saleAddress, voteAddress, voteId } = useParams<{
@@ -31,6 +31,7 @@ export default function VoteView() {
   ensureString(voteId);
 
   const {
+    hasTokenBalance,
     voteState,
     canVote,
     canRevokeVote,
@@ -49,9 +50,13 @@ export default function VoteView() {
     voteId: BigInt(voteId),
   });
 
-  const { data: token, isLoading, error } = useQuery({
+  const {
+    data: token,
+    isLoading,
+    error,
+  } = useQuery({
     queryFn: () => TokensService.findByAddress({ address: saleAddress }),
-    queryKey: ['TokensService.findByAddress', saleAddress],
+    queryKey: ["TokensService.findByAddress", saleAddress],
     retry: 3,
     retryDelay: 1000 * 5,
   });
@@ -61,7 +66,9 @@ export default function VoteView() {
     return new Date(Date.now() + timeDiff).toDateString();
   };
 
-  const isOpen = voteState ? currentBlockHeight < voteState.close_height : false;
+  const isOpen = voteState
+    ? currentBlockHeight < voteState.close_height
+    : false;
 
   if (isLoading) {
     return (
@@ -83,11 +90,7 @@ export default function VoteView() {
   }
 
   if (!token) {
-    return (
-      <div className="text-slate-400 p-4">
-        Token not found
-      </div>
-    );
+    return <div className="text-slate-400 p-4">Token not found</div>;
   }
 
   return (
@@ -97,15 +100,17 @@ export default function VoteView() {
         <div className="hidden lg:block lg:col-span-1 space-y-4">
           {/* TokenTradeCard placeholder */}
           <div className="border border-white/10 rounded-xl p-4 bg-black/20 backdrop-blur-lg text-white">
-            <div className="text-lg font-bold mb-2">{token.name || token.symbol}</div>
+            <div className="text-lg font-bold mb-2">
+              {token.name || token.symbol}
+            </div>
             <div className="text-sm text-white/80">Token Details</div>
           </div>
-          
+
           {/* TokenDetailsCard placeholder */}
           <div className="border border-white/10 rounded-xl p-4 bg-black/20 backdrop-blur-lg text-white">
             <div className="text-sm text-white/80">Additional Token Info</div>
           </div>
-          
+
           {/* TokenRanking placeholder */}
           <div className="border border-white/10 rounded-xl p-4 bg-black/20 backdrop-blur-lg text-white">
             <div className="text-sm text-white/80">Token Ranking</div>
@@ -132,12 +137,14 @@ export default function VoteView() {
                 <div className="p-6 border-b border-white/10">
                   <div className="flex justify-between items-center">
                     <VoteSubject voteState={voteState} />
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      isOpen 
-                        ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                    }`}>
-                      {isOpen ? 'Open' : 'Closed'}
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        isOpen
+                          ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                          : "bg-red-500/20 text-red-400 border border-red-500/30"
+                      }`}
+                    >
+                      {isOpen ? "Open" : "Closed"}
                     </span>
                   </div>
                 </div>
@@ -147,39 +154,47 @@ export default function VoteView() {
                   {voteState?.metadata?.link && (
                     <div>
                       <strong className="item-label">Proposed by:</strong>
-                      <span className="ml-2 text-blue-400">{voteState.author}</span>
+                      <span className="ml-2 text-blue-400">
+                        {voteState.author}
+                      </span>
                     </div>
                   )}
-                  
+
                   {voteState?.create_height && (
                     <div>
                       <strong className="item-label">Created at:</strong>
-                      <span className="ml-2">{formatDate(voteState.create_height)}</span>
+                      <span className="ml-2">
+                        {formatDate(voteState.create_height)}
+                      </span>
                     </div>
                   )}
-                  
+
                   {voteState?.close_height && (
                     <div>
                       <strong className="item-label">
-                        {isOpen ? 'Open Until:' : 'Expired at:'}
+                        {isOpen ? "Open Until:" : "Expired at:"}
                       </strong>
-                      <span className="ml-2">{formatDate(voteState.close_height)}</span>
+                      <span className="ml-2">
+                        {formatDate(voteState.close_height)}
+                      </span>
                     </div>
                   )}
-                  
+
                   {voteState?.metadata?.description && (
                     <div>
                       <div className="item-label">Description:</div>
-                      <div className="text-white/80 mt-1">{voteState.metadata.description}</div>
+                      <div className="text-white/80 mt-1">
+                        {voteState.metadata.description}
+                      </div>
                     </div>
                   )}
-                  
+
                   {voteState?.metadata?.link && (
                     <div>
                       <strong className="item-label">Link:</strong>
-                      <a 
-                        href={voteState.metadata.link} 
-                        target="_blank" 
+                      <a
+                        href={voteState.metadata.link}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="ml-2 text-blue-400 hover:text-blue-300 transition-colors duration-200"
                       >
@@ -192,7 +207,9 @@ export default function VoteView() {
                 {/* User vote info */}
                 {userVoteOrLockedInfo && (
                   <div className="px-6 py-4 bg-white/5 border-t border-white/10">
-                    <div className="text-sm text-white/80">{userVoteOrLockedInfo}</div>
+                    <div className="text-sm text-white/80">
+                      {userVoteOrLockedInfo}
+                    </div>
                   </div>
                 )}
 
@@ -200,7 +217,7 @@ export default function VoteView() {
                 <div className="p-6 border-t border-white/10">
                   <div className="relative">
                     <div className="w-full bg-red-500/20 rounded-full h-3 overflow-hidden">
-                      <div 
+                      <div
                         className="h-full bg-green-500 transition-all duration-300"
                         style={{ width: `${voteYesPercentage || 0}%` }}
                       />
@@ -210,24 +227,47 @@ export default function VoteView() {
                       <span>Disagree</span>
                     </div>
                   </div>
-                  
-                  {/* {voteYesPercentage && (
+
+                  {voteYesPercentage && (
                     <div className="mt-2 text-sm text-white/80">
-                      Vote Yes Percentage: {Decimal.from(voteYesPercentage)?.prettify()}
+                      Vote Yes Percentage:{" "}
+                      {Decimal.from(voteYesPercentage)?.prettify()}
                     </div>
                   )}
-                  
+
                   {voteStakeYesPercentage && (
                     <div className="mt-1 text-sm text-white/80">
-                      Vote Stake Yes Percentage: {Decimal.from(voteStakeYesPercentage).prettify()}
+                      Vote Stake Yes Percentage:{" "}
+                      {Decimal.from(voteStakeYesPercentage).prettify()}
                     </div>
-                  )} */}
+                  )}
                 </div>
+
+                {/* Token balance check */}
+                {canVote && !hasTokenBalance && (
+                  <div className="p-6 border-t border-white/10 bg-yellow-500/10 border-yellow-500/20">
+                    <div className="text-center space-y-4">
+                      <div className="text-yellow-400 font-medium">
+                        You need {token.symbol} tokens to participate in this
+                        vote
+                      </div>
+                      <div className="text-white/80 text-sm">
+                        Get {token.symbol} tokens to vote on this proposal
+                      </div>
+                      <Link
+                        to={`/trendminer/tokens/${token.symbol}`}
+                        className="inline-block"
+                      >
+                        Get {token.symbol} Tokens
+                      </Link>
+                    </div>
+                  </div>
+                )}
 
                 {/* Action buttons */}
                 <div className="p-6 border-t border-white/10">
                   <div className="flex flex-wrap gap-3">
-                    {canVote && (
+                    {canVote && hasTokenBalance && (
                       <>
                         <AeButton
                           onClick={() => voteOption(true)}
@@ -249,7 +289,7 @@ export default function VoteView() {
                         </AeButton>
                       </>
                     )}
-                    
+
                     {canRevokeVote && (
                       <AeButton
                         onClick={revokeVote}
@@ -261,7 +301,7 @@ export default function VoteView() {
                         Revoke
                       </AeButton>
                     )}
-                    
+
                     {canWithdraw && (
                       <AeButton
                         onClick={withdraw}
@@ -273,7 +313,7 @@ export default function VoteView() {
                         Withdraw
                       </AeButton>
                     )}
-                    
+
                     {canApply && (
                       <AeButton
                         disabled={actionLoading}

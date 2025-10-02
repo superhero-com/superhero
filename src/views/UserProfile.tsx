@@ -708,27 +708,18 @@ export default function UserProfile({
 function formatTokenBalance(balance: any, decimals: any): string {
   try {
     if (balance === null || balance === undefined) return "0";
-    let str = String(balance).replace(/,/g, "");
+    // Most account-token balances come as raw base units (big ints). Force convert.
+    const raw = String(balance).replace(/[,\s]/g, "");
     let decs = Number(decimals);
-    if (!Number.isFinite(decs) || decs <= 0) decs = 18;
-    // If decimal string, decide whether it's already in token units or base units with trailing zeros
-    if (/\./.test(str)) {
-      const parts = str.split('.');
-      const fractional = parts[1] || '';
-      const hasNonZeroFraction = /[1-9]/.test(fractional);
-      if (!hasNonZeroFraction) {
-        // Only zeros after decimal => treat as base units integer
-        str = parts[0];
-      } else {
-        // Non-zero fractional part => assume already token units
-        return Decimal.from(str).prettify(2);
-      }
+    if (!Number.isFinite(decs) || decs <= 0) decs = 18; // default for Trendminer tokens
+
+    // If value is already short (contains dot with non-zero fraction), treat as token units
+    if (/\./.test(raw) && /[1-9]/.test(raw.split(".")[1] || "")) {
+      return Decimal.from(raw).prettify(2);
     }
-    // Scientific notation => format directly
-    if (/e|E/.test(str)) {
-      return Decimal.from(str).prettify(2);
-    }
-    const normalized = fromAettos(str, decs);
+
+    // Otherwise treat as integer base units and convert by decimals
+    const normalized = fromAettos(raw, decs);
     return Decimal.from(normalized).prettify(2);
   } catch {
     try {

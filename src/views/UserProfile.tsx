@@ -341,17 +341,12 @@ export default function UserProfile({
                           </div>
                         </div>
 
-                        {/* Balance */}
-                        <div className="flex items-center text-white font-medium">
-                          {typeof balance === "number"
-                            ? balance
-                            : balance || "0"}
-                          {token?.symbol ? (
-                            <span className="ml-1 text-white/60 text-xs">
-                              {token?.symbol}
-                            </span>
-                          ) : null}
-                        </div>
+                      {/* Balance */}
+                      <div className="flex items-center text-white font-medium">
+                        {typeof balance === "number"
+                          ? balance
+                          : balance || "0"}
+                      </div>
 
                         {/* Total Value */}
                         <div className="flex items-center">

@@ -66,10 +66,11 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
 
     if (value.includes('e')) {
       // Handle scientific notation
-      setInternalValue(Decimal.from(modelValue).prettify(6));
+      const formatted = Decimal.from(modelValue).prettify();
+      setInternalValue(formatMoney(formatted));
     } else if (typeof modelValue === 'number' || !value.endsWith('.')) {
       // Update unless the value ends with a dot (user is typing decimal)
-      setInternalValue(value);
+      setInternalValue(formatMoney(value));
     }
   }, [modelValue]);
 
@@ -80,7 +81,7 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
   }));
 
   const sanitizeValue = (value: string): string => {
-    // Remove commas and negative signs, but keep decimal points and numbers
+    // Remove all non-numeric characters except decimal point
     let sanitized = value.replace(/[^0-9.]/g, '');
 
     // Ensure only one decimal point
@@ -89,17 +90,56 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
       sanitized = parts[0] + '.' + parts.slice(1).join('');
     }
 
+    // Limit decimal places to 8 (common for crypto)
+    const decimalLimit = 21; 
+    if (parts.length === 2 && parts[1].length > decimalLimit) {
+      sanitized = parts[0] + '.' + parts[1].substring(0, decimalLimit);
+    }
+
     return sanitized;
+  };
+
+  const formatMoney = (value: string): string => {
+    if (!value || value === '') return '';
+    
+    // Remove any existing formatting
+    const cleanValue = value.replace(/[^0-9.]/g, '');
+    
+    // Split into integer and decimal parts
+    const parts = cleanValue.split('.');
+    const integerPart = parts[0];
+    const decimalPart = parts[1] || '';
+    
+    // Only add thousands separators if the integer part has more than 3 digits
+    // and is not just zeros (to avoid formatting 0.000000 as 0,000,000)
+    let formattedInteger = integerPart;
+    if (integerPart.length > 3 && integerPart !== '0') {
+      formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+    
+    // Combine with decimal part
+    return decimalPart ? `${formattedInteger}.${decimalPart}` : formattedInteger;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
     const sanitizedValue = sanitizeValue(rawValue);
+    
+    // Use raw value for display if it ends with decimal point or has trailing zeros after decimal
+    // Use formatted value for complete numbers
+    let displayValue;
+    if (rawValue.endsWith('.') || (rawValue.includes('.') && rawValue.endsWith('0'))) {
+      // Keep the raw value for partial decimal input or trailing zeros
+      displayValue = rawValue;
+    } else {
+      // Format complete numbers
+      displayValue = formatMoney(sanitizedValue);
+    }
 
-    // Update internal value immediately for better UX
-    setInternalValue(rawValue);
+    // Update internal value with display value
+    setInternalValue(displayValue);
 
-    // Only emit sanitized value to parent
+    // Only emit sanitized value to parent (without formatting)
     onUpdateModelValue?.(sanitizedValue);
   };
 

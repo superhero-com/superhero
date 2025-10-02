@@ -9,6 +9,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import VotersTable from "../../features/trendminer/components/Dao/VotersTable";
 import { Decimal } from "@/libs/decimal";
+import TokenTradeCard from "@/features/trendminer/components/TokenTradeCard";
+import TokenSummary from "@/features/bcl/components/TokenSummary";
+import TokenRanking from "@/features/trendminer/components/TokenRanking";
 
 export default function VoteView() {
   const { saleAddress, voteAddress, voteId } = useParams<{
@@ -94,27 +97,17 @@ export default function VoteView() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4">
+    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Left sidebar - Token info (hidden on mobile) */}
         <div className="hidden lg:block lg:col-span-1 space-y-4">
           {/* TokenTradeCard placeholder */}
-          <div className="border border-white/10 rounded-xl p-4 bg-black/20 backdrop-blur-lg text-white">
-            <div className="text-lg font-bold mb-2">
-              {token.name || token.symbol}
-            </div>
-            <div className="text-sm text-white/80">Token Details</div>
-          </div>
 
-          {/* TokenDetailsCard placeholder */}
-          <div className="border border-white/10 rounded-xl p-4 bg-black/20 backdrop-blur-lg text-white">
-            <div className="text-sm text-white/80">Additional Token Info</div>
-          </div>
+          <TokenTradeCard token={token} />
 
-          {/* TokenRanking placeholder */}
-          <div className="border border-white/10 rounded-xl p-4 bg-black/20 backdrop-blur-lg text-white">
-            <div className="text-sm text-white/80">Token Ranking</div>
-          </div>
+          <TokenSummary token={token} />
+
+          <TokenRanking token={token} />
         </div>
 
         {/* Main content */}

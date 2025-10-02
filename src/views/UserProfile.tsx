@@ -708,10 +708,24 @@ export default function UserProfile({
 function formatTokenBalance(balance: any, decimals: any): string {
   try {
     if (balance === null || balance === undefined) return "0";
-    const str = String(balance).replace(/,/g, "");
+    let str = String(balance).replace(/,/g, "");
     let decs = Number(decimals);
     if (!Number.isFinite(decs) || decs <= 0) decs = 18;
-    if (/e|E|\./.test(str)) {
+    // If decimal string, decide whether it's already in token units or base units with trailing zeros
+    if (/\./.test(str)) {
+      const parts = str.split('.');
+      const fractional = parts[1] || '';
+      const hasNonZeroFraction = /[1-9]/.test(fractional);
+      if (!hasNonZeroFraction) {
+        // Only zeros after decimal => treat as base units integer
+        str = parts[0];
+      } else {
+        // Non-zero fractional part => assume already token units
+        return Decimal.from(str).prettify(2);
+      }
+    }
+    // Scientific notation => format directly
+    if (/e|E/.test(str)) {
       return Decimal.from(str).prettify(2);
     }
     const normalized = fromAettos(str, decs);

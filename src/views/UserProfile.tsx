@@ -345,9 +345,9 @@ export default function UserProfile({
 
                         {/* Balance */}
                         <div className="flex items-center">
-                        <div className="bg-gradient-to-r text-sm from-cyan-400 to-blue-500 bg-clip-text text-transparent font-medium">
-                          {formatTokenBalance(balance, token?.decimals)}
-                        </div>
+                          <div className="bg-gradient-to-r text-sm from-cyan-400 to-blue-500 bg-clip-text text-transparent font-medium">
+                            {formatTokenBalance(balance, token?.decimals)}
+                          </div>
                         </div>
 
                         {/* Total Value */}
@@ -712,16 +712,16 @@ function formatTokenBalance(balance: any, decimals: any): string {
     const decs = Number(decimals || 18);
     // If scientific notation or already decimal, format directly
     if (/e|E|\./.test(str)) {
-      return Decimal.from(str).prettify();
+      return Decimal.from(str).prettify(2);
     }
     // Treat as base units and convert by decimals
     const normalized = fromAettos(str, decs);
-    return Decimal.from(normalized).prettify();
+    return Decimal.from(normalized).prettify(2);
   } catch {
     try {
-      return Decimal.from(String(balance || '0')).prettify();
+      return Decimal.from(String(balance || "0")).prettify(2);
     } catch {
-      return String(balance || '0');
+      return String(balance || "0");
     }
   }
 }

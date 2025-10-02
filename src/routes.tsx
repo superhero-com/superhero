@@ -7,8 +7,12 @@ const TokenList = lazy(() => import("./features/trendminer/views/TokenList"));
 const TrendCloud = lazy(() => import("./views/Trendminer/TrendCloud"));
 const TrendCloudVisx = lazy(() => import("./views/Trendminer/TrendCloudVisx"));
 const TrendInvite = lazy(() => import("./views/Trendminer/Invite"));
+
+// Daos
 const TrendDao = lazy(() => import("./views/Trendminer/Dao"));
 const TrendDaos = lazy(() => import("./views/Trendminer/Daos"));
+const VoteView = lazy(() => import("./views/Trendminer/VoteView"));
+
 const TrendAccounts = lazy(() => import("./views/Trendminer/Accounts"));
 const TrendAccountDetails = lazy(
   () => import("./views/Trendminer/AccountDetails")
@@ -70,6 +74,7 @@ export const routes: RouteObject[] = [
   { path: "/tx-queue/:id", element: <TxQueue /> },
   { path: "/trendminer/invite", element: <TrendInvite /> },
   { path: "/trendminer/dao/:saleAddress", element: <TrendDao /> },
+  { path: "/trendminer/dao/:saleAddress/vote/:voteId/:voteAddress", element: <VoteView /> },
   { path: "/trendminer/daos", element: <TrendDaos /> },
   { path: "/trendminer/accounts", element: <TrendAccounts /> },
   { path: "/trendminer/accounts/:address", element: <TrendAccountDetails /> },

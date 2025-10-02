@@ -2,6 +2,7 @@ import { Decimal } from "@/libs/decimal";
 import { FormattedFractionalPrice } from "./types";
 import moment, { Moment } from "moment";
 import { DATE_LONG } from "./constants";
+import { Encoded, Encoding, isAddressValid } from "@aeternity/aepp-sdk";
 
 export async function fetchJson<T = any>(
   url: string,
@@ -64,4 +65,17 @@ export function formatLongDate(value: string | Moment) {
   return date.isBefore(moment().subtract(1, "days"))
     ? date.format(DATE_LONG)
     : date.fromNow();
+}
+
+export function ensureAddress<T extends Encoding>(
+  value: string,
+  encoding: T,
+): asserts value is Encoded.Generic<T> {
+  if (!isAddressValid(value, encoding)) {
+    throw new Error(`value must be a ${encoding} address, got ${value}`);
+  }
+}
+
+export function ensureString(value: unknown): asserts value is string {
+  if (typeof value !== 'string') throw new Error(`value must be a string, got ${value}`);
 }

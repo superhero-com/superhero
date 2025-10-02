@@ -4,8 +4,6 @@ import TokenListTableRow from "./TokenListTableRow";
 import TokenRowSkeleton from "./TokenRowSkeleton";
 import PerformanceTimeframeSelector from "./PerformanceTimeframeSelector";
 
-type PriceMovementTimeframe = '1D' | '7D' | '30D';
-
 type OrderByOption = 'market_cap' | 'newest' | 'oldest' | 'holders_count' | 'trending_score' | 'name' | 'price';
 type OrderDirection = 'ASC' | 'DESC';
 

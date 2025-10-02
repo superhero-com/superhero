@@ -1,28 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { TokenListTable, TrendminerBanner } from "..";
-import { TokenDto, TokensService } from "../../../api/generated";
+import { TokensService } from "../../../api/generated";
 import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
 import TrendingPillsCarousel from "../../../components/Trendminer/TrendingPillsCarousel";
 import RepositoriesList from "../components/RepositoriesList";
 import { useAccount } from "../../../hooks";
 
-type TrendingTagItem = {
-  tag: string;
-  score: number;
-  source?: string;
-};
-
-type TokenItem = {
-  address: string;
-  name: string;
-  symbol: string;
-  price: number;
-  market_cap: number;
-  holders_count: number;
-  sale_address?: string;
-  trending_score?: number;
-};
 
 type SelectOptions<T> = Array<{
   title: string;
@@ -97,11 +81,6 @@ export default function TokenList() {
   // Remove hardcoded collection options - these should be dynamic based on available collections
   // For now, just use 'all' as the Vue implementation shows collection can be any string
 
-  const activeSortOption = useMemo(() =>
-    orderByOptions.find((option) => option.value === orderBy),
-    [orderBy]
-  );
-
   const orderByMapped = useMemo(() => {
     if (orderBy === SORT.newest || orderBy === SORT.oldest) {
       return 'created_at';
@@ -149,10 +128,6 @@ export default function TokenList() {
       ],
       staleTime: 1000 * 60, // 1 minute
     });
-
-  function updateCollection(val: CollectionOption) {
-    setCollection(val);
-  }
 
   function updateOrderBy(val: OrderByOption) {
     setOrderBy(val);

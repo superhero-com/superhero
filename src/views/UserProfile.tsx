@@ -342,10 +342,10 @@ export default function UserProfile({
                         </div>
 
                       {/* Balance */}
-                      <div className="flex items-center text-white font-medium">
-                        {typeof balance === "number"
-                          ? balance
-                          : balance || "0"}
+                      <div className="flex items-center">
+                        <div className="bg-gradient-to-r text-sm from-cyan-400 to-blue-500 bg-clip-text text-transparent font-medium">
+                          {typeof balance === "number" ? balance : balance || "0"}
+                        </div>
                       </div>
 
                         {/* Total Value */}

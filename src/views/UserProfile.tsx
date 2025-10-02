@@ -708,18 +708,12 @@ export default function UserProfile({
 function formatTokenBalance(balance: any, decimals: any): string {
   try {
     if (balance === null || balance === undefined) return "0";
-    const str = String(balance);
-    let decs = Number(decimals ?? 18);
-    // Some APIs may report 0 decimals even though values are in base units (1e18)
-    // Heuristic: very large integer with no dot likely needs 18 decimals
-    if ((!Number.isFinite(decs) || decs === 0) && /^(\d{7,})$/.test(str)) {
-      decs = 18;
-    }
-    // If scientific notation or already decimal, format directly
+    const str = String(balance).replace(/,/g, "");
+    let decs = Number(decimals);
+    if (!Number.isFinite(decs) || decs <= 0) decs = 18;
     if (/e|E|\./.test(str)) {
       return Decimal.from(str).prettify(2);
     }
-    // Treat as base units and convert by decimals
     const normalized = fromAettos(str, decs);
     return Decimal.from(normalized).prettify(2);
   } catch {

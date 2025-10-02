@@ -67,7 +67,9 @@ export default function UserProfile({
   const [orderDirection, setOrderDirection] = useState<"ASC" | "DESC">("DESC");
 
   // Owned tokens with balances (account tokens endpoint)
-  const [ownedOrderDirection, setOwnedOrderDirection] = useState<"ASC" | "DESC">("DESC");
+  const [ownedOrderDirection, setOwnedOrderDirection] = useState<
+    "ASC" | "DESC"
+  >("DESC");
   const { data: ownedTokensResp, isFetching: loadingOwned } = useQuery({
     queryKey: [
       "AccountTokensService.listTokenHolders",
@@ -257,8 +259,12 @@ export default function UserProfile({
           {!loadingOwned && (ownedTokensResp?.items?.length ?? 0) === 0 && (
             <div className="text-center py-12 px-6 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl">
               <div className="text-4xl mb-3 opacity-30">🪙</div>
-              <div className="text-white font-semibold mb-1">No owned tokens</div>
-              <div className="text-white/60 text-sm">This user doesn't own any Trendminer tokens yet.</div>
+              <div className="text-white font-semibold mb-1">
+                No owned tokens
+              </div>
+              <div className="text-white/60 text-sm">
+                This user doesn't own any Trendminer tokens yet.
+              </div>
             </div>
           )}
 
@@ -271,7 +277,11 @@ export default function UserProfile({
                 <div>Price</div>
                 <button
                   className="text-left hover:opacity-80"
-                  onClick={() => setOwnedOrderDirection(ownedOrderDirection === "DESC" ? "ASC" : "DESC")}
+                  onClick={() =>
+                    setOwnedOrderDirection(
+                      ownedOrderDirection === "DESC" ? "ASC" : "DESC"
+                    )
+                  }
                   title="Sort by balance"
                 >
                   Balance {ownedOrderDirection === "DESC" ? "↓" : "↑"}
@@ -281,47 +291,85 @@ export default function UserProfile({
 
               {/* Rows */}
               <div className="divide-y divide-white/5">
-                {(ownedTokensResp?.items || []).map((item: any, idx: number) => {
-                  const token = item?.token || item;
-                  const tokenName = token?.name || token?.symbol || token?.address || `Token ${idx + 1}`;
-                  const tokenHref = token?.name || token?.address ? `/trendminer/tokens/${encodeURIComponent(token?.name || token?.address)}` : undefined;
-                  const balance = item?.balance ?? item?.holder_balance ?? item?.amount;
-                  const balanceData = item?.balance_data;
-                  const priceData = token?.price_data;
+                {(ownedTokensResp?.items || []).map(
+                  (item: any, idx: number) => {
+                    const token = item?.token || item;
+                    const tokenName =
+                      token?.name ||
+                      token?.symbol ||
+                      token?.address ||
+                      `Token ${idx + 1}`;
+                    const tokenHref =
+                      token?.name || token?.address
+                        ? `/trendminer/tokens/${encodeURIComponent(
+                            token?.name || token?.address
+                          )}`
+                        : undefined;
+                    const balance =
+                      item?.balance ?? item?.holder_balance ?? item?.amount;
+                    const balanceData = item?.balance_data;
+                    const priceData = token?.price_data;
 
-                  return (
-                    <div key={`${token?.address || token?.name || idx}`} className="grid grid-cols-1 md:grid-cols-4 gap-4 px-6 py-4">
-                      {/* Token */}
-                      <div className="flex items-center min-w-0">
-                        {tokenHref ? (
-                          <a href={tokenHref} className="text-white hover:underline truncate">{tokenName}</a>
-                        ) : (
-                          <div className="text-white truncate">{tokenName}</div>
-                        )}
-                      </div>
+                    return (
+                      <div
+                        key={`${token?.address || token?.name || idx}`}
+                        className="owned-token-row grid grid-cols-1 md:grid-cols-4 gap-4 px-6 py-4 rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                      >
+                        {/* Token */}
+                        <div className="flex items-center min-w-0">
+                          {tokenHref ? (
+                            <a
+                              href={tokenHref}
+                              className="token-name text-md font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent hover:underline truncate"
+                            >
+                              {tokenName}
+                            </a>
+                          ) : (
+                            <div className="token-name text-md font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent truncate">
+                              {tokenName}
+                            </div>
+                          )}
+                        </div>
 
-                      {/* Price */}
-                      <div className="flex items-center">
-                        <PriceDataFormatter watchPrice={false} priceData={priceData} />
-                      </div>
+                        {/* Price */}
+                        <div className="flex items-center">
+                          <div className="bg-gradient-to-r text-sm from-yellow-400 to-cyan-500 bg-clip-text text-transparent">
+                            <PriceDataFormatter
+                              watchPrice={false}
+                              priceData={priceData}
+                            />
+                          </div>
+                        </div>
 
-                      {/* Balance */}
-                      <div className="flex items-center text-white font-medium">
-                        {typeof balance === "number" ? balance : (balance || "0")}
-                        {token?.symbol ? <span className="ml-1 text-white/60 text-xs">{token?.symbol}</span> : null}
-                      </div>
+                        {/* Balance */}
+                        <div className="flex items-center text-white font-medium">
+                          {typeof balance === "number"
+                            ? balance
+                            : balance || "0"}
+                          {token?.symbol ? (
+                            <span className="ml-1 text-white/60 text-xs">
+                              {token?.symbol}
+                            </span>
+                          ) : null}
+                        </div>
 
-                      {/* Total Value */}
-                      <div className="flex items-center">
-                        {balanceData ? (
-                          <PriceDataFormatter watchPrice={false} priceData={balanceData} />
-                        ) : (
-                          <span className="text-white/60">-</span>
-                        )}
+                        {/* Total Value */}
+                        <div className="flex items-center">
+                          {balanceData ? (
+                            <div className="bg-gradient-to-r text-sm from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                              <PriceDataFormatter
+                                watchPrice={false}
+                                priceData={balanceData}
+                              />
+                            </div>
+                          ) : (
+                            <span className="text-white/60">-</span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  }
+                )}
               </div>
 
               {loadingOwned && (
@@ -329,6 +377,20 @@ export default function UserProfile({
                   <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 </div>
               )}
+              <style>{`
+                .owned-token-row:hover .token-name {
+                  background: linear-gradient(to right, #fb923c, #fbbf24);
+                  -webkit-background-clip: text;
+                  background-clip: text;
+                }
+                .owned-token-row:hover {
+                  transform: translateY(-2px);
+                  box-shadow: 0 8px 25px rgba(17, 97, 254, 0.15);
+                }
+                .owned-token-row:active {
+                  transform: translateY(0);
+                }
+              `}</style>
             </div>
           )}
         </div>

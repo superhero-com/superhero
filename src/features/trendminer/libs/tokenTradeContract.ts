@@ -1,6 +1,6 @@
 import { AeSdkBase, Contract, ContractMethodsBase, Encoded } from '@aeternity/aepp-sdk';
 import { BondingCurveTokenSale, initAffiliationTokenGatingTokenSale, toTokenDecimals } from 'bctsl-sdk';
-import { TokenDto } from '../types';
+import { TokenDto } from '@/api/generated/models/TokenDto';
 import { CONFIG } from '../../../config';
 import { fetchJson } from '../../../utils/common';
 

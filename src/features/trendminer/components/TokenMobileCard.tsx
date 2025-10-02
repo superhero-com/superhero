@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { TokenDto } from "../../../api/generated";
+import { TokenDto } from "@/api/generated/models/TokenDto";
 import { PriceDataFormatter } from "@/features/shared/components";
 import { AddressChip } from "../../../components/AddressChip";
 import { TokenLineChart } from "./TokenLineChart";

@@ -11,7 +11,7 @@ import {
   toAe,
   toDecimals
 } from '../../../utils/bondingCurve';
-import { TokenDto } from '../types';
+import { TokenDto } from '@/api/generated/models/TokenDto';
 import {
   setupContractInstance,
   fetchUserTokenBalance,

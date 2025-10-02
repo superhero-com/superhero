@@ -5,22 +5,9 @@ import AddressChip from "@/components/AddressChip";
 import { PriceDto } from "@/api/generated";
 import PriceDataFormatter from "@/features/shared/components/PriceDataFormatter";
 import { toAe } from '@aeternity/aepp-sdk';
-
+import { TokenDto } from "@/api/generated/models/TokenDto";
 interface TokenSummaryProps {
-  token: {
-    name?: string;
-    symbol?: string;
-    price?: number | string;
-    market_cap?: number | string;
-    total_supply?: number | string;
-    decimals?: number;
-    holders_count?: number;
-    address?: string;
-    contract_address?: string;
-    sale_address?: string;
-    created_at?: string;
-    dao_balance?: number | string;
-  };
+  token: TokenDto;
   holders?: any[];
   className?: string;
 }
@@ -132,7 +119,7 @@ export default function TokenSummary({
 
       {/* Contract Addresses */}
       <div className="flex flex-col gap-3 mb-6">
-        {(token.address || token.contract_address) && (
+        {(token.address || token.creator_address) && (
           <div className="flex items-center gap-2 justify-between bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
             <div className="text-xs text-white/60 font-medium">
               Contract Address:
@@ -146,6 +133,14 @@ export default function TokenSummary({
               Sale Address:
             </div>
             <AddressChip address={token.sale_address} linkToExplorer />
+          </div>
+        )}
+        {token.creator_address && (
+          <div className="flex items-center gap-2 justify-between bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
+            <div className="text-xs text-white/60 font-medium">
+              Created By:
+            </div>
+            <AddressChip address={token.creator_address} linkToExplorer />
           </div>
         )}
       </div>

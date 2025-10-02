@@ -11,11 +11,11 @@ export default class ErrorBoundary extends React.Component<Props, State> {
   static getDerivedStateFromError() { return { hasError: true }; }
   componentDidCatch(err: any) { console.error(err); }
   componentDidUpdate(_: Props, prevState: State) {
-    if (!prevState.hasError && this.state.hasError) {
-      setTimeout(() => {
-        try { window.location.reload(); } catch {}
-      }, 2000);
-    }
+    // if (!prevState.hasError && this.state.hasError) {
+    //   setTimeout(() => {
+    //     try { window.location.reload(); } catch {}
+    //   }, 2000);
+    // }
   }
   render() {
     if (this.state.hasError) return (

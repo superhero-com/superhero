@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAeSdk } from "./useAeSdk";
-import { TokenDto, TokensService } from "../api/generated";
+import { TokenDto, TokensService } from "@/api/generated";
 
 // Define the API response structure for tokens
 interface TokensResponse {

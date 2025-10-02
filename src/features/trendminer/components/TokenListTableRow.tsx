@@ -1,6 +1,6 @@
 import { PriceDataFormatter } from "@/features/shared/components";
 import { useMemo } from "react";
-import { TokenDto } from "../../../api/generated";
+import { TokenDto } from "@/api/generated/models/TokenDto";
 import { TokenLineChart } from "./TokenLineChart";
 import TokenMobileCard from "./TokenMobileCard";
 

@@ -9,6 +9,7 @@ import UserBadge from "../components/UserBadge";
 import { useQuery } from "@tanstack/react-query";
 import { PostsService } from "../api/generated";
 import { TokensService } from "../api/generated/services/TokensService";
+import { AccountTokensService } from "../api/generated/services/AccountTokensService";
 import { TransactionsService } from "../api/generated/services/TransactionsService";
 import FeedItem from "../features/social/components/FeedItem";
 import { PostApiResponse } from "../features/social/types";
@@ -65,20 +66,19 @@ export default function UserProfile({
   >("market_cap");
   const [orderDirection, setOrderDirection] = useState<"ASC" | "DESC">("DESC");
 
-  // Owned tokens
+  // Owned tokens with balances (account tokens endpoint)
+  const [ownedOrderDirection, setOwnedOrderDirection] = useState<"ASC" | "DESC">("DESC");
   const { data: ownedTokensResp, isFetching: loadingOwned } = useQuery({
     queryKey: [
-      "TokensService.listAll",
-      "owned",
+      "AccountTokensService.listTokenHolders",
       effectiveAddress,
-      orderBy,
-      orderDirection,
+      ownedOrderDirection,
     ],
     queryFn: () =>
-      TokensService.listAll({
-        ownerAddress: effectiveAddress,
-        orderBy,
-        orderDirection,
+      AccountTokensService.listTokenHolders({
+        address: effectiveAddress,
+        orderBy: "balance",
+        orderDirection: ownedOrderDirection,
         limit: 100,
         page: 1,
       }) as unknown as Promise<{ items: any[]; meta?: any }>,
@@ -253,43 +253,84 @@ export default function UserProfile({
       )}
 
       {tab === "owned" && (
-        <div className="mt-4">
+        <div className="mt-4 space-y-4">
           {!loadingOwned && (ownedTokensResp?.items?.length ?? 0) === 0 && (
             <div className="text-center py-12 px-6 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl">
               <div className="text-4xl mb-3 opacity-30">🪙</div>
-              <div className="text-white font-semibold mb-1">
-                No owned tokens
-              </div>
-              <div className="text-white/60 text-sm">
-                This user doesn't own any Trendminer tokens yet.
-              </div>
+              <div className="text-white font-semibold mb-1">No owned tokens</div>
+              <div className="text-white/60 text-sm">This user doesn't own any Trendminer tokens yet.</div>
             </div>
           )}
-          <TokenListTable
-            pages={
-              ownedTokensResp
-                ? [{ items: (ownedTokensResp.items || []) as any[] }]
-                : [{ items: [] }]
-            }
-            loading={loadingOwned}
-            showCollectionColumn={false}
-            orderBy={orderBy as any}
-            orderDirection={orderDirection}
-            onSort={(key) => {
-              if (key === "newest") {
-                setOrderBy("created_at");
-                setOrderDirection("DESC");
-              } else if (key === "oldest") {
-                setOrderBy("created_at");
-                setOrderDirection("ASC");
-              } else if (key === orderBy) {
-                setOrderDirection(orderDirection === "DESC" ? "ASC" : "DESC");
-              } else {
-                setOrderBy(key as any);
-                setOrderDirection("DESC");
-              }
-            }}
-          />
+
+          {/* Owned tokens table: Token | Price | Balance | Total Value */}
+          {(ownedTokensResp?.items?.length ?? 0) > 0 && (
+            <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
+              {/* Header */}
+              <div className="hidden md:grid grid-cols-4 gap-4 px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide">
+                <div>Token</div>
+                <div>Price</div>
+                <button
+                  className="text-left hover:opacity-80"
+                  onClick={() => setOwnedOrderDirection(ownedOrderDirection === "DESC" ? "ASC" : "DESC")}
+                  title="Sort by balance"
+                >
+                  Balance {ownedOrderDirection === "DESC" ? "↓" : "↑"}
+                </button>
+                <div>Total Value</div>
+              </div>
+
+              {/* Rows */}
+              <div className="divide-y divide-white/5">
+                {(ownedTokensResp?.items || []).map((item: any, idx: number) => {
+                  const token = item?.token || item;
+                  const tokenName = token?.name || token?.symbol || token?.address || `Token ${idx + 1}`;
+                  const tokenHref = token?.name || token?.address ? `/trendminer/tokens/${encodeURIComponent(token?.name || token?.address)}` : undefined;
+                  const balance = item?.balance ?? item?.holder_balance ?? item?.amount;
+                  const balanceData = item?.balance_data;
+                  const priceData = token?.price_data;
+
+                  return (
+                    <div key={`${token?.address || token?.name || idx}`} className="grid grid-cols-1 md:grid-cols-4 gap-4 px-6 py-4">
+                      {/* Token */}
+                      <div className="flex items-center min-w-0">
+                        {tokenHref ? (
+                          <a href={tokenHref} className="text-white hover:underline truncate">{tokenName}</a>
+                        ) : (
+                          <div className="text-white truncate">{tokenName}</div>
+                        )}
+                      </div>
+
+                      {/* Price */}
+                      <div className="flex items-center">
+                        <PriceDataFormatter watchPrice={false} priceData={priceData} />
+                      </div>
+
+                      {/* Balance */}
+                      <div className="flex items-center text-white font-medium">
+                        {typeof balance === "number" ? balance : (balance || "0")}
+                        {token?.symbol ? <span className="ml-1 text-white/60 text-xs">{token?.symbol}</span> : null}
+                      </div>
+
+                      {/* Total Value */}
+                      <div className="flex items-center">
+                        {balanceData ? (
+                          <PriceDataFormatter watchPrice={false} priceData={balanceData} />
+                        ) : (
+                          <span className="text-white/60">-</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {loadingOwned && (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

@@ -97,7 +97,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
       const response = await TrendminerApi.listTrendingTags({
         orderBy: sortBy,
         orderDirection: 'DESC',
-        limit: 50,
+        limit: 10, // shouldn't be bigger than the tokens list as it can break the scroll
         page: 1,
         search: search || undefined,
       });

@@ -1,18 +1,18 @@
 import { TokensService } from "@/api/generated";
-import { LivePriceFormatter } from "@/features/shared/components";
-import VoteDetail from "@/features/dao/components/VoteDetail";
-import { useDao } from "@/features/dao/hooks/useDao";
-import { Decimal } from "@/libs/decimal";
-import { Encoded, toAe } from "@aeternity/aepp-sdk";
-import { useQuery } from "@tanstack/react-query";
-import { VOTE_TYPE, VoteMetadata } from "bctsl-sdk";
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import TokenVoteCard from "@/features/dao/components/TokenVoteCard";
+import { useDao } from "@/features/dao/hooks/useDao";
+import { LivePriceFormatter } from "@/features/shared/components";
+import { Decimal } from "@/libs/decimal";
+import { Encoded, toAe } from "@aeternity/aepp-sdk";
+import { useQuery } from "@tanstack/react-query";
+import { VOTE_TYPE, VoteMetadata } from "bctsl-sdk";
+import { useState } from "react";
+import { Link, useParams } from "react-router-dom";
 
 const voteTypes = [
   VOTE_TYPE.VotePayout,
@@ -309,7 +309,7 @@ export default function Dao() {
                 ) : (
                   Array.from(state?.votes).map((vote: any, index: number) =>
                   (
-                    <VoteDetail
+                    <TokenVoteCard
                       key={index}
                       address={vote[1][1]}
                       saleAddress={saleAddress as Encoded.ContractAddress}

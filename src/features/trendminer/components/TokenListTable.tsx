@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { TokenDto } from "../../../api/generated";
+import { TokenDto } from "@/api/generated/models/TokenDto";
 import TokenListTableRow from "./TokenListTableRow";
 import TokenRowSkeleton from "./TokenRowSkeleton";
 import PerformanceTimeframeSelector from "./PerformanceTimeframeSelector";

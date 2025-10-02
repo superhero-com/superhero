@@ -8,7 +8,7 @@ import { cn } from "../../../lib/utils";
 import FractionFormatter, { FormattedFractionalPrice } from "../../shared/components/FractionFormatter";
 import LivePriceFormatter from "../../shared/components/LivePriceFormatter";
 import { useTokenTrade } from "../hooks/useTokenTrade";
-import { TokenDto } from "../types";
+import { TokenDto } from "@/api/generated/models/TokenDto";
 import ImpactBadge from "./ImpactBadge";
 import MessageBox from "./MessageBox";
 import TradeTokenInput from "./TradeTokenInput";

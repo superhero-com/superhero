@@ -3,7 +3,7 @@ import { Button } from '../../../components/ui/button';
 import { ChevronDown, ArrowUpDown } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import AssetInput from './AssetInput';
-import { TokenDto } from '../types';
+import { TokenDto } from "@/api/generated/models/TokenDto";
 import { Decimal } from '../../../libs/decimal';
 
 interface TradeTokenInputProps {

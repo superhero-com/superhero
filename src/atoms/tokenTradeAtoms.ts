@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { Decimal } from '../libs/decimal';
-import { TokenDto } from '../features/trendminer/types';
+import { TokenDto } from '@/api/generated/models/TokenDto';
 
 // Success transaction data interface
 export interface SuccessTxData {

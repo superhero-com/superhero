@@ -53,17 +53,17 @@ export const navigationItems: NavigationItem[] = [
     ],
   },
   configs.features.trendminer && {
-      id: 'trending',
-      label: 'Trends',
-      path: '/trendminer/tokens',
-      icon: '📈',
+    id: "trending",
+    label: "Trends",
+    path: "/trendminer/tokens",
+    icon: "📈",
   },
 
   configs.features.trendminer && {
-      id: 'invite',
-      label: 'Invite & Earn',
-      path: '/trendminer/invite',
-      icon: '🎁',
+    id: "invite",
+    label: "Invite & Earn",
+    path: "/trendminer/invite",
+    icon: "🎁",
   },
   // {
   //     id: 'governance',

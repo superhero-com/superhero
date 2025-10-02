@@ -1,6 +1,6 @@
 import { TokensService } from "@/api/generated";
 import { LivePriceFormatter } from "@/features/shared/components";
-import VoteDetail from "@/features/dao/components/VoteDetail";
+import VoteDetail from "@/features/dao/components/TokenVoteCard";
 import { useDao } from "@/features/dao/hooks/useDao";
 import { Decimal } from "@/libs/decimal";
 import { Encoded, toAe } from "@aeternity/aepp-sdk";

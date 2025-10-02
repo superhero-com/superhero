@@ -9,9 +9,9 @@ const TrendCloudVisx = lazy(() => import("./views/Trendminer/TrendCloudVisx"));
 const TrendInvite = lazy(() => import("./views/Trendminer/Invite"));
 
 // Daos
-const TrendDao = lazy(() => import("./views/Trendminer/Dao"));
-const TrendDaos = lazy(() => import("./views/Trendminer/Daos"));
-const VoteView = lazy(() => import("./views/Trendminer/VoteView"));
+const TrendDao = lazy(() => import("./features/dao/views/TokenDaosListView"));
+const TrendDaos = lazy(() => import("./features/dao/views/DaoListView"));
+const VoteView = lazy(() => import("./features/dao/views/DaoVoteDetailsView"));
 
 const TrendAccounts = lazy(() => import("./views/Trendminer/Accounts"));
 const TrendAccountDetails = lazy(
@@ -77,9 +77,9 @@ export const routes: RouteObject[] = [
   { path: "/trendminer/tokens/:tokenName", element: <TokenSaleDetails /> },
   { path: "/tx-queue/:id", element: <TxQueue /> },
   { path: "/trendminer/invite", element: <TrendInvite /> },
+  { path: "/trendminer/daos", element: <TrendDaos /> },
   { path: "/trendminer/dao/:saleAddress", element: <TrendDao /> },
   { path: "/trendminer/dao/:saleAddress/vote/:voteId/:voteAddress", element: <VoteView /> },
-  { path: "/trendminer/daos", element: <TrendDaos /> },
   { path: "/trendminer/accounts", element: <TrendAccounts /> },
   { path: "/trendminer/accounts/:address", element: <TrendAccountDetails /> },
   { path: "/trendminer/create", element: <TrendCreate /> },

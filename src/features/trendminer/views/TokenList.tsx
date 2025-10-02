@@ -6,6 +6,14 @@ import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTra
 import TrendingPillsCarousel from "../../../components/Trendminer/TrendingPillsCarousel";
 import RepositoriesList from "../components/RepositoriesList";
 import { useAccount } from "../../../hooks";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/select";
+import AeButton from "@/components/AeButton";
 
 
 type SelectOptions<T> = Array<{
@@ -29,7 +37,7 @@ type CollectionOption = 'all' | string; // Can be 'all' or specific collection a
 
 export default function TokenList() {
   const { activeAccount } = useAccount();
-  
+
   const [collection, setCollection] = useState<CollectionOption>('all');
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore); // Default to trending score like Vue
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
@@ -37,13 +45,13 @@ export default function TokenList() {
   const [search, setSearch] = useState("");
   const [searchThrottled, setSearchThrottled] = useState("");
   const loadMoreBtn = useRef<HTMLButtonElement>(null);
-  
+
   // Throttle search input (2000ms delay like Vue)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setSearchThrottled(search);
     }, 2000);
-    
+
     return () => clearTimeout(timeoutId);
   }, [search]);
 
@@ -135,9 +143,9 @@ export default function TokenList() {
   }
 
   function handleSort(sortKey: OrderByOption) {
-    if (orderBy === sortKey || 
-        (orderBy === 'newest' && sortKey === 'oldest') || 
-        (orderBy === 'oldest' && sortKey === 'newest')) {
+    if (orderBy === sortKey ||
+      (orderBy === 'newest' && sortKey === 'oldest') ||
+      (orderBy === 'oldest' && sortKey === 'newest')) {
       // Toggle direction if same column (or newest/oldest pair)
       if (sortKey === 'newest' || sortKey === 'oldest') {
         // For date-based sorting, toggle between newest and oldest
@@ -186,39 +194,40 @@ export default function TokenList() {
       <div className="">
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6">
           {/* Left: Token List */}
-          <div className="min-w-0">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-white">
+          <div className="w-full">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between mb-6 gap-4">
+              <h2 className="flex text-xl sm:text-2xl font-bold text-white">
                 Tokenized Trends
               </h2>
 
               {/* FILTERS */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <div className="flex flex-col sm:flex-row align-center gap-2 sm:gap-3">
                 {/* OrderBy Filter */}
-                <select
-                  className="px-3 py-2 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05]"
-                  value={orderBy}
-                  onChange={(e) => updateOrderBy(e.target.value as OrderByOption)}
-                >
-                  {orderByOptions.map((option) => (
-                    <option key={option.value} value={option.value} className="bg-gray-900">
-                      {option.title}
-                    </option>
-                  ))}
-                </select>
+                <Select value={orderBy} onValueChange={updateOrderBy}>
+                  <SelectTrigger className="px-3 py-5 h-14 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-900 border-white/10">
+                    {orderByOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10">
+                        {option.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
                 {/* Owned by me */}
                 {activeAccount && (
-                  <button
+                  <AeButton
+                    variant="primary"
+                    className={`w-full h-14 ${ownedOnly
+                        ? 'bg-white/10 opacity-60'
+                        : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'
+                      }`}
                     onClick={() => setOwnedOnly(!ownedOnly)}
-                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                      ownedOnly
-                        ? 'bg-[#1161FE] text-white border border-[#1161FE]'
-                        : 'bg-white/[0.02] text-white border border-white/10 hover:bg-white/[0.05]'
-                    }`}
                   >
                     Show Owned Only
-                  </button>
+                  </AeButton>
                 )}
 
                 {/* Search */}
@@ -226,7 +235,7 @@ export default function TokenList() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search tokens"
-                  className="px-3 py-2 w-full sm:min-w-[200px] sm:max-w-[280px] bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none focus:border-[#1161FE] placeholder-white/50 transition-all duration-300 hover:bg-white/[0.05]"
+                  className="px-3 py-1 w-full sm:min-w-[200px] sm:max-w-[280px] bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none focus:border-[#1161FE] placeholder-white/50 transition-all duration-300 hover:bg-white/[0.05]"
                 />
               </div>
             </div>
@@ -240,9 +249,9 @@ export default function TokenList() {
             )}
 
             {/* Token List Table */}
-            <TokenListTable 
-              pages={data?.pages} 
-              loading={isFetching} 
+            <TokenListTable
+              pages={data?.pages}
+              loading={isFetching}
               orderBy={orderBy}
               orderDirection={finalOrderDirection}
               onSort={handleSort}
@@ -260,8 +269,8 @@ export default function TokenList() {
               onClick={() => fetchNextPage()}
               disabled={isFetching}
               className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isFetching
-                  ? 'bg-white/10 cursor-not-allowed opacity-60'
-                  : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0'
+                ? 'bg-white/10 cursor-not-allowed opacity-60'
+                : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'
                 }`}
             >
               {isFetching ? (

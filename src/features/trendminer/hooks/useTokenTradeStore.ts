@@ -1,7 +1,7 @@
 import { useAtom, useAtomValue } from 'jotai';
 import { useAccount } from '@/hooks';
 import { Decimal } from '../../../libs/decimal';
-import { TokenDto } from '../types';
+import { TokenDto } from '@/api/generated/models/TokenDto';
 import {
   tokenTradeTokenAtom,
   userBalanceAtom,

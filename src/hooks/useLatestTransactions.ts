@@ -36,7 +36,7 @@ export function useLatestTransactions() {
           const pages = [10, 20, 50, 100];
           pages.forEach((page) => {
             queryClient.setQueryData(
-              ['TransactionsService.listTransactions', payload.token.sale_address, page, 1],
+              ["TransactionsService.listTransactions", payload.token.sale_address, page, 1],
               (oldData: Awaited<CustomPagination<TransactionDtoWithToken>> | undefined) => ({
                 meta: {
                   ...(oldData?.meta || {}),

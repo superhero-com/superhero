@@ -1,7 +1,7 @@
+import { TokenDto } from "@/api/generated/models/TokenDto";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { TokenDto } from "@/api/generated/models/TokenDto";
 import { TokensService } from "../../../api/generated/services/TokensService";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { useOwnedTokens } from "../../../hooks/useOwnedTokens";
@@ -15,8 +15,7 @@ import TokenTrades from "../../../components/Trendminer/TokenTrades";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import {
-  Card,
-  CardContent
+  Card
 } from "../../../components/ui/card";
 import ShareModal from "../../../components/ui/ShareModal";
 
@@ -30,9 +29,7 @@ import {
 } from "../";
 import { TokenSummary } from "../../bcl/components";
 import { useLiveTokenData } from "../hooks/useLiveTokenData";
-import { TokenDto as TrendminerTokenDto } from "../types";
 
-interface TokenSaleDetailsProps { }
 
 // Tab constants
 const TAB_DETAILS = "details";
@@ -47,7 +44,7 @@ type TabType =
   | typeof TAB_HOLDERS;
 
 //
-export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
+export default function TokenSaleDetails() {
   const { tokenName } = useParams<{ tokenName: string }>();
   const navigate = useNavigate();
   const { activeAccount } = useAeSdk();
@@ -58,9 +55,6 @@ export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
   const [showDeployedMessage, setShowDeployedMessage] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [tradeActionSheet, setTradeActionSheet] = useState(false);
-  const [candleSeries, setCandleSeries] = useState<any[]>([]);
-  const [intervalSec, setIntervalSec] = useState<number>(5 * 60);
-  const [mcRank, setMcRank] = useState<number | null>(null);
   const [performance, setPerformance] = useState<any | null>(null);
   const [pendingLastsLong, setPendingLastsLong] = useState(false);
   const { ownedTokens } = useOwnedTokens();
@@ -114,7 +108,7 @@ export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
   }, [tokenData, _token]);
 
   // Derived states
-  const isTokenPending = isTokenNewlyCreated && !token;
+  const isTokenPending = isTokenNewlyCreated && !token?.sale_address;
   const isMobile = window.innerWidth < 768;
 
   // Share URL
@@ -129,30 +123,6 @@ export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
       ? ownedTokens.some((it: any) => it.id === token.id)
       : false;
   }, [activeAccount, token]);
-
-  // Convert API TokenDto to trendminer TokenDto format
-  const trendminerToken = useMemo((): TrendminerTokenDto | null => {
-    if (!token) return null;
-    return {
-      sale_address: token.sale_address,
-      symbol: token.symbol,
-      decimals: Number(token.decimals) || 18,
-      total_supply: token.total_supply,
-      price: Number(token.price) || 0,
-      sell_price: Number(token.sell_price) || 0,
-      name: token.name,
-      address: token.address,
-    };
-  }, [token]);
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-48 p-10 text-center">
-        <div className="w-8 h-8 border-3 border-purple-300 border-t-purple-600 rounded-full animate-spin mb-4" />
-        <span className="text-white/80">Loading token details...</span>
-      </div>
-    );
-  }
 
   // Render error state (token not found)
   if (isError && !isTokenNewlyCreated) {
@@ -258,17 +228,17 @@ export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
         {/* Desktop Sidebar (Left Column) */}
         {!isMobile && (
           <div className="lg:col-span-1 flex flex-col gap-6">
-            {isLoading || isTokenPending ? (
+            {!token?.sale_address ? (
               <TokenSaleSidebarSkeleton boilerplate={isTokenPending} />
-            ) : trendminerToken ? (
+            ) : (
               <>
-                <TokenTradeCard token={trendminerToken} />
+                <TokenTradeCard token={token} />
                 <TokenSummary
-                  token={{ ...token, decimals: Number(token.decimals) }}
+                  token={token}
                 />
                 <TokenRanking token={token} />
               </>
-            ) : null}
+            )}
           </div>
         )}
 
@@ -280,7 +250,7 @@ export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
           {/* Token Header */}
           <Card className="bg-white/[0.02] border-white/10">
             <div className="p-2">
-              {isLoading || isTokenPending ? (
+              {(isLoading && !token?.sale_address) ? (
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 flex-1">
                     <div className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-lg w-48 h-8" />
@@ -365,7 +335,7 @@ export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
           </Card>
 
           {/* Chart */}
-          {isLoading || isTokenPending ? (
+          {(isLoading && !token?.sale_address) ? (
             <TokenCandlestickChartSkeleton boilerplate={isTokenPending} />
           ) : (
             <TokenCandlestickChart token={token} className="w-full" />
@@ -456,7 +426,7 @@ export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
       )}
 
       {/* Mobile Trading Modal */}
-      {tradeActionSheet && trendminerToken && (
+      {(tradeActionSheet && token?.sale_address) && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end">
           <div className="w-full bg-white/[0.02] border-t border-white/10 rounded-t-3xl p-6 backdrop-blur-xl">
             <div className="flex justify-between items-center mb-4">
@@ -471,7 +441,7 @@ export default function TokenSaleDetails({ }: TokenSaleDetailsProps) {
               </Button>
             </div>
             <TokenTradeCard
-              token={trendminerToken}
+              token={token}
               onClose={() => setTradeActionSheet(false)}
             />
           </div>

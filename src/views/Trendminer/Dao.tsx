@@ -10,12 +10,6 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import AeButton from "../../components/AeButton";
 
-let bctsl: any;
-async function ensureBctsl() {
-  if (!bctsl) bctsl = await import("bctsl-sdk");
-  return bctsl;
-}
-
 const voteTypes = [
   VOTE_TYPE.VotePayout,
   // VOTE_TYPE.VotePayoutAmount, // two fields
@@ -69,7 +63,6 @@ export default function Dao() {
       };
       await addVote(metadata as VoteMetadata);
       await updateState();
-      // await refreshDao();
     } catch (e: any) {
       setErrorMessage(e?.message || "Failed to create vote");
     } finally {

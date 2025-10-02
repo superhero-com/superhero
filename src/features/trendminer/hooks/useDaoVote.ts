@@ -24,6 +24,7 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
     tokenSaleAddress,
   });
 
+
   const canVote = useMemo(
     () =>
       activeAccount &&
@@ -187,7 +188,6 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
   }, [vote, applyAction]);
 
   const voteOption = useCallback(async (option: boolean) => {
-    console.log('voteOption', vote, dao.userTokenBalance, dao.tokenInstanceRef);
     if (!vote || !dao.userTokenBalance || !dao.tokenInstanceRef) {
 
         console.log('voteOption', vote, dao.userTokenBalance, dao.tokenInstanceRef);
@@ -218,6 +218,7 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
 
     voteYesPercentage,
     voteStakeYesPercentage,
+    hasTokenBalance: dao.userTokenBalance,
     runTestCheck,
 
     // methods

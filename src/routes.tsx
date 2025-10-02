@@ -1,5 +1,5 @@
 import React, { lazy } from "react";
-import { RouteObject } from "react-router-dom";
+import { RouteObject, Navigate } from "react-router-dom";
 import SocialLayout from "./components/layout/SocialLayout";
 
 const FeedList = lazy(() => import("./features/social/views/FeedList"));
@@ -13,8 +13,12 @@ const TrendAccounts = lazy(() => import("./views/Trendminer/Accounts"));
 const TrendAccountDetails = lazy(
   () => import("./views/Trendminer/AccountDetails")
 );
-const TrendCreate = lazy(() => import("./features/trendminer/views/CreateTokenView"));
-const TokenSaleDetails = lazy(() => import("./features/trendminer/views/TokenSaleDetails"));
+const TrendCreate = lazy(
+  () => import("./features/trendminer/views/CreateTokenView")
+);
+const TokenSaleDetails = lazy(
+  () => import("./features/trendminer/views/TokenSaleDetails")
+);
 const PostDetail = lazy(() => import("./features/social/views/PostDetail"));
 const UserProfile = lazy(() => import("./views/UserProfile"));
 const Landing = lazy(() => import("./views/Landing"));
@@ -85,11 +89,7 @@ export const routes: RouteObject[] = [
   // New DEX Routes with Layout
   {
     path: "/defi",
-    element: (
-      <DexLayout>
-        <DexSwap />
-      </DexLayout>
-    ),
+    element: <Navigate to="/defi/swap" replace />,
   },
   {
     path: "/defi/swap",

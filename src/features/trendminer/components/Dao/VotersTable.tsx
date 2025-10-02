@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { VoteState } from 'bctsl-sdk';
 import { Decimal } from '@/libs/decimal';
 import AddressChip from '@/components/AddressChip';
-import { LivePriceFormatter } from '@/features/shared/components';
+import { LivePriceFormatter, PriceFormatter, TokenPriceFormatter } from '@/features/shared/components';
 
 interface VotersTableProps {
   voteState: VoteState;
@@ -18,7 +18,7 @@ interface VoterItem {
 export default function VotersTable({ voteState, token }: VotersTableProps) {
   const items = useMemo((): VoterItem[] => {
     const voterItems: VoterItem[] = [];
-    
+
     if (voteState?.vote_accounts) {
       for (const [address, vote] of voteState.vote_accounts.entries()) {
         voterItems.push({
@@ -28,7 +28,7 @@ export default function VotersTable({ voteState, token }: VotersTableProps) {
         });
       }
     }
-    
+
     return voterItems;
   }, [voteState]);
 
@@ -48,7 +48,7 @@ export default function VotersTable({ voteState, token }: VotersTableProps) {
       <div className="p-4 border-b border-white/10">
         <div className="text-lg font-bold">Voters</div>
       </div>
-      
+
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -65,11 +65,10 @@ export default function VotersTable({ voteState, token }: VotersTableProps) {
                   <AddressChip address={item.address} linkToExplorer />
                 </td>
                 <td className="p-4">
-                  <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
-                    item.choice 
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                  <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${item.choice
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                       : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                  }`}>
+                    }`}>
                     <span className="text-xs">
                       {item.choice ? '✓' : '○'}
                     </span>
@@ -79,12 +78,7 @@ export default function VotersTable({ voteState, token }: VotersTableProps) {
                   </span>
                 </td>
                 <td className="p-4">
-                  <LivePriceFormatter
-                    aePrice={Decimal.fromBigNumberString(item.amount.toString())}
-                    watchKey={token?.sale_address}
-                    className="text-sm"
-                    hideFiatPrice={true}
-                  />
+                  {Decimal.fromBigNumberString(item.amount.toString()).prettify()} {token.symbol || token.name}
                 </td>
               </tr>
             ))}

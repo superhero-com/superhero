@@ -346,7 +346,7 @@ export default function UserProfile({
                         {/* Balance */}
                         <div className="flex items-center">
                           <div className="bg-gradient-to-r text-sm from-cyan-400 to-blue-500 bg-clip-text text-transparent font-medium">
-                            {formatTokenBalance(balance, token?.decimals)}
+                            {Decimal.from(balance).div(10 ** (token?.decimals || 18)).prettify()}
                           </div>
                         </div>
 

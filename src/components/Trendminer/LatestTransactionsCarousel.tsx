@@ -39,20 +39,28 @@ export default function LatestTransactionsCarousel() {
         const totalWidth = latestTransactions.length * cardWidth;
         const newPosition = prev + 1.5; // Adjust speed here (pixels per frame)
         
-        // Reset to 0 when we've scrolled through half the content (since we duplicate items)
-        if (newPosition >= totalWidth) {
-          return 0;
+        console.log('newPosition', newPosition);
+        console.log('totalWidth', totalWidth);
+        const stopAt = totalWidth - (cardWidth * 7);
+        // Stop scrolling when we reach the end
+        if (newPosition >= stopAt) {
+          return stopAt; // Stop at the end
         }
         return newPosition;
       });
       
-      if (!isHovered) {
+      // Continue animation only if we haven't reached the end and not hovered
+      const cardWidth = 208;
+      const totalWidth = latestTransactions.length * cardWidth;
+      const currentPosition = scrollPosition;
+      
+      if (!isHovered && currentPosition < totalWidth) {
         animationRef.current = requestAnimationFrame(scroll);
       }
     };
     
     animationRef.current = requestAnimationFrame(scroll);
-  }, [latestTransactions.length, isHovered]);
+  }, [latestTransactions.length, isHovered, scrollPosition]);
 
   const stopScrolling = useCallback(() => {
     if (animationRef.current) {
@@ -288,8 +296,8 @@ export default function LatestTransactionsCarousel() {
     );
   };
 
-  // Create seamless loop by duplicating transactions exactly once
-  const loop = [...latestTransactions, ...latestTransactions];
+  // Use transactions directly without duplication since we want it to stop at the end
+  const transactions = latestTransactions;
 
   return (
     <div className="latest-transactions-carousel">
@@ -305,7 +313,7 @@ export default function LatestTransactionsCarousel() {
           onTouchStart={() => setIsHovered(true)}
           onTouchEnd={() => setIsHovered(false)}
         >
-          {loop.map((item, index) => renderItem(item, index))}
+          {transactions.map((item, index) => renderItem(item, index))}
         </div>
       </div>
     </div>

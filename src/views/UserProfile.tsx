@@ -709,7 +709,12 @@ function formatTokenBalance(balance: any, decimals: any): string {
   try {
     if (balance === null || balance === undefined) return "0";
     const str = String(balance);
-    const decs = Number(decimals || 18);
+    let decs = Number(decimals ?? 18);
+    // Some APIs may report 0 decimals even though values are in base units (1e18)
+    // Heuristic: very large integer with no dot likely needs 18 decimals
+    if ((!Number.isFinite(decs) || decs === 0) && /^(\d{7,})$/.test(str)) {
+      decs = 18;
+    }
     // If scientific notation or already decimal, format directly
     if (/e|E|\./.test(str)) {
       return Decimal.from(str).prettify(2);

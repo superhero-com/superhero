@@ -20,10 +20,6 @@ import AddressChip from "../components/AddressChip";
 import PriceDataFormatter from "../features/shared/components/PriceDataFormatter";
 import { formatLongDate } from "../utils/common";
 import { TX_FUNCTIONS } from "../utils/constants";
-import { TrendminerApi } from "../api/backend";
-import TokenPriceFormatter from "../features/shared/components/TokenPriceFormatter";
-import { Decimal } from "../libs/decimal";
-import { toAe } from "@aeternity/aepp-sdk";
 
 import AddressAvatar from "../components/AddressAvatar";
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
@@ -69,16 +65,23 @@ export default function UserProfile({
   >("market_cap");
   const [orderDirection, setOrderDirection] = useState<"ASC" | "DESC">("DESC");
 
-  // Owned tokens (with balances for this account)
+  // Owned tokens
   const { data: ownedTokensResp, isFetching: loadingOwned } = useQuery({
-    queryKey: ["TrendminerApi.listAccountTokens", effectiveAddress],
+    queryKey: [
+      "TokensService.listAll",
+      "owned",
+      effectiveAddress,
+      orderBy,
+      orderDirection,
+    ],
     queryFn: () =>
-      TrendminerApi.listAccountTokens(effectiveAddress, {
-        orderBy: "balance",
-        orderDirection: "DESC",
+      TokensService.listAll({
+        ownerAddress: effectiveAddress,
+        orderBy,
+        orderDirection,
         limit: 100,
         page: 1,
-      }) as Promise<{ items?: any[] } | any[]>,
+      }) as unknown as Promise<{ items: any[]; meta?: any }>,
     enabled: !!effectiveAddress && tab === "owned",
     staleTime: 60_000,
   });
@@ -250,76 +253,43 @@ export default function UserProfile({
       )}
 
       {tab === "owned" && (
-        <div className="mt-4 space-y-4">
-          {!loadingOwned && ((ownedTokensResp as any)?.items?.length ?? (Array.isArray(ownedTokensResp) ? (ownedTokensResp as any[]).length : 0)) === 0 && (
+        <div className="mt-4">
+          {!loadingOwned && (ownedTokensResp?.items?.length ?? 0) === 0 && (
             <div className="text-center py-12 px-6 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl">
               <div className="text-4xl mb-3 opacity-30">🪙</div>
-              <div className="text-white font-semibold mb-1">No owned tokens</div>
-              <div className="text-white/60 text-sm">This user doesn't own any Trendminer tokens yet.</div>
+              <div className="text-white font-semibold mb-1">
+                No owned tokens
+              </div>
+              <div className="text-white/60 text-sm">
+                This user doesn't own any Trendminer tokens yet.
+              </div>
             </div>
           )}
-
-          <div className="hidden md:grid grid-cols-6 gap-4 px-6 py-4 border border-white/10 rounded-2xl bg-white/[0.02] text-xs font-semibold text-white/60 uppercase tracking-wide">
-            <div>Token</div>
-            <div>Current MC Rank</div>
-            <div>Price</div>
-            <div>Market Cap</div>
-            <div>Token Balance</div>
-            <div>Total Value</div>
-          </div>
-
-          <div className="divide-y divide-white/5 border border-white/10 rounded-2xl overflow-hidden">
-            {(((ownedTokensResp as any)?.items as any[]) || (Array.isArray(ownedTokensResp) ? (ownedTokensResp as any[]) : [])).map((it: any) => {
-              const token = it?.token || it;
-              const balanceRaw = it?.balance ?? it?.holder_balance ?? it?.token_balance ?? '0';
-              const balanceDec = Decimal.from(toAe(balanceRaw || '0'));
-              const tokenHref = token?.name || token?.address ? `/trendminer/tokens/${encodeURIComponent(token?.name || token?.address)}` : undefined;
-
-              return (
-                <div key={token?.address} className="grid grid-cols-1 md:grid-cols-6 gap-4 px-6 py-4 bg-white/[0.01]">
-                  <div className="flex items-center">
-                    <div className="md:hidden text-xs text-white/60 mr-2 min-w-[100px]">Token:</div>
-                    {tokenHref ? (
-                      <a href={tokenHref} className="text-white hover:underline">{token?.name || token?.symbol || token?.address}</a>
-                    ) : (
-                      <div className="text-white">{token?.name || token?.symbol || token?.address}</div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center">
-                    <div className="md:hidden text-xs text-white/60 mr-2 min-w-[100px]">Current MC Rank:</div>
-                    <div className="text-white font-medium">{token?.rank ?? '-'}</div>
-                  </div>
-
-                  <div className="flex items-center">
-                    <div className="md:hidden text-xs text-white/60 mr-2 min-w-[100px]">Price:</div>
-                    <PriceDataFormatter watchPrice={false} priceData={token?.price_data} />
-                  </div>
-
-                  <div className="flex items-center">
-                    <div className="md:hidden text-xs text-white/60 mr-2 min-w-[100px]">Market Cap:</div>
-                    <PriceDataFormatter watchPrice={false} priceData={token?.market_cap_data} />
-                  </div>
-
-                  <div className="flex items-center">
-                    <div className="md:hidden text-xs text-white/60 mr-2 min-w-[100px]">Token Balance:</div>
-                    <TokenPriceFormatter token={token} price={balanceDec} hideFiatPrice={true} className="text-white text-sm" />
-                  </div>
-
-                  <div className="flex items-center">
-                    <div className="md:hidden text-xs text-white/60 mr-2 min-w-[100px]">Total Value:</div>
-                    <TokenPriceFormatter token={token} price={balanceDec} className="text-white text-sm" />
-                  </div>
-                </div>
-              );
-            })}
-
-            {loadingOwned && (
-              <div className="flex items-center justify-center py-12">
-                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              </div>
-            )}
-          </div>
+          <TokenListTable
+            pages={
+              ownedTokensResp
+                ? [{ items: (ownedTokensResp.items || []) as any[] }]
+                : [{ items: [] }]
+            }
+            loading={loadingOwned}
+            showCollectionColumn={false}
+            orderBy={orderBy as any}
+            orderDirection={orderDirection}
+            onSort={(key) => {
+              if (key === "newest") {
+                setOrderBy("created_at");
+                setOrderDirection("DESC");
+              } else if (key === "oldest") {
+                setOrderBy("created_at");
+                setOrderDirection("ASC");
+              } else if (key === orderBy) {
+                setOrderDirection(orderDirection === "DESC" ? "ASC" : "DESC");
+              } else {
+                setOrderBy(key as any);
+                setOrderDirection("DESC");
+              }
+            }}
+          />
         </div>
       )}
 

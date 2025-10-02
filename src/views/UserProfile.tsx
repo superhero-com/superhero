@@ -21,6 +21,8 @@ import AddressChip from "../components/AddressChip";
 import PriceDataFormatter from "../features/shared/components/PriceDataFormatter";
 import { formatLongDate } from "../utils/common";
 import { TX_FUNCTIONS } from "../utils/constants";
+import { Decimal } from "../libs/decimal";
+import { fromAettos } from "../libs/dex";
 
 import AddressAvatar from "../components/AddressAvatar";
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
@@ -341,12 +343,12 @@ export default function UserProfile({
                           </div>
                         </div>
 
-                      {/* Balance */}
-                      <div className="flex items-center">
+                        {/* Balance */}
+                        <div className="flex items-center">
                         <div className="bg-gradient-to-r text-sm from-cyan-400 to-blue-500 bg-clip-text text-transparent font-medium">
-                          {typeof balance === "number" ? balance : balance || "0"}
+                          {formatTokenBalance(balance, token?.decimals)}
                         </div>
-                      </div>
+                        </div>
 
                         {/* Total Value */}
                         <div className="flex items-center">
@@ -701,6 +703,27 @@ export default function UserProfile({
   ) : (
     content
   );
+}
+
+function formatTokenBalance(balance: any, decimals: any): string {
+  try {
+    if (balance === null || balance === undefined) return "0";
+    const str = String(balance);
+    const decs = Number(decimals || 18);
+    // If scientific notation or already decimal, format directly
+    if (/e|E|\./.test(str)) {
+      return Decimal.from(str).prettify();
+    }
+    // Treat as base units and convert by decimals
+    const normalized = fromAettos(str, decs);
+    return Decimal.from(normalized).prettify();
+  } catch {
+    try {
+      return Decimal.from(String(balance || '0')).prettify();
+    } catch {
+      return String(balance || '0');
+    }
+  }
 }
 
 function formatVolume(volume: string | number): string {

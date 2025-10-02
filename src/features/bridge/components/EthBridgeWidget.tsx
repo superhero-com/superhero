@@ -223,7 +223,7 @@ export default function BuyAeWidget({ embedded = false }: EthBridgeWidgetProps) 
       {!embedded && (
         <div className="flex justify-center my-3 sm:my-4 relative">
           <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-white/10 ${circleBg} text-white flex items-center justify-center text-lg sm:text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(0,0,0,0.25)] z-[2] relative`}>
-            🌉
+            ⬇️
           </div>
         </div>
       )}

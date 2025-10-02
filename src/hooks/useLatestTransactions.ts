@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { CustomPagination} from '../utils/types';
 
-import type { TokenDto } from '../api/generated/models/TokenDto';
+import type { TokenDto } from '@/api/generated/models/TokenDto';
 import type { TransactionDto } from '../api/generated/models/TransactionDto';
 import WebSocketClient from '../libs/WebSocketClient';
 import { TransactionsService } from '@/api/generated/services/TransactionsService';

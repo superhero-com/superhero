@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Pagination } from '../models/Pagination';
-import type { TokenDto } from '../models/TokenDto';
+import type { TokenDto } from '@/api/generated/models/TokenDto';
 import type { TokenPriceMovementDto } from '../models/TokenPriceMovementDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';

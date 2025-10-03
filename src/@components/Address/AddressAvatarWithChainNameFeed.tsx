@@ -24,6 +24,7 @@ interface AddressAvatarWithChainNameFeedProps {
     contentClassName?: string;
 }
 
+
 export const AddressAvatarWithChainNameFeed = memo(({
     address,
     size = 36,

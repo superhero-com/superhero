@@ -92,14 +92,15 @@ export function AddressFormatted({
       </div>
     );
   }
-
+  
   return (
     <span className={cn(
       className,
       // Smaller font for ak_ full addresses; even smaller on mobile
       address.startsWith('ak_') && 'text-[8.5px] md:text-[11px] font-light font-mono'
-    )}>{formatAddress(address)}</span>
+    )}>{formatAddress(address, 10, true)}</span>
   );
+  
 }
 
 export default AddressFormatted;

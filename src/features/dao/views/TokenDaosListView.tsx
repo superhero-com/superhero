@@ -1,6 +1,6 @@
 import { TokensService } from "@/api/generated";
 import { LivePriceFormatter } from "@/features/shared/components";
-import VoteDetail from "@/features/dao/components/TokenVoteCard";
+import TokenVoteCard from "@/features/dao/components/TokenVoteCard";
 import { useDao } from "@/features/dao/hooks/useDao";
 import { Decimal } from "@/libs/decimal";
 import { Encoded, toAe } from "@aeternity/aepp-sdk";
@@ -46,15 +46,6 @@ export default function Dao() {
     tokenSaleAddress: saleAddress as Encoded.ContractAddress,
   });
 
-  // useEffect(() => {
-  //   setNewVote({
-  //     type: VOTE_TYPE.VotePayout as (typeof voteTypes)[number],
-  //     value: 'ak_LF4siZQxMqjGBAcHS2MMacMYgYjHjRh4HkDwqF3sA59oLfcMA',
-  //     description: 'abc',
-  //     link: 'http://localhost:8080/dao/ct_215VAdtTqmNH8PcdwWcfQNju1qioAXb1XMwDP5hoNZJEeYhHqz',
-  //   });
-  // }, [saleAddress]);
-
   async function createVote() {
     if (!saleAddress) return;
     setCreating(true);
@@ -80,7 +71,7 @@ export default function Dao() {
       {/* Header Section */}
       <div className="mb-6">
         {token && (
-          <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent leading-tight">
                 {token.name || token.symbol} [DAO]
@@ -112,7 +103,7 @@ export default function Dao() {
           </div>
         )}
         
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
           <Link
             to={`/trendminer/tokens/${encodeURIComponent(saleAddress || "")}`}
             className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
@@ -309,7 +300,7 @@ export default function Dao() {
                 ) : (
                   Array.from(state?.votes).map((vote: any, index: number) =>
                   (
-                    <VoteDetail
+                    <TokenVoteCard
                       key={index}
                       address={vote[1][1]}
                       saleAddress={saleAddress as Encoded.ContractAddress}

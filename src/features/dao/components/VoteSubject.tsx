@@ -34,10 +34,13 @@ export default function VoteSubject({ voteState }: VoteSubjectProps) {
   const beneficiary = subjectEntries[0][1][0];
 
   return (
-    <div className="text-white flex items-center gap-2">
+    <div className="text-white flex items-center gap-2 flex-wrap">
       <span className="font-medium">{subjectText}</span>
+      <div className="flex items-center gap-4">
       <span className="text-white/80"> to </span>
       <AddressAvatarWithChainNameFeed address={beneficiary} />
+      </div>
+      
     </div>
   );
 }

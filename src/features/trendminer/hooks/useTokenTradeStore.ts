@@ -86,10 +86,12 @@ export function useTokenTradeStore() {
   const updateIsAllowSelling = (allow: boolean) => setIsAllowSelling(allow);
   const updateSlippage = (newSlippage: number) => setSlippage(newSlippage);
 
-  const resetFormData = () => {
+  const resetFormData = (forceReset: boolean = false) => {
     setTokenA(undefined);
     setTokenB(undefined);
-    setSuccessTxData(undefined);
+    if (forceReset) {
+      setSuccessTxData(undefined);
+    }
     setNextPrice(Decimal.ZERO);
   };
 

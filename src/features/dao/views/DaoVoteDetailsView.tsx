@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { TokensService } from "@/api/generated";
 import { useDaoVote } from "@/features/dao/hooks/useDaoVote";
 import { useAeSdk } from "@/hooks";
@@ -8,20 +7,19 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 
 // UI Components
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 
 // Custom Components
 import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarWithChainNameFeed";
+import TokenSummary from "@/features/bcl/components/TokenSummary";
 import VoteSubject from "@/features/dao/components/VoteSubject";
 import VotersTable from "@/features/dao/components/VotersTable";
-import { Decimal } from "@/libs/decimal";
-import TokenTradeCard from "@/features/trendminer/components/TokenTradeCard";
-import TokenSummary from "@/features/bcl/components/TokenSummary";
 import TokenRanking from "@/features/trendminer/components/TokenRanking";
+import TokenTradeCard from "@/features/trendminer/components/TokenTradeCard";
 
 export default function DaoVoteDetailsView() {
   const { saleAddress, voteAddress, voteId } = useParams<{
@@ -31,7 +29,6 @@ export default function DaoVoteDetailsView() {
   }>();
 
   const { currentBlockHeight } = useAeSdk();
-  const [showVoters, setShowVoters] = useState(false);
 
   // Validate parameters
   if (!saleAddress || !voteAddress || !voteId) {
@@ -356,14 +353,6 @@ export default function DaoVoteDetailsView() {
                         </Button>
                       )}
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowVoters(!showVoters)}
-                        className="border-white/20 bg-white/5 text-white hover:bg-white/10"
-                      >
-                        {showVoters ? "Hide" : "Show"} Voters
-                      </Button>
                     </div>
 
                     {actionLoading && (
@@ -376,7 +365,7 @@ export default function DaoVoteDetailsView() {
                 </Card>
 
                 {/* Voters Table */}
-                {showVoters && (
+
                   <Card className="bg-white/[0.02] border-white/10">
                     <CardHeader>
                       <CardTitle className="text-lg font-semibold text-white">Voters</CardTitle>
@@ -385,7 +374,6 @@ export default function DaoVoteDetailsView() {
                       <VotersTable voteState={voteState} token={token} />
                     </CardContent>
                   </Card>
-                )}
               </div>
             </>
           )}

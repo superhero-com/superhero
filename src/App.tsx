@@ -55,10 +55,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, [activeAccount]);
 
-  if (!sdkInitialized) {
-    return <div className="loading-fallback" />;
-  }
-
   return (
     <div className="app-container">
       

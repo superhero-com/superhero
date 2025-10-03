@@ -198,7 +198,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
   }, [store.tokenB, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance, store]);
 
   const resetFormState = useCallback(() => {
-    store.resetFormData();
+    store.resetFormData(true);
     errorMessage.current = undefined;
     store.updateLoadingTransaction(false);
   }, [store]);

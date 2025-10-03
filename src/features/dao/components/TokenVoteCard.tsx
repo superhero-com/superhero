@@ -79,7 +79,7 @@ export default function TokenVoteCard({
   return (
     <Card className="bg-white/[0.02] border-white/10 hover:bg-white/[0.04] transition-all duration-200">
       <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3 flex-wrap gap-4">
+        <div className="flex flex-col items-start justify-between mb-3 gap-4">
           <Badge variant="secondary" className={getVoteStatusColor()}>
             {getVoteStatusText()}
           </Badge>

@@ -209,20 +209,20 @@ export default function DaoVoteDetailsView() {
                     {/* Vote Metadata */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div className="space-y-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-white/60 font-medium min-w-[120px]">Proposed By:</span>
                           <AddressAvatarWithChainNameFeed address={voteState.author} />
                         </div>
                         
                         {voteState?.create_height && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-white/60 font-medium min-w-[120px]">Created:</span>
                             <span className="text-white">{formatDate(voteState.create_height)}</span>
                           </div>
                         )}
 
                         {voteState?.close_height && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-white/60 font-medium min-w-[120px]">
                               {isOpen ? "Closes:" : "Closed:"}
                             </span>
@@ -240,7 +240,7 @@ export default function DaoVoteDetailsView() {
 
                       <div className="space-y-3">
                         {voteState?.metadata?.link && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
                             <span className="text-white/60 font-medium min-w-[120px]">Link:</span>
                             <a 
                               href={voteState.metadata.link} 
@@ -254,7 +254,7 @@ export default function DaoVoteDetailsView() {
                         )}
 
                         {userVoteOrLockedInfo && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-white/60 font-medium min-w-[120px]">Your Status:</span>
                             <span className="text-white/80 text-sm">{userVoteOrLockedInfo}</span>
                           </div>

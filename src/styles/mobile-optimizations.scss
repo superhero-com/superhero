@@ -55,13 +55,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 200px;
   color: $light_font_color;
   font-size: 14px;
-  
-  @include mobile {
-    min-height: 150px;
-  }
 }
 
 /* Mobile-specific layout improvements */

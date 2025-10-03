@@ -1,18 +1,19 @@
 import { TokensService } from "@/api/generated";
-import { LivePriceFormatter } from "@/features/shared/components";
-import TokenVoteCard from "@/features/dao/components/TokenVoteCard";
-import { useDao } from "@/features/dao/hooks/useDao";
-import { Decimal } from "@/libs/decimal";
-import { Encoded, toAe } from "@aeternity/aepp-sdk";
-import { useQuery } from "@tanstack/react-query";
-import { VOTE_TYPE, VoteMetadata } from "bctsl-sdk";
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import TokenVoteCard from "@/features/dao/components/TokenVoteCard";
+import { useDao } from "@/features/dao/hooks/useDao";
+import { LivePriceFormatter } from "@/features/shared/components";
+import { Decimal } from "@/libs/decimal";
+import { ensureAddress, ensureString } from "@/utils/common";
+import { Encoded, Encoding, toAe } from "@aeternity/aepp-sdk";
+import { useQuery } from "@tanstack/react-query";
+import { VOTE_TYPE, VoteMetadata } from "bctsl-sdk";
+import { useState } from "react";
+import { Link, useParams } from "react-router-dom";
 
 const voteTypes = [
   VOTE_TYPE.VotePayout,
@@ -28,6 +29,11 @@ export default function Dao() {
   const { saleAddress } = useParams();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{
+    value?: string;
+    description?: string;
+    link?: string;
+  }>({});
   const [newVote, setNewVote] = useState<{
     type: (typeof voteTypes)[number];
     value?: string;
@@ -46,8 +52,60 @@ export default function Dao() {
     tokenSaleAddress: saleAddress as Encoded.ContractAddress,
   });
 
+  const validateForm = () => {
+    const errors: { value?: string; description?: string; link?: string } = {};
+    
+    // Validate subject value (should be an address)
+    if (!newVote.value || newVote.value.trim() === '') {
+      errors.value = 'Subject value is required';
+    } else {
+      try {
+        ensureAddress(newVote.value.trim(), Encoding.ContractAddress);
+      } catch (e) {
+        errors.value = 'Subject value must be a valid contract address';
+      }
+    }
+    
+    // Validate description (should be a string)
+    if (!newVote.description || newVote.description.trim() === '') {
+      errors.description = 'Description is required';
+    } else {
+      try {
+        ensureString(newVote.description.trim());
+      } catch (e) {
+        errors.description = 'Description must be a valid string';
+      }
+    }
+    
+    // Validate link (should be a string)
+    if (!newVote.link || newVote.link.trim() === '') {
+      errors.link = 'Link is required';
+    } else {
+      try {
+        ensureString(newVote.link.trim());
+      } catch (e) {
+        errors.link = 'Link must be a valid string';
+      }
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const clearFieldError = (field: keyof typeof validationErrors) => {
+    if (validationErrors[field]) {
+      setValidationErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
   async function createVote() {
     if (!saleAddress) return;
+    
+    // Validate form before proceeding
+    if (!validateForm()) {
+      return;
+    }
+    
     setCreating(true);
     setErrorMessage(null);
     try {
@@ -227,39 +285,57 @@ export default function Dao() {
                     <Input
                       placeholder="Subject value (address or data)"
                       value={newVote.value}
-                      onChange={(e) =>
-                        setNewVote((v) => ({ ...v, value: e.target.value }))
-                      }
-                      className="bg-white/5 border-white/20 text-white placeholder:text-white/60"
+                      onChange={(e) => {
+                        setNewVote((v) => ({ ...v, value: e.target.value }));
+                        clearFieldError('value');
+                      }}
+                      className={`bg-white/5 border-white/20 text-white placeholder:text-white/60 ${
+                        validationErrors.value ? 'border-red-500' : ''
+                      }`}
                     />
+                    {validationErrors.value && (
+                      <p className="text-red-400 text-xs mt-1">{validationErrors.value}</p>
+                    )}
                   </div>
                   
                   <div>
                     <label className="text-sm font-medium text-white/80 mb-2 block">
-                      Description (optional)
+                      Description
                     </label>
                     <Input
-                      placeholder="Description (optional)"
+                      placeholder="Description"
                       value={newVote.description || ""}
-                      onChange={(e) =>
-                        setNewVote((v) => ({ ...v, description: e.target.value }))
-                      }
-                      className="bg-white/5 border-white/20 text-white placeholder:text-white/60"
+                      onChange={(e) => {
+                        setNewVote((v) => ({ ...v, description: e.target.value }));
+                        clearFieldError('description');
+                      }}
+                      className={`bg-white/5 border-white/20 text-white placeholder:text-white/60 ${
+                        validationErrors.description ? 'border-red-500' : ''
+                      }`}
                     />
+                    {validationErrors.description && (
+                      <p className="text-red-400 text-xs mt-1">{validationErrors.description}</p>
+                    )}
                   </div>
                   
                   <div>
                     <label className="text-sm font-medium text-white/80 mb-2 block">
-                      Link (optional)
+                      Link
                     </label>
                     <Input
-                      placeholder="Link (optional)"
+                      placeholder="Link"
                       value={newVote.link || ""}
-                      onChange={(e) =>
-                        setNewVote((v) => ({ ...v, link: e.target.value }))
-                      }
-                      className="bg-white/5 border-white/20 text-white placeholder:text-white/60"
+                      onChange={(e) => {
+                        setNewVote((v) => ({ ...v, link: e.target.value }));
+                        clearFieldError('link');
+                      }}
+                      className={`bg-white/5 border-white/20 text-white placeholder:text-white/60 ${
+                        validationErrors.link ? 'border-red-500' : ''
+                      }`}
                     />
+                    {validationErrors.link && (
+                      <p className="text-red-400 text-xs mt-1">{validationErrors.link}</p>
+                    )}
                   </div>
                   
                   {errorMessage && (

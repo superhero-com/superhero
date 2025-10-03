@@ -25,11 +25,8 @@ export default function TokenVoteCard({
 }: TokenVoteCardProps) {
   const navigate = useNavigate();
   const { currentBlockHeight } = useAeSdk();
-  
-  const {
-    voteState,
-    voteYesPercentage,
-  } = useDaoVote({
+
+  const { voteState, voteYesPercentage } = useDaoVote({
     tokenSaleAddress: saleAddress,
     voteAddress: address,
     voteId: voteId,
@@ -56,7 +53,7 @@ export default function TokenVoteCard({
     const minutesRemaining = blocksRemaining * 3;
     const hoursRemaining = Math.floor(minutesRemaining / 60);
     const daysRemaining = Math.floor(hoursRemaining / 24);
-    
+
     if (daysRemaining > 0) {
       return `${daysRemaining}d ${hoursRemaining % 24}h remaining`;
     } else if (hoursRemaining > 0) {
@@ -68,7 +65,8 @@ export default function TokenVoteCard({
 
   const getVoteStatusColor = () => {
     if (!isOpen) return "bg-red-500/20 text-red-400 border-red-500/30";
-    if (voteYesPercentage && voteYesPercentage > 0.5) return "bg-green-500/20 text-green-400 border-green-500/30";
+    if (voteYesPercentage && voteYesPercentage > 0.5)
+      return "bg-green-500/20 text-green-400 border-green-500/30";
     return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
   };
 
@@ -81,32 +79,34 @@ export default function TokenVoteCard({
   return (
     <Card className="bg-white/[0.02] border-white/10 hover:bg-white/[0.04] transition-all duration-200">
       <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <VoteSubject voteState={voteState} />
-          <Badge
-            variant="secondary"
-            className={getVoteStatusColor()}
-          >
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-4">
+          <Badge variant="secondary" className={getVoteStatusColor()}>
             {getVoteStatusText()}
           </Badge>
+          <VoteSubject voteState={voteState} />
         </div>
 
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center gap-4 text-white/60">
-            <span>By: <AddressAvatarWithChainNameFeed address={voteState.author} /></span>
+        <div className="flex items-center justify-between text-sm flex-wrap gap-4">
+          <div className="flex items-center gap-4 text-white/60 flex-wrap">
+            <div className="flex items-center gap-4">
+              <span className="text-white/80"> By: </span>{" "}
+              <AddressAvatarWithChainNameFeed address={voteState.author} />
+            </div>
             {isOpen && (
               <span className="text-yellow-400">
                 {formatTimeRemaining(voteState.close_height)}
               </span>
             )}
           </div>
-          
+
           <Button
             variant="outline"
             size="sm"
             className="border-white/20 bg-white/5 text-white hover:bg-white/10"
             onClick={() => {
-              navigate(`/trendminer/dao/${saleAddress}/vote/${voteId.toString()}/${address.toString()}`);
+              navigate(
+                `/trendminer/dao/${saleAddress}/vote/${voteId.toString()}/${address.toString()}`
+              );
             }}
           >
             View Details

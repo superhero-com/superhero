@@ -90,6 +90,7 @@ export default function TokenListTableRow({
           <div className="mobile-label block md:hidden text-white/60 w-16">Price:</div>
           <div className="bg-gradient-to-r  text-sm from-yellow-400 to-cyan-500 bg-clip-text text-transparent">
             <PriceDataFormatter
+              hideFiatPrice
               priceData={token.price_data}
             />
           </div>
@@ -103,6 +104,7 @@ export default function TokenListTableRow({
           <div className="bg-gradient-to-r text-sm  from-cyan-400 to-blue-500 bg-clip-text text-transparent">
             <PriceDataFormatter
               bignumber
+              hideFiatPrice
               priceData={token.market_cap_data}
             />
           </div>

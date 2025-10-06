@@ -47,7 +47,7 @@ export default function TokenPriceFormatter({
   return (
     <PriceFormatter
       symbol={token.symbol}
-      aePrice={aePrice}
+      aePrice={price}
       fiatPrice={fiatPrice}
       {...priceFormatterProps}
     />

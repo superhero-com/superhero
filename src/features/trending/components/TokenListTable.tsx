@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import TokenListTableRow from "./TokenListTableRow";
 import TokenRowSkeleton from "./TokenRowSkeleton";
-import PerformanceTimeframeSelector from "./PerformanceTimeframeSelector";
 
 type OrderByOption = 'market_cap' | 'newest' | 'oldest' | 'holders_count' | 'trending_score' | 'name' | 'price';
 type OrderDirection = 'ASC' | 'DESC';
@@ -150,8 +149,8 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
             >
               Holders
             </SortableColumnHeader>
-            <th className="cell cell-chart text-xs text-right flex justify-center py-1 pl-3">
-              <PerformanceTimeframeSelector  />
+            <th className="cell cell-chart text-xs text-center opacity-50 py-1 pl-3">
+              Performance
             </th>
             <th className="cell-link">{/* Links placeholder column */}</th>
           </tr>

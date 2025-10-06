@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { TokenListTable, TrendminerBanner } from "..";
+import { TokenListTable, TrendminerBanner, PerformanceTimeframeSelector } from "..";
 import { TokensService } from "../../../api/generated";
 import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
 import TrendingPillsCarousel from "../../../components/Trendminer/TrendingPillsCarousel";
@@ -191,98 +191,101 @@ export default function TokenList() {
       <TrendingPillsCarousel />
 
       {/* Main content */}
-      <div className="">
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6">
-          {/* Left: Token List */}
-          <div className="w-full">
-            <div className="flex flex-col sm:flex-row items-center sm:justify-between mb-6 gap-4">
-              <h2 className="flex text-xl sm:text-2xl font-bold text-white">
-                Tokenized Trends
-              </h2>
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-4">
+        {/* Left: Token List */}
+        <div className="w-full">
+          <div className="flex flex-col sm:flex-row items-center sm:justify-between mb-6 gap-4 w-full">
+            <h2 className="flex text-xl sm:text-2xl font-bold text-white">
+              Tokenized Trends
+            </h2>
 
-              {/* FILTERS */}
-              <div className="flex flex-col sm:flex-row align-center gap-2 sm:gap-3">
-                {/* OrderBy Filter */}
-                <Select value={orderBy} onValueChange={updateOrderBy}>
-                  <SelectTrigger className="px-3 py-5 h-14 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-900 border-white/10">
-                    {orderByOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10">
-                        {option.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {/* FILTERS */}
+            <div className="flex flex-1 flex-col md:flex-row justify-end items-center gap-2">
+              {/* OrderBy Filter */}
+              <Select value={orderBy} onValueChange={updateOrderBy}>
+                <SelectTrigger className="px-2 py-2 h-10 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05] w-full sm:w-auto sm:min-w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-900 border-white/10">
+                  {orderByOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10 text-xs">
+                      {option.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-                {/* Owned by me */}
-                {activeAccount && (
-                  <AeButton
-                    variant="primary"
-                    className={`w-full h-14 ${ownedOnly
-                        ? 'bg-white/10 opacity-60'
-                        : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'
-                      }`}
-                    onClick={() => setOwnedOnly(!ownedOnly)}
-                  >
-                    Show Owned Only
-                  </AeButton>
-                )}
+              {/* Owned by me */}
+              {activeAccount && (
+                <AeButton
+                  variant="primary"
+                  className={`h-10 px-3 whitespace-nowrap ${ownedOnly
+                    ? 'bg-white/10 opacity-60'
+                    : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'
+                    }`}
+                  onClick={() => setOwnedOnly(!ownedOnly)}
+                >
+                  <span className="text-xs">Owned Only</span>
+                </AeButton>
+              )}
 
-                {/* Search */}
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search tokens"
-                  className="px-3 py-1 w-full sm:min-w-[200px] sm:max-w-[280px] bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none focus:border-[#1161FE] placeholder-white/50 transition-all duration-300 hover:bg-white/[0.05]"
-                />
+              {/* Search */}
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search tokens"
+                className="px-2 py-2 h-10 min-h-[auto] bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] placeholder-white/50 transition-all duration-300 hover:bg-white/[0.05] w-full sm:min-w-[160px] sm:max-w-[200px]"
+              />
+
+              {/* Performance Timeframe Selector */}
+              <div className="flex items-center justify-center sm:justify-start">
+                <PerformanceTimeframeSelector />
               </div>
             </div>
-
-            {/* Message Box for no results */}
-            {(!data?.pages?.length || !data?.pages[0].items.length) && !isFetching && (
-              <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 text-center text-white/80 mb-4">
-                <h3 className="font-semibold mb-2 text-white">No Token Sales</h3>
-                <p>No tokens found matching your criteria.</p>
-              </div>
-            )}
-
-            {/* Token List Table */}
-            <TokenListTable
-              pages={data?.pages}
-              loading={isFetching}
-              orderBy={orderBy}
-              orderDirection={finalOrderDirection}
-              onSort={handleSort}
-            />
           </div>
 
-          <RepositoriesList />
+          {/* Message Box for no results */}
+          {(!data?.pages?.length || !data?.pages[0].items.length) && !isFetching && (
+            <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 text-center text-white/80 mb-4">
+              <h3 className="font-semibold mb-2 text-white">No Token Sales</h3>
+              <p>No tokens found matching your criteria.</p>
+            </div>
+          )}
+
+          {/* Token List Table */}
+          <TokenListTable
+            pages={data?.pages}
+            loading={isFetching}
+            orderBy={orderBy}
+            orderDirection={finalOrderDirection}
+            onSort={handleSort}
+          />
         </div>
 
-        {/* Load More Button */}
-        {hasNextPage && (
-          <div className="text-center pt-2 pb-4">
-            <button
-              ref={loadMoreBtn}
-              onClick={() => fetchNextPage()}
-              disabled={isFetching}
-              className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isFetching
-                ? 'bg-white/10 cursor-not-allowed opacity-60'
-                : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'
-                }`}
-            >
-              {isFetching ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  Loading...
-                </div>
-              ) : 'Load More'}
-            </button>
-          </div>
-        )}
+        <RepositoriesList />
       </div>
+
+      {/* Load More Button */}
+      {hasNextPage && (
+        <div className="text-center pt-2 pb-4">
+          <button
+            ref={loadMoreBtn}
+            onClick={() => fetchNextPage()}
+            disabled={isFetching}
+            className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isFetching
+              ? 'bg-white/10 cursor-not-allowed opacity-60'
+              : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'
+              }`}
+          >
+            {isFetching ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Loading...
+              </div>
+            ) : 'Load More'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

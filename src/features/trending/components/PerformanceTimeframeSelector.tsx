@@ -20,9 +20,9 @@ export default function PerformanceTimeframeSelector() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="period-selector-button bg-transparent border-none text-white/70 hover:text-white/90 transition-colors text-right font-normal text-sm opacity-70 tracking-tight cursor-pointer flex items-center gap-1"
+        className="px-2 py-2 h-10 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05] w-full sm:w-auto flex items-center justify-between gap-2"
       >
-        <span className="uppercase">{value}</span>
+        <span className="uppercase text-xs">{value}</span>
         <svg
           className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
@@ -42,7 +42,7 @@ export default function PerformanceTimeframeSelector() {
           />
 
           {/* Menu */}
-          <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-20 min-w-[80px]">
+          <div className="absolute right-0 sm:right-0 sm:left-0 top-full mt-1 bg-gray-900 border border-white/10 rounded-lg shadow-lg z-20 min-w-[140px] w-full sm:w-auto">
             <div className="py-1">
               {PRICE_MOVEMENT_TIMEFRAMES
                 .filter(timeframe => timeframe !== value)
@@ -50,29 +50,15 @@ export default function PerformanceTimeframeSelector() {
                   <button
                     key={timeframe}
                     onClick={() => handleUpdate(timeframe)}
-                    className="w-full px-3 py-2 text-left text-sm text-white hover:bg-gray-700 transition-colors"
+                    className="w-full px-2 py-1.5 text-left text-xs text-white hover:bg-white/10 transition-colors"
                   >
-                    {timeframe}
+                    {timeframe.toUpperCase()}
                   </button>
                 ))}
             </div>
           </div>
         </>
       )}
-
-      <style jsx>{`
-        .period-selector-button {
-          height: unset;
-          font-weight: 400;
-          font-size: 15px;
-          opacity: 0.7;
-          letter-spacing: -0.1px;
-        }
-
-        .period-selector-button:hover {
-          opacity: 1;
-        }
-      `}</style>
     </div>
   );
 }

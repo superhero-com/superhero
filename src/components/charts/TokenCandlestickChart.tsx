@@ -23,6 +23,7 @@ interface IInterval {
   value: number;
 }
 
+
 interface TokenCandlestickChartProps {
   token: TokenDto;
   height?: number;
@@ -384,7 +385,7 @@ export default function TokenCandlestickChart({
     if (data?.pages?.length) {
       updateSeriesData(data.pages);
     }
-  }, [data, updateSeriesData]);
+  }, [data]);
 
   return (
     <div

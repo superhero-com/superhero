@@ -9,9 +9,9 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [apiStatus, setApiStatus] = useState<{
     backend: 'online' | 'offline' | 'checking';
-    trendminer: 'online' | 'offline' | 'checking';
+    trending: 'online' | 'offline' | 'checking';
     dex: 'online' | 'offline' | 'checking';
-  }>({ backend: 'checking', trendminer: 'checking', dex: 'checking' });
+  }>({ backend: 'checking', trending: 'checking', dex: 'checking' });
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -29,9 +29,9 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
 
       try {
         await TrendminerApi.listTrendingTags({ limit: 1 });
-        setApiStatus((p) => ({ ...p, trendminer: 'online' }));
+        setApiStatus((p) => ({ ...p, trending: 'online' }));
       } catch {
-        setApiStatus((p) => ({ ...p, trendminer: 'offline' }));
+        setApiStatus((p) => ({ ...p, trending: 'offline' }));
       }
 
       try {
@@ -126,9 +126,9 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
               {`${statusEmoji(apiStatus.backend)} Backend`}
             </span>
             {
-              configs.features.trendminer && (
-                <span style={{ color: statusColor(apiStatus.trendminer) }}>
-                  {`${statusEmoji(apiStatus.trendminer)} Trendminer`}
+              configs.features.trending && (
+                <span style={{ color: statusColor(apiStatus.trending) }}>
+                  {`${statusEmoji(apiStatus.trending)} Trendminer`}
                 </span>
               )
             }

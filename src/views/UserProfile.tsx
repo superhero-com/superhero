@@ -16,7 +16,7 @@ import { PostApiResponse } from "../features/social/types";
 import "../features/social/views/FeedList.scss";
 import { useAccountBalances } from "../hooks/useAccountBalances";
 import { useChainName, useAddressByChainName } from "../hooks/useChainName";
-import TokenListTable from "../features/trendminer/components/TokenListTable";
+import TokenListTable from "../features/trending/components/TokenListTable";
 import AddressChip from "../components/AddressChip";
 import PriceDataFormatter from "../features/shared/components/PriceDataFormatter";
 import { formatLongDate } from "../utils/common";
@@ -303,7 +303,7 @@ export default function UserProfile({
                       `Token ${idx + 1}`;
                     const tokenHref =
                       token?.name || token?.address
-                        ? `/trendminer/tokens/${encodeURIComponent(
+                        ? `/trending/tokens/${encodeURIComponent(
                             token?.name || token?.address
                           )}`
                         : undefined;
@@ -501,7 +501,7 @@ export default function UserProfile({
                 token?.name || transaction?.token_name || "Token";
               const tokenHref =
                 token?.name || token?.address
-                  ? `/trendminer/tokens/${encodeURIComponent(
+                  ? `/trending/tokens/${encodeURIComponent(
                       token?.name || token?.address
                     )}`
                   : undefined;

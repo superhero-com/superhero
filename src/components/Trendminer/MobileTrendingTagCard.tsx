@@ -42,7 +42,7 @@ export default function MobileTrendingTagCard({
     if (onTokenize) {
       onTokenize();
     } else {
-      window.location.href = `/trendminer/create?new=${encodeURIComponent(tag)}`;
+      window.location.href = `/trending/create?new=${encodeURIComponent(tag)}`;
     }
   };
 
@@ -51,7 +51,7 @@ export default function MobileTrendingTagCard({
     if (onView) {
       onView();
     } else if (token) {
-      window.location.href = `/trendminer/tokens/${encodeURIComponent(token.name || token.address)}`;
+      window.location.href = `/trending/tokens/${encodeURIComponent(token.name || token.address)}`;
     }
   };
 

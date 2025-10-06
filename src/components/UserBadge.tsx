@@ -40,7 +40,7 @@ export default function UserBadge(
     return () => document.removeEventListener('click', handleDocClick);
   }, [visible]);
 
-  const hrefPath = linkTo === 'account' ? `/trendminer/accounts/${address}` : `/users/${address}`;
+  const hrefPath = linkTo === 'account' ? `/trending/accounts/${address}` : `/users/${address}`;
 
   return (
     <span className="relative inline-flex items-center">

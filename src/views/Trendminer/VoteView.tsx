@@ -9,9 +9,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import VotersTable from "@/features/dao/components/VotersTable";
 import { Decimal } from "@/libs/decimal";
-import TokenTradeCard from "@/features/trendminer/components/TokenTradeCard";
+import TokenTradeCard from "@/features/trending/components/TokenTradeCard";
 import TokenSummary from "@/features/bcl/components/TokenSummary";
-import TokenRanking from "@/features/trendminer/components/TokenRanking";
+import TokenRanking from "@/features/trending/components/TokenRanking";
 
 export default function VoteView() {
   const { saleAddress, voteAddress, voteId } = useParams<{
@@ -117,7 +117,7 @@ export default function VoteView() {
               {/* Back button */}
               <div className="mb-4 flex items-center gap-4">
                 <Link
-                  to={`/trendminer/dao/${saleAddress}`}
+                  to={`/trending/dao/${saleAddress}`}
                   className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
                 >
                   ← Back to Treasury
@@ -248,7 +248,7 @@ export default function VoteView() {
                         Get {token.symbol} tokens to vote on this proposal
                       </div>
                       <Link
-                        to={`/trendminer/tokens/${token.symbol}`}
+                        to={`/trending/tokens/${token.symbol}`}
                         className="inline-block"
                       >
                         Get {token.symbol} Tokens

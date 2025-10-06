@@ -109,7 +109,7 @@ export default function TokenMobileCard({
 
             {/* Link that covers whole card */}
             <a
-                href={`/trendminer/tokens/${encodeURIComponent(token.name || token.address)}`}
+                href={`/trending/tokens/${encodeURIComponent(token.name || token.address)}`}
                 className="absolute inset-0 z-10"
                 aria-label={`View details for ${token.name || token.symbol}`}
             />

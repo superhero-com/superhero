@@ -66,11 +66,11 @@ export default function RightRail({
   );
   const [apiStatus, setApiStatus] = useState<{
     backend: "online" | "offline" | "checking";
-    trendminer: "online" | "offline" | "checking";
+    trending: "online" | "offline" | "checking";
     dex: "online" | "offline" | "checking";
   }>({
     backend: "checking",
-    trendminer: "checking",
+    trending: "checking",
     dex: "checking",
   });
 
@@ -290,7 +290,7 @@ export default function RightRail({
             subtitle: `${token.symbol} • ${token.holders_count || 0} holders`,
             icon: "💎",
             relevance,
-            url: `/trendminer/tokens/${token.name || token.symbol}`,
+            url: `/trending/tokens/${token.name || token.symbol}`,
           });
         });
         resultIndex++;
@@ -339,7 +339,7 @@ export default function RightRail({
             subtitle: `DAO • ${dao.members_count || 0} members`,
             icon: "🏛️",
             relevance,
-            url: `/trendminer/dao/${dao.address}`,
+            url: `/trending/dao/${dao.address}`,
           });
         });
         resultIndex++;
@@ -454,9 +454,9 @@ export default function RightRail({
       // Check Trendminer API
       try {
         await TrendminerApi.listTrendingTags({ limit: 1 });
-        setApiStatus((prev) => ({ ...prev, trendminer: "online" }));
+        setApiStatus((prev) => ({ ...prev, trending: "online" }));
       } catch {
-        setApiStatus((prev) => ({ ...prev, trendminer: "offline" }));
+        setApiStatus((prev) => ({ ...prev, trending: "offline" }));
       }
 
       // Check DEX API (simulate)
@@ -586,7 +586,7 @@ export default function RightRail({
         navigate("/defi");
         break;
       case "nfts":
-        navigate("/trendminer");
+        navigate("/trending");
         break;
       case "trending":
         navigate("/trending");
@@ -603,7 +603,7 @@ export default function RightRail({
   };
 
   const handleTokenClick = (token: any) => {
-    if (token?.name) navigate(`/trendminer/tokens/${token.name}`);
+    if (token?.name) navigate(`/trending/tokens/${token.name}`);
   };
 
   // Simulate price alerts

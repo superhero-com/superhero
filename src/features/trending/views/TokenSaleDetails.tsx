@@ -26,7 +26,7 @@ import {
   TokenRanking,
   TokenSaleSidebarSkeleton,
   TokenTradeCard
-} from "../";
+} from "..";
 import { TokenSummary } from "../../bcl/components";
 import { useLiveTokenData } from "../hooks/useLiveTokenData";
 
@@ -144,14 +144,14 @@ export default function TokenSaleDetails() {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => navigate("/trendminer/tokens")}
+              onClick={() => navigate("/trending/tokens")}
               className="border-white/20 bg-white/5 text-white hover:bg-white/10"
             >
               ← Back to Token List
             </Button>
             <Button
               size="lg"
-              onClick={() => navigate(`/trendminer/create?name=${tokenName}`)}
+              onClick={() => navigate(`/trending/create?name=${tokenName}`)}
               className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] hover:shadow-lg"
             >
               Claim It
@@ -410,7 +410,7 @@ export default function TokenSaleDetails() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => navigate("/trendminer/tokens")}
+              onClick={() => navigate("/trending/tokens")}
               className="border-white/20 bg-white/5 text-white hover:bg-white/10"
             >
               ←

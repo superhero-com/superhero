@@ -132,7 +132,7 @@ export default function TokenListTableRow({
       {/* Link that covers whole row */}
       <td className="cell cell-link">
         <a
-          href={`/trendminer/tokens/${encodeURIComponent(token.name || token.address)}`}
+          href={`/trending/tokens/${encodeURIComponent(token.name || token.address)}`}
           className="link absolute inset-0 z-10"
           aria-label={`View details for ${token.name || token.symbol}`}
         />

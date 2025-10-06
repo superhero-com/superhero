@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect } from "react";
 import { useRoutes } from "react-router-dom";
 import GlobalNewAccountEducation from "./components/GlobalNewAccountEducation";
-import { CollectInvitationLinkCard } from "./features/trendminer/components/Invitation";
+import { CollectInvitationLinkCard } from "./features/trending/components/Invitation";
 import ModalProvider from "./components/ModalProvider";
 import { useAeSdk, useAccount, useWalletConnect } from "./hooks";
 import { routes } from "./routes";

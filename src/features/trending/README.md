@@ -1,11 +1,11 @@
 # Trendminer Feature
 
-This feature contains all trendminer (wordcraft) related logic and components that have been migrated from Vue/Vuetify to React/Tailwind CSS.
+This feature contains all trending (wordcraft) related logic and components that have been migrated from Vue/Vuetify to React/Tailwind CSS.
 
 ## Components
 
 ### TokenTradeCard
-- **Location**: `src/features/trendminer/components/TokenTradeCard.tsx`
+- **Location**: `src/features/trending/components/TokenTradeCard.tsx`
 - **Migrated from**: `external/wordcraft/src/components/Tokens/TokenTradeCard.vue`
 - **Description**: A trading interface for buying/selling tokens with bonding curve mechanics
 
@@ -19,7 +19,7 @@ This feature contains all trendminer (wordcraft) related logic and components th
 - Protocol DAO reward calculation
 
 ### TradeTokenInput
-- **Location**: `src/features/trendminer/components/TradeTokenInput.tsx`
+- **Location**: `src/features/trending/components/TradeTokenInput.tsx`
 - **Migrated from**: `external/wordcraft/src/components/Forms/TradeTokenInput.vue`
 - **Description**: Dual input component for token trading with swap functionality
 
@@ -31,7 +31,7 @@ This feature contains all trendminer (wordcraft) related logic and components th
 - Focus management for input fields
 
 ### AssetInput
-- **Location**: `src/features/trendminer/components/AssetInput.tsx`
+- **Location**: `src/features/trending/components/AssetInput.tsx`
 - **Migrated from**: `external/wordcraft/src/components/Forms/AssetInput.vue`
 - **Description**: Individual asset input field with balance and currency features
 
@@ -47,7 +47,7 @@ This feature contains all trendminer (wordcraft) related logic and components th
 ## Hooks
 
 ### useTokenTrade
-- **Location**: `src/features/trendminer/hooks/useTokenTrade.ts`
+- **Location**: `src/features/trending/hooks/useTokenTrade.ts`
 - **Migrated from**: `external/wordcraft/src/composables/useTokenTrade.ts` and `external/wordcraft/src/stores/tokenTradeStore.ts`
 - **Description**: Manages token trading state and business logic
 
@@ -61,7 +61,7 @@ This feature contains all trendminer (wordcraft) related logic and components th
 ## Types
 
 ### TokenDto, TokenTradeState, TradeCalculation
-- **Location**: `src/features/trendminer/types/index.ts`
+- **Location**: `src/features/trending/types/index.ts`
 - **Description**: TypeScript interfaces for token trading functionality
 
 ## Migration Notes
@@ -77,7 +77,7 @@ The migration from Vue to React involved:
 ## Usage
 
 ```tsx
-import { TokenTradeCard } from '../../features/trendminer';
+import { TokenTradeCard } from '../../features/trending';
 
 function MyComponent() {
   const token = {

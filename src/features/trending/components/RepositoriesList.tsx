@@ -85,9 +85,9 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
 
   const onCardAction = (repo: Repository) => {
     if (hasToken(repo)) {
-      navigate(`/trendminer/tokens/${repo.tag}`);
+      navigate(`/trending/tokens/${repo.tag}`);
     } else {
-      navigate(`/trendminer/create?platform=${repo.source}&repo=${repo.tag}`);
+      navigate(`/trending/create?platform=${repo.source}&repo=${repo.tag}`);
     }
   };
 
@@ -228,7 +228,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
                       className="px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] text-xs font-medium hover:bg-white/[0.08] hover:-translate-y-0.5 active:translate-y-0"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/trendminer/tokens/${repo.tag}`);
+                        navigate(`/trending/tokens/${repo.tag}`);
                       }}
                     >
                       View
@@ -238,7 +238,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
                       className="px-2.5 py-1.5 rounded-lg border-none text-white cursor-pointer text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-[#1161FE] shadow-[0_2px_8px_rgba(17,97,254,0.4)] hover:shadow-[0_4px_12px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/trendminer/create?platform=${repo.source}&repo=${repo.tag}`);
+                        navigate(`/trending/create?platform=${repo.source}&repo=${repo.tag}`);
                       }}
                     >
                       Tokenize

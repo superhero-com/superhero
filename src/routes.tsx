@@ -3,7 +3,7 @@ import { RouteObject, Navigate } from "react-router-dom";
 import SocialLayout from "./components/layout/SocialLayout";
 
 const FeedList = lazy(() => import("./features/social/views/FeedList"));
-const TokenList = lazy(() => import("./features/trendminer/views/TokenList"));
+const TokenList = lazy(() => import("./features/trending/views/TokenList"));
 const TrendCloud = lazy(() => import("./views/Trendminer/TrendCloud"));
 const TrendCloudVisx = lazy(() => import("./views/Trendminer/TrendCloudVisx"));
 const TrendInvite = lazy(() => import("./views/Trendminer/Invite"));
@@ -18,10 +18,10 @@ const TrendAccountDetails = lazy(
   () => import("./views/Trendminer/AccountDetails")
 );
 const TrendCreate = lazy(
-  () => import("./features/trendminer/views/CreateTokenView")
+  () => import("./features/trending/views/CreateTokenView")
 );
 const TokenSaleDetails = lazy(
-  () => import("./features/trendminer/views/TokenSaleDetails")
+  () => import("./features/trending/views/TokenSaleDetails")
 );
 const PostDetail = lazy(() => import("./features/social/views/PostDetail"));
 const UserProfile = lazy(() => import("./views/UserProfile"));
@@ -71,18 +71,18 @@ export const routes: RouteObject[] = [
       { path: "users/:address", element: <UserProfile standalone={false} /> },
     ],
   },
-  { path: "/trendminer/tokens", element: <TokenList /> },
-  { path: "/trendminer", element: <TrendCloud /> },
-  { path: "/trendminer/visx", element: <TrendCloudVisx /> },
-  { path: "/trendminer/tokens/:tokenName", element: <TokenSaleDetails /> },
+  { path: "/trending/tokens", element: <TokenList /> },
+  { path: "/trending", element: <TrendCloud /> },
+  { path: "/trending/visx", element: <TrendCloudVisx /> },
+  { path: "/trending/tokens/:tokenName", element: <TokenSaleDetails /> },
   { path: "/tx-queue/:id", element: <TxQueue /> },
-  { path: "/trendminer/invite", element: <TrendInvite /> },
-  { path: "/trendminer/daos", element: <TrendDaos /> },
-  { path: "/trendminer/dao/:saleAddress", element: <TrendDao /> },
-  { path: "/trendminer/dao/:saleAddress/vote/:voteId/:voteAddress", element: <VoteView /> },
-  { path: "/trendminer/accounts", element: <TrendAccounts /> },
-  { path: "/trendminer/accounts/:address", element: <TrendAccountDetails /> },
-  { path: "/trendminer/create", element: <TrendCreate /> },
+  { path: "/trending/invite", element: <TrendInvite /> },
+  { path: "/trending/daos", element: <TrendDaos /> },
+  { path: "/trending/dao/:saleAddress", element: <TrendDao /> },
+  { path: "/trending/dao/:saleAddress/vote/:voteId/:voteAddress", element: <VoteView /> },
+  { path: "/trending/accounts", element: <TrendAccounts /> },
+  { path: "/trending/accounts/:address", element: <TrendAccountDetails /> },
+  { path: "/trending/create", element: <TrendCreate /> },
   // Kept for backward compatibility; redirecting into SocialLayout version
   { path: "/users/:address", element: <UserProfile /> },
   { path: "/landing", element: <Landing /> },

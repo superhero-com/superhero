@@ -7,7 +7,7 @@ import { navigationItems } from './navigationItems';
 
 export default function WebAppHeader() {
   const { pathname } = useLocation();
-  const isDaoPath = pathname.startsWith('/trendminer/dao') || pathname.startsWith('/trendminer/daos');
+  const isDaoPath = pathname.startsWith('/trending/dao') || pathname.startsWith('/trending/daos');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const t = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
     return t;
@@ -29,7 +29,7 @@ export default function WebAppHeader() {
 
   const isActiveRoute = (path: string) => {
     if (path === '/') return pathname === '/';
-    if (path === '/trendminer/daos') return isDaoPath;
+    if (path === '/trending/daos') return isDaoPath;
     return pathname.startsWith(path);
   };
 

@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { Decimal } from '../../../libs/decimal';
 import {
+  calculateBuyPrice,
   calculateBuyPriceWithAffiliationFee,
   calculateSellReturn,
   calculateTokensFromAE,
@@ -44,7 +45,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     try {
       const price = Decimal.from(
         toAe(
-          calculateBuyPriceWithAffiliationFee(
+          calculateBuyPrice(
             new BigNumber(currentSupply.bigNumber),
             new BigNumber(1).multipliedBy(new BigNumber(10).pow(18)),
           ),
@@ -55,7 +56,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       console.error('Error calculating bonding curve price:', error);
       store.updateNextPrice(Decimal.ZERO);
     }
-  }, [store]);
+  }, []);
 
   // Calculate token cost based on bonding curve
   const calculateTokenCost = useCallback((amount?: number, _isBuying = false, _isUsingToken = false): number => {
@@ -64,7 +65,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     let currentSupply = Decimal.from(toAe(tokenSupply.toString()));
 
     if (!amount || amount <= 0) {
-      calculateNextPrice(currentSupply);
+      calculateNextPrice(currentSupply); //
       return amount || 0;
     }
 
@@ -153,41 +154,46 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     if (fetchedUserBalance !== undefined) {
       store.updateUserBalance(fetchedUserBalance);
     }
-  }, [fetchedUserBalance, store]);
+  }, [fetchedUserBalance]);
 
   // Watch tokenA changes and calculate tokenB automatically
   useEffect(() => {
     if (
-      store.tokenA === undefined ||
-      store.tokenA <= 0 ||
+      // store.tokenA === undefined ||
+      // store.tokenA <= 0 ||
       !store.tokenAFocused ||
       !tokenRef.current.sale_address ||
       !contractInstances?.tokenSaleInstance
     ) {
       return;
     }
-
+    if ( store.tokenA === undefined || store.tokenA <= 0) {
+      store.updateTokenB(undefined);
+      return;
+    }
     const calculatedTokenB = calculateTokenCost(
       store.tokenA,
       store.isBuying,
       !store.isBuying
     );
+    console.log('calculatedTokenB', calculatedTokenB);
 
     store.updateTokenB(calculatedTokenB);
-  }, [store.tokenA, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance, store]);
+  }, [store.tokenA, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
 
   // Watch tokenB changes and calculate tokenA automatically  
   useEffect(() => {
     if (
-      store.tokenB === undefined ||
-      store.tokenB <= 0 ||
       store.tokenAFocused ||
       !tokenRef.current.sale_address ||
       !contractInstances?.tokenSaleInstance
     ) {
       return;
     }
-
+    if (store.tokenB === undefined || store.tokenB <= 0) {
+      store.updateTokenA(undefined);
+      return;
+    }
     const calculatedTokenA = calculateTokenCost(
       store.tokenB,
       store.isBuying,
@@ -195,7 +201,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     );
 
     store.updateTokenA(calculatedTokenA);
-  }, [store.tokenB, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance, store]);
+  }, [store.tokenB, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
 
   const resetFormState = useCallback(() => {
     store.resetFormData(true);
@@ -366,6 +372,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       // Setup contract if needed
       if (contractInstances?.tokenSaleInstance?.address !== tokenToTrade.sale_address) {
         // Contract will be setup by the query hook
+        await setupContractInstance(sdk, tokenToTrade);
         return;
       }
 

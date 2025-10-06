@@ -39,7 +39,7 @@ export default function TokenList() {
   const { activeAccount } = useAccount();
 
   const [collection, setCollection] = useState<CollectionOption>('all');
-  const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore); // Default to trending score like Vue
+  const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.marketCap); // Default to trending score like Vue
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
   const [ownedOnly, setOwnedOnly] = useState(false);
   const [search, setSearch] = useState("");
@@ -57,12 +57,12 @@ export default function TokenList() {
 
   const orderByOptions: SelectOptions<OrderByOption> = [
     {
-      title: 'Trending Score',
-      value: SORT.trendingScore,
-    },
-    {
       title: 'Market Cap',
       value: SORT.marketCap,
+    },
+    {
+      title: 'Trending Score',
+      value: SORT.trendingScore,
     },
     {
       title: 'Price',

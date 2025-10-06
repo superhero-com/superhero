@@ -183,9 +183,8 @@ export default function UserProfile({
               <span className="text-lg font-bold text-white">{chainName}</span>
             )}
             <span
-              className={`${
-                chainName ? "text-sm font-normal" : "text-lg font-bold"
-              } font-mono bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent break-all`}
+              className={`${chainName ? "text-sm font-normal" : "text-lg font-bold"
+                } font-mono bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent break-all`}
             >
               {effectiveAddress}
             </span>
@@ -304,8 +303,8 @@ export default function UserProfile({
                     const tokenHref =
                       token?.name || token?.address
                         ? `/trending/tokens/${encodeURIComponent(
-                            token?.name || token?.address
-                          )}`
+                          token?.name || token?.address
+                        )}`
                         : undefined;
                     const balance =
                       item?.balance ?? item?.holder_balance ?? item?.amount;
@@ -502,14 +501,14 @@ export default function UserProfile({
               const tokenHref =
                 token?.name || token?.address
                   ? `/trending/tokens/${encodeURIComponent(
-                      token?.name || token?.address
-                    )}`
+                    token?.name || token?.address
+                  )}`
                   : undefined;
 
               return (
                 <div
                   key={transaction.id}
-                  className="grid grid-cols-1 md:grid-cols-7 gap-4 px-6 py-4 bg-white/[0.01]"
+                  className="grid grid-cols-1 md:grid-cols-7 gap-4 px-4 py-4 bg-white/[0.01]"
                 >
                   {/* Token */}
                   <div className="flex items-center">
@@ -591,7 +590,7 @@ export default function UserProfile({
                     </div>
                     <AddressChip
                       address={transaction?.tx_hash}
-                      linkToProfile={false}
+                      linkToExplorer
                     />
                   </div>
                 </div>

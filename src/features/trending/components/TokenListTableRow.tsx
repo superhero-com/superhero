@@ -58,89 +58,89 @@ export default function TokenListTableRow({
 
       {/* Desktop table row for larger screens */}
       <tr className="bctsl-token-list-table-row rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hidden md:table-row">
-      {/* Fake cell to match header structure */}
-      <td className="cell-fake"></td>
-      
-      {/* Rank */}
-      <td className="cell cell-rank pl-2 pl-md-4">
-        <div className="rank text-md font-bold bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-transparent opacity-50">
-          {collectionRank}
-        </div>
-      </td>
+        {/* Fake cell to match header structure */}
+        <td className="cell-fake"></td>
 
-      {/* Name */}
-      <td className="cell cell-name px-1 px-lg-3">
-        <div className="token-name text-md font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent transition-colors">
-          #{token.symbol || token.name}
-        </div>
-      </td>
-
-      {/* Collection Label*/}
-      {showCollectionColumn && (
-        <td className="cell cell-collection text-right px-1 px-md-3">
-          <TokenLabel>
-            {parseCollectionName(token.collection)}
-          </TokenLabel>
+        {/* Rank */}
+        <td className="cell cell-rank pl-2 pl-md-4">
+          <div className="rank text-md font-bold bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-transparent opacity-50">
+            {collectionRank}
+          </div>
         </td>
-      )}
 
-      {/* Price */}
-      <td className="cell cell-price px-1 px-lg-3 text-md-right">
-        <div className="flex align-center md:block">
-          <div className="mobile-label block md:hidden text-white/60 w-16">Price:</div>
-          <div className="bg-gradient-to-r  text-sm from-yellow-400 to-cyan-500 bg-clip-text text-transparent">
-            <PriceDataFormatter
-              hideFiatPrice
-              priceData={token.price_data}
-            />
+        {/* Name */}
+        <td className="cell cell-name px-1 px-lg-3">
+          <div className="token-name text-md font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent transition-colors">
+            #{token.symbol || token.name}
           </div>
-        </div>
-      </td>
+        </td>
 
-      {/* Market Cap */}
-      <td className="cell cell-market-cap px-1 px-lg-3 text-md-right">
-        <div className="flex align-center md:block justify-between">
-          <div className="mobile-label block md:hidden text-white/60 w-16">MC:</div>
-          <div className="bg-gradient-to-r text-sm  from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-            <PriceDataFormatter
-              bignumber
-              hideFiatPrice
-              priceData={token.market_cap_data}
-            />
-          </div>
-        </div>
-      </td>
-
-      {/* Holders */}
-      <td className="cell cell-holders text-left px-1 px-lg-3">
-        <div className="bg-gradient-to-r from-blue-400 to-green-500 bg-clip-text text-transparent font-medium">
-          {token.holders_count?.toLocaleString() || '0'}
-        </div>
-      </td>
-
-      {/* Chart */}
-      <td className="cell cell-chart text-right pr-md-4">
-        {tokenAddress && (
-            <div className="ml-auto chart max-w-[180px]">
-            <TokenLineChart
-              saleAddress={token.sale_address || tokenAddress}
-              height={60}
-              hideTimeframe={true}
-            />
-          </div>
+        {/* Collection Label*/}
+        {showCollectionColumn && (
+          <td className="cell cell-collection text-right px-1 px-md-3">
+            <TokenLabel>
+              {parseCollectionName(token.collection)}
+            </TokenLabel>
+          </td>
         )}
-      </td>
 
-      {/* Link that covers whole row */}
-      <td className="cell cell-link">
-        <a
-          href={`/trending/tokens/${encodeURIComponent(token.name || token.address)}`}
-          className="link absolute inset-0 z-10"
-          aria-label={`View details for ${token.name || token.symbol}`}
-        />
-      </td>
+        {/* Price */}
+        <td className="cell cell-price px-1 px-lg-3 text-md-right">
+          <div className="flex align-center md:block">
+            <div className="mobile-label block md:hidden text-white/60 w-16">Price:</div>
+            <div className="bg-gradient-to-r  text-sm from-yellow-400 to-cyan-500 bg-clip-text text-transparent">
+              <PriceDataFormatter
+                hideFiatPrice
+                priceData={token.price_data}
+              />
+            </div>
+          </div>
+        </td>
 
-      <style>{`
+        {/* Market Cap */}
+        <td className="cell cell-market-cap px-1 px-lg-3 text-md-right">
+          <div className="flex align-center md:block justify-between">
+            <div className="mobile-label block md:hidden text-white/60 w-16">MC:</div>
+            <div className="bg-gradient-to-r text-sm  from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+              <PriceDataFormatter
+                bignumber
+                hideFiatPrice
+                priceData={token.market_cap_data}
+              />
+            </div>
+          </div>
+        </td>
+
+        {/* Holders */}
+        <td className="cell cell-holders text-left px-1 px-lg-3">
+          <div className="bg-gradient-to-r from-blue-400 to-green-500 bg-clip-text text-transparent font-medium">
+            {token.holders_count?.toLocaleString() || '0'}
+          </div>
+        </td>
+
+        {/* Chart */}
+        <td className="cell cell-chart text-right pr-md-4">
+          {tokenAddress && (
+            <div className="ml-auto chart max-w-[180px] flex">
+              <TokenLineChart
+                saleAddress={token.sale_address || tokenAddress}
+                height={60}
+                hideTimeframe={true}
+              />
+            </div>
+          )}
+        </td>
+
+        {/* Link that covers whole row */}
+        <td className="cell cell-link">
+          <a
+            href={`/trending/tokens/${encodeURIComponent(token.name || token.address)}`}
+            className="link absolute inset-0 z-10"
+            aria-label={`View details for ${token.name || token.symbol}`}
+          />
+        </td>
+
+        <style>{`
         .bctsl-token-list-table-row {
           position: relative;
           z-index: 1;

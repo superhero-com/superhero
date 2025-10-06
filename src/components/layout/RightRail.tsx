@@ -720,7 +720,7 @@ export default function RightRail({
 
           <div className="flex justify-between items-center py-2 border-t border-white/5">
             <span className="text-[11px] text-[var(--light-font-color)] uppercase tracking-wide">
-              Status
+              Node Connection
             </span>
             <span
               className={`text-[12px] font-semibold ${

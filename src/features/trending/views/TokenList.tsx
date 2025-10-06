@@ -191,7 +191,7 @@ export default function TokenList() {
       <TrendingPillsCarousel />
 
       {/* Main content */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-4">
         {/* Left: Token List */}
         <div className="w-full">
           <div className="flex flex-col sm:flex-row items-center sm:justify-between mb-6 gap-4 w-full">

@@ -271,8 +271,6 @@ img, video { max-width: 100%; height: auto; display: block; }
 button { 
   cursor: pointer; 
   /* Touch-friendly minimum size */
-  min-height: 44px;
-  min-width: 44px;
   /* Better touch feedback */
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -323,8 +321,7 @@ textarea {
   outline: none;
   font-size: 16px;
   font-weight: 500;
-  /* Mobile optimization */
-  min-height: 56px;
+
   /* Gen Z shadow */
   box-shadow: var(--glass-shadow);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

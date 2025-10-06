@@ -121,10 +121,10 @@ export default function TokenListTableRow({
         {/* Chart */}
         <td className="cell cell-chart text-right pr-md-4">
           {tokenAddress && (
-            <div className="ml-auto chart max-w-[180px] flex">
+            <div className="ml-auto chart max-w-[180px]">
               <TokenLineChart
                 saleAddress={token.sale_address || tokenAddress}
-                height={60}
+                height={40}
                 hideTimeframe={true}
               />
             </div>

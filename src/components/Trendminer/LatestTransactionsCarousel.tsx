@@ -39,8 +39,6 @@ export default function LatestTransactionsCarousel() {
         const totalWidth = latestTransactions.length * cardWidth;
         const newPosition = prev + 1.5; // Adjust speed here (pixels per frame)
         
-        console.log('newPosition', newPosition);
-        console.log('totalWidth', totalWidth);
         const stopAt = totalWidth - (cardWidth * 7);
         // Stop scrolling when we reach the end
         if (newPosition >= stopAt) {

@@ -8,7 +8,7 @@ import { Decimal } from "@/libs/decimal";
 import { toAe } from "@/utils/bondingCurve";
 import { LivePriceFormatter } from "@/features/shared/components";
 import AddressChip from "@/components/AddressChip";
-import { TokenLineChart } from "@/features/trendminer/components/TokenLineChart";
+import { TokenLineChart } from "@/features/trending/components/TokenLineChart";
 
 type SelectOptions<T> = Array<{
   title: string;
@@ -188,7 +188,7 @@ export default function Daos() {
                 </div>
                 <a
                   className="px-4 py-2.5 rounded-xl text-white no-underline border-0 bg-gradient-to-r from-purple-600 to-purple-700 shadow-lg shadow-purple-600/35 transition-all duration-120 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-purple-600/45"
-                  href={`/trendminer/dao/${encodeURIComponent(
+                  href={`/trending/dao/${encodeURIComponent(
                     t.sale_address || ""
                   )}`}
                 >
@@ -279,7 +279,7 @@ export default function Daos() {
               <div className="flex justify-between items-center gap-2 mt-2">
                 <a
                   className="text-xs opacity-95 text-white no-underline px-3 py-2 rounded-xl border-0 bg-white/5 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all duration-150"
-                  href={`/trendminer/tokens/${encodeURIComponent(
+                  href={`/trending/tokens/${encodeURIComponent(
                     t.sale_address || t.address
                   )}`}
                 >

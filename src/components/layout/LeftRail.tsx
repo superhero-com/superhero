@@ -248,7 +248,7 @@ export default function LeftRail() {
         navigate("/dex");
         break;
       case "nfts":
-        navigate("/trendminer");
+        navigate("/trending");
         break;
       case "trending":
         navigate("/trending");
@@ -269,7 +269,7 @@ export default function LeftRail() {
   };
 
   const handleTokenClick = (token: TokenItem) => {
-    navigate(`/trendminer/tokens/${token.name}`);
+    navigate(`/trending/tokens/${token.name}`);
   };
 
   const formatMarketCap = (amount: number): string => {

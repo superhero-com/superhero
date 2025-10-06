@@ -208,8 +208,8 @@ export default function TrendingPillsCarousel() {
                 }}
                 onClick={() => {
                   const url = hasToken 
-                    ? `/trendminer/tokens/${encodeURIComponent(tag.tag)}` 
-                    : `/trendminer/create?new=${encodeURIComponent(tag.tag)}`;
+                    ? `/trending/tokens/${encodeURIComponent(tag.tag)}` 
+                    : `/trending/create?new=${encodeURIComponent(tag.tag)}`;
                   window.location.href = url;
                 }}
               >

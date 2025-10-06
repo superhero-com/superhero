@@ -52,17 +52,17 @@ export const navigationItems: NavigationItem[] = [
       },
     ],
   },
-  configs.features.trendminer && {
+  configs.features.trending && {
     id: "trending",
     label: "Trends",
-    path: "/trendminer/tokens",
+    path: "/trending/tokens",
     icon: "📈",
   },
 
-  configs.features.trendminer && {
+  configs.features.trending && {
     id: "invite",
     label: "Invite & Earn",
-    path: "/trendminer/invite",
+    path: "/trending/invite",
     icon: "🎁",
   },
   // {

@@ -18,8 +18,8 @@ import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarW
 import TokenSummary from "@/features/bcl/components/TokenSummary";
 import VoteSubject from "@/features/dao/components/VoteSubject";
 import VotersTable from "@/features/dao/components/VotersTable";
-import TokenRanking from "@/features/trendminer/components/TokenRanking";
-import TokenTradeCard from "@/features/trendminer/components/TokenTradeCard";
+import TokenRanking from "@/features/trending/components/TokenRanking";
+import TokenTradeCard from "@/features/trending/components/TokenTradeCard";
 
 export default function DaoVoteDetailsView() {
   const { saleAddress, voteAddress, voteId } = useParams<{
@@ -152,7 +152,7 @@ export default function DaoVoteDetailsView() {
               {/* Back button */}
               <div className="mb-4 flex items-center gap-4">
                 <Link
-                  to={`/trendminer/dao/${saleAddress}`}
+                  to={`/trending/dao/${saleAddress}`}
                   className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
                 >
                   ← Back to Treasury
@@ -282,7 +282,7 @@ export default function DaoVoteDetailsView() {
                             Get {token.symbol} tokens to vote on this proposal
                           </div>
                           <Link
-                            to={`/trendminer/tokens/${token.symbol}`}
+                            to={`/trending/tokens/${token.symbol}`}
                             className="inline-block"
                           >
                             <Button variant="outline" size="sm" className="border-yellow-500/30 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20">

@@ -1,33 +1,48 @@
-import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Identicon from './Identicon';
-import { Badge } from './ui/badge';
-import { AeCard, AeCardContent } from './ui/ae-card';
-import { cn } from '@/lib/utils';
-import { formatAddress } from '../utils/address';
-export default function UserBadge(
-  { address, showAvatar = true, linkTo = 'profile', shortAddress = false, chainName }: {
-    address: string;
-    showAvatar?: boolean;
-    linkTo?: 'profile' | 'account';
-    shortAddress?: boolean;
-    chainName?: string;
-  }
-) {
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Identicon from "./Identicon";
+import { Badge } from "./ui/badge";
+import { AeCard, AeCardContent } from "./ui/ae-card";
+import { cn } from "@/lib/utils";
+import { formatAddress } from "../utils/address";
+import { useProfile } from "@/hooks/useProfile";
+export default function UserBadge({
+  address,
+  showAvatar = true,
+  linkTo = "profile",
+  shortAddress = false,
+  chainName,
+}: {
+  address: string;
+  showAvatar?: boolean;
+  linkTo?: "profile" | "account";
+  shortAddress?: boolean;
+  chainName?: string;
+}) {
   const navigate = useNavigate();
-  const name = chainName || 'Fellow superhero';
+  const name = chainName || "Fellow superhero";
   const [profile, setProfile] = useState<any>(null);
+  const { getProfile } = useProfile(address);
+
+  useEffect(() => {
+    (async () => {
+      const p = await getProfile();
+      setProfile(p);
+    })();
+  }, [address, getProfile]);
   const [hover, setHover] = useState(false);
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLAnchorElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!hover) { setVisible(false); return; }
+    if (!hover) {
+      setVisible(false);
+      return;
+    }
     const id = window.setTimeout(() => setVisible(true), 300);
     return () => window.clearTimeout(id);
   }, [hover]);
-
 
   useEffect(() => {
     function handleDocClick(e: MouseEvent) {
@@ -36,11 +51,14 @@ export default function UserBadge(
       if (ref.current && ref.current.contains(e.target as Node)) return;
       setVisible(false);
     }
-    if (visible) document.addEventListener('click', handleDocClick);
-    return () => document.removeEventListener('click', handleDocClick);
+    if (visible) document.addEventListener("click", handleDocClick);
+    return () => document.removeEventListener("click", handleDocClick);
   }, [visible]);
 
-  const hrefPath = linkTo === 'account' ? `/trending/accounts/${address}` : `/users/${address}`;
+  const hrefPath =
+    linkTo === "account"
+      ? `/trending/accounts/${address}`
+      : `/users/${address}`;
 
   return (
     <span className="relative inline-flex items-center">
@@ -50,7 +68,11 @@ export default function UserBadge(
         className="author inline-flex items-center gap-2 text-inherit no-underline min-w-0 hover:text-foreground transition-colors"
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(hrefPath); }}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          navigate(hrefPath);
+        }}
       >
         {showAvatar && (
           <div className="flex-shrink-0">
@@ -65,7 +87,9 @@ export default function UserBadge(
             className={cn(
               "address text-muted-foreground/40 font-mono tracking-wide underline decoration-muted-foreground/20 decoration-1 underline-offset-2 whitespace-nowrap min-w-0 flex-shrink",
               // Smaller + lighter font for full ak_ addresses; prevent ellipsis for them
-              address.startsWith('ak_') ? "text-[11px] font-light max-w-none overflow-visible" : "text-xs font-semibold overflow-hidden text-ellipsis max-w-[200px]"
+              address.startsWith("ak_")
+                ? "text-[11px] font-light max-w-none overflow-visible"
+                : "text-xs font-semibold overflow-hidden text-ellipsis max-w-[200px]"
             )}
             title={address}
           >
@@ -73,7 +97,7 @@ export default function UserBadge(
           </span>
         </div>
       </a>
-      
+
       {visible && (
         <AeCard
           ref={cardRef}
@@ -112,5 +136,3 @@ export default function UserBadge(
     </span>
   );
 }
-
-

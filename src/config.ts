@@ -14,6 +14,7 @@ export type AppConfig = {
   CONTRACT_V2_ADDRESS: string;
   CONTRACT_V3_ADDRESS: string;
   WORD_REGISTRY_ADDRESS: string;
+  PROFILE_REGISTRY_ADDRESS?: Encoded.ContractAddress;
   LANDING_ENABLED: boolean;
   WORDBAZAAR_ENABLED: boolean;
   JITSI_DOMAIN: string;
@@ -28,38 +29,38 @@ export type AppConfig = {
 };
 
 const defaultConfig: AppConfig = {
-  "BACKEND_URL": "https://raendom-backend.z52da5wt.xyz",
-  "SUPERHERO_API_URL": "https://api.superhero.com",
-  "SUPERHERO_WS_URL": "https://api.superhero.com",
-  "NODE_URL": "https://mdw.wordcraft.fun",
-  "WALLET_URL": "https://wallet.superhero.com",
-  "MIDDLEWARE_URL": "https://mdw.wordcraft.fun/mdw",
-  "JITSI_DOMAIN": "meet.jit.si",
-  "EXPLORER_URL": "https://aescan.io",
-  "IMGUR_API_CLIENT_ID": "",
-  "GIPHY_API_KEY": "",
-  "COMMIT_HASH": "",
-  "DEX_BACKEND_URL": "https://dex-backend-mainnet.prd.service.aepps.com",
-  "MAINNET_DEX_BACKEND_URL": "https://dex-backend-mainnet.prd.service.aepps.com",
-  "TESTNET_DEX_BACKEND_URL": "https://dex-backend-testnet.prd.service.aepps.com",
-  "CONTRACT_V3_ADDRESS": "ct_2Hyt9ZxzXra5NAzhePkRsDPDWppoatVD7CtHnUoHVbuehwR8Nb",
-  "CONTRACT_V33333_ADDRESS": "ct_WscpdLQf6ZZxoVqrsEwUwmuAEdzEkJii5W5TzG84rVgHeK6BW",
- 
-  CONTRACT_V1_ADDRESS: '',
-  CONTRACT_V2_ADDRESS: '',
-  WORD_REGISTRY_ADDRESS: '',
+  BACKEND_URL: "https://raendom-backend.z52da5wt.xyz",
+  SUPERHERO_API_URL: "https://api.superhero.com",
+  SUPERHERO_WS_URL: "https://api.superhero.com",
+  NODE_URL: "https://mdw.wordcraft.fun",
+  WALLET_URL: "https://wallet.superhero.com",
+  MIDDLEWARE_URL: "https://mdw.wordcraft.fun/mdw",
+  JITSI_DOMAIN: "meet.jit.si",
+  EXPLORER_URL: "https://aescan.io",
+  IMGUR_API_CLIENT_ID: "",
+  GIPHY_API_KEY: "",
+  COMMIT_HASH: "",
+  DEX_BACKEND_URL: "https://dex-backend-mainnet.prd.service.aepps.com",
+  MAINNET_DEX_BACKEND_URL: "https://dex-backend-mainnet.prd.service.aepps.com",
+  TESTNET_DEX_BACKEND_URL: "https://dex-backend-testnet.prd.service.aepps.com",
+  CONTRACT_V3_ADDRESS: "ct_2Hyt9ZxzXra5NAzhePkRsDPDWppoatVD7CtHnUoHVbuehwR8Nb",
+  CONTRACT_V33333_ADDRESS:
+    "ct_WscpdLQf6ZZxoVqrsEwUwmuAEdzEkJii5W5TzG84rVgHeK6BW",
+
+  CONTRACT_V1_ADDRESS: "",
+  CONTRACT_V2_ADDRESS: "",
+  WORD_REGISTRY_ADDRESS: "",
+  PROFILE_REGISTRY_ADDRESS: "",
   LANDING_ENABLED: false,
   WORDBAZAAR_ENABLED: false,
-  GOVERNANCE_API_URL: 'https://governance-server-mainnet.prd.service.aepps.com/',
-  GOVERNANCE_CONTRACT_ADDRESS: 'ct_ouZib4wT9cNwgRA1pxgA63XEUd8eQRrG8PcePDEYogBc1VYTq',
- 
- 
- 
-  
-  
-  UNFINISHED_FEATURES: '',
-  
-  BONDING_CURVE_18_DECIMALS_ADDRESS: '',
+  GOVERNANCE_API_URL:
+    "https://governance-server-mainnet.prd.service.aepps.com/",
+  GOVERNANCE_CONTRACT_ADDRESS:
+    "ct_ouZib4wT9cNwgRA1pxgA63XEUd8eQRrG8PcePDEYogBc1VYTq",
+
+  UNFINISHED_FEATURES: "",
+
+  BONDING_CURVE_18_DECIMALS_ADDRESS: "",
 };
 
 // Allow local development overrides via Vite env vars set at build time
@@ -74,8 +75,8 @@ export const CONFIG: AppConfig = {
 };
 
 function toBool(v: any): boolean {
-  if (typeof v === 'boolean') return v;
-  if (typeof v === 'number') return v !== 0;
-  if (typeof v === 'string') return v.toLowerCase() === 'true' || v === '1';
+  if (typeof v === "boolean") return v;
+  if (typeof v === "number") return v !== 0;
+  if (typeof v === "string") return v.toLowerCase() === "true" || v === "1";
   return false;
 }

@@ -26,7 +26,7 @@ export default function UserBadge({
 
   useEffect(() => {
     (async () => {
-      const p = await getProfile(address);
+      const p = await getProfile();
       setProfile(p);
     })();
   }, [address, getProfile]);

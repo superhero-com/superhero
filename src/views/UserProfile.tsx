@@ -200,7 +200,7 @@ export default function UserProfile({
     window.scrollTo(0, 0);
     loadAccountData();
     (async () => {
-      const p = await getProfile(effectiveAddress);
+      const p = await getProfile();
       setProfile(p);
     })();
   }, [effectiveAddress]);
@@ -875,7 +875,7 @@ export default function UserProfile({
           setEditOpen(false);
           refetchPosts();
           (async () => {
-            const p = await getProfile(effectiveAddress);
+            const p = await getProfile();
             setProfile(p);
           })();
         }}
@@ -892,7 +892,7 @@ export default function UserProfile({
           setEditOpen(false);
           refetchPosts();
           (async () => {
-            const p = await getProfile(effectiveAddress);
+            const p = await getProfile();
             setProfile(p);
           })();
         }}

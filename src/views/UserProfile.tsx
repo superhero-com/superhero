@@ -152,6 +152,19 @@ export default function UserProfile({
   // Get posts from the query data
   const posts = data?.items || [];
 
+  // Latest bio from tipping v3 posts tagged with "bio-update"
+  const latestBioPost = useMemo(() => {
+    for (const p of posts) {
+      const topics = Array.isArray((p as any).topics) ? (p as any).topics : [];
+      const media = Array.isArray((p as any).media) ? (p as any).media : [];
+      if (topics.includes("bio-update") || media.includes("bio-update")) {
+        return p;
+      }
+    }
+    return undefined;
+  }, [posts]);
+  const bioText = latestBioPost?.content?.trim() || profile?.biography;
+
   useEffect(() => {
     if (!effectiveAddress) return;
     // Scroll to top whenever navigating to a user profile
@@ -197,11 +210,11 @@ export default function UserProfile({
               >
                 {effectiveAddress}
               </span>
-              {profile?.biography && (
-                <span className="text-xs text-white/70 mt-1 whitespace-pre-wrap">
-                  {profile.biography}
-                </span>
-              )}
+            {bioText && (
+              <span className="text-xs text-white/70 mt-1 whitespace-pre-wrap">
+                {bioText}
+              </span>
+            )}
               {profile?.avatar_url && (
                 <span className="text-xs text-white/40">Avatar: {profile.avatar_url}</span>
               )}

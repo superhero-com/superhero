@@ -114,6 +114,7 @@ export default function TokenChat({ token }: Props) {
   });
 
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const fromRef = useRef<string | undefined>(undefined);
   const maxRetries = 3;
 
   const resetChat = useCallback(() => {
@@ -123,6 +124,7 @@ export default function TokenChat({ token }: Props) {
       retryTimeoutRef.current = null;
     }
 
+    fromRef.current = undefined;
     setState({
       messages: [],
       from: undefined,
@@ -161,67 +163,64 @@ export default function TokenChat({ token }: Props) {
   }, [maxRetries]);
 
   const loadMessages = useCallback(async (isInitial = false) => {
+    // Check if we should proceed with loading
     setState(prevState => {
       if (prevState.loading || prevState.endReached) return prevState;
+      return { ...prevState, loading: true, error: null };
+    });
 
-      // Start loading
-      const newState = { ...prevState, loading: true, error: null };
+    try {
+      const response = await QualiChatService.getTokenMessages(
+        token.name,
+        token.address,
+        { from: fromRef.current, limit: 20 }
+      );
 
-      // Load messages asynchronously
-      (async () => {
-        try {
-          const response = await QualiChatService.getTokenMessages(
-            token.name,
-            token.address,
-            { from: prevState.from, limit: 20 }
-          );
+      const textMessages = (response?.data || [])
+        .filter((m) => m?.content?.msgtype === 'm.text');
 
-          const textMessages = (response?.data || [])
-            .filter((m) => m?.content?.msgtype === 'm.text');
+      setState(currentState => ({
+        ...currentState,
+        messages: isInitial ? textMessages : [...currentState.messages, ...textMessages],
+        from: response?.end || undefined,
+        endReached: !response?.data?.length || !response?.end,
+        loading: false,
+        retryCount: 0, // Reset retry count on success
+      }));
 
-          setState(currentState => ({
-            ...currentState,
-            messages: isInitial ? textMessages : [...currentState.messages, ...textMessages],
-            from: response?.end || undefined,
-            endReached: !response?.data?.length || !response?.end,
-            loading: false,
-            retryCount: 0, // Reset retry count on success
-          }));
-        } catch (error: any) {
-          if (error?.status === 404) {
-            setState(currentState => ({
+      // Update the ref with the new from value
+      fromRef.current = response?.end || undefined;
+    } catch (error: any) {
+      if (error?.status === 404) {
+        setState(currentState => ({
+          ...currentState,
+          loading: false,
+          endReached: true,
+          retryCount: 0,
+        }));
+      } else {
+        setState(currentState => {
+          const shouldRetry = currentState.retryCount < maxRetries;
+
+          if (shouldRetry) {
+            // Schedule retry
+            scheduleRetry(isInitial);
+            return {
               ...currentState,
               loading: false,
-              endReached: true,
-              retryCount: 0,
-            }));
+              error: `Failed to load comments. Retrying in 5 seconds... (${currentState.retryCount + 1}/${maxRetries})`,
+            };
           } else {
-            setState(currentState => {
-              const shouldRetry = currentState.retryCount < maxRetries;
-
-              if (shouldRetry) {
-                // Schedule retry
-                scheduleRetry(isInitial);
-                return {
-                  ...currentState,
-                  loading: false,
-                  error: `Failed to load comments. Retrying in 5 seconds... (${currentState.retryCount + 1}/${maxRetries})`,
-                };
-              } else {
-                // Max retries reached
-                return {
-                  ...currentState,
-                  loading: false,
-                  error: 'Unable to load comments after multiple attempts. Please try again later.',
-                };
-              }
-            });
+            // Max retries reached
+            return {
+              ...currentState,
+              loading: false,
+              error: 'Unable to load comments after multiple attempts. Please try again later.',
+            };
           }
-        }
-      })();
-
-      return newState;
-    });
+        });
+      }
+    }
   }, [token.name, token.address, maxRetries, scheduleRetry]);
 
   const handleRetry = useCallback(() => {
@@ -263,7 +262,7 @@ export default function TokenChat({ token }: Props) {
         <div className="grid gap-2">
           {state.messages.map((message, index) => (
             <MessageItem
-              key={message.event_id || `message-${index}`}
+              key={`${message.sender}-${message.timestamp}-${index}`}
               message={message}
               index={index}
             />

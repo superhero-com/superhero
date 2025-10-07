@@ -50,7 +50,7 @@ export default function UserProfile({
   const { getProfile, canEdit } = useProfile(effectiveAddress);
   const { openModal } = useModal();
 
-  const { data } = useQuery({
+  const { data, refetch: refetchPosts } = useQuery({
     queryKey: ["PostsService.listAll", address],
     queryFn: () =>
       PostsService.listAll({
@@ -155,8 +155,8 @@ export default function UserProfile({
   // Latest bio from tipping v3 posts tagged with "bio-update"
   const latestBioPost = useMemo(() => {
     for (const p of posts) {
-      const topics = Array.isArray((p as any).topics) ? (p as any).topics : [];
-      const media = Array.isArray((p as any).media) ? (p as any).media : [];
+      const topics = (Array.isArray((p as any).topics) ? (p as any).topics : []).map((t: string) => String(t).toLowerCase());
+      const media = (Array.isArray((p as any).media) ? (p as any).media : []).map((m: string) => String(m).toLowerCase());
       if (topics.includes("bio-update") || media.includes("bio-update")) {
         return p;
       }
@@ -752,6 +752,7 @@ export default function UserProfile({
         open={editOpen}
         onClose={() => {
           setEditOpen(false);
+          refetchPosts();
           (async () => {
             const p = await getProfile(effectiveAddress);
             setProfile(p);
@@ -767,6 +768,7 @@ export default function UserProfile({
         open={editOpen}
         onClose={() => {
           setEditOpen(false);
+          refetchPosts();
           (async () => {
             const p = await getProfile(effectiveAddress);
             setProfile(p);

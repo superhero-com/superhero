@@ -29,6 +29,9 @@ const TransactionConfirmModal = React.lazy(
 const ConnectWalletModal = React.lazy(
   () => import("./components/modals/ConnectWalletModal")
 );
+const TipModal = React.lazy(
+  () => import("./components/modals/TipModal")
+);
 
 export default function App() {
   useSuperheroChainNames();
@@ -74,6 +77,7 @@ export default function App() {
             alert: AlertModal,
             "transaction-confirm": TransactionConfirmModal,
             "connect-wallet": ConnectWalletModal,
+            "tip": TipModal,
           }}
         />
       </Suspense>

@@ -26,6 +26,8 @@ import { fromAettos } from "../libs/dex";
 
 import AddressAvatar from "../components/AddressAvatar";
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
+import { IconDiamond } from "../icons";
+import { useModal } from "../hooks";
 
 type TabType = "feed" | "owned" | "created" | "transactions";
 
@@ -44,6 +46,7 @@ export default function UserProfile({
   const { decimalBalance, loadAccountData } =
     useAccountBalances(effectiveAddress);
   const { chainName } = useChainName(effectiveAddress);
+  const { openModal } = useModal();
 
   const { data } = useQuery({
     queryKey: ["PostsService.listAll", address],
@@ -171,7 +174,8 @@ export default function UserProfile({
       </div>
       {/* Compact Profile header */}
       <div className="bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-5 mb-4 relative overflow-hidden transition-all duration-300 hover:border-white/20 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 md:p-4 md:mb-3 md:rounded-xl">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 justify-between">
+          <div className="flex items-center gap-4">
           <AddressAvatarWithChainName
             address={effectiveAddress}
             size={56}
@@ -189,6 +193,19 @@ export default function UserProfile({
               {effectiveAddress}
             </span>
           </div>
+          </div>
+
+          {/* Tip button */}
+          <AeButton
+            onClick={() => openModal({ name: "tip", props: { toAddress: effectiveAddress } })}
+            variant="ghost"
+            size="sm"
+            className="!border !border-solid !border-white/15 hover:!border-white/35 inline-flex items-center gap-2"
+            title="Send a tip"
+          >
+            <IconDiamond className="w-4 h-4 text-[#1161FE]" />
+            Tip
+          </AeButton>
         </div>
       </div>
 

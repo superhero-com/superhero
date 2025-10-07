@@ -71,7 +71,8 @@ export default function TokenListTableRow({
         {/* Name */}
         <td className="cell cell-name px-1 px-lg-3">
           <div className="token-name text-md font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent transition-colors">
-            #{token.symbol || token.name}
+            <span className="text-white/60 text-[.85em] mr-0.5 align-baseline">#</span>
+            <span>{token.symbol || token.name}</span>
           </div>
         </td>
 

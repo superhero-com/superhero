@@ -62,7 +62,16 @@ const defaultConfig: AppConfig = {
   BONDING_CURVE_18_DECIMALS_ADDRESS: '',
 };
 
-export const CONFIG: AppConfig = { ...defaultConfig };
+// Allow local development overrides via Vite env vars set at build time
+// e.g. VITE_SUPERHERO_API_URL, VITE_SUPERHERO_WS_URL
+const envApiUrl = (import.meta as any)?.env?.VITE_SUPERHERO_API_URL as string | undefined;
+const envWsUrl = (import.meta as any)?.env?.VITE_SUPERHERO_WS_URL as string | undefined;
+
+export const CONFIG: AppConfig = {
+  ...defaultConfig,
+  ...(envApiUrl ? { SUPERHERO_API_URL: envApiUrl } : {}),
+  ...(envWsUrl ? { SUPERHERO_WS_URL: envWsUrl } : {}),
+};
 
 function toBool(v: any): boolean {
   if (typeof v === 'boolean') return v;

@@ -44,7 +44,7 @@ export default function UserProfile({
   );
   const effectiveAddress =
     isChainName && resolvedAddress ? resolvedAddress : (address as string);
-  const { decimalBalance, loadAccountData } =
+  const { decimalBalance, aex9Balances, loadAccountData } =
     useAccountBalances(effectiveAddress);
   const { chainName } = useChainName(effectiveAddress);
   const { getProfile, canEdit } = useProfile(effectiveAddress);
@@ -227,6 +227,45 @@ export default function UserProfile({
               {profile?.avatar_url && (
                 <span className="text-xs text-white/40">Avatar: {profile.avatar_url}</span>
               )}
+
+            {/* Account summary: AE balance + top token holdings (same as hover card) */}
+            <div className="mt-2 space-y-1">
+              <div className="text-xs text-white/80">
+                <span className="font-semibold">AE Balance: </span>
+                <span className="font-mono">{decimalBalance ? `${decimalBalance.prettify()} AE` : "Loading..."}</span>
+              </div>
+              {Array.isArray(aex9Balances) && aex9Balances.length > 0 && (
+                <div className="text-xs text-white/80">
+                  <div className="font-semibold mb-0.5">Tokens Holdings:</div>
+                  {aex9Balances
+                    .sort((a: any, b: any) => {
+                      const balanceA = a.amount && a.decimals
+                        ? Decimal.from(a.amount).div(10 ** a.decimals)
+                        : Decimal.from(0);
+                      const balanceB = b.amount && b.decimals
+                        ? Decimal.from(b.amount).div(10 ** b.decimals)
+                        : Decimal.from(0);
+                      return balanceB.gt(balanceA) ? 1 : balanceB.lt(balanceA) ? -1 : 0;
+                    })
+                    .slice(0, 3)
+                    .map((token: any, index: number) => {
+                      const balance = Decimal.from(token.amount).div(10 ** token.decimals).prettify();
+                      const name = token.symbol || token.token_symbol || token.token_name || "Unknown";
+                      return (
+                        <div key={token.contract_id || index} className="flex justify-between items-center py-0.5">
+                          <span className="font-medium max-w-[180px] overflow-hidden text-ellipsis">{name}</span>
+                          <span className="font-mono text-xs">{balance}</span>
+                        </div>
+                      );
+                    })}
+                  {aex9Balances.length > 3 && (
+                    <div className="text-xs text-white/60 mt-0.5">
+                      + {aex9Balances.length - 3} more...
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             </div>
           </div>
 

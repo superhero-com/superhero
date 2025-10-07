@@ -30,6 +30,7 @@ import ProfileEditModal from "../components/modals/ProfileEditModal";
 import { useProfile } from "../hooks/useProfile";
 import { IconDiamond } from "../icons";
 import { useModal } from "../hooks";
+import { CONFIG } from "../config";
 
 type TabType = "feed" | "owned" | "created" | "transactions";
 export default function UserProfile({
@@ -232,7 +233,7 @@ export default function UserProfile({
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex flex-col items-end gap-2 md:gap-2">
               {canEdit ? (
                 <AeButton
                   size="sm"
@@ -255,6 +256,21 @@ export default function UserProfile({
                   Tip
                 </AeButton>
               ) : null}
+
+              {/* Explorer link */}
+              <AeButton
+                variant="ghost"
+                size="xs"
+                className="!border !border-solid !border-white/15 hover:!border-white/35"
+                onClick={() => {
+                  const base = (CONFIG.EXPLORER_URL || "https://aescan.io").replace(/\/$/, "");
+                  const url = `${base}/accounts/${effectiveAddress}`;
+                  window.open(url, "_blank", "noopener,noreferrer");
+                }}
+                title="Open on æScan"
+              >
+                View on æScan
+              </AeButton>
             </div>
           </div>
 

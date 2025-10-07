@@ -111,6 +111,10 @@ export const AddressAvatarWithChainName = memo(({
                 </div>
             </div>
 
+            {(() => {
+                const shouldShowText = showPrimaryOnly || showAddressAndChainName || showBalance || !!secondary;
+                if (!shouldShowText) return null;
+                return (
             <div className={cn("flex flex-col items-start min-w-0 px-[12px] pb-[20px]", contentClassName)}>
                 {showPrimaryOnly ? (
                     (() => {
@@ -157,6 +161,8 @@ export const AddressAvatarWithChainName = memo(({
                 </div>
                 {secondary}
             </div>
+                );
+            })()}
         </>
     )
 

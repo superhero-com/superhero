@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import Identicon from '../Identicon';
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import Identicon from "../Identicon";
 
 interface UserPopupProps {
   address: string;
@@ -11,14 +11,21 @@ interface UserPopupProps {
 
 export default function UserPopup({ address, open, onClose }: UserPopupProps) {
   const [profile, setProfile] = useState<any>(null);
-  
+  const { getProfile } = useProfile(address);
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      setProfile(await getProfile(address));
+    })();
+  }, [open, address, getProfile]);
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-md mx-auto bg-[var(--secondary-color)] border-white/20">
         <DialogHeader>
           <DialogTitle className="text-white">User Profile</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div className="flex gap-3">
             <Avatar className="h-14 w-14">
@@ -27,14 +34,12 @@ export default function UserPopup({ address, open, onClose }: UserPopupProps) {
                 <Identicon address={address} size={56} />
               </AvatarFallback>
             </Avatar>
-            
+
             <div className="min-w-0 flex-1">
               <div className="text-sm font-bold text-white">
-                {profile?.preferredChainName || 'Legend'}
+                {profile?.preferredChainName || "Legend"}
               </div>
-              <div className="text-xs text-gray-300 break-all">
-                {address}
-              </div>
+              <div className="text-xs text-gray-300 break-all">{address}</div>
               {profile?.location && (
                 <div className="text-xs text-gray-300 mt-1">
                   {profile.location}
@@ -42,7 +47,7 @@ export default function UserPopup({ address, open, onClose }: UserPopupProps) {
               )}
             </div>
           </div>
-          
+
           {profile?.biography && (
             <div className="text-xs text-gray-300 whitespace-pre-wrap bg-white/5 rounded-lg p-3">
               {profile.biography}
@@ -53,5 +58,3 @@ export default function UserPopup({ address, open, onClose }: UserPopupProps) {
     </Dialog>
   );
 }
-
-

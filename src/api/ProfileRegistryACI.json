@@ -1,0 +1,48 @@
+{
+  "contract": {
+    "kind": "contract_main",
+    "name": "ProfileRegistry",
+    "payable": false,
+    "typedefs": [
+      {
+        "name": "Profile",
+        "typedef": {
+          "record": [
+            { "name": "biography", "type": "string" },
+            { "name": "avatar_url", "type": "string" }
+          ]
+        }
+      }
+    ],
+    "state": {
+      "record": [{ "name": "profiles", "type": "map(address, Profile)" }]
+    },
+    "functions": [
+      {
+        "name": "init",
+        "arguments": [],
+        "returns": "ProfileRegistry.state",
+        "payable": false,
+        "stateful": false
+      },
+      {
+        "name": "get_profile",
+        "arguments": [{ "name": "account", "type": "address" }],
+        "returns": { "option": ["Profile"] },
+        "payable": false,
+        "stateful": false
+      },
+      {
+        "name": "set_profile",
+        "arguments": [
+          { "name": "biography", "type": "string" },
+          { "name": "avatar_url", "type": "string" }
+        ],
+        "returns": { "tuple": [] },
+        "payable": false,
+        "stateful": true
+      }
+    ]
+  }
+}
+

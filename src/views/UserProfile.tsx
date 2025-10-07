@@ -250,17 +250,18 @@ export default function UserProfile({
         </AeButton>
       </div>
       {/* Profile header (banner + avatar + stats) */}
-      <div className="mb-5 md:mb-6 rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl relative">
-        {/* Banner */}
-        <div className="h-16 md:h-28 w-full bg-[radial-gradient(100%_60%_at_0%_0%,rgba(17,97,254,0.35),transparent_60%),radial-gradient(100%_60%_at_100%_0%,rgba(78,205,196,0.35),transparent_60%)]" />
+      <div className="mb-5 md:mb-6 rounded-2xl overflow-visible md:overflow-hidden relative md:border md:border-white/10 md:bg-gradient-to-b md:from-white/10 md:to-white/5 md:backdrop-blur-xl">
+        {/* Banner (desktop only) */}
+        <div className="hidden md:block h-28 w-full bg-[radial-gradient(100%_60%_at_0%_0%,rgba(17,97,254,0.35),transparent_60%),radial-gradient(100%_60%_at_100%_0%,rgba(78,205,196,0.35),transparent_60%)]" />
 
         {/* Avatar and main info */}
-        <div className="px-4 md:px-6 pb-4 md:pb-6 -mt-10 md:-mt-12 relative z-10">
+        <div className="px-0 md:px-6 pb-0 md:pb-6 mt-0 md:-mt-12 relative z-10">
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-start md:gap-4">
-            <div className="flex flex-col gap-3 min-w-0 md:flex-row md:items-start md:gap-4 md:flex-1">
-              <div className="shrink-0 self-start">
-                {/* Smaller avatar on mobile */}
-                <div className="md:hidden">
+            <div className="flex flex-col gap-2 min-w-0 md:flex-1">
+              {/* Row 1: avatar + identity */}
+              <div className="flex items-center gap-3 md:gap-4">
+                {/* Avatar */}
+                <div className="md:hidden shrink-0">
                   <AddressAvatarWithChainName
                     address={effectiveAddress}
                     size={64}
@@ -269,7 +270,7 @@ export default function UserProfile({
                     isHoverEnabled={true}
                   />
                 </div>
-                <div className="hidden md:block">
+                <div className="hidden md:block shrink-0">
                   <AddressAvatarWithChainName
                     address={effectiveAddress}
                     size={88}
@@ -278,19 +279,21 @@ export default function UserProfile({
                     isHoverEnabled={true}
                   />
                 </div>
-              </div>
-              <div className="min-w-0 pb-1 md:self-center">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent tracking-tight">{chainName || "Legend"}</span>
-                </div>
-                <div className="font-mono text-xs text-white/70 break-all">{effectiveAddress}</div>
-                {bioText && (
-                  <div className="mt-2 text-sm text-white whitespace-pre-wrap inline-flex items-center gap-2">
-                    <span>{bioText}</span>
-                    <span id="bio-loading-indicator" className="hidden w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                {/* Identity */}
+                <div className="min-w-0 md:self-center">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent tracking-tight">{chainName || "Legend"}</span>
                   </div>
-                )}
+                  <div className="font-mono text-xs text-white/70 break-all">{effectiveAddress}</div>
+                </div>
               </div>
+              {/* Row 2: bio on its own line */}
+              {bioText && (
+                <div className="mt-1 text-sm text-white whitespace-pre-wrap inline-flex items-center gap-2">
+                  <span>{bioText}</span>
+                  <span id="bio-loading-indicator" className="hidden w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                </div>
+              )}
             </div>
             <div className="flex flex-row flex-wrap items-start gap-2 md:flex-col md:items-end md:gap-2 md:ml-auto md:self-start">
               {canEdit ? (

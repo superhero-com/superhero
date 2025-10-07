@@ -28,7 +28,7 @@ import AddressAvatar from "../components/AddressAvatar";
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import ProfileEditModal from "../components/modals/ProfileEditModal";
 import { useProfile } from "../hooks/useProfile";
-import { IconDiamond } from "../icons";
+import { IconDiamond, IconLink } from "../icons";
 import { useModal } from "../hooks";
 import { CONFIG } from "../config";
 
@@ -269,7 +269,10 @@ export default function UserProfile({
                 }}
                 title="Open on æScan"
               >
-                View on æScan
+                <span className="inline-flex items-center gap-2">
+                  <span>View on æScan</span>
+                  <IconLink className="w-3.5 h-3.5 opacity-80" />
+                </span>
               </AeButton>
             </div>
           </div>

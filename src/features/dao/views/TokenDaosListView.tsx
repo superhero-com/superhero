@@ -8,7 +8,8 @@ import TokenVoteCard from "@/features/dao/components/TokenVoteCard";
 import { useDao } from "@/features/dao/hooks/useDao";
 import { LivePriceFormatter } from "@/features/shared/components";
 import { Decimal } from "@/libs/decimal";
-import { Encoded, toAe } from "@aeternity/aepp-sdk";
+import { ensureAddress, ensureString } from "@/utils/common";
+import { Encoded, Encoding, toAe } from "@aeternity/aepp-sdk";
 import { useQuery } from "@tanstack/react-query";
 import { VOTE_TYPE, VoteMetadata } from "bctsl-sdk";
 import { useState } from "react";
@@ -28,6 +29,11 @@ export default function Dao() {
   const { saleAddress } = useParams();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{
+    value?: string;
+    description?: string;
+    link?: string;
+  }>({});
   const [newVote, setNewVote] = useState<{
     type: (typeof voteTypes)[number];
     value?: string;
@@ -46,17 +52,60 @@ export default function Dao() {
     tokenSaleAddress: saleAddress as Encoded.ContractAddress,
   });
 
-  // useEffect(() => {
-  //   setNewVote({
-  //     type: VOTE_TYPE.VotePayout as (typeof voteTypes)[number],
-  //     value: 'ak_LF4siZQxMqjGBAcHS2MMacMYgYjHjRh4HkDwqF3sA59oLfcMA',
-  //     description: 'abc',
-  //     link: 'http://localhost:8080/dao/ct_215VAdtTqmNH8PcdwWcfQNju1qioAXb1XMwDP5hoNZJEeYhHqz',
-  //   });
-  // }, [saleAddress]);
+  const validateForm = () => {
+    const errors: { value?: string; description?: string; link?: string } = {};
+    
+    // Validate subject value (should be an address)
+    if (!newVote.value || newVote.value.trim() === '') {
+      errors.value = 'Subject value is required';
+    } else {
+      try {
+        ensureAddress(newVote.value.trim(), Encoding.ContractAddress);
+      } catch (e) {
+        errors.value = 'Subject value must be a valid contract address';
+      }
+    }
+    
+    // Validate description (should be a string)
+    if (!newVote.description || newVote.description.trim() === '') {
+      errors.description = 'Description is required';
+    } else {
+      try {
+        ensureString(newVote.description.trim());
+      } catch (e) {
+        errors.description = 'Description must be a valid string';
+      }
+    }
+    
+    // Validate link (should be a string)
+    if (!newVote.link || newVote.link.trim() === '') {
+      errors.link = 'Link is required';
+    } else {
+      try {
+        ensureString(newVote.link.trim());
+      } catch (e) {
+        errors.link = 'Link must be a valid string';
+      }
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const clearFieldError = (field: keyof typeof validationErrors) => {
+    if (validationErrors[field]) {
+      setValidationErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
 
   async function createVote() {
     if (!saleAddress) return;
+    
+    // Validate form before proceeding
+    if (!validateForm()) {
+      return;
+    }
+    
     setCreating(true);
     setErrorMessage(null);
     try {
@@ -80,7 +129,7 @@ export default function Dao() {
       {/* Header Section */}
       <div className="mb-6">
         {token && (
-          <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent leading-tight">
                 {token.name || token.symbol} [DAO]
@@ -112,7 +161,7 @@ export default function Dao() {
           </div>
         )}
         
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
           <Link
             to={`/trending/tokens/${encodeURIComponent(saleAddress || "")}`}
             className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
@@ -236,39 +285,57 @@ export default function Dao() {
                     <Input
                       placeholder="Subject value (address or data)"
                       value={newVote.value}
-                      onChange={(e) =>
-                        setNewVote((v) => ({ ...v, value: e.target.value }))
-                      }
-                      className="bg-white/5 border-white/20 text-white placeholder:text-white/60"
+                      onChange={(e) => {
+                        setNewVote((v) => ({ ...v, value: e.target.value }));
+                        clearFieldError('value');
+                      }}
+                      className={`bg-white/5 border-white/20 text-white placeholder:text-white/60 ${
+                        validationErrors.value ? 'border-red-500' : ''
+                      }`}
                     />
+                    {validationErrors.value && (
+                      <p className="text-red-400 text-xs mt-1">{validationErrors.value}</p>
+                    )}
                   </div>
                   
                   <div>
                     <label className="text-sm font-medium text-white/80 mb-2 block">
-                      Description (optional)
+                      Description
                     </label>
                     <Input
-                      placeholder="Description (optional)"
+                      placeholder="Description"
                       value={newVote.description || ""}
-                      onChange={(e) =>
-                        setNewVote((v) => ({ ...v, description: e.target.value }))
-                      }
-                      className="bg-white/5 border-white/20 text-white placeholder:text-white/60"
+                      onChange={(e) => {
+                        setNewVote((v) => ({ ...v, description: e.target.value }));
+                        clearFieldError('description');
+                      }}
+                      className={`bg-white/5 border-white/20 text-white placeholder:text-white/60 ${
+                        validationErrors.description ? 'border-red-500' : ''
+                      }`}
                     />
+                    {validationErrors.description && (
+                      <p className="text-red-400 text-xs mt-1">{validationErrors.description}</p>
+                    )}
                   </div>
                   
                   <div>
                     <label className="text-sm font-medium text-white/80 mb-2 block">
-                      Link (optional)
+                      Link
                     </label>
                     <Input
-                      placeholder="Link (optional)"
+                      placeholder="Link"
                       value={newVote.link || ""}
-                      onChange={(e) =>
-                        setNewVote((v) => ({ ...v, link: e.target.value }))
-                      }
-                      className="bg-white/5 border-white/20 text-white placeholder:text-white/60"
+                      onChange={(e) => {
+                        setNewVote((v) => ({ ...v, link: e.target.value }));
+                        clearFieldError('link');
+                      }}
+                      className={`bg-white/5 border-white/20 text-white placeholder:text-white/60 ${
+                        validationErrors.link ? 'border-red-500' : ''
+                      }`}
                     />
+                    {validationErrors.link && (
+                      <p className="text-red-400 text-xs mt-1">{validationErrors.link}</p>
+                    )}
                   </div>
                   
                   {errorMessage && (

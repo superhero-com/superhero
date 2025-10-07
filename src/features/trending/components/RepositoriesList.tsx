@@ -4,6 +4,7 @@ import { TrendminerApi } from '../../../api/backend';
 import { Input } from '../../../components/ui/input';
 import AeButton from '../../../components/AeButton';
 import { cn } from '../../../lib/utils';
+import { Decimal } from '@/libs/decimal';
 
 interface Repository {
   fullName: string;
@@ -85,9 +86,9 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
 
   const onCardAction = (repo: Repository) => {
     if (hasToken(repo)) {
-      navigate(`/trendminer/tokens/${repo.tag}`);
+      navigate(`/trending/tokens/${repo.tag}`);
     } else {
-      navigate(`/trendminer/create?platform=${repo.source}&repo=${repo.tag}`);
+      navigate(`/trending/create?platform=${repo.source}&repo=${repo.tag}`);
     }
   };
 
@@ -97,7 +98,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
       const response = await TrendminerApi.listTrendingTags({
         orderBy: sortBy,
         orderDirection: 'DESC',
-        limit: 50,
+        limit: 20, // shouldn't be bigger than the tokens list as it can break the scroll
         page: 1,
         search: search || undefined,
       });
@@ -154,18 +155,20 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
         <div className="flex flex-col gap-2">
           {Array.from({ length: 5 }).map((_, index) => (
             <div key={index} className="animate-pulse">
-              <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[10px] rounded-xl px-4 py-3">
-                <div className="space-y-2">
-                  {/* First Line: Tag Name and Score */}
-                  <div className="flex items-center justify-between">
-                    <div className="bg-white/10 h-4 w-24 rounded"></div>
+              <div className="px-4 py-2.5">
+                {/* Single Line Layout Skeleton */}
+                <div className="flex items-center justify-between gap-3">
+                  {/* Left: Tag Name */}
+                  <div className="bg-white/10 h-4 w-24 rounded flex-shrink-0"></div>
+
+                  {/* Center: Score and Source */}
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="bg-white/10 h-3.5 w-12 rounded"></div>
-                  </div>
-                  {/* Second Line: Source and Button */}
-                  <div className="flex items-center justify-between">
                     <div className="bg-white/10 h-3 w-16 rounded"></div>
-                    <div className="bg-white/10 h-6 w-16 rounded"></div>
                   </div>
+
+                  {/* Right: Action Button */}
+                  <div className="bg-white/10 h-6 w-16 rounded flex-shrink-0"></div>
                 </div>
               </div>
             </div>
@@ -187,7 +190,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
           {currentRepositoriesList.map((repo: Repository) => (
             <div
               key={repo.fullName || repo.tag}
-              className="repository-card bg-white/[0.02] rounded-xl border border-white/10 px-4 py-3 cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:transform hover:-translate-y-1 hover:shadow-[0_8px_25px_rgba(17,97,254,0.15)] hover:bg-white/[0.05] backdrop-blur-[10px]"
+              className="py-2 cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:transform hover:-translate-y-1"
               role="button"
               tabIndex={0}
               onClick={() => onCardAction(repo)}
@@ -198,59 +201,81 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
                 }
               }}
             >
-              <div className="space-y-2">
-                {/* First Line: Tag Name and Score */}
-                <div className="flex items-center justify-between">
-                  <div className="text-base font-bold font-mono tracking-wide text-white">
-                    #{repo.tag}
-                  </div>
-                  {repo.source ? (
-                    <div className="text-xs text-white/60 font-medium">
-                      Via: {repo.source}
-                    </div>
-                  ) : (
-                    <div></div>
-                  )}
-
+              {/* Single Line Layout: Tag, Score, Source, Action */}
+              <div className="flex items-center justify-between gap-1">
+                {/* Left: Tag Name */}
+                <div className="flex text-sm font-bold font-mono tracking-wide text-white flex-shrink-0 truncate">
+                  {String(repo.tag).substring(0, 20)}
+                  {String(repo.tag).length > 20 && '...'}
                 </div>
 
-                {/* Second Line: Source and Action Button */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 font-medium text-sm">
-                    <svg className="w-3.5 h-3.5 text-[#1161FE]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                    </svg>
-                    <span className="text-white/90 text-sm">{formatCompact(repo.score)}</span>
+                <div className="flex justify-end items-end gap-3 flex-1 min-w-0 text-right">
+                  {/* Center: Score and Source */}
+                  {
+                    hasToken(repo) ? (
+                      <div className="text-xs text-white/60 font-medium truncate">
+                        {Decimal.from(repo.token?.price).prettify()} AE
+                        Holders: {repo.token?.holders_count}
+
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-end gap-3 flex-1 min-w-0 text-right">
+                        <div className="flex items-center gap-1 font-medium text-sm">
+                          <svg className="w-3.5 h-3.5 text-[#1161FE] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                          </svg>
+                          <span className="text-white/90 text-sm">{formatCompact(repo.score)}</span>
+                        </div>
+                        {
+                          repo.source && (
+                            <a
+                              onClick={(e) => {
+                                e.stopPropagation();
+                              }}
+                              target="_blank"
+                              href={`https://x.com/search?q=${encodeURIComponent('#' + repo.tag)}&src=typed_query`}
+                              className="text-xs text-white/60 font-medium">
+                              Via: {repo.source}
+                            </a>
+                          )
+                        }
+                      </div>
+                    )
+                  }
+
+
+                  {/* Right: Action Button */}
+                  <div className="flex-shrink-0">
+                    {hasToken(repo) ? (
+                      <button
+                        className="px-2 py-1 rounded-lg border-none text-white cursor-pointer text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/trending/tokens/${repo.tag}`);
+                        }}
+                      >
+                        View
+                      </button>
+                    ) : (
+                      <button
+                        className="px-2 py-1 rounded-lg border-none text-white cursor-pointer text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/trending/create?platform=${repo.source}&repo=${repo.tag}`);
+                        }}
+                      >
+                        Tokenize
+                      </button>
+                    )}
                   </div>
-                  {/* Action Button */}
-                  {hasToken(repo) ? (
-                    <button
-                      className="px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] text-xs font-medium hover:bg-white/[0.08] hover:-translate-y-0.5 active:translate-y-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/trendminer/tokens/${repo.tag}`);
-                      }}
-                    >
-                      View
-                    </button>
-                  ) : (
-                    <button
-                      className="px-2.5 py-1.5 rounded-lg border-none text-white cursor-pointer text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-[#1161FE] shadow-[0_2px_8px_rgba(17,97,254,0.4)] hover:shadow-[0_4px_12px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/trendminer/create?platform=${repo.source}&repo=${repo.tag}`);
-                      }}
-                    >
-                      Tokenize
-                    </button>
-                  )}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            </div >
+          ))
+          }
+        </div >
       )}
 
-    </div>
+    </div >
   );
 }

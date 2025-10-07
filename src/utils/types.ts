@@ -40,7 +40,7 @@ export interface IAppConfigs {
   avatarServiceUrl: string;
 
   features: {
-    trendminer: boolean;
+    trending: boolean;
   };
 }
 

@@ -19,7 +19,7 @@ export default function FAQ() {
         'We partner with Quali.chat — a quality chat app for crypto people. Expect realtime conversations, moderation tools, and crypto‑friendly UX. Each token has a public room; holders can coordinate faster.',
     },
     {
-      id: 'what-is-trendminer',
+      id: 'what-is-trending',
       category: 'Overview',
       title: 'What is Trendminer?',
       answer:

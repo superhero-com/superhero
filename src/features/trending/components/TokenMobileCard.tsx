@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { TokenDto } from "../../../api/generated";
+import { TokenDto } from "@/api/generated/models/TokenDto";
 import { PriceDataFormatter } from "@/features/shared/components";
 import { AddressChip } from "../../../components/AddressChip";
 import { TokenLineChart } from "./TokenLineChart";
@@ -60,7 +60,8 @@ export default function TokenMobileCard({
                     {/* Token Info */}
                     <div className="flex-1 min-w-0">
                         <div className="text-white font-semibold text-lg leading-tight mb-1">
-                            #{token.symbol || token.name}
+                            <span className="text-white/60 text-[.9em] mr-0.5 align-baseline">#</span>
+                            <span>{token.symbol || token.name}</span>
                         </div>
 
                         {/* Collection label if enabled */}
@@ -109,7 +110,7 @@ export default function TokenMobileCard({
 
             {/* Link that covers whole card */}
             <a
-                href={`/trendminer/tokens/${encodeURIComponent(token.name || token.address)}`}
+                href={`/trending/tokens/${encodeURIComponent(token.name || token.address)}`}
                 className="absolute inset-0 z-10"
                 aria-label={`View details for ${token.name || token.symbol}`}
             />

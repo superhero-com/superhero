@@ -98,7 +98,6 @@ export function TokenLineChart({
 
   // Watch for data changes
   useEffect(() => {
-    console.log('Data changed:', data?.result, 'timeframe:', performanceChartTimeframe);
     if (!data?.result?.length || !areaSeries.current) {
       return;
     }

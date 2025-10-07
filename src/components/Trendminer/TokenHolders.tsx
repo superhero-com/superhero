@@ -166,7 +166,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
                       token={token}
                       price={
                         holder.balance !== "NaN"
-                          ? Decimal.from(toAe(holder.balance))
+                          ? Decimal.from(holder.balance).div(10 ** (parseInt(token.decimals) || 18))
                           : Decimal.ZERO
                       }
                       className="text-white text-xs sm:text-base font-medium"
@@ -209,7 +209,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
         </div>
 
         {/* Loading State */}
-        {isFetching && (
+        {(isFetching && !holders.length) && (
           <div className="flex items-center justify-center py-12">
             <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
           </div>
@@ -243,9 +243,9 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="space-y-4">
+        <div className="space-y-4 pb-8">
           {/* Items per page selector */}
-          <div className="flex items-center justify-between text-sm text-white/60">
+          <div className="flex items-center flex-col md:flex-row justify-between text-sm text-white/60">
             <div className="flex items-center gap-2">
               <span>Show:</span>
               <select
@@ -277,7 +277,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
           </div>
 
           {/* Page navigation */}
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center flex-col md:flex-row justify-center gap-2">
             <button
               onClick={() => updatePage(Math.max(1, currentPage - 1))}
               disabled={currentPage <= 1}

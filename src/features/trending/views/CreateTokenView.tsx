@@ -1,5 +1,5 @@
 import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter';
-import { AssetInput } from '@/features/trendminer';
+import { AssetInput } from '@/features/trending';
 import { Decimal } from '@/libs/decimal';
 import { calculateBuyPriceWithAffiliationFee, toDecimals } from '@/utils/bondingCurve';
 import { toAe } from "@aeternity/aepp-sdk";
@@ -239,7 +239,7 @@ export default function CreateTokenView() {
       );
 
       // Navigate to token details
-      navigate(`/trendminer/tokens/${tokenName}`);
+      navigate(`/trending/tokens/${tokenName}`);
     } catch (error: any) {
       console.error('Error creating token:', error);
       const message = error?.message || error?.reason || 'Unknown error';
@@ -382,7 +382,7 @@ export default function CreateTokenView() {
                           Token <span className="font-mono font-bold">{alreadyRegisteredName}</span> is already registered.{' '}
                           <button
                             type="button"
-                            onClick={() => navigate(`/trendminer/tokens/${alreadyRegisteredAs}`)}
+                            onClick={() => navigate(`/trending/tokens/${alreadyRegisteredAs}`)}
                             className="text-blue-400 hover:text-blue-300 underline"
                           >
                             Buy it here

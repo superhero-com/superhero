@@ -12,9 +12,18 @@ export interface NavigationItem {
 export const navigationItems: NavigationItem[] = [
   {
     id: "home",
-    label: "Feed",
+    label: "Social",
     path: "/",
     icon: "🏠",
+  },
+  configs.features.trending && {
+    id: "trending",
+    label: "Trends",
+    path: "/trending/tokens",
+    icon: "📈",
+    children: [
+      { id: "invite", label: "Invite & Earn", path: "/trending/invite", icon: "🎁" },
+    ],
   },
   {
     id: "dex",
@@ -51,19 +60,6 @@ export const navigationItems: NavigationItem[] = [
         icon: "📋",
       },
     ],
-  },
-  configs.features.trendminer && {
-    id: "trending",
-    label: "Trends",
-    path: "/trendminer/tokens",
-    icon: "📈",
-  },
-
-  configs.features.trendminer && {
-    id: "invite",
-    label: "Invite & Earn",
-    path: "/trendminer/invite",
-    icon: "🎁",
   },
   // {
   //     id: 'governance',

@@ -267,10 +267,26 @@ export default function MobileAppHeader() {
                 return (
                   <React.Fragment key={`nav-${item.id}`}>
                     {node}
+                    {Array.isArray((item as any).children) && (item as any).children.length > 0 && (
+                      <div className="ml-2 grid gap-2">
+                        {(item as any).children.map((child: any) => (
+                          <div key={child.id} className={`${baseBg} rounded-xl`}>
+                            <Link
+                              to={child.path}
+                              onClick={handleNavigationClick}
+                              className={`${commonClasses} bg-transparent`}
+                              style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}
+                            >
+                              <span className="text-lg sm:text-base">{child.label}</span>
+                            </Link>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {index === 1 && (
                       <div className={`${baseBg} rounded-xl`}>
                         <Link
-                  to="/defi/buy-ae-with-eth"
+                          to="/defi/buy-ae-with-eth"
                           onClick={handleNavigationClick}
                           className={`${commonClasses} bg-transparent`}
                           style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}

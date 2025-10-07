@@ -5,22 +5,9 @@ import AddressChip from "@/components/AddressChip";
 import { PriceDto } from "@/api/generated";
 import PriceDataFormatter from "@/features/shared/components/PriceDataFormatter";
 import { toAe } from '@aeternity/aepp-sdk';
-
+import { TokenDto } from "@/api/generated/models/TokenDto";
 interface TokenSummaryProps {
-  token: {
-    name?: string;
-    symbol?: string;
-    price?: number | string;
-    market_cap?: number | string;
-    total_supply?: number | string;
-    decimals?: number;
-    holders_count?: number;
-    address?: string;
-    contract_address?: string;
-    sale_address?: string;
-    created_at?: string;
-    dao_balance?: number | string;
-  };
+  token: TokenDto;
   holders?: any[];
   className?: string;
 }
@@ -132,7 +119,7 @@ export default function TokenSummary({
 
       {/* Contract Addresses */}
       <div className="flex flex-col gap-3 mb-6">
-        {(token.address || token.contract_address) && (
+        {(token.address || token.creator_address) && (
           <div className="flex items-center gap-2 justify-between bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
             <div className="text-xs text-white/60 font-medium">
               Contract Address:
@@ -148,6 +135,14 @@ export default function TokenSummary({
             <AddressChip address={token.sale_address} linkToExplorer />
           </div>
         )}
+        {token.creator_address && (
+          <div className="flex items-center gap-2 justify-between bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
+            <div className="text-xs text-white/60 font-medium">
+              Created By:
+            </div>
+            <AddressChip address={token.creator_address} linkToExplorer />
+          </div>
+        )}
       </div>
 
       {/* Description */}
@@ -161,7 +156,7 @@ export default function TokenSummary({
       <div className="flex gap-3 flex-wrap">
         {token.sale_address && (
           <a
-            href={`/trendminer/dao/${encodeURIComponent(token.sale_address)}`}
+            href={`/trending/dao/${encodeURIComponent(token.sale_address)}`}
             className="inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-purple-700 no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:shadow-[0_8px_25px_rgba(147,51,234,0.4)] hover:-translate-y-0.5 active:translate-y-0"
           >
             Open DAO
@@ -169,7 +164,7 @@ export default function TokenSummary({
         )}
         <div className="flex gap-3 ">
         <a
-          href="/trendminer/invite"
+          href="/trending/invite"
           className="inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white border border-white/10 bg-white/[0.05] no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0"
         >
           Invite & Earn

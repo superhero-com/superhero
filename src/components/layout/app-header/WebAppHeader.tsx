@@ -7,7 +7,7 @@ import { navigationItems } from './navigationItems';
 
 export default function WebAppHeader() {
   const { pathname } = useLocation();
-  const isDaoPath = pathname.startsWith('/trendminer/dao') || pathname.startsWith('/trendminer/daos');
+  const isDaoPath = pathname.startsWith('/trending/dao') || pathname.startsWith('/trending/daos');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const t = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
     return t;
@@ -29,7 +29,7 @@ export default function WebAppHeader() {
 
   const isActiveRoute = (path: string) => {
     if (path === '/') return pathname === '/';
-    if (path === '/trendminer/daos') return isDaoPath;
+    if (path === '/trending/daos') return isDaoPath;
     return pathname.startsWith(path);
   };
 
@@ -49,63 +49,112 @@ export default function WebAppHeader() {
         </Link>
 
         <nav className="flex items-center gap-6 flex-grow md:gap-5 relative">
-          {navigationItems.map(item => (
-            item.isExternal ? (
-              <a
-                key={item.id}
-                href={item.path}
-                target="_blank"
-                rel="noreferrer"
-                className={`no-underline font-medium px-3 py-2 rounded-lg transition-all duration-200 relative ${
-                  isActiveRoute(item.path) 
-                    ? 'after:content-[""] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-0.5 after:rounded-sm'
-                    : ''
-                }`}
-                style={{
-                  color: isActiveRoute(item.path) ? 'var(--custom-links-color)' : 'var(--light-font-color)',
-                  backgroundColor: isActiveRoute(item.path) ? 'rgba(0,255,157,0.1)' : 'transparent',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActiveRoute(item.path)) {
-                    e.currentTarget.style.color = 'var(--standard-font-color)';
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActiveRoute(item.path)) {
-                    e.currentTarget.style.color = 'var(--light-font-color)';
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
-              >
-                {item.label}
-                {isActiveRoute(item.path) && (
-                  <span 
-                    className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
-                    style={{ backgroundColor: 'var(--custom-links-color)' }}
-                  />
-                )}
-              </a>
-            ) : (
-              <Link
-                key={item.id}
-                to={item.path}
-                className={`no-underline font-medium px-3 py-2 rounded-lg transition-all duration-200 relative`}
-                style={{
-                  color: isActiveRoute(item.path) ? 'var(--custom-links-color)' : 'var(--light-font-color)',
-                  backgroundColor: isActiveRoute(item.path) ? 'rgba(0,255,157,0.1)' : 'transparent',
-                }}
-              >
-                {item.label}
-                {isActiveRoute(item.path) && (
-                  <span 
-                    className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
-                    style={{ backgroundColor: 'var(--custom-links-color)' }}
-                  />
-                )}
-              </Link>
-            )
-          ))}
+          {navigationItems
+            .filter((item: any) => !!item && !!item.id)
+            .map((item: any) => {
+              const commonClass = `no-underline font-medium px-3 py-2 rounded-lg transition-all duration-200 relative`;
+
+              // Special: add dropdown for Trends only
+              const isTrendsWithChildren = item.id === 'trending' && Array.isArray(item.children) && item.children.length > 0;
+
+              if (isTrendsWithChildren) {
+                return (
+                  <div key={item.id} className="relative group">
+                    <Link
+                      to={item.path}
+                      className={commonClass}
+                      style={{
+                        color: isActiveRoute(item.path) ? 'var(--custom-links-color)' : 'var(--light-font-color)',
+                        backgroundColor: isActiveRoute(item.path) ? 'rgba(0,255,157,0.1)' : 'transparent',
+                      }}
+                    >
+                      {item.label}
+                      <span className="ml-1">▾</span>
+                      {isActiveRoute(item.path) && (
+                        <span 
+                          className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
+                          style={{ backgroundColor: 'var(--custom-links-color)' }}
+                        />
+                      )}
+                    </Link>
+
+                    {/* Dropdown */}
+                    <div className="hidden group-hover:block absolute left-0 top-full mt-2 min-w-[220px] rounded-xl border border-white/10 bg-[var(--background-color)] shadow-[0_12px_32px_rgba(0,0,0,0.35)] py-2 z-[1001]">
+                      {item.children.map((child: any) => (
+                        <Link
+                          key={child.id}
+                          to={child.path}
+                          className="no-underline flex items-center gap-2 px-4 py-2 text-[var(--light-font-color)] hover:text-[var(--standard-font-color)] hover:bg-white/10"
+                        >
+                          <span className="w-5 text-center">{child.icon}</span>
+                          <span className="text-sm font-medium">{child.label}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+
+              if (item.isExternal) {
+                return (
+                  <a
+                    key={item.id}
+                    href={item.path}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`${commonClass} ${
+                      isActiveRoute(item.path) 
+                        ? 'after:content-["\"\"] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-0.5 after:rounded-sm'
+                        : ''
+                    }`}
+                    style={{
+                      color: isActiveRoute(item.path) ? 'var(--custom-links-color)' : 'var(--light-font-color)',
+                      backgroundColor: isActiveRoute(item.path) ? 'rgba(0,255,157,0.1)' : 'transparent',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActiveRoute(item.path)) {
+                        e.currentTarget.style.color = 'var(--standard-font-color)';
+                        e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActiveRoute(item.path)) {
+                        e.currentTarget.style.color = 'var(--light-font-color)';
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }
+                    }}
+                  >
+                    {item.label}
+                    {isActiveRoute(item.path) && (
+                      <span 
+                        className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
+                        style={{ backgroundColor: 'var(--custom-links-color)' }}
+                      />
+                    )}
+                  </a>
+                );
+              }
+
+              return (
+                <Link
+                  key={item.id}
+                  to={item.path}
+                  className={commonClass}
+                  style={{
+                    color: isActiveRoute(item.path) ? 'var(--custom-links-color)' : 'var(--light-font-color)',
+                    backgroundColor: isActiveRoute(item.path) ? 'rgba(0,255,157,0.1)' : 'transparent',
+                  }}
+                >
+                  {item.label}
+                  {isActiveRoute(item.path) && (
+                    <span 
+                      className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
+                      style={{ backgroundColor: 'var(--custom-links-color)' }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
         </nav>
 
         {/* Right area lives inside the boxed header container */}

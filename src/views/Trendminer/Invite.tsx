@@ -3,7 +3,7 @@ import {
   CollectRewardsCard, 
   InvitationList, 
   InviteAndEarnCard 
-} from "../../features/trendminer/components/Invitation";
+} from "../../features/trending/components/Invitation";
 import RightRail from "../../components/layout/RightRail";
 import Shell from "../../components/layout/Shell";
 import { useAeSdk } from "../../hooks";

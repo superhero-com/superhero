@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { CustomPagination} from '../utils/types';
+import type { CustomPagination } from '../utils/types';
 
-import type { TokenDto } from '../api/generated/models/TokenDto';
+import type { TokenDto } from '@/api/generated/models/TokenDto';
 import type { TransactionDto } from '../api/generated/models/TransactionDto';
 import WebSocketClient from '../libs/WebSocketClient';
 import { TransactionsService } from '@/api/generated/services/TransactionsService';
@@ -11,8 +11,8 @@ import { TransactionsService } from '@/api/generated/services/TransactionsServic
 let initialized = false;
 let unsubscribeLatestTransactions: (() => void) | null = null;
 
-export type TransactionDtoWithToken = TransactionDto & { 
-  address: string; 
+export type TransactionDtoWithToken = TransactionDto & {
+  address: string;
   token: TokenDto;
 };
 
@@ -25,18 +25,18 @@ export function useLatestTransactions() {
 
   // Initialize WebSocket subscription (singleton pattern)
   useEffect(() => {
-    
+
     if (!initialized) {
       initialized = true;
-      
-    //   Use the token transaction channel like the carousel component
+
+      //   Use the token transaction channel like the carousel component
       unsubscribeLatestTransactions = WebSocketClient.subscribeForTransactions(
         (payload: any) => {
           // Update React Query cache for different page sizes
           const pages = [10, 20, 50, 100];
           pages.forEach((page) => {
             queryClient.setQueryData(
-              ['TransactionsService.listTransactions', payload.token.sale_address, page, 1],
+              ["TransactionsService.listTransactions", payload.token.sale_address, page, 1],
               (oldData: Awaited<CustomPagination<TransactionDtoWithToken>> | undefined) => ({
                 meta: {
                   ...(oldData?.meta || {}),
@@ -46,20 +46,20 @@ export function useLatestTransactions() {
               }),
             );
           });
-            
- 
-          if(latestTransactions.length > 50) {
-            setLatestTransactions(latestTransactions.slice(0, 50));
-          }
-          setLatestTransactions([...latestTransactions, {
+
+
+          // if (latestTransactions.length > 50) {
+          //   setLatestTransactions(latestTransactions.slice(0, 50));
+          // }
+          setLatestTransactions(prev => ([...prev, {
             token: payload.token,
             address: payload.token?.sale_address || payload.data?.account || '',
             ...payload.data,
-          }]);
+          }]));
         }
       );
 
-    TransactionsService.listTransactions({
+      TransactionsService.listTransactions({
         limit: 50,
         page: 1,
         includes: "token",

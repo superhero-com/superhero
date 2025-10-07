@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect } from "react";
 import { useRoutes } from "react-router-dom";
 import GlobalNewAccountEducation from "./components/GlobalNewAccountEducation";
-import { CollectInvitationLinkCard } from "./features/trendminer/components/Invitation";
+import { CollectInvitationLinkCard } from "./features/trending/components/Invitation";
 import ModalProvider from "./components/ModalProvider";
 import { useAeSdk, useAccount, useWalletConnect } from "./hooks";
 import { routes } from "./routes";
@@ -29,6 +29,9 @@ const TransactionConfirmModal = React.lazy(
 const ConnectWalletModal = React.lazy(
   () => import("./components/modals/ConnectWalletModal")
 );
+const TipModal = React.lazy(
+  () => import("./components/modals/TipModal")
+);
 
 export default function App() {
   useSuperheroChainNames();
@@ -55,10 +58,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, [activeAccount]);
 
-  if (!sdkInitialized) {
-    return <div className="loading-fallback" />;
-  }
-
   return (
     <div className="app-container">
       
@@ -78,6 +77,7 @@ export default function App() {
             alert: AlertModal,
             "transaction-confirm": TransactionConfirmModal,
             "connect-wallet": ConnectWalletModal,
+            "tip": TipModal,
           }}
         />
       </Suspense>

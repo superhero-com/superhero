@@ -57,7 +57,7 @@ export default function UserBadge({
 
   const hrefPath =
     linkTo === "account"
-      ? `/trendminer/accounts/${address}`
+      ? `/trending/accounts/${address}`
       : `/users/${address}`;
 
   return (

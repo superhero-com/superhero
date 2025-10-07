@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { TokensService } from "@/api/generated";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useAeSdk } from "../../hooks";
+import { useAeSdk } from "@/hooks";
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import { Decimal } from "@/libs/decimal";
 import { toAe } from "@/utils/bondingCurve";

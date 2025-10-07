@@ -40,8 +40,8 @@ export default function GlobalStatsAnalytics() {
 
   const last7DaysTradeVolumeValue = useMemo(() =>
     Decimal.from(
-      Array.isArray(todayTradeVolume) 
-        ? todayTradeVolume.reduce((sum, day) => sum + Number(day.volume_ae || 0), 0) 
+      Array.isArray(todayTradeVolume)
+        ? todayTradeVolume.reduce((sum, day) => sum + Number(day.volume_ae || 0), 0)
         : 0
     ),
     [todayTradeVolume]
@@ -56,26 +56,26 @@ export default function GlobalStatsAnalytics() {
   const statsItems = useMemo((): { name: string; value: string | number; fiat?: string }[] => [
     {
       name: 'Total Market Cap',
-      value: `${totalMarketCapValue.shorten()} ${COIN_SYMBOL}`,
+      value:last24HoursData ? `${totalMarketCapValue.shorten()} ${COIN_SYMBOL}` : '-',
       fiat: formatFiat(getFiat(totalMarketCapValue)),
     },
     {
       name: 'Volume (7d)',
-      value: `${last7DaysTradeVolumeValue.shorten()} ${COIN_SYMBOL}`,
+      value: todayTradeVolume ? `${last7DaysTradeVolumeValue?.shorten()} ${COIN_SYMBOL}` : '-',
       fiat: formatFiat(getFiat(last7DaysTradeVolumeValue)),
     },
     {
       name: 'Unique tokens',
-      value: last24HoursData?.total_tokens ?? 0,
+      value: last24HoursData ? `${last24HoursData?.total_tokens ?? '-'}` : '-',
     },
     {
       name: 'Created tokens (24h)',
-      value: last24HoursData?.total_created_tokens ?? 0,
+      value: last24HoursData?.total_created_tokens ?? '-',
     },
   ], [totalMarketCapValue, last7DaysTradeVolumeValue, last24HoursData, getFiat, formatFiat, currentCurrencyInfo]);
 
   // Check if data is loading
-  const isLoading = !todayTradeVolume || !last24HoursData;
+  // const isLoading = !todayTradeVolume || !last24HoursData;
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -83,20 +83,11 @@ export default function GlobalStatsAnalytics() {
         <div key={item.name} className="p-2">
           <div className="text-xs opacity-80 mb-1">{item.name}</div>
           <div className="font-extrabold text-sm sm:text-base">
-            {isLoading ? (
-              <div className="animate-pulse">
-                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-1"></div>
-                {item.fiat && <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded opacity-70"></div>}
+            {item.value}
+            {item.fiat && (
+              <div className="text-xs font-normal opacity-70 mt-1">
+                {item.fiat}
               </div>
-            ) : (
-              <>
-                {item.value}
-                {item.fiat && (
-                  <div className="text-xs font-normal opacity-70 mt-1">
-                    {item.fiat}
-                  </div>
-                )}
-              </>
             )}
           </div>
         </div>

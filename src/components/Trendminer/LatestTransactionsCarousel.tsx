@@ -1,19 +1,15 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import AddressChip from "../AddressChip";
 import {
   useLatestTransactions,
 } from "@/hooks/useLatestTransactions";
 import { TX_FUNCTIONS } from "@/utils/constants";
 import { Decimal } from "@/libs/decimal";
-import { AddressAvatarWithChainName } from "@/@components/Address/AddressAvatarWithChainName";
-import { Avatar } from "../ui/avatar";
 import AddressAvatar from "../AddressAvatar";
 import './LatestTransactionsCarousel.scss';
 
 export default function LatestTransactionsCarousel() {
   const { latestTransactions } = useLatestTransactions();
   const [itemsToShow, setItemsToShow] = useState(4); // Number of items visible at once for loading state
-  const [screenWidth, setScreenWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -23,7 +19,6 @@ export default function LatestTransactionsCarousel() {
   // Responsive breakpoints for loading state and screen width tracking
   const updateResponsiveValues = useCallback(() => {
     const width = window.innerWidth;
-    setScreenWidth(width);
     
     if (width >= 1680) setItemsToShow(7);
     else if (width >= 1280) setItemsToShow(5);
@@ -44,20 +39,26 @@ export default function LatestTransactionsCarousel() {
         const totalWidth = latestTransactions.length * cardWidth;
         const newPosition = prev + 1.5; // Adjust speed here (pixels per frame)
         
-        // Reset to 0 when we've scrolled through half the content (since we duplicate items)
-        if (newPosition >= totalWidth) {
-          return 0;
+        const stopAt = totalWidth - (cardWidth * 7);
+        // Stop scrolling when we reach the end
+        if (newPosition >= stopAt) {
+          return stopAt; // Stop at the end
         }
         return newPosition;
       });
       
-      if (!isHovered) {
+      // Continue animation only if we haven't reached the end and not hovered
+      const cardWidth = 208;
+      const totalWidth = latestTransactions.length * cardWidth;
+      const currentPosition = scrollPosition;
+      
+      if (!isHovered && currentPosition < totalWidth) {
         animationRef.current = requestAnimationFrame(scroll);
       }
     };
     
     animationRef.current = requestAnimationFrame(scroll);
-  }, [latestTransactions.length, isHovered]);
+  }, [latestTransactions.length, isHovered, scrollPosition]);
 
   const stopScrolling = useCallback(() => {
     if (animationRef.current) {
@@ -249,7 +250,7 @@ export default function LatestTransactionsCarousel() {
         }}
         onClick={() => {
           if (saleAddress) {
-            window.location.href = `/trendminer/tokens/${encodeURIComponent(
+            window.location.href = `/trending/tokens/${encodeURIComponent(
               tokenName
             )}`;
           }
@@ -293,8 +294,8 @@ export default function LatestTransactionsCarousel() {
     );
   };
 
-  // Create seamless loop by duplicating transactions exactly once
-  const loop = [...latestTransactions, ...latestTransactions];
+  // Use transactions directly without duplication since we want it to stop at the end
+  const transactions = latestTransactions;
 
   return (
     <div className="latest-transactions-carousel">
@@ -310,7 +311,7 @@ export default function LatestTransactionsCarousel() {
           onTouchStart={() => setIsHovered(true)}
           onTouchEnd={() => setIsHovered(false)}
         >
-          {loop.map((item, index) => renderItem(item, index))}
+          {transactions.map((item, index) => renderItem(item, index))}
         </div>
       </div>
     </div>

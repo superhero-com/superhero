@@ -1,7 +1,7 @@
 import { useAtom, useAtomValue } from 'jotai';
 import { useAccount } from '@/hooks';
 import { Decimal } from '../../../libs/decimal';
-import { TokenDto } from '../types';
+import { TokenDto } from '@/api/generated/models/TokenDto';
 import {
   tokenTradeTokenAtom,
   userBalanceAtom,
@@ -86,10 +86,12 @@ export function useTokenTradeStore() {
   const updateIsAllowSelling = (allow: boolean) => setIsAllowSelling(allow);
   const updateSlippage = (newSlippage: number) => setSlippage(newSlippage);
 
-  const resetFormData = () => {
+  const resetFormData = (forceReset: boolean = false) => {
     setTokenA(undefined);
     setTokenB(undefined);
-    setSuccessTxData(undefined);
+    if (forceReset) {
+      setSuccessTxData(undefined);
+    }
     setNextPrice(Decimal.ZERO);
   };
 

@@ -1,6 +1,5 @@
 import React from "react";
 import AeButton from "../../../components/AeButton";
-import WalletConnectBtn from "../../../components/WalletConnectBtn";
 import GlobalStatsAnalytics from "../../../components/Trendminer/GlobalStatsAnalytics";
 
 export default function TrendminerBanner() {
@@ -17,37 +16,22 @@ export default function TrendminerBanner() {
               Build Communities.
             </div>
             <div className="flex flex-col gap-3 mt-4">
-              {/* First row: Tokenize a Trend + Get Superhero Wallet */}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <AeButton
                   variant="primary"
                   size="md"
                   rounded
-                  onClick={() => (window.location.href = "/trendminer/create")}
+                  onClick={() => (window.location.href = "/trending/create")}
                   className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   TOKENIZE A TREND
                 </AeButton>
-                <AeButton
-                  variant="secondary"
-                  size="md"
-                  outlined
-                  onClick={() =>
-                    window.open("https://wallet.superhero.com", "_blank")
-                  }
-                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  Get Superhero Wallet ↘
-                </AeButton>
-              </div>
 
-              {/* Second row: Explore DAOs + Invite & Earn */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <AeButton
                   variant="accent"
                   size="md"
                   rounded
-                  onClick={() => (window.location.href = "/trendminer/daos")}
+                  onClick={() => (window.location.href = "/trending/daos")}
                   className="bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   EXPLORE DAOS
@@ -57,7 +41,7 @@ export default function TrendminerBanner() {
                   size="md"
                   rounded
                   onClick={() =>
-                    (window.location.href = "/trendminer/invite")
+                    (window.location.href = "/trending/invite")
                   }
                   className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
@@ -65,15 +49,11 @@ export default function TrendminerBanner() {
                 </AeButton>
               </div>
 
-              {/* Third row: Connect Wallet */}
-              <div className="w-full sm:w-auto">
-                <WalletConnectBtn />
-              </div>
             </div>
             <div className="text-sm text-white/75 mt-2.5 max-w-[720px] overflow-hidden text-ellipsis leading-relaxed">
-              Tokenized trends are community tokens launched on a bonding
+              Tokenized trends are community DAO tokens launched on a bonding
               curve. Price moves with buys/sells, no order books. Each token
-              mints a DAO treasury that can fund initiatives via on-chain
+              creates a DAO with treasury that can fund initiatives via on-chain
               votes. Connect your wallet to trade and participate.
             </div>
           </div>

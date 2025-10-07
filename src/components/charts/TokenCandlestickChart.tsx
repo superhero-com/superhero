@@ -23,6 +23,7 @@ interface IInterval {
   value: number;
 }
 
+
 interface TokenCandlestickChartProps {
   token: TokenDto;
   height?: number;
@@ -384,7 +385,7 @@ export default function TokenCandlestickChart({
     if (data?.pages?.length) {
       updateSeriesData(data.pages);
     }
-  }, [data, updateSeriesData]);
+  }, [data]);
 
   return (
     <div
@@ -405,7 +406,7 @@ export default function TokenCandlestickChart({
             </div>
             <div className="flex gap-1 pb-1 pl-2 text-xs text-muted-foreground">
               <div>on</div>
-              <div>Æternity</div>
+              <div>æternity</div>
               <div>·</div>
               <div>{intervalBy.label}</div>
             </div>

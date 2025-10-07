@@ -113,7 +113,7 @@ function TokenGrid({ items }: { items: TokenItem[] }) {
       {items.map((it) => (
         <Link 
           key={it.address} 
-          to={`/trendminer/tokens/${encodeURIComponent(it.name || it.address)}`} 
+          to={`/trending/tokens/${encodeURIComponent(it.name || it.address)}`} 
           className="no-underline text-inherit"
         >
           <div className="p-3 border border-white/10 rounded-lg bg-black/20 backdrop-blur-lg hover:-translate-y-1 hover:shadow-lg transition-all duration-200">

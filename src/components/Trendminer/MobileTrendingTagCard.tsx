@@ -42,7 +42,7 @@ export default function MobileTrendingTagCard({
     if (onTokenize) {
       onTokenize();
     } else {
-      window.location.href = `/trendminer/create?new=${encodeURIComponent(tag)}`;
+      window.location.href = `/trending/create?new=${encodeURIComponent(tag)}`;
     }
   };
 
@@ -51,7 +51,7 @@ export default function MobileTrendingTagCard({
     if (onView) {
       onView();
     } else if (token) {
-      window.location.href = `/trendminer/tokens/${encodeURIComponent(token.name || token.address)}`;
+      window.location.href = `/trending/tokens/${encodeURIComponent(token.name || token.address)}`;
     }
   };
 
@@ -65,7 +65,8 @@ export default function MobileTrendingTagCard({
       <div className="flex justify-between items-start mb-2 sm:mb-1.5">
         <div className="flex-1 min-w-0">
           <div className="text-sm font-bold text-[var(--standard-font-color)] leading-tight mb-0.5 sm:text-xs">
-            #{tag.toUpperCase()}
+            <span className="text-white/60 text-[.9em] mr-0.5 align-baseline">#</span>
+            <span>{tag.toUpperCase()}</span>
           </div>
           {source && (
             <div className="text-xs text-[var(--light-font-color)] opacity-70 sm:text-[10px]">
@@ -95,7 +96,8 @@ export default function MobileTrendingTagCard({
             onClick={handleView}
             className="min-w-15 h-7 text-[11px] sm:min-w-12.5 sm:h-6.5 sm:text-[10px]"
           >
-            View #{token.name || token.symbol}
+            View <span className="text-white/60 text-[.9em] mr-0.5 align-baseline">#</span>
+            <span>{token.name || token.symbol}</span>
           </AeButton>
         </div>
       ) : (

@@ -208,8 +208,8 @@ export default function TrendingPillsCarousel() {
                 }}
                 onClick={() => {
                   const url = hasToken 
-                    ? `/trendminer/tokens/${encodeURIComponent(tag.tag)}` 
-                    : `/trendminer/create?new=${encodeURIComponent(tag.tag)}`;
+                    ? `/trending/tokens/${encodeURIComponent(tag.tag)}` 
+                    : `/trending/create?new=${encodeURIComponent(tag.tag)}`;
                   window.location.href = url;
                 }}
               >
@@ -217,7 +217,8 @@ export default function TrendingPillsCarousel() {
                   {/* Single Compact Row */}
                   <div className="trending-compact-row">
                     <span className={`trending-tag-name ${style.textGradient} bg-clip-text text-transparent`}>
-                      #{tag.tag}
+                      <span className="text-white/60 text-[.9em] mr-0.5 align-baseline">#</span>
+                      <span>{tag.tag}</span>
                     </span>
                     <div className="trending-right-content">
                       <div className={`trending-score ${style.textGradient} bg-clip-text text-transparent`}>

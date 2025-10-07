@@ -67,7 +67,7 @@ export default function UserProfile({
   });
 
   // Account info (bio, chain name, totals) from backend
-  const { data: accountInfo } = useQuery({
+  const { data: accountInfo, refetch: refetchAccount } = useQuery({
     queryKey: ["AccountsService.getAccount", effectiveAddress],
     queryFn: () =>
       AccountsService.getAccount({
@@ -205,6 +205,35 @@ export default function UserProfile({
     })();
   }, [effectiveAddress]);
 
+  // Listen for bio post submissions to show a spinner and refetch until updated
+  useEffect(() => {
+    function handleBioPosted(e: Event) {
+      try {
+        const detail = (e as CustomEvent).detail as { address?: string };
+        if (!detail?.address || detail.address !== effectiveAddress) return;
+        const el = document.getElementById("bio-loading-indicator");
+        if (el) el.classList.remove("hidden");
+        // Poll account endpoint briefly to pick up new bio
+        const start = Date.now();
+        const interval = window.setInterval(async () => {
+          await refetchAccount();
+          const latestBio = (accountInfo?.bio || "").trim();
+          if (latestBio) {
+            if (el) el.classList.add("hidden");
+            window.clearInterval(interval);
+          }
+          if (Date.now() - start > 15_000) {
+            // timeout after 15s
+            if (el) el.classList.add("hidden");
+            window.clearInterval(interval);
+          }
+        }, 1500);
+      } catch {}
+    }
+    window.addEventListener("profile-bio-posted", handleBioPosted as any);
+    return () => window.removeEventListener("profile-bio-posted", handleBioPosted as any);
+  }, [effectiveAddress, refetchAccount, accountInfo?.bio]);
+
   const content = (
     <div className="w-full">
       <div className="mb-4">
@@ -256,8 +285,9 @@ export default function UserProfile({
                 </div>
                 <div className="font-mono text-xs text-white/70 break-all">{effectiveAddress}</div>
                 {bioText && (
-                  <div className="mt-2 text-sm text-white whitespace-pre-wrap">
-                    {bioText}
+                  <div className="mt-2 text-sm text-white whitespace-pre-wrap inline-flex items-center gap-2">
+                    <span>{bioText}</span>
+                    <span id="bio-loading-indicator" className="hidden w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   </div>
                 )}
               </div>

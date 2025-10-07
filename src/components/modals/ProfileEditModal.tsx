@@ -90,11 +90,19 @@ export default function ProfileEditModal({
         aci: TIPPING_V3_ACI as any,
         address: CONFIG.CONTRACT_V3_ADDRESS as `ct_${string}`,
       });
-      await contract.post_without_tip(text, ["bio-update", "hidden"]);
-      // Optimistically update account bio in cache so UI reflects immediately
-      const cacheKey = ["AccountsService.getAccount", (address as string) || (activeAccount as string)];
-      queryClient.setQueryData(cacheKey, (prev: any) => ({ ...(prev || {}), bio: text }));
-      push(<div>Bio update submitted</div>);
+      const res: any = await contract.post_without_tip(text, ["bio-update", "hidden"]);
+      // Notify listeners that a bio update post was submitted; parent can show a spinner and poll
+      try {
+        const evt = new CustomEvent("profile-bio-posted", {
+          detail: {
+            address: (address as string) || (activeAccount as string),
+            bio: text,
+            txHash: res?.hash || res?.transactionHash || res?.tx?.hash,
+          },
+        });
+        window.dispatchEvent(evt);
+      } catch {}
+      push(<div>Bio update submitted. Waiting for on-chain confirmation…</div>);
       onClose();
     } catch (e: any) {
       push(

@@ -213,16 +213,6 @@ export default function UserProfile({
               <AeButton size="sm" onClick={() => setEditOpen(true)}>
                 Edit Profile
               </AeButton>
-              <AeButton
-                onClick={() => openModal({ name: "tip", props: { toAddress: effectiveAddress } })}
-                variant="ghost"
-                size="sm"
-                className="!border !border-solid !border-white/15 hover:!border-white/35 inline-flex items-center gap-2"
-                title="Send a tip"
-              >
-                <IconDiamond className="w-4 h-4 text-[#1161FE]" />
-                Tip
-              </AeButton>
             </div>
           ) : (
             <AeButton

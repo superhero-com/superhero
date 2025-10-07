@@ -313,14 +313,14 @@ export default function UserProfile({
           variant="tab"
           active={tab === "owned"}
         >
-          Owned Tokens
+          Owned Trends
         </AeButton>
         <AeButton
           onClick={() => setTab("created")}
           variant="tab"
           active={tab === "created"}
         >
-          Created Tokens
+          Created Trends
         </AeButton>
         <AeButton
           onClick={() => setTab("transactions")}

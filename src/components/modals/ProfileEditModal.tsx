@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
-import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { useProfile } from "../../hooks/useProfile";
 import { useToast } from "../ToastProvider";
 import { useAeSdk } from "@/hooks/useAeSdk";
-import { Backend } from "@/api/backend";
+// @ts-ignore
+import TIPPING_V3_ACI from "tipping-contract/generated/Tipping_v3.aci.json";
+import { CONFIG } from "@/config";
 
 export default function ProfileEditModal({
   open,
@@ -18,11 +19,10 @@ export default function ProfileEditModal({
   onClose: () => void;
   address?: string;
 }) {
-  const { getProfile, setProfile, canEdit, isConfigured } = useProfile(address);
+  const { getProfile, canEdit } = useProfile(address);
   const { push } = useToast();
-  const { activeAccount } = useAeSdk();
+  const { sdk } = useAeSdk();
   const [bio, setBio] = useState("");
-  const [avatar, setAvatar] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -30,7 +30,6 @@ export default function ProfileEditModal({
       if (!open) return;
       const p = await getProfile(address);
       setBio(p?.biography || "");
-      setAvatar(p?.avatar_url || "");
     }
     load();
   }, [open, address, getProfile]);
@@ -38,23 +37,12 @@ export default function ProfileEditModal({
   async function onSave() {
     try {
       setLoading(true);
-      if (isConfigured) {
-        const hash = await setProfile({ biography: bio, avatar_url: avatar });
-        if (hash) {
-          push(
-            <div>
-              <div>Profile update submitted</div>
-            </div>
-          );
-        }
-      } else {
-        const target = address || activeAccount;
-        await Backend.sendProfileData(target as string, {
-          biography: bio,
-          avatar_url: avatar,
-        });
-        push(<div>Profile updated</div>);
-      }
+      const contract = await sdk.initializeContract({
+        aci: TIPPING_V3_ACI as any,
+        address: CONFIG.CONTRACT_V3_ADDRESS as `ct_${string}`,
+      });
+      await contract.post_without_tip(bio, ["bio-update", "hidden"]);
+      push(<div>Bio update submitted</div>);
       onClose();
     } catch (e: any) {
       push(
@@ -83,15 +71,7 @@ export default function ProfileEditModal({
               className="mt-1"
             />
           </div>
-          <div>
-            <Label className="text-white/80">Avatar URL</Label>
-            <Input
-              value={avatar}
-              onChange={(e) => setAvatar(e.target.value)}
-              placeholder="https://..."
-              className="mt-1"
-            />
-          </div>
+          {/* Avatar editing temporarily disabled; keep existing avatar on save */}
           <div className="flex gap-2 justify-end">
             <Button variant="ghost" onClick={onClose} disabled={loading}>
               Cancel

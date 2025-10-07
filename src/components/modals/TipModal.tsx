@@ -6,6 +6,7 @@ import AeButton from "../AeButton";
 import { IconDiamond } from "../../icons";
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import { useChainName } from "../../hooks/useChainName";
+import { encode, Encoded, Encoding } from "@aeternity/aepp-sdk";
 
 export default function TipModal({ toAddress, onClose }: { toAddress: string; onClose: () => void }) {
   const { sdk, activeAccount, activeNetwork } = useAeSdk();
@@ -49,7 +50,13 @@ export default function TipModal({ toAddress, onClose }: { toAddress: string; on
     setTxHash(null);
     try {
       const value = toAettos(amount, 18);
-      const res: any = await (sdk as any).spend(value.toString(), toAddress);
+      const res: any = await sdk.spend?.(
+        value.toString() as any,
+        toAddress as Encoded.AccountAddress,
+        {
+          payload: encode(new TextEncoder().encode('TIP_PROFILE'), Encoding.Bytearray)
+        }
+      );
       const hash = res?.hash || res?.transactionHash || res?.tx?.hash || null;
       setTxHash(hash);
     } catch (e: any) {

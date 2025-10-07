@@ -239,7 +239,10 @@ export default function UserProfile({
       <div className="mb-4">
         <AeButton
           onClick={() => {
-            window.history.length > 1 ? navigate(-1) : navigate("/");
+            const state = (window.history?.state as any) || {};
+            const canGoBack = typeof state.idx === "number" ? state.idx > 0 : window.history.length > 1;
+            if (canGoBack) navigate(-1);
+            else navigate("/", { replace: true });
           }}
           variant="ghost"
           size="sm"

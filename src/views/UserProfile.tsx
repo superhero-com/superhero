@@ -211,7 +211,7 @@ export default function UserProfile({
         <div className="px-4 md:px-6 pb-4 md:pb-6 -mt-10 md:-mt-12 relative z-10">
           <div className="flex items-end justify-between gap-4">
             <div className="flex items-end gap-4 min-w-0">
-              <div className="shrink-0 rounded-2xl p-1 bg-white/10 border border-white/10 backdrop-blur-md">
+              <div className="shrink-0">
                 <AddressAvatarWithChainName
                   address={effectiveAddress}
                   size={88}

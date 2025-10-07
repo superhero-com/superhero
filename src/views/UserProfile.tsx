@@ -260,7 +260,7 @@ export default function UserProfile({
               {/* Explorer link */}
               <AeButton
                 variant="ghost"
-                size="xs"
+                size="sm"
                 className="!border !border-solid !border-white/15 hover:!border-white/35"
                 onClick={() => {
                   const base = (CONFIG.EXPLORER_URL || "https://aescan.io").replace(/\/$/, "");

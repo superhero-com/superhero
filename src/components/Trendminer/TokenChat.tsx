@@ -1,114 +1,299 @@
-import React, { useEffect, useState } from 'react';
-import { cn } from '../../lib/utils';
+import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { QualiChatService, type QualiMessage } from '../../libs/QualiChatService';
 import AeButton from '../AeButton';
-import AddressChip from '../AddressChip';
 
-type Props = { token: { name: string; address: string } };
+type Props = {
+  token: {
+    name: string;
+    address: string;
+  };
+};
+
+type ChatState = {
+  messages: QualiMessage[];
+  from: string | undefined;
+  endReached: boolean;
+  loading: boolean;
+  error: string | null;
+  retryCount: number;
+};
+
+// Loading skeleton component
+const MessageSkeleton = () => (
+  <div className="h-10.5 rounded-lg bg-white/8 animate-pulse" />
+);
+
+// Individual message component
+const MessageItem = ({ message, index }: { message: QualiMessage; index: number }) => {
+  const formatTimestamp = (ts?: number) => {
+    if (!ts) return '';
+    try {
+      return new Date(ts).toLocaleString();
+    } catch {
+      return '';
+    }
+  };
+
+  function parseAddress(address: string) {
+    if (address.startsWith('@')) {
+      address = address.slice(1);
+    }
+    if (address.includes(':')) {
+      address = address.split(':')[0];
+    }
+    return address;
+  }
+
+  return (
+    <div className="border border-white/20 rounded-lg p-2.5 bg-white/5">
+      <div className="text-xs opacity-80 flex justify-between mb-0.5 text-white/80">
+        <AddressAvatarWithChainName
+          address={parseAddress(message.sender)}
+          size={36}
+          contentClassName="px-2 pb-0"
+          className="w-auto"
+        />
+        <span>{formatTimestamp(message.timestamp)}</span>
+      </div>
+      <div className="text-sm text-white">
+        {message.content?.body}
+      </div>
+    </div>
+  );
+};
+
+// Error display component
+const ErrorDisplay = ({ error, onRetry }: { error: string; onRetry: () => void }) => (
+  <div className="text-red-400 text-sm text-center p-3 bg-red-500/10 rounded-lg border border-red-500/30">
+    <div className="mb-2">{error}</div>
+    <AeButton
+      onClick={onRetry}
+      variant="ghost"
+      size="small"
+      className="text-red-400 hover:text-red-300"
+    >
+      Retry
+    </AeButton>
+  </div>
+);
+
+// Empty state component
+const EmptyState = () => (
+  <div className="text-center py-8">
+    <div className="text-sm text-white/60 mb-2">There are no comments yet</div>
+    <div className="text-xs text-white/40">Be the first to share your thoughts!</div>
+  </div>
+);
+
+// Add comment CTA component
+const AddCommentCTA = () => (
+  <div className="text-center border border-white/20 rounded-xl p-3 bg-white/5">
+    <a
+      href="https://quali.chat/"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors"
+    >
+      Add comment
+    </a>
+    <div className="mt-1.5 text-xs opacity-70 text-white/70">
+      Service provided by <strong>Quali.chat</strong>
+    </div>
+  </div>
+);
 
 export default function TokenChat({ token }: Props) {
-  const [messages, setMessages] = useState<QualiMessage[]>([]);
-  const [from, setFrom] = useState<string | undefined>();
-  const [endReached, setEndReached] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [state, setState] = useState<ChatState>({
+    messages: [],
+    from: undefined,
+    endReached: false,
+    loading: false,
+    error: null,
+    retryCount: 0,
+  });
 
-  function formatTs(ts?: number) {
-    if (!ts) return '';
-    try { return new Date(ts).toLocaleString(); } catch { return ''; }
-  }
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const maxRetries = 3;
 
-  async function loadMore() {
-    if (loading || endReached) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const resp = await QualiChatService.getTokenMessages(token.name, token.address, { from, limit: 20 });
-      const onlyText = (resp?.data || []).filter((m) => m?.content?.msgtype === 'm.text');
-      setMessages((prev) => [...prev, ...onlyText]);
-      setFrom(resp?.end || undefined);
-      if (!resp?.data?.length || !resp?.end) setEndReached(true);
-    } catch (e: any) {
-      if (e?.status === 404) {
-        setEndReached(true);
-      } else {
-        setError('Unable to load comments');
-      }
-    } finally {
-      setLoading(false);
+  const resetChat = useCallback(() => {
+    // Clear any pending retry timeout
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
     }
-  }
 
-  useEffect(() => { setMessages([]); setFrom(undefined); setEndReached(false); }, [token?.address, token?.name]);
-  useEffect(() => { loadMore(); /* initial */ }, [token?.address, token?.name]);
+    setState({
+      messages: [],
+      from: undefined,
+      endReached: false,
+      loading: false,
+      error: null,
+      retryCount: 0,
+    });
+  }, []);
+
+  const scheduleRetry = useCallback((isInitial: boolean) => {
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+    }
+
+    retryTimeoutRef.current = setTimeout(() => {
+      setState(prevState => {
+        if (prevState.retryCount >= maxRetries) {
+          return {
+            ...prevState,
+            error: 'Failed to load comments after multiple attempts. Please try again later.',
+            loading: false,
+          };
+        }
+
+        return {
+          ...prevState,
+          retryCount: prevState.retryCount + 1,
+          loading: true,
+          error: null,
+        };
+      });
+
+      loadMessages(isInitial);
+    }, 5000);
+  }, [maxRetries]);
+
+  const loadMessages = useCallback(async (isInitial = false) => {
+    setState(prevState => {
+      if (prevState.loading || prevState.endReached) return prevState;
+
+      // Start loading
+      const newState = { ...prevState, loading: true, error: null };
+
+      // Load messages asynchronously
+      (async () => {
+        try {
+          const response = await QualiChatService.getTokenMessages(
+            token.name,
+            token.address,
+            { from: prevState.from, limit: 20 }
+          );
+
+          const textMessages = (response?.data || [])
+            .filter((m) => m?.content?.msgtype === 'm.text');
+
+          setState(currentState => ({
+            ...currentState,
+            messages: isInitial ? textMessages : [...currentState.messages, ...textMessages],
+            from: response?.end || undefined,
+            endReached: !response?.data?.length || !response?.end,
+            loading: false,
+            retryCount: 0, // Reset retry count on success
+          }));
+        } catch (error: any) {
+          if (error?.status === 404) {
+            setState(currentState => ({
+              ...currentState,
+              loading: false,
+              endReached: true,
+              retryCount: 0,
+            }));
+          } else {
+            setState(currentState => {
+              const shouldRetry = currentState.retryCount < maxRetries;
+
+              if (shouldRetry) {
+                // Schedule retry
+                scheduleRetry(isInitial);
+                return {
+                  ...currentState,
+                  loading: false,
+                  error: `Failed to load comments. Retrying in 5 seconds... (${currentState.retryCount + 1}/${maxRetries})`,
+                };
+              } else {
+                // Max retries reached
+                return {
+                  ...currentState,
+                  loading: false,
+                  error: 'Unable to load comments after multiple attempts. Please try again later.',
+                };
+              }
+            });
+          }
+        }
+      })();
+
+      return newState;
+    });
+  }, [token.name, token.address, maxRetries, scheduleRetry]);
+
+  const handleRetry = useCallback(() => {
+    resetChat();
+    loadMessages(true);
+  }, [resetChat, loadMessages]);
+
+  // Reset chat when token changes
+  useEffect(() => {
+    resetChat();
+  }, [token?.address, token?.name, resetChat]);
+
+  // Load initial messages
+  useEffect(() => {
+    loadMessages(true);
+  }, [token?.address, token?.name, loadMessages]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const hasMessages = state.messages.length > 0;
+  const showEmptyState = !state.loading && !state.error && state.endReached && !hasMessages;
 
   return (
     <div className="grid gap-2">
-      <div className="text-center border border-white/20 rounded-xl p-3 bg-white/5">
-        <a 
-          href="https://quali.chat/" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors"
-        >
-          Add comment
-        </a>
-        <div className="mt-1.5 text-xs opacity-70 text-white/70">
-          Service provided by <strong>Quali.chat</strong>
-        </div>
-      </div>
-      
-      {error && (
-        <div className="text-red-400 text-sm text-center p-3 bg-red-500/10 rounded-lg border border-red-500/30">
-          {error}
-        </div>
+      <AddCommentCTA />
+
+      {state.error && (
+        <ErrorDisplay error={state.error} onRetry={handleRetry} />
       )}
-      
-      {!error && (
+
+      {!state.error && (
         <div className="grid gap-2">
-          {messages.map((m, idx) => (
-            <div 
-              key={m.event_id || `${idx}`} 
-              className="border border-white/20 rounded-lg p-2.5 bg-white/5"
-            >
-              <div className="text-xs opacity-80 flex justify-between mb-0.5 text-white/80">
-                <AddressChip
-                  address={m.sender || 'user'}
-                  linkToProfile={true}
-                  large={true}
-                />
-                <span>{formatTs(m.origin_server_ts)}</span>
-              </div>
-              <div className="text-sm text-white">
-                {m.content?.body}
-              </div>
-            </div>
-          ))}
-          
-          {loading && new Array(3).fill(0).map((_, i) => (
-            <div 
-              key={`s-${i}`} 
-              className="h-10.5 rounded-lg bg-white/8 animate-pulse"
+          {state.messages.map((message, index) => (
+            <MessageItem
+              key={message.event_id || `message-${index}`}
+              message={message}
+              index={index}
             />
           ))}
+
+          {state.loading && (
+            <>
+              {Array.from({ length: 3 }, (_, i) => (
+                <MessageSkeleton key={`skeleton-${i}`} />
+              ))}
+            </>
+          )}
         </div>
       )}
-      
+
       <div className="text-center mt-1.5">
-        {!endReached ? (
-          <AeButton 
-            onClick={loadMore} 
-            disabled={loading} 
-            loading={loading} 
-            variant="ghost" 
+        {!state.endReached && !state.error && (
+          <AeButton
+            onClick={() => loadMessages(false)}
+            disabled={state.loading}
+            loading={state.loading}
+            variant="ghost"
             size="medium"
             className="min-w-24"
           >
-            {loading ? 'Loading…' : 'Load more'}
+            {state.loading ? 'Loading…' : 'Load more'}
           </AeButton>
-        ) : (!messages.length && (
-          <div className="text-sm text-white/60">There are no comments yet</div>
-        ))}
+        )}
+
+        {showEmptyState && <EmptyState />}
       </div>
     </div>
   );

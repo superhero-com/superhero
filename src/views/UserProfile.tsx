@@ -234,7 +234,12 @@ export default function UserProfile({
             </div>
             <div className="flex items-center gap-2 md:gap-3">
               {canEdit ? (
-                <AeButton size="sm" onClick={() => setEditOpen(true)}>
+                <AeButton
+                  size="sm"
+                  variant="ghost"
+                  className="!border !border-solid !border-white/20 hover:!border-white/35"
+                  onClick={() => setEditOpen(true)}
+                >
                   Edit Profile
                 </AeButton>
               ) : null}

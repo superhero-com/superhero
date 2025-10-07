@@ -206,12 +206,12 @@ export default function UserProfile({
       {/* Profile header (banner + avatar + stats) */}
       <div className="mb-5 md:mb-6 rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl relative">
         {/* Banner */}
-        <div className="h-28 md:h-36 w-full bg-[radial-gradient(100%_60%_at_0%_0%,rgba(17,97,254,0.35),transparent_60%),radial-gradient(100%_60%_at_100%_0%,rgba(78,205,196,0.35),transparent_60%)]" />
+        <div className="h-16 md:h-28 w-full bg-[radial-gradient(100%_60%_at_0%_0%,rgba(17,97,254,0.35),transparent_60%),radial-gradient(100%_60%_at_100%_0%,rgba(78,205,196,0.35),transparent_60%)]" />
 
         {/* Avatar and main info */}
         <div className="px-4 md:px-6 pb-4 md:pb-6 -mt-10 md:-mt-12 relative z-10">
-          <div className="flex items-end justify-between gap-4">
-            <div className="flex items-end gap-4 min-w-0">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-start md:gap-4">
+            <div className="flex flex-col gap-3 min-w-0 md:flex-row md:items-end md:gap-4 md:flex-1">
               <div className="shrink-0">
                 <AddressAvatarWithChainName
                   address={effectiveAddress}
@@ -233,7 +233,7 @@ export default function UserProfile({
                 )}
               </div>
             </div>
-            <div className="flex flex-col items-end gap-2 md:gap-2">
+            <div className="flex flex-row flex-wrap items-start gap-2 md:items-start md:gap-2 md:ml-auto md:self-start">
               {canEdit ? (
                 <AeButton
                   size="sm"
@@ -261,7 +261,7 @@ export default function UserProfile({
               <AeButton
                 variant="ghost"
                 size="sm"
-                className="!border !border-solid !border-white/15 hover:!border-white/35"
+                className="!border !border-solid !border-white/15 hover:!border-white/35 [&_svg]:!size-[0.9em]"
                 onClick={() => {
                   const base = (CONFIG.EXPLORER_URL || "https://aescan.io").replace(/\/$/, "");
                   const url = `${base}/accounts/${effectiveAddress}`;
@@ -271,14 +271,14 @@ export default function UserProfile({
               >
                 <span className="inline-flex items-center gap-2">
                   <span>View on æScan</span>
-                  <IconLink className="w-[0.85em] h-[0.85em] opacity-80" />
+                  <IconLink className="w-[0.65em] h-[0.65em] opacity-80 align-middle" />
                 </span>
               </AeButton>
             </div>
           </div>
 
           {/* Stats */}
-          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+          <div className="mt-3 md:mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
             <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
               <div className="text-[11px] uppercase tracking-wider text-white/60">AE Balance</div>
               <div className="text-white font-bold mt-1">{decimalBalance ? `${decimalBalance.prettify()} AE` : "Loading..."}</div>

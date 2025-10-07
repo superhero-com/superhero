@@ -9,7 +9,10 @@ export default function GovernancePolls() {
 
   const [search, setSearch] = useState<string>("");
   const [status, setStatus] = useState<"all" | "open" | "closed">("open");
-  const { data: polls = [] } = usePolls({ status, search });
+  const { data: polls, isLoading } = usePolls({ status, search });
+
+  //   console.log(JSON.stringify(polls, null, 2));
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900/50 via-slate-800/30 to-slate-900/50">
@@ -18,7 +21,7 @@ export default function GovernancePolls() {
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-3xl blur-3xl -z-10" />
           <div className="flex items-center justify-between mb-8 py-8 px-6 bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl">
-            <div className="flex items-center gap-6">
+            <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="relative">
                 <div className="w-16 h-16 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
                   <span className="text-2xl">🗳️</span>
@@ -36,13 +39,19 @@ export default function GovernancePolls() {
               </div>
             </div>
             <div className="hidden md:flex items-center gap-3">
-              <div className="px-4 py-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl border border-green-500/30">
-                <span className="text-green-400 text-sm font-semibold">
-                  {
-                    polls.filter((p) => p.status?.toLowerCase() === "open")
-                      .length
-                  }{" "}
-                  Active
+              <div
+                className={`px-4 py-2 rounded-2xl  ${
+                  status === "open"
+                    ? "to-emerald-500/20 bg-gradient-to-r border border-green-500/30 from-green-500/20"
+                    : "to-red-500/20 bg-gradient-to-r border border-red-500/30 from-red-500/20"
+                }`}
+              >
+                <span
+                  className={`text-green-400 text-sm font-semibold ${
+                    status === "open" ? "text-green-400" : "text-red-400"
+                  }`}
+                >
+                  {polls.length} {status === "open" ? "Active" : "Closing"}
                 </span>
               </div>
             </div>
@@ -165,14 +174,6 @@ export default function GovernancePolls() {
                   <div className="flex flex-col gap-4">
                     <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-blue-500/5 rounded-3xl blur-2xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                    {/* <MobileCard
-                      variant="default"
-                      padding="large"
-                      clickable
-                      loading={false}
-                      className="bg-black/30 backdrop-blur-2xl border border-white/10 rounded-3xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-white/20 overflow-hidden relative group/card animate-[slideInUp_0.6s_ease-out]"
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    > */}
                     <div className="p-4 bg-black/30  border border-white/10 rounded-3xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-white/20 overflow-hidden group/card animate-[slideInUp_0.6s_ease-out]">
                       {/* Animated gradient border */}
                       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
@@ -180,7 +181,7 @@ export default function GovernancePolls() {
                       {/* Status indicator with glow */}
                       <div className="absolute top-4 right-4 z-10">
                         <div
-                          className={`relative px-4 py-2 rounded-2xl text-xs font-bold uppercase tracking-wide whitespace-nowrap transition-all duration-300 ${
+                          className={`relative px-3 py-2 rounded-2xl text-xs font-bold uppercase tracking-wide whitespace-nowrap transition-all duration-300 ${
                             p.status?.toLowerCase() === "open"
                               ? "bg-gradient-to-br from-green-500/30 to-emerald-500/20 text-green-300 border border-green-400/40 shadow-[0_0_20px_rgba(34,197,94,0.3)]"
                               : p.status?.toLowerCase() === "closed"
@@ -253,7 +254,6 @@ export default function GovernancePolls() {
                         <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 rounded-3xl" />
                       </div>
                     </div>
-                    {/* </MobileCard> */}
                   </div>
                 </Link>
               ))}

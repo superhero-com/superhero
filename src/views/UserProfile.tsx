@@ -227,13 +227,13 @@ export default function UserProfile({
                 </div>
                 <div className="font-mono text-xs text-white/70 break-all">{effectiveAddress}</div>
                 {bioText && (
-                  <div className="mt-2 text-sm text-white/80 whitespace-pre-wrap">
+                  <div className="mt-2 text-sm text-white whitespace-pre-wrap">
                     {bioText}
                   </div>
                 )}
               </div>
             </div>
-            <div className="flex flex-row flex-wrap items-start gap-2 md:items-start md:gap-2 md:ml-auto md:self-start">
+            <div className="flex flex-row flex-wrap items-start gap-2 md:flex-col md:items-end md:gap-2 md:ml-auto md:self-start">
               {canEdit ? (
                 <AeButton
                   size="sm"

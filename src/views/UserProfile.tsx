@@ -8,6 +8,7 @@ import UserBadge from "../components/UserBadge";
 
 import { useQuery } from "@tanstack/react-query";
 import { PostsService } from "../api/generated";
+import { AccountsService } from "../api/generated/services/AccountsService";
 import { TokensService } from "../api/generated/services/TokensService";
 import { AccountTokensService } from "../api/generated/services/AccountTokensService";
 import { TransactionsService } from "../api/generated/services/TransactionsService";
@@ -65,6 +66,17 @@ export default function UserProfile({
     enabled: !!effectiveAddress,
   });
 
+  // Account info (bio, chain name, totals) from backend
+  const { data: accountInfo } = useQuery({
+    queryKey: ["AccountsService.getAccount", effectiveAddress],
+    queryFn: () =>
+      AccountsService.getAccount({
+        address: effectiveAddress,
+      }) as unknown as Promise<any>,
+    enabled: !!effectiveAddress,
+    staleTime: 10_000,
+  });
+
   const [profile, setProfile] = useState<any>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [tab, setTab] = useState<TabType>("feed");
@@ -84,16 +96,17 @@ export default function UserProfile({
       "AccountTokensService.listTokenHolders",
       effectiveAddress,
       ownedOrderDirection,
+      tab === "owned" ? 100 : 1, // vary by mode so cache keys differ
     ],
     queryFn: () =>
       AccountTokensService.listTokenHolders({
         address: effectiveAddress,
         orderBy: "balance",
         orderDirection: ownedOrderDirection,
-        limit: 100,
+        limit: tab === "owned" ? 100 : 1,
         page: 1,
       }) as unknown as Promise<{ items: any[]; meta?: any }>,
-    enabled: !!effectiveAddress && tab === "owned",
+    enabled: !!effectiveAddress,
     staleTime: 60_000,
   });
 
@@ -105,16 +118,17 @@ export default function UserProfile({
       effectiveAddress,
       orderBy,
       orderDirection,
+      tab === "created" ? 100 : 1, // vary by mode
     ],
     queryFn: () =>
       TokensService.listAll({
         creatorAddress: effectiveAddress,
         orderBy,
         orderDirection,
-        limit: 100,
+        limit: tab === "created" ? 100 : 1,
         page: 1,
       }) as unknown as Promise<{ items: any[]; meta?: any }>,
-    enabled: !!effectiveAddress && tab === "created",
+    enabled: !!effectiveAddress,
     staleTime: 60_000,
   });
 
@@ -175,7 +189,10 @@ export default function UserProfile({
     }
     return undefined;
   }, [posts]);
-  const bioText = latestBioPost?.content?.trim() || profile?.biography;
+  const bioText =
+    (accountInfo?.bio || "").trim() ||
+    latestBioPost?.content?.trim() ||
+    profile?.biography;
 
   useEffect(() => {
     if (!effectiveAddress) return;
@@ -211,19 +228,31 @@ export default function UserProfile({
         {/* Avatar and main info */}
         <div className="px-4 md:px-6 pb-4 md:pb-6 -mt-10 md:-mt-12 relative z-10">
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-start md:gap-4">
-            <div className="flex flex-col gap-3 min-w-0 md:flex-row md:items-end md:gap-4 md:flex-1">
-              <div className="shrink-0">
-                <AddressAvatarWithChainName
-                  address={effectiveAddress}
-                  size={88}
-                  overlaySize={28}
-                  showAddressAndChainName={false}
-                  isHoverEnabled={true}
-                />
+            <div className="flex flex-col gap-3 min-w-0 md:flex-row md:items-start md:gap-4 md:flex-1">
+              <div className="shrink-0 self-start">
+                {/* Smaller avatar on mobile */}
+                <div className="md:hidden">
+                  <AddressAvatarWithChainName
+                    address={effectiveAddress}
+                    size={64}
+                    overlaySize={22}
+                    showAddressAndChainName={false}
+                    isHoverEnabled={true}
+                  />
+                </div>
+                <div className="hidden md:block">
+                  <AddressAvatarWithChainName
+                    address={effectiveAddress}
+                    size={88}
+                    overlaySize={28}
+                    showAddressAndChainName={false}
+                    isHoverEnabled={true}
+                  />
+                </div>
               </div>
-              <div className="min-w-0 pb-1">
+              <div className="min-w-0 pb-1 md:self-center">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xl md:text-2xl font-extrabold text-white tracking-tight">{chainName || "Legend"}</span>
+                  <span className="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent tracking-tight">{chainName || "Legend"}</span>
                 </div>
                 <div className="font-mono text-xs text-white/70 break-all">{effectiveAddress}</div>
                 {bioText && (
@@ -284,51 +313,50 @@ export default function UserProfile({
               <div className="text-white font-bold mt-1">{decimalBalance ? `${decimalBalance.prettify()} AE` : "Loading..."}</div>
             </div>
             <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
-              <div className="text-[11px] uppercase tracking-wider text-white/60">Tokens</div>
-              <div className="text-white font-bold mt-1">{Array.isArray(aex9Balances) ? aex9Balances.length : 0}</div>
+              <div className="text-[11px] uppercase tracking-wider text-white/60">Owned Trends</div>
+              <div className="text-white font-bold mt-1">{(ownedTokensResp as any)?.meta?.totalItems ?? (Array.isArray(aex9Balances) ? aex9Balances.length : 0)}</div>
+            </div>
+            <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
+              <div className="text-[11px] uppercase tracking-wider text-white/60">Created Trends</div>
+              <div className="text-white font-bold mt-1">{(createdTokensResp as any)?.meta?.totalItems ?? ((createdTokensResp?.items?.length) || 0)}</div>
             </div>
             <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
               <div className="text-[11px] uppercase tracking-wider text-white/60">Posts</div>
               <div className="text-white font-bold mt-1">{posts.length}</div>
             </div>
-            <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
-              <div className="text-[11px] uppercase tracking-wider text-white/60">Address</div>
-              <div className="text-white font-mono text-[12px] mt-1 truncate" title={effectiveAddress}>{effectiveAddress}</div>
-            </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-4 border-b border-[#2f2f3b] px-1">
-        <AeButton
-          onClick={() => setTab("feed")}
-          variant="tab"
-          active={tab === "feed"}
-        >
-          Feed
-        </AeButton>
-        <AeButton
-          onClick={() => setTab("owned")}
-          variant="tab"
-          active={tab === "owned"}
-        >
-          Owned Trends
-        </AeButton>
-        <AeButton
-          onClick={() => setTab("created")}
-          variant="tab"
-          active={tab === "created"}
-        >
-          Created Trends
-        </AeButton>
-        <AeButton
-          onClick={() => setTab("transactions")}
-          variant="tab"
-          active={tab === "transactions"}
-        >
-          Transactions
-        </AeButton>
+      {/* Tabs - reuse main feed filter styles (mobile underline, desktop pills) */}
+      <div className="w-full mb-2">
+        {/* Underline tabs with divider. Full-bleed on mobile; constrained on md+. */}
+        <div>
+          <div className="flex items-center justify-start gap-4 border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] overflow-x-auto whitespace-nowrap md:w-full md:mx-0 md:overflow-visible md:gap-10">
+            {([
+              { key: "feed", label: "Feed" },
+              { key: "owned", label: "Owned Trends" },
+              { key: "created", label: "Created Trends" },
+              { key: "transactions", label: "Transactions" },
+            ] as const).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setTab(key as TabType)}
+                className={[
+                  "relative px-1 py-3 text-xs leading-none font-semibold transition-colors !bg-transparent !shadow-none whitespace-nowrap shrink-0 md:px-3 md:py-3 md:text-sm",
+                  "hover:!bg-transparent focus:!bg-transparent active:!bg-transparent focus-visible:!ring-0 focus:!outline-none",
+                  tab === key
+                    ? "text-white after:content-[''] after:absolute after:left-0 after:right-0 after:-bottom-[1px] after:h-0.5 after:bg-[#1161FE] after:rounded-full after:mx-1"
+                    : "text-white/70",
+                ].join(" ")}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* No desktop pill group; using the same layout across breakpoints */}
       </div>
 
       {tab === "feed" && (
@@ -381,7 +409,7 @@ export default function UserProfile({
             <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
               {/* Header */}
               <div className="hidden md:grid grid-cols-4 gap-4 px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide">
-                <div>Token</div>
+                <div>Trends</div>
                 <div>Price</div>
                 <button
                   className="text-left hover:opacity-80"
@@ -423,18 +451,18 @@ export default function UserProfile({
                         key={`${token?.address || token?.name || idx}`}
                         className="owned-token-row grid grid-cols-1 md:grid-cols-4 gap-4 px-6 py-4 rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
                       >
-                        {/* Token */}
+                        {/* Trends */}
                         <div className="flex items-center min-w-0">
                           {tokenHref ? (
                             <a
                               href={tokenHref}
                               className="token-name text-md font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent hover:underline truncate"
                             >
-                              {tokenName}
+                              #{tokenName}
                             </a>
                           ) : (
                             <div className="token-name text-md font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent truncate">
-                              {tokenName}
+                              #{tokenName}
                             </div>
                           )}
                         </div>
@@ -816,6 +844,7 @@ export default function UserProfile({
           })();
         }}
         address={effectiveAddress}
+        initialBio={bioText}
       />
     </Shell>
   ) : (
@@ -832,6 +861,7 @@ export default function UserProfile({
           })();
         }}
         address={effectiveAddress}
+        initialBio={bioText}
       />
     </>
   );

@@ -32,50 +32,58 @@ export default function ProfileEditModal({
   const BIO_CHAR_LIMIT = 280;
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   // Track which bio value we already selected for; ensures selection runs after async loads and on each open
-  const selectedForBioRef = useRef<string | null>(null);
+  const selectedOnceRef = useRef(false);
+  const userTypedRef = useRef(false);
+  const prefilledRef = useRef(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
     async function load() {
       if (!open) return;
-      if (initialBio && initialBio.trim()) {
+      if (initialBio && initialBio.trim() && !userTypedRef.current) {
         setBio(initialBio.slice(0, BIO_CHAR_LIMIT));
+        prefilledRef.current = true;
         return;
       }
       try {
         const acct = await AccountsService.getAccount({ address: (address as string) || (activeAccount as string) });
-        if (acct?.bio) {
+        if (acct?.bio && !userTypedRef.current) {
           setBio(String(acct.bio));
+          prefilledRef.current = true;
           return;
         }
       } catch {}
       const p = await getProfile();
-      setBio(p?.biography || "");
-      setAvatarUrl(p?.avatar_url || "");
+      if (!userTypedRef.current) {
+        setBio(p?.biography || "");
+        setAvatarUrl(p?.avatar_url || "");
+        prefilledRef.current = true;
+      }
     }
     load();
   }, [open, address, getProfile, initialBio]);
 
-  // Select entire bio when modal opens or when bio value changes and hasn't been selected yet
+  // Select entire bio once after it is prefilling and modal opens
   useEffect(() => {
     if (!open) {
-      selectedForBioRef.current = null;
+      selectedOnceRef.current = false;
+      prefilledRef.current = false;
       return;
     }
     const el = textareaRef.current;
     if (!el) return;
-    if (selectedForBioRef.current === bio) return;
+    if (selectedOnceRef.current || !prefilledRef.current) return;
     // Defer to ensure dialog/content/value are mounted
     requestAnimationFrame(() => {
       setTimeout(() => {
         try {
           el.focus();
           el.select();
-          selectedForBioRef.current = bio;
+          selectedOnceRef.current = true;
         } catch {}
       }, 0);
     });
-  }, [open, bio]);
+  }, [open]);
 
   async function onSave() {
     try {
@@ -127,7 +135,19 @@ export default function ProfileEditModal({
             <Textarea
               ref={textareaRef as any}
               value={bio}
-              onChange={(e) => setBio(e.target.value.slice(0, BIO_CHAR_LIMIT))}
+              onChange={(e) => {
+                try { userTypedRef.current = true; } catch {}
+                const el = e.target as HTMLTextAreaElement;
+                const prevPos = el.selectionStart || 0;
+                const nextValue = el.value.slice(0, BIO_CHAR_LIMIT);
+                setBio(nextValue);
+                requestAnimationFrame(() => {
+                  const ta = textareaRef.current;
+                  if (!ta) return;
+                  const pos = Math.min(prevPos, nextValue.length);
+                  try { ta.setSelectionRange(pos, pos); } catch {}
+                });
+              }}
               placeholder="Tell the world about you"
               className="mt-1 bg-white/7 border border-white/14 text-white rounded-xl focus:border-[#4ecdc4] focus:outline-none"
               maxLength={BIO_CHAR_LIMIT}

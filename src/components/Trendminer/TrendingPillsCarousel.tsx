@@ -217,7 +217,8 @@ export default function TrendingPillsCarousel() {
                   {/* Single Compact Row */}
                   <div className="trending-compact-row">
                     <span className={`trending-tag-name ${style.textGradient} bg-clip-text text-transparent`}>
-                      #{tag.tag}
+                      <span className="text-white/60 text-[.9em] mr-0.5 align-baseline">#</span>
+                      <span>{tag.tag}</span>
                     </span>
                     <div className="trending-right-content">
                       <div className={`trending-score ${style.textGradient} bg-clip-text text-transparent`}>

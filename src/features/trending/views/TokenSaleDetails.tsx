@@ -132,7 +132,8 @@ export default function TokenSaleDetails() {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Token{" "}
             <span className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-              #{tokenName}
+              <span className="text-white/60 text-[.9em] mr-0.5 align-baseline">#</span>
+              <span>{tokenName}</span>
             </span>{" "}
             not found
           </h1>
@@ -269,7 +270,8 @@ export default function TokenSaleDetails() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent leading-tight">
-                      #{token.symbol || token.name}
+                      <span className="text-white/60 text-[.9em] mr-0.5 align-baseline">#</span>
+                      <span>{token.symbol || token.name}</span>
                     </h1>
 
                     <div className="flex items-center gap-2 flex-wrap">
@@ -388,7 +390,7 @@ export default function TokenSaleDetails() {
             {isMobile && activeTab === TAB_DETAILS && (
               <div className="space-y-4">
                 <TokenSummary
-                  token={{ ...token, decimals: Number(token.decimals) }}
+                  token={{ ...token, decimals: String(token.decimals ?? '') as any }}
                 />
               </div>
             )}

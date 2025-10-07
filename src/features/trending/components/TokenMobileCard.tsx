@@ -60,7 +60,8 @@ export default function TokenMobileCard({
                     {/* Token Info */}
                     <div className="flex-1 min-w-0">
                         <div className="text-white font-semibold text-lg leading-tight mb-1">
-                            #{token.symbol || token.name}
+                            <span className="text-white/60 text-[.9em] mr-0.5 align-baseline">#</span>
+                            <span>{token.symbol || token.name}</span>
                         </div>
 
                         {/* Collection label if enabled */}

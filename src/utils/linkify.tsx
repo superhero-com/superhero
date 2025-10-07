@@ -7,6 +7,8 @@ const URL_REGEX = /((https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/[\w\-._~:\/?#[\]@!$&'()*+
 const AENS_TAG_REGEX = /@?[a-z0-9-]+\.chain\b/gi;
 // Optional '@' followed by an account address starting with ak_
 const ACCOUNT_TAG_REGEX = /@?(ak_[A-Za-z0-9]+)/gi;
+// Hashtags like #TokenName, #liquid, #LIQUID_123 (avoid URL fragments by running after URL linking)
+const HASHTAG_REGEX = /#([A-Za-z][A-Za-z0-9_]{0,49})/g;
 
 export function linkify(text: string, options?: { knownChainNames?: Set<string> }): React.ReactNode[] {
   if (!text) return [];
@@ -81,10 +83,10 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
   });
 
   // Pass 2b: Within remaining plain text segments, linkify regular URLs
-  const finalParts: React.ReactNode[] = [];
+  const urlLinkedParts: React.ReactNode[] = [];
   accountLinked.forEach((node, idx) => {
     if (typeof node !== 'string') {
-      finalParts.push(node);
+      urlLinkedParts.push(node);
       return;
     }
     const segment = node as string;
@@ -92,14 +94,14 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
     segment.replace(URL_REGEX, (m, _p1, _p2, _p3, off: number) => {
       // Avoid converting bare 'name.chain' (optionally followed by '/') without protocol into a link
       const isBareChainNoProtocol = !/^https?:\/\//i.test(m) && /^[\w-]+\.chain(\/|$)/i.test(m);
-      if (off > segLast) finalParts.push(segment.slice(segLast, off));
+      if (off > segLast) urlLinkedParts.push(segment.slice(segLast, off));
       if (isBareChainNoProtocol) {
-        finalParts.push(m);
+        urlLinkedParts.push(m);
       } else {
         const href = m.startsWith('http') ? m : `https://${m}`;
         const fullText = formatUrl(m);
         const display = truncateEnd(fullText, 60);
-        finalParts.push(
+        urlLinkedParts.push(
           <a
             href={href}
             key={`${href}-${idx}-${off}`}
@@ -126,7 +128,41 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
       segLast = off + m.length;
       return m;
     });
-    if (segLast < segment.length) finalParts.push(segment.slice(segLast));
+    if (segLast < segment.length) urlLinkedParts.push(segment.slice(segLast));
+  });
+
+  // Pass 3: Hashtags → link to trending tokens page (/trending/tokens/<UPPERCASE>)
+  const finalParts: React.ReactNode[] = [];
+  urlLinkedParts.forEach((node, idx) => {
+    if (typeof node !== 'string') {
+      finalParts.push(node);
+      return;
+    }
+    const segment = node as string;
+    let last = 0;
+    segment.replace(HASHTAG_REGEX, (m: string, tag: string, off: number) => {
+      if (off > last) finalParts.push(segment.slice(last, off));
+      const target = `/trending/tokens/${tag.toUpperCase()}`;
+      finalParts.push(
+        <a
+          href={target}
+          key={`hashtag-${tag}-${idx}-${off}`}
+          className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+          style={{
+            WebkitTextFillColor: 'currentColor',
+            WebkitBackgroundClip: 'initial',
+            backgroundClip: 'initial',
+            background: 'none',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {m}
+        </a>
+      );
+      last = off + m.length;
+      return m;
+    });
+    if (last < segment.length) finalParts.push(segment.slice(last));
   });
 
   return finalParts;

@@ -271,7 +271,7 @@ export default function UserProfile({
               >
                 <span className="inline-flex items-center gap-2">
                   <span>View on æScan</span>
-                  <IconLink className="w-3.5 h-3.5 opacity-80" />
+                  <IconLink className="w-2 h-2 opacity-80" />
                 </span>
               </AeButton>
             </div>

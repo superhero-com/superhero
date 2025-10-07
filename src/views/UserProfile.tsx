@@ -202,91 +202,76 @@ export default function UserProfile({
           ← Back
         </AeButton>
       </div>
-      {/* Compact Profile header */}
-      <div className="bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-5 mb-4 relative overflow-hidden transition-all duration-300 hover:border-white/20 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 md:p-4 md:mb-3 md:rounded-xl">
-        <div className="flex items-center gap-4 justify-between">
-          <div className="flex items-center gap-4">
-            <AddressAvatarWithChainName
-              address={effectiveAddress}
-              size={56}
-              showAddressAndChainName={false}
-              isHoverEnabled={true}
-            />
-            <div className="flex flex-col min-w-0">
-              {chainName && (
-                <span className="text-lg font-bold text-white">{chainName}</span>
-              )}
-              <span
-                className={`${chainName ? "text-sm font-normal" : "text-lg font-bold"} font-mono bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent break-all`}
-              >
-                {effectiveAddress}
-              </span>
-            <span className="text-xs text-white/70 mt-1 whitespace-pre-wrap">
-              {bioText || "Your bio will appear here. Edit Profile to add one."}
-            </span>
-              {profile?.avatar_url && (
-                <span className="text-xs text-white/40">Avatar: {profile.avatar_url}</span>
-              )}
+      {/* Profile header (banner + avatar + stats) */}
+      <div className="mb-5 md:mb-6 rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl relative">
+        {/* Banner */}
+        <div className="h-28 md:h-36 w-full bg-[radial-gradient(100%_60%_at_0%_0%,rgba(17,97,254,0.35),transparent_60%),radial-gradient(100%_60%_at_100%_0%,rgba(78,205,196,0.35),transparent_60%)]" />
 
-            {/* Account summary: AE balance + top token holdings (same as hover card) */}
-            <div className="mt-2 space-y-1">
-              <div className="text-xs text-white/80">
-                <span className="font-semibold">AE Balance: </span>
-                <span className="font-mono">{decimalBalance ? `${decimalBalance.prettify()} AE` : "Loading..."}</span>
+        {/* Avatar and main info */}
+        <div className="px-4 md:px-6 pb-4 md:pb-6 -mt-10 md:-mt-12 relative z-10">
+          <div className="flex items-end justify-between gap-4">
+            <div className="flex items-end gap-4 min-w-0">
+              <div className="shrink-0 rounded-2xl p-1 bg-white/10 border border-white/10 backdrop-blur-md">
+                <AddressAvatarWithChainName
+                  address={effectiveAddress}
+                  size={88}
+                  overlaySize={28}
+                  showAddressAndChainName={false}
+                  isHoverEnabled={true}
+                />
               </div>
-              {Array.isArray(aex9Balances) && aex9Balances.length > 0 && (
-                <div className="text-xs text-white/80">
-                  <div className="font-semibold mb-0.5">Tokens Holdings:</div>
-                  {aex9Balances
-                    .sort((a: any, b: any) => {
-                      const balanceA = a.amount && a.decimals
-                        ? Decimal.from(a.amount).div(10 ** a.decimals)
-                        : Decimal.from(0);
-                      const balanceB = b.amount && b.decimals
-                        ? Decimal.from(b.amount).div(10 ** b.decimals)
-                        : Decimal.from(0);
-                      return balanceB.gt(balanceA) ? 1 : balanceB.lt(balanceA) ? -1 : 0;
-                    })
-                    .slice(0, 3)
-                    .map((token: any, index: number) => {
-                      const balance = Decimal.from(token.amount).div(10 ** token.decimals).prettify();
-                      const name = token.symbol || token.token_symbol || token.token_name || "Unknown";
-                      return (
-                        <div key={token.contract_id || index} className="flex justify-between items-center py-0.5">
-                          <span className="font-medium max-w-[180px] overflow-hidden text-ellipsis">{name}</span>
-                          <span className="font-mono text-xs">{balance}</span>
-                        </div>
-                      );
-                    })}
-                  {aex9Balances.length > 3 && (
-                    <div className="text-xs text-white/60 mt-0.5">
-                      + {aex9Balances.length - 3} more...
-                    </div>
-                  )}
+              <div className="min-w-0 pb-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xl md:text-2xl font-extrabold text-white tracking-tight">{chainName || "Legend"}</span>
                 </div>
-              )}
+                <div className="font-mono text-xs text-white/70 break-all">{effectiveAddress}</div>
+                {bioText && (
+                  <div className="mt-2 text-sm text-white/80 whitespace-pre-wrap">
+                    {bioText}
+                  </div>
+                )}
+              </div>
             </div>
+            <div className="flex items-center gap-2 md:gap-3">
+              {canEdit ? (
+                <AeButton size="sm" onClick={() => setEditOpen(true)}>
+                  Edit Profile
+                </AeButton>
+              ) : null}
+              {!canEdit ? (
+                <AeButton
+                  onClick={() => openModal({ name: "tip", props: { toAddress: effectiveAddress } })}
+                  variant="ghost"
+                  size="sm"
+                  className="!border !border-solid !border-white/15 hover:!border-white/35 inline-flex items-center gap-2"
+                  title="Send a tip"
+                >
+                  <IconDiamond className="w-4 h-4 text-[#1161FE]" />
+                  Tip
+                </AeButton>
+              ) : null}
             </div>
           </div>
 
-          {canEdit ? (
-            <div className="ml-auto flex items-center gap-2">
-              <AeButton size="sm" onClick={() => setEditOpen(true)}>
-                Edit Profile
-              </AeButton>
+          {/* Stats */}
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+            <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
+              <div className="text-[11px] uppercase tracking-wider text-white/60">AE Balance</div>
+              <div className="text-white font-bold mt-1">{decimalBalance ? `${decimalBalance.prettify()} AE` : "Loading..."}</div>
             </div>
-          ) : (
-            <AeButton
-              onClick={() => openModal({ name: "tip", props: { toAddress: effectiveAddress } })}
-              variant="ghost"
-              size="sm"
-              className="!border !border-solid !border-white/15 hover:!border-white/35 inline-flex items-center gap-2"
-              title="Send a tip"
-            >
-              <IconDiamond className="w-4 h-4 text-[#1161FE]" />
-              Tip
-            </AeButton>
-          )}
+            <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
+              <div className="text-[11px] uppercase tracking-wider text-white/60">Tokens</div>
+              <div className="text-white font-bold mt-1">{Array.isArray(aex9Balances) ? aex9Balances.length : 0}</div>
+            </div>
+            <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
+              <div className="text-[11px] uppercase tracking-wider text-white/60">Posts</div>
+              <div className="text-white font-bold mt-1">{posts.length}</div>
+            </div>
+            <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
+              <div className="text-[11px] uppercase tracking-wider text-white/60">Address</div>
+              <div className="text-white font-mono text-[12px] mt-1 truncate" title={effectiveAddress}>{effectiveAddress}</div>
+            </div>
+          </div>
         </div>
       </div>
 

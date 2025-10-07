@@ -231,12 +231,12 @@ export default function TokenChat({ token }: Props) {
   // Reset chat when token changes
   useEffect(() => {
     resetChat();
-  }, [token?.address, token?.name, resetChat]);
+  }, [token?.address, token?.name]);
 
   // Load initial messages
   useEffect(() => {
     loadMessages(true);
-  }, [token?.address, token?.name, loadMessages]);
+  }, [token?.address, token?.name]);
 
   // Cleanup timeout on unmount
   useEffect(() => {

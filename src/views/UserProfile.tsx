@@ -157,9 +157,20 @@ export default function UserProfile({
     for (const p of posts) {
       const topics = (Array.isArray((p as any).topics) ? (p as any).topics : []).map((t: string) => String(t).toLowerCase());
       const media = (Array.isArray((p as any).media) ? (p as any).media : []).map((m: string) => String(m).toLowerCase());
-      if (topics.includes("bio-update") || media.includes("bio-update")) {
-        return p;
-      }
+
+      // Heuristic 1: topics/media contains the tag
+      const hasTagInTopicsOrMedia = topics.includes("bio-update") || media.includes("bio-update");
+
+      // Heuristic 2: inspect tx_args for a list of tags including "bio-update"
+      const args: any[] = Array.isArray((p as any).tx_args) ? (p as any).tx_args : [];
+      const hasTagInTxArgs = args.some((arg: any) => {
+        if (!arg || typeof arg !== 'object') return false;
+        if (String(arg.type).toLowerCase() !== 'list') return false;
+        const listVal: any[] = Array.isArray(arg.value) ? arg.value : [];
+        return listVal.some((item: any) => String(item?.value || '').toLowerCase() === 'bio-update');
+      });
+
+      if (hasTagInTopicsOrMedia || hasTagInTxArgs) return p;
     }
     return undefined;
   }, [posts]);
@@ -210,11 +221,9 @@ export default function UserProfile({
               >
                 {effectiveAddress}
               </span>
-            {bioText && (
-              <span className="text-xs text-white/70 mt-1 whitespace-pre-wrap">
-                {bioText}
-              </span>
-            )}
+            <span className="text-xs text-white/70 mt-1 whitespace-pre-wrap">
+              {bioText || "Your bio will appear here. Edit Profile to add one."}
+            </span>
               {profile?.avatar_url && (
                 <span className="text-xs text-white/40">Avatar: {profile.avatar_url}</span>
               )}

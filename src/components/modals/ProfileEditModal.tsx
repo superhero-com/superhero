@@ -24,6 +24,7 @@ export default function ProfileEditModal({
   const { sdk } = useAeSdk();
   const [bio, setBio] = useState("");
   const [loading, setLoading] = useState(false);
+  const BIO_CHAR_LIMIT = 280;
 
   useEffect(() => {
     async function load() {
@@ -37,11 +38,16 @@ export default function ProfileEditModal({
   async function onSave() {
     try {
       setLoading(true);
+      const text = (bio || "").slice(0, BIO_CHAR_LIMIT).trim();
+      if (!text) {
+        push(<div style={{ color: "#ffb3b3" }}>Bio cannot be empty</div>);
+        return;
+      }
       const contract = await sdk.initializeContract({
         aci: TIPPING_V3_ACI as any,
         address: CONFIG.CONTRACT_V3_ADDRESS as `ct_${string}`,
       });
-      await contract.post_without_tip(bio, ["bio-update", "hidden"]);
+      await contract.post_without_tip(text, ["bio-update", "hidden"]);
       push(<div>Bio update submitted</div>);
       onClose();
     } catch (e: any) {
@@ -66,10 +72,12 @@ export default function ProfileEditModal({
             <Label className="text-white/80">Bio</Label>
             <Textarea
               value={bio}
-              onChange={(e) => setBio(e.target.value)}
+              onChange={(e) => setBio(e.target.value.slice(0, BIO_CHAR_LIMIT))}
               placeholder="Tell the world about you"
               className="mt-1"
+              maxLength={BIO_CHAR_LIMIT}
             />
+            <div className="mt-1 text-white/50 text-xs text-right">{bio.length}/{BIO_CHAR_LIMIT}</div>
           </div>
           {/* Avatar editing temporarily disabled; keep existing avatar on save */}
           <div className="flex gap-2 justify-end">

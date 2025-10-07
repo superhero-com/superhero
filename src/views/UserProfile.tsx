@@ -273,8 +273,8 @@ export default function UserProfile({
                 <div className="hidden md:block shrink-0">
                   <AddressAvatarWithChainName
                     address={effectiveAddress}
-                    size={88}
-                    overlaySize={28}
+                    size={72}
+                    overlaySize={24}
                     showAddressAndChainName={false}
                     isHoverEnabled={true}
                   />
@@ -284,7 +284,7 @@ export default function UserProfile({
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent tracking-tight">{chainName || "Legend"}</span>
                   </div>
-                  <div className="font-mono text-xs text-white/70 break-all">{effectiveAddress}</div>
+                  <div className="font-mono text-xs text-white/70 break-all mt-0 md:mt-2">{effectiveAddress}</div>
                 </div>
               </div>
               {/* Row 2: bio on its own line */}

@@ -194,15 +194,15 @@ export default function TokenList() {
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-4">
         {/* Left: Token List */}
         <div className="w-full">
-          <div className="flex flex-col sm:flex-row items-center sm:justify-between mb-6 gap-4 w-full">
+          <div className="flex flex-col items-start mb-6 gap-3 w-full">
             <div className="flex text-xl sm:text-2xl font-bold text-white w-full">
               Tokenized Trends
             </div>
 
             {/* FILTERS */}
-            <div className="flex w-full items-center gap-2 flex-wrap sm:flex-nowrap">
+            <div className="flex w-full items-center gap-2 flex-wrap sm:flex-nowrap justify-between">
               {/* OrderBy Filter */}
-              <div className="w-full sm:w-auto">
+              <div className="w-full sm:w-auto flex-shrink-0">
                 <Select value={orderBy} onValueChange={updateOrderBy}>
                   <SelectTrigger className="px-2 py-2 h-10 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05] w-full sm:w-auto sm:min-w-[140px]">
                     <SelectValue />
@@ -221,7 +221,7 @@ export default function TokenList() {
               {activeAccount && (
                 <AeButton
                   variant="primary"
-                  className={`h-10 px-3 whitespace-nowrap w-full sm:w-auto ${ownedOnly
+                  className={`h-10 px-3 whitespace-nowrap w-full sm:w-auto flex-shrink-0 ${ownedOnly
                     ? 'bg-white/10 opacity-60'
                     : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'
                     }`}
@@ -240,7 +240,7 @@ export default function TokenList() {
               />
 
               {/* Performance Timeframe Selector */}
-              <div className="flex items-center justify-center sm:justify-start w-auto">
+              <div className="flex items-center justify-center sm:justify-start w-auto flex-shrink-0">
                 <PerformanceTimeframeSelector />
               </div>
             </div>

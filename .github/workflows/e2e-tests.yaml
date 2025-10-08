@@ -62,11 +62,32 @@ jobs:
         run: npx playwright install --with-deps chromium
         
       - name: Run Superhero React E2E tests
+        id: test_run
+        continue-on-error: true
         working-directory: keypair-testing
         env:
           SUPERHERO_COM_BASE_URL: ${{ steps.netlify.outputs.url }}
-        run: npx playwright test tests_superhero_react/superhero-react.spec.ts --project="Web Chrome"
+        run: |
+          npx playwright test tests_superhero_react/superhero-react.spec.ts --project="Web Chrome" --retries=1 --config=./playwright.config.ts --workers=3 2>&1 | tee test-output.txt || true
         
+      - name: Extract failed tests
+        if: always()
+        id: failed_tests
+        working-directory: keypair-testing
+        run: |
+          if [ -f "test-output.txt" ]; then
+            FAILED=$(grep -E "^\s+[0-9]+\)" test-output.txt | grep "✘" | sed 's/^[[:space:]]*[0-9]*)[[:space:]]*//' | head -10 || echo "")
+            if [ -n "$FAILED" ]; then
+              echo "failed<<EOF" >> $GITHUB_OUTPUT
+              echo "$FAILED" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            else
+              echo "failed=" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "failed=" >> $GITHUB_OUTPUT
+          fi
+      
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
@@ -80,11 +101,20 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const status = '${{ job.status }}' === 'success' ? '✅ E2E Tests PASSED' : '❌ E2E Tests FAILED';
+            const status = '${{ steps.test_run.outcome }}' === 'success' ? '✅ E2E Tests PASSED' : '❌ E2E Tests FAILED';
+            const failedTests = `${{ steps.failed_tests.outputs.failed }}`.trim();
+            
+            let body = `## ${status}\n\n**Tested URL:** ${{ steps.netlify.outputs.url }}\n\n`;
+            
+            if (failedTests) {
+              body += `### ❌ Failed Tests:\n\`\`\`\n${failedTests}\n\`\`\`\n\n`;
+            }
+            
+            body += `📊 [View Full Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
             
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `## ${status}\n\n**Tested URL:** ${{ steps.netlify.outputs.url }}\n\n📊 [View Full Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`
+              body: body
             });

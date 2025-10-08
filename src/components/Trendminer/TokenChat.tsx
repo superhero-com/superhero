@@ -101,7 +101,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           <span className="text-white text-sm">💬</span>
         </div>
         <div className="flex-1">
-          <h4 className="text-white font-semibold text-sm mb-1">Chat rooms</h4>
+          <h4 className="text-white font-semibold text-sm mb-1">Token-gated chat rooms</h4>
           <p className="text-white/70 text-xs leading-relaxed">
             Powered by{' '}
             <a

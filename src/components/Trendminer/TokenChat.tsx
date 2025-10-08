@@ -119,7 +119,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           href={qualiPublicUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] hover:shadow-[0_10px_28px_rgba(255,255,255,0.12)] focus:outline-none focus:ring-2 focus:ring-white/30"
+          className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] hover:shadow-[0_10px_28px_rgba(255,255,255,0.12)] focus:outline-none focus:ring-2 focus:ring-white/30 no-gradient-text"
           title="Open the public chat on Quali.chat"
         >
           <div className="flex items-center gap-2">
@@ -127,7 +127,9 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
               <span className="no-gradient-text">🌐</span>
             </div>
             <div className="flex-1">
-              <div className="text-white font-medium leading-tight">Public chat</div>
+              <div className="font-semibold leading-tight">
+                <span className="bg-gradient-to-r from-[#b06cf5] via-[#ff7eb3] to-[#ff9f4d] bg-clip-text text-transparent">Public chat</span>
+              </div>
               <div className="text-[11px] text-white/65 leading-tight">Read for all • Post for holders</div>
             </div>
             <div className="text-white/60 group-hover:text-white transition-colors">↗</div>
@@ -138,7 +140,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           href={qualiPrivateUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] hover:shadow-[0_10px_28px_rgba(255,255,255,0.12)] focus:outline-none focus:ring-2 focus:ring-white/30"
+          className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] hover:shadow-[0_10px_28px_rgba(255,255,255,0.12)] focus:outline-none focus:ring-2 focus:ring-white/30 no-gradient-text"
           title="Open the private chat on Quali.chat (holders only)"
         >
           <div className="flex items-center gap-2">
@@ -146,7 +148,9 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
               <span className="no-gradient-text">🔒</span>
             </div>
             <div className="flex-1">
-              <div className="text-white font-medium leading-tight">Private chat</div>
+              <div className="font-semibold leading-tight">
+                <span className="bg-gradient-to-r from-[#b06cf5] via-[#ff7eb3] to-[#ff9f4d] bg-clip-text text-transparent">Private chat</span>
+              </div>
               <div className="text-[11px] text-white/65 leading-tight">Holders only • Read and post</div>
             </div>
             <div className="text-white/60 group-hover:text-white transition-colors">↗</div>

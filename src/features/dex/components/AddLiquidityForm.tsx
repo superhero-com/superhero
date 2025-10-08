@@ -46,7 +46,10 @@ export default function AddLiquidityForm() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successTxHash, setSuccessTxHash] = useState<string>("");
-  const [successAmounts, setSuccessAmounts] = useState<{ amountA: string; amountB: string }>({ amountA: "", amountB: "" });
+  const [successAmounts, setSuccessAmounts] = useState<{
+    amountA: string;
+    amountB: string;
+  }>({ amountA: "", amountB: "" });
 
   // Helper function to find token by symbol or contract address
   const findToken = (identifier: string): DexTokenDto | null => {
@@ -104,10 +107,10 @@ export default function AddLiquidityForm() {
   // Update hook state when tokens change
   useEffect(() => {
     // For AE tokens, use 'AE' as the address for the hook state
-    const tokenAAddress = tokenA?.is_ae ? "AE" : (tokenA?.address || "");
-    const tokenBAddress = tokenB?.is_ae ? "AE" : (tokenB?.address || "");
+    const tokenAAddress = tokenA?.is_ae ? "AE" : tokenA?.address || "";
+    const tokenBAddress = tokenB?.is_ae ? "AE" : tokenB?.address || "";
 
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       tokenA: tokenAAddress,
       tokenB: tokenBAddress,
@@ -127,43 +130,73 @@ export default function AddLiquidityForm() {
     }));
   }, [amountA, amountB, setState]);
 
+  useEffect(() => {
+    if (state.pairPreview?.ratioAinB) {
+      if (amountA && amountA !== "") {
+        const ratioAinB = parseFloat(state.pairPreview.ratioAinB);
+        if (!isNaN(ratioAinB) && ratioAinB > 0) {
+          const amountANum = parseFloat(amountA);
+          if (!isNaN(amountANum)) {
+            const calculatedAmountB =
+              amountANum === 0 ? "0" : (amountANum / ratioAinB).toString();
+
+            setAmountB(calculatedAmountB);
+          }
+        }
+      } else {
+        const ratioAinB = parseFloat(state.pairPreview.ratioAinB);
+        if (!isNaN(ratioAinB) && ratioAinB > 0) {
+          const amountBNum = parseFloat(amountB);
+          if (!isNaN(amountBNum)) {
+            const calculatedAmountA =
+              amountBNum === 0 ? "0" : (amountBNum * ratioAinB).toString();
+            setAmountA(calculatedAmountA);
+          }
+        }
+      }
+    }
+  }, [state.pairPreview, tokenB]);
+
   // Handle Token A amount change and auto-calculate Token B
   const handleAmountAChange = (newAmountA: string) => {
     setAmountA(newAmountA);
-    
+    console.log("changed state.pairPreview", state.pairPreview);
     // Auto-calculate Token B based on ratio
-    if (state.pairPreview?.ratioAinB && newAmountA && newAmountA !== '') {
+    if (state.pairPreview?.ratioAinB && newAmountA && newAmountA !== "") {
       const ratioAinB = parseFloat(state.pairPreview.ratioAinB);
       if (!isNaN(ratioAinB) && ratioAinB > 0) {
         const amountANum = parseFloat(newAmountA);
         if (!isNaN(amountANum)) {
-          const calculatedAmountB = amountANum === 0 ? '0' : (amountANum / ratioAinB).toString();
+          const calculatedAmountB =
+            amountANum === 0 ? "0" : (amountANum / ratioAinB).toString();
+
           setAmountB(calculatedAmountB);
         }
       }
-    } else if (!newAmountA || newAmountA === '') {
+    } else if (!newAmountA || newAmountA === "") {
       // Clear Token B when Token A is cleared
-      setAmountB('');
+      setAmountB("");
     }
   };
 
   // Handle Token B amount change and auto-calculate Token A
   const handleAmountBChange = (newAmountB: string) => {
     setAmountB(newAmountB);
-    
+    console.log("changed state.pairPreview", state.pairPreview);
     // Auto-calculate Token A based on ratio
-    if (state.pairPreview?.ratioAinB && newAmountB && newAmountB !== '') {
+    if (state.pairPreview?.ratioAinB && newAmountB && newAmountB !== "") {
       const ratioAinB = parseFloat(state.pairPreview.ratioAinB);
       if (!isNaN(ratioAinB) && ratioAinB > 0) {
         const amountBNum = parseFloat(newAmountB);
         if (!isNaN(amountBNum)) {
-          const calculatedAmountA = amountBNum === 0 ? '0' : (amountBNum * ratioAinB).toString();
+          const calculatedAmountA =
+            amountBNum === 0 ? "0" : (amountBNum * ratioAinB).toString();
           setAmountA(calculatedAmountA);
         }
       }
-    } else if (!newAmountB || newAmountB === '') {
+    } else if (!newAmountB || newAmountB === "") {
       // Clear Token A when Token B is cleared
-      setAmountA('');
+      setAmountA("");
     }
   };
 
@@ -283,9 +316,7 @@ export default function AddLiquidityForm() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-xl font-bold m-0 sh-dex-title">
-            Add Liquidity
-          </h2>
+          <h2 className="text-xl font-bold m-0 sh-dex-title">Add Liquidity</h2>
         </div>
 
         <div className="flex gap-2 items-center">
@@ -313,11 +344,8 @@ export default function AddLiquidityForm() {
           <p className="text-xs text-white/60 mt-1">
             Adding to
             <TokenChip address={selectedTokenA} />
-            <span className="text-lg text-light-font-color">
-              /
-            </span>
+            <span className="text-lg text-light-font-color">/</span>
             <TokenChip address={selectedTokenB} />
-          
             position
           </p>
         )}
@@ -335,7 +363,7 @@ export default function AddLiquidityForm() {
           amount={amountA}
           balance={balances.in}
           onTokenChange={setTokenA}
-          onAmountChange={handleAmountAChange}
+          onAmountChange={(newAmountA) => handleAmountAChange(newAmountA)}
           tokens={filteredTokensA}
           excludeTokens={tokenB ? [tokenB] : []}
           disabled={state.loading}
@@ -362,7 +390,7 @@ export default function AddLiquidityForm() {
           amount={amountB}
           balance={balances.out}
           onTokenChange={setTokenB}
-          onAmountChange={handleAmountBChange}
+          onAmountChange={(newAmountB) => handleAmountBChange(newAmountB)}
           tokens={filteredTokensB}
           excludeTokens={tokenA ? [tokenA] : []}
           disabled={state.loading}
@@ -398,7 +426,7 @@ export default function AddLiquidityForm() {
         <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
           {hasInsufficientBalanceA && hasInsufficientBalanceB ? (
             <>
-              Insufficient balance for both {tokenA?.symbol} and {" "}
+              Insufficient balance for both {tokenA?.symbol} and{" "}
               {tokenB?.symbol}
             </>
           ) : hasInsufficientBalanceA ? (

@@ -187,6 +187,14 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fromRef = useRef<string | undefined>(undefined);
   const maxRetries = 3;
+  const tokenRef = useRef<{ name: string; address: string }>(token);
+  const loadMessagesRef = useRef<(isInitial?: boolean) => void>();
+  const scheduleRetryRef = useRef<(isInitial: boolean) => void>();
+
+  // Keep token ref in sync to avoid recreating callbacks
+  useEffect(() => {
+    tokenRef.current = token;
+  }, [token]);
 
   // Determine what parts to render/fetch based on mode
   const showCTA = mode !== 'messagesOnly';
@@ -210,7 +218,8 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
     });
   }, []);
 
-  const scheduleRetry = useCallback((isInitial: boolean) => {
+  // Stable retry scheduler using refs to avoid circular dependencies
+  scheduleRetryRef.current = (isInitial: boolean) => {
     if (retryTimeoutRef.current) {
       clearTimeout(retryTimeoutRef.current);
     }
@@ -233,9 +242,10 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
         };
       });
 
-      loadMessages(isInitial);
+      // Call the latest loadMessages via ref
+      loadMessagesRef.current?.(isInitial);
     }, 5000);
-  }, [maxRetries]);
+  };
 
   const loadMessages = useCallback(async (isInitial = false) => {
     // Check if we should proceed with loading
@@ -245,9 +255,10 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
     });
 
     try {
+      const currentToken = tokenRef.current;
       const response = await QualiChatService.getTokenMessages(
-        token.name,
-        token.address,
+        currentToken.name,
+        currentToken.address,
         { from: fromRef.current, limit: 20 }
       );
 
@@ -279,7 +290,7 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
 
           if (shouldRetry) {
             // Schedule retry
-            scheduleRetry(isInitial);
+            scheduleRetryRef.current?.(isInitial);
             return {
               ...currentState,
               loading: false,
@@ -296,7 +307,10 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
         });
       }
     }
-  }, [token.name, token.address, maxRetries, scheduleRetry]);
+  }, []);
+
+  // Expose latest loadMessages to retry scheduler via ref
+  loadMessagesRef.current = loadMessages;
 
   const handleRetry = useCallback(() => {
     resetChat();

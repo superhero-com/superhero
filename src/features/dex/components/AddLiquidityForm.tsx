@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { DEX_ADDRESSES } from "../../../libs/dex";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
 import { useAddLiquidity } from "../hooks";
 import { useTokenList } from "../../../components/dex/hooks/useTokenList";
 import { useTokenBalances } from "../../../components/dex/hooks/useTokenBalances";
-import { DexTokenDto } from "../../../api/generated";
+import { DexTokenDto, DexService } from "../../../api/generated";
 import TokenInput from "../../../components/dex/core/TokenInput";
 import DexSettings from "./DexSettings";
 import LiquidityConfirmation from "./LiquidityConfirmation";
@@ -13,12 +14,16 @@ import LiquiditySuccessNotification from "../../../components/dex/core/Liquidity
 import { Decimal } from "../../../libs/decimal";
 
 import { useAccount, useDex } from "../../../hooks";
+import { useAeSdk } from "../../../hooks/useAeSdk";
 import { usePool } from "../context/PoolProvider";
 import { TokenChip } from "@/components/TokenChip";
 
 export default function AddLiquidityForm() {
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
+  const { activeNetwork } = useAeSdk();
+  const location = useLocation();
+  const navigate = useNavigate();
   const {
     currentAction,
     selectedTokenA,
@@ -76,33 +81,132 @@ export default function AddLiquidityForm() {
     return null;
   };
 
-  // Initialize tokens based on context or defaults
+  // Function to fetch token metadata from middleware
+  const fetchTokenFromMiddleware = useCallback(async (address: string): Promise<DexTokenDto | null> => {
+    try {
+      const _token = DexService.getDexTokenByAddress({ address });
+      return _token;
+    } catch (error) {
+      console.warn('[AddLiquidityForm] Failed to fetch token from middleware:', address, error);
+      return null;
+    }
+  }, [activeNetwork.middlewareUrl]);
+
+  // Helper function to find token by address or symbol
+  const findTokenByAddressOrSymbol = useCallback(async (identifier: string): Promise<DexTokenDto | null> => {
+    if (!identifier) return null;
+
+    // If identifier is 'AE', find the AE token
+    if (identifier === 'AE') {
+      return tokens.find(t => t.is_ae) || null;
+    }
+
+    // First, try to find in the local token list
+    const localToken = tokens.find(t => t.address === identifier);
+    if (localToken) return localToken;
+
+    // If not found locally and it looks like a contract address, fetch from middleware
+    if (identifier.startsWith('ct_')) {
+      return await fetchTokenFromMiddleware(identifier);
+    }
+
+    return null;
+  }, [tokens, fetchTokenFromMiddleware]);
+
+  // Function to update URL parameters based on current token selection
+  const updateUrlParams = useCallback((newTokenA: DexTokenDto | null, newTokenB: DexTokenDto | null) => {
+    const searchParams = new URLSearchParams(location.search);
+
+    // Update or remove 'from' parameter (tokenA)
+    if (newTokenA) {
+      const fromValue = newTokenA.is_ae ? 'AE' : newTokenA.address;
+      searchParams.set('from', fromValue);
+    } else {
+      searchParams.delete('from');
+    }
+
+    // Update or remove 'to' parameter (tokenB)
+    if (newTokenB) {
+      const toValue = newTokenB.is_ae ? 'AE' : newTokenB.address;
+      searchParams.set('to', toValue);
+    } else {
+      searchParams.delete('to');
+    }
+
+    // Update the URL without causing a page reload
+    const newUrl = `${location.pathname}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    navigate(newUrl, { replace: true });
+  }, [location.pathname, location.search, navigate]);
+
+  // Initialize tokens from URL parameters or defaults
   useEffect(() => {
     if (!tokens.length) return;
 
-    // Set initial tokens from context if provided (force update when context changes)
-    if (selectedTokenA) {
-      const foundTokenA = findToken(selectedTokenA);
-      if (foundTokenA && (!tokenA || tokenA.symbol !== foundTokenA.symbol)) {
-        setTokenA(foundTokenA);
-      }
-    }
+    let cancelled = false;
 
-    if (selectedTokenB) {
-      const foundTokenB = findToken(selectedTokenB);
-      if (foundTokenB && (!tokenB || tokenB.symbol !== foundTokenB.symbol)) {
-        setTokenB(foundTokenB);
-      }
-    }
+    const initializeTokens = async () => {
+      console.log('[AddLiquidityForm] Initialize tokens');
+      const searchParams = new URLSearchParams(location.search);
+      const fromParam = searchParams.get('from');
+      const toParam = searchParams.get('to');
+      const defaultToAddress = 'ct_KeTvHnhU85vuuQMMZocaiYkPL9tkoavDRT3Jsy47LK2YqLHYb'; // WTT
 
-    // Set default tokens if no context tokens provided and none selected
-    if (!selectedTokenA && !tokenA && tokens.length) {
-      setTokenA(tokens[2] || tokens[0]);
+      // Set tokenA based on URL param, context, or default
+      if (fromParam && !tokenA) {
+        const foundToken = await findTokenByAddressOrSymbol(fromParam);
+        if (foundToken && !cancelled) {
+          setTokenA(foundToken);
+        }
+      } else if (selectedTokenA && !tokenA) {
+        // Fallback to context if no URL param
+        const foundTokenA = findToken(selectedTokenA);
+        if (foundTokenA && !cancelled) {
+          setTokenA(foundTokenA);
+        }
+      } else if (!tokenA && !fromParam && !selectedTokenA) {
+        // Default: AE as input token
+        const ae = tokens.find((t) => t.is_ae) || null;
+        setTokenA(ae || tokens[0] || null);
+      }
+
+      // Set tokenB based on URL param, context, or default
+      if (toParam && !tokenB) {
+        const foundToken = await findTokenByAddressOrSymbol(toParam);
+        if (foundToken && !cancelled) {
+          setTokenB(foundToken);
+        }
+      } else if (selectedTokenB && !tokenB) {
+        // Fallback to context if no URL param
+        const foundTokenB = findToken(selectedTokenB);
+        if (foundTokenB && !cancelled) {
+          setTokenB(foundTokenB);
+        }
+      } else if (!tokenB && !toParam && !selectedTokenB) {
+        // Default: WTT as output token when no URL param provided
+        const wtt = await findTokenByAddressOrSymbol(defaultToAddress);
+        if (wtt && !cancelled) {
+          setTokenB(wtt);
+        }
+      }
+    };
+
+    initializeTokens();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tokens, location.search, tokenA, tokenB, selectedTokenA, selectedTokenB, findTokenByAddressOrSymbol, findToken]);
+
+  // Update URL parameters when tokens change (after initial load)
+  useEffect(() => {
+    // Skip URL updates during initial load or when tokens are being set from URL params
+    if (!tokens.length || (!tokenA && !tokenB)) return;
+
+    // Only update URL if we have at least one token selected and tokens are loaded
+    if (tokenA || tokenB) {
+      updateUrlParams(tokenA, tokenB);
     }
-    // if (!selectedTokenB && !tokenB && tokens.length) {
-    //   setTokenB(tokens[0] || tokens[1]);
-    // }
-  }, [tokens, selectedTokenA, selectedTokenB]);
+  }, [tokenA, tokenB, tokens.length, updateUrlParams]);
 
   // Update hook state when tokens change
   useEffect(() => {

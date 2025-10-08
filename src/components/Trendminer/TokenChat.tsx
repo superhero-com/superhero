@@ -8,6 +8,7 @@ type Props = {
     name: string;
     address: string;
   };
+  mode?: 'full' | 'ctaOnly' | 'messagesOnly';
 };
 
 type ChatState = {
@@ -172,7 +173,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
   );
 };
 
-export default function TokenChat({ token }: Props) {
+export default function TokenChat({ token, mode = 'full' }: Props) {
   const [state, setState] = useState<ChatState>({
     messages: [],
     from: undefined,
@@ -319,15 +320,18 @@ export default function TokenChat({ token }: Props) {
   const hasMessages = state.messages.length > 0;
   const showEmptyState = !state.loading && !state.error && state.endReached && !hasMessages;
 
+  const showCTA = mode !== 'messagesOnly';
+  const showMessages = mode !== 'ctaOnly';
+
   return (
     <div className="grid gap-2">
-      <AddCommentCTA token={token} />
+      {showCTA && <AddCommentCTA token={token} />}
 
       {state.error && (
         <ErrorDisplay error={state.error} onRetry={handleRetry} />
       )}
 
-      {!state.error && (
+      {showMessages && !state.error && (
         <div className="grid gap-2">
           {state.messages.map((message, index) => (
             <MessageItem
@@ -347,6 +351,7 @@ export default function TokenChat({ token }: Props) {
         </div>
       )}
 
+      {showMessages && (
       <div className="text-center mt-1.5">
         {!state.endReached && !state.error && (
           <AeButton
@@ -363,6 +368,7 @@ export default function TokenChat({ token }: Props) {
 
         {showEmptyState && <EmptyState />}
       </div>
+      )}
     </div>
   );
 }

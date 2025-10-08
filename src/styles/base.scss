@@ -57,6 +57,10 @@
   --glass-bg: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  
+  /* Governance Vote Animations */
+  --vote-pulse: 0 0 0 0 rgba(255, 107, 107, 0.7);
+  --vote-pulse-active: 0 0 0 10px rgba(255, 107, 107, 0);
 }
 
 :root[data-theme='light'] {
@@ -427,6 +431,187 @@ textarea:disabled {
     font-weight: 500;
     color: var(--neon-yellow);
   }
+}
+
+/* Gen Z Ultra Modern Animations */
+@keyframes slideInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(0, 255, 157, 0.6), 0 0 40px rgba(0, 255, 157, 0.3);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Gen Z Animation Utilities */
+.animate-slideInUp {
+  animation: slideInUp 0.6s ease-out;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.5s ease-out;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Governance Vote Specific Animations */
+@keyframes votePulse {
+  0% {
+    box-shadow: var(--vote-pulse);
+  }
+  70% {
+    box-shadow: var(--vote-pulse-active);
+  }
+  100% {
+    box-shadow: var(--vote-pulse);
+  }
+}
+
+@keyframes resultBarFill {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: var(--bar-width);
+  }
+}
+
+@keyframes successGlow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), 0 0 30px rgba(16, 185, 129, 0.6);
+  }
+}
+
+@keyframes winningPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 10px rgba(251, 191, 36, 0);
+  }
+}
+
+.animate-vote-pulse {
+  animation: votePulse 2s infinite;
+}
+
+.animate-result-fill {
+  animation: resultBarFill 1.5s ease-out forwards;
+}
+
+.animate-success-glow {
+  animation: successGlow 2s ease-in-out infinite;
+}
+
+.animate-winning-pulse {
+  animation: winningPulse 2s ease-in-out infinite;
+}
+
+/* Enhanced hover effects for governance components */
+.governance-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.governance-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.vote-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.vote-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.vote-button:hover::before {
+  left: 100%;
+}
+
+.vote-button:active {
+  transform: scale(0.98);
 }
 
 

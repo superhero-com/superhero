@@ -14,7 +14,7 @@ jobs:
         id: netlify
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
-          DEPLOY_URL="https://deploy-preview-${PR_NUMBER}--superhero.netlify.app"
+          DEPLOY_URL="https://deploy-preview-${PR_NUMBER}--superhero-c9df18.netlify.app"
           
           echo "Waiting for Netlify deployment at: $DEPLOY_URL"
           

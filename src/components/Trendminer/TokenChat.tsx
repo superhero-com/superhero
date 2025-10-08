@@ -100,7 +100,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
 
       {/* Header */}
       <div className="flex items-start gap-3 mb-4 text-left">
-        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] flex items-center justify-center shadow-[0_6px_18px_rgba(78,205,196,0.28)]">
+        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white/12 border border-white/15 flex items-center justify-center">
           <span className="text-white text-base">💬</span>
         </div>
         <div className="flex-1">

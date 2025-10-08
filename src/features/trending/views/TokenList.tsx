@@ -200,7 +200,7 @@ export default function TokenList() {
             </div>
 
             {/* FILTERS */}
-            <div className="flex w-full flex-wrap items-center gap-2">
+            <div className="flex w-full items-center gap-2 flex-wrap sm:flex-nowrap">
               {/* OrderBy Filter */}
               <div className="w-full sm:w-auto">
                 <Select value={orderBy} onValueChange={updateOrderBy}>
@@ -236,7 +236,7 @@ export default function TokenList() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search tokens"
-                className="px-2 py-2 h-10 min-h-[auto] bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] placeholder-white/50 transition-all duration-300 hover:bg-white/[0.05] w-full sm:w-auto sm:min-w-[200px] sm:max-w-[260px]"
+                className="px-2 py-2 h-10 min-h-[auto] bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] placeholder-white/50 transition-all duration-300 hover:bg-white/[0.05] flex-1 min-w-[180px] max-w-[420px]"
               />
 
               {/* Performance Timeframe Selector */}

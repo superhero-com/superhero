@@ -101,16 +101,18 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors no-gradient-text"
+          title="Open the public chat on Quali.chat"
         >
-          🌐 Open public chat
+          🌐 Public chat
         </a>
         <a
           href={qualiPrivateUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors no-gradient-text"
+          title="Open the private chat on Quali.chat (holders only)"
         >
-          🔒 Open private chat
+          🔒 Private chat
         </a>
       </div>
       <div className="mt-1.5 text-xs opacity-70 text-white/70">

@@ -100,7 +100,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           href={qualiPublicUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors"
+          className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors no-gradient-text"
         >
           🌐 Open public chat
         </a>
@@ -108,7 +108,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           href={qualiPrivateUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors"
+          className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors no-gradient-text"
         >
           🔒 Open private chat
         </a>

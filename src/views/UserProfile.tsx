@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import AeButton from "../components/AeButton";
 import RightRail from "../components/layout/RightRail";
 import Shell from "../components/layout/Shell";
@@ -30,6 +30,8 @@ export default function UserProfile({
 }: { standalone?: boolean } = {}) {
   const navigate = useNavigate();
   const { address } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   // Support AENS chain name route: /users/<name.chain>
   const isChainName = address?.endsWith(".chain");
   const { address: resolvedAddress } = useAddressByChainName(
@@ -70,7 +72,37 @@ export default function UserProfile({
 
   const [profile, setProfile] = useState<any>(null);
   const [editOpen, setEditOpen] = useState(false);
-  const [tab, setTab] = useState<TabType>("feed");
+  
+  // Get tab from URL search params, default to "feed"
+  const tabFromUrl = searchParams.get("tab") as TabType;
+  const [tab, setTab] = useState<TabType>(
+    tabFromUrl && ["feed", "owned", "created", "transactions"].includes(tabFromUrl) 
+      ? tabFromUrl 
+      : "feed"
+  );
+
+  // Function to handle tab changes and update URL
+  const handleTabChange = (newTab: TabType) => {
+    setTab(newTab);
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (newTab === "feed") {
+      // Remove tab param for default tab to keep URL clean
+      newSearchParams.delete("tab");
+    } else {
+      newSearchParams.set("tab", newTab);
+    }
+    setSearchParams(newSearchParams, { replace: true });
+  };
+
+  // Sync tab state when URL changes (e.g., browser back/forward)
+  useEffect(() => {
+    const urlTab = searchParams.get("tab") as TabType;
+    if (urlTab && ["feed", "owned", "created", "transactions"].includes(urlTab)) {
+      setTab(urlTab);
+    } else if (!urlTab) {
+      setTab("feed");
+    }
+  }, [searchParams]);
 
 
   const { data: ownedTokensResp } = useQuery({
@@ -302,7 +334,7 @@ export default function UserProfile({
             ] as const).map(({ key, label }) => (
               <button
                 key={key}
-                onClick={() => setTab(key as TabType)}
+                onClick={() => handleTabChange(key as TabType)}
                 className={[
                   "relative px-1 py-3 text-xs leading-none font-semibold transition-colors !bg-transparent !shadow-none whitespace-nowrap shrink-0 md:px-3 md:py-3 md:text-sm",
                   "hover:!bg-transparent focus:!bg-transparent active:!bg-transparent focus-visible:!ring-0 focus:!outline-none",

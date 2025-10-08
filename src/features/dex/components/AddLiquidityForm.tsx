@@ -535,12 +535,12 @@ export default function AddLiquidityForm() {
             </>
           ) : hasInsufficientBalanceA ? (
             <>
-              Insufficient {tokenA?.symbol} balance. You need {amountA} but only
+              Insufficient {tokenA?.symbol} balance. You need {Decimal.from(amountA || '0').prettify()} but only
               have {balances.in ? Decimal.from(balances.in).prettify() : "0"}
             </>
           ) : (
             <>
-              Insufficient {tokenB?.symbol} balance. You need {amountB} but only
+              Insufficient {tokenB?.symbol} balance. You need {Decimal.from(amountB || '0').prettify()} but only
               have {balances.out ? Decimal.from(balances.out).prettify() : "0"}
             </>
           )}

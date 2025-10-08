@@ -461,7 +461,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       {/* Insufficient Balance Warning */}
       {hasInsufficientBalance && (
         <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
-          Insufficient {tokenIn?.symbol} balance. You need {amountIn} but only have {balances.in ? Decimal.from(balances.in).prettify() : '0'}
+          Insufficient {tokenIn?.symbol} balance. You need {Decimal.from(amountIn || '0').prettify()} but only have {balances.in ? Decimal.from(balances.in).prettify() : '0'}
         </div>
       )}
 

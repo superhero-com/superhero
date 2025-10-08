@@ -7,7 +7,7 @@ on:
 jobs:
   e2e-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     
     steps:
       - name: Wait for Netlify Preview
@@ -67,19 +67,20 @@ jobs:
         working-directory: keypair-testing
         env:
           SUPERHERO_COM_BASE_URL: ${{ steps.netlify.outputs.url }}
-        run: |
-          npx playwright test tests_superhero_react/superhero-react.spec.ts --project="Web Chrome" --retries=1 --config=./playwright.config.ts --workers=3 2>&1 | tee test-output.txt || true
+        run: npx playwright test tests_superhero_react/superhero-react.spec.ts --project="Web Chrome" --retries=1 --config=./playwright.config.ts --reporter=html --reporter=list --reporter=json:test-results.json || true
         
       - name: Extract failed tests
         if: always()
         id: failed_tests
         working-directory: keypair-testing
         run: |
-          if [ -f "test-output.txt" ]; then
-            FAILED=$(grep -E "^\s+[0-9]+\)" test-output.txt | grep "✘" | sed 's/^[[:space:]]*[0-9]*)[[:space:]]*//' | head -10 || echo "")
-            if [ -n "$FAILED" ]; then
+          if [ -f "test-results.json" ]; then
+            # Extract titles of failed or timedOut tests (limit to 10 for brevity)
+            FAILED_TESTS=$(jq -r '.suites[]?.specs[]? | select(.tests[]?.results[]?.status == "failed" or .tests[]?.results[]?.status == "timedOut") | .title' test-results.json | head -10)
+            
+            if [ -n "$FAILED_TESTS" ]; then
               echo "failed<<EOF" >> $GITHUB_OUTPUT
-              echo "$FAILED" >> $GITHUB_OUTPUT
+              echo "$FAILED_TESTS" >> $GITHUB_OUTPUT
               echo "EOF" >> $GITHUB_OUTPUT
             else
               echo "failed=" >> $GITHUB_OUTPUT

@@ -94,26 +94,27 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
   const qualiPrivateUrl = `https://app.quali.chat/#/room/#PRIV_${encodedName}_${encodedAddress}_AETERNITY:quali.chat`;
 
   return (
-    <div className="text-center border border-white/20 rounded-xl p-3 bg-white/5">
-      {/* Header inside card (merged from info banner) */}
-      <div className="flex items-start gap-3 mb-2 text-left">
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] flex items-center justify-center">
-          <span className="text-white text-sm">💬</span>
+    <div className="border border-white/15 rounded-2xl p-4 md:p-5 bg-gradient-to-b from-white/[0.06] to-white/[0.02] backdrop-blur-[10px] text-center">
+      {/* Header */}
+      <div className="flex items-start gap-3 mb-3 text-left">
+        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] flex items-center justify-center shadow-[0_6px_18px_rgba(78,205,196,0.28)]">
+          <span className="text-white text-base">💬</span>
         </div>
         <div className="flex-1">
-          <h4 className="text-white font-semibold text-sm mb-1">Token-gated chat rooms</h4>
-          <p className="text-white/70 text-xs leading-relaxed">
-            Public room: everyone can read, only holders can post. Private room: only holders can read and post.
-          </p>
+          <h4 className="text-white font-semibold text-[15px] mb-1 tracking-wide">Join the trend holders’ exclusive chat rooms</h4>
+          <div className="flex items-center gap-2 flex-wrap text-[10px] text-white/70">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 border border-white/15">🌐 Public: read for all, post for holders</span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 border border-white/15">🔒 Private: holders only</span>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-2 flex-wrap">
+      <div className="flex items-center justify-center gap-2.5 flex-wrap">
         <a
           href={qualiPublicUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:bg-white/20 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(255,255,255,0.12)] focus:outline-none focus:ring-2 focus:ring-white/30 no-gradient-text"
+          className="inline-flex items-center gap-1.5 no-underline text-white bg-white/10 border border-white/20 px-3.5 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:bg-white/20 hover:-translate-y-0.5 hover:shadow-[0_10px_26px_rgba(255,255,255,0.12)] focus:outline-none focus:ring-2 focus:ring-white/30 active:translate-y-0 no-gradient-text"
           title="Open the public chat on Quali.chat"
         >
           🌐 Public chat
@@ -122,13 +123,13 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           href={qualiPrivateUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:bg-white/20 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(255,255,255,0.12)] focus:outline-none focus:ring-2 focus:ring-white/30 no-gradient-text"
+          className="inline-flex items-center gap-1.5 no-underline text-white bg-white/10 border border-white/20 px-3.5 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:bg-white/20 hover:-translate-y-0.5 hover:shadow-[0_10px_26px_rgba(255,255,255,0.12)] focus:outline-none focus:ring-2 focus:ring-white/30 active:translate-y-0 no-gradient-text"
           title="Open the private chat on Quali.chat (holders only)"
         >
           🔒 Private chat
         </a>
       </div>
-      <div className="mt-1.5 text-xs opacity-70 text-white/70">
+      <div className="mt-2 text-xs opacity-70 text-white/70">
         Service provided by{' '}
         <a
           href="https://quali.chat"

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { DexTokenDto } from '../../../api/generated';
 import { useAccount } from '../../../hooks/useAccount';
 import { Decimal } from '../../../libs/decimal';
+import { DEX_ADDRESSES } from '../../../libs/dex';
 
 interface TokenSelectorProps {
   label?: string;
@@ -44,6 +45,13 @@ export default function TokenSelector({
         token.symbol.toLowerCase().includes(term) ||
         (token.address || '').toLowerCase().includes(term);
       const notExcluded = !excludeIds.includes(token.address);
+      // if the token is WAE, skip it
+      if (skipToken?.address === DEX_ADDRESSES.wae && token.address === 'ae') {
+        return false;
+      }
+      if (skipToken?.address === 'ae' && token.address === DEX_ADDRESSES.wae) {
+        return false;
+      }
       const notSkipped = !skipToken || token.address !== skipToken.address;
       return matchesSearch && notExcluded && notSkipped;
     });

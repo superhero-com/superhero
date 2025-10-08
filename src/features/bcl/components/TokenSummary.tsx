@@ -43,7 +43,7 @@ export default function TokenSummary({
 
       {/* Token Name */}
       <div className="mb-6">
-        <div className="rounded-2xl text-center p-0 bg-transparent border-0 backdrop-blur-none sm:p-4 sm:bg-white/[0.05] sm:border sm:border-white/10 sm:backdrop-blur-[10px]">
+        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] text-center">
           <div className="text-xs text-white/60 font-medium mb-2">
             Token Name
           </div>
@@ -55,7 +55,7 @@ export default function TokenSummary({
 
       {/* Price and Market Cap */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="rounded-2xl p-0 bg-transparent border-0 backdrop-blur-none sm:p-4 sm:bg-white/[0.05] sm:border sm:border-white/10 sm:backdrop-blur-[10px]">
+        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
           <div className="text-xs text-white/60 font-medium mb-2">Price</div>
           <PriceDataFormatter
             className="text-xs sm:text-base"
@@ -63,7 +63,7 @@ export default function TokenSummary({
             priceData={token.price_data as PriceDto}
           />
         </div>
-        <div className="rounded-2xl p-0 bg-transparent border-0 backdrop-blur-none sm:p-4 sm:bg-white/[0.05] sm:border sm:border-white/10 sm:backdrop-blur-[10px]">
+        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
           <div className="text-xs text-white/60 font-medium mb-2">
             Market Cap
           </div>
@@ -79,7 +79,7 @@ export default function TokenSummary({
       {/* DAO Balance and Total Supply */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         {token.dao_balance && (
-          <div className="rounded-2xl p-0 bg-transparent border-0 backdrop-blur-none sm:p-4 sm:bg-white/[0.05] sm:border sm:border-white/10 sm:backdrop-blur-[10px]">
+          <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
             <div className="text-xs text-white/60 font-medium mb-2">
               DAO Balance
             </div>
@@ -91,7 +91,7 @@ export default function TokenSummary({
           </div>
         )}
         {token.total_supply && (
-          <div className="rounded-2xl p-0 bg-transparent border-0 backdrop-blur-none sm:p-4 sm:bg-white/[0.05] sm:border sm:border-white/10 sm:backdrop-blur-[10px]">
+          <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-[10px]">
             <div className="text-xs text-white/60 font-medium mb-2">
               Total Supply
             </div>
@@ -106,7 +106,7 @@ export default function TokenSummary({
       {/* Creation Date */}
       {token.created_at && (
         <div className="mb-6">
-          <div className="rounded-2xl text-center p-0 bg-transparent border-0 backdrop-blur-none sm:p-4 sm:bg-white/[0.05] sm:border sm:border-white/10 sm:backdrop-blur-[10px]">
+          <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] text-center">
             <div className="text-xs text-white/60 font-medium mb-2">
               Creation Date
             </div>
@@ -120,7 +120,7 @@ export default function TokenSummary({
       {/* Contract Addresses */}
       <div className="flex flex-col gap-3 mb-6">
         {(token.address || token.creator_address) && (
-          <div className="flex items-center gap-2 justify-between rounded-2xl p-0 bg-transparent border-0 backdrop-blur-none sm:p-4 sm:bg-white/[0.05] sm:border sm:border-white/10 sm:backdrop-blur-[10px]">
+          <div className="flex items-center gap-2 justify-between bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
             <div className="text-xs text-white/60 font-medium">
               Contract Address:
             </div>
@@ -128,7 +128,7 @@ export default function TokenSummary({
           </div>
         )}
         {token.sale_address && (
-          <div className="flex items-center gap-2 justify-between rounded-2xl p-0 bg-transparent border-0 backdrop-blur-none sm:p-4 sm:bg-white/[0.05] sm:border sm:border-white/10 sm:backdrop-blur-[10px]">
+          <div className="flex items-center gap-2 justify-between bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
             <div className="text-xs text-white/60 font-medium">
               Sale Address:
             </div>
@@ -136,7 +136,7 @@ export default function TokenSummary({
           </div>
         )}
         {token.creator_address && (
-          <div className="flex items-center gap-2 justify-between rounded-2xl p-0 bg-transparent border-0 backdrop-blur-none sm:p-4 sm:bg-white/[0.05] sm:border sm:border-white/10 sm:backdrop-blur-[10px]">
+          <div className="flex items-center gap-2 justify-between bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
             <div className="text-xs text-white/60 font-medium">
               Created By:
             </div>
@@ -146,7 +146,7 @@ export default function TokenSummary({
       </div>
 
       {/* Description */}
-      <div className="text-sm text-white/60 leading-relaxed mb-6 rounded-2xl p-0 bg-transparent border-0 backdrop-blur-none sm:p-4 sm:bg-white/[0.05] sm:border sm:border-white/10 sm:backdrop-blur-[10px]">
+      <div className="text-sm text-white/60 leading-relaxed mb-6 bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
         This token uses a bonding curve: buying mints new tokens at a higher
         price; selling burns tokens and returns AE along the curve. A portion of
         trades feeds the token's DAO treasury for proposals and payouts.

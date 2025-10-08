@@ -110,7 +110,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
             Chat for #{token.name || 'this token'} holders
           </h4>
           <p className="text-white/70 text-xs leading-relaxed">
-            Buy this token to join the exclusive chat rooms.
+            Buy this token to join the exclusive chat rooms. Your wallet proves ownership; access is token‑gated.
           </p>
         </div>
       </div>

@@ -45,8 +45,6 @@ export function useLiquidityPositions(): PoolListState & {
 
     const accountAex9Balances = await loadAccountAex9Balances();
     const listAllPairs: any = await DexService.listAllPairs({ limit: 1000, page: 1 });
-    console.log("[useDex] scanAccountLiquidity superheroPairs", listAllPairs);
-    console.log("[useDex] scanAccountLiquidity accountAex9Balances", accountAex9Balances);
     // const pairs = await getPairs(false);
     const pairs: PairDto[] = listAllPairs.items;
 
@@ -104,7 +102,6 @@ export function useLiquidityPositions(): PoolListState & {
 
   // Refresh positions manually
   const refreshPositions = useCallback(async () => {
-    console.log("[useLiquidityPositions] refreshPositions->activeAccount", activeAccount);
     if (!activeAccount) return;
     await loadAndCachePositions(activeAccount);
   }, [activeAccount, loadAndCachePositions]);

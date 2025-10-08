@@ -87,21 +87,27 @@ const EmptyState = () => (
 );
 
 // Add comment CTA component
-const AddCommentCTA = () => (
-  <div className="text-center border border-white/20 rounded-xl p-3 bg-white/5">
-    <a
-      href="https://quali.chat/"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors"
-    >
-      Add comment
-    </a>
-    <div className="mt-1.5 text-xs opacity-70 text-white/70">
-      Service provided by <strong>Quali.chat</strong>
+const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) => {
+  const encodedName = encodeURIComponent(token.name);
+  const encodedAddress = encodeURIComponent(token.address);
+  const qualiRoomUrl = `https://app.quali.chat/#/room/#PUB_${encodedName}_${encodedAddress}_AETERNITY:quali.chat`;
+
+  return (
+    <div className="text-center border border-white/20 rounded-xl p-3 bg-white/5">
+      <a
+        href={qualiRoomUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors"
+      >
+        Add comment
+      </a>
+      <div className="mt-1.5 text-xs opacity-70 text-white/70">
+        Service provided by <strong>Quali.chat</strong>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default function TokenChat({ token }: Props) {
   const [state, setState] = useState<ChatState>({
@@ -252,7 +258,7 @@ export default function TokenChat({ token }: Props) {
 
   return (
     <div className="grid gap-2">
-      <AddCommentCTA />
+      <AddCommentCTA token={token} />
 
       {state.error && (
         <ErrorDisplay error={state.error} onRetry={handleRetry} />

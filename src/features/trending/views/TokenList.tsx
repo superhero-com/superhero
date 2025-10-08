@@ -219,16 +219,18 @@ export default function TokenList() {
 
               {/* Owned by me */}
               {activeAccount && (
-                <AeButton
-                  variant={ownedOnly ? "ghost" : "primary"}
-                  className={`h-10 px-3 whitespace-nowrap w-full md:w-auto flex-shrink-0 transition-all duration-300 ${ownedOnly
-                    ? '!bg-transparent !backdrop-blur-0 !border-2 !border-pink-500/80 !ring-0 text-white hover:bg-pink-500/10'
-                    : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl'
-                    }`}
-                  onClick={() => setOwnedOnly(!ownedOnly)}
-                >
-                  <span className="text-xs">Owned Only</span>
-                </AeButton>
+                <div className={`w-full md:w-auto flex-shrink-0 ${ownedOnly ? 'rounded-2xl border-2 border-pink-500/80' : ''}`}>
+                  <AeButton
+                    variant={ownedOnly ? "ghost" : "primary"}
+                    className={`h-10 px-3 whitespace-nowrap w-full md:w-auto flex-shrink-0 transition-all duration-300 ${ownedOnly
+                      ? '!bg-transparent !backdrop-blur-0 !border-0 !ring-0 text-white hover:bg-pink-500/10'
+                      : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl'
+                      }`}
+                    onClick={() => setOwnedOnly(!ownedOnly)}
+                  >
+                    <span className="text-xs">Owned Only</span>
+                  </AeButton>
+                </div>
               )}
 
               {/* Search */}

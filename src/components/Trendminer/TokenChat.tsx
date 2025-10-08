@@ -81,7 +81,7 @@ const ErrorDisplay = ({ error, onRetry }: { error: string; onRetry: () => void }
 // Empty state component
 const EmptyState = () => (
   <div className="text-center py-8">
-    <div className="text-sm text-white/60 mb-2">No messages yet</div>
+    <div className="text-sm text-white/60 mb-2">No public chat messages yet</div>
     <div className="text-xs text-white/40">Be the first to share your thoughts!</div>
   </div>
 );

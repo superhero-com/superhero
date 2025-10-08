@@ -105,7 +105,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
         </div>
         <div className="flex-1">
           <h4 className="text-white font-semibold text-[16px] mb-0.5 tracking-wide">
-            Chat for {token.name || 'this token'} holders
+            Chat for #{token.name || 'this token'} holders
           </h4>
           <p className="text-white/70 text-xs leading-relaxed">
             Choose a room to join. Your wallet proves ownership; access is token‑gated.
@@ -165,7 +165,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           rel="noopener noreferrer"
           className="text-[#4ecdc4] hover:text-white transition-colors underline"
         >
-          Quali.chat
+          <strong>Quali.chat</strong>
         </a>
       </div>
     </div>

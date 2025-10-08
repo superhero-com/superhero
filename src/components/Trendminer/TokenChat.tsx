@@ -188,6 +188,10 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
   const fromRef = useRef<string | undefined>(undefined);
   const maxRetries = 3;
 
+  // Determine what parts to render/fetch based on mode
+  const showCTA = mode !== 'messagesOnly';
+  const showMessages = mode !== 'ctaOnly';
+
   const resetChat = useCallback(() => {
     // Clear any pending retry timeout
     if (retryTimeoutRef.current) {
@@ -299,15 +303,15 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
     loadMessages(true);
   }, [resetChat, loadMessages]);
 
-  // Reset chat when token changes
+  // Reset chat when token changes (only if messages are shown)
   useEffect(() => {
-    resetChat();
-  }, [token?.address, token?.name]);
+    if (showMessages) resetChat();
+  }, [token?.address, token?.name, showMessages, resetChat]);
 
-  // Load initial messages
+  // Load initial messages (only if messages are shown)
   useEffect(() => {
-    loadMessages(true);
-  }, [token?.address, token?.name]);
+    if (showMessages) loadMessages(true);
+  }, [token?.address, token?.name, showMessages, loadMessages]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -321,14 +325,13 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
   const hasMessages = state.messages.length > 0;
   const showEmptyState = !state.loading && !state.error && state.endReached && !hasMessages;
 
-  const showCTA = mode !== 'messagesOnly';
-  const showMessages = mode !== 'ctaOnly';
+  // showCTA & showMessages already defined above
 
   return (
     <div className="grid gap-2">
       {showCTA && <AddCommentCTA token={token} />}
 
-      {state.error && (
+      {showMessages && state.error && (
         <ErrorDisplay error={state.error} onRetry={handleRetry} />
       )}
 

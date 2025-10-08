@@ -200,9 +200,9 @@ export default function TokenList() {
             </div>
 
             {/* FILTERS */}
-            <div className="flex w-full items-center gap-2 flex-wrap sm:flex-nowrap justify-between">
+            <div className="flex w-full items-center gap-3 flex-wrap md:flex-nowrap">
               {/* OrderBy Filter */}
-              <div className="w-full sm:w-auto flex-shrink-0">
+              <div className="w-full md:w-auto flex-shrink-0">
                 <Select value={orderBy} onValueChange={updateOrderBy}>
                   <SelectTrigger className="px-2 py-2 h-10 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05] w-full sm:w-auto sm:min-w-[140px]">
                     <SelectValue />
@@ -221,7 +221,7 @@ export default function TokenList() {
               {activeAccount && (
                 <AeButton
                   variant="primary"
-                  className={`h-10 px-3 whitespace-nowrap w-full sm:w-auto flex-shrink-0 ${ownedOnly
+                  className={`h-10 px-3 whitespace-nowrap w-full md:w-auto flex-shrink-0 ${ownedOnly
                     ? 'bg-white/10 opacity-60'
                     : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'
                     }`}
@@ -236,11 +236,11 @@ export default function TokenList() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search tokens"
-                className="px-2 py-2 h-10 min-h-[auto] bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] placeholder-white/50 transition-all duration-300 hover:bg-white/[0.05] flex-1 min-w-[180px] max-w-[420px]"
+                className="px-2 py-2 h-10 min-h-[auto] bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] placeholder-white/50 transition-all duration-300 hover:bg-white/[0.05] w-full md:flex-1 min-w-[160px] md:max-w-none"
               />
 
               {/* Performance Timeframe Selector */}
-              <div className="flex items-center justify-center sm:justify-start w-auto flex-shrink-0">
+              <div className="flex items-center justify-center md:justify-start w-auto flex-shrink-0">
                 <PerformanceTimeframeSelector />
               </div>
             </div>

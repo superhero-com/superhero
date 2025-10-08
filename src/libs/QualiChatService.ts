@@ -43,7 +43,8 @@ export class QualiChatService {
     options?: { from?: string; limit?: number },
   ) {
     const { from, limit = 20 } = options || {};
-    return this.request<MessagesListResponse>(`/rooms/PUB_${tokenName}_${tokenContract}/messages`, {
+    const sanitizedName = (tokenName || '').replace(/-/g, '');
+    return this.request<MessagesListResponse>(`/rooms/PUB_${sanitizedName}_${tokenContract}/messages`, {
       from,
       limit,
     });

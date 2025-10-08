@@ -8,6 +8,7 @@ type Props = {
     name: string;
     address: string;
   };
+  mode?: 'full' | 'ctaOnly' | 'messagesOnly';
 };
 
 type ChatState = {
@@ -81,29 +82,99 @@ const ErrorDisplay = ({ error, onRetry }: { error: string; onRetry: () => void }
 // Empty state component
 const EmptyState = () => (
   <div className="text-center py-8">
-    <div className="text-sm text-white/60 mb-2">There are no comments yet</div>
+    <div className="text-sm text-white/60 mb-2">No public chat messages yet</div>
     <div className="text-xs text-white/40">Be the first to share your thoughts!</div>
   </div>
 );
 
-// Add comment CTA component
-const AddCommentCTA = () => (
-  <div className="text-center border border-white/20 rounded-xl p-3 bg-white/5">
-    <a
-      href="https://quali.chat/"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors"
-    >
-      Add comment
-    </a>
-    <div className="mt-1.5 text-xs opacity-70 text-white/70">
-      Service provided by <strong>Quali.chat</strong>
-    </div>
-  </div>
-);
+// Add chat CTAs component (reimagined layout)
+const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) => {
+  const roomName = (token.name || '').replace(/-/g, '');
+  const encodedName = encodeURIComponent(roomName);
+  const encodedAddress = encodeURIComponent(token.address);
+  const qualiPublicUrl = `https://app.quali.chat/#/room/#PUB_${encodedName}_${encodedAddress}_AETERNITY:quali.chat`;
+  const qualiPrivateUrl = `https://app.quali.chat/#/room/#PRIV_${encodedName}_${encodedAddress}_AETERNITY:quali.chat`;
 
-export default function TokenChat({ token }: Props) {
+  return (
+    <div className="relative overflow-hidden border border-white/10 rounded-2xl p-4 md:p-5 bg-white/[0.03] backdrop-blur-[14px] z-10">
+      {/* Decorative glow */}
+      <div className="pointer-events-none absolute -top-16 -right-16 w-56 h-56 bg-[radial-gradient(circle_at_center,rgba(78,205,196,0.25),transparent_60%)]" />
+
+      {/* Header */}
+      <div className="flex items-start gap-3 mb-4 text-left">
+        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white/12 border border-white/15 flex items-center justify-center">
+          <span className="text-white text-base">💬</span>
+        </div>
+        <div className="flex-1">
+          <h4 className="text-white font-semibold text-[16px] mb-0.5 tracking-wide">
+            Chat for #{token.name || 'this token'} holders
+          </h4>
+          <p className="text-white/70 text-xs leading-relaxed">
+            Buy this token to join the exclusive chat rooms. Your wallet proves ownership; access is token‑gated.
+          </p>
+        </div>
+      </div>
+
+      {/* Rooms grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <a
+          href={qualiPublicUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] hover:shadow-[0_10px_28px_rgba(255,255,255,0.12)] focus:outline-none focus:ring-2 focus:ring-white/30 no-gradient-text"
+          title="Open the public chat on Quali.chat"
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 grid place-items-center">
+              <span className="no-gradient-text">🌐</span>
+            </div>
+            <div className="flex-1">
+              <div className="font-semibold leading-tight">
+                <span className="bg-gradient-to-r from-[#b06cf5] via-[#ff7eb3] to-[#ff9f4d] bg-clip-text text-transparent">Public chat</span>
+              </div>
+              <div className="text-[11px] text-white/65 leading-tight">Read for all • Write only for holders</div>
+            </div>
+            <div className="text-white/60 group-hover:text-white transition-colors">↗</div>
+          </div>
+        </a>
+
+        <a
+          href={qualiPrivateUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] hover:shadow-[0_10px_28px_rgba(255,255,255,0.12)] focus:outline-none focus:ring-2 focus:ring-white/30 no-gradient-text"
+          title="Open the private chat on Quali.chat (holders only)"
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 grid place-items-center">
+              <span className="no-gradient-text">🔒</span>
+            </div>
+            <div className="flex-1">
+              <div className="font-semibold leading-tight">
+                <span className="bg-gradient-to-r from-[#b06cf5] via-[#ff7eb3] to-[#ff9f4d] bg-clip-text text-transparent">Private chat</span>
+              </div>
+              <div className="text-[11px] text-white/65 leading-tight">Read and write only for holders</div>
+            </div>
+            <div className="text-white/60 group-hover:text-white transition-colors">↗</div>
+          </div>
+        </a>
+      </div>
+      <div className="mt-3 text-xs opacity-70 text-white/70 text-center">
+        Service provided by{' '}
+        <a
+          href="https://quali.chat"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#4ecdc4] hover:text-white transition-colors underline"
+        >
+          <strong>Quali.chat</strong>
+        </a>
+      </div>
+    </div>
+  );
+};
+
+export default function TokenChat({ token, mode = 'full' }: Props) {
   const [state, setState] = useState<ChatState>({
     messages: [],
     from: undefined,
@@ -116,6 +187,18 @@ export default function TokenChat({ token }: Props) {
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fromRef = useRef<string | undefined>(undefined);
   const maxRetries = 3;
+  const tokenRef = useRef<{ name: string; address: string }>(token);
+  const loadMessagesRef = useRef<(isInitial?: boolean) => void>();
+  const scheduleRetryRef = useRef<(isInitial: boolean) => void>();
+
+  // Keep token ref in sync to avoid recreating callbacks
+  useEffect(() => {
+    tokenRef.current = token;
+  }, [token]);
+
+  // Determine what parts to render/fetch based on mode
+  const showCTA = mode !== 'messagesOnly';
+  const showMessages = mode !== 'ctaOnly';
 
   const resetChat = useCallback(() => {
     // Clear any pending retry timeout
@@ -135,7 +218,8 @@ export default function TokenChat({ token }: Props) {
     });
   }, []);
 
-  const scheduleRetry = useCallback((isInitial: boolean) => {
+  // Stable retry scheduler using refs to avoid circular dependencies
+  scheduleRetryRef.current = (isInitial: boolean) => {
     if (retryTimeoutRef.current) {
       clearTimeout(retryTimeoutRef.current);
     }
@@ -158,9 +242,10 @@ export default function TokenChat({ token }: Props) {
         };
       });
 
-      loadMessages(isInitial);
+      // Call the latest loadMessages via ref
+      loadMessagesRef.current?.(isInitial);
     }, 5000);
-  }, [maxRetries]);
+  };
 
   const loadMessages = useCallback(async (isInitial = false) => {
     // Check if we should proceed with loading
@@ -170,9 +255,10 @@ export default function TokenChat({ token }: Props) {
     });
 
     try {
+      const currentToken = tokenRef.current;
       const response = await QualiChatService.getTokenMessages(
-        token.name,
-        token.address,
+        currentToken.name,
+        currentToken.address,
         { from: fromRef.current, limit: 20 }
       );
 
@@ -204,39 +290,42 @@ export default function TokenChat({ token }: Props) {
 
           if (shouldRetry) {
             // Schedule retry
-            scheduleRetry(isInitial);
+            scheduleRetryRef.current?.(isInitial);
             return {
               ...currentState,
               loading: false,
-              error: `Failed to load comments. Retrying in 5 seconds... (${currentState.retryCount + 1}/${maxRetries})`,
+              error: `Failed to load messages. Retrying in 5 seconds... (${currentState.retryCount + 1}/${maxRetries})`,
             };
           } else {
             // Max retries reached
             return {
               ...currentState,
               loading: false,
-              error: 'Unable to load comments after multiple attempts. Please try again later.',
+              error: 'Unable to load messages after multiple attempts. Please try again later.',
             };
           }
         });
       }
     }
-  }, [token.name, token.address, maxRetries, scheduleRetry]);
+  }, []);
+
+  // Expose latest loadMessages to retry scheduler via ref
+  loadMessagesRef.current = loadMessages;
 
   const handleRetry = useCallback(() => {
     resetChat();
     loadMessages(true);
   }, [resetChat, loadMessages]);
 
-  // Reset chat when token changes
+  // Reset chat when token changes (only if messages are shown)
   useEffect(() => {
-    resetChat();
-  }, [token?.address, token?.name]);
+    if (showMessages) resetChat();
+  }, [token?.address, token?.name, showMessages, resetChat]);
 
-  // Load initial messages
+  // Load initial messages (only if messages are shown)
   useEffect(() => {
-    loadMessages(true);
-  }, [token?.address, token?.name]);
+    if (showMessages) loadMessages(true);
+  }, [token?.address, token?.name, showMessages, loadMessages]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -250,15 +339,17 @@ export default function TokenChat({ token }: Props) {
   const hasMessages = state.messages.length > 0;
   const showEmptyState = !state.loading && !state.error && state.endReached && !hasMessages;
 
+  // showCTA & showMessages already defined above
+
   return (
     <div className="grid gap-2">
-      <AddCommentCTA />
+      {showCTA && <AddCommentCTA token={token} />}
 
-      {state.error && (
+      {showMessages && state.error && (
         <ErrorDisplay error={state.error} onRetry={handleRetry} />
       )}
 
-      {!state.error && (
+      {showMessages && !state.error && (
         <div className="grid gap-2">
           {state.messages.map((message, index) => (
             <MessageItem
@@ -278,6 +369,7 @@ export default function TokenChat({ token }: Props) {
         </div>
       )}
 
+      {showMessages && (
       <div className="text-center mt-1.5">
         {!state.endReached && !state.error && (
           <AeButton
@@ -294,6 +386,7 @@ export default function TokenChat({ token }: Props) {
 
         {showEmptyState && <EmptyState />}
       </div>
+      )}
     </div>
   );
 }

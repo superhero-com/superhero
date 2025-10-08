@@ -4,9 +4,9 @@ import AeButton from '../components/AeButton';
 import RightRail from '../components/layout/RightRail';
 import Shell from '../components/layout/Shell';
 
-import GovernanceAccount from '@/components/goverance/GovernanceAccount';
-import GovernancePolls from '@/components/goverance/GovernancePolls';
-import GovernanceVote from '@/components/goverance/GovernanceVote';
+import GovernanceAccount from '@/components/governance/GovernanceAccount';
+import GovernancePolls from '@/components/governance/GovernancePolls';
+import GovernanceVote from '@/components/governance/GovernanceVote';
 type TabType = 'polls' | 'vote' | 'account';
 
 export default function Governance() {

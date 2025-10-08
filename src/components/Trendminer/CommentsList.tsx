@@ -32,7 +32,7 @@ export default function CommentsList({ token }: CommentsListProps) {
               >
                 Quali.chat
               </a>
-              . Click "Add comment" to post in the public room; messages appear here shortly after.
+              . Click "Add message" to post in the public room; messages appear here shortly after.
             </p>
           </div>
         </div>

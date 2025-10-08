@@ -100,7 +100,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
         rel="noopener noreferrer"
         className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors"
       >
-        Add comment
+        Add message
       </a>
       <div className="mt-1.5 text-xs opacity-70 text-white/70">
         Service provided by <strong>Quali.chat</strong>

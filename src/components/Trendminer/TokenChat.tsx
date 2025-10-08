@@ -81,7 +81,7 @@ const ErrorDisplay = ({ error, onRetry }: { error: string; onRetry: () => void }
 // Empty state component
 const EmptyState = () => (
   <div className="text-center py-8">
-    <div className="text-sm text-white/60 mb-2">There are no comments yet</div>
+    <div className="text-sm text-white/60 mb-2">No messages yet</div>
     <div className="text-xs text-white/40">Be the first to share your thoughts!</div>
   </div>
 );
@@ -95,12 +95,34 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
 
   return (
     <div className="text-center border border-white/20 rounded-xl p-3 bg-white/5">
+      {/* Header inside card (merged from info banner) */}
+      <div className="flex items-start gap-3 mb-2 text-left">
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] flex items-center justify-center">
+          <span className="text-white text-sm">💬</span>
+        </div>
+        <div className="flex-1">
+          <h4 className="text-white font-semibold text-sm mb-1">Chat rooms</h4>
+          <p className="text-white/70 text-xs leading-relaxed">
+            Powered by{' '}
+            <a
+              href="https://quali.chat"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#4ecdc4] hover:text-white transition-colors underline"
+            >
+              Quali.chat
+            </a>
+            . Public room: everyone can read, only holders can post. Private room: only holders can read and post.
+          </p>
+        </div>
+      </div>
+
       <div className="flex items-center justify-center gap-2 flex-wrap">
         <a
           href={qualiPublicUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors no-gradient-text"
+          className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:bg-white/20 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(255,255,255,0.12)] focus:outline-none focus:ring-2 focus:ring-white/30 no-gradient-text"
           title="Open the public chat on Quali.chat"
         >
           🌐 Public chat
@@ -109,7 +131,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           href={qualiPrivateUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors no-gradient-text"
+          className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:bg-white/20 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(255,255,255,0.12)] focus:outline-none focus:ring-2 focus:ring-white/30 no-gradient-text"
           title="Open the private chat on Quali.chat (holders only)"
         >
           🔒 Private chat
@@ -227,14 +249,14 @@ export default function TokenChat({ token }: Props) {
             return {
               ...currentState,
               loading: false,
-              error: `Failed to load comments. Retrying in 5 seconds... (${currentState.retryCount + 1}/${maxRetries})`,
+              error: `Failed to load messages. Retrying in 5 seconds... (${currentState.retryCount + 1}/${maxRetries})`,
             };
           } else {
             // Max retries reached
             return {
               ...currentState,
               loading: false,
-              error: 'Unable to load comments after multiple attempts. Please try again later.',
+              error: 'Unable to load messages after multiple attempts. Please try again later.',
             };
           }
         });

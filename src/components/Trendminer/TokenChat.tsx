@@ -89,7 +89,8 @@ const EmptyState = () => (
 
 // Add chat CTAs component (reimagined layout)
 const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) => {
-  const encodedName = encodeURIComponent(token.name);
+  const roomName = (token.name || '').replace(/-/g, '');
+  const encodedName = encodeURIComponent(roomName);
   const encodedAddress = encodeURIComponent(token.address);
   const qualiPublicUrl = `https://app.quali.chat/#/room/#PUB_${encodedName}_${encodedAddress}_AETERNITY:quali.chat`;
   const qualiPrivateUrl = `https://app.quali.chat/#/room/#PRIV_${encodedName}_${encodedAddress}_AETERNITY:quali.chat`;
@@ -131,7 +132,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
               <div className="font-semibold leading-tight">
                 <span className="bg-gradient-to-r from-[#b06cf5] via-[#ff7eb3] to-[#ff9f4d] bg-clip-text text-transparent">Public chat</span>
               </div>
-              <div className="text-[11px] text-white/65 leading-tight">Read for all • Post for holders</div>
+              <div className="text-[11px] text-white/65 leading-tight">Read for all • Write only for holders</div>
             </div>
             <div className="text-white/60 group-hover:text-white transition-colors">↗</div>
           </div>
@@ -152,7 +153,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
               <div className="font-semibold leading-tight">
                 <span className="bg-gradient-to-r from-[#b06cf5] via-[#ff7eb3] to-[#ff9f4d] bg-clip-text text-transparent">Private chat</span>
               </div>
-              <div className="text-[11px] text-white/65 leading-tight">Holders only • Read and post</div>
+              <div className="text-[11px] text-white/65 leading-tight">Read and write only for holders</div>
             </div>
             <div className="text-white/60 group-hover:text-white transition-colors">↗</div>
           </div>

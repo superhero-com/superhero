@@ -86,22 +86,33 @@ const EmptyState = () => (
   </div>
 );
 
-// Add comment CTA component
+// Add chat CTAs component
 const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) => {
   const encodedName = encodeURIComponent(token.name);
   const encodedAddress = encodeURIComponent(token.address);
-  const qualiRoomUrl = `https://app.quali.chat/#/room/#PUB_${encodedName}_${encodedAddress}_AETERNITY:quali.chat`;
+  const qualiPublicUrl = `https://app.quali.chat/#/room/#PUB_${encodedName}_${encodedAddress}_AETERNITY:quali.chat`;
+  const qualiPrivateUrl = `https://app.quali.chat/#/room/#PRIV_${encodedName}_${encodedAddress}_AETERNITY:quali.chat`;
 
   return (
     <div className="text-center border border-white/20 rounded-xl p-3 bg-white/5">
-      <a
-        href={qualiRoomUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors"
-      >
-        Open chat
-      </a>
+      <div className="flex items-center justify-center gap-2 flex-wrap">
+        <a
+          href={qualiPublicUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors"
+        >
+          Open public chat
+        </a>
+        <a
+          href={qualiPrivateUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block no-underline text-white bg-white/12 border border-white/25 px-3 py-2 rounded-full text-sm font-medium hover:bg-white/20 transition-colors"
+        >
+          Open private chat
+        </a>
+      </div>
       <div className="mt-1.5 text-xs opacity-70 text-white/70">
         Service provided by <strong>Quali.chat</strong>
       </div>

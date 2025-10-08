@@ -32,7 +32,7 @@ export default function CommentsList({ token }: CommentsListProps) {
               >
                 Quali.chat
               </a>
-              . Click "Open chat" to post in the public room; messages appear here shortly after.
+              . Public room: everyone can read, only holders can post. Private room: only holders can read and post. Use the buttons below to open either room; messages appear here shortly after.
             </p>
           </div>
         </div>

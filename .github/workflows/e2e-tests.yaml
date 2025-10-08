@@ -68,7 +68,7 @@ jobs:
         env:
           SUPERHERO_COM_BASE_URL: ${{ steps.netlify.outputs.url }}
         run: |
-          npx playwright test tests_superhero_react/superhero-react.spec.ts --retries=1 --config=./playwright.config.ts --reporter=html --reporter=list 2>&1 | tee test-output.log
+          npx playwright test tests_superhero_react/superhero-react.spec.ts --retries=0 --config=./playwright.config.ts --reporter=html --reporter=list 2>&1 | tee test-output.log
           echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
         
       - name: Extract failed tests

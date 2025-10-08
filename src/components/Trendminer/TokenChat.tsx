@@ -96,7 +96,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
   const qualiPrivateUrl = `https://app.quali.chat/#/room/#PRIV_${encodedName}_${encodedAddress}_AETERNITY:quali.chat`;
 
   return (
-    <div className="relative overflow-hidden border border-white/10 rounded-2xl p-4 md:p-5 bg-white/[0.03] backdrop-blur-[14px] mt-3 md:mt-4 z-10">
+    <div className="relative overflow-hidden border border-white/10 rounded-2xl p-4 md:p-5 bg-white/[0.03] backdrop-blur-[14px] z-10">
       {/* Decorative glow */}
       <div className="pointer-events-none absolute -top-16 -right-16 w-56 h-56 bg-[radial-gradient(circle_at_center,rgba(78,205,196,0.25),transparent_60%)]" />
 

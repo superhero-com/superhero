@@ -32,7 +32,7 @@ export default function TokenSummary({
 
   return (
     <div
-      className={`bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] ${className}`}
+      className={`${className} p-0 bg-transparent border-0 rounded-none shadow-none backdrop-blur-none sm:p-6 sm:bg-white/[0.02] sm:border sm:border-white/10 sm:rounded-[24px] sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)] sm:backdrop-blur-[20px]`}
     >
       {/* Header */}
       <div className="mb-6">

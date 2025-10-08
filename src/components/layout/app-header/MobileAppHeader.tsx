@@ -170,7 +170,7 @@ export default function MobileAppHeader() {
       {showOverlay && (
         <div className="fixed inset-0 bg-black/80 flex items-start justify-end z-[1100] animate-[fadeIn_0.2s_ease-out] backdrop-blur-[4px] sm:items-start sm:justify-center" onClick={() => setShowOverlay(false)}>
           <div className="z-[1101] text-[var(--light-font-color)] relative w-full max-w-[320px] h-screen bg-[var(--background-color)] flex flex-col overflow-y-auto animate-[slideInRight_0.3s_ease-out] shadow-[-10px_0_30px_rgba(0,0,0,0.3)] sm:max-w-full sm:w-full sm:animate-[slideInUp_0.3s_ease-out] sm:shadow-[0_-10px_30px_rgba(0,0,0,0.3)]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between h-[70px] px-3 border-b border-white/10 sm:px-3">
+            <div className="flex items-center justify-between h-[70px] px-3 border-b border-white/10 sm:px-3 flex-shrink-0">
               <h2
                 className="m-0 px-4 text-md font-semibold uppercase tracking-[0.02em] !text-white/80 !bg-transparent"
                 style={{

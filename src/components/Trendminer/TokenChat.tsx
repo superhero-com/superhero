@@ -103,16 +103,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
         <div className="flex-1">
           <h4 className="text-white font-semibold text-sm mb-1">Token-gated chat rooms</h4>
           <p className="text-white/70 text-xs leading-relaxed">
-            Powered by{' '}
-            <a
-              href="https://quali.chat"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#4ecdc4] hover:text-white transition-colors underline"
-            >
-              Quali.chat
-            </a>
-            . Public room: everyone can read, only holders can post. Private room: only holders can read and post.
+            Public room: everyone can read, only holders can post. Private room: only holders can read and post.
           </p>
         </div>
       </div>
@@ -138,7 +129,15 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
         </a>
       </div>
       <div className="mt-1.5 text-xs opacity-70 text-white/70">
-        Service provided by <strong>Quali.chat</strong>
+        Service provided by{' '}
+        <a
+          href="https://quali.chat"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#4ecdc4] hover:text-white transition-colors underline"
+        >
+          Quali.chat
+        </a>
       </div>
     </div>
   );

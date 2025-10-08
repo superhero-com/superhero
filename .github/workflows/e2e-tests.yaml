@@ -67,7 +67,7 @@ jobs:
         working-directory: keypair-testing
         env:
           SUPERHERO_COM_BASE_URL: ${{ steps.netlify.outputs.url }}
-        run: npx playwright test tests_superhero_react/superhero-react.spec.ts --project="Web Chrome" --retries=1 --config=./playwright.config.ts --reporter=html --reporter=list --reporter=json:test-results.json || true
+        run: npx playwright test tests_superhero_react/superhero-react.spec.ts --project="Web Chrome" --retries=1 --config=./playwright.config.ts --reporter=html --reporter=list --reporter=json:outputFile=test-results.json || true
         
       - name: Extract failed tests
         if: always()

@@ -67,16 +67,16 @@ jobs:
         working-directory: keypair-testing
         env:
           SUPERHERO_COM_BASE_URL: ${{ steps.netlify.outputs.url }}
-        run: npx playwright test tests_superhero_react/superhero-react.spec.ts --project="Web Chrome" --retries=1 --config=./playwright.config.ts --reporter=html --reporter=list --reporter=json:outputFile=test-results.json || true
+        run: npx playwright test tests_superhero_react/superhero-react.spec.ts --project="Web Chrome" --retries=1 --config=./playwright.config.ts --reporter=html --reporter=list 2>&1 | tee test-output.log || true
         
       - name: Extract failed tests
         if: always()
         id: failed_tests
         working-directory: keypair-testing
         run: |
-          if [ -f "test-results.json" ]; then
-            # Extract titles of failed or timedOut tests (limit to 10 for brevity)
-            FAILED_TESTS=$(jq -r '.suites[]?.specs[]? | select(.tests[]?.results[]?.status == "failed" or .tests[]?.results[]?.status == "timedOut") | .title' test-results.json | head -10)
+          if [ -f "test-output.log" ]; then
+            # Extract failed test names from list reporter output
+            FAILED_TESTS=$(grep "✘" test-output.log | sed 's/^.*\[.*\]//' | sed 's/^[[:space:]]*//' | head -10)
             
             if [ -n "$FAILED_TESTS" ]; then
               echo "failed<<EOF" >> $GITHUB_OUTPUT

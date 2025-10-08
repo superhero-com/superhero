@@ -57,7 +57,7 @@ jobs:
         working-directory: keypair-testing
         run: npm ci
         
-      - name: Install Playwright browsers
+      - name: Install Playwright browsers (Only Chrome)
         working-directory: keypair-testing
         run: npx playwright install --with-deps chromium
         
@@ -111,7 +111,7 @@ jobs:
               body += `### ❌ Failed Tests:\n\`\`\`\n${failedTests}\n\`\`\`\n\n`;
             }
             
-            body += `📊 [View Full Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+            body += `📊[View Full Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
             
             github.rest.issues.createComment({
               issue_number: context.issue.number,

@@ -44,20 +44,20 @@ export default function LiquidityPreview({
       </div>
 
       <div className="grid gap-2">
-        {preview.ratioAinB && preview.ratioAinB !== '-' && (
-          <div className="flex justify-between items-center text-xs text-light-font-color">
-            <span>Rate</span>
-            <span className="font-semibold text-standard-font-color">
-              1 {tokenA.symbol} = {preview.ratioAinB} {tokenB.symbol}
-            </span>
-          </div>
-        )}
-
         {preview.ratioBinA && preview.ratioBinA !== '-' && (
           <div className="flex justify-between items-center text-xs text-light-font-color">
             <span>Rate</span>
             <span className="font-semibold text-standard-font-color">
-              1 {tokenB.symbol} = {preview.ratioBinA} {tokenA.symbol}
+              1 {tokenA.symbol} = {preview.ratioBinA} {tokenB.symbol}
+            </span>
+          </div>
+        )}
+
+        {preview.ratioAinB && preview.ratioAinB !== '-' && (
+          <div className="flex justify-between items-center text-xs text-light-font-color">
+            <span>Rate</span>
+            <span className="font-semibold text-standard-font-color">
+              1 {tokenB.symbol} = {preview.ratioAinB} {tokenA.symbol}
             </span>
           </div>
         )}

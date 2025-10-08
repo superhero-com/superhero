@@ -163,8 +163,8 @@ export default function TokenInput({
 
         {/* Insufficient Balance Warning */}
         {hasInsufficientBalance && balance && amount && Number(amount) > 0 && (
-          <div className="mt-2 text-xs text-destructive font-medium flex items-center gap-1">
-            ⚠️ Insufficient {token?.symbol} balance. You need {amount} but only have {Decimal.from(balance).prettify()}
+          <div className="mt-2 text-xs text-red-500 font-medium flex items-center gap-1">
+            ⚠️ Insufficient {token?.symbol} balance. You need {Decimal.from(amount || '0').prettify()} but only have {Decimal.from(balance).prettify()}
           </div>
         )}
       </AeCardContent>

@@ -19,7 +19,8 @@ function useParentId(item: PostDto): string | null {
     const extract = (value: unknown): string | null => {
       if (!value) return null;
       const asString = String(value);
-      const m = asString.match(/comment[:/]([^\s,;]+)$/i);
+      // Match comment:<id> or comment/<id> anywhere in the string
+      const m = asString.match(/comment[:/]([^\s,;]+)/i);
       const id = m?.[1] || (asString.startsWith("comment:") ? asString.split(":")[1] : null);
       if (!id) return null;
       return id.endsWith("_v3") ? id : `${id}_v3`;

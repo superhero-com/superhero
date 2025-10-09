@@ -70,7 +70,37 @@ jobs:
         run: |
           npx playwright test tests_superhero_react/superhero-react.spec.ts --retries=0 --config=./playwright.config.ts --reporter=html --reporter=list 2>&1 | tee test-output.log
           echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
-        
+          
+      - name: Debug Playwright Report Directory
+        if: always()
+        working-directory: keypair-testing
+        run: |
+          echo "Checking playwright-report directory..."
+          if [ -d "playwright-report" ]; then
+            echo "Directory exists. Listing contents:"
+            ls -la playwright-report/
+            echo "File count: $(find playwright-report/ -type f | wc -l)"
+          else
+            echo "Directory does not exist."
+            ls -la . | grep report
+          fi
+          
+      - name: Show Playwright Config
+        if: always()
+        working-directory: keypair-testing
+        run: |
+          echo "Playwright config contents:"
+          cat playwright.config.ts || echo "Config not found"
+          
+      - name: Upload Test Output Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output-log-${{ github.event.pull_request.number }}
+          path: keypair-testing/test-output.log
+          retention-days: 30
+          if-no-files-found: warn
+      
       - name: Extract failed tests
         if: always()
         id: failed_tests

@@ -124,7 +124,7 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
                 e.stopPropagation();
                 onOpenPost(parentId);
               }}
-              className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/10 rounded-xl p-3 hover:bg-white/[0.06]"
+              className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/10 rounded-xl p-3 transition-colors hover:bg-white/[0.04] hover:border-white/25"
               title="Open parent"
             >
               <div className="flex items-end mb-1 min-w-0">

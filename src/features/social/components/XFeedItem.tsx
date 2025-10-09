@@ -128,7 +128,7 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
               title="Open parent"
             >
               <div className="flex items-end mb-1 min-w-0">
-                <span className="text-[11px] text-white/65 shrink-0 mr-2">Replying to</span>
+                <span className="text-[11px] text-white/65 shrink-0 mr-1">Replying to</span>
                 <div className="flex items-center gap-1 min-w-0 h-[19px]">
                   <AddressAvatarWithChainNameFeed
                     address={parent?.sender_address || authorAddress}

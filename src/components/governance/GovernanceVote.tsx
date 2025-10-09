@@ -1,7 +1,7 @@
 import AeButton from "../AeButton";
 import { AddressChip } from "../AddressChip";
 import { Encoding, isAddressValid } from "@aeternity/aepp-sdk";
-import { useGovernance, useWallet } from "@/hooks";
+import { useAccount, useAeSdk, useGovernance } from "@/hooks";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -13,21 +13,20 @@ export default function GovernanceVote({
   pollId,
   setActiveTab,
 }: GovernanceVoteProps) {
-  const { address } = useWallet();
+  const { activeAccount } = useAeSdk();
+  const { decimalBalance } = useAccount();
   const {
     usePoll,
     usePollResults,
     useRevokeVote,
     useSubmitVote,
-    useAccount,
     useDelegation,
     useDelegators,
   } = useGovernance();
   const submitVoteMutation = useSubmitVote();
   const revokeVoteMutation = useRevokeVote();
-  const { data: account } = useAccount(address || "");
-  const { data: delegation = { to: null } } = useDelegation();
-  const { data: delegators = [] } = useDelegators(address || "");
+  const { data: delegation } = useDelegation();
+  const { data: delegators = [] } = useDelegators();
   const pollAddress = isAddressValid(pollId, Encoding.ContractAddress) ? pollId : undefined;
   if (!pollAddress) throw new Error('Invalid poll address');
   const { data: poll } = usePoll(pollAddress);
@@ -121,11 +120,6 @@ export default function GovernanceVote({
                   </div>
                   <h2 className="text-xl md:text-2xl font-bold text-white">Cast Your Vote</h2>
                 </div>
-                {poll?.pollState.metadata.description && (
-                  <p className="text-slate-300 text-sm md:text-base leading-relaxed">
-                    {poll.pollState.metadata.description}
-                  </p>
-                )}
               </div>
 
               <div className="grid gap-4">
@@ -313,7 +307,7 @@ export default function GovernanceVote({
         )}
 
         {/* Enhanced Account Section */}
-        {address && (
+        {activeAccount && (
           <div className="mb-8">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-3xl blur-xl"></div>
@@ -327,7 +321,7 @@ export default function GovernanceVote({
                   <h2 className="text-xl md:text-2xl font-bold text-white">Your Governance Power</h2>
                 </div>
 
-                {account && (
+                {decimalBalance && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div className="group p-6 bg-white/5 border border-white/10 rounded-2xl transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1">
                       <div className="flex items-center gap-4">
@@ -338,7 +332,7 @@ export default function GovernanceVote({
                         </div>
                         <div>
                           <p className="text-sm text-slate-400 font-medium mb-1">Account Balance</p>
-                          <p className="text-2xl font-bold text-white">{account.balance || "0"} AE</p>
+                          <p className="text-2xl font-bold text-white">{decimalBalance.prettify()} AE</p>
                           <p className="text-xs text-slate-500">Available for voting</p>
                         </div>
                       </div>
@@ -371,7 +365,7 @@ export default function GovernanceVote({
                     Delegation Status
                   </h3>
                   
-                  {delegation.to ? (
+                  {delegation ? (
                     <div className="flex items-start gap-4 p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20 rounded-xl">
                       <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center shrink-0">
                         <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -381,7 +375,7 @@ export default function GovernanceVote({
                       <div className="flex-1">
                         <p className="text-sm text-slate-300 font-medium mb-2">Votes are being delegated to:</p>
                         <p className="text-white font-mono text-sm break-all bg-black/20 px-3 py-2 rounded-lg border border-white/10">
-                          {delegation.to}
+                          {delegation}
                         </p>
                         <p className="text-xs text-slate-500 mt-2">
                           Your voting power is being used by this delegate

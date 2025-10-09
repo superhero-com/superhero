@@ -7,8 +7,10 @@ import REGISTRY_WITH_EVENTS_ACI from '../api/GovernanceRegistryACI.json';
 import GOVERNANCE_POLL_ACI from '../api/GovernancePollACI.json';
 
 export const useGovernance = () => {
-  const { activeAccount, sdk } = useAeSdk();
+  const { activeAccount: activeAccountUntyped, sdk } = useAeSdk();
   const queryClient = useQueryClient();
+
+  const activeAccount = activeAccountUntyped as Encoded.AccountAddress;
 
   // Polls query (combined smart contract + backend ordering/metrics)
   const usePolls = (params: { status: 'all' | 'open' | 'closed'; search?: string }) => {
@@ -95,46 +97,30 @@ export const useGovernance = () => {
   };
 
   // Delegation query
-  const useDelegation = (userAddress?: string) => {
-    const targetAddress = userAddress || activeAccount;
-    return useQuery({
-      queryKey: ['governance', 'delegation', targetAddress],
+  const useDelegation = () => {
+    return useQuery<Encoded.AccountAddress | null>({
+      queryKey: ['governance', 'delegation', activeAccount],
       queryFn: async () => {
-        if (!targetAddress) return { to: null };
-        try {
-          // @ts-expect-error needs to integrate the right backend
-          return await GovernanceApi.getDelegation(targetAddress);
-        } catch {
-          return { to: null };
-        }
+        const registry = await Contract.initialize<{
+          delegatee: (account: Encoded.AccountAddress) => Encoded.AccountAddress | undefined
+        }>({
+          ...sdk.getContext(),
+          aci: REGISTRY_WITH_EVENTS_ACI as any,
+          address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
+        });
+        return (await registry.delegatee(activeAccount)).decodedResult ?? null;
       },
-      enabled: !!targetAddress,
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };
 
   // Delegators query
-  const useDelegators = (to: string) => {
+  const useDelegators = () => {
     return useQuery({
-      queryKey: ['governance', 'delegators', to],
+      queryKey: ['governance', 'delegators', activeAccount],
       queryFn: async () => {
-        // @ts-expect-error needs to integrate the right backend
-        const res = await GovernanceApi.listDelegators(to);
-        const list = (res && (res.delegators || res.items || res.data || (Array.isArray(res) ? res : null))) || [];
-        return list;
+        return (await GovernanceApi.getDelegatedPower(activeAccount)).flattenedDelegationTree;
       },
-      enabled: !!to,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    });
-  };
-
-  // Account query
-  const useAccount = (accountAddress: string) => {
-    return useQuery({
-      queryKey: ['governance', 'account', accountAddress],
-      // @ts-expect-error needs to integrate the right backend
-      queryFn: () => GovernanceApi.getAccount(accountAddress),
-      enabled: !!accountAddress,
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };
@@ -188,16 +174,19 @@ export const useGovernance = () => {
   // Set delegation mutation
   const useSetDelegation = () => {
     return useMutation({
-      mutationFn: async ({ to }: { to: string }) => {
+      mutationFn: async (to: Encoded.AccountAddress) => {
         if (!activeAccount) throw new Error('No wallet connected');
 
-        // @ts-expect-error needs to integrate the right backend
-        const first = await GovernanceApi.setDelegation(activeAccount, { to });
-        if (first?.challenge) {
-          const signature = (await sdk.signMessage(first.challenge)).toString('hex');
-          // @ts-expect-error needs to integrate the right backend
-          await GovernanceApi.setDelegation(activeAccount, { to, challenge: first.challenge, signature });
-        }
+        const registry = await Contract.initialize<{
+          delegate: (to: Encoded.AccountAddress) => void
+        }>({
+          ...sdk.getContext(),
+          aci: REGISTRY_WITH_EVENTS_ACI as any,
+          address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
+        });
+
+        await registry.delegate(to);
+        await GovernanceApi.submitContractEvent("Delegation");
       },
       onSuccess: () => {
         // Invalidate delegation query
@@ -212,13 +201,16 @@ export const useGovernance = () => {
       mutationFn: async () => {
         if (!activeAccount) throw new Error('No wallet connected');
 
-        // @ts-expect-error needs to integrate the right backend
-        const first = await GovernanceApi.revokeDelegation(activeAccount, {} as any);
-        if ((first as any)?.challenge) {
-          const signature = (await sdk.signMessage((first as any).challenge)).toString('hex');
-          // @ts-expect-error needs to integrate the right backend
-          await GovernanceApi.revokeDelegation(activeAccount, { challenge: (first as any).challenge, signature });
-        }
+        const registry = await Contract.initialize<{
+          revoke_delegation: () => void
+        }>({
+          ...sdk.getContext(),
+          aci: REGISTRY_WITH_EVENTS_ACI as any,
+          address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
+        });
+
+        await registry.revoke_delegation();
+        await GovernanceApi.submitContractEvent("RevokeDelegation");
       },
       onSuccess: () => {
         // Invalidate delegation query
@@ -234,7 +226,6 @@ export const useGovernance = () => {
     usePollResults,
     useDelegation,
     useDelegators,
-    useAccount,
     
     // Mutations
     useSubmitVote,

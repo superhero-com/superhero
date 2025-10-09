@@ -2,7 +2,7 @@ import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarW
 import { cn } from "@/lib/utils";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { PostDto, PostsService } from "../../../api/generated";
-import { IconComment, IconLink } from "../../../icons";
+import { IconComment } from "../../../icons";
 import { linkify } from "../../../utils/linkify";
 import { useWallet } from "../../../hooks";
 import { relativeTime, compactTime } from "../../../utils/time";
@@ -105,26 +105,14 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
         </div>
 
         <div className="flex-1 min-w-0">
-          {/* Header: name · time and on-chain link */}
+          {/* Header: name · time */}
           <div className="flex items-center justify-between gap-2.5">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
               <span className="text-white/50">·</span>
               <div className="text-[12px] text-white/70 whitespace-nowrap">{compactTime(item.created_at as unknown as string)}</div>
             </div>
-            {item.tx_hash && CONFIG.EXPLORER_URL && (
-              <a
-                href={`${CONFIG.EXPLORER_URL.replace(/\/$/, "")}/transactions/${item.tx_hash}`}
-                target="_blank"
-                rel="noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 text-xs leading-none text-white/60 no-gradient-text"
-                title={item.tx_hash}
-              >
-                <span>on-chain</span>
-                <IconLink className="w-2 h-2" />
-              </a>
-            )}
+            {/* On-chain link removed */}
           </div>
           <div className="mt-1 text-[12px] text-white/65 font-mono leading-[0.9]">{authorAddress}</div>
 

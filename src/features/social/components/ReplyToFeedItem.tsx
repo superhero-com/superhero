@@ -12,6 +12,7 @@ interface ReplyToFeedItemProps {
   item: PostDto;
   onOpenPost: (postId: string) => void;
   commentCount?: number;
+  hideParentContext?: boolean; // when true, do not render parent context header
 }
 
 function useParentId(item: PostDto): string | null {
@@ -58,7 +59,7 @@ function useParentId(item: PostDto): string | null {
 }
 
 // X-like post item with optional parent context header
-const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: ReplyToFeedItemProps) => {
+const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentContext = false }: ReplyToFeedItemProps) => {
   const postId = item.id;
   const authorAddress = item.sender_address;
   const { chainNames } = useWallet();
@@ -71,7 +72,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: ReplyToFee
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      if (!parentId) return;
+      if (!parentId || hideParentContext) return;
       try {
         const res = await PostsService.getById({ id: parentId });
         if (!cancelled) setParent(res as unknown as PostDto);
@@ -83,7 +84,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: ReplyToFee
     return () => {
       cancelled = true;
     };
-  }, [parentId]);
+  }, [parentId, hideParentContext]);
 
   const handleOpen = useCallback(() => onOpenPost(postId), [onOpenPost, postId]);
 
@@ -122,7 +123,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: ReplyToFee
           <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{authorAddress}</div>
 
           {/* Parent context header placed under author row, before reply text */}
-          {parentId && (
+          {parentId && !hideParentContext && (
             <button
               type="button"
               onClick={(e) => {

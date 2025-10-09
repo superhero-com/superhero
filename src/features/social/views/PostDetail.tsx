@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PostsService, PostDto } from '../../../api/generated';
@@ -14,6 +14,7 @@ import CommentForm from '../components/CommentForm';
 export default function PostDetail({ standalone = true }: { standalone?: boolean } = {}) {
   const { postId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Query for post data using new PostsService
   const {
@@ -63,7 +64,12 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   // Handle comment added callback
   const handleCommentAdded = useCallback(() => {
     refetchPost();
-  }, [refetchPost]);
+    // Refresh replies list keys used by DirectReplies and any legacy comment queries
+    if (postId) {
+      queryClient.refetchQueries({ queryKey: ['post-comments', postId, 'infinite'] });
+      queryClient.refetchQueries({ queryKey: ['post-comments', postId] });
+    }
+  }, [refetchPost, queryClient, postId]);
 
   // Render helpers
   const renderLoadingState = () => (
@@ -114,7 +120,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
             <h3 className="text-white/90 font-semibold mb-2">Replies</h3>
             <DirectReplies id={postId!} onOpenPost={(id) => navigate(`/post/${id}`)} />
             <div className="mt-6">
-              <CommentForm postId={postId!} onCommentAdded={() => {}} placeholder="Write a reply..." />
+              <CommentForm postId={postId!} onCommentAdded={handleCommentAdded} placeholder="Write a reply..." />
             </div>
           </section>
         </article>

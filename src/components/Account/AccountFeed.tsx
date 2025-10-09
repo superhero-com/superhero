@@ -3,7 +3,7 @@ import {
   DataTable,
   DataTableResponse,
 } from "@/features/shared/components/DataTable";
-import XFeedItem from "@/features/social/components/XFeedItem";
+import ReplyToFeedItem from "@/features/social/components/ReplyToFeedItem";
 import { PostApiResponse } from "@/features/social/types";
 import { useNavigate } from "react-router-dom";
 
@@ -26,7 +26,7 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
     <DataTable
       queryFn={fetchFeed}
       renderRow={({ item, index }) => (
-        <XFeedItem
+        <ReplyToFeedItem
           key={item.id}
           item={item}
           commentCount={item.total_comments ?? 0}

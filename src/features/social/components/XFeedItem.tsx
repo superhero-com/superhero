@@ -139,18 +139,20 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
               className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/10 rounded-xl p-3 hover:bg-white/[0.06]"
               title="Open parent"
             >
-              <div className="flex items-center gap-2.5 mb-1 min-w-0">
-                <span className="text-[11px] text-white/65 shrink-0">Replying to</span>
-                <AddressAvatarWithChainNameFeed
-                  address={parent?.sender_address || authorAddress}
-                  size={16}
-                  overlaySize={12}
-                  showAddressAndChainName={false}
-                />
-                <div className="text-[12px] font-semibold text-white/90 truncate">
-                  {parent ? chainNames?.[parent.sender_address] || "Legend" : "Parent"}
+              <div className="flex items-center mb-1 min-w-0">
+                <span className="text-[11px] text-white/65 shrink-0 mr-2">Replying to</span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <AddressAvatarWithChainNameFeed
+                    address={parent?.sender_address || authorAddress}
+                    size={16}
+                    overlaySize={12}
+                    showAddressAndChainName={false}
+                  />
+                  <div className="text-[12px] font-semibold text-white/90 truncate">
+                    {parent ? chainNames?.[parent.sender_address] || "Legend" : "Parent"}
+                  </div>
                 </div>
-                <span className="text-[11px] text-white/50">·</span>
+                <span className="mx-2 text-[11px] text-white/50">·</span>
                 <div className="text-[11px] text-white/60 whitespace-nowrap">
                   {parent?.created_at ? compactTime(parent.created_at as unknown as string) : "—"}
                 </div>

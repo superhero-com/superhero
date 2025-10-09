@@ -139,30 +139,26 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
               className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/10 rounded-xl p-3 hover:bg-white/[0.06]"
               title="Open parent"
             >
-              <div className="text-[11px] text-white/65 mb-1">Replying to</div>
-              <div className="flex items-start gap-2">
+              <div className="flex items-center gap-2.5 mb-1 min-w-0">
+                <span className="text-[11px] text-white/65 shrink-0">Replying to</span>
                 <AddressAvatarWithChainNameFeed
                   address={parent?.sender_address || authorAddress}
-                  size={18}
+                  size={16}
                   overlaySize={12}
                   showAddressAndChainName={false}
                 />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="text-[12px] font-semibold text-white/90 truncate">
-                      {parent ? chainNames?.[parent.sender_address] || "Legend" : "Parent"}
-                    </div>
-                    <span className="text-[11px] text-white/50">·</span>
-                    <div className="text-[11px] text-white/60 whitespace-nowrap">
-                      {parent?.created_at ? compactTime(parent.created_at as unknown as string) : "—"}
-                    </div>
-                  </div>
-                  <div className="text-[12px] text-white/80 line-clamp-2">
-                    {parentError || !parent
-                      ? "Parent unavailable/not visible"
-                      : linkify(parent.content, { knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())) })}
-                  </div>
+                <div className="text-[12px] font-semibold text-white/90 truncate">
+                  {parent ? chainNames?.[parent.sender_address] || "Legend" : "Parent"}
                 </div>
+                <span className="text-[11px] text-white/50">·</span>
+                <div className="text-[11px] text-white/60 whitespace-nowrap">
+                  {parent?.created_at ? compactTime(parent.created_at as unknown as string) : "—"}
+                </div>
+              </div>
+              <div className="text-[12px] text-white/80 line-clamp-2">
+                {parentError || !parent
+                  ? "Parent unavailable/not visible"
+                  : linkify(parent.content, { knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())) })}
               </div>
               <div className="mt-1 text-[11px] text-white/70">Show full thread</div>
             </button>

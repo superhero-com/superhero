@@ -22,7 +22,7 @@ export default function CommentsList({ token }: CommentsListProps) {
       />
 
       {/* Row 2: Messages card */}
-      <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4 md:p-5 backdrop-blur-[5px] min-h-[200px]">
+      <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4 md:p-5 backdrop-blur-[5px] min-h-[200px] relative z-0">
         <TokenChat
           token={{
             name: token.name,

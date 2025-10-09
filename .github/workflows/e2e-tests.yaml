@@ -63,7 +63,6 @@ jobs:
         
       - name: Run Superhero React E2E tests
         id: test_run
-        continue-on-error: true
         working-directory: keypair-testing
         env:
           SUPERHERO_COM_BASE_URL: ${{ steps.netlify.outputs.url }}

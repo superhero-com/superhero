@@ -1,4 +1,5 @@
 import AeButton from "../AeButton";
+import { AddressChip } from "../AddressChip";
 import { Encoding, isAddressValid } from "@aeternity/aepp-sdk";
 import { useGovernance, useWallet } from "@/hooks";
 import { useState } from "react";
@@ -74,6 +75,22 @@ export default function GovernanceVote({
                 <p className="text-slate-300 text-sm md:text-base leading-relaxed max-w-2xl">
                   {poll?.pollState.metadata.description || "Cast your vote and make your voice heard in the community governance"}
                 </p>
+                {poll?.pollState.metadata.link && (
+                  <a
+                    href={poll.pollState.metadata.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-block text-blue-400 hover:text-blue-300 hover:underline break-all"
+                  >
+                    {poll.pollState.metadata.link}
+                  </a>
+                )}
+                {poll?.pollState.author && (
+                  <div className="mt-3 flex items-center gap-2 text-slate-400 text-xs">
+                    <span>By:</span>
+                    <AddressChip address={poll.pollState.author} linkToProfile />
+                  </div>
+                )}
               </div>
               <AeButton
                 onClick={() => setActiveTab("polls")}

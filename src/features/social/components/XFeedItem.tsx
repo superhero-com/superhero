@@ -129,15 +129,13 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
             >
               <div className="flex items-end mb-1 min-w-0">
                 <span className="text-[11px] text-white/65 shrink-0 mr-2">Replying to</span>
-                <div className="flex items-center gap-1 min-w-0">
-                  <div className="relative translate-y-[1px]">
-                    <AddressAvatarWithChainNameFeed
-                      address={parent?.sender_address || authorAddress}
-                      size={16}
-                      overlaySize={12}
-                      showAddressAndChainName={false}
-                    />
-                  </div>
+                <div className="flex items-center gap-1 min-w-0 h-[19px]">
+                  <AddressAvatarWithChainNameFeed
+                    address={parent?.sender_address || authorAddress}
+                    size={16}
+                    overlaySize={12}
+                    showAddressAndChainName={false}
+                  />
                   <div className="text-[12px] font-semibold text-white/90 truncate whitespace-nowrap">
                     {parent ? chainNames?.[parent.sender_address] || "Legend" : "Parent"}
                   </div>

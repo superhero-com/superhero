@@ -114,7 +114,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: ReplyToFee
             </div>
             {/* On-chain link removed */}
           </div>
-          <div className="mt-1 text-[11px] text-white/65 font-mono leading-[1.2] truncate">{authorAddress}</div>
+          <div className="mt-1 text-[10px] text-white/65 font-mono leading-[1.2] truncate">{authorAddress}</div>
 
           {/* Parent context header placed under author row, before reply text */}
           {parentId && (

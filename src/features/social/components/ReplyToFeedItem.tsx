@@ -93,7 +93,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: ReplyToFee
 
   return (
     <article
-      className="relative w-full p-4 md:p-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:rounded-2xl md:backdrop-blur-xl transition-colors hover:border-white/25 hover:shadow-none"
+      className="relative w-screen -mx-[calc((100vw-100%)/2)] px-3 py-3 md:w-full md:mx-0 md:p-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:rounded-2xl md:backdrop-blur-xl transition-colors hover:border-white/25 hover:shadow-none"
       onClick={handleOpen}
       role="button"
       aria-label="Open post"

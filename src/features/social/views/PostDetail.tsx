@@ -84,13 +84,13 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   const renderStack = () => (
     <div className="grid gap-3">
       {grandData && (
-        <ReplyToFeedItem item={grandData as any} commentCount={(grandData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} />
+        <ReplyToFeedItem hideParentContext item={grandData as any} commentCount={(grandData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} />
       )}
       {parentData && (
-        <ReplyToFeedItem item={parentData as any} commentCount={(parentData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} />
+        <ReplyToFeedItem hideParentContext item={parentData as any} commentCount={(parentData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} />
       )}
       {postData && (
-        <ReplyToFeedItem item={postData as any} commentCount={(postData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} />
+        <ReplyToFeedItem hideParentContext item={postData as any} commentCount={(postData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} />
       )}
     </div>
   );

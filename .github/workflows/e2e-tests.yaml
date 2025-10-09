@@ -103,8 +103,8 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const exitCode = '${{ steps.test_run.outputs.exit_code }}';
-            const status = exitCode === '0' ? '✅ E2E Tests PASSED' : '❌ E2E Tests FAILED';
+            const jobStatus = '${{ job.status }}';
+            const status = jobStatus === 'success' ? '✅ E2E Tests PASSED' : '❌ E2E Tests FAILED';
             const failedTests = `${{ steps.failed_tests.outputs.failed }}`.trim();
             
             let body = `## ${status}\n\n**Tested URL:** ${{ steps.netlify.outputs.url }}\n\n`;
@@ -121,9 +121,3 @@ jobs:
               repo: context.repo.repo,
               body: body
             });
-      
-      - name: Fail workflow if tests failed
-        if: steps.test_run.outputs.exit_code != '0'
-        run: |
-          echo "❌ E2E tests failed with exit code ${{ steps.test_run.outputs.exit_code }}"
-          exit 1

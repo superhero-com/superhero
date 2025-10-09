@@ -30,7 +30,7 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
           key={item.id}
           item={item}
           commentCount={item.total_comments ?? 0}
-          onOpenPost={(id: string) => navigate(`/post/${id}`)}
+          onOpenPost={(id: string) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)}
         />
       )}
       initialParams={{

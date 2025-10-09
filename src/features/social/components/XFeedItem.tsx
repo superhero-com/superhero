@@ -157,7 +157,7 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
                   {parent?.created_at ? compactTime(parent.created_at as unknown as string) : "—"}
                 </div>
               </div>
-              <div className="text-[12px] text-white/80 line-clamp-2">
+              <div className="text-[12px] text-white line-clamp-2">
                 {parentError || !parent
                   ? "Parent unavailable/not visible"
                   : linkify(parent.content, { knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())) })}

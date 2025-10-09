@@ -9,7 +9,7 @@ import { useWallet } from "../../../hooks";
 import CreatePost from "../components/CreatePost";
 import SortControls from "../components/SortControls";
 import EmptyState from "../components/EmptyState";
-import FeedItem from "../components/FeedItem";
+import XFeedItem from "../components/XFeedItem";
 import { PostApiResponse } from "../types";
 
 // Custom hook
@@ -152,12 +152,11 @@ export default function FeedList({
       const chainName = chainNames?.[authorAddress];
 
       return (
-        <FeedItem
+        <XFeedItem
           key={postId}
           item={item}
           commentCount={commentCount}
-          onItemClick={handleItemClick}
-          isFirst={index === 0}
+          onOpenPost={handleItemClick}
         />
       );
     });

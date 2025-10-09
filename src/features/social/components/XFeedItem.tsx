@@ -114,7 +114,7 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
             </div>
             {/* On-chain link removed */}
           </div>
-          <div className="mt-1 text-[12px] text-white/65 font-mono leading-[0.9]">{authorAddress}</div>
+          <div className="mt-1 text-[11px] text-white/65 font-mono leading-[0.9] truncate">{authorAddress}</div>
 
           {/* Parent context header placed under author row, before reply text */}
           {parentId && (

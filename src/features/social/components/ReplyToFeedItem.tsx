@@ -194,6 +194,8 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: ReplyToFee
           </div>
         </div>
       </div>
+      {/* Full-bleed divider on mobile */}
+      <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />
     </article>
   );
 });

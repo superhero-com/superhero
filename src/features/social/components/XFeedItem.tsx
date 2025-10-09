@@ -140,7 +140,7 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
               title="Open parent"
             >
               <div className="flex items-center mb-1 min-w-0">
-                <span className="text-[11px] text-white/65 shrink-0 mr-1">Replying to</span>
+                <span className="text-[11px] text-white/65 shrink-0 mr-2">Replying to</span>
                 <div className="flex items-center gap-1 min-w-0">
                   <AddressAvatarWithChainNameFeed
                     address={parent?.sender_address || authorAddress}
@@ -152,7 +152,7 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
                     {parent ? chainNames?.[parent.sender_address] || "Legend" : "Parent"}
                   </div>
                 </div>
-                <span className="mx-1 text-[11px] text-white/50">·</span>
+                <span className="mx-2 text-[11px] text-white/50">·</span>
                 <div className="text-[11px] text-white/60 whitespace-nowrap">
                   {parent?.created_at ? compactTime(parent.created_at as unknown as string) : "—"}
                 </div>

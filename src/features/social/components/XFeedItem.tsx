@@ -93,7 +93,7 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
 
   return (
     <article
-      className="relative w-full p-4 md:p-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:rounded-2xl md:backdrop-blur-xl md:transition-all md:duration-300 hover:md:-translate-y-0.5"
+      className="relative w-full p-4 md:p-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:rounded-2xl md:backdrop-blur-xl"
       onClick={handleOpen}
       role="button"
       aria-label="Open post"
@@ -124,7 +124,7 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
                 e.stopPropagation();
                 onOpenPost(parentId);
               }}
-              className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/10 rounded-xl p-3 transition-colors hover:bg-white/[0.04] hover:border-white/25"
+              className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/15 rounded-xl p-3 transition-colors hover:bg-white/[0.04] hover:border-white/40"
               title="Open parent"
             >
               <div className="flex items-end mb-1 min-w-0">

@@ -152,7 +152,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: ReplyToFee
                   ? "Parent unavailable/not visible"
                   : linkify(parent.content, { knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())) })}
               </div>
-              <div className="mt-1 text-[11px] text-white/70">Show full thread</div>
+              <div className="mt-1 text-[11px] text-white/70">Show post</div>
             </button>
           )}
 

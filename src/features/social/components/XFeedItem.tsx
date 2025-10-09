@@ -106,8 +106,8 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
 
         <div className="flex-1 min-w-0">
           {/* Header: name · time and on-chain link */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2.5 min-w-0">
               <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
               <span className="text-white/50">·</span>
               <div className="text-[12px] text-white/70 whitespace-nowrap">{compactTime(item.created_at as unknown as string)}</div>
@@ -126,7 +126,7 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
               </a>
             )}
           </div>
-          <div className="text-[12px] text-foreground/90 font-mono leading-[0.9]">{authorAddress}</div>
+          <div className="mt-0.5 text-[12px] text-foreground/90 font-mono leading-[0.9]">{authorAddress}</div>
 
           {/* Parent context header placed under author row, before reply text */}
           {parentId && (
@@ -136,7 +136,7 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
                 e.stopPropagation();
                 onOpenPost(parentId);
               }}
-              className="mt-2 block w-full text-left bg-white/[0.04] border border-white/10 rounded-xl p-3 hover:bg-white/[0.06]"
+              className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/10 rounded-xl p-3 hover:bg-white/[0.06]"
               title="Open parent"
             >
               <div className="flex items-start gap-2">
@@ -168,7 +168,7 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
           )}
 
           {/* Body */}
-          <div className="mt-2 text-[15px] text-foreground leading-snug">
+          <div className="mt-3 text-[15px] text-foreground leading-snug">
             {linkify(item.content, { knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())) })}
           </div>
 
@@ -176,7 +176,7 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
           {media.length > 0 && (
             <div
               className={cn(
-                "mt-2 grid gap-2 rounded-xl overflow-hidden",
+                "mt-3 grid gap-2 rounded-xl overflow-hidden",
                 media.length === 1 && "grid-cols-1",
                 media.length === 2 && "grid-cols-2",
                 media.length >= 3 && "grid-cols-2"
@@ -196,23 +196,12 @@ const XFeedItem = memo(({ item, onOpenPost, commentCount = 0 }: XFeedItemProps) 
           )}
 
           {/* Actions */}
-          <div className="mt-3 flex items-center justify-between">
+          <div className="mt-4 flex items-center justify-between">
             <div className="inline-flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/10">
               <IconComment className="w-[14px] h-[14px]" />
               {commentCount}
             </div>
-            {parentId && (
-              <button
-                type="button"
-                className="text-[12px] font-semibold text-white/80 hover:text-white underline underline-offset-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenPost(parentId);
-                }}
-              >
-                Show full thread
-              </button>
-            )}
+            {/* Single 'Show full thread' link kept in the parent header only */}
           </div>
         </div>
       </div>

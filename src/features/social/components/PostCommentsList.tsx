@@ -26,7 +26,7 @@ export default function PostCommentsList({ id, onCommentAdded }: PostCommentsLis
     queryKey: ['post-comments', id],
     queryFn: async () => {
       const result = await PostsService.getComments({
-        id: id,
+        id: `${String(id).replace(/_v3$/,'')}_v3`,
         limit: 100
       }) as any;
       return result?.items || [];

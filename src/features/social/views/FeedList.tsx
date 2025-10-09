@@ -124,7 +124,8 @@ export default function FeedList({
       try {
         sessionStorage.setItem("feedScrollY", String(window.scrollY || 0));
       } catch {}
-      navigate(`/post/${postId}`);
+      const cleanId = String(postId).replace(/_v3$/, "");
+      navigate(`/post/${cleanId}`);
     },
     [navigate]
   );

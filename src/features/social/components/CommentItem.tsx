@@ -73,7 +73,7 @@ const CommentItem = memo(({
   }, [onCommentAdded, showReplies, hasReplies, refetchReplies]);
 
   const toggleReplies = useCallback(() => {
-    navigate(`/post/${comment.id}`);
+    navigate(`/post/${String(comment.id).replace(/_v3$/,'')}`);
     // setShowReplies(!showReplies);
   }, [showReplies]);
 

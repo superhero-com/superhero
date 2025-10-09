@@ -28,7 +28,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     refetch: refetchPost
   } = useQuery({
     queryKey: ['post', postId],
-    queryFn: () => PostsService.getById({ id: postId! }),
+    queryFn: () => PostsService.getById({ id: `${String(postId).replace(/_v3$/,'')}_v3` }),
     enabled: !!postId,
     refetchInterval: 120 * 1000, // Auto-refresh every 2 minutes
   });

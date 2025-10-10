@@ -61,7 +61,14 @@ export default function DirectReplies({
   return (
     <div className="grid gap-3">
       {list.map((reply) => (
-        <ReplyToFeedItem key={reply.id} item={reply} commentCount={reply.total_comments ?? 0} hideParentContext onOpenPost={(id) => onOpenPost(String(id).replace(/_v3$/,''))} />
+        <ReplyToFeedItem
+          key={reply.id}
+          item={reply}
+          commentCount={reply.total_comments ?? 0}
+          hideParentContext
+          allowInlineRepliesToggle={false}
+          onOpenPost={(id) => onOpenPost(String(id).replace(/_v3$/,''))}
+        />
       ))}
       {hasNextPage && <div ref={sentinelRef} className="h-10" />}
     </div>

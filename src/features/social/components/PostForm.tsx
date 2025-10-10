@@ -176,8 +176,9 @@ export default function PostForm({
         // For posts, include media URLs
         postMedia = [...mediaUrls];
       } else if (postId) {
-        // For comments, reference the parent post
-        postMedia = [...mediaUrls, `comment:${postId}`];
+        // For comments, reference the parent post (normalized to *_v3)
+        const parentIdV3 = postId.endsWith('_v3') ? postId : `${postId}_v3`;
+        postMedia = [...mediaUrls, `comment:${parentIdV3}`];
       }
 
       const { decodedResult } = await contract.post_without_tip(
@@ -189,14 +190,14 @@ export default function PostForm({
         decodedResult
       );
 
-      if (isPost) {
-        try {
-          await PostsService.getById({
-            id: `${decodedResult}_v3`,
-          });
-        } catch { }
-      } else if (postId) {
-        // Invalidate the post comments query for comments
+      // Proactively warm the backend for the created item (post or comment)
+      try {
+        await PostsService.getById({ id: `${decodedResult}_v3` });
+      } catch {}
+
+      if (!isPost && postId) {
+        // Invalidate the post comments queries for comments
+        queryClient.refetchQueries({ queryKey: ["post-comments", postId, "infinite"] });
         queryClient.refetchQueries({ queryKey: ["post-comments", postId] });
         onCommentAdded?.();
       }

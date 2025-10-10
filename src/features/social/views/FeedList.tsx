@@ -157,6 +157,7 @@ export default function FeedList({
           key={postId}
           item={item}
           commentCount={commentCount}
+          allowInlineRepliesToggle={false}
           onOpenPost={handleItemClick}
         />
       );

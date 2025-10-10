@@ -313,6 +313,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
                   item={reply}
                   commentCount={reply.total_comments ?? 0}
                   hideParentContext
+                  allowInlineRepliesToggle={false}
                   onOpenPost={(id) => onOpenPost(String(id).replace(/_v3$/,''))}
                 />
               ))}

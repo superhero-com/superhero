@@ -9,6 +9,7 @@ import BlockchainInfoPopover from "./BlockchainInfoPopover";
 import { Badge } from "@/components/ui/badge";
 import { useTransactionStatus } from "@/hooks/useTransactionStatus";
 import SharePopover from "./SharePopover";
+import PostTipButton from "./PostTipButton";
 import { MessageCircle } from "lucide-react";
 import { useWallet } from "../../../hooks";
 import { relativeTime, compactTime, fullTimestamp } from "../../../utils/time";
@@ -266,7 +267,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
 
           {/* Actions */}
           <div className="mt-4 flex items-center justify-between">
-            <div className="inline-flex items-center gap-2">
+            <div className="inline-flex items-center gap-4 md:gap-2">
             <button
               type="button"
               onClick={(e) => {
@@ -280,13 +281,14 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
                   handleOpen();
                 }
               }}
-              className="inline-flex items-center gap-1.5 text-[13px] px-0 py-0 rounded-lg bg-transparent border-0 h-auto min-h-0 min-w-0 md:px-2.5 md:py-1 md:h-[28px] md:min-h-[28px] md:bg-white/[0.04] md:border md:border-white/10 md:hover:border-white/20 transition-colors"
+              className="inline-flex items-center gap-1.5 text-[13px] px-0 py-0 rounded-lg bg-transparent border-0 h-auto min-h-0 min-w-0 md:px-2.5 md:py-1 md:h-[28px] md:min-h-[28px] md:bg-white/[0.04] md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25 transition-colors"
               aria-expanded={allowInlineRepliesToggle ? showReplies : undefined}
               aria-controls={`replies-${postId}`}
             >
               <MessageCircle className="w-[14px] h-[14px]" strokeWidth={2.25} />
               {commentCount}
             </button>
+              <PostTipButton toAddress={authorAddress} postId={String(postId)} />
             </div>
             <SharePopover postId={item.id} />
           </div>

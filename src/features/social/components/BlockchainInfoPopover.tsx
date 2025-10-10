@@ -75,7 +75,10 @@ export function BlockchainInfoPopover({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={cn("inline-flex items-center justify-center gap-1 h-[28px] px-2.5 rounded-lg bg-white/[0.04] border border-white/10 hover:border-white/20 transition-colors", className)}
+          className={cn(
+            "inline-flex items-center justify-center gap-1 h-auto min-h-0 min-w-0 md:h-[28px] md:min-h-[28px] px-0 rounded-lg bg-transparent border-0 md:px-2.5 md:bg-white/[0.04] md:border md:border-white/10 md:hover:border-white/20 transition-colors",
+            className
+          )}
           onClick={(e) => e.stopPropagation()}
           aria-label="Blockchain info"
           title="Blockchain info"

@@ -260,7 +260,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
                   handleOpen();
                 }
               }}
-              className="inline-flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/10 hover:border-white/20 transition-colors"
+              className="inline-flex items-center gap-1.5 text-[13px] px-0 py-0 rounded-lg bg-transparent border-0 h-auto min-h-0 min-w-0 md:px-2.5 md:py-1 md:h-[28px] md:min-h-[28px] md:bg-white/[0.04] md:border md:border-white/10 md:hover:border-white/20 transition-colors"
               aria-expanded={allowInlineRepliesToggle ? showReplies : undefined}
               aria-controls={`replies-${postId}`}
             >

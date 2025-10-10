@@ -10,7 +10,7 @@ import { IconComment, IconLink } from '../../../icons';
 import BlockchainInfoPopover from './BlockchainInfoPopover';
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 import { linkify } from '../../../utils/linkify';
-import { relativeTime } from '../../../utils/time';
+import { relativeTime, fullTimestamp } from '../../../utils/time';
 import CommentForm from './CommentForm';
 /* navigation removed for inline nested replies */
 import { CONFIG } from '../../../config';
@@ -115,7 +115,7 @@ const CommentItem = memo(({
                     </a>
                   </div>
                 ) : comment.created_at ? (
-                  <span className="hidden sm:inline text-xs text-muted-foreground flex-shrink-0 whitespace-nowrap">
+                  <span className="hidden sm:inline text-xs text-muted-foreground flex-shrink-0 whitespace-nowrap" title={fullTimestamp(comment.created_at)}>
                     {relativeTime(new Date(comment.created_at))}
                   </span>
                 ) : null}
@@ -136,7 +136,7 @@ const CommentItem = memo(({
                       <IconLink className="w-2 h-2" />
                     </a>
                   ) : comment.created_at ? (
-                    <span className="text-[11px] text-muted-foreground flex-shrink-0 leading-none md:hidden">
+                    <span className="text-[11px] text-muted-foreground flex-shrink-0 leading-none md:hidden" title={fullTimestamp(comment.created_at)}>
                       {relativeTime(new Date(comment.created_at))}
                     </span>
                   ) : null}

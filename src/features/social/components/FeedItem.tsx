@@ -9,7 +9,7 @@ import { IconComment, IconLink } from "../../../icons";
 import AddressFormatted from "../../../components/AddressFormatted";
 import { linkify } from "../../../utils/linkify";
 import { useWallet } from "../../../hooks";
-import { relativeTime, compactTime } from "../../../utils/time";
+import { relativeTime, compactTime, fullTimestamp } from "../../../utils/time";
 import { CONFIG } from "../../../config";
 
 interface FeedItemProps {
@@ -176,7 +176,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
                     {displayName}
                   </div>
                   <span className="text-white/50">·</span>
-                  <div className="text-[12px] md:text-[13px] text-white/70 whitespace-nowrap">
+                  <div className="text-[12px] md:text-[13px] text-white/70 whitespace-nowrap" title={fullTimestamp(item.created_at as unknown as string)}>
                     {compactTime(item.created_at as unknown as string)}
                   </div>
                 </div>
@@ -186,7 +186,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
               </div>
               <div className="hidden md:flex items-center gap-2 ml-3 whitespace-nowrap">
                 {item.created_at ? (
-                  <div className="text-xs text-white/60 leading-none">
+                  <div className="text-xs text-white/60 leading-none" title={fullTimestamp(item.created_at as unknown as string)}>
                     {relativeTime(new Date(item.created_at))}
                   </div>
                 ) : null}

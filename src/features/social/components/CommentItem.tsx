@@ -72,7 +72,7 @@ const CommentItem = memo(({
     if (onCommentAdded) {
       onCommentAdded();
     }
-  }, [onCommentAdded, showReplies, hasReplies, refetchReplies]);
+  }, [onCommentAdded, refetchReplies]);
 
   const toggleReplies = useCallback(() => {
     setShowReplies((prev) => !prev);

@@ -118,13 +118,13 @@ export function BlockchainInfoPopover({
             <div className="text-xs text-white/70">Tx hash</div>
             <div className="flex items-center justify-end gap-2 min-w-0">
               <a href={txUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[var(--neon-teal)] hover:text-[var(--neon-teal)] truncate" onClick={(e) => e.stopPropagation()}>{shortHash}</a>
-              <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100" onClick={(e) => handleCopy(txHash, e)}>Copy</button>
+              <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none" onClick={(e) => handleCopy(txHash, e)}>Copy</button>
             </div>
           </div>
           {absoluteTime && (
             <div className="grid grid-cols-[auto,1fr] items-center gap-2">
               <div className="text-xs text-white/70">Timestamp</div>
-              <div className="text-xs text-white/90 text-right">{absoluteTime}</div>
+              <div className="text-xs text-white/90 text-right min-h-0">{absoluteTime}</div>
             </div>
           )}
           {sender && (
@@ -134,7 +134,7 @@ export function BlockchainInfoPopover({
                 <a href={senderUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[var(--neon-teal)] hover:text-[var(--neon-teal)] truncate" onClick={(e) => e.stopPropagation()}>
                   {`${sender.slice(0, 6)}...${sender.slice(-4)}`}
                 </a>
-                <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100" onClick={(e) => handleCopy(sender!, e)}>Copy</button>
+                <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none" onClick={(e) => handleCopy(sender!, e)}>Copy</button>
               </div>
             </div>
           )}
@@ -145,7 +145,7 @@ export function BlockchainInfoPopover({
                 <a href={contractUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[var(--neon-teal)] hover:text-[var(--neon-teal)] truncate" onClick={(e) => e.stopPropagation()}>
                   {`${contract.slice(0, 6)}...${contract.slice(-4)}`}
                 </a>
-                <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100" onClick={(e) => handleCopy(contract!, e)}>Copy</button>
+                <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none" onClick={(e) => handleCopy(contract!, e)}>Copy</button>
               </div>
             </div>
           )}
@@ -153,8 +153,8 @@ export function BlockchainInfoPopover({
             <div className="grid grid-cols-[auto,1fr] items-center gap-2">
               <div className="text-xs text-white/70">Post ID</div>
               <div className="flex items-center justify-end gap-2 min-w-0">
-                <div className="text-xs text-white/90 truncate">{postId}</div>
-                <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100" onClick={(e) => handleCopy(postId, e)}>Copy</button>
+                <div className="text-xs text-white/90 truncate min-h-0">{postId}</div>
+                <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none" onClick={(e) => handleCopy(postId, e)}>Copy</button>
               </div>
             </div>
           )}

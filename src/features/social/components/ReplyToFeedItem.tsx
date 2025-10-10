@@ -9,6 +9,7 @@ import BlockchainInfoPopover from "./BlockchainInfoPopover";
 import { Badge } from "@/components/ui/badge";
 import { useTransactionStatus } from "@/hooks/useTransactionStatus";
 import SharePopover from "./SharePopover";
+import { MessageCircle } from "lucide-react";
 import { useWallet } from "../../../hooks";
 import { relativeTime, compactTime } from "../../../utils/time";
 import { CONFIG } from "../../../config";
@@ -249,7 +250,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
               aria-expanded={allowInlineRepliesToggle ? showReplies : undefined}
               aria-controls={`replies-${postId}`}
             >
-              <IconComment className="w-[14px] h-[14px]" />
+              <MessageCircle className="w-[14px] h-[14px]" strokeWidth={2.25} />
               {commentCount}
             </button>
               {item.tx_hash && (

@@ -176,17 +176,20 @@ export function BlockchainInfoPopover({
         </div>
         <DropdownMenuSeparator className="bg-white/10" />
         <div className="px-1 py-2 flex items-center justify-between gap-2">
-          <a href={txUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD]" onClick={(e) => e.stopPropagation()}>
-            View on æScan
+          <a href={txUrl} target="_blank" rel="noreferrer" className="text-xs inline-flex items-center gap-1 underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD]" onClick={(e) => e.stopPropagation()}>
+            <span>View on æScan</span>
+            <span aria-hidden>↗</span>
           </a>
           {senderUrl && (
-            <a href={senderUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD]" onClick={(e) => e.stopPropagation()}>
-              Sender
+            <a href={senderUrl} target="_blank" rel="noreferrer" className="text-xs inline-flex items-center gap-1 underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD]" onClick={(e) => e.stopPropagation()}>
+              <span>Sender</span>
+              <span aria-hidden>↗</span>
             </a>
           )}
           {contractUrl && (
-            <a href={contractUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD]" onClick={(e) => e.stopPropagation()}>
-              Contract
+            <a href={contractUrl} target="_blank" rel="noreferrer" className="text-xs inline-flex items-center gap-1 underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD]" onClick={(e) => e.stopPropagation()}>
+              <span>Contract</span>
+              <span aria-hidden>↗</span>
             </a>
           )}
         </div>

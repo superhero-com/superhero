@@ -11,11 +11,11 @@ interface SortControlsProps {
 // Component: Sort Controls
 const SortControls = memo(
   ({ sortBy, onSortChange, className = "" }: SortControlsProps) => (
-    <div className={cn("w-full mb-0 md:mb-4", className)}>
+    <div className={cn("w-full mb-3", className)}>
       {/* Mobile: text tabs with bottom divider and active underline */}
       <div className="md:hidden">
         {/* Edge-to-edge bottom divider */}
-        <div className="flex w-screen -mx-[calc((100vw-100%)/2)] items-center justify-center gap-12 border-b border-white/15">
+        <div className="flex w-screen -mx-[calc((100vw-100%)/2)] items-center justify-center gap-8 border-b border-white/15 px-4">
           <button
             onClick={() => onSortChange("latest")}
             className={cn(

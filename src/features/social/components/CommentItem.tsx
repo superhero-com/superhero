@@ -10,7 +10,7 @@ import { IconComment, IconLink } from '../../../icons';
 import { linkify } from '../../../utils/linkify';
 import { relativeTime } from '../../../utils/time';
 import CommentForm from './CommentForm';
-import { useNavigate } from 'react-router-dom';
+/* navigation removed for inline nested replies */
 import { CONFIG } from '../../../config';
 
 interface CommentItemProps {
@@ -29,7 +29,6 @@ const CommentItem = memo(({
   depth = 0,
   maxDepth = 3
 }: CommentItemProps) => {
-  const navigate = useNavigate();
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
 
@@ -47,13 +46,14 @@ const CommentItem = memo(({
   } = useQuery({
     queryKey: ['comment-replies', comment.id],
     queryFn: async () => {
+      const normalizedId = String(comment.id).endsWith('_v3') ? String(comment.id) : `${String(comment.id)}_v3`;
       const result = await PostsService.getComments({
-        id: comment.id,
+        id: normalizedId,
         limit: 100
       }) as any;
       return result?.items || [];
     },
-    enabled: showReplies && hasReplies,
+    enabled: showReplies,
     refetchInterval: 120 * 1000,
   });
 
@@ -63,19 +63,17 @@ const CommentItem = memo(({
 
   const handleCommentAdded = useCallback(() => {
     setShowReplyForm(false);
-    // Refetch this comment's replies if they're currently shown
-    if (showReplies && hasReplies) {
-      refetchReplies();
-    }
+    // Ensure replies are shown and refresh list after posting a reply
+    setShowReplies(true);
+    refetchReplies();
     if (onCommentAdded) {
       onCommentAdded();
     }
   }, [onCommentAdded, showReplies, hasReplies, refetchReplies]);
 
   const toggleReplies = useCallback(() => {
-    navigate(`/post/${String(comment.id).replace(/_v3$/,'')}`);
-    // setShowReplies(!showReplies);
-  }, [showReplies]);
+    setShowReplies((prev) => !prev);
+  }, []);
 
   return (
     <div className={cn("relative",)}>
@@ -206,7 +204,7 @@ const CommentItem = memo(({
       )}
 
       {/* Nested replies */}
-      {/* {hasReplies && showReplies && (
+      {showReplies && (
         <div className="mt-3 space-y-3">
           {repliesLoading && (
             <div className="ml-11 text-sm text-muted-foreground">
@@ -217,6 +215,9 @@ const CommentItem = memo(({
             <div className="ml-11 text-sm text-destructive">
               Error loading replies
             </div>
+          )}
+          {!repliesLoading && !repliesError && fetchedReplies.length === 0 && (
+            <div className="ml-11 text-sm text-muted-foreground">No replies yet.</div>
           )}
           {fetchedReplies.map((reply) => (
             <CommentItem
@@ -229,7 +230,7 @@ const CommentItem = memo(({
             />
           ))}
         </div>
-      )} */}
+      )}
 
       {/* Single vertical line handled by parent wrappers; remove duplicate */}
     </div>

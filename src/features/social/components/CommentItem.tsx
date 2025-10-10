@@ -98,21 +98,20 @@ const CommentItem = memo(({
                   />
                 </div>
                 {/* Desktop: show time inline on the right */}
-                {comment.tx_hash && CONFIG.EXPLORER_URL ? (
+                {comment.created_at && comment.tx_hash ? (
                   <div className="hidden sm:flex items-center gap-2 flex-shrink-0 whitespace-nowrap">
-                    <a
-                      href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${comment.tx_hash}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text group"
-                      title={comment.tx_hash}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <span className="underline-offset-2 group-hover:underline">
-                        {`Posted on-chain${comment.created_at ? ` ${relativeTime(new Date(comment.created_at))}` : ''}`}
-                      </span>
-                      <IconLink className="w-2.5 h-2.5" />
-                    </a>
+                    <BlockchainInfoPopover
+                      txHash={comment.tx_hash}
+                      createdAt={comment.created_at}
+                      sender={comment.sender_address}
+                      contract={(comment as any).contract_address}
+                      postId={String(comment.id)}
+                      triggerContent={
+                        <span className="text-xs text-muted-foreground whitespace-nowrap underline-offset-2 hover:underline" title={fullTimestamp(comment.created_at)}>
+                          {relativeTime(new Date(comment.created_at))}
+                        </span>
+                      }
+                    />
                   </div>
                 ) : comment.created_at ? (
                   <span className="hidden sm:inline text-xs text-muted-foreground flex-shrink-0 whitespace-nowrap" title={fullTimestamp(comment.created_at)}>
@@ -121,20 +120,19 @@ const CommentItem = memo(({
                 ) : null}
                 {/* Mobile-only timestamp inside the line; desktop remains inline in header */}
                 <div className="w-full border-l border-white ml-[20px] pl-[32px] -mt-5 md:hidden">
-                  {comment.tx_hash && CONFIG.EXPLORER_URL ? (
-                    <a
-                      href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${comment.tx_hash}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-0.5 text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text md:hidden group -mt-2"
-                      title={comment.tx_hash}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <span className="underline-offset-2 group-hover:underline">
-                        {`Posted on-chain${comment.created_at ? ` ${relativeTime(new Date(comment.created_at))}` : ''}`}
-                      </span>
-                      <IconLink className="w-2 h-2" />
-                    </a>
+                  {comment.created_at && comment.tx_hash ? (
+                    <BlockchainInfoPopover
+                      txHash={comment.tx_hash}
+                      createdAt={comment.created_at}
+                      sender={comment.sender_address}
+                      contract={(comment as any).contract_address}
+                      postId={String(comment.id)}
+                      triggerContent={
+                        <span className="text-[11px] leading-none text-muted-foreground underline-offset-2 hover:underline" title={fullTimestamp(comment.created_at)}>
+                          {relativeTime(new Date(comment.created_at))}
+                        </span>
+                      }
+                    />
                   ) : comment.created_at ? (
                     <span className="text-[11px] text-muted-foreground flex-shrink-0 leading-none md:hidden" title={fullTimestamp(comment.created_at)}>
                       {relativeTime(new Date(comment.created_at))}

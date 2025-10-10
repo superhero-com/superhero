@@ -174,7 +174,22 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
             <div className="flex items-baseline gap-2.5 min-w-0">
               <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
               <span className="text-white/50 shrink-0">·</span>
-              <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
+              {item.tx_hash ? (
+                <BlockchainInfoPopover
+                  txHash={(item as any).tx_hash}
+                  createdAt={item.created_at as unknown as string}
+                  sender={(item as any).sender_address}
+                  contract={(item as any).contract_address}
+                  postId={String(item.id)}
+                  triggerContent={
+                    <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>
+                      {compactTime(item.created_at as unknown as string)}
+                    </span>
+                  }
+                />
+              ) : (
+                <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
+              )}
             </div>
           </div>
           <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{authorAddress}</div>

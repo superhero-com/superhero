@@ -11,6 +11,7 @@ import { linkify } from "../../../utils/linkify";
 import { useWallet } from "../../../hooks";
 import { relativeTime, compactTime, fullTimestamp } from "../../../utils/time";
 import { CONFIG } from "../../../config";
+import BlockchainInfoPopover from "./BlockchainInfoPopover";
 
 interface FeedItemProps {
   item: PostDto;
@@ -176,9 +177,25 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
                     {displayName}
                   </div>
                   <span className="text-white/50">·</span>
-                  <div className="text-[12px] md:text-[13px] text-white/70 whitespace-nowrap" title={fullTimestamp(item.created_at as unknown as string)}>
-                    {compactTime(item.created_at as unknown as string)}
-                  </div>
+                  {item.tx_hash ? (
+                    <BlockchainInfoPopover
+                      txHash={(item as any).tx_hash}
+                      createdAt={item.created_at as unknown as string}
+                      sender={(item as any).sender_address}
+                      contract={(item as any).contract_address}
+                      postId={String(item.id)}
+                      triggerContent={
+                        <span className="text-[12px] md:text-[13px] text-white/70 whitespace-nowrap" title={fullTimestamp(item.created_at as unknown as string)}>
+                          {compactTime(item.created_at as unknown as string)}
+                        </span>
+                      }
+                      triggerClassName=""
+                    />
+                  ) : (
+                    <div className="text-[12px] md:text-[13px] text-white/70 whitespace-nowrap" title={fullTimestamp(item.created_at as unknown as string)}>
+                      {compactTime(item.created_at as unknown as string)}
+                    </div>
+                  )}
                 </div>
                 <div className="text-[12px] text-foreground/90 font-mono leading-[0.9]">
                   <AddressFormatted address={authorAddress} truncate={false} />

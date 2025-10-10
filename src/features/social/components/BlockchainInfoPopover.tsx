@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState, ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -21,6 +21,8 @@ type BlockchainInfoPopoverProps = {
   postId?: string;
   className?: string;
   showLabel?: boolean;
+  triggerContent?: ReactNode; // custom trigger content (e.g., timestamp text)
+  triggerClassName?: string; // optional class for custom trigger
 };
 
 export function BlockchainInfoPopover({
@@ -31,6 +33,8 @@ export function BlockchainInfoPopover({
   postId,
   className,
   showLabel,
+  triggerContent,
+  triggerClassName,
 }: BlockchainInfoPopoverProps) {
   const [open, setOpen] = useState(false);
   const [extraLoading, setExtraLoading] = useState(false);
@@ -76,16 +80,23 @@ export function BlockchainInfoPopover({
         <button
           type="button"
           className={cn(
-            "inline-flex items-center justify-center gap-1 h-auto min-h-0 min-w-0 md:h-[28px] md:min-h-[28px] px-0 rounded-lg bg-transparent border-0 md:px-2.5 md:bg-white/[0.04] md:border md:border-white/10 md:hover:border-white/20 transition-colors",
-            className
+            triggerContent
+              ? cn("inline-flex items-center gap-1 bg-transparent border-0 px-0 py-0 h-auto min-h-0 min-w-0 text-white/70 hover:underline underline-offset-2", triggerClassName)
+              : cn("inline-flex items-center justify-center gap-1 h-auto min-h-0 min-w-0 md:h-[28px] md:min-h-[28px] px-0 rounded-lg bg-transparent border-0 md:px-2.5 md:bg-white/[0.04] md:border md:border-white/10 md:hover:border-white/20", className),
           )}
           onClick={(e) => e.stopPropagation()}
           aria-label="Blockchain info"
           title="Blockchain info"
         >
-          <ShieldCheck className="w-[14px] h-[14px] opacity-80" strokeWidth={2.25} />
-          {showLabel && (
-            <span className="text-[11px] leading-none text-white/85">on-chain</span>
+          {triggerContent ? (
+            <>{triggerContent}</>
+          ) : (
+            <>
+              <ShieldCheck className="w-[14px] h-[14px] opacity-80" strokeWidth={2.25} />
+              {showLabel && (
+                <span className="text-[11px] leading-none text-white/85">on-chain</span>
+              )}
+            </>
           )}
         </button>
       </DropdownMenuTrigger>

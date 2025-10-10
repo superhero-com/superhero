@@ -130,11 +130,14 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
     return <Badge variant="secondary" className="border-amber-400/30 bg-amber-400/15 text-amber-300">Pending</Badge>;
   }
 
+  const isContextMuted = !isActive && allowInlineRepliesToggle === false;
+
   return (
     <article
       className={cn(
         "relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 pt-4 pb-5 md:w-full md:mx-0 md:p-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:rounded-2xl md:backdrop-blur-xl transition-colors hover:border-white/25 hover:shadow-none",
-        isActive && "bg-white/[0.06] md:bg-white/[0.08] md:border-white/40"
+        isActive && "bg-white/[0.06] md:bg-white/[0.08] md:border-white/40",
+        isContextMuted && "md:bg-white/[0.03] md:border-white/10"
       )}
       onClick={handleOpen}
       role="button"

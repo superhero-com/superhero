@@ -7,11 +7,13 @@ import { IconDiamond } from "../../icons";
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import { useChainName } from "../../hooks/useChainName";
 import { encode, Encoded, Encoding } from "@aeternity/aepp-sdk";
+import { useToast } from "../ToastProvider";
 
 export default function TipModal({ toAddress, onClose, payload }: { toAddress: string; onClose: () => void; payload?: string }) {
   const { sdk, activeAccount, activeNetwork } = useAeSdk();
   const { balance } = useAccount();
   const { chainName } = useChainName(toAddress);
+  const toast = useToast();
 
   const aeBalanceAe = useMemo(() => {
     try {
@@ -49,17 +51,25 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
     const value = toAettos(amount, 18);
     onClose();
     try {
-      await sdk.spend?.(
+      const res: any = await sdk.spend?.(
         value.toString() as any,
         toAddress as Encoded.AccountAddress,
         {
           payload: encode(new TextEncoder().encode(payload ?? 'TIP_PROFILE'), Encoding.Bytearray)
         }
       );
+      const hash = res?.hash || res?.transactionHash || res?.tx?.hash || null;
+      try {
+        const base = activeNetwork?.explorerUrl?.replace(/\/$/, "") || "";
+        const url = hash && base ? `${base}/transactions/${hash}` : "";
+        toast.push(
+          url
+            ? (<>Tip submitted. <a href={url} target="_blank" rel="noreferrer" style={{ color: '#8bc9ff', textDecoration: 'underline' }}>View on explorer</a></>)
+            : (<>Tip submitted.</>)
+        );
+      } catch {}
     } catch (e: any) {
-      // Swallow UI updates since modal is closed; surface errors via wallet modal/notifications
-      // eslint-disable-next-line no-console
-      console.error(e);
+      try { toast.push(<>Tip failed: {e?.message || String(e)}</>); } catch {}
     }
   }
 

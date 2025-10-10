@@ -82,7 +82,7 @@ export function BlockchainInfoPopover({
         >
           <ShieldCheck className="w-[14px] h-[14px] opacity-80" strokeWidth={2.25} />
           {showLabel && (
-            <span className="text-[12px] leading-none text-white/85">on-chain</span>
+            <span className="text-[11px] leading-none text-white/85">on-chain</span>
           )}
         </button>
       </DropdownMenuTrigger>

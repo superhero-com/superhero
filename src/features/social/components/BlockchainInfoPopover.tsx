@@ -81,7 +81,7 @@ export function BlockchainInfoPopover({
           type="button"
           className={cn(
             triggerContent
-              ? cn("inline-flex items-center gap-1 bg-transparent border-0 px-0 py-0 h-auto min-h-0 min-w-0 text-white/70 hover:underline underline-offset-2", triggerClassName)
+              ? cn("inline-flex items-center gap-1 bg-transparent border-0 px-0 py-0 h-auto min-h-0 min-w-0 text-white/70 hover:underline underline-offset-2 focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 shadow-none hover:shadow-none active:shadow-none", triggerClassName)
               : cn("inline-flex items-center justify-center gap-1 h-auto min-h-0 min-w-0 md:h-[28px] md:min-h-[28px] px-0 rounded-lg bg-transparent border-0 md:px-2.5 md:bg-white/[0.04] md:border md:border-white/10 md:hover:border-white/20", className),
           )}
           onClick={(e) => e.stopPropagation()}
@@ -129,6 +129,12 @@ export function BlockchainInfoPopover({
         </div>
         <DropdownMenuSeparator className="bg-white/10" />
         <div className="px-1 py-2 grid gap-1.5">
+          {absoluteTime && (
+            <div className="grid grid-cols-[auto,1fr] items-center gap-2">
+              <div className="text-xs text-white/70">Timestamp</div>
+              <div className="text-xs text-white text-right min-h-0 font-semibold">{absoluteTime}</div>
+            </div>
+          )}
           <div className="grid grid-cols-[auto,1fr] items-center gap-2">
             <div className="text-xs text-white/70">Tx hash</div>
             <div className="flex items-center justify-end gap-2 min-w-0">
@@ -136,12 +142,6 @@ export function BlockchainInfoPopover({
               <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none" onClick={(e) => handleCopy(txHash, e)}>Copy</button>
             </div>
           </div>
-          {absoluteTime && (
-            <div className="grid grid-cols-[auto,1fr] items-center gap-2">
-              <div className="text-xs text-white/70">Timestamp</div>
-              <div className="text-xs text-white/90 text-right min-h-0">{absoluteTime}</div>
-            </div>
-          )}
           {sender && (
             <div className="grid grid-cols-[auto,1fr] items-center gap-2">
               <div className="text-xs text-white/70">Sender</div>

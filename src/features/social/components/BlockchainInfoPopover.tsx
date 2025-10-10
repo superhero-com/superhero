@@ -109,7 +109,13 @@ export function BlockchainInfoPopover({
         >
           <X className="w-4 h-4" />
         </button>
-        <DropdownMenuLabel className="px-1 pb-2 text-[13px] font-semibold tracking-wide text-white/85">Blockchain transaction</DropdownMenuLabel>
+        <div className="px-1 pb-2 flex items-center justify-between gap-2">
+          <DropdownMenuLabel className="px-0 pb-0 text-[13px] font-semibold tracking-wide text-white/85">Blockchain transaction</DropdownMenuLabel>
+          <div className="ml-auto min-w-[48px] text-right">
+            {extraLoading && <span className="text-[11px] text-white/70">Loading…</span>}
+            {extraError && <span className="text-[11px] text-red-300/90">!</span>}
+          </div>
+        </div>
         <div className="px-1 pb-2 flex items-center gap-2">
           {status?.confirmed && (
             <Badge className="border-green-500/30 bg-green-500/25 text-green-300">Mined</Badge>
@@ -120,8 +126,6 @@ export function BlockchainInfoPopover({
           {status?.blockNumber && (
             <span className="text-xs text-white/80">• #{status.blockNumber}</span>
           )}
-          {extraLoading && <span className="ml-auto text-[11px] text-white/70">Loading…</span>}
-          {extraError && <span className="ml-auto text-[11px] text-red-300/90">!</span>}
         </div>
         <DropdownMenuSeparator className="bg-white/10" />
         <div className="px-1 py-2 grid gap-1.5">

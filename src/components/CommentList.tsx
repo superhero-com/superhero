@@ -3,7 +3,7 @@ import React from 'react';
 export type Comment = { id: string; text: string; author?: string; createdAt?: string };
 
 export default function CommentList({ comments }: { comments: Comment[] }) {
-  if (!comments?.length) return <div className="text-white/70">There are no comments at the moment.</div>;
+  if (!comments?.length) return <div className="text-white/70">There are no replies at the moment.</div>;
   return (
     <div className="grid gap-3">
       {comments.map((c) => (

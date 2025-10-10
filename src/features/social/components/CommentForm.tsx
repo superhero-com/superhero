@@ -10,7 +10,7 @@ interface CommentFormProps {
 const CommentForm: React.FC<CommentFormProps> = ({
   postId,
   onCommentAdded,
-  placeholder = "Write a comment..."
+  placeholder = "Write a reply..."
 }) => {
   return (
     <PostForm

@@ -7,10 +7,13 @@ import { AeButton } from '../../../components/ui/ae-button';
 import { AeCard, AeCardContent } from '../../../components/ui/ae-card';
 import { Badge } from '../../../components/ui/badge';
 import { IconComment, IconLink } from '../../../icons';
+import PostTipButton from './PostTipButton';
+import BlockchainInfoPopover from './BlockchainInfoPopover';
+import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 import { linkify } from '../../../utils/linkify';
-import { relativeTime } from '../../../utils/time';
+import { relativeTime, fullTimestamp } from '../../../utils/time';
 import CommentForm from './CommentForm';
-import { useNavigate } from 'react-router-dom';
+/* navigation removed for inline nested replies */
 import { CONFIG } from '../../../config';
 
 interface CommentItemProps {
@@ -29,7 +32,6 @@ const CommentItem = memo(({
   depth = 0,
   maxDepth = 3
 }: CommentItemProps) => {
-  const navigate = useNavigate();
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
 
@@ -37,6 +39,7 @@ const CommentItem = memo(({
   const chainName = chainNames?.[authorAddress];
   const hasReplies = comment.total_comments > 0;
   const canReply = depth < maxDepth;
+  const { status } = useTransactionStatus(comment.tx_hash, { enabled: !!comment.tx_hash, refetchInterval: 8000 });
 
   // Query for comment replies - only fetch when showReplies is true
   const {
@@ -47,13 +50,14 @@ const CommentItem = memo(({
   } = useQuery({
     queryKey: ['comment-replies', comment.id],
     queryFn: async () => {
+      const normalizedId = String(comment.id).endsWith('_v3') ? String(comment.id) : `${String(comment.id)}_v3`;
       const result = await PostsService.getComments({
-        id: comment.id,
+        id: normalizedId,
         limit: 100
       }) as any;
       return result?.items || [];
     },
-    enabled: showReplies && hasReplies,
+    enabled: showReplies,
     refetchInterval: 120 * 1000,
   });
 
@@ -63,19 +67,17 @@ const CommentItem = memo(({
 
   const handleCommentAdded = useCallback(() => {
     setShowReplyForm(false);
-    // Refetch this comment's replies if they're currently shown
-    if (showReplies && hasReplies) {
-      refetchReplies();
-    }
+    // Ensure replies are shown and refresh list after posting a reply
+    setShowReplies(true);
+    refetchReplies();
     if (onCommentAdded) {
       onCommentAdded();
     }
-  }, [onCommentAdded, showReplies, hasReplies, refetchReplies]);
+  }, [onCommentAdded, refetchReplies]);
 
   const toggleReplies = useCallback(() => {
-    navigate(`/post/${comment.id}`);
-    // setShowReplies(!showReplies);
-  }, [showReplies]);
+    setShowReplies((prev) => !prev);
+  }, []);
 
   return (
     <div className={cn("relative",)}>
@@ -97,45 +99,43 @@ const CommentItem = memo(({
                   />
                 </div>
                 {/* Desktop: show time inline on the right */}
-                {comment.tx_hash && CONFIG.EXPLORER_URL ? (
+                {comment.created_at && comment.tx_hash ? (
                   <div className="hidden sm:flex items-center gap-2 flex-shrink-0 whitespace-nowrap">
-                    <a
-                      href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${comment.tx_hash}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-light-font-color hover:text-light-font-color no-gradient-text group"
-                      title={comment.tx_hash}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <span className="underline-offset-2 group-hover:underline">
-                        {`Posted on-chain${comment.created_at ? ` ${relativeTime(new Date(comment.created_at))}` : ''}`}
-                      </span>
-                      <IconLink className="w-2.5 h-2.5" />
-                    </a>
+                    <BlockchainInfoPopover
+                      txHash={comment.tx_hash}
+                      createdAt={comment.created_at}
+                      sender={comment.sender_address}
+                      contract={(comment as any).contract_address}
+                      postId={String(comment.id)}
+                      triggerContent={
+                        <span className="text-xs text-muted-foreground whitespace-nowrap underline-offset-2 hover:underline" title={fullTimestamp(comment.created_at)}>
+                          {relativeTime(new Date(comment.created_at))}
+                        </span>
+                      }
+                    />
                   </div>
                 ) : comment.created_at ? (
-                  <span className="hidden sm:inline text-xs text-muted-foreground flex-shrink-0 whitespace-nowrap">
+                  <span className="hidden sm:inline text-xs text-muted-foreground flex-shrink-0 whitespace-nowrap" title={fullTimestamp(comment.created_at)}>
                     {relativeTime(new Date(comment.created_at))}
                   </span>
                 ) : null}
                 {/* Mobile-only timestamp inside the line; desktop remains inline in header */}
                 <div className="w-full border-l border-white ml-[20px] pl-[32px] -mt-5 md:hidden">
-                  {comment.tx_hash && CONFIG.EXPLORER_URL ? (
-                    <a
-                      href={`${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${comment.tx_hash}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-0.5 text-[11px] leading-none text-light-font-color hover:text-light-font-color no-gradient-text md:hidden group -mt-2"
-                      title={comment.tx_hash}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <span className="underline-offset-2 group-hover:underline">
-                        {`Posted on-chain${comment.created_at ? ` ${relativeTime(new Date(comment.created_at))}` : ''}`}
-                      </span>
-                      <IconLink className="w-2 h-2" />
-                    </a>
+                  {comment.created_at && comment.tx_hash ? (
+                    <BlockchainInfoPopover
+                      txHash={comment.tx_hash}
+                      createdAt={comment.created_at}
+                      sender={comment.sender_address}
+                      contract={(comment as any).contract_address}
+                      postId={String(comment.id)}
+                      triggerContent={
+                        <span className="text-[11px] leading-none text-muted-foreground underline-offset-2 hover:underline" title={fullTimestamp(comment.created_at)}>
+                          {relativeTime(new Date(comment.created_at))}
+                        </span>
+                      }
+                    />
                   ) : comment.created_at ? (
-                    <span className="text-[11px] text-muted-foreground flex-shrink-0 leading-none md:hidden">
+                    <span className="text-[11px] text-muted-foreground flex-shrink-0 leading-none md:hidden" title={fullTimestamp(comment.created_at)}>
                       {relativeTime(new Date(comment.created_at))}
                     </span>
                   ) : null}
@@ -163,11 +163,11 @@ const CommentItem = memo(({
                   </div>
                 )}
 
-                   <div className="flex items-center gap-3 mt-2">
+                   <div className="flex items-center gap-4 md:gap-2 mt-2">
                      {hasReplies && (
                        <Badge
                          variant="outline"
-                         className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 bg-transparent border-white/10 hover:border-white/20 cursor-pointer transition-colors"
+                         className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 bg-transparent border-white/10 hover:border-white/20 md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25 cursor-pointer transition-colors"
                          onClick={toggleReplies}
                        >
                          <IconComment className="w-[14px] h-[14px]" />
@@ -175,7 +175,7 @@ const CommentItem = memo(({
                        </Badge>
                      )}
 
-                     {canReply && (
+                      {canReply && (
                        <AeButton
                          variant="link"
                          size="sm"
@@ -185,6 +185,19 @@ const CommentItem = memo(({
                          Reply
                        </AeButton>
                      )}
+
+                      <PostTipButton toAddress={authorAddress} postId={String(comment.id)} />
+
+                      {comment.tx_hash && (
+                        <BlockchainInfoPopover
+                          txHash={comment.tx_hash}
+                          createdAt={comment.created_at}
+                          sender={comment.sender_address}
+                          contract={(comment as any).contract_address}
+                          postId={String(comment.id)}
+                          className=""
+                        />
+                      )}
                    </div>
                </div>
             </div>
@@ -206,7 +219,7 @@ const CommentItem = memo(({
       )}
 
       {/* Nested replies */}
-      {/* {hasReplies && showReplies && (
+      {showReplies && (
         <div className="mt-3 space-y-3">
           {repliesLoading && (
             <div className="ml-11 text-sm text-muted-foreground">
@@ -217,6 +230,9 @@ const CommentItem = memo(({
             <div className="ml-11 text-sm text-destructive">
               Error loading replies
             </div>
+          )}
+          {!repliesLoading && !repliesError && fetchedReplies.length === 0 && (
+            <div className="ml-11 text-sm text-muted-foreground">No replies yet.</div>
           )}
           {fetchedReplies.map((reply) => (
             <CommentItem
@@ -229,7 +245,7 @@ const CommentItem = memo(({
             />
           ))}
         </div>
-      )} */}
+      )}
 
       {/* Single vertical line handled by parent wrappers; remove duplicate */}
     </div>

@@ -3,7 +3,7 @@ import {
   DataTable,
   DataTableResponse,
 } from "@/features/shared/components/DataTable";
-import FeedItem from "@/features/social/components/FeedItem";
+import ReplyToFeedItem from "@/features/social/components/ReplyToFeedItem";
 import { PostApiResponse } from "@/features/social/types";
 import { useNavigate } from "react-router-dom";
 
@@ -26,11 +26,11 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
     <DataTable
       queryFn={fetchFeed}
       renderRow={({ item, index }) => (
-        <FeedItem
+        <ReplyToFeedItem
           key={item.id}
           item={item}
           commentCount={item.total_comments ?? 0}
-          onItemClick={(id: string) => navigate(`/post/${id}`)}
+          onOpenPost={(id: string) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)}
         />
       )}
       initialParams={{

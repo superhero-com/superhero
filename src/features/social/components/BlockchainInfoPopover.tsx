@@ -20,6 +20,7 @@ type BlockchainInfoPopoverProps = {
   contract?: string;
   postId?: string;
   className?: string;
+  showLabel?: boolean;
 };
 
 export function BlockchainInfoPopover({
@@ -29,6 +30,7 @@ export function BlockchainInfoPopover({
   contract,
   postId,
   className,
+  showLabel,
 }: BlockchainInfoPopoverProps) {
   const [open, setOpen] = useState(false);
   const [extraLoading, setExtraLoading] = useState(false);
@@ -79,6 +81,9 @@ export function BlockchainInfoPopover({
           title="Blockchain info"
         >
           <ShieldCheck className="w-[14px] h-[14px] opacity-80" strokeWidth={2.25} />
+          {showLabel && (
+            <span className="text-[12px] leading-none text-white/85">on-chain</span>
+          )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[360px] max-w-[92vw] p-3 rounded-xl border border-white/15 bg-black/80 backdrop-blur-md shadow-2xl text-white">

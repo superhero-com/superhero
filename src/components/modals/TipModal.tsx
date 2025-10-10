@@ -8,7 +8,7 @@ import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithC
 import { useChainName } from "../../hooks/useChainName";
 import { encode, Encoded, Encoding } from "@aeternity/aepp-sdk";
 
-export default function TipModal({ toAddress, onClose }: { toAddress: string; onClose: () => void }) {
+export default function TipModal({ toAddress, onClose, payload }: { toAddress: string; onClose: () => void; payload?: string }) {
   const { sdk, activeAccount, activeNetwork } = useAeSdk();
   const { balance } = useAccount();
   const { chainName } = useChainName(toAddress);
@@ -45,24 +45,21 @@ export default function TipModal({ toAddress, onClose }: { toAddress: string; on
 
   async function handleSend() {
     if (disabled) return;
-    setSending(true);
-    setError(null);
-    setTxHash(null);
+    // Close the tipping modal before opening the wallet confirmation to avoid stacked modals
+    const value = toAettos(amount, 18);
+    onClose();
     try {
-      const value = toAettos(amount, 18);
-      const res: any = await sdk.spend?.(
+      await sdk.spend?.(
         value.toString() as any,
         toAddress as Encoded.AccountAddress,
         {
-          payload: encode(new TextEncoder().encode('TIP_PROFILE'), Encoding.Bytearray)
+          payload: encode(new TextEncoder().encode(payload ?? 'TIP_PROFILE'), Encoding.Bytearray)
         }
       );
-      const hash = res?.hash || res?.transactionHash || res?.tx?.hash || null;
-      setTxHash(hash);
     } catch (e: any) {
-      setError(e?.message || String(e));
-    } finally {
-      setSending(false);
+      // Swallow UI updates since modal is closed; surface errors via wallet modal/notifications
+      // eslint-disable-next-line no-console
+      console.error(e);
     }
   }
 

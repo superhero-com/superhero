@@ -90,7 +90,7 @@ export function BlockchainInfoPopover({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[360px] max-w-[92vw] p-3 rounded-xl border border-white/15 bg-black/80 backdrop-blur-md shadow-2xl text-white">
-        <DropdownMenuLabel className="px-1 pb-2 text-[13px] font-semibold tracking-wide text-white/85">Transaction</DropdownMenuLabel>
+        <DropdownMenuLabel className="px-1 pb-2 text-[13px] font-semibold tracking-wide text-white/85">Blockchain transaction</DropdownMenuLabel>
         <div className="px-1 pb-2 flex items-center gap-2">
           {status?.confirmed && (
             <Badge className="border-green-500/30 bg-green-500/25 text-green-300">Mined</Badge>

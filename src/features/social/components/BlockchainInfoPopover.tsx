@@ -114,47 +114,47 @@ export function BlockchainInfoPopover({
         </div>
         <DropdownMenuSeparator className="bg-white/10" />
         <div className="px-1 py-2 grid gap-1.5">
-          <div className="flex items-center justify-between gap-2">
+          <div className="grid grid-cols-[auto,1fr] items-center gap-2">
             <div className="text-xs text-white/70">Tx hash</div>
-            <div className="flex items-center gap-2">
-              <a href={txUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[var(--neon-teal)] hover:text-[var(--neon-teal)]" onClick={(e) => e.stopPropagation()}>{shortHash}</a>
-              <button className="text-[11px] opacity-80 hover:opacity-100" onClick={(e) => handleCopy(txHash, e)}>Copy</button>
+            <div className="flex items-center justify-end gap-2 min-w-0">
+              <a href={txUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[var(--neon-teal)] hover:text-[var(--neon-teal)] truncate" onClick={(e) => e.stopPropagation()}>{shortHash}</a>
+              <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100" onClick={(e) => handleCopy(txHash, e)}>Copy</button>
             </div>
           </div>
           {absoluteTime && (
-            <div className="flex items-center justify-between gap-2">
+            <div className="grid grid-cols-[auto,1fr] items-center gap-2">
               <div className="text-xs text-white/70">Timestamp</div>
-              <div className="text-xs text-white/90">{absoluteTime}</div>
+              <div className="text-xs text-white/90 text-right">{absoluteTime}</div>
             </div>
           )}
           {sender && (
-            <div className="flex items-center justify-between gap-2">
+            <div className="grid grid-cols-[auto,1fr] items-center gap-2">
               <div className="text-xs text-white/70">Sender</div>
-              <div className="flex items-center gap-2">
-                <a href={senderUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[var(--neon-teal)] hover:text-[var(--neon-teal)]" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-end gap-2 min-w-0">
+                <a href={senderUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[var(--neon-teal)] hover:text-[var(--neon-teal)] truncate" onClick={(e) => e.stopPropagation()}>
                   {`${sender.slice(0, 6)}...${sender.slice(-4)}`}
                 </a>
-                <button className="text-[11px] opacity-80 hover:opacity-100" onClick={(e) => handleCopy(sender!, e)}>Copy</button>
+                <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100" onClick={(e) => handleCopy(sender!, e)}>Copy</button>
               </div>
             </div>
           )}
           {contract && (
-            <div className="flex items-center justify-between gap-2">
+            <div className="grid grid-cols-[auto,1fr] items-center gap-2">
               <div className="text-xs text-white/70">Contract</div>
-              <div className="flex items-center gap-2">
-                <a href={contractUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[var(--neon-teal)] hover:text-[var(--neon-teal)]" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-end gap-2 min-w-0">
+                <a href={contractUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[var(--neon-teal)] hover:text-[var(--neon-teal)] truncate" onClick={(e) => e.stopPropagation()}>
                   {`${contract.slice(0, 6)}...${contract.slice(-4)}`}
                 </a>
-                <button className="text-[11px] opacity-80 hover:opacity-100" onClick={(e) => handleCopy(contract!, e)}>Copy</button>
+                <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100" onClick={(e) => handleCopy(contract!, e)}>Copy</button>
               </div>
             </div>
           )}
           {postId && (
-            <div className="flex items-center justify-between gap-2">
+            <div className="grid grid-cols-[auto,1fr] items-center gap-2">
               <div className="text-xs text-white/70">Post ID</div>
-              <div className="flex items-center gap-2">
-                <div className="text-xs text-white/90">{postId}</div>
-                <button className="text-[11px] opacity-80 hover:opacity-100" onClick={(e) => handleCopy(postId, e)}>Copy</button>
+              <div className="flex items-center justify-end gap-2 min-w-0">
+                <div className="text-xs text-white/90 truncate">{postId}</div>
+                <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100" onClick={(e) => handleCopy(postId, e)}>Copy</button>
               </div>
             </div>
           )}

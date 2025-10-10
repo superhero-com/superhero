@@ -21,7 +21,7 @@ export default function DirectReplies({
   } = useInfiniteQuery({
     queryKey: ['post-comments', id, 'infinite'],
     queryFn: ({ pageParam = 1 }) =>
-      PostsService.getComments({ id: `${String(id).replace(/_v3$/,'')}_v3`, orderDirection: 'DESC', page: pageParam, limit: 20 }) as any,
+      PostsService.getComments({ id: `${String(id).replace(/_v3$/,'')}_v3`, orderDirection: 'ASC', page: pageParam, limit: 50 }) as any,
     getNextPageParam: (lastPage: any) => {
       const meta = lastPage?.meta;
       if (meta?.currentPage && meta?.totalPages && meta.currentPage < meta.totalPages) return meta.currentPage + 1;
@@ -47,6 +47,24 @@ export default function DirectReplies({
     observer.observe(el);
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Auto-drain a few pages so short threads show fully without scrolling
+  useEffect(() => {
+    if (!data) return;
+    let cancelled = false;
+    const maxAutoPages = 5;
+    async function drain() {
+      let steps = 0;
+      while (!cancelled && hasNextPage && !isFetchingNextPage && steps < maxAutoPages) {
+        steps += 1;
+        await fetchNextPage();
+      }
+    }
+    if (hasNextPage && !isFetchingNextPage) {
+      drain();
+    }
+    return () => { cancelled = true; };
+  }, [data, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   if (isLoading) return <div className="text-center py-6 text-white/70">Loading replies…</div>;
   if (error) return (

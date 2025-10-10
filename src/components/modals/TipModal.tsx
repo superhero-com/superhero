@@ -8,12 +8,15 @@ import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithC
 import { useChainName } from "../../hooks/useChainName";
 import { encode, Encoded, Encoding } from "@aeternity/aepp-sdk";
 import { useToast } from "../ToastProvider";
+import { useAtom } from 'jotai';
+import { tipStatusAtom, type TipPhase, makeTipKey } from '../../atoms/tipAtoms';
 
 export default function TipModal({ toAddress, onClose, payload }: { toAddress: string; onClose: () => void; payload?: string }) {
   const { sdk, activeAccount, activeNetwork } = useAeSdk();
   const { balance } = useAccount();
   const { chainName } = useChainName(toAddress);
   const toast = useToast();
+  const [tipStatus, setTipStatus] = useAtom(tipStatusAtom);
 
   const aeBalanceAe = useMemo(() => {
     try {
@@ -49,6 +52,8 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
     if (disabled) return;
     // Close the tipping modal before opening the wallet confirmation to avoid stacked modals
     const value = toAettos(amount, 18);
+    const tipKey = makeTipKey(toAddress, payload || '');
+    setTipStatus((s) => ({ ...s, [tipKey]: { status: 'pending', updatedAt: Date.now() } }));
     onClose();
     try {
       const res: any = await sdk.spend?.(
@@ -59,17 +64,28 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
         }
       );
       const hash = res?.hash || res?.transactionHash || res?.tx?.hash || null;
-      try {
-        const base = activeNetwork?.explorerUrl?.replace(/\/$/, "") || "";
-        const url = hash && base ? `${base}/transactions/${hash}` : "";
-        toast.push(
-          url
-            ? (<>Tip submitted. <a href={url} target="_blank" rel="noreferrer" style={{ color: '#8bc9ff', textDecoration: 'underline' }}>View on explorer</a></>)
-            : (<>Tip submitted.</>)
-        );
-      } catch {}
+      setTipStatus((s) => ({ ...s, [tipKey]: { status: 'success', updatedAt: Date.now() } }));
+      // Auto-reset success state after 2.5s
+      setTimeout(() => {
+        setTipStatus((s) => {
+          const current = s[tipKey];
+          if (!current || current.status !== 'success') return s;
+          const next = { ...s } as any;
+          delete next[tipKey];
+          return next;
+        });
+      }, 2500);
     } catch (e: any) {
-      try { toast.push(<>Tip failed: {e?.message || String(e)}</>); } catch {}
+      setTipStatus((s) => ({ ...s, [tipKey]: { status: 'error', updatedAt: Date.now() } }));
+      setTimeout(() => {
+        setTipStatus((s) => {
+          const current = s[tipKey];
+          if (!current || current.status !== 'error') return s;
+          const next = { ...s } as any;
+          delete next[tipKey];
+          return next;
+        });
+      }, 2500);
     }
   }
 

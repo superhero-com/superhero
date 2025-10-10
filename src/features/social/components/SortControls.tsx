@@ -14,12 +14,12 @@ const SortControls = memo(
     <div className={cn("w-full mb-3", className)}>
       {/* Mobile: text tabs with bottom divider and active underline */}
       <div className="md:hidden">
-        {/* Edge-to-edge bottom divider */}
-        <div className="flex w-screen -mx-[calc((100vw-100%)/2)] items-center justify-center gap-8 border-b border-white/15 px-4">
+        {/* Edge-to-edge bottom divider with proper mobile spacing */}
+        <div className="flex items-center justify-center gap-6 border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] px-4">
           <button
             onClick={() => onSortChange("latest")}
             className={cn(
-              "relative px-1 pt-0 pb-0 text-xs leading-none font-semibold transition-colors !bg-transparent !shadow-none hover:!bg-transparent focus:!bg-transparent active:!bg-transparent hover:!shadow-none focus:!shadow-none active:!shadow-none focus-visible:!ring-0 focus:!outline-none",
+              "relative px-1 py-3 text-xs leading-none font-semibold transition-colors md:px-3 md:py-3 md:text-sm !bg-transparent !shadow-none hover:!bg-transparent focus:!bg-transparent active:!bg-transparent hover:!shadow-none focus:!shadow-none active:!shadow-none focus-visible:!ring-0 focus:!outline-none",
               sortBy === "latest"
                 ? "text-white after:content-[''] after:absolute after:left-0 after:right-0 after:-bottom-[1px] after:h-0.5 after:bg-[#1161FE] after:rounded-full after:mx-1"
                 : "text-white/70"
@@ -30,7 +30,7 @@ const SortControls = memo(
           <button
             onClick={() => onSortChange("hot")}
             className={cn(
-              "relative px-1 pt-0 pb-0 text-xs leading-none font-semibold transition-colors !bg-transparent !shadow-none hover:!bg-transparent focus:!bg-transparent active:!bg-transparent hover:!shadow-none focus:!shadow-none active:!shadow-none focus-visible:!ring-0 focus:!outline-none",
+              "relative px-1 py-3 text-xs leading-none font-semibold transition-colors md:px-3 md:py-3 md:text-sm !bg-transparent !shadow-none hover:!bg-transparent focus:!bg-transparent active:!bg-transparent hover:!shadow-none focus:!shadow-none active:!shadow-none focus-visible:!ring-0 focus:!outline-none",
               sortBy === "hot"
                 ? "text-white after:content-[''] after:absolute after:left-0 after:right-0 after:-bottom-[1px] after:h-0.5 after:bg-[#1161FE] after:rounded-full after:mx-1"
                 : "text-white/70"

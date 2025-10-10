@@ -8,7 +8,7 @@ import { linkify } from "../../../utils/linkify";
 import BlockchainInfoPopover from "./BlockchainInfoPopover";
 import { Badge } from "@/components/ui/badge";
 import { useTransactionStatus } from "@/hooks/useTransactionStatus";
-import { IconShare } from "@/icons";
+import SharePopover from "./SharePopover";
 import { useWallet } from "../../../hooks";
 import { relativeTime, compactTime } from "../../../utils/time";
 import { CONFIG } from "../../../config";
@@ -263,24 +263,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
                 />
               )}
             </div>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                const path = `/post/${String(item.id).replace(/_v3$/, '')}`;
-                const url = `${window.location.origin}${path}`;
-                if ((navigator as any).share) {
-                  (navigator as any).share({ url, title: "Superhero Post" }).catch(() => {});
-                } else {
-                  try { navigator.clipboard.writeText(url); } catch {}
-                }
-              }}
-              className="inline-flex items-center justify-center gap-1.5 h-[28px] px-2.5 rounded-lg bg-white/[0.04] border border-white/10 hover:border-white/20 transition-colors"
-              aria-label="Share post"
-              title="Share post"
-            >
-              <IconShare className="w-[14px] h-[14px] opacity-80" />
-            </button>
+            <SharePopover postId={item.id} />
           </div>
 
           {/* Nested replies for this item */}

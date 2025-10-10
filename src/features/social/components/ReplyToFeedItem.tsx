@@ -11,7 +11,7 @@ import { useTransactionStatus } from "@/hooks/useTransactionStatus";
 import SharePopover from "./SharePopover";
 import { MessageCircle } from "lucide-react";
 import { useWallet } from "../../../hooks";
-import { relativeTime, compactTime } from "../../../utils/time";
+import { relativeTime, compactTime, fullTimestamp } from "../../../utils/time";
 import { CONFIG } from "../../../config";
 
 interface ReplyToFeedItemProps {
@@ -174,7 +174,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
             <div className="flex items-baseline gap-2.5 min-w-0">
               <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
               <span className="text-white/50 shrink-0">·</span>
-              <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0">{compactTime(item.created_at as unknown as string)}</div>
+              <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
             </div>
           </div>
           <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{authorAddress}</div>
@@ -207,7 +207,9 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
                 </div>
                 <span className="mx-2 text-[11px] text-white/50 shrink-0">·</span>
                 <div className="text-[11px] text-white/60 whitespace-nowrap shrink-0">
-                  {parent?.created_at ? compactTime(parent.created_at as unknown as string) : "—"}
+                  {parent?.created_at ? (
+                    <span title={fullTimestamp(parent.created_at as unknown as string)}>{compactTime(parent.created_at as unknown as string)}</span>
+                  ) : "—"}
                 </div>
               </div>
               <div className="text-[12px] text-white line-clamp-2">

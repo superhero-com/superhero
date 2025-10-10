@@ -205,10 +205,10 @@ a.no-gradient-text {
   -webkit-background-clip: initial !important;
   -webkit-text-fill-color: currentColor !important;
   background-clip: initial !important;
-  color: var(--light-font-color) !important;
+  color: inherit !important;
 }
 a.no-gradient-text:hover {
-  color: var(--light-font-color) !important;
+  color: inherit !important;
   filter: none;
   transform: none;
   text-shadow: none;

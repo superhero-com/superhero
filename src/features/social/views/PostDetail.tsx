@@ -90,13 +90,13 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   const renderStack = () => (
     <div className="grid gap-3">
       {grandData && (
-        <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={grandData as any} commentCount={(grandData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} />
+        <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={grandData as any} commentCount={(grandData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} isActive={false} />
       )}
       {parentData && (
-        <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={parentData as any} commentCount={(parentData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} />
+        <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={parentData as any} commentCount={(parentData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} isActive={false} />
       )}
       {postData && (
-        <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(postData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} />
+        <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(postData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} isActive />
       )}
     </div>
   );

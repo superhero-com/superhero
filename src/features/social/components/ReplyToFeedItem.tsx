@@ -1,6 +1,7 @@
 import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarWithChainNameFeed";
 import { cn } from "@/lib/utils";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { PostDto, PostsService } from "../../../api/generated";
 import { IconComment } from "../../../icons";
 import { linkify } from "../../../utils/linkify";
@@ -70,6 +71,24 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
   const [parent, setParent] = useState<PostDto | null>(null);
   const [parentError, setParentError] = useState<Error | null>(null);
 
+  // Nested replies state for this item
+  const [showReplies, setShowReplies] = useState(false);
+  const {
+    data: childReplies = [],
+    isLoading: childLoading,
+    error: childError,
+    refetch: refetchChildReplies,
+  } = useQuery({
+    queryKey: ["post-comments", postId],
+    queryFn: async () => {
+      const normalizedId = String(postId).endsWith("_v3") ? String(postId) : `${String(postId)}_v3`;
+      const result = await PostsService.getComments({ id: normalizedId, orderDirection: "DESC", limit: 50 }) as any;
+      return result?.items || [];
+    },
+    enabled: showReplies,
+    refetchInterval: 120 * 1000,
+  });
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -88,6 +107,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
   }, [parentId, hideParentContext]);
 
   const handleOpen = useCallback(() => onOpenPost(postId), [onOpenPost, postId]);
+  const toggleReplies = useCallback(() => setShowReplies((s) => !s), []);
 
   const media = Array.isArray(item.media)
     ? item.media.filter((m) => (typeof m === "string" ? !m.startsWith("comment:") : true))
@@ -193,12 +213,44 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
 
           {/* Actions */}
           <div className="mt-4 flex items-center justify-between">
-            <div className="inline-flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/10">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); toggleReplies(); if (!showReplies) setTimeout(() => refetchChildReplies(), 0); }}
+              className="inline-flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/10 hover:border-white/20 transition-colors"
+              aria-expanded={showReplies}
+              aria-controls={`replies-${postId}`}
+            >
               <IconComment className="w-[14px] h-[14px]" />
               {commentCount}
-            </div>
+            </button>
             {/* Single 'Show full thread' link kept in the parent header only */}
           </div>
+
+          {/* Nested replies for this item */}
+          {showReplies && (
+            <div id={`replies-${postId}`} className="mt-3 grid gap-2 pl-3 md:pl-5 border-l border-white/10">
+              {childLoading && (
+                <div className="text-[13px] text-white/70">Loading replies…</div>
+              )}
+              {childError && (
+                <div className="text-[13px] text-white/70">
+                  Error loading replies. <button className="underline" onClick={(e) => { e.stopPropagation(); refetchChildReplies(); }}>Retry</button>
+                </div>
+              )}
+              {!childLoading && !childError && childReplies.length === 0 && (
+                <div className="text-[13px] text-white/60">No replies yet.</div>
+              )}
+              {childReplies.map((reply: PostDto) => (
+                <ReplyToFeedItem
+                  key={reply.id}
+                  item={reply}
+                  commentCount={reply.total_comments ?? 0}
+                  hideParentContext
+                  onOpenPost={(id) => onOpenPost(String(id).replace(/_v3$/,''))}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
       {/* Full-bleed divider on mobile */}

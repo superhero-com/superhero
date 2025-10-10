@@ -7,6 +7,8 @@ import { AeButton } from '../../../components/ui/ae-button';
 import { AeCard, AeCardContent } from '../../../components/ui/ae-card';
 import { Badge } from '../../../components/ui/badge';
 import { IconComment, IconLink } from '../../../icons';
+import BlockchainInfoPopover from './BlockchainInfoPopover';
+import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 import { linkify } from '../../../utils/linkify';
 import { relativeTime } from '../../../utils/time';
 import CommentForm from './CommentForm';
@@ -36,6 +38,7 @@ const CommentItem = memo(({
   const chainName = chainNames?.[authorAddress];
   const hasReplies = comment.total_comments > 0;
   const canReply = depth < maxDepth;
+  const { status } = useTransactionStatus(comment.tx_hash, { enabled: !!comment.tx_hash, refetchInterval: 8000 });
 
   // Query for comment replies - only fetch when showReplies is true
   const {
@@ -161,7 +164,7 @@ const CommentItem = memo(({
                   </div>
                 )}
 
-                   <div className="flex items-center gap-3 mt-2">
+                   <div className="flex items-center gap-2 mt-2">
                      {hasReplies && (
                        <Badge
                          variant="outline"
@@ -173,7 +176,7 @@ const CommentItem = memo(({
                        </Badge>
                      )}
 
-                     {canReply && (
+                      {canReply && (
                        <AeButton
                          variant="link"
                          size="sm"
@@ -183,6 +186,17 @@ const CommentItem = memo(({
                          Reply
                        </AeButton>
                      )}
+
+                      {comment.tx_hash && (
+                        <BlockchainInfoPopover
+                          txHash={comment.tx_hash}
+                          createdAt={comment.created_at}
+                          sender={comment.sender_address}
+                          contract={(comment as any).contract_address}
+                          postId={String(comment.id)}
+                          className=""
+                        />
+                      )}
                    </div>
                </div>
             </div>

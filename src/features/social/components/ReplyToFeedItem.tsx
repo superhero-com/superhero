@@ -5,6 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import { PostDto, PostsService } from "../../../api/generated";
 import { IconComment } from "../../../icons";
 import { linkify } from "../../../utils/linkify";
+import BlockchainInfoPopover from "./BlockchainInfoPopover";
+import { Badge } from "@/components/ui/badge";
+import { useTransactionStatus } from "@/hooks/useTransactionStatus";
 import { useWallet } from "../../../hooks";
 import { relativeTime, compactTime } from "../../../utils/time";
 import { CONFIG } from "../../../config";
@@ -115,6 +118,16 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
     ? item.media.filter((m) => (typeof m === "string" ? !m.startsWith("comment:") : true))
     : [];
 
+  // Inline mined badge helper
+  function MinedBadge({ txHash }: { txHash: string }) {
+    const { status } = useTransactionStatus(txHash, { enabled: !!txHash, refetchInterval: 8000 });
+    if (!status) return null;
+    if (status.confirmed) {
+      return <Badge className="border-green-500/30 bg-green-500/20 text-green-300">Mined</Badge>;
+    }
+    return <Badge variant="secondary" className="border-amber-400/30 bg-amber-400/15 text-amber-300">Pending</Badge>;
+  }
+
   return (
     <article
       className={cn(
@@ -144,7 +157,6 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
               <span className="text-white/50 shrink-0">·</span>
               <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0">{compactTime(item.created_at as unknown as string)}</div>
             </div>
-            {/* On-chain link removed */}
           </div>
           <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{authorAddress}</div>
 
@@ -217,7 +229,8 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
           )}
 
           {/* Actions */}
-          <div className="mt-4 flex items-center justify-between">
+          <div className="mt-4 flex items-center justify-start">
+            <div className="inline-flex items-center gap-2">
             <button
               type="button"
               onClick={(e) => {
@@ -238,7 +251,17 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
               <IconComment className="w-[14px] h-[14px]" />
               {commentCount}
             </button>
-            {/* Single 'Show full thread' link kept in the parent header only */}
+              {item.tx_hash && (
+                <BlockchainInfoPopover
+                  txHash={item.tx_hash}
+                  createdAt={item.created_at as unknown as string}
+                  sender={item.sender_address}
+                  contract={(item as any).contract_address}
+                  postId={String(item.id)}
+                  className=""
+                />
+              )}
+            </div>
           </div>
 
           {/* Nested replies for this item */}

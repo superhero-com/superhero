@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { Info } from "lucide-react";
+import { IconLink } from "@/icons";
 import { CONFIG } from "@/config";
 import { cn } from "@/lib/utils";
 import { useTransactionStatus } from "@/hooks/useTransactionStatus";
@@ -78,7 +78,7 @@ export function BlockchainInfoPopover({
           aria-label="Blockchain info"
           title="Blockchain info"
         >
-          <Info className="w-[14px] h-[14px] opacity-80" />
+          <IconLink className="w-[14px] h-[14px] opacity-80" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[360px] max-w-[92vw] p-3 rounded-xl border border-white/15 bg-black/80 backdrop-blur-md shadow-2xl text-white">

@@ -176,9 +176,8 @@ export default function PostForm({
         // For posts, include media URLs
         postMedia = [...mediaUrls];
       } else if (postId) {
-        // For comments, reference the parent post (normalized to *_v3)
-        const parentIdV3 = postId.endsWith('_v3') ? postId : `${postId}_v3`;
-        postMedia = [...mediaUrls, `comment:${parentIdV3}`];
+        // For replies, reference the parent post
+        postMedia = [`comment:${postId}`];
       }
 
       const { decodedResult } = await contract.post_without_tip(
@@ -186,18 +185,18 @@ export default function PostForm({
         postMedia
       );
       console.log(
-        `[PostForm] ${isPost ? "Post" : "Comment"} submitted`,
+        `[PostForm] ${isPost ? "Post" : "Reply"} submitted`,
         decodedResult
       );
 
-      // Proactively warm the backend for the created item (post or comment)
-      try {
-        await PostsService.getById({ id: `${decodedResult}_v3` });
-      } catch {}
-
-      if (!isPost && postId) {
-        // Invalidate the post comments queries for comments
-        queryClient.refetchQueries({ queryKey: ["post-comments", postId, "infinite"] });
+      if (isPost) {
+        try {
+          await PostsService.getById({
+            id: `${decodedResult}_v3`,
+          });
+        } catch {}
+      } else if (postId) {
+        // Invalidate the post comments query for replies
         queryClient.refetchQueries({ queryKey: ["post-comments", postId] });
         onCommentAdded?.();
       }
@@ -258,11 +257,11 @@ export default function PostForm({
       : "Connect your Superhero Wallet to start posting on-chain ✍️";
   } else {
     currentPlaceholder = activeAccount
-      ? "Write a comment..."
-      : "Connect your wallet to comment";
+      ? "Write a reply..."
+      : "Connect your wallet to reply";
   }
 
-  // If not connected and it's a comment, show simple message
+  // If not connected and it's a reply, show simple message
   if (!activeAccount && !isPost) {
     return (
       <div
@@ -270,7 +269,7 @@ export default function PostForm({
       >
         <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl">
           <div className="text-center text-white/70">
-            <p className="text-sm">Please connect your wallet to comment</p>
+            <p className="text-sm">Please connect your wallet to reply</p>
           </div>
           <div className="mt-3 flex justify-center">
             <ConnectWalletButton block className="w-full md:w-auto" />
@@ -288,8 +287,9 @@ export default function PostForm({
 
   return (
     <div
-      className={`${isPost ? "w-full max-w-none" : "max-w-[680px] mx-auto md:mx-3"
-        } mb-2 md:mb-4 ${className}`}
+      className={`${
+        isPost ? "w-full max-w-none" : "max-w-[680px] mx-auto md:mx-3"
+      } mb-2 md:mb-4 ${className}`}
     >
       <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="relative">
@@ -308,83 +308,83 @@ export default function PostForm({
             )}
             <div className={activeAccount ? "md:col-start-2" : "md:col-span-2"}>
               <div className="relative">
-                <textarea
-                  ref={textareaRef}
-                  placeholder={currentPlaceholder}
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pr-14 md:pb-12 md:text-base"
-                  style={{ minHeight: computedMinHeight }}
-                  rows={2}
-                  maxLength={characterLimit}
-                />
-
-                <div className="md:hidden absolute bottom-5 left-2">
-                  {/* Mobile-only GIF button inside textarea corner */}
-                  {showGifInput && (
-                    <button
-                      type="button"
-                      className="md:hidden  inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
-                      title="GIF"
-                      ref={gifBtnRef}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setShowGif((s) => !s);
-                        setShowEmoji(false);
-                      }}
-                      onTouchStart={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onTouchEnd={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setShowGif((s) => !s);
-                        setShowEmoji(false);
-                      }}
-                    >
-                      <span className="uppercase tracking-wide">GIF</span>
-                    </button>
-                  )}
-                  {/* Mobile-only GIF popover anchored to button */}
-                  {showGifInput && showGif && (
-                    <div className="popover md:hidden absolute top-0 left-2 bg-gray-900 border border-white/12 rounded-2xl p-3.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-30 min-w-[min(440px,100vw-5rem)] max-w-[calc(100vw-2rem)] right-2">
-                      <div className="font-bold mb-2.5 text-white">Add a GIF</div>
-                      <input
-                        type="url"
-                        placeholder="Paste GIF/Video URL"
-                        value={gifInput}
-                        onChange={(e) => setGifInput(e.target.value)}
-                        className="w-full bg-white/8 border border-white/16 rounded-xl p-2.5 text-white text-sm"
-                      />
-                      <div className="mt-2.5 flex justify-end gap-2.5">
-                        <button
-                          type="button"
-                          className="bg-white/8 border border-white/16 text-white px-3 py-2 rounded-xl cursor-pointer transition-all duration-200 hover:bg-white/12"
-                          onClick={() => setShowGif(false)}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          className="bg-primary-400 text-black border border-primary-400 px-3 py-2 rounded-xl cursor-pointer transition-all duration-200"
-                          onClick={addGifFromUrl}
-                        >
-                          Add
-                        </button>
-                      </div>
+              <textarea
+                ref={textareaRef}
+                placeholder={currentPlaceholder}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pr-14 md:pb-12 md:text-base"
+                style={{ minHeight: computedMinHeight }}
+                rows={2}
+                maxLength={characterLimit}
+              />
+              
+              <div className="md:hidden absolute bottom-5 left-2">
+                {/* Mobile-only GIF button inside textarea corner */}
+                {showGifInput && (
+                  <button
+                    type="button"
+                    className="md:hidden  inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
+                    title="GIF"
+                    ref={gifBtnRef}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowGif((s) => !s);
+                      setShowEmoji(false);
+                    }}
+                    onTouchStart={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowGif((s) => !s);
+                      setShowEmoji(false);
+                    }}
+                  >
+                    <span className="uppercase tracking-wide">GIF</span>
+                  </button>
+                )}
+                {/* Mobile-only GIF popover anchored to button */}
+                {showGifInput && showGif && (
+                  <div className="md:hidden absolute top-0 left-2 bg-gray-900 border border-white/12 rounded-2xl p-3.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-30 min-w-[240px] max-w-[calc(100vw-2rem)] right-2">
+                    <div className="font-bold mb-2.5 text-white">Add a GIF</div>
+                    <input
+                      type="url"
+                      placeholder="Paste GIF/Video URL"
+                      value={gifInput}
+                      onChange={(e) => setGifInput(e.target.value)}
+                      className="w-full bg-white/8 border border-white/16 rounded-xl p-2.5 text-white text-sm"
+                    />
+                    <div className="mt-2.5 flex justify-end gap-2.5">
+                      <button
+                        type="button"
+                        className="bg-white/8 border border-white/16 text-white px-3 py-2 rounded-xl cursor-pointer transition-all duration-200 hover:bg-white/12"
+                        onClick={() => setShowGif(false)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className="bg-primary-400 text-black border border-primary-400 px-3 py-2 rounded-xl cursor-pointer transition-all duration-200"
+                        onClick={addGifFromUrl}
+                      >
+                        Add
+                      </button>
                     </div>
-                  )}
-                </div>
-                {characterLimit && (
-                  <div className="absolute bottom-4 right-2 md:bottom-4 md:right-4 text-white/60 text-sm font-semibold pointer-events-none select-none">
-                    {text.length}/{characterLimit}
                   </div>
                 )}
+              </div>
+              {characterLimit && (
+                <div className="absolute bottom-4 right-2 md:bottom-4 md:right-4 text-white/60 text-sm font-semibold pointer-events-none select-none">
+                  {text.length}/{characterLimit}
+                </div>
+              )}
 
 
-
+             
               </div>
 
               {(showEmojiPicker || showGifInput) && (
@@ -485,8 +485,8 @@ export default function PostForm({
                             ? "Posting…"
                             : "Posting..."
                           : isPost
-                            ? "Post"
-                            : "Post Comment"}
+                          ? "Post"
+                          : "Post Comment"}
                       </AeButton>
                     ) : (
                       <ConnectWalletButton className="rounded-full" />
@@ -543,8 +543,8 @@ export default function PostForm({
                       ? "Posting…"
                       : "Posting..."
                     : isPost
-                      ? "Post"
-                      : "Post Comment"}
+                    ? "Post"
+                    : "Post Comment"}
                 </AeButton>
               ) : (
                 <ConnectWalletButton block className="w-full rounded-xl md:rounded-full" />

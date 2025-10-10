@@ -16,7 +16,7 @@ interface PostCommentsListProps {
 export default function PostCommentsList({ id, onCommentAdded }: PostCommentsListProps) {
   const { chainNames } = useWallet();
 
-  // Query for post comments
+  // Query for post replies
   const {
     data: comments = [],
     isLoading,
@@ -37,7 +37,7 @@ export default function PostCommentsList({ id, onCommentAdded }: PostCommentsLis
 
 
 
-  // Handle comment added callback
+  // Handle reply added callback
   const handleCommentAdded = () => {
     refetchComments();
     onCommentAdded?.();
@@ -48,7 +48,7 @@ export default function PostCommentsList({ id, onCommentAdded }: PostCommentsLis
       <AeCard variant="glass" className="mt-6">
         <AeCardContent className="p-6 text-center">
           <div className="text-lg">⏳</div>
-          <p className="text-sm text-muted-foreground mt-2">Loading comments...</p>
+          <p className="text-sm text-muted-foreground mt-2">Loading replies...</p>
         </AeCardContent>
       </AeCard>
     );
@@ -59,7 +59,7 @@ export default function PostCommentsList({ id, onCommentAdded }: PostCommentsLis
       <AeCard variant="glass" className="mt-6">
         <AeCardContent className="p-6 text-center space-y-4">
           <div className="text-lg">⚠️</div>
-          <p className="text-sm text-muted-foreground">Error loading comments.</p>
+          <p className="text-sm text-muted-foreground">Error loading replies.</p>
           <AeButton 
             onClick={() => refetchComments()} 
             variant="outline" 
@@ -79,7 +79,7 @@ export default function PostCommentsList({ id, onCommentAdded }: PostCommentsLis
           <AeCardContent className="p-8 text-center">
             <div className="text-2xl opacity-60 mb-2">💬</div>
             <p className="text-sm text-muted-foreground">
-              No comments yet. Be the first to comment!
+              No replies yet. Be the first to reply!
             </p>
           </AeCardContent>
         </AeCard>

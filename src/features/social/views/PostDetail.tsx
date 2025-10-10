@@ -61,7 +61,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
 
   // No need for author helpers; cards handle display
 
-  // Handle comment added callback
+  // Handle reply added callback
   const handleCommentAdded = useCallback(() => {
     refetchPost();
     // Refresh replies list keys used by DirectReplies and any legacy comment queries

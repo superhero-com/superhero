@@ -88,7 +88,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   );
 
   const renderStack = () => (
-    <div className="grid gap-3">
+    <div className="grid gap-0 md:gap-3">
       {grandData && (
         <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={grandData as any} commentCount={(grandData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} isActive={false} />
       )}

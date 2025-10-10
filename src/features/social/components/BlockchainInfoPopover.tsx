@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, X } from "lucide-react";
 import { CONFIG } from "@/config";
 import { cn } from "@/lib/utils";
 import { useTransactionStatus } from "@/hooks/useTransactionStatus";
@@ -89,7 +89,15 @@ export function BlockchainInfoPopover({
           )}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-[360px] max-w-[92vw] p-3 rounded-xl border border-white/15 bg-black/80 backdrop-blur-md shadow-2xl text-white">
+      <DropdownMenuContent className="relative w-[360px] max-w-[92vw] p-3 rounded-xl border border-white/15 bg-black/80 backdrop-blur-md shadow-2xl text-white">
+        <button
+          type="button"
+          className="absolute right-2 top-2 md:hidden inline-flex items-center justify-center w-7 h-7 rounded-md bg-white/10 border border-white/15 text-white hover:bg-white/15 transition-colors"
+          aria-label="Close"
+          onClick={(e) => { e.stopPropagation(); setOpen(false); }}
+        >
+          <X className="w-4 h-4" />
+        </button>
         <DropdownMenuLabel className="px-1 pb-2 text-[13px] font-semibold tracking-wide text-white/85">Blockchain transaction</DropdownMenuLabel>
         <div className="px-1 pb-2 flex items-center gap-2">
           {status?.confirmed && (

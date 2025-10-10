@@ -167,7 +167,7 @@ const CommentItem = memo(({
                      {hasReplies && (
                        <Badge
                          variant="outline"
-                         className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 bg-transparent border-white/10 hover:border-white/20 md:!border md:!border-white/15 md:hover:!border-white/30 cursor-pointer transition-colors"
+                         className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 bg-transparent border-white/10 hover:border-white/20 md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25 cursor-pointer transition-colors"
                          onClick={toggleReplies}
                        >
                          <IconComment className="w-[14px] h-[14px]" />

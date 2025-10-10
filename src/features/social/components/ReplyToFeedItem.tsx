@@ -142,7 +142,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
     >
       {/* Top-right on-chain button */}
       {item.tx_hash && (
-        <div className="absolute top-2 right-2 z-10">
+        <div className="absolute top-4 right-2 md:top-5 md:right-5 z-10">
           <BlockchainInfoPopover
             txHash={item.tx_hash}
             createdAt={item.created_at as unknown as string}

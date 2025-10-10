@@ -486,7 +486,7 @@ export default function PostForm({
                             : "Posting..."
                           : isPost
                           ? "Post"
-                          : "Post Comment"}
+                          : "Post Reply"}
                       </AeButton>
                     ) : (
                       <ConnectWalletButton className="rounded-full" />
@@ -544,7 +544,7 @@ export default function PostForm({
                       : "Posting..."
                     : isPost
                     ? "Post"
-                    : "Post Comment"}
+                    : "Post Reply"}
                 </AeButton>
               ) : (
                 <ConnectWalletButton block className="w-full rounded-xl md:rounded-full" />

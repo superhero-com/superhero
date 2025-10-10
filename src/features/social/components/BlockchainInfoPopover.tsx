@@ -89,7 +89,7 @@ export function BlockchainInfoPopover({
           )}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="relative w-[360px] max-w-[92vw] p-3 rounded-xl border border-white/15 bg-black/80 backdrop-blur-md shadow-2xl text-white">
+      <DropdownMenuContent className="relative w-[360px] max-w-[92vw] p-3 rounded-xl border border-white/15 bg-black/80 backdrop-blur-md shadow-2xl text-white allow-small-controls">
         <button
           type="button"
           className="absolute right-2 top-2 md:hidden inline-flex items-center justify-center w-7 h-7 rounded-md bg-white/10 border border-white/15 text-white hover:bg-white/15 transition-colors"

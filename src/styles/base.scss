@@ -361,6 +361,14 @@ textarea:disabled {
     min-height: 48px;
     min-width: 48px;
   }
+
+  /* Opt-out: small inline controls (e.g., popovers) */
+  .allow-small-controls {
+    button, a, [role="button"] {
+      min-height: 0 !important;
+      min-width: 0 !important;
+    }
+  }
   
   /* Better spacing for mobile */
   .mobile-spacing {

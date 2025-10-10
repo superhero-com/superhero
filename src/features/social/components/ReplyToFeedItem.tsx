@@ -14,6 +14,7 @@ interface ReplyToFeedItemProps {
   onOpenPost: (postId: string) => void;
   commentCount?: number;
   hideParentContext?: boolean; // when true, do not render parent context header
+  allowInlineRepliesToggle?: boolean; // when false, clicking replies just opens post
 }
 
 function useParentId(item: PostDto): string | null {
@@ -61,7 +62,7 @@ function useParentId(item: PostDto): string | null {
 }
 
 // X-like post item with optional parent context header
-const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentContext = false }: ReplyToFeedItemProps) => {
+const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentContext = false, allowInlineRepliesToggle = true }: ReplyToFeedItemProps) => {
   const postId = item.id;
   const authorAddress = item.sender_address;
   const { chainNames } = useWallet();
@@ -215,9 +216,19 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
           <div className="mt-4 flex items-center justify-between">
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); toggleReplies(); if (!showReplies) setTimeout(() => refetchChildReplies(), 0); }}
+              onClick={(e) => {
+                if (allowInlineRepliesToggle) {
+                  e.stopPropagation();
+                  toggleReplies();
+                  if (!showReplies) setTimeout(() => refetchChildReplies(), 0);
+                } else {
+                  // On post pages: do not toggle, just open the post
+                  e.stopPropagation();
+                  handleOpen();
+                }
+              }}
               className="inline-flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/10 hover:border-white/20 transition-colors"
-              aria-expanded={showReplies}
+              aria-expanded={allowInlineRepliesToggle ? showReplies : undefined}
               aria-controls={`replies-${postId}`}
             >
               <IconComment className="w-[14px] h-[14px]" />

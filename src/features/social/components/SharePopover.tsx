@@ -6,7 +6,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { IconShare } from "@/icons";
 import { Share2, Link as LinkIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +33,7 @@ export default function SharePopover({ postId, className }: SharePopoverProps) {
           title="Share post"
           onClick={(e) => e.stopPropagation()}
         >
-          <IconShare className="w-[14px] h-[14px] opacity-80" />
+          <Share2 className="w-[14px] h-[14px] opacity-80" strokeWidth={2.25} />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[260px] max-w-[92vw] p-1 rounded-xl border border-white/15 bg-black/80 backdrop-blur-md shadow-2xl text-white">
@@ -61,7 +60,7 @@ export default function SharePopover({ postId, className }: SharePopoverProps) {
             }
           }}
         >
-          <Share2 className="w-4 h-4 opacity-85" />
+          <Share2 className="w-4 h-4 opacity-85" strokeWidth={2.25} />
           <span>Share post via …</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

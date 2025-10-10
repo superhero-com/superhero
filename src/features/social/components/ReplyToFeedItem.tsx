@@ -140,6 +140,20 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
       role="button"
       aria-label="Open post"
     >
+      {/* Top-right on-chain button */}
+      {item.tx_hash && (
+        <div className="absolute top-2 right-2 z-10">
+          <BlockchainInfoPopover
+            txHash={item.tx_hash}
+            createdAt={item.created_at as unknown as string}
+            sender={item.sender_address}
+            contract={(item as any).contract_address}
+            postId={String(item.id)}
+            className="px-2"
+            showLabel
+          />
+        </div>
+      )}
       {/* Main row: avatar next to name/time like X */}
       <div className="flex gap-2 md:gap-3 items-start">
         <div className="flex-shrink-0 pt-0.5">
@@ -253,16 +267,6 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
               <MessageCircle className="w-[14px] h-[14px]" strokeWidth={2.25} />
               {commentCount}
             </button>
-              {item.tx_hash && (
-                <BlockchainInfoPopover
-                  txHash={item.tx_hash}
-                  createdAt={item.created_at as unknown as string}
-                  sender={item.sender_address}
-                  contract={(item as any).contract_address}
-                  postId={String(item.id)}
-                  className=""
-                />
-              )}
             </div>
             <SharePopover postId={item.id} />
           </div>

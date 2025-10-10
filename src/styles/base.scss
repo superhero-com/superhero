@@ -178,9 +178,9 @@ a {
 }
 
 a:hover { 
-  filter: brightness(1.3);
-  transform: translateY(-2px);
-  text-shadow: $glow_shadow;
+  filter: brightness(1.1);
+  transform: none;
+  text-shadow: none;
 }
 
 a::after {
@@ -205,10 +205,10 @@ a.no-gradient-text {
   -webkit-background-clip: initial !important;
   -webkit-text-fill-color: currentColor !important;
   background-clip: initial !important;
-  color: var(--light-font-color) !important;
+  color: inherit !important;
 }
 a.no-gradient-text:hover {
-  color: var(--light-font-color) !important;
+  color: inherit !important;
   filter: none;
   transform: none;
   text-shadow: none;
@@ -356,10 +356,14 @@ textarea:disabled {
 
 /* Sexy Mobile-specific optimizations */
 @include mobile {
-  /* Larger touch targets for mobile */
-  button, a, [role="button"] {
-    min-height: 48px;
-    min-width: 48px;
+  /* Removed global forced 48px touch targets to allow compact inline controls */
+
+  /* Opt-out: small inline controls (e.g., popovers) */
+  .allow-small-controls {
+    button, a, [role="button"] {
+      min-height: 0 !important;
+      min-width: 0 !important;
+    }
   }
   
   /* Better spacing for mobile */

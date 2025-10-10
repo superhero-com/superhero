@@ -9,7 +9,7 @@ import { useWallet } from "../../../hooks";
 import CreatePost from "../components/CreatePost";
 import SortControls from "../components/SortControls";
 import EmptyState from "../components/EmptyState";
-import FeedItem from "../components/FeedItem";
+import ReplyToFeedItem from "../components/ReplyToFeedItem";
 import { PostApiResponse } from "../types";
 
 // Custom hook
@@ -124,7 +124,8 @@ export default function FeedList({
       try {
         sessionStorage.setItem("feedScrollY", String(window.scrollY || 0));
       } catch {}
-      navigate(`/post/${postId}`);
+      const cleanId = String(postId).replace(/_v3$/, "");
+      navigate(`/post/${cleanId}`);
     },
     [navigate]
   );
@@ -152,12 +153,11 @@ export default function FeedList({
       const chainName = chainNames?.[authorAddress];
 
       return (
-        <FeedItem
+        <ReplyToFeedItem
           key={postId}
           item={item}
           commentCount={commentCount}
-          onItemClick={handleItemClick}
-          isFirst={index === 0}
+          onOpenPost={handleItemClick}
         />
       );
     });
@@ -214,7 +214,7 @@ export default function FeedList({
         <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
       </div>
 
-      <div className="w-full flex flex-col gap-0 md:gap-4 -mx-2 md:mx-0">
+      <div className="w-full flex flex-col gap-0 md:gap-4 md:mx-0">
         {renderEmptyState()}
         {renderFeedItems}
       </div>

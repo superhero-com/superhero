@@ -356,11 +356,7 @@ textarea:disabled {
 
 /* Sexy Mobile-specific optimizations */
 @include mobile {
-  /* Larger touch targets for mobile */
-  button, a, [role="button"] {
-    min-height: 48px;
-    min-width: 48px;
-  }
+  /* Removed global forced 48px touch targets to allow compact inline controls */
 
   /* Opt-out: small inline controls (e.g., popovers) */
   .allow-small-controls {

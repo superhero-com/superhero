@@ -110,7 +110,7 @@ export function BlockchainInfoPopover({
           <X className="w-4 h-4" />
         </button>
         <div className="px-1 pb-2 flex items-center justify-between gap-2">
-          <DropdownMenuLabel className="px-0 pb-0 text-[13px] font-semibold tracking-wide text-white/85">Post stored on the æternity block</DropdownMenuLabel>
+          <DropdownMenuLabel className="px-0 pb-0 text-[13px] font-semibold tracking-wide text-white/85">Post stored on the æternity blockchain</DropdownMenuLabel>
           <div className="ml-auto min-w-[48px] text-right">
             {extraLoading && <span className="text-[11px] text-white/70">Loading…</span>}
             {extraError && <span className="text-[11px] text-red-300/90">!</span>}

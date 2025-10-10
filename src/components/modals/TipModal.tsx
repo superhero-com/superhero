@@ -52,8 +52,12 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
     if (disabled) return;
     // Close the tipping modal before opening the wallet confirmation to avoid stacked modals
     const value = toAettos(amount, 18);
-    const tipKey = makeTipKey(toAddress, payload || '');
-    setTipStatus((s) => ({ ...s, [tipKey]: { status: 'pending', updatedAt: Date.now() } }));
+    // Derive postId from payload when in TIP_POST mode so external button can reflect state
+    const postIdForKey = (payload && payload.startsWith('TIP_POST:')) ? payload.split(':')[1] : '';
+    const tipKey = postIdForKey ? makeTipKey(toAddress, postIdForKey) : '';
+    if (tipKey) {
+      setTipStatus((s) => ({ ...s, [tipKey]: { status: 'pending', updatedAt: Date.now() } }));
+    }
     onClose();
     try {
       const res: any = await sdk.spend?.(
@@ -64,28 +68,32 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
         }
       );
       const hash = res?.hash || res?.transactionHash || res?.tx?.hash || null;
-      setTipStatus((s) => ({ ...s, [tipKey]: { status: 'success', updatedAt: Date.now() } }));
-      // Auto-reset success state after 2.5s
-      setTimeout(() => {
-        setTipStatus((s) => {
-          const current = s[tipKey];
-          if (!current || current.status !== 'success') return s;
-          const next = { ...s } as any;
-          delete next[tipKey];
-          return next;
-        });
-      }, 2500);
+      if (tipKey) {
+        setTipStatus((s) => ({ ...s, [tipKey]: { status: 'success', updatedAt: Date.now() } }));
+        // Auto-reset success state after 2.5s
+        setTimeout(() => {
+          setTipStatus((s) => {
+            const current = s[tipKey];
+            if (!current || current.status !== 'success') return s;
+            const next = { ...s } as any;
+            delete next[tipKey];
+            return next;
+          });
+        }, 2500);
+      }
     } catch (e: any) {
-      setTipStatus((s) => ({ ...s, [tipKey]: { status: 'error', updatedAt: Date.now() } }));
-      setTimeout(() => {
-        setTipStatus((s) => {
-          const current = s[tipKey];
-          if (!current || current.status !== 'error') return s;
-          const next = { ...s } as any;
-          delete next[tipKey];
-          return next;
-        });
-      }, 2500);
+      if (tipKey) {
+        setTipStatus((s) => ({ ...s, [tipKey]: { status: 'error', updatedAt: Date.now() } }));
+        setTimeout(() => {
+          setTipStatus((s) => {
+            const current = s[tipKey];
+            if (!current || current.status !== 'error') return s;
+            const next = { ...s } as any;
+            delete next[tipKey];
+            return next;
+          });
+        }, 2500);
+      }
     }
   }
 

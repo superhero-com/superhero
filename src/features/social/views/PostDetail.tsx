@@ -8,6 +8,7 @@ import RightRail from '../../../components/layout/RightRail';
 import Shell from '../../../components/layout/Shell';
 import { extractParentId } from '../utils/postParent';
 import ReplyToFeedItem from '../components/ReplyToFeedItem';
+import PostTipButton from '../components/PostTipButton';
 import DirectReplies from '../components/DirectReplies';
 import CommentForm from '../components/CommentForm';
 

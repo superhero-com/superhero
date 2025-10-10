@@ -7,6 +7,7 @@ import { AeButton } from '../../../components/ui/ae-button';
 import { AeCard, AeCardContent } from '../../../components/ui/ae-card';
 import { Badge } from '../../../components/ui/badge';
 import { IconComment, IconLink } from '../../../icons';
+import PostTipButton from './PostTipButton';
 import BlockchainInfoPopover from './BlockchainInfoPopover';
 import { useTransactionStatus } from '@/hooks/useTransactionStatus';
 import { linkify } from '../../../utils/linkify';
@@ -162,11 +163,11 @@ const CommentItem = memo(({
                   </div>
                 )}
 
-                   <div className="flex items-center gap-2 mt-2">
+                   <div className="flex items-center gap-4 md:gap-2 mt-2">
                      {hasReplies && (
                        <Badge
                          variant="outline"
-                         className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 bg-transparent border-white/10 hover:border-white/20 cursor-pointer transition-colors"
+                         className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 bg-transparent border-white/10 hover:border-white/20 md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25 cursor-pointer transition-colors"
                          onClick={toggleReplies}
                        >
                          <IconComment className="w-[14px] h-[14px]" />
@@ -184,6 +185,8 @@ const CommentItem = memo(({
                          Reply
                        </AeButton>
                      )}
+
+                      <PostTipButton toAddress={authorAddress} postId={String(comment.id)} />
 
                       {comment.tx_hash && (
                         <BlockchainInfoPopover

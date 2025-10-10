@@ -102,7 +102,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   );
 
   const content = (
-    <div className="w-full py-2 px-2 sm:px-3 md:px-4">
+    <div className="w-full p-0">
       <div className="mb-4">
         <AeButton onClick={() => { navigate('/'); }} variant="ghost" size="sm" outlined className="!border !border-solid !border-white/15 hover:!border-white/35">
           ← Back

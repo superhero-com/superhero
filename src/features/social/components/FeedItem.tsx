@@ -31,7 +31,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
     const extract = (value: unknown): string | null => {
       if (!value) return null;
       const asString = String(value);
-      const m = asString.match(/comment[:/](?<id>[^\s,;]+)$/i);
+      const m = asString.match(/comment[:/](?<id>[^\s,;]+)/i);
       const id = (m?.groups as any)?.id || (asString.startsWith('comment:') ? asString.split(':')[1] : null);
       if (!id) return null;
       return id.endsWith('_v3') ? id : `${id}_v3`;

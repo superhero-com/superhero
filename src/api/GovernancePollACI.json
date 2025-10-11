@@ -1,0 +1,270 @@
+[
+  {
+    "namespace": {
+      "name": "ListInternal",
+      "typedefs": []
+    }
+  },
+  {
+    "namespace": {
+      "name": "List",
+      "typedefs": []
+    }
+  },
+  {
+    "namespace": {
+      "name": "String",
+      "typedefs": []
+    }
+  },
+  {
+    "contract": {
+      "event": {
+        "variant": [
+          {
+            "Vote": [
+              "address",
+              "address",
+              "int"
+            ]
+          },
+          {
+            "RevokeVote": [
+              "address",
+              "address"
+            ]
+          }
+        ]
+      },
+      "functions": [
+        {
+          "arguments": [
+            {
+              "name": "metadata",
+              "type": "Poll.metadata"
+            },
+            {
+              "name": "vote_options",
+              "type": "Poll.vote_option"
+            },
+            {
+              "name": "close_height",
+              "type": {
+                "option": [
+                  "int"
+                ]
+              }
+            }
+          ],
+          "name": "init",
+          "payable": false,
+          "returns": "Poll.state",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "option",
+              "type": "int"
+            }
+          ],
+          "name": "vote",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [],
+          "name": "revoke_vote",
+          "payable": false,
+          "returns": {
+            "tuple": []
+          },
+          "stateful": true
+        },
+        {
+          "arguments": [],
+          "name": "get_state",
+          "payable": false,
+          "returns": "Poll.state",
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "title",
+          "payable": false,
+          "returns": "string",
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "close_height",
+          "payable": false,
+          "returns": {
+            "option": [
+              "int"
+            ]
+          },
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "metadata",
+          "payable": false,
+          "returns": "Poll.metadata",
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "votes",
+          "payable": false,
+          "returns": "Poll.votes",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "author",
+              "type": "address"
+            }
+          ],
+          "name": "is_author",
+          "payable": false,
+          "returns": "bool",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "voter",
+              "type": "address"
+            }
+          ],
+          "name": "has_voted",
+          "payable": false,
+          "returns": "bool",
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "is_closed",
+          "payable": false,
+          "returns": "bool",
+          "stateful": false
+        },
+        {
+          "arguments": [
+            {
+              "name": "voter",
+              "type": "address"
+            }
+          ],
+          "name": "voted_option",
+          "payable": false,
+          "returns": {
+            "option": [
+              "int"
+            ]
+          },
+          "stateful": false
+        },
+        {
+          "arguments": [],
+          "name": "version",
+          "payable": false,
+          "returns": "int",
+          "stateful": false
+        }
+      ],
+      "kind": "contract_main",
+      "name": "Poll",
+      "payable": false,
+      "state": {
+        "record": [
+          {
+            "name": "metadata",
+            "type": "Poll.metadata"
+          },
+          {
+            "name": "vote_options",
+            "type": "Poll.vote_option"
+          },
+          {
+            "name": "close_height",
+            "type": {
+              "option": [
+                "int"
+              ]
+            }
+          },
+          {
+            "name": "create_height",
+            "type": "int"
+          },
+          {
+            "name": "votes",
+            "type": "Poll.votes"
+          },
+          {
+            "name": "author",
+            "type": "address"
+          }
+        ]
+      },
+      "typedefs": [
+        {
+          "name": "metadata",
+          "typedef": {
+            "record": [
+              {
+                "name": "title",
+                "type": "string"
+              },
+              {
+                "name": "description",
+                "type": "string"
+              },
+              {
+                "name": "link",
+                "type": "string"
+              },
+              {
+                "name": "spec_ref",
+                "type": {
+                  "option": [
+                    "hash"
+                  ]
+                }
+              }
+            ]
+          },
+          "vars": []
+        },
+        {
+          "name": "vote_option",
+          "typedef": {
+            "map": [
+              "int",
+              "string"
+            ]
+          },
+          "vars": []
+        },
+        {
+          "name": "votes",
+          "typedef": {
+            "map": [
+              "address",
+              "int"
+            ]
+          },
+          "vars": []
+        }
+      ]
+    }
+  }
+]
+
+

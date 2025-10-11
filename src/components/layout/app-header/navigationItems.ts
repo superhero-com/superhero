@@ -61,12 +61,12 @@ export const navigationItems: NavigationItem[] = [
       },
     ],
   },
-  // {
-  //     id: 'governance',
-  //     label: 'Governance & Voting',
-  //     path: '/voting',
-  //     icon: '🗳️',
-  // },
+  {
+      id: 'governance',
+      label: 'Governance & Voting',
+      path: '/voting',
+      icon: '🗳️',
+  },
   // {
   //     id: 'landing',
   //     label: 'Info',

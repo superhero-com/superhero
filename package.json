@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@aeternity/aepp-sdk": "^13.3.2",
-    "@dicebear/collection": "^9.2.4",
-    "@dicebear/core": "^9.2.4",
+    "@dicebear/avatars": "^4.2.5",
+    "@dicebear/avatars-avataaars-sprites": "^4.2.5",
     "@ethersproject/bignumber": "^5.8.0",
     "@mdi/font": "7.4.47",
     "@multiavatar/multiavatar": "^1.0.7",

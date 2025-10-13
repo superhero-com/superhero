@@ -127,8 +127,6 @@ export default function AccountOwnedTokens({
               address: address,
               orderBy: "balance",
               orderDirection: ownedOrderDirection,
-              limit: 100,
-              page: 1,
               enabled: !!address && tab === "owned",
               staleTime: 60_000,
             }}

@@ -262,9 +262,8 @@ export function addSlippage(amount: bigint, slippagePct: number): bigint {
 }
 
 export function subSlippage(amount: bigint, slippagePct: number): bigint {
-  const a = new BigNumber(amount.toString());
-  const res = a.multipliedBy(1 - slippagePct / 100).integerValue(BigNumber.ROUND_DOWN);
-  return BigInt(res.toFixed(0));
+  const scaledTenthPercent = BigInt(Math.round(slippagePct * 10));
+  return amount - (amount * scaledTenthPercent) / 1000n;
 }
 
 export async function ensureAllowanceForRouter(sdk: any, tokenAddress: string, owner: string, needed: bigint, routerAddress?: string): Promise<void> {

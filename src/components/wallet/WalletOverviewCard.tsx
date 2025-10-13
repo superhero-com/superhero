@@ -226,16 +226,20 @@ export default function WalletOverviewCard({
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                {topHoldings.map((it: any, idx: number) => (
-                  <div key={idx} className="flex items-center justify-between text-sm">
-                    <div className="truncate text-white/80">
-                      {it?.token_symbol || it?.token_name || it?.token || "Token"}
+                {topHoldings.map((it: any, idx: number) => {
+                  const label = getTokenLabelSafe(it);
+                  const balanceLabel = getBalanceLabelSafe(it);
+                  return (
+                    <div key={idx} className="flex items-center justify-between text-sm">
+                      <div className="truncate text-white/80" title={label}>
+                        {label}
+                      </div>
+                      <div className="text-white font-mono">
+                        {balanceLabel}
+                      </div>
                     </div>
-                    <div className="text-white font-mono">
-                      {formatCompact(it.balance || it.amount || 0)}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -268,6 +272,33 @@ function formatCompact(value: number): string {
   } catch {
     return String(value);
   }
+}
+
+function getTokenLabelSafe(item: any): string {
+  try {
+    const token = item?.token || {};
+    const label =
+      item?.token_symbol ||
+      item?.symbol ||
+      token?.symbol ||
+      item?.token_name ||
+      item?.name ||
+      token?.name ||
+      item?.address ||
+      token?.address;
+    if (typeof label === "string") return label;
+    return "Token";
+  } catch {
+    return "Token";
+  }
+}
+
+function getBalanceLabelSafe(item: any): string {
+  const raw = item?.balance ?? item?.amount ?? item?.token_balance;
+  if (raw == null) return "—";
+  const n = Number(raw);
+  if (!isFinite(n)) return "—";
+  return formatCompact(n);
 }
 
 

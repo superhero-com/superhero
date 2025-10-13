@@ -143,8 +143,8 @@ export default function FAQ() {
   );
 
   return (
-    <div className="max-w-[1000px] mx-auto p-6 text-white bg-[#0f1115] rounded-2xl">
-      <div className="rounded-2xl p-7 bg-gradient-to-r from-[#111317] to-[#1a1f26] text-white mb-4 border border-white/[0.06]">
+    <div className="max-w-[1000px] mx-auto p-6 text-white">
+      <div className="rounded-2xl p-7 bg-gradient-to-b from-white/6 to-white/3 text-white mb-4 border border-white/10 backdrop-blur-md">
         <div className="text-sm opacity-90">Welcome</div>
         <div className="text-[32px] font-extrabold leading-tight">Superhero — the all‑in‑one social + crypto app</div>
         <div className="text-[15px] opacity-90 mt-2">Discover trends, mint community tokens, trade on bonding curves, chat in real‑time, and govern treasuries — in partnership with Quali.chat.</div>
@@ -222,7 +222,10 @@ function Badge({ label }: { label: string }) {
 
 function Card({ id, children }: { id?: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="p-4 border border-white/8 rounded-xl bg-gradient-to-b from-white/4 to-white/2 text-white">
+    <section
+      id={id}
+      className="p-4 border border-white/10 rounded-xl bg-white/5 backdrop-blur-md text-white shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
+    >
       {children}
     </section>
   );
@@ -231,17 +234,17 @@ function Card({ id, children }: { id?: string; children: React.ReactNode }) {
 function QAItem({ title, answer }: { title: string; answer: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border border-white/8 rounded-xl bg-white/4 text-white">
+    <div className="border border-white/10 rounded-xl bg-white/5 backdrop-blur-md text-white shadow-[0_6px_18px_rgba(0,0,0,0.25)]">
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="w-full text-left bg-transparent border-0 p-3 cursor-pointer font-bold text-white hover:bg-white/5 transition-colors"
+        className="w-full text-left bg-transparent border-0 p-3 cursor-pointer font-bold text-white hover:bg-white/10 transition-colors"
       >
         {title}
         <span className="float-right opacity-60">{open ? '−' : '+'}</span>
       </button>
       {open && (
-        <div className="px-3 pb-3 border-t border-white/8 text-[15px] opacity-90">
+        <div className="px-3 pb-3 border-t border-white/10 text-[15px] opacity-90">
           {answer}
         </div>
       )}

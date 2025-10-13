@@ -42,7 +42,7 @@ export default function AccountOwnedTokens({
     <div className="mt-4 space-y-4">
       <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="hidden md:grid grid-cols-4 gap-4 px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide">
+        <div className="hidden md:grid md:grid-cols-[2fr_1fr_1fr_1fr] gap-4 px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide">
           <div>Token</div>
           <div>Price</div>
           <button
@@ -84,7 +84,7 @@ export default function AccountOwnedTokens({
               return (
                 <div
                   key={`${token?.address || token?.name || index}`}
-                  className="owned-token-row grid grid-cols-1 md:grid-cols-4 gap-4 px-6 py-4 rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                  className="owned-token-row grid grid-cols-1 gap-4 px-6 py-4 rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] md:grid md:grid-cols-[2fr_1fr_1fr_1fr]"
                 >
                   <div className="flex items-center min-w-0">
                     {tokenHref ? (

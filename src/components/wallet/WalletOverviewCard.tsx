@@ -231,10 +231,11 @@ export default function WalletOverviewCard({
                 {topHoldings.map((it: any, idx: number) => {
                   const label = getTokenLabelSafe(it);
                   const balanceLabel = getBalanceLabelSafe(it);
-                  return (
-                    <div key={idx} className="flex items-center justify-between text-sm">
+                   return (
+                     <div key={idx} className="flex items-center justify-between text-sm">
                       <div className="truncate font-semibold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent" title={label}>
-                        #{(label || '').toString()}
+                        <span className="text-white/60 text-[.85em] mr-0.5 align-baseline">#</span>
+                        <span>{(label || '').toString()}</span>
                       </div>
                       <div className="text-xs md:text-sm bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                         {balanceLabel}

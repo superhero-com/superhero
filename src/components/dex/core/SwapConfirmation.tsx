@@ -16,6 +16,7 @@ interface SwapConfirmationProps {
   priceImpactPct: number | null;
   path: string[];
   loading?: boolean;
+  swapStep?: { current: number; total: number; label: string } | null;
 }
 
 export default function SwapConfirmation({
@@ -31,7 +32,8 @@ export default function SwapConfirmation({
   deadlineMins,
   priceImpactPct,
   path,
-  loading = false
+  loading = false,
+  swapStep = null
 }: SwapConfirmationProps) {
   if (!tokenIn || !tokenOut) return null;
 
@@ -390,7 +392,13 @@ export default function SwapConfirmation({
                     borderRadius: '50%',
                     animation: 'spin 1s linear infinite'
                   }}></div>
-                  Swapping...
+                  {swapStep ? (
+                    <>
+                      {swapStep.label}... ({swapStep.current}/{swapStep.total})
+                    </>
+                  ) : (
+                    'Swapping...'
+                  )}
                 </>
               ) : 'Confirm on Wallet'}
             </button>

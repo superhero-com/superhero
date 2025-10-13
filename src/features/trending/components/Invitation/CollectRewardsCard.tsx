@@ -176,10 +176,9 @@ export default function CollectRewardsCard({
                 Available Rewards
               </span>
               <LivePriceFormatter
-                row
                 aePrice={Decimal.from(accumulatedRewardsAe.toString())}
                 watchPrice={false}
-                className="gap-2 text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent text-shadow-[0_0_20px_rgba(255,107,107,0.3)] break-words"
+                className="gap-2 items-center text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent text-shadow-[0_0_20px_rgba(255,107,107,0.3)] break-words"
               />
             </div>
 

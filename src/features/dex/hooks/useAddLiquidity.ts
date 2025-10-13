@@ -40,6 +40,11 @@ export function useAddLiquidity() {
     allowanceInfo: null,
   });
 
+  // Ensure minimum amounts passed to on-chain calls are at least 1 base unit (aettos)
+  function clampToMinUnit(value: bigint): bigint {
+    return value < 1n ? 1n : value;
+  }
+
   async function fetchTokenMeta(addr: string): Promise<{ decimals: number; symbol: string }> {
     if (addr === 'AE') {
       return { decimals: 18, symbol: 'AE' };
@@ -242,8 +247,10 @@ export function useAddLiquidity() {
         const amountAeDesired = isTokenAAe ? amountAAettos : amountBAettos;
         
         // Calculate minimum amounts with slippage using dex library function
-        const minToken = subSlippage(amountTokenDesired, params.slippagePct);
-        const minAe = subSlippage(amountAeDesired, params.slippagePct);
+        const minTokenRaw = subSlippage(amountTokenDesired, params.slippagePct);
+        const minAeRaw = subSlippage(amountAeDesired, params.slippagePct);
+        const minToken = clampToMinUnit(minTokenRaw);
+        const minAe = clampToMinUnit(minAeRaw);
         const minimumLiquidity = MINIMUM_LIQUIDITY;
         
         // Validation - ensure all values are positive
@@ -291,8 +298,10 @@ export function useAddLiquidity() {
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       } else {
         // Calculate minimum amounts with slippage using dex library function
-        const minAmountA = subSlippage(amountAAettos, params.slippagePct);
-        const minAmountB = subSlippage(amountBAettos, params.slippagePct);
+        const minAmountARaw = subSlippage(amountAAettos, params.slippagePct);
+        const minAmountBRaw = subSlippage(amountBAettos, params.slippagePct);
+        const minAmountA = clampToMinUnit(minAmountARaw);
+        const minAmountB = clampToMinUnit(minAmountBRaw);
         const minimumLiquidity = MINIMUM_LIQUIDITY;
         
         // Validation - ensure all values are positive
@@ -479,8 +488,10 @@ export function useAddLiquidity() {
         const expectedAeAmount = (liquidityAmount * reserveAe) / totalSupply;
 
         // Apply slippage to get minimum amounts
-        const minTokenAmount = subSlippage(expectedTokenAmount, params.slippagePct);
-        const minAeAmount = subSlippage(expectedAeAmount, params.slippagePct);
+        const minTokenAmountRaw = subSlippage(expectedTokenAmount, params.slippagePct);
+        const minAeAmountRaw = subSlippage(expectedAeAmount, params.slippagePct);
+        const minTokenAmount = clampToMinUnit(minTokenAmountRaw);
+        const minAeAmount = clampToMinUnit(minAeAmountRaw);
 
         // Validation
         if (minTokenAmount <= 0n) {
@@ -538,8 +549,10 @@ export function useAddLiquidity() {
         const expectedAmountB = (liquidityAmount * reserveB) / totalSupply;
         
         // Apply slippage to get minimum amounts
-        const minAmountA = subSlippage(expectedAmountA, params.slippagePct);
-        const minAmountB = subSlippage(expectedAmountB, params.slippagePct);
+        const minAmountARaw = subSlippage(expectedAmountA, params.slippagePct);
+        const minAmountBRaw = subSlippage(expectedAmountB, params.slippagePct);
+        const minAmountA = clampToMinUnit(minAmountARaw);
+        const minAmountB = clampToMinUnit(minAmountBRaw);
         
         // Validation
         if (minAmountA <= 0n) {
@@ -553,21 +566,6 @@ export function useAddLiquidity() {
         console.log('Ensuring LP token allowance for router...');
         await ensurePairAllowanceForRouter(sdk, pairInfo.pairAddress, address, liquidityAmount);
         console.log('LP token allowance ensured.');
-        
-        // console.log('remove_liquidity params::', {
-        //   tokenA: params.tokenA,
-        //   tokenB: params.tokenB,
-        //   liquidity: liquidityAmount.toString(), //
-        //   minAmountA: minAmountA.toString(),
-        //   minAmountB: minAmountB.toString(),
-        //   address,
-        //   deadline: BigInt(Date.now() + params.deadlineMins * 60 * 1000).toString(),
-        //   expectedAmountA: expectedAmountA.toString(),
-        //   expectedAmountB: expectedAmountB.toString(),
-        //   totalSupply: totalSupply.toString(),
-        //   reserveA: reserveA.toString(),
-        //   reserveB: reserveB.toString()
-        // });
         
         const res = await router.remove_liquidity(
           params.tokenA,

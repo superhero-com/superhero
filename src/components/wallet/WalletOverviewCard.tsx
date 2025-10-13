@@ -230,10 +230,10 @@ export default function WalletOverviewCard({
                 {(topHoldingsResp as any)?.meta?.totalItems > 3 && (
                   <button
                     type="button"
-                    className="self-start mt-1 text-[11px] text-[var(--neon-teal)] hover:underline"
+                    className="self-start mt-1 text-[11px] text-white/70 hover:text-white/90 hover:underline"
                     onClick={() => navigate(`/users/${activeAccount}?tab=owned`)}
                   >
-                    Show all trends →
+                    show more
                   </button>
                 )}
               </div>

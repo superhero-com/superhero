@@ -17,7 +17,13 @@
   padding-top: 18px;
 
   @include mobile {
+    /* Default top padding to offset fixed mobile header */
     padding-top: 84px;
+    
+    /* When invite card is shown above routes, reduce gap under it */
+    .has-invite-card & {
+      padding-top: 8px;
+    }
   }
 }
 
@@ -44,10 +50,19 @@
   @include mobile {
     padding: 0 0.5rem;
     max-width: 100%;
+    
+    /* Only offset for header when invite card is visible above routes */
+    .has-invite-card & {
+      padding-top: 84px;
+    }
   }
   
   @include mobile-small {
     padding: 0 0.25rem;
+
+    .has-invite-card & {
+      padding-top: 84px;
+    }
   }
 }
 

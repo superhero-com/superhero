@@ -1,6 +1,6 @@
 import { AeSdk, CompilerHttp, MemoryAccount } from "@aeternity/aepp-sdk";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
@@ -41,6 +41,7 @@ export default function CollectInvitationLinkCard({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const [successMessage, setSuccessMessage] = useState<string | undefined>();
+  const didMountRef = useRef(false);
 
   // Computed values
   const isRevoking = useMemo(
@@ -169,21 +170,50 @@ export default function CollectInvitationLinkCard({
     }
   }, [invitationCode, getInvitationRewardAmount]);
 
-  // Handle route changes - collapse card when navigating if there's a success message
+  // Ensure card is expanded on first render (especially from invite deep link)
+  // Keep expanded while an invitation code is present; collapse only on route
+  // changes when there is no invite code and no success message.
   useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      setIsCollapsed(false);
+      return;
+    }
+
     if (successMessage) {
       setIsCollapsed(false);
-      // Auto-dismiss after successful claim/revoke
       const timer = setTimeout(() => {
         resetInviteCode();
         setSuccessMessage(undefined);
       }, 3000);
       return () => clearTimeout(timer);
-    } else {
-      // Collapse when navigating to different routes
-      setIsCollapsed(true);
     }
-  }, [location.pathname, successMessage, resetInviteCode]);
+
+    // If we still have an invitation code, keep expanded
+    if (invitationCode) {
+      setIsCollapsed(false);
+      return;
+    }
+
+    // Collapse when navigating to different routes after initial mount
+    setIsCollapsed(true);
+  }, [location.pathname, successMessage, resetInviteCode, invitationCode]);
+
+  // Toggle app-level layout class so routes below don't add extra spacing
+  useEffect(() => {
+    const appContainer = document.querySelector('.app-container');
+    if (appContainer) {
+      if (invitationCode && !isCollapsed) {
+        appContainer.classList.add('has-invite-card');
+      } else {
+        appContainer.classList.remove('has-invite-card');
+      }
+    }
+    return () => {
+      const appEl = document.querySelector('.app-container');
+      appEl?.classList.remove('has-invite-card');
+    };
+  }, [invitationCode, isCollapsed]);
 
   // Don't render if no invitation code
   if (!invitationCode) {
@@ -191,7 +221,7 @@ export default function CollectInvitationLinkCard({
   }
 
   return (
-    <div className={cn("relative z-10 mb-4", className)}>
+    <div className={cn("relative z-10 mb-2", className)}>
       {/* Collapsed state */}
       {isCollapsed ? (
         <Card

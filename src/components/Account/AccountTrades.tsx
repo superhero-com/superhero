@@ -18,9 +18,6 @@ interface AccountTradesProps {
 }
 
 export default function AccountTrades({ address, tab }: AccountTradesProps) {
-  // Transactions pagination
-  const [txItemsPerPage, setTxItemsPerPage] = useState(10);
-  const [txCurrentPage, setTxCurrentPage] = useState(1);
 
   const isChainName = address?.endsWith(".chain");
   const { address: resolvedAddress } = useAddressByChainName(
@@ -35,34 +32,6 @@ export default function AccountTrades({ address, tab }: AccountTradesProps) {
     })) as unknown as Promise<{ items: any[]; meta?: any }>;
     return response as unknown as DataTableResponse<any>;
   };
-
-  // const {
-  //   data: txResp,
-  //   isFetching: loadingTx,
-  //   refetch: refetchTx,
-  //   error: txError,
-  // } = useQuery({
-  //   queryKey: [
-  //     "TransactionsService.listTransactions",
-  //     "account",
-  //     effectiveAddress,
-  //     txItemsPerPage,
-  //     txCurrentPage,
-  //   ],
-  //   queryFn: () =>
-  //     TransactionsService.listTransactions({
-  //       accountAddress: effectiveAddress,
-  //       includes: "token",
-  //       limit: txItemsPerPage,
-  //       page: txCurrentPage,
-  //     }) as unknown as Promise<{
-  //       items: any[];
-  //       meta: { totalItems: number; totalPages: number; currentPage: number };
-  //     }>,
-  //   enabled: !!effectiveAddress && tab === "transactions",
-  //   staleTime: 30_000,
-  //   refetchInterval: 60_000,
-  // });
 
   return (
     <div className="mt-4 space-y-4">
@@ -217,18 +186,16 @@ export default function AccountTrades({ address, tab }: AccountTradesProps) {
               </div>
             );
           }}
-          itemsPerPage={20}
+          itemsPerPage={10}
           initialParams={{
             accountAddress: effectiveAddress,
             includes: "token",
-            limit: txItemsPerPage,
-            page: txCurrentPage,
             enabled: !!effectiveAddress && tab === "transactions",
             staleTime: 30_000,
             refetchInterval: 60_000,
           }}
           emptyMessage="No transactions found matching your."
-          className="space-y-4"
+          className="space-y-4 mb-4"
           errorComponent={(error) => (
             <div className="text-center py-12">
               <div className="text-red-400 text-lg mb-2">⚠️</div>

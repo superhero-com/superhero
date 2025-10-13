@@ -124,9 +124,9 @@ export default function WalletOverviewCard({
       {/* Summary Row */}
       <div className="py-1">
         <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-2">
+          <div className="text-[13px] text-[var(--light-font-color)] uppercase tracking-wide flex items-center gap-1.5">
             <span className="text-lg" aria-hidden="true">👛</span>
-            <h4 className="m-0 text-white text-base font-bold">Your Wallet</h4>
+            <span>Your Wallet</span>
           </div>
           <div className="flex gap-1">
             <button

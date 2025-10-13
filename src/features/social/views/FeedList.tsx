@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { PostsService } from "../../../api/generated";
 import AeButton from "../../../components/AeButton";
+import WelcomeBanner from "../../../components/WelcomeBanner";
 import Shell from "../../../components/layout/Shell";
 import RightRail from "../../../components/layout/RightRail";
 import { useWallet } from "../../../hooks";
@@ -199,6 +200,11 @@ export default function FeedList({
 
   const content = (
     <div className="w-full">
+      {!standalone && (
+        <div className="mb-3 md:mb-4">
+          <WelcomeBanner />
+        </div>
+      )}
       {/* Mobile: CreatePost first, then SortControls */}
       <div className="md:hidden">
         <CreatePost onSuccess={refetch} />

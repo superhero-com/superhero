@@ -63,7 +63,7 @@ export default function WalletOverviewCard({
         orderBy: "balance" as any,
         orderDirection: "DESC" as any,
         limit: 3,
-      }) as unknown as Promise<{ items: any[] }>,
+      }) as unknown as Promise<{ items: any[]; meta?: any }>,
     enabled: !!activeAccount,
     staleTime: 60_000,
   });
@@ -227,6 +227,15 @@ export default function WalletOverviewCard({
                     </div>
                   );
                 })}
+                {(topHoldingsResp as any)?.meta?.totalItems > 3 && (
+                  <button
+                    type="button"
+                    className="self-start mt-1 text-[11px] text-[var(--neon-teal)] hover:underline"
+                    onClick={() => navigate(`/users/${activeAccount}?tab=owned`)}
+                  >
+                    Show all trends →
+                  </button>
+                )}
               </div>
             )}
           </div>

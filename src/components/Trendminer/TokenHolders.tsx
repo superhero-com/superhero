@@ -7,6 +7,7 @@ import { Decimal } from "@/libs/decimal";
 import { toAe } from "@aeternity/aepp-sdk";
 import AddressChip from "../AddressChip";
 import TokenPriceFormatter from "@/features/shared/components/TokenPriceFormatter";
+import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 
 // Pagination response interface
 interface PaginatedHoldersResponse {
@@ -121,7 +122,10 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
       {/* Data Table */}
       <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
         {/* Table Header */}
-        <div className="hidden md:grid grid-cols-3 gap-4 px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide">
+        <div
+          className="hidden md:grid gap-4 px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide"
+          style={{ gridTemplateColumns: "2fr 1fr 1fr" }}
+        >
           {headers.map((header) => (
             <div
               key={header.key}
@@ -142,17 +146,14 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
             return (
               <div
                 key={holder.id}
-                className="grid grid-cols-1 md:grid-cols-3 gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors"
+                className="grid grid-cols-1 md:[grid-template-columns:2fr_1fr_1fr] gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors"
               >
                 {/* Account */}
-                <div className="flex items-center">
-                    <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
                     Account:
                   </div>
-                    <AddressChip
-                      address={holder.address}
-                      linkToProfile={true}
-                    />
+                  <AddressAvatarWithChainName address={holder.address} />
                 </div>
 
                 {/* Balance */}
@@ -166,7 +167,9 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
                       token={token}
                       price={
                         holder.balance !== "NaN"
-                          ? Decimal.from(holder.balance).div(10 ** (parseInt(token.decimals) || 18))
+                          ? Decimal.from(holder.balance).div(
+                              10 ** (parseInt(token.decimals) || 18)
+                            )
                           : Decimal.ZERO
                       }
                       className="text-white text-xs sm:text-base font-medium"
@@ -175,32 +178,31 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
                 </div>
 
                 {/* Percentage */}
-
-                <div className="flex items-center md:justify-end">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                    %:
-                  </div>
-                  <div className="min-w-[80px] text-right">
-                    {percentage.gt("0.01") ? (
-                      <div className="font-semibold text-white">
-                        {percentage.prettify()}%
-                      </div>
-                    ) : percentage.isZero ? (
-                      <div>0%</div>
-                    ) : (
-                      <div>0.01%</div>
-                    )}
-                    <div className="w-full bg-white/10 rounded-full h-1 mt-1">
-                      <div
-                        className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] h-1 rounded-full transition-all duration-500"
-                        style={{
-                          width: `${Math.min(
-                            Number(percentage.toString()),
-                            100
-                          )}%`,
-                        }}
-                      />
+                <div className="flex flex-col  md:items-center md:justify-end gap-2">
+                  <div className="flex items-center justify-between md:flex-col md:items-end md:gap-1">
+                    <div className="md:hidden text-xs text-white/60 font-medium">
+                      Ownership
                     </div>
+                    <div className="font-semibold text-white text-base md:text-sm">
+                      {percentage.gt("0.01") ? (
+                        <>{percentage.prettify()}%</>
+                      ) : percentage.isZero ? (
+                        <>0%</>
+                      ) : (
+                        <>&lt;0.01%</>
+                      )}
+                    </div>
+                  </div>
+                  <div className="w-full md:min-w-[100px] md:max-w-[120px] bg-white/10 rounded-full h-2 md:h-1.5 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${Math.min(
+                          Number(percentage.toString()),
+                          100
+                        )}%`,
+                      }}
+                    />
                   </div>
                 </div>
               </div>
@@ -209,7 +211,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
         </div>
 
         {/* Loading State */}
-        {(isFetching && !holders.length) && (
+        {isFetching && !holders.length && (
           <div className="flex items-center justify-center py-12">
             <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
           </div>

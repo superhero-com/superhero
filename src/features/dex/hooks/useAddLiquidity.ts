@@ -9,6 +9,7 @@ import { AddLiquidityState, LiquidityExecutionParams, RemoveLiquidityExecutionPa
 import { providedLiquidityAtom, useAccount, useAeSdk, useDex, useRecentActivities } from '../../../hooks';
 import { useAtom } from 'jotai';
 import { Decimal } from '../../../libs/decimal';
+import { BridgeConstants } from '@/features/ae-eth-bridge/constants';
 
 export function useAddLiquidity() {
   const [providedLiquidity, setProvidedLiquidity] = useAtom(providedLiquidityAtom);
@@ -235,7 +236,7 @@ export function useAddLiquidity() {
       }
 
       if (params.isAePair) {
-        const isTokenAAe = params.tokenA === 'AE';
+        const isTokenAAe = params.tokenA === BridgeConstants.aeternity.default_ae || params.tokenA === 'AE';
         const token = isTokenAAe ? params.tokenB : params.tokenA;
         const amountTokenDesired = isTokenAAe ? amountBAettos : amountAAettos;
         const amountAeDesired = isTokenAAe ? amountAAettos : amountBAettos;
@@ -455,30 +456,32 @@ export function useAddLiquidity() {
 
       if (params.isAePair) {
         // Handle AE pair removal
-        const isTokenAAe = params.tokenA === 'AE';
+        const isTokenAAe = params.tokenA === BridgeConstants.aeternity.default_ae;
         const token = isTokenAAe ? params.tokenB : params.tokenA;
-        
+
         // Get pair info to calculate expected amounts (use wrapped AE address)
         const waeAddress = DEX_ADDRESSES.wae;
         const pairInfo = await getPairInfo(sdk, factory, token, waeAddress);
-        
+
         if (!pairInfo || !pairInfo.reserveA || !pairInfo.reserveB || !pairInfo.totalSupply) {
           throw new Error('Unable to get pair information');
         }
 
         // Calculate expected amounts based on current reserves and total supply
         const totalSupply = BigInt(pairInfo.totalSupply);
-        const reserveToken = isTokenAAe ? BigInt(pairInfo.reserveB) : BigInt(pairInfo.reserveA);
-        const reserveAe = isTokenAAe ? BigInt(pairInfo.reserveA) : BigInt(pairInfo.reserveB);
-        
+        // pairInfo was fetched with (token, wae), so reserveA is always the non-AE token reserve
+        // and reserveB is always the WAE reserve, regardless of original position ordering.
+        const reserveToken = BigInt(pairInfo.reserveA);
+        const reserveAe = BigInt(pairInfo.reserveB);
+
         // Calculate expected amounts: (liquidity * reserve) / totalSupply
         const expectedTokenAmount = (liquidityAmount * reserveToken) / totalSupply;
         const expectedAeAmount = (liquidityAmount * reserveAe) / totalSupply;
-        
+
         // Apply slippage to get minimum amounts
         const minTokenAmount = subSlippage(expectedTokenAmount, params.slippagePct);
         const minAeAmount = subSlippage(expectedAeAmount, params.slippagePct);
-        
+
         // Validation
         if (minTokenAmount <= 0n) {
           throw new Error(`Invalid minimum token amount: ${minTokenAmount.toString()}`);
@@ -486,12 +489,12 @@ export function useAddLiquidity() {
         if (minAeAmount <= 0n) {
           throw new Error(`Invalid minimum AE amount: ${minAeAmount.toString()}`);
         }
-        
+
         // Ensure LP token allowance for router
         console.log('Ensuring LP token allowance for router...');
         await ensurePairAllowanceForRouter(sdk, pairInfo.pairAddress, address, liquidityAmount);
         console.log('LP token allowance ensured.');
-        
+
         console.log('remove_liquidity_ae params::', {
           token,
           liquidity: liquidityAmount.toString(),
@@ -505,7 +508,7 @@ export function useAddLiquidity() {
           reserveToken: reserveToken.toString(),
           reserveAe: reserveAe.toString()
         });
-        
+
         const res = await router.remove_liquidity_ae(
           token,
           liquidityAmount,
@@ -514,7 +517,7 @@ export function useAddLiquidity() {
           address,
           BigInt(Date.now() + params.deadlineMins * 60 * 1000)
         );
-        
+
         console.log('[useAddLiquidity] remove_liquidity_ae res::', res);
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       } else {

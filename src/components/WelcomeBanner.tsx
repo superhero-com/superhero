@@ -80,7 +80,7 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
           </Link>
           <Link
             to="/faq"
-            className="inline-flex items-center rounded-lg border border-white/35 bg-white/10 px-3 py-2 text-sm font-medium text-white/95 transition hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/50"
+            className="no-gradient-text inline-flex items-center rounded-lg border border-white/35 bg-white/10 px-3 py-2 text-sm font-medium text-white/80 transition hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/50"
           >
             Learn more
           </Link>

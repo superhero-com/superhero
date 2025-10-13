@@ -46,8 +46,7 @@ function MyComponent() {
         </div>
       )}
       initialParams={{
-        limit: 10,
-        page: 1,
+        // ...
       }}
     />
   );
@@ -90,7 +89,7 @@ function AdvancedComponent() {
       <DataTable
         queryFn={(params) => MyService.getData({ ...params, ...filters })}
         renderRow={({ item }) => <MyRowComponent item={item} />}
-        initialParams={{ limit: 20, page: 1 }}
+        initialParams={{  }}
       />
     </div>
   );

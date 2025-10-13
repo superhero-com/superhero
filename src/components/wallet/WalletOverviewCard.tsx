@@ -233,7 +233,7 @@ export default function WalletOverviewCard({
                     className="self-start mt-1 text-[11px] text-white/70 hover:text-white/90 hover:underline"
                     onClick={() => navigate(`/users/${activeAccount}?tab=owned`)}
                   >
-                    show more
+                    Show more
                   </button>
                 )}
               </div>

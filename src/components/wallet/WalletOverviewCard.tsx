@@ -221,7 +221,7 @@ export default function WalletOverviewCard({
                       <div className="truncate font-semibold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent" title={label}>
                         #{(label || '').toString()}
                       </div>
-                      <div className="font-mono bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                      <div className="text-xs md:text-sm bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                         {balanceLabel}
                       </div>
                     </div>

@@ -9,6 +9,7 @@ import CopyText from "@/components/ui/CopyText";
 import { useAeSdk } from "@/hooks/useAeSdk";
 import { useAccountBalances } from "@/hooks/useAccountBalances";
 import { AccountTokensService } from "@/api/generated/services/AccountTokensService";
+import { Decimal } from "@/libs/decimal";
 
 type Currency = "usd" | "eur" | "cny";
 
@@ -117,8 +118,6 @@ export default function WalletOverviewCard({
     );
   }
 
-  const short = `${activeAccount.slice(0, 6)}...${activeAccount.slice(-4)}`;
-
   return (
     <div className={"grid gap-2 " + (className || "")}>
       {/* Summary Row */}
@@ -156,28 +155,24 @@ export default function WalletOverviewCard({
             overlaySize={18}
             showBalance={false}
             showAddressAndChainName={false}
-            showPrimaryOnly={false}
+            showPrimaryOnly={true}
             hideFallbackName={true}
-            contentClassName="px-0 pb-0"
+            contentClassName="px-2 pb-0"
+            secondary={(
+              <div className="text-[11px] text-[var(--light-font-color)]">
+                {balanceAe.toLocaleString(undefined, { maximumFractionDigits: 6 })} AE
+                {aeFiat != null && (
+                  <>
+                    {" "}
+                    <span className="opacity-70">·</span>{" "}
+                    <span>
+                      ≈ {formatPrice(aeFiat, selectedCurrency)}
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
           />
-
-          <div className="min-w-0">
-            <div className="font-semibold text-[var(--standard-font-color)] leading-tight">
-              {short}
-            </div>
-            <div className="text-[11px] text-[var(--light-font-color)]">
-              {balanceAe.toLocaleString(undefined, { maximumFractionDigits: 6 })} AE
-              {aeFiat != null && (
-                <>
-                  {" "}
-                  <span className="opacity-70">·</span>{" "}
-                  <span>
-                    ≈ {formatPrice(aeFiat, selectedCurrency)}
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
 
           <div className="ml-auto flex items-center gap-2">
             <span
@@ -286,11 +281,15 @@ function getTokenLabelSafe(item: any): string {
 }
 
 function getBalanceLabelSafe(item: any): string {
-  const raw = item?.balance ?? item?.amount ?? item?.token_balance;
-  if (raw == null) return "—";
-  const n = Number(raw);
-  if (!isFinite(n)) return "—";
-  return formatCompact(n);
+  try {
+    const token = item?.token || item || {};
+    const decimals = Number(token?.decimals ?? 18);
+    const raw = item?.balance ?? item?.holder_balance ?? item?.amount ?? item?.token_balance;
+    if (raw == null) return "-";
+    return Decimal.from(raw).div(10 ** decimals).prettify();
+  } catch {
+    return "-";
+  }
 }
 
 

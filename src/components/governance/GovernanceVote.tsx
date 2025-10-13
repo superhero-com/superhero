@@ -1,69 +1,55 @@
-import MobileCard from "../MobileCard";
 import AeButton from "../AeButton";
+import { AddressChip } from "../AddressChip";
 import { Encoding, isAddressValid } from "@aeternity/aepp-sdk";
-import { useGovernance, useWallet } from "@/hooks";
+import { useAccount, useAeSdk, useGovernance } from "@/hooks";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface GovernanceVoteProps {
-  pollId: any;
+  pollId: string;
   setActiveTab: (tab: string) => void;
 }
 export default function GovernanceVote({
   pollId,
   setActiveTab,
 }: GovernanceVoteProps) {
-  const { address } = useWallet();
+  const { activeAccount } = useAeSdk();
+  const { decimalBalance } = useAccount();
   const {
     usePoll,
     usePollResults,
-    useMyVote,
     useRevokeVote,
     useSubmitVote,
-    useAccount,
     useDelegation,
     useDelegators,
   } = useGovernance();
   const submitVoteMutation = useSubmitVote();
   const revokeVoteMutation = useRevokeVote();
-  const { data: account } = useAccount(address || "");
-  const { data: delegation = { to: null } } = useDelegation();
-  const { data: delegators = [] } = useDelegators(address || "");
-  const { data: poll } = usePoll(
-    isAddressValid(pollId, Encoding.ContractAddress) ? pollId : undefined
-  );
-  const { data: results } = usePollResults(pollId || "");
-  const { data: myVote } = useMyVote(pollId || "");
+  const { data: delegation } = useDelegation();
+  const { data: delegators = [] } = useDelegators();
+  const pollAddress = isAddressValid(pollId, Encoding.ContractAddress) ? pollId : undefined;
+  if (!pollAddress) throw new Error('Invalid poll address');
+  const { data: poll } = usePoll(pollAddress);
 
-  const [selectedVote, setSelectedVote] = useState<string | null>(null);
-  const [isVoting, setIsVoting] = useState(false);
+  const { data: results } = usePollResults(pollAddress);
 
-  const handleVote = async (option: string) => {
-    if (pollId && !isVoting) {
-      setIsVoting(true);
-      setSelectedVote(option);
+  const [votingFor, setVotingFor] = useState<number | null>(null);
 
-      try {
-        await submitVoteMutation.mutateAsync({
-          pollId,
-          option: String(option),
-        });
-        // Add a small delay for better UX
-        setTimeout(() => {
-          setIsVoting(false);
-          setSelectedVote(null);
-        }, 1000);
-      } catch (error) {
-        setIsVoting(false);
-        setSelectedVote(null);
-      }
+  const handleVote = async (option: number) => {
+    if (votingFor != null) return;
+    setVotingFor(option);
+    try {
+      await submitVoteMutation.mutateAsync({
+        pollAddress,
+        option,
+      });
+    } finally {
+      setVotingFor(null);
     }
   };
 
   const handleRevokeVote = () => {
-    if (pollId) {
-      revokeVoteMutation.mutate(pollId);
-    }
+    revokeVoteMutation.mutate(pollAddress);
   };
 
   const getVotePercentage = (votes: number, total: number) => {
@@ -88,10 +74,26 @@ export default function GovernanceVote({
                 <p className="text-slate-300 text-sm md:text-base leading-relaxed max-w-2xl">
                   {poll?.pollState.metadata.description || "Cast your vote and make your voice heard in the community governance"}
                 </p>
+                {poll?.pollState.metadata.link && (
+                  <a
+                    href={poll.pollState.metadata.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-block text-blue-400 hover:text-blue-300 hover:underline break-all"
+                  >
+                    {poll.pollState.metadata.link}
+                  </a>
+                )}
+                {poll?.pollState.author && (
+                  <div className="mt-3 flex items-center gap-2 text-slate-400 text-xs">
+                    <span>By:</span>
+                    <AddressChip address={poll.pollState.author} linkToProfile />
+                  </div>
+                )}
               </div>
               <AeButton
                 onClick={() => setActiveTab("polls")}
-                className="shrink-0 px-6 py-3 text-sm font-medium bg-white/5 backdrop-blur-lg text-white border border-white/20 rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/20"
+                className="shrink-0 px-6 py-3 text-sm font-medium bg-white/5 backdrop-blur-lg text-white border border-white/20 rounded-2xl transition-all hover:bg-white/10 hover:border-white/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/20"
               >
                 <span className="flex items-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,71 +120,33 @@ export default function GovernanceVote({
                   </div>
                   <h2 className="text-xl md:text-2xl font-bold text-white">Cast Your Vote</h2>
                 </div>
-                {poll?.pollState.metadata.description && (
-                  <p className="text-slate-300 text-sm md:text-base leading-relaxed">
-                    {poll.pollState.metadata.description}
-                  </p>
-                )}
               </div>
-
-              {myVote && (
-                <div className="mb-6 p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20 rounded-2xl backdrop-blur-lg relative overflow-hidden animate-success-glow">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-500/5 to-transparent animate-pulse"></div>
-                  <div className="relative">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
-                        <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-sm text-slate-300 font-medium">Your Current Vote</p>
-                        <p className="text-green-400 font-semibold text-lg">
-                          {myVote?.option || myVote}
-                        </p>
-                      </div>
-                    </div>
-                    <AeButton
-                      onClick={handleRevokeVote}
-                      className="w-full md:w-auto bg-transparent text-white border border-white/20 rounded-xl px-6 py-3 transition-all duration-300 hover:bg-white/5 hover:border-white/30 hover:-translate-y-1 hover:shadow-lg"
-                    >
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Change Vote
-                      </span>
-                    </AeButton>
-                  </div>
-                </div>
-              )}
 
               <div className="grid gap-4">
                 {Object.values(poll?.pollState.vote_options ?? {}).map(
                   (opt, idx) => {
-                    const val = idx.toString();
                     const lbl = opt;
-                    const isSelected = selectedVote === val;
-                    const isVotingThis = isVoting && isSelected;
+                    const isSelected = results?.myVote === idx;
+                    const isVotingThis = votingFor === idx;
 
                     return (
                       <button
-                        key={val}
-                        onClick={() => handleVote(val)}
-                        disabled={isVoting}
+                        key={idx}
+                        onClick={() => handleVote(idx)}
+                        disabled={votingFor != null}
                         className={cn(
-                          "group relative p-6 text-left bg-black/20 backdrop-blur-lg border-2 border-white/10 rounded-2xl transition-all duration-300 cursor-pointer touch-manipulation vote-button",
+                          "group relative p-6 text-left bg-black/20 backdrop-blur-lg border-2 border-white/10 rounded-2xl transition-all cursor-pointer touch-manipulation vote-button",
                           "hover:bg-white/5 hover:border-white/20 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/20",
                           "focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50",
                           isSelected && "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl -translate-y-1 animate-vote-pulse",
                           isVotingThis && "bg-gradient-to-r from-cyan-400 to-blue-400 text-white border-transparent animate-pulse",
-                          isVoting && !isVotingThis && "opacity-50 cursor-not-allowed transform-none hover:transform-none hover:shadow-none"
+                          votingFor && !isVotingThis && "opacity-50 cursor-not-allowed transform-none hover:transform-none hover:shadow-none"
                         )}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className={cn(
-                              "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300",
+                              "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
                               isSelected ? "bg-white/20" : "bg-white/5 group-hover:bg-white/10"
                             )}>
                               {isVotingThis ? (
@@ -216,6 +180,21 @@ export default function GovernanceVote({
                   }
                 )}
               </div>
+              {results?.myVote != null && (
+                <div className="mt-6">
+                  <AeButton
+                    onClick={handleRevokeVote}
+                    className="w-full md:w-auto bg-transparent text-white border border-white/20 rounded-xl px-6 py-3 transition-all hover:bg-white/5 hover:border-white/30 hover:-translate-y-1 hover:shadow-lg"
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Revoke Vote
+                    </span>
+                  </AeButton>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -250,12 +229,11 @@ export default function GovernanceVote({
 
                 <div className="space-y-4">
                   {(results.options || []).map((opt: any, idx: number) => {
-                    const val = opt.value || opt;
                     const lbl = opt.label || opt;
                     const votes = opt.votes || 0;
                     const total = results.totalVotes || 1;
                     const percentage = getVotePercentage(votes, total);
-                    const isWinning = percentage === Math.max(
+                    const isWinning = percentage != 0 && percentage === Math.max(
                       ...(results.options || []).map((o: any) => getVotePercentage(o.votes || 0, total))
                     );
 
@@ -263,7 +241,7 @@ export default function GovernanceVote({
                       <div
                         key={idx}
                         className={cn(
-                          "group relative p-6 bg-white/5 border border-white/10 rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1",
+                          "group relative p-6 bg-white/5 border border-white/10 rounded-2xl transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1",
                           isWinning && "bg-gradient-to-br from-yellow-500/10 to-amber-500/5 border-yellow-500/30 shadow-xl shadow-yellow-500/20 animate-winning-pulse"
                         )}
                       >
@@ -278,7 +256,7 @@ export default function GovernanceVote({
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-4">
                             <div className={cn(
-                              "w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg transition-all duration-300",
+                              "w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg transition-all",
                               isWinning ? "bg-yellow-500/20 text-yellow-400" : "bg-white/10 text-slate-300 group-hover:bg-white/20"
                             )}>
                               {String.fromCharCode(65 + idx)}
@@ -329,7 +307,7 @@ export default function GovernanceVote({
         )}
 
         {/* Enhanced Account Section */}
-        {address && (
+        {activeAccount && (
           <div className="mb-8">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-3xl blur-xl"></div>
@@ -343,9 +321,9 @@ export default function GovernanceVote({
                   <h2 className="text-xl md:text-2xl font-bold text-white">Your Governance Power</h2>
                 </div>
 
-                {account && (
+                {decimalBalance && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div className="group p-6 bg-white/5 border border-white/10 rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1">
+                    <div className="group p-6 bg-white/5 border border-white/10 rounded-2xl transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
                           <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -354,14 +332,14 @@ export default function GovernanceVote({
                         </div>
                         <div>
                           <p className="text-sm text-slate-400 font-medium mb-1">Account Balance</p>
-                          <p className="text-2xl font-bold text-white">{account.balance || "0"} AE</p>
+                          <p className="text-2xl font-bold text-white">{decimalBalance.prettify()} AE</p>
                           <p className="text-xs text-slate-500">Available for voting</p>
                         </div>
                       </div>
                     </div>
 
                     {delegators.length > 0 && (
-                      <div className="group p-6 bg-white/5 border border-white/10 rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1">
+                      <div className="group p-6 bg-white/5 border border-white/10 rounded-2xl transition-all hover:bg-white/10 hover:border-white/20 hover:-translate-y-1">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
                             <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -387,7 +365,7 @@ export default function GovernanceVote({
                     Delegation Status
                   </h3>
                   
-                  {delegation.to ? (
+                  {delegation ? (
                     <div className="flex items-start gap-4 p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20 rounded-xl">
                       <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center shrink-0">
                         <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -397,7 +375,7 @@ export default function GovernanceVote({
                       <div className="flex-1">
                         <p className="text-sm text-slate-300 font-medium mb-2">Votes are being delegated to:</p>
                         <p className="text-white font-mono text-sm break-all bg-black/20 px-3 py-2 rounded-lg border border-white/10">
-                          {delegation.to}
+                          {delegation}
                         </p>
                         <p className="text-xs text-slate-500 mt-2">
                           Your voting power is being used by this delegate

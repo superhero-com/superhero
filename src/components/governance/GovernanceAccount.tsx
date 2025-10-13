@@ -2,39 +2,40 @@ import { HeaderLogo as IconGovernance } from "@/icons";
 import MobileCard from "../MobileCard";
 import MobileInput from "../MobileInput";
 import AeButton from "../AeButton";
-import { useGovernance, useWallet } from "@/hooks";
+import { useAccount, useAeSdk, useGovernance } from "@/hooks";
 import { useEffect, useState } from "react";
+import { Encoding, isAddressValid, toAe } from "@aeternity/aepp-sdk";
 
 export default function GovernanceAccount() {
-  const { address } = useWallet();
+  const { activeAccount } = useAeSdk();
+  const { decimalBalance } = useAccount();
   const {
-    useAccount,
     useDelegation,
     useDelegators,
     useSetDelegation,
     useRevokeDelegation,
   } = useGovernance();
 
-  const { data: delegation = { to: null }, isLoading: delegationLoading } = useDelegation();
-  const { data: delegators = [], isLoading: delegatorsLoading } = useDelegators(address || "");
-  const { data: account, isLoading: accountLoading } = useAccount(address || "");
+  const { data: delegation } = useDelegation();
+  const { data: delegators = [], isLoading: delegatorsLoading } = useDelegators();
 
   // Mutations
   const setDelegationMutation = useSetDelegation();
   const revokeDelegationMutation = useRevokeDelegation();
 
   const [delegateAddress, setDelegateAddress] = useState<string>(
-    delegation?.to || ""
+    delegation || ""
   );
 
   // Update delegate address when delegation changes
   useEffect(() => {
-    setDelegateAddress(delegation?.to || "");
-  }, [delegation?.to]);
+    setDelegateAddress(delegation || "");
+  }, [delegation]);
 
   const handleSaveDelegation = () => {
-    if (delegateAddress.trim()) {
-      setDelegationMutation.mutate({ to: delegateAddress.trim() });
+    const to = delegateAddress.trim();
+    if (isAddressValid(to, Encoding.AccountAddress)) {
+      setDelegationMutation.mutate(to);
     }
   };
 
@@ -43,7 +44,6 @@ export default function GovernanceAccount() {
     setDelegateAddress("");
   };
 
-  const isLoading = delegationLoading || accountLoading || delegatorsLoading;
   const isSaving = setDelegationMutation.isPending;
   const isRevoking = revokeDelegationMutation.isPending;
 
@@ -64,7 +64,7 @@ export default function GovernanceAccount() {
         </div>
 
         {/* Account Information Card */}
-        {address && (
+        {activeAccount && (
           <div className="mb-8 animate-fadeInUp">
             <MobileCard
               variant="elevated"
@@ -81,13 +81,13 @@ export default function GovernanceAccount() {
                 </div>
               </div>
 
-              {isLoading ? (
+              {delegatorsLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="h-16 bg-white/5 rounded-2xl animate-pulse" />
                   ))}
                 </div>
-              ) : account ? (
+              ) : activeAccount ? (
                 <div className="grid gap-4">
                   {/* Address */}
                   <div className="group p-5 bg-white/5 border border-white/10 rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg">
@@ -100,7 +100,7 @@ export default function GovernanceAccount() {
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-mono text-white bg-black/20 px-3 py-1 rounded-lg">
-                          {address.slice(0, 8)}...{address.slice(-8)}
+                          {activeAccount.slice(0, 8)}...{activeAccount.slice(-8)}
                         </div>
                       </div>
                     </div>
@@ -117,7 +117,7 @@ export default function GovernanceAccount() {
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-bold text-white">
-                          {account.balance || "0"} AE
+                          {decimalBalance.prettify()} AE
                         </div>
                       </div>
                     </div>
@@ -174,7 +174,7 @@ export default function GovernanceAccount() {
 
             <div className="space-y-6">
               {/* Current Delegation Status */}
-              {delegation?.to && (
+              {delegation && (
                 <div className="p-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-2xl">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center">
@@ -183,7 +183,7 @@ export default function GovernanceAccount() {
                     <div className="flex-1">
                       <p className="text-sm font-medium text-emerald-300">Currently Delegated</p>
                       <p className="text-xs text-slate-400 font-mono">
-                        {delegation.to.slice(0, 12)}...{delegation.to.slice(-12)}
+                        {delegation.slice(0, 12)}...{delegation.slice(-12)}
                       </p>
                     </div>
                   </div>
@@ -223,7 +223,7 @@ export default function GovernanceAccount() {
                   {isSaving ? "Saving Delegation..." : "💾 Save Delegation"}
                 </AeButton>
 
-                {delegation?.to && (
+                {delegation && (
                   <AeButton
                     onClick={handleRevokeDelegation}
                     disabled={isSaving || isRevoking}
@@ -262,12 +262,12 @@ export default function GovernanceAccount() {
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
                             <span className="text-xs font-bold text-white">
-                              {(delegator.address || delegator).slice(0, 2).toUpperCase()}
+                              {(delegator.delegator).slice(3, 5).toUpperCase()}
                             </span>
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-mono text-white truncate">
-                              {delegator.address || delegator}
+                              {delegator.delegator}
                             </p>
                             <p className="text-xs text-slate-400">Delegator #{idx + 1}</p>
                           </div>
@@ -275,7 +275,10 @@ export default function GovernanceAccount() {
                         {delegator.balance && (
                           <div className="text-right flex-shrink-0">
                             <p className="text-sm font-bold text-white">
-                              {delegator.balance} AE
+                              {Number(toAe(delegator.balance)).toLocaleString(undefined, {
+                                maximumFractionDigits: 6,
+                              })}
+                              {" "}AE
                             </p>
                             <p className="text-xs text-slate-400">Voting Power</p>
                           </div>
@@ -291,7 +294,7 @@ export default function GovernanceAccount() {
 
         {/* Success/Error Messages */}
         {setDelegationMutation.isSuccess && (
-          <div className="fixed top-4 right-4 z-50 animate-slideInUp">
+          <div className="fixed top-20 right-4 z-50 animate-slideInUp">
             <div className="p-4 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-2xl shadow-2xl">
               <div className="flex items-center gap-3">
                 <span className="text-lg">✅</span>
@@ -305,7 +308,7 @@ export default function GovernanceAccount() {
         )}
 
         {revokeDelegationMutation.isSuccess && (
-          <div className="fixed top-4 right-4 z-50 animate-slideInUp">
+          <div className="fixed top-20 right-4 z-50 animate-slideInUp">
             <div className="p-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl shadow-2xl">
               <div className="flex items-center gap-3">
                 <span className="text-lg">🔄</span>
@@ -319,7 +322,7 @@ export default function GovernanceAccount() {
         )}
 
         {(setDelegationMutation.isError || revokeDelegationMutation.isError) && (
-          <div className="fixed top-4 right-4 z-50 animate-slideInUp">
+          <div className="fixed top-20 right-4 z-50 animate-slideInUp">
             <div className="p-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-2xl shadow-2xl">
               <div className="flex items-center gap-3">
                 <span className="text-lg">❌</span>

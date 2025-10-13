@@ -90,6 +90,7 @@ export const routes: RouteObject[] = [
   { path: "/voting", element: <Governance /> },
   { path: "/voting/p/:id", element: <Governance /> },
   { path: "/voting/account", element: <Governance /> },
+  { path: "/voting/create", element: <Governance /> },
 
   // New DEX Routes with Layout
   {

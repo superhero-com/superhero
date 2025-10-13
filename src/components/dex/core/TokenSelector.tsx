@@ -46,10 +46,10 @@ export default function TokenSelector({
         (token.address || '').toLowerCase().includes(term);
       const notExcluded = !excludeIds.includes(token.address);
       // if the token is WAE, skip it
-      if (skipToken?.address === DEX_ADDRESSES.wae && token.address === 'ae') {
+      if (skipToken?.address === DEX_ADDRESSES.wae && token.address === 'AE') {
         return false;
       }
-      if (skipToken?.address === 'ae' && token.address === DEX_ADDRESSES.wae) {
+      if (skipToken?.address === 'AE' && token.address === DEX_ADDRESSES.wae) {
         return false;
       }
       const notSkipped = !skipToken || token.address !== skipToken.address;

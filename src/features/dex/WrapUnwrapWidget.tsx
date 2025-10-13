@@ -66,7 +66,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
 
       // Create token objects for AE and WAE
       const aeToken = {
-        address: 'ae',
+        address: 'AE',
         name: 'Aeternity',
         symbol: 'AE',
         decimals: 18,

@@ -13,10 +13,10 @@ export function useTokenBalances(tokenIn: DexTokenDto | null, tokenOut: DexToken
 
   const balances = useMemo(() => {
     return {
-      in: fromAettos(tokenIn?.address === 'ae' ? balance : aex9Balances.find(
+      in: fromAettos(tokenIn?.address === 'AE' ? balance : aex9Balances.find(
         (t) => t.contract_id === tokenIn?.address
       )?.amount || 0),
-      out: fromAettos(tokenOut?.address === 'ae' ? balance : aex9Balances.find(
+      out: fromAettos(tokenOut?.address === 'AE' ? balance : aex9Balances.find(
         (t) => t.contract_id === tokenOut?.address
       )?.amount || 0),
     }

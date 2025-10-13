@@ -26,8 +26,8 @@ export function useSwapExecution() {
   const [allowanceInfo, setAllowanceInfo] = useState<string | null>(null);
 
   function isAeToWae(tokenIn: any, tokenOut: any): boolean {
-    const isAetoWae = tokenIn.address == 'ae' && tokenOut.address == DEX_ADDRESSES.wae;
-    const isWaeToAe = tokenIn.address == DEX_ADDRESSES.wae && tokenOut.address == 'ae';
+    const isAetoWae = tokenIn.address == 'AE' && tokenOut.address == DEX_ADDRESSES.wae;
+    const isWaeToAe = tokenIn.address == DEX_ADDRESSES.wae && tokenOut.address == 'AE';
     return isAetoWae || isWaeToAe;
   }
 
@@ -132,10 +132,10 @@ export function useSwapExecution() {
       if (isAeToWae(params.tokenIn, params.tokenOut)) {
         let txHash: string | null = null;
 
-        if (params.tokenIn.address === 'ae' && params.tokenOut.address === DEX_ADDRESSES.wae) {
+        if (params.tokenIn.address === 'AE' && params.tokenOut.address === DEX_ADDRESSES.wae) {
           // AE -> WAE (wrap)
           txHash = await wrapAeToWae(params.amountIn);
-        } else if (params.tokenIn.address === DEX_ADDRESSES.wae && params.tokenOut.address === 'ae') {
+        } else if (params.tokenIn.address === DEX_ADDRESSES.wae && params.tokenOut.address === 'AE') {
           // WAE -> AE (unwrap)
           txHash = await unwrapWaeToAe(params.amountIn);
         }
@@ -143,7 +143,7 @@ export function useSwapExecution() {
         if (txHash) {
           try {
             const url = CONFIG.EXPLORER_URL ? `${CONFIG.EXPLORER_URL.replace(/\/$/, '')}/transactions/${txHash}` : '';
-            const actionName = params.tokenIn.address === 'ae' ? 'Wrap' : 'Unwrap';
+            const actionName = params.tokenIn.address === 'AE' ? 'Wrap' : 'Unwrap';
             toast.push(
               React.createElement('div', {},
                 React.createElement('div', {}, `${actionName} submitted`),

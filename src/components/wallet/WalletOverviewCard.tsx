@@ -206,7 +206,7 @@ export default function WalletOverviewCard({
           <Separator className="my-3" />
 
           <div className="grid gap-2">
-            <div className="text-xs text-white/70 font-medium">Top Holdings</div>
+            <div className="text-xs text-white/70 font-medium">Owned Trends</div>
             {topHoldings.length === 0 ? (
               <div className="text-xs text-white/60">
                 No holdings found. Explore trending tokens to get started.
@@ -218,10 +218,10 @@ export default function WalletOverviewCard({
                   const balanceLabel = getBalanceLabelSafe(it);
                   return (
                     <div key={idx} className="flex items-center justify-between text-sm">
-                      <div className="truncate text-white/80" title={label}>
-                        {label}
+                      <div className="truncate font-semibold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent" title={label}>
+                        #{(label || '').toString()}
                       </div>
-                      <div className="text-white font-mono">
+                      <div className="font-mono bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                         {balanceLabel}
                       </div>
                     </div>

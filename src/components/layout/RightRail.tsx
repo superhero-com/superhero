@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Backend, TrendminerApi } from "../../api/backend";
 import { useAccountBalances } from "../../hooks/useAccountBalances";
+import WalletOverviewCard from "@/components/wallet/WalletOverviewCard";
 import { useAeSdk } from "../../hooks/useAeSdk";
 import { useToast } from "../ToastProvider";
 import Sparkline from "../Trendminer/Sparkline";
@@ -670,80 +671,7 @@ export default function RightRail({
     <div className="grid gap-4 h-fit min-w-0 scrollbar-thin scrollbar-track-white/[0.02] scrollbar-thumb-gradient-to-r scrollbar-thumb-from-pink-500/60 scrollbar-thumb-via-[rgba(0,255,157,0.6)] scrollbar-thumb-to-pink-500/60 scrollbar-thumb-rounded-[10px] scrollbar-thumb-border scrollbar-thumb-border-white/10 hover:scrollbar-thumb-from-pink-500/80 hover:scrollbar-thumb-via-[rgba(0,255,157,0.8)] hover:scrollbar-thumb-to-pink-500/80">
       {/* Network & Wallet Overview */}
       <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-4 shadow-[var(--glass-shadow)] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_12px_32px_rgba(255,107,107,0.2)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-[var(--border-gradient)] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
-        <div className="grid gap-2">
-          {activeAccount ? (
-            <div className="py-1">
-              <div className="flex items-center justify-between mb-1">
-                <div className="text-[13px] text-[var(--light-font-color)] uppercase tracking-wide">
-                  Your Wallet Balance
-                </div>
-                {accountId && (
-                  <div className="flex gap-1">
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/users/${accountId}`)}
-                      className="bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[10px] cursor-pointer transition-all duration-200 hover:bg-white/10 text-[var(--light-font-color)]"
-                    >
-                      VIEW PROFILE
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div className="text-2xl font-extrabold text-[var(--standard-font-color)]">
-                {Number(balanceAe || 0).toLocaleString(undefined, {
-                  maximumFractionDigits: 6,
-                })}{" "}
-                AE
-              </div>
-              {prices?.[selectedCurrency] != null && (
-                <div className="text-[11px] text-[var(--light-font-color)] mt-1">
-                  ≈{" "}
-                  {formatPrice(
-                    Number(balanceAe || 0) * Number(prices[selectedCurrency]),
-                    selectedCurrency
-                  )}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="py-1">
-              <div className="text-[13px] text-[var(--light-font-color)] uppercase tracking-wide mb-1">
-                AE Price
-              </div>
-              <div className="text-2xl font-extrabold text-[var(--standard-font-color)]">
-                {prices?.[selectedCurrency]
-                  ? formatPrice(prices[selectedCurrency], selectedCurrency)
-                  : "-"}
-              </div>
-            </div>
-          )}
-
-          <div className="flex justify-between items-center py-2 border-t border-white/5">
-            <span className="text-[11px] text-[var(--light-font-color)] uppercase tracking-wide">
-              Node Connection
-            </span>
-            <span
-              className={`text-[12px] font-semibold ${
-                isOnline
-                  ? "text-[var(--neon-green)]"
-                  : "text-[var(--neon-pink)]"
-              }`}
-            >
-              {isOnline ? "🟢 Connected" : "🔴 Offline"}
-            </span>
-          </div>
-
-          {currentBlockHeight != null && (
-            <div className="flex justify-between items-center py-2">
-              <span className="text-[11px] text-[var(--light-font-color)] uppercase tracking-wide">
-                Block
-              </span>
-              <span className="text-[11px] text-[var(--standard-font-color)] font-semibold">
-                #{Number(currentBlockHeight).toLocaleString()}
-              </span>
-            </div>
-          )}
-        </div>
+        <WalletOverviewCard selectedCurrency={selectedCurrency} prices={prices} />
       </div>
 
       {/* Enhanced Price Section (hidden by default via hidePriceSection) */}

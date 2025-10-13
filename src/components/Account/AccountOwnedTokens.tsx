@@ -82,11 +82,13 @@ export default function AccountOwnedTokens({
                         href={tokenHref}
                         className="token-name text-md font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent hover:underline truncate"
                       >
-                        {tokenName}
+                        <span className="text-white/60 text-[.85em] mr-0.5 align-baseline">#</span>
+                        <span>{tokenName}</span>
                       </a>
                     ) : (
                       <div className="token-name text-md font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent truncate">
-                        {tokenName}
+                        <span className="text-white/60 text-[.85em] mr-0.5 align-baseline">#</span>
+                        <span>{tokenName}</span>
                       </div>
                     )}
                   </div>

@@ -156,7 +156,7 @@ export default function WalletOverviewCard({
             overlaySize={18}
             showBalance={false}
             showAddressAndChainName={false}
-            showPrimaryOnly={true}
+            showPrimaryOnly={false}
             hideFallbackName={true}
             contentClassName="px-0 pb-0"
           />

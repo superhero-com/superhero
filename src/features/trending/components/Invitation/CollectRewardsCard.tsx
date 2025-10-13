@@ -58,6 +58,7 @@ export default function CollectRewardsCard({
   // Calculate unique invitees
   const calculateUniqueInvitees = useCallback(async () => {
     if (!activeAccount || !sdk) return;
+    let _numberOfUniqueInvitees = 0;
 
     try {
       const affiliationTreasury = await getAffiliationTreasury(sdk as any);
@@ -65,20 +66,14 @@ export default function CollectRewardsCard({
         activeAccount
       );
 
-      if ("ThresholdReached" in inviteeData) {
-        setNumberOfUniqueInvitees(MIN_INVITEES);
-      } else if (inviteeData.WaitingForInvitations?.[0]) {
-        setNumberOfUniqueInvitees(inviteeData.WaitingForInvitations[0].length);
-      } else {
-        setNumberOfUniqueInvitees(0);
-      }
+      _numberOfUniqueInvitees =
+        'ThresholdReached' in inviteeData
+          ? MIN_INVITEES
+          : inviteeData.WaitingForInvitations[0].length || inviteeData.WaitingForInvitations[1].size;
     } catch (error: any) {
-      setNumberOfUniqueInvitees(0);
-      // Only log if it's not the expected "Key does not exist" error
-      if (!error?.message?.includes("Maps: Key does not exist")) {
-        console.error("Failed to calculate unique invitees:", error);
-      }
+      //
     }
+    setNumberOfUniqueInvitees(_numberOfUniqueInvitees);
   }, [activeAccount, sdk]);
 
   // Collect rewards
@@ -194,11 +189,10 @@ export default function CollectRewardsCard({
             <button
               onClick={onCollectReward}
               disabled={collectingReward || !isEligibleForRewards}
-              className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold uppercase tracking-wider break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${
-                isEligibleForRewards
+              className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold uppercase tracking-wider break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${isEligibleForRewards
                   ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-pink-500/40"
                   : "opacity-50 cursor-not-allowed bg-gray-600 transform-none"
-              }`}
+                }`}
             >
               {collectingReward ? (
                 <div className="flex items-center justify-center gap-3">

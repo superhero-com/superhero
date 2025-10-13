@@ -62,7 +62,10 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
       </div>
 
       <div className="relative flex flex-col gap-2 md:gap-3">
-        <h2 className="text-lg sm:text-xl md:text-2xl font-semibold tracking-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]">
+        <h2
+          className="text-lg sm:text-xl md:text-2xl font-semibold tracking-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)] text-white"
+          style={{ WebkitTextFillColor: 'white', background: 'none' }}
+        >
           Superhero — the all‑in‑one social + crypto app
         </h2>
         <p className="text-sm md:text-base leading-snug text-white/95 max-w-3xl">

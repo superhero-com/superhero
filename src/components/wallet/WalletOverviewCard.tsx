@@ -200,7 +200,22 @@ export default function WalletOverviewCard({
       {open && (
         <div className="rounded-xl border border-white/10 bg-white/5 p-3">
           <div className="flex flex-wrap items-center gap-2">
-            <CopyText value={activeAccount} className="flex-1 min-w-[220px]" />
+            <button
+              type="button"
+              className="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 bg-white/10 text-white hover:bg-white/20 border border-white/20"
+              onClick={async () => {
+                try { await navigator.clipboard.writeText(activeAccount); } catch {}
+              }}
+            >
+              📋 Copy address
+            </button>
+            <button
+              type="button"
+              className="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 bg-white/10 text-white hover:bg-white/20 border border-white/20"
+              onClick={() => window.open(`https://www.aescan.io/account/${activeAccount}`, '_blank')}
+            >
+              🔗 Open on aeScan
+            </button>
           </div>
 
           <Separator className="my-3" />

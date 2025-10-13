@@ -1,11 +1,34 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { cn } from "../lib/utils";
+import { Link } from "react-router-dom";
 
 type WelcomeBannerProps = {
   className?: string;
 };
 
+const DISMISS_KEY = "welcome_banner_dismissed_until";
+
 export default function WelcomeBanner({ className }: WelcomeBannerProps) {
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    try {
+      const until = localStorage.getItem(DISMISS_KEY);
+      if (!until) return;
+      const ts = Date.parse(until);
+      if (!Number.isNaN(ts) && ts > Date.now()) setHidden(true);
+    } catch {}
+  }, []);
+
+  const handleDismiss = () => {
+    try {
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      localStorage.setItem(DISMISS_KEY, expiresAt.toISOString());
+    } catch {}
+    setHidden(true);
+  };
+
+  if (hidden) return null;
   return (
     <div
       className={cn(
@@ -19,6 +42,20 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
       style={{ minHeight: 112 }}
       aria-label="Welcome to Superhero"
     >
+      <button
+        type="button"
+        onClick={handleDismiss}
+        aria-label="Dismiss welcome banner"
+        className={cn(
+          "absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center",
+          "rounded-full bg-white/15 text-white/90 hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/60"
+        )}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
       <div className="pointer-events-none absolute inset-0 opacity-30">
         <div className="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-white blur-3xl" />
         <div className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full bg-fuchsia-300 blur-3xl" />
@@ -32,12 +69,18 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
           Posts are timestamped forever on the aeternity blockchain. Discover and invest in trending community tokens, and help govern them on‑chain.
         </p>
         <div className="mt-2 flex items-center gap-2">
-          <span className="inline-flex select-none items-center rounded-lg bg-white/15 px-3 py-2 text-sm font-medium backdrop-blur-md">
+          <Link
+            to="/trending/tokens"
+            className="inline-flex items-center rounded-lg bg-white/20 px-3 py-2 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/60"
+          >
             Explore Trends
-          </span>
-          <span className="inline-flex select-none items-center rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium">
+          </Link>
+          <Link
+            to="/faq"
+            className="inline-flex items-center rounded-lg border border-white/35 bg-white/10 px-3 py-2 text-sm font-medium text-white/95 transition hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/50"
+          >
             Learn more
-          </span>
+          </Link>
         </div>
       </div>
     </div>

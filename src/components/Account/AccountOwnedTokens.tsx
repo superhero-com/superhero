@@ -1,3 +1,4 @@
+import { PriceDto } from "@/api/generated/models/PriceDto";
 import { AccountTokensService } from "@/api/generated/services/AccountTokensService";
 import {
   DataTable,
@@ -27,6 +28,15 @@ export default function AccountOwnedTokens({
     })) as unknown as Promise<{ items: any[]; meta?: any }>;
     return response as unknown as DataTableResponse<any>;
   };
+
+  function calculateTotalValue(balance: string, price: PriceDto): PriceDto {
+    const balanceInDecimal = Decimal.from(balance);
+    return Object.entries(price).reduce((acc, [key, value]) => {
+      acc[key as keyof PriceDto] = Number(Decimal.from(value).mul(balanceInDecimal).toString());
+      return acc;
+    }, {} as PriceDto);
+  }
+  
 
   return (
     <div className="mt-4 space-y-4">
@@ -109,16 +119,15 @@ export default function AccountOwnedTokens({
                   </div>
 
                   <div className="flex items-center">
-                    {balanceData ? (
+                   
                       <div className="bg-gradient-to-r text-sm from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                         <PriceDataFormatter
+                          bignumber
                           watchPrice={false}
-                          priceData={balanceData}
+                          priceData={calculateTotalValue(balance, priceData)}
                         />
                       </div>
-                    ) : (
-                      <span className="text-white/60">-</span>
-                    )}
+                   
                   </div>
                 </div>
               );

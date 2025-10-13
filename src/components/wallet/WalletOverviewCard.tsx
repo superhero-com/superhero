@@ -187,6 +187,8 @@ export default function WalletOverviewCard({
                   : "text-[var(--neon-pink)]"
               }`}
               title={isOnline ? "Connected" : "Offline"}
+              role="status"
+              aria-live="polite"
             >
               {isOnline ? "●" : "○"}
             </span>

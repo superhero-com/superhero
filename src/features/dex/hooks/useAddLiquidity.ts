@@ -120,8 +120,24 @@ export function useAddLiquidity() {
 
       const rA = new BigNumber(fromAettos(info.reserveA, state.decA));
       const rB = new BigNumber(fromAettos(info.reserveB, state.decB));
-      const ratioAinB = rB.isZero() ? '-' : rA.div(rB).toFixed(8);
-      const ratioBinA = rA.isZero() ? '-' : rB.div(rA).toFixed(8);
+
+      // Compute ratios using raw reserves with decimal scaling to avoid precision loss
+      const reserveARaw = new BigNumber(info.reserveA.toString());
+      const reserveBRaw = new BigNumber(info.reserveB.toString());
+
+      let ratioAinB = '-'; // 1 B = ? A
+      let ratioBinA = '-'; // 1 A = ? B
+
+      if (!reserveARaw.isZero() && !reserveBRaw.isZero()) {
+        const powA = new BigNumber(10).pow(state.decA);
+        const powB = new BigNumber(10).pow(state.decB);
+        // ratioBinA = (reserveB / 10^decB) / (reserveA / 10^decA) = reserveB*10^decA / (reserveA*10^decB)
+        const ratioBperA = reserveBRaw.multipliedBy(powA).dividedBy(reserveARaw.multipliedBy(powB));
+        const ratioAperB = reserveARaw.multipliedBy(powB).dividedBy(reserveBRaw.multipliedBy(powA));
+        // Use higher precision to avoid rounding to zero for tiny ratios
+        ratioBinA = ratioBperA.toFixed(18).replace(/\.0+$/, '');
+        ratioAinB = ratioAperB.toFixed(18).replace(/\.0+$/, '');
+      }
 
       let sharePct = '0.00000000';
       let lpMintEstimate: string | undefined;

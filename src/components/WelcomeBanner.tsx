@@ -71,7 +71,7 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
         <div className="mt-2 flex items-center gap-2">
           <Link
             to="/trending/tokens"
-            className="inline-flex items-center rounded-lg bg-white/20 px-3 py-2 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/60"
+            className="inline-flex items-center rounded-lg bg-white text-violet-700 px-3 py-2 text-sm font-semibold shadow-sm transition hover:bg-white/95 focus:outline-none focus:ring-2 focus:ring-violet-400"
           >
             Explore Trends
           </Link>

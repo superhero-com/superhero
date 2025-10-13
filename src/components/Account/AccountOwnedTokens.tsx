@@ -77,17 +77,17 @@ export default function AccountOwnedTokens({
                   className="owned-token-row grid grid-cols-1 md:grid-cols-4 gap-4 px-6 py-4 rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
                 >
                   <div className="flex items-center min-w-0">
-                    <span className="text-white/60 text-[.85em] mr-0.5 align-baseline">#</span>
+                    <span className="text-white/60 text-[.85em] mr-0.5 align-baseline font-semibold">#</span>
                     {tokenHref ? (
                       <a
                         href={tokenHref}
                         className="token-name text-md font-bold hover:underline truncate"
                       >
-                        <span className="bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent">{tokenName}</span>
+                        <span className="bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent font-bold">{tokenName}</span>
                       </a>
                     ) : (
                       <div className="token-name text-md font-bold truncate">
-                        <span className="bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent">{tokenName}</span>
+                        <span className="bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent font-bold">{tokenName}</span>
                       </div>
                     )}
                   </div>

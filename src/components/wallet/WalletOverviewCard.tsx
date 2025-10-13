@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import { AeButton } from "@/components/ui/ae-button";
 import { Separator } from "@/components/ui/separator";
 import CopyText from "@/components/ui/CopyText";
 
@@ -206,14 +205,6 @@ export default function WalletOverviewCard({
         <div className="rounded-xl border border-white/10 bg-white/5 p-3">
           <div className="flex flex-wrap items-center gap-2">
             <CopyText value={activeAccount} className="flex-1 min-w-[220px]" />
-            <AeButton
-              onClick={() => navigate(`/users/${activeAccount}`)}
-              variant="ghost"
-              size="sm"
-              className="h-8 px-3"
-            >
-              View Profile
-            </AeButton>
           </div>
 
           <Separator className="my-3" />

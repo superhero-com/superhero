@@ -33,8 +33,8 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
     <div
       className={cn(
         "relative w-full overflow-hidden rounded-2xl p-4 sm:p-6 md:p-7",
-        "bg-gradient-to-br from-indigo-800 via-violet-800 to-fuchsia-800",
-        "text-white shadow-[0_10px_30px_rgba(0,0,0,0.35)]",
+        "bg-gradient-to-br from-indigo-900 via-violet-900 to-fuchsia-900",
+        "text-white shadow-[0_10px_30px_rgba(0,0,0,0.4)]",
         "border border-white/10",
         "transition-all duration-300 ease-out",
         className
@@ -43,7 +43,7 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
       aria-label="Welcome to Superhero"
     >
       {/* global darkening overlay */}
-      <div className="pointer-events-none absolute inset-0 bg-black/20" />
+      <div className="pointer-events-none absolute inset-0 bg-black/35" />
 
       <button
         type="button"
@@ -59,7 +59,7 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
       </button>
-      <div className="pointer-events-none absolute inset-0 opacity-20">
+      <div className="pointer-events-none absolute inset-0 opacity-10">
         <div className="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-white blur-3xl" />
         <div className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full bg-fuchsia-300 blur-3xl" />
       </div>

@@ -237,6 +237,15 @@ a.no-gradient-text::after {
 .banner-cta:hover { transform: translateY(-2px) scale(1.015); box-shadow: 0 10px 24px rgba(0,0,0,0.25); }
 .banner-cta:active { transform: translateY(0) scale(0.995); }
 
+/* Force 'Learn more' to white text, disable gradient on anchor while keeping bg-color */
+.banner-learn-btn {
+  color: rgba(255,255,255,0.8) !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.8) !important;
+  background-image: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+}
+
 img, video { max-width: 100%; height: auto; display: block; }
 
 /* Prevent content overflow */

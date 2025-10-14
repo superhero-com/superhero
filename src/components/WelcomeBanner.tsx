@@ -85,9 +85,9 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
           </Link>
           <Link
             to="/faq"
-            className="banner-cta inline-flex items-center rounded-lg border border-white/35 bg-white/10 px-3 py-2 text-sm font-medium transition hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/50"
+            className="banner-cta banner-learn-btn inline-flex items-center rounded-lg border border-white/35 bg-white/10 px-3 py-2 text-sm font-medium transition hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/50"
           >
-            <span className="no-gradient-text" style={{ color: 'rgba(255,255,255,0.8)' }}>Learn more</span>
+            <span className="no-gradient-text">Learn more</span>
           </Link>
         </div>
       </div>

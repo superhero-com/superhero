@@ -79,15 +79,15 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
         <div className="mt-2 flex items-center gap-2">
           <Link
             to="/trending/tokens"
-            className="no-gradient-text banner-cta inline-flex items-center rounded-lg px-3 py-2 text-sm font-semibold shadow-sm transition hover:bg-white/95 focus:outline-none focus:ring-2 focus:ring-violet-400 banner-explore-btn"
+            className="banner-cta inline-flex items-center rounded-lg px-3 py-2 text-sm font-semibold shadow-sm transition hover:bg-white/95 focus:outline-none focus:ring-2 focus:ring-violet-400 banner-explore-btn"
           >
-            <span>Explore Trends</span>
+            <span className="no-gradient-text">Explore Trends</span>
           </Link>
           <Link
             to="/faq"
-            className="no-gradient-text banner-cta inline-flex items-center rounded-lg border border-white/35 bg-white/10 px-3 py-2 text-sm font-medium text-white/80 transition hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/50"
+            className="banner-cta inline-flex items-center rounded-lg border border-white/35 bg-white/10 px-3 py-2 text-sm font-medium text-white/80 transition hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/50"
           >
-            Learn more
+            <span className="no-gradient-text">Learn more</span>
           </Link>
         </div>
       </div>

@@ -228,6 +228,7 @@ a.no-gradient-text::after {
   -webkit-text-fill-color: #6d28d9 !important;
   -webkit-background-clip: initial !important;
   background-clip: initial !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
 }
 
 /* Banner CTA shared hover: gentle nudge up, subtle scale, no underline bar */

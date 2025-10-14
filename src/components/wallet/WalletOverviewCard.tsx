@@ -262,10 +262,11 @@ export default function WalletOverviewCard({
 }
 
 function formatPrice(value: number, currency: string): string {
-  const formatter = new Intl.NumberFormat(undefined, {
+  const formatter = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: currency.toUpperCase(),
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6,
   });
   try {
     return formatter.format(value);

@@ -57,6 +57,14 @@ const TokenDetail = lazy(() => import("./views/TokenDetail"));
 const PoolDetail = lazy(() => import("./views/PoolDetail"));
 const AddTokens = lazy(() => import("./views/AddTokens"));
 
+// Graffiti
+const GraffitiHome = lazy(() => import("./features/graffiti/views/GraffitiHome"));
+const GraffitiContribute = lazy(() => import("./features/graffiti/views/GraffitiContribute"));
+const GraffitiOverview = lazy(() => import("./features/graffiti/views/GraffitiOverview"));
+const GraffitiPositioning = lazy(() => import("./features/graffiti/views/GraffitiPositioning"));
+const GraffitiConfirm = lazy(() => import("./features/graffiti/views/GraffitiConfirm"));
+const GraffitiInfo = lazy(() => import("./features/graffiti/views/GraffitiInfo"));
+
 export const routes: RouteObject[] = [
   {
     path: "/",
@@ -83,6 +91,13 @@ export const routes: RouteObject[] = [
   { path: "/trending/accounts", element: <TrendAccounts /> },
   { path: "/trending/accounts/:address", element: <TrendAccountDetails /> },
   { path: "/trending/create", element: <TrendCreate /> },
+  // Graffiti
+  { path: "/graffiti", element: <GraffitiHome /> },
+  { path: "/graffiti/info", element: <GraffitiInfo /> },
+  { path: "/graffiti/contribute", element: <GraffitiContribute /> },
+  { path: "/graffiti/overview", element: <GraffitiOverview /> },
+  { path: "/graffiti/positioning", element: <GraffitiPositioning /> },
+  { path: "/graffiti/confirm", element: <GraffitiConfirm /> },
   // Kept for backward compatibility; redirecting into SocialLayout version
   { path: "/users/:address", element: <UserProfile /> },
   { path: "/landing", element: <Landing /> },

@@ -65,12 +65,12 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
         <div className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full bg-fuchsia-300 blur-3xl" />
       </div>
 
-      <div className="relative flex flex-col gap-2 md:gap-3">
+      <div className="relative flex flex-col gap-2 md:gap-3 pr-12 sm:pr-0">
         <h2
           className="flex items-center gap-2 text-lg sm:text-xl md:text-2xl font-semibold tracking-tight leading-[1.15] sm:leading-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)] text-white"
           style={{ WebkitTextFillColor: 'white', background: 'none' }}
         >
-          <IconDiamond className="w-6 h-6 md:w-7 md:h-7 text-white/90" aria-hidden="true" />
+          <IconDiamond className="w-6 h-6 md:w-7 md:h-7 text-white/90 shrink-0" aria-hidden="true" />
           <span>Superhero — the all‑in‑one social + crypto app</span>
         </h2>
         <p className="text-sm md:text-base leading-snug text-white/95 max-w-3xl">

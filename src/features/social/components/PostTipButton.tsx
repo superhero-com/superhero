@@ -1,10 +1,11 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { IconDiamond } from '../../../icons';
 import { useModal } from '../../../hooks/useModal';
 import { buildTipPostPayload } from '../utils/tips';
 import { useAtom } from 'jotai';
 import { tipStatusAtom, makeTipKey } from '../../../atoms/tipAtoms';
 import { Check } from 'lucide-react';
+import { usePostTipSummary } from '../hooks/usePostTipSummary';
 
 export default function PostTipButton({ toAddress, postId }: { toAddress: string; postId: string }) {
   const { openModal } = useModal();
@@ -13,6 +14,21 @@ export default function PostTipButton({ toAddress, postId }: { toAddress: string
   const state = tipStatus[key]?.status;
   const isPending = state === 'pending';
   const isSuccess = state === 'success';
+
+  const { data: summary } = usePostTipSummary(postId);
+  const totalAe = useMemo(() => {
+    if (!summary || summary.totalTips == null) return 0;
+    const n = Number(summary.totalTips);
+    return Number.isFinite(n) ? n : 0;
+  }, [summary]);
+
+  const formatted = useMemo(() => {
+    if (totalAe <= 0) return '';
+    const v = totalAe;
+    // Compact formatting up to 2 decimals, trim trailing zeros
+    const s = v >= 1000 ? Math.round(v).toString() : v.toFixed(v < 1 ? 3 : 2);
+    return s.replace(/\.0+$/,'').replace(/(\.\d*[1-9])0+$/, '$1');
+  }, [totalAe]);
 
   const handleTip = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -38,7 +54,7 @@ export default function PostTipButton({ toAddress, postId }: { toAddress: string
       )}
       {isSuccess && <Check className="w-[14px] h-[14px]" />}
       {!isPending && !isSuccess && <IconDiamond className="w-[14px] h-[14px]" />}
-      {isPending ? 'Sending' : isSuccess ? 'Tipped' : 'Tip'}
+      {isPending ? 'Sending' : isSuccess ? 'Tipped' : (formatted ? `${formatted} AE` : 'Tip')}
     </button>
   );
 }

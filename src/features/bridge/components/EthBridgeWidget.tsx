@@ -230,7 +230,7 @@ export default function BuyAeWidget({
 
       {/* From Input - ETH */}
       <div
-        className={`${sectionBase} ${sectionBg} ${sectionSpacingSmall} sm:pt-0`}
+        className={`${sectionBase} ${sectionBg} ${sectionSpacingSmall}`}
       >
         <div className="flex justify-between items-center mb-2 min-w-0">
           <label className="text-xs text-white/60 font-medium uppercase tracking-wider flex-shrink-0">

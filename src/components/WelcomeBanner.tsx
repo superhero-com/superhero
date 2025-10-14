@@ -33,8 +33,9 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
     <div
       className={cn(
         "relative w-full overflow-hidden rounded-2xl p-4 sm:p-6 md:p-7",
-        "bg-gradient-to-br from-indigo-900 via-violet-900 to-fuchsia-900",
-        "text-white shadow-[0_10px_30px_rgba(0,0,0,0.4)]",
+        "bg-gradient-to-br from-indigo-900/70 via-violet-900/60 to-fuchsia-900/60",
+        "backdrop-blur-md backdrop-saturate-150",
+        "text-white shadow-[0_10px_30px_rgba(0,0,0,0.35)]",
         "border border-white/10",
         "transition-all duration-300 ease-out",
         className
@@ -42,8 +43,7 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
       style={{ minHeight: 112 }}
       aria-label="Welcome to Superhero"
     >
-      {/* global darkening overlay */}
-      <div className="pointer-events-none absolute inset-0 bg-black/35" />
+      {/* translucent gradient blends with page background; no black overlay */}
 
       <button
         type="button"

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import AeButton from '../components/AeButton';
-import RightRail from '../components/layout/RightRail';
 import Shell from '../components/layout/Shell';
 
 import GovernanceAccount from '@/components/governance/GovernanceAccount';
@@ -29,7 +28,7 @@ export default function Governance() {
   }, [pollId, location.pathname]);
 
   return (
-    <Shell right={<RightRail />}> 
+    <Shell> 
       {/* Enhanced Tab Navigation */}
       <div className="flex gap-2 mb-5 p-2 overflow-x-auto scrollbar-none -ms-overflow-style-none webkit-scrollbar-none scroll-smooth webkit-overflow-scrolling-touch">
         <AeButton 

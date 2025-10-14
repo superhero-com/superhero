@@ -221,6 +221,15 @@ a.no-gradient-text::after {
   display: none;
 }
 
+/* Specific override for white-with-purple CTA on banner */
+.banner-explore-btn {
+  background: #ffffff !important;
+  color: #6d28d9 !important; /* violet-700 */
+  -webkit-text-fill-color: #6d28d9 !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+}
+
 img, video { max-width: 100%; height: auto; display: block; }
 
 /* Prevent content overflow */

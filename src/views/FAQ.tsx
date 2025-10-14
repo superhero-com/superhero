@@ -156,7 +156,7 @@ export default function FAQ() {
         </div>
       </div>
 
-      <div className="grid grid-cols-[260px_1fr] gap-4 lg:grid-cols-1">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr]">
         <Card>
           <div className="font-extrabold mb-2">On this page</div>
           <div className="grid gap-1.5">

@@ -26,6 +26,7 @@ export const configs: IAppConfigs = {
       compilerUrl: "https://v7.compiler.aepps.com",
       superheroBackendUrl:
         "https://superhero-backend-mainnet.prd.service.aepps.com",
+      graffitiContract: "",
       disabled: true,
     },
     ae_uat: {
@@ -39,6 +40,7 @@ export const configs: IAppConfigs = {
       compilerUrl: "https://v7.compiler.aepps.com",
       superheroBackendUrl:
         "https://superhero-backend-testnet.prd.service.aepps.com",
+      graffitiContract: "ct_N4ijuS5Nwg1txyqqkgUBruJgCXrT8G7ZRKWi9N5KjGUhTS3cE",
     },
   },
 //   languages: ["en"],
@@ -46,6 +48,7 @@ export const configs: IAppConfigs = {
 
   features: {
     trending: true,
+    graffiti: true,
   }
 };
 

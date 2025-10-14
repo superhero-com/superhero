@@ -16,6 +16,7 @@ export default function GraffitiHome() {
           <div className="flex gap-3">
             <AeButton onClick={() => navigate('/graffiti/contribute')}>Get Started</AeButton>
             <AeButton variant="secondary" onClick={() => navigate('/graffiti/overview')}>Overview</AeButton>
+            <AeButton variant="ghost" onClick={() => navigate('/graffiti/info')}>What is this?</AeButton>
           </div>
         </div>
       </MobileCard>

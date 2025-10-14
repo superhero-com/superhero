@@ -196,7 +196,28 @@ export default function PostForm({
           });
         } catch {}
       } else if (postId) {
-        // Invalidate the post comments query for replies
+        // For replies: optimistically show the new reply immediately
+        try {
+          const newReply = await PostsService.getById({ id: `${String(decodedResult).replace(/_v3$/,'')}_v3` });
+          // Update infinite replies list if present
+          queryClient.setQueryData(["post-comments", postId, "infinite"], (old: any) => {
+            if (!old) {
+              return {
+                pageParams: [1],
+                pages: [ { items: [newReply], meta: { currentPage: 1, totalPages: 1 } } ],
+              };
+            }
+            const firstPage = old.pages?.[0] || { items: [], meta: old.pages?.[0]?.meta };
+            const nextFirst = { ...firstPage, items: [newReply, ...(firstPage.items || [])] };
+            return { ...old, pages: [nextFirst, ...old.pages.slice(1)] };
+          });
+          // Update non-infinite comments list if present
+          queryClient.setQueryData(["post-comments", postId], (old: any) => {
+            if (!Array.isArray(old)) return [newReply];
+            return [newReply, ...old];
+          });
+        } catch {}
+        // Also trigger a refetch in the background to pick up any server-side changes
         queryClient.refetchQueries({ queryKey: ["post-comments", postId] });
         onCommentAdded?.();
       }

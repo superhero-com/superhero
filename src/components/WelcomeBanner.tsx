@@ -74,7 +74,9 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
           <span>Superhero — the all‑in‑one social + crypto app</span>
         </h2>
         <p className="text-sm md:text-base leading-snug text-white/95 max-w-3xl">
-          Posts are timestamped and stored on the æternity blockchain forever. Tokenize trends. Own the hype. Build communities.
+          Posts are timestamped and stored on the æternity blockchain forever.
+          <br className="hidden md:block" />
+          Tokenize trends. Own the hype. Build communities.
         </p>
         <div className="mt-2 flex items-center gap-2">
           <Link

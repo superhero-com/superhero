@@ -109,7 +109,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
 
   // Setup contract instance when token or SDK changes
   const { data: contractInstances } = useQuery({
-    queryKey: ['tokenTrade', 'contractSetup', token.sale_address, !!sdk],
+    queryKey: ['tokenTrade', 'contractSetup', token.sale_address, !!sdk, activeAccount],
     queryFn: async () => {
       if (!token.sale_address) return null;
       const currentSdk = sdk || staticAeSdk;

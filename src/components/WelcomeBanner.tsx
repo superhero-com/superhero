@@ -80,6 +80,7 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
           <Link
             to="/trending/tokens"
             className="no-gradient-text inline-flex items-center rounded-lg bg-white text-violet-700 px-3 py-2 text-sm font-semibold shadow-sm transition hover:bg-white/95 focus:outline-none focus:ring-2 focus:ring-violet-400"
+            style={{ color: '#6d28d9' }}
           >
             Explore Trends
           </Link>

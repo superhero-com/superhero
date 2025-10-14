@@ -138,6 +138,7 @@ export default function GovernanceCreate() {
         omitUnknown: true,
         ttl: undefined,
       });
+      const createdAddress = (init as any).address as string;
 
       // Add to registry
       const registry = await Contract.initialize<{
@@ -147,12 +148,12 @@ export default function GovernanceCreate() {
         aci: REGISTRY_WITH_EVENTS_ACI as any,
         address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
       });
-      await registry.add_poll(init.address as Encoded.ContractAddress, isListed, {
+      await registry.add_poll(createdAddress as Encoded.ContractAddress, isListed, {
         ttl: undefined,
       });
 
       // Navigate to created poll (use on-chain id to resolve from backend list or use contract address route)
-      navigate(`/voting/p/${init.address}`);
+      navigate(`/voting/p/${createdAddress}`);
     } catch (e) {
       console.error(e);
       setErrors((prev) => ({ ...prev, title: 'Could not create your poll. Please try again.' }));
@@ -162,7 +163,7 @@ export default function GovernanceCreate() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900/50 via-slate-800/30 to-slate-900/50">
+    <div className="min-h-screen">
       <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-3xl mx-auto">
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl blur-xl"></div>
@@ -183,8 +184,8 @@ export default function GovernanceCreate() {
           </MobileCard>
         )}
 
-        <MobileInput label="Title" value={title} onChange={(e) => setTitle(e.target.value)} error={Boolean(errors.title)} />
-        <MobileInput label="Description" value={description} onChange={(e) => setDescription(e.target.value)} error={Boolean(errors.description)} />
+        <MobileInput label="Title" value={title} onChange={(e) => setTitle(e.target.value)} error={errors.title || undefined} />
+        <MobileInput label="Description" value={description} onChange={(e) => setDescription(e.target.value)} error={errors.description || undefined} />
 
         {showForumHint && (
           <MobileCard variant="outlined" padding="small" className="bg-white/5 border-white/10 text-slate-200">
@@ -192,7 +193,7 @@ export default function GovernanceCreate() {
           </MobileCard>
         )}
 
-        <MobileInput label="Link" value={link} onChange={(e) => setLink(e.target.value)} onBlur={handleLinkBlur} error={Boolean(errors.link)} />
+        <MobileInput label="Link" value={link} onChange={(e) => setLink(e.target.value)} onBlur={handleLinkBlur} error={errors.link || undefined} />
 
         <div className="flex gap-2">
           <AeButton onClick={() => setIsListed(true)} className={isListed ? 'bg-pink-600 text-white' : 'bg-white/10'}>Publicly Listed</AeButton>
@@ -203,7 +204,7 @@ export default function GovernanceCreate() {
           {options.map((opt, idx) => (
             <div key={idx} className="flex items-center gap-2">
               <MobileInput label={idx === 0 ? 'Options' : undefined} placeholder="Add Option"
-                value={opt} onChange={(e) => addOptionRow(idx, e.target.value)} error={Boolean(errors.options)} />
+                value={opt} onChange={(e) => addOptionRow(idx, e.target.value)} error={errors.options || undefined} />
               {opt && (
                 <AeButton onClick={() => removeOption(idx)} className="bg-white/10">✕</AeButton>
               )}
@@ -212,7 +213,7 @@ export default function GovernanceCreate() {
         </div>
 
         <div>
-          <MobileInput label="Close at height" type="number" value={closeHeight} onChange={(e) => setCloseHeight(e.target.value)} error={Boolean(errors.closeHeight)} />
+          <MobileInput label="Close at height" type="number" value={closeHeight} onChange={(e) => setCloseHeight(e.target.value)} error={errors.closeHeight || undefined} />
           <div className="mt-4 grid grid-cols-2 gap-2">
             <MobileInput label="Est. close date" type="date" value={dateString} onChange={(e) => setDateString(e.target.value)} onBlur={updateCloseHeightFromDate} />
             <MobileInput label="Est. close time" type="time" value={timeString} onChange={(e) => setTimeString(e.target.value)} onBlur={updateCloseHeightFromDate} />

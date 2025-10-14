@@ -57,7 +57,7 @@ export default function GovernanceVote({
     return Math.round((votes / total) * 100);
   };
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900/50 via-slate-800/30 to-slate-900/50">
+    <div className="min-h-screen">
       <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
         {/* Enhanced Header */}
         <div className="relative mb-8">

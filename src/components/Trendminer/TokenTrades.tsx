@@ -6,6 +6,7 @@ import AddressChip from "../AddressChip";
 import PriceDataFormatter from "@/features/shared/components/PriceDataFormatter";
 import { formatLongDate } from "@/utils/common";
 import { TX_FUNCTIONS } from "@/utils/constants";
+import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 
 // Pagination response interface
 interface PaginatedTransactionsResponse {
@@ -208,7 +209,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
       {/* Data Table */}
       <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
         {/* Table Header */}
-        <div className="hidden md:grid grid-cols-7 gap-4 px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide">
+        <div className="hidden lg:grid gap-4 px-2 xl:px-6 py-4 border-b border-white/10 text-xs font-semibold text-white/60 uppercase tracking-wide lg:[grid-template-columns:1fr_60px_37px_60px_60px_35px_80px] xl:[grid-template-columns:2fr_80px_0.5fr_100px_100px_100px_150px]">
           {headers.map((header) => (
             <div key={header.key} className="truncate">
               {header.title}
@@ -224,18 +225,15 @@ export default function TokenTrades({ token }: TokenTradesProps) {
             return (
               <div
                 key={transaction.id}
-                className="grid grid-cols-1 md:grid-cols-7 gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors"
+                className="grid grid-cols-1 lg:[grid-template-columns:1fr_60px_37px_60px_60px_35px_80px] xl:[grid-template-columns:2fr_80px_0.5fr_100px_100px_100px_150px] gap-4 px-2 xl:px-6 py-4 hover:bg-white/[0.02] transition-colors"
               >
                 {/* Account */}
                 {transaction.address ? (
                   <div className="flex items-center">
-                    <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                    <div className="lg:hidden text-xs text-white/60 mr-2 min-w-[60px]">
                       Account:
                     </div>
-                    <AddressChip
-                      address={transaction.address}
-                      linkToProfile={true}
-                    />
+                    <AddressAvatarWithChainName address={transaction.address} />
                   </div>
                 ) : (
                   <div></div>
@@ -243,7 +241,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
 
                 {/* Type */}
                 {transaction.tx_type ? <div className="flex items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                  <div className="lg:hidden text-xs text-white/60 mr-2 min-w-[60px]">
                     Type:
                   </div>
                   <div
@@ -255,54 +253,56 @@ export default function TokenTrades({ token }: TokenTradesProps) {
 
                 {/* Volume */}
                 <div className="flex items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                  <div className="lg:hidden text-xs text-white/60 mr-2 min-w-[60px]">
                     Volume:
                   </div>
-                  <div className="text-white font-medium">
+                  <div className="text-white text-xs font-medium">
                     {formatVolume(transaction.volume)}
                   </div>
                 </div>
 
                 {/* Unit Price */}
                 <div className="flex items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                  <div className="lg:hidden text-xs text-white/60 mr-2 min-w-[60px]">
                     Unit Price:
                   </div>
                   <PriceDataFormatter
                     watchPrice={false}
                     priceData={transaction.unit_price}
+                    className="text-xs"
                   />
                 </div>
 
                 {/* Total Price */}
                 <div className="flex items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                  <div className="lg:hidden text-xs text-white/60 mr-2 min-w-[60px]">
                     Total:
                   </div>
                   <PriceDataFormatter
                     watchPrice={false}
                     priceData={transaction.amount}
+                    className="text-xs"
                   />
                 </div>
 
                 {/* Date */}
                 <div className="flex items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                  <div className="lg:hidden text-xs text-white/60 mr-2 min-w-[60px]">
                     Date:
                   </div>
-                  <div className="text-white/70 text-sm">
+                  <div className="text-white/70 text-xs">
                     {formatLongDate(transaction.created_at)}
                   </div>
                 </div>
 
                 {/* Transaction Hash */}
                 <div className="flex items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
+                  <div className="lg:hidden text-xs text-white/60 mr-2 min-w-[60px]">
                     Tx:
                   </div>
                   <AddressChip
                     address={transaction.tx_hash}
-                    linkToProfile={false}
+                    linkToExplorer
                   />
                 </div>
               </div>
@@ -349,7 +349,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
       {totalPages > 1 && (
         <div className="space-y-4 pb-8">
           {/* Items per page selector */}
-          <div className="flex items-center flex-col md:flex-row justify-between text-sm text-white/60">
+          <div className="flex items-center flex-col lg:flex-row justify-between text-sm text-white/60">
             <div className="flex items-center gap-2">
               <span>Show:</span>
               <select

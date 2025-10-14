@@ -172,7 +172,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
                             )
                           : Decimal.ZERO
                       }
-                      className="text-white text-xs sm:text-base font-medium"
+                      className="text-white text-xs font-medium"
                     />
                   </div>
                 </div>

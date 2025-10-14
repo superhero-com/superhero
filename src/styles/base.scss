@@ -230,6 +230,12 @@ a.no-gradient-text::after {
   background-clip: initial !important;
 }
 
+/* Banner CTA shared hover: gentle nudge up, subtle scale, no underline bar */
+.banner-cta { position: relative; transform: translateY(0); transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, color 180ms ease; }
+.banner-cta::after { display: none !important; }
+.banner-cta:hover { transform: translateY(-2px) scale(1.015); box-shadow: 0 10px 24px rgba(0,0,0,0.25); }
+.banner-cta:active { transform: translateY(0) scale(0.995); }
+
 img, video { max-width: 100%; height: auto; display: block; }
 
 /* Prevent content overflow */

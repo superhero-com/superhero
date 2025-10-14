@@ -10,6 +10,7 @@ import { CONFIG } from "../../../config";
 import { useAccount } from "../../../hooks/useAccount";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { useQueryClient } from "@tanstack/react-query";
+import GiftSearch from "./GiftSearch";
 
 interface PostFormProps {
   // Common props
@@ -91,15 +92,12 @@ export default function PostForm({
 
   const [text, setText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [showEmoji, setShowEmoji] = useState(false);
   const [showGif, setShowGif] = useState(false);
-  const [gifInput, setGifInput] = useState("");
   const [promptIndex, setPromptIndex] = useState(0);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiBtnRef = useRef<HTMLButtonElement>(null);
   const gifBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -134,7 +132,7 @@ export default function PostForm({
       const popovers = document.querySelectorAll(".popover");
       for (const p of Array.from(popovers)) if (p.contains(target)) return;
       setShowEmoji(false);
-      setShowGif(false);
+      // setShowGif(false);
     }
     document.addEventListener("click", onDocClick);
     return () => document.removeEventListener("click", onDocClick);
@@ -184,10 +182,6 @@ export default function PostForm({
         trimmed,
         postMedia
       );
-      console.log(
-        `[PostForm] ${isPost ? "Post" : "Reply"} submitted`,
-        decodedResult
-      );
 
       if (isPost) {
         try {
@@ -224,7 +218,6 @@ export default function PostForm({
 
       // Reset after success
       setText("");
-      setMediaFiles([]);
       setMediaUrls([]);
       onSuccess?.();
     } finally {
@@ -232,41 +225,9 @@ export default function PostForm({
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length > 0) {
-      setMediaFiles((prev) => [...prev, ...files.slice(0, 4 - prev.length)]);
-      files.slice(0, 4 - mediaFiles.length).forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setMediaUrls((prev) => [...prev, e.target?.result as string]);
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-  };
-
-  const addGifFromUrl = () => {
-    const url = gifInput.trim();
-    if (!url) return;
-    setMediaUrls((prev) => [...prev, url]);
-    setGifInput("");
-    setShowGif(false);
-  };
-
   const removeMedia = (index: number) => {
-    setMediaFiles((prev) => prev.filter((_, i) => i !== index));
     setMediaUrls((prev) => prev.filter((_, i) => i !== index));
   };
-
-  const handleClose = () => {
-    setText("");
-    setMediaFiles([]);
-    setMediaUrls([]);
-    onClose?.();
-  };
-
-  const chainName = chainNames?.[activeAccount || ""];
 
   // Dynamic placeholder logic
   let currentPlaceholder: string;
@@ -368,35 +329,6 @@ export default function PostForm({
                     <span className="uppercase tracking-wide">GIF</span>
                   </button>
                 )}
-                {/* Mobile-only GIF popover anchored to button */}
-                {showGifInput && showGif && (
-                  <div className="md:hidden absolute top-0 left-2 bg-gray-900 border border-white/12 rounded-2xl p-3.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-30 min-w-[240px] max-w-[calc(100vw-2rem)] right-2">
-                    <div className="font-bold mb-2.5 text-white">Add a GIF</div>
-                    <input
-                      type="url"
-                      placeholder="Paste GIF/Video URL"
-                      value={gifInput}
-                      onChange={(e) => setGifInput(e.target.value)}
-                      className="w-full bg-white/8 border border-white/16 rounded-xl p-2.5 text-white text-sm"
-                    />
-                    <div className="mt-2.5 flex justify-end gap-2.5">
-                      <button
-                        type="button"
-                        className="bg-white/8 border border-white/16 text-white px-3 py-2 rounded-xl cursor-pointer transition-all duration-200 hover:bg-white/12"
-                        onClick={() => setShowGif(false)}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        className="bg-primary-400 text-black border border-primary-400 px-3 py-2 rounded-xl cursor-pointer transition-all duration-200"
-                        onClick={addGifFromUrl}
-                      >
-                        Add
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
               {characterLimit && (
                 <div className="absolute bottom-4 right-2 md:bottom-4 md:right-4 text-white/60 text-sm font-semibold pointer-events-none select-none">
@@ -463,33 +395,16 @@ export default function PostForm({
                       </div>
                     )}
 
-                    {showGifInput && showGif && (
-                      <div className="absolute bottom-[110%] left-0 bg-gray-900 border border-white/12 rounded-2xl p-3.5 shadow-[0_16px_30px_rgba(0,0,0,0.4)] z-10 min-w-[240px] md:fixed md:bottom-5 md:left-5 md:right-5 md:min-w-auto md:max-w-none md:rounded-2xl md:p-4 md:shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
-                        <div className="font-bold mb-2.5 text-white">Add a GIF</div>
-                        <input
-                          type="url"
-                          placeholder="Paste GIF/Video URL"
-                          value={gifInput}
-                          onChange={(e) => setGifInput(e.target.value)}
-                          className="w-full bg-white/8 border border-white/16 rounded-xl p-2.5 text-white text-sm md:p-3 md:text-base md:rounded-xl md:min-h-[44px]"
-                        />
-                        <div className="mt-2.5 flex justify-end gap-2.5 md:mt-3 md:gap-3">
-                          <button
-                            type="button"
-                            className="bg-white/8 border border-white/16 text-white px-3 py-2 rounded-xl cursor-pointer transition-all duration-200 hover:bg-white/12 md:px-4 md:py-3 md:min-h-[44px] md:rounded-xl md:text-sm"
-                            onClick={() => setShowGif(false)}
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            type="button"
-                            className="bg-primary-400 text-black border border-primary-400 px-3 py-2 rounded-xl cursor-pointer transition-all duration-200 md:px-4 md:py-3 md:min-h-[44px] md:rounded-xl md:text-sm"
-                            onClick={addGifFromUrl}
-                          >
-                            Add
-                          </button>
-                        </div>
-                      </div>
+                    {showGifInput && (
+                      <GiftSearch 
+                        open={showGif} 
+                        onOpenChange={setShowGif}
+                        mediaUrls={mediaUrls}
+                        removeMedia={removeMedia}
+                        onSelectGif={(gifUrl) => {
+                          setMediaUrls((prev) => [...prev, gifUrl]);
+                        }} 
+                      />
                     )}
                   </div>
 
@@ -518,34 +433,36 @@ export default function PostForm({
             </div>
 
             {showMediaFeatures && mediaUrls.length > 0 && (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2 md:grid-cols-[repeat(auto-fill,minmax(120px,1fr))] md:gap-3">
-                {mediaUrls.map((url, index) => (
-                  <div
-                    key={index}
-                    className="relative rounded-xl overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.25)]"
-                  >
-                    {/.mp4$|.webm$|.mov$/i.test(url) ? (
-                      <video
-                        src={url}
-                        controls
-                        className="w-full h-45 object-cover block md:h-40"
-                      />
-                    ) : (
-                      <img
-                        src={url}
-                        alt="media"
-                        className="w-full h-45 object-cover block md:h-40"
-                      />
-                    )}
-                    <button
-                      type="button"
-                      className="absolute top-1.5 right-1.5 bg-black/70 border-none text-white w-7 h-7 rounded-full cursor-pointer grid place-items-center transition-all duration-200 hover:bg-black/90 hover:scale-105"
-                      onClick={() => removeMedia(index)}
+              <div className="col-span-full md:col-start-2 w-full overflow-x-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent -mx-4 px-4 md:mx-0 md:px-0">
+                <div className="flex flex-row gap-3 pb-2">
+                  {mediaUrls.map((url, index) => (
+                    <div
+                      key={index}
+                      className="relative rounded-xl overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.25)] flex-shrink-0 w-[200px] md:w-[180px]"
                     >
-                      <IconClose className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
+                      {/.mp4$|.webm$|.mov$/i.test(url) ? (
+                        <video
+                          src={url}
+                          controls
+                          className="w-full h-[200px] md:h-[180px] object-cover block"
+                        />
+                      ) : (
+                        <img
+                          src={url}
+                          alt="media"
+                          className="w-full h-[200px] md:h-[180px] object-cover block"
+                        />
+                      )}
+                      <button
+                        type="button"
+                        className="absolute top-1.5 right-1.5 bg-black/70 border-none text-white w-7 h-7 rounded-full cursor-pointer grid place-items-center transition-all duration-200 hover:bg-black/90 hover:scale-105 active:scale-95"
+                        onClick={() => removeMedia(index)}
+                      >
+                        <IconClose className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

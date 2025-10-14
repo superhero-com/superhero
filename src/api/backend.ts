@@ -13,6 +13,10 @@ export const TrendminerApi = {
     }
     return res.json();
   },
+  // GET /api/tips/posts/{postId}/summary
+  getPostTipSummary(postId: string) {
+    return this.fetchJson(`/api/tips/posts/${encodeURIComponent(postId)}/summary`);
+  },
   // GET /api/factory - returns active community factory schema (address, collections, rules)
   getFactory() {
     return this.fetchJson('/api/factory');

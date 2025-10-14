@@ -221,6 +221,31 @@ a.no-gradient-text::after {
   display: none;
 }
 
+/* Specific override for white-with-purple CTA on banner */
+.banner-explore-btn {
+  background: #ffffff !important;
+  color: #6d28d9 !important; /* violet-700 */
+  -webkit-text-fill-color: #6d28d9 !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
+}
+
+/* Banner CTA shared hover: gentle nudge up, subtle scale, no underline bar */
+.banner-cta { position: relative; transform: translateY(0); transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, color 180ms ease; }
+.banner-cta::after { display: none !important; }
+.banner-cta:hover { transform: translateY(-2px) scale(1.015); box-shadow: 0 10px 24px rgba(0,0,0,0.25); }
+.banner-cta:active { transform: translateY(0) scale(0.995); }
+
+/* Force 'Learn more' to white text, disable gradient on anchor while keeping bg-color */
+.banner-learn-btn {
+  color: rgba(255,255,255,0.8) !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.8) !important;
+  background-image: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+}
+
 img, video { max-width: 100%; height: auto; display: block; }
 
 /* Prevent content overflow */

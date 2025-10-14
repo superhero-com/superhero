@@ -48,7 +48,7 @@ export default function GovernanceAccount() {
   const isRevoking = revokeDelegationMutation.isPending;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900/50 via-slate-800/30 to-slate-900/50">
+    <div className="min-h-screen">
       <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
         {/* Enhanced Header Section */}
         <div className="text-center mb-12 animate-slideInUp">
@@ -69,7 +69,7 @@ export default function GovernanceAccount() {
             <MobileCard
               variant="elevated"
               padding="large"
-              className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-500"
+              className="bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-500"
             >
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
@@ -90,7 +90,7 @@ export default function GovernanceAccount() {
               ) : activeAccount ? (
                 <div className="grid gap-4">
                   {/* Address */}
-                  <div className="group p-5 bg-white/5 border border-white/10 rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg">
+                  <div className="group p-5 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
@@ -107,7 +107,7 @@ export default function GovernanceAccount() {
                   </div>
 
                   {/* Balance */}
-                  <div className="group p-5 bg-white/5 border border-white/10 rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg">
+                  <div className="group p-5 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center">
@@ -125,7 +125,7 @@ export default function GovernanceAccount() {
 
                   {/* Delegators Count */}
                   {delegators.length > 0 && (
-                    <div className="group p-5 bg-white/5 border border-white/10 rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg">
+                    <div className="group p-5 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
@@ -160,7 +160,7 @@ export default function GovernanceAccount() {
           <MobileCard
             variant="elevated"
             padding="large"
-            className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-500"
+            className="bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-500"
           >
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center shadow-lg">
@@ -256,7 +256,7 @@ export default function GovernanceAccount() {
                   {delegators.map((delegator: any, idx: number) => (
                     <div
                       key={idx}
-                      className="group p-4 bg-white/5 border border-white/10 rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg"
+                      className="group p-4 bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-2xl rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 hover:shadow-lg"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 flex-1 min-w-0">

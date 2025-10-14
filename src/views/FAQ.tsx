@@ -69,9 +69,9 @@ export default function FAQ() {
     {
       id: 'governance',
       category: 'DAO & Governance',
-      title: 'What is the Governance & Voting section?',
+      title: 'What is the Voting section?',
       answer:
-        'The Governance & Voting page provides a unified interface for browsing polls, voting, managing delegations, and viewing your on‑chain governance activity. All governance functions are accessible through tabs within a single page.',
+        'The Voting page provides a unified interface for browsing polls, voting, managing delegations, and viewing your on‑chain governance activity. All governance functions are accessible through tabs within a single page.',
     },
     {
       id: 'social',

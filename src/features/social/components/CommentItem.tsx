@@ -175,18 +175,18 @@ const CommentItem = memo(({
                        </Badge>
                      )}
 
-                      {canReply && (
-                       <AeButton
-                         variant="link"
-                         size="sm"
-                         onClick={handleReplyClick}
-                         className="px-0 h-auto text-xs -ml-1 md:ml-0 text-muted-foreground hover:text-foreground no-underline shadow-none hover:shadow-none"
-                       >
-                         Reply
-                       </AeButton>
-                     )}
+                     <PostTipButton toAddress={authorAddress} postId={String(comment.id)} />
 
-                      <PostTipButton toAddress={authorAddress} postId={String(comment.id)} />
+                     {canReply && (
+                      <AeButton
+                        variant="link"
+                        size="sm"
+                        onClick={handleReplyClick}
+                        className="px-0 h-auto text-xs -ml-1 md:ml-0 text-muted-foreground hover:text-foreground no-underline shadow-none hover:shadow-none"
+                      >
+                        Reply
+                      </AeButton>
+                    )}
 
                       {comment.tx_hash && (
                         <BlockchainInfoPopover

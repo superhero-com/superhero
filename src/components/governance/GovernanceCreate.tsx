@@ -167,7 +167,7 @@ export default function GovernanceCreate() {
       <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-3xl mx-auto">
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl blur-xl"></div>
-          <div className="relative bg-black/30 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8">
+          <div className="relative bg-black/30 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-8">
             <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent m-0">Create Poll</h1>
             <p className="text-slate-300 mt-2">Use the form below to create a new governance poll.</p>
           </div>

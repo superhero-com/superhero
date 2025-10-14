@@ -20,7 +20,7 @@ export default function GovernancePolls() {
         {/* Enhanced Header Section */}
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-3xl blur-3xl -z-10" />
-          <div className="flex items-center justify-between mb-8 py-8 px-6 bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl">
+          <div className="flex items-center justify-between mb-8 py-8 px-6 bg-black/20 backdrop-blur-2xl border border-white/10 rounded-3xl">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="relative">
                 <div className="w-16 h-16 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
@@ -174,7 +174,7 @@ export default function GovernancePolls() {
                   <div className="flex flex-col gap-4">
                     <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-blue-500/5 rounded-3xl blur-2xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                    <div className="p-4 bg-black/30  border border-white/10 rounded-3xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-white/20 overflow-hidden group/card animate-[slideInUp_0.6s_ease-out]">
+                    <div className="p-4 bg-black/30 backdrop-blur-2xl border border-white/10 rounded-3xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-white/20 overflow-hidden group/card animate-[slideInUp_0.6s_ease-out]">
                       {/* Animated gradient border */}
                       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
 

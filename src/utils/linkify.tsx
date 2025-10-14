@@ -7,8 +7,8 @@ const URL_REGEX = /((https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/[\w\-._~:\/?#[\]@!$&'()*+
 const AENS_TAG_REGEX = /@?[a-z0-9-]+\.chain\b/gi;
 // Optional '@' followed by an account address starting with ak_
 const ACCOUNT_TAG_REGEX = /@?(ak_[A-Za-z0-9]+)/gi;
-// Hashtags like #TokenName, #liquid, #LIQUID_123 (avoid URL fragments by running after URL linking)
-const HASHTAG_REGEX = /#([A-Za-z][A-Za-z0-9_]{0,49})/g;
+// Hashtags like #TokenName, #liquid, #LIQUID_123, #ROCK-N-ROLL (allow hyphens)
+const HASHTAG_REGEX = /#([A-Za-z][A-Za-z0-9_-]{0,49})/g;
 
 export function linkify(text: string, options?: { knownChainNames?: Set<string> }): React.ReactNode[] {
   if (!text) return [];

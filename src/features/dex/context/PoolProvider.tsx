@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { LiquidityPosition } from '../types/pool';
+import { useAccount } from '../../../hooks';
+import { useSetAtom } from 'jotai';
+import { invalidatePositionsAtom } from '../atoms/positionsAtoms';
 
 export type PoolAction = 'add' | 'remove' | null;
 
@@ -37,6 +40,8 @@ interface PoolProviderProps {
 }
 
 export function PoolProvider({ children }: PoolProviderProps) {
+  const { activeAccount } = useAccount();
+  const invalidatePositions = useSetAtom(invalidatePositionsAtom);
   const [currentAction, setCurrentAction] = useState<PoolAction>(null);
   const [selectedPosition, setSelectedPosition] = useState<LiquidityPosition | null>(null);
   const [selectedTokenA, setSelectedTokenA] = useState<string>('');
@@ -67,6 +72,11 @@ export function PoolProvider({ children }: PoolProviderProps) {
   };
 
   const onPositionUpdated = async () => {
+    // Invalidate cached positions; the positions hook effect will reload
+    if (activeAccount) {
+      invalidatePositions(activeAccount);
+    }
+    // If a refresh function is provided, call it as well
     if (refreshPositions) {
       await refreshPositions();
     }

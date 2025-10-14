@@ -1,5 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { useEffect, useState } from 'react';
+import { Decimal } from '@/libs/decimal';
 import { DexTokenDto } from '../../../api/generated';
 import { CONFIG } from '../../../config';
 
@@ -121,7 +122,7 @@ export default function LiquiditySuccessNotification({
                 <span style={{ fontWeight: 600 }}>{tokenA.symbol}</span>
               </div>
               <span style={{ fontWeight: 700, color: 'var(--accent-color)' }}>
-                {Number(amountA).toFixed(6)}
+                {Decimal.from(amountA).prettify()}
               </span>
             </div>
 
@@ -152,7 +153,7 @@ export default function LiquiditySuccessNotification({
                 <span style={{ fontWeight: 600 }}>{tokenB.symbol}</span>
               </div>
               <span style={{ fontWeight: 700, color: 'var(--accent-color)' }}>
-                {Number(amountB).toFixed(6)}
+                {Decimal.from(amountB).prettify()}
               </span>
             </div>
           </div>

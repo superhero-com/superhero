@@ -9,6 +9,7 @@ import { AddLiquidityState, LiquidityExecutionParams, RemoveLiquidityExecutionPa
 import { providedLiquidityAtom, useAccount, useAeSdk, useDex, useRecentActivities } from '../../../hooks';
 import { useAtom } from 'jotai';
 import { Decimal } from '../../../libs/decimal';
+import { BridgeConstants } from '@/features/ae-eth-bridge/constants';
 
 export function useAddLiquidity() {
   const [providedLiquidity, setProvidedLiquidity] = useAtom(providedLiquidityAtom);
@@ -38,6 +39,11 @@ export function useAddLiquidity() {
     showSettings: false,
     allowanceInfo: null,
   });
+
+  // Ensure minimum amounts passed to on-chain calls are at least 1 base unit (aettos)
+  function clampToMinUnit(value: bigint): bigint {
+    return value < 1n ? 1n : value;
+  }
 
   async function fetchTokenMeta(addr: string): Promise<{ decimals: number; symbol: string }> {
     if (addr === 'AE') {
@@ -120,8 +126,24 @@ export function useAddLiquidity() {
 
       const rA = new BigNumber(fromAettos(info.reserveA, state.decA));
       const rB = new BigNumber(fromAettos(info.reserveB, state.decB));
-      const ratioAinB = rB.isZero() ? '-' : rA.div(rB).toFixed(8);
-      const ratioBinA = rA.isZero() ? '-' : rB.div(rA).toFixed(8);
+
+      // Compute ratios using raw reserves with decimal scaling to avoid precision loss
+      const reserveARaw = new BigNumber(info.reserveA.toString());
+      const reserveBRaw = new BigNumber(info.reserveB.toString());
+
+      let ratioAinB = '-'; // 1 B = ? A
+      let ratioBinA = '-'; // 1 A = ? B
+
+      if (!reserveARaw.isZero() && !reserveBRaw.isZero()) {
+        const powA = new BigNumber(10).pow(state.decA);
+        const powB = new BigNumber(10).pow(state.decB);
+        // ratioBinA = (reserveB / 10^decB) / (reserveA / 10^decA) = reserveB*10^decA / (reserveA*10^decB)
+        const ratioBperA = reserveBRaw.multipliedBy(powA).dividedBy(reserveARaw.multipliedBy(powB));
+        const ratioAperB = reserveARaw.multipliedBy(powB).dividedBy(reserveBRaw.multipliedBy(powA));
+        // Use higher precision to avoid rounding to zero for tiny ratios
+        ratioBinA = ratioBperA.toFixed(18).replace(/\.0+$/, '');
+        ratioAinB = ratioAperB.toFixed(18).replace(/\.0+$/, '');
+      }
 
       let sharePct = '0.00000000';
       let lpMintEstimate: string | undefined;
@@ -219,14 +241,16 @@ export function useAddLiquidity() {
       }
 
       if (params.isAePair) {
-        const isTokenAAe = params.tokenA === 'AE';
+        const isTokenAAe = params.tokenA === BridgeConstants.aeternity.default_ae || params.tokenA === 'AE';
         const token = isTokenAAe ? params.tokenB : params.tokenA;
         const amountTokenDesired = isTokenAAe ? amountBAettos : amountAAettos;
         const amountAeDesired = isTokenAAe ? amountAAettos : amountBAettos;
         
         // Calculate minimum amounts with slippage using dex library function
-        const minToken = subSlippage(amountTokenDesired, params.slippagePct);
-        const minAe = subSlippage(amountAeDesired, params.slippagePct);
+        const minTokenRaw = subSlippage(amountTokenDesired, params.slippagePct);
+        const minAeRaw = subSlippage(amountAeDesired, params.slippagePct);
+        const minToken = clampToMinUnit(minTokenRaw);
+        const minAe = clampToMinUnit(minAeRaw);
         const minimumLiquidity = MINIMUM_LIQUIDITY;
         
         // Validation - ensure all values are positive
@@ -274,8 +298,10 @@ export function useAddLiquidity() {
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       } else {
         // Calculate minimum amounts with slippage using dex library function
-        const minAmountA = subSlippage(amountAAettos, params.slippagePct);
-        const minAmountB = subSlippage(amountBAettos, params.slippagePct);
+        const minAmountARaw = subSlippage(amountAAettos, params.slippagePct);
+        const minAmountBRaw = subSlippage(amountBAettos, params.slippagePct);
+        const minAmountA = clampToMinUnit(minAmountARaw);
+        const minAmountB = clampToMinUnit(minAmountBRaw);
         const minimumLiquidity = MINIMUM_LIQUIDITY;
         
         // Validation - ensure all values are positive
@@ -439,30 +465,34 @@ export function useAddLiquidity() {
 
       if (params.isAePair) {
         // Handle AE pair removal
-        const isTokenAAe = params.tokenA === 'AE';
+        const isTokenAAe = params.tokenA === BridgeConstants.aeternity.default_ae;
         const token = isTokenAAe ? params.tokenB : params.tokenA;
-        
+
         // Get pair info to calculate expected amounts (use wrapped AE address)
         const waeAddress = DEX_ADDRESSES.wae;
         const pairInfo = await getPairInfo(sdk, factory, token, waeAddress);
-        
+
         if (!pairInfo || !pairInfo.reserveA || !pairInfo.reserveB || !pairInfo.totalSupply) {
           throw new Error('Unable to get pair information');
         }
 
         // Calculate expected amounts based on current reserves and total supply
         const totalSupply = BigInt(pairInfo.totalSupply);
-        const reserveToken = isTokenAAe ? BigInt(pairInfo.reserveB) : BigInt(pairInfo.reserveA);
-        const reserveAe = isTokenAAe ? BigInt(pairInfo.reserveA) : BigInt(pairInfo.reserveB);
-        
+        // pairInfo was fetched with (token, wae), so reserveA is always the non-AE token reserve
+        // and reserveB is always the WAE reserve, regardless of original position ordering.
+        const reserveToken = BigInt(pairInfo.reserveA);
+        const reserveAe = BigInt(pairInfo.reserveB);
+
         // Calculate expected amounts: (liquidity * reserve) / totalSupply
         const expectedTokenAmount = (liquidityAmount * reserveToken) / totalSupply;
         const expectedAeAmount = (liquidityAmount * reserveAe) / totalSupply;
-        
+
         // Apply slippage to get minimum amounts
-        const minTokenAmount = subSlippage(expectedTokenAmount, params.slippagePct);
-        const minAeAmount = subSlippage(expectedAeAmount, params.slippagePct);
-        
+        const minTokenAmountRaw = subSlippage(expectedTokenAmount, params.slippagePct);
+        const minAeAmountRaw = subSlippage(expectedAeAmount, params.slippagePct);
+        const minTokenAmount = clampToMinUnit(minTokenAmountRaw);
+        const minAeAmount = clampToMinUnit(minAeAmountRaw);
+
         // Validation
         if (minTokenAmount <= 0n) {
           throw new Error(`Invalid minimum token amount: ${minTokenAmount.toString()}`);
@@ -470,12 +500,12 @@ export function useAddLiquidity() {
         if (minAeAmount <= 0n) {
           throw new Error(`Invalid minimum AE amount: ${minAeAmount.toString()}`);
         }
-        
+
         // Ensure LP token allowance for router
         console.log('Ensuring LP token allowance for router...');
         await ensurePairAllowanceForRouter(sdk, pairInfo.pairAddress, address, liquidityAmount);
         console.log('LP token allowance ensured.');
-        
+
         console.log('remove_liquidity_ae params::', {
           token,
           liquidity: liquidityAmount.toString(),
@@ -489,7 +519,7 @@ export function useAddLiquidity() {
           reserveToken: reserveToken.toString(),
           reserveAe: reserveAe.toString()
         });
-        
+
         const res = await router.remove_liquidity_ae(
           token,
           liquidityAmount,
@@ -498,7 +528,7 @@ export function useAddLiquidity() {
           address,
           BigInt(Date.now() + params.deadlineMins * 60 * 1000)
         );
-        
+
         console.log('[useAddLiquidity] remove_liquidity_ae res::', res);
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       } else {
@@ -519,8 +549,10 @@ export function useAddLiquidity() {
         const expectedAmountB = (liquidityAmount * reserveB) / totalSupply;
         
         // Apply slippage to get minimum amounts
-        const minAmountA = subSlippage(expectedAmountA, params.slippagePct);
-        const minAmountB = subSlippage(expectedAmountB, params.slippagePct);
+        const minAmountARaw = subSlippage(expectedAmountA, params.slippagePct);
+        const minAmountBRaw = subSlippage(expectedAmountB, params.slippagePct);
+        const minAmountA = clampToMinUnit(minAmountARaw);
+        const minAmountB = clampToMinUnit(minAmountBRaw);
         
         // Validation
         if (minAmountA <= 0n) {
@@ -534,21 +566,6 @@ export function useAddLiquidity() {
         console.log('Ensuring LP token allowance for router...');
         await ensurePairAllowanceForRouter(sdk, pairInfo.pairAddress, address, liquidityAmount);
         console.log('LP token allowance ensured.');
-        
-        // console.log('remove_liquidity params::', {
-        //   tokenA: params.tokenA,
-        //   tokenB: params.tokenB,
-        //   liquidity: liquidityAmount.toString(), //
-        //   minAmountA: minAmountA.toString(),
-        //   minAmountB: minAmountB.toString(),
-        //   address,
-        //   deadline: BigInt(Date.now() + params.deadlineMins * 60 * 1000).toString(),
-        //   expectedAmountA: expectedAmountA.toString(),
-        //   expectedAmountB: expectedAmountB.toString(),
-        //   totalSupply: totalSupply.toString(),
-        //   reserveA: reserveA.toString(),
-        //   reserveB: reserveB.toString()
-        // });
         
         const res = await router.remove_liquidity(
           params.tokenA,

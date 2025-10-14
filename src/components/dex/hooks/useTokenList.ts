@@ -18,7 +18,7 @@ export function useTokenList(): TokenListState {
   })
 
   const tokens = useMemo(() => [
-    { address: 'ae', symbol: 'AE', name: 'AE', decimals: 18, is_ae: true },
+    { address: 'AE', symbol: 'AE', name: 'AE', decimals: 18, is_ae: true },
     ...(data?.items ?? [])
   ], [data]);
 

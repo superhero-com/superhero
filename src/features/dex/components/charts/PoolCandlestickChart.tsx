@@ -77,7 +77,7 @@ export function PoolCandlestickChart({
 
   useEffect(() => {
     if (fromTokenAddress) {
-      const isAe = fromTokenAddress === 'ae';
+      const isAe = fromTokenAddress === 'AE';
       if (isAe) {
         const WAE_ADDRESS = DEX_ADDRESSES.wae;
         setFromToken(pair?.token0?.address === WAE_ADDRESS ? 'token0' : 'token1');

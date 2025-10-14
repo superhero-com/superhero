@@ -43,6 +43,7 @@ export default function AddLiquidityForm() {
   const [amountB, setAmountB] = useState<string>("");
   const [searchA, setSearchA] = useState("");
   const [searchB, setSearchB] = useState("");
+  const [lastEdited, setLastEdited] = useState<"A" | "B" | null>(null);
 
   // Liquidity hook
   const { state, setState, executeAddLiquidity } = useAddLiquidity();
@@ -235,49 +236,45 @@ export default function AddLiquidityForm() {
   }, [amountA, amountB, setState]);
 
   useEffect(() => {
-    if (state.pairPreview?.ratioAinB) {
-      if (amountA && amountA !== "") {
-        const ratioAinB = parseFloat(state.pairPreview.ratioAinB);
-        if (!isNaN(ratioAinB) && ratioAinB > 0) {
-          const amountANum = parseFloat(amountA);
-          if (!isNaN(amountANum)) {
-            const calculatedAmountB =
-              amountANum === 0 ? "0" : (amountANum / ratioAinB).toString();
-
-            setAmountB(calculatedAmountB);
-          }
+    if (!state.pairPreview?.ratioAinB) return;
+    try {
+      const ratio = Decimal.from(state.pairPreview.ratioAinB);
+      if (lastEdited === "A") {
+        if (amountA) {
+          const amountANum = Decimal.from(amountA);
+          const calculatedAmountB = amountANum.eq(0)
+            ? "0"
+            : amountANum.div(ratio).toString();
+          setAmountB(calculatedAmountB);
         }
-      } else {
-        const ratioAinB = parseFloat(state.pairPreview.ratioAinB);
-        if (!isNaN(ratioAinB) && ratioAinB > 0) {
-          const amountBNum = parseFloat(amountB);
-          if (!isNaN(amountBNum)) {
-            const calculatedAmountA =
-              amountBNum === 0 ? "0" : (amountBNum * ratioAinB).toString();
-            setAmountA(calculatedAmountA);
-          }
+      } else if (lastEdited === "B") {
+        if (amountB) {
+          const amountBNum = Decimal.from(amountB);
+          const calculatedAmountA = amountBNum.eq(0)
+            ? "0"
+            : amountBNum.mul(ratio).toString();
+          setAmountA(calculatedAmountA);
         }
       }
-    }
-  }, [state.pairPreview, tokenB]);
+    } catch {}
+  }, [state.pairPreview, lastEdited]);
 
   // Handle Token A amount change and auto-calculate Token B
   const handleAmountAChange = (newAmountA: string) => {
+    setLastEdited("A");
     setAmountA(newAmountA);
     console.log("changed state.pairPreview", state.pairPreview);
-    // Auto-calculate Token B based on ratio
-    if (state.pairPreview?.ratioAinB && newAmountA && newAmountA !== "") {
-      const ratioAinB = parseFloat(state.pairPreview.ratioAinB);
-      if (!isNaN(ratioAinB) && ratioAinB > 0) {
-        const amountANum = parseFloat(newAmountA);
-        if (!isNaN(amountANum)) {
-          const calculatedAmountB =
-            amountANum === 0 ? "0" : (amountANum / ratioAinB).toString();
-
-          setAmountB(calculatedAmountB);
-        }
-      }
-    } else if (!newAmountA || newAmountA === "") {
+    // Auto-calculate Token B based on ratio using Decimal to avoid float drift
+    if (state.pairPreview?.ratioAinB && newAmountA) {
+      try {
+        const ratio = Decimal.from(state.pairPreview.ratioAinB);
+        const amountANum = Decimal.from(newAmountA);
+        const calculatedAmountB = amountANum.eq(0)
+          ? "0"
+          : amountANum.div(ratio).toString();
+        setAmountB(calculatedAmountB);
+      } catch {}
+    } else if (!newAmountA) {
       // Clear Token B when Token A is cleared
       setAmountB("");
     }
@@ -285,20 +282,20 @@ export default function AddLiquidityForm() {
 
   // Handle Token B amount change and auto-calculate Token A
   const handleAmountBChange = (newAmountB: string) => {
+    setLastEdited("B");
     setAmountB(newAmountB);
     console.log("changed state.pairPreview", state.pairPreview);
-    // Auto-calculate Token A based on ratio
-    if (state.pairPreview?.ratioAinB && newAmountB && newAmountB !== "") {
-      const ratioAinB = parseFloat(state.pairPreview.ratioAinB);
-      if (!isNaN(ratioAinB) && ratioAinB > 0) {
-        const amountBNum = parseFloat(newAmountB);
-        if (!isNaN(amountBNum)) {
-          const calculatedAmountA =
-            amountBNum === 0 ? "0" : (amountBNum * ratioAinB).toString();
-          setAmountA(calculatedAmountA);
-        }
-      }
-    } else if (!newAmountB || newAmountB === "") {
+    // Auto-calculate Token A based on ratio using Decimal to avoid float drift
+    if (state.pairPreview?.ratioAinB && newAmountB) {
+      try {
+        const ratio = Decimal.from(state.pairPreview.ratioAinB);
+        const amountBNum = Decimal.from(newAmountB);
+        const calculatedAmountA = amountBNum.eq(0)
+          ? "0"
+          : amountBNum.mul(ratio).toString();
+        setAmountA(calculatedAmountA);
+      } catch {}
+    } else if (!newAmountB) {
       // Clear Token A when Token B is cleared
       setAmountA("");
     }

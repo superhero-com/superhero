@@ -1,5 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { DexTokenDto } from '../../../api/generated';
+import { Decimal } from '@/libs/decimal';
 
 interface LiquidityConfirmationProps {
   show: boolean;
@@ -71,7 +72,7 @@ export default function LiquidityConfirmation({
                   </div>
                 </div>
                 <div className="font-bold text-lg text-standard-font-color">
-                  {Number(amountA).toFixed(6)}
+                  {Decimal.from(amountA).prettify()}
                 </div>
               </div>
 
@@ -87,7 +88,7 @@ export default function LiquidityConfirmation({
                   </div>
                 </div>
                 <div className="font-bold text-lg text-standard-font-color">
-                  {Number(amountB).toFixed(6)}
+                  {Decimal.from(amountB).prettify()}
                 </div>
               </div>
             </div>
@@ -101,11 +102,11 @@ export default function LiquidityConfirmation({
               </div>
 
               <div className="grid gap-2">
-                {pairPreview.ratioAinB && pairPreview.ratioAinB !== '-' && (
+                {pairPreview.ratioBinA && pairPreview.ratioBinA !== '-' && (
                   <div className="flex justify-between text-xs text-light-font-color">
                     <span>Exchange Rate</span>
                     <span className="text-standard-font-color">
-                      1 {tokenA.symbol} = {pairPreview.ratioAinB} {tokenB.symbol}
+                      1 {tokenA.symbol} = {pairPreview.ratioBinA} {tokenB.symbol}
                     </span>
                   </div>
                 )}

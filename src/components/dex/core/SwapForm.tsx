@@ -43,8 +43,8 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     queryFn: () => {
       if (!tokenIn || !tokenOut) return null;
       return DexService.getPairByFromTokenAndToToken({
-        fromToken: tokenIn.address == 'ae' ? DEX_ADDRESSES.wae : tokenIn.address,
-        toToken: tokenOut.address == 'ae' ? DEX_ADDRESSES.wae : tokenOut.address
+        fromToken: tokenIn.address == 'AE' ? DEX_ADDRESSES.wae : tokenIn.address,
+        toToken: tokenOut.address == 'AE' ? DEX_ADDRESSES.wae : tokenOut.address
       });
     },
     enabled: !!tokenIn?.address && !!tokenOut?.address,

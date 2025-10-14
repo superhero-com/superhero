@@ -63,7 +63,7 @@ export const navigationItems: NavigationItem[] = [
   },
   {
       id: 'governance',
-      label: 'Governance & Voting',
+      label: 'Voting',
       path: '/voting',
       icon: '🗳️',
   },

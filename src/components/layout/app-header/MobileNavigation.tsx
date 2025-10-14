@@ -123,7 +123,7 @@ export default function MobileNavigation() {
               </Link>
               <Link to="/voting" onClick={handleNavigationClick} className="flex items-center py-4 px-5 bg-white/5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] gap-4 hover:bg-white/10 hover:translate-x-1 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px] sm:gap-3">
                 <span className="text-xl w-6 text-center sm:text-lg sm:w-5">🗳️</span>
-                <span className="text-base sm:text-[15px]">Governance & Voting</span>
+                <span className="text-base sm:text-[15px]">Voting</span>
               </Link>
               <Link to="/landing" onClick={handleNavigationClick} className="flex items-center py-4 px-5 bg-white/5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] gap-4 hover:bg-white/10 hover:translate-x-1 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px] sm:gap-3">
                 <span className="text-xl w-6 text-center sm:text-lg sm:w-5">ℹ️</span>

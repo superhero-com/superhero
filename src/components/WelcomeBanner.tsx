@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { cn } from "../lib/utils";
 import { Link } from "react-router-dom";
+import { IconDiamond } from "../icons";
 
 type WelcomeBannerProps = {
   className?: string;
@@ -66,10 +67,11 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
 
       <div className="relative flex flex-col gap-2 md:gap-3">
         <h2
-          className="text-lg sm:text-xl md:text-2xl font-semibold tracking-tight leading-[1.15] sm:leading-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)] text-white"
+          className="flex items-center gap-2 text-lg sm:text-xl md:text-2xl font-semibold tracking-tight leading-[1.15] sm:leading-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)] text-white"
           style={{ WebkitTextFillColor: 'white', background: 'none' }}
         >
-          Superhero — the all‑in‑one social + crypto app
+          <IconDiamond className="w-6 h-6 md:w-7 md:h-7 text-white/90" aria-hidden="true" />
+          <span>Superhero — the all‑in‑one social + crypto app</span>
         </h2>
         <p className="text-sm md:text-base leading-snug text-white/95 max-w-3xl">
           Posts are timestamped forever on the aeternity blockchain. Tokenize trends. Own the hype. Build communities.

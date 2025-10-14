@@ -36,8 +36,6 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
       )}
       initialParams={{
         accountAddress: address,
-        limit: 100,
-        page: 1,
         orderBy: "created_at",
         orderDirection: "DESC",
         search: "",

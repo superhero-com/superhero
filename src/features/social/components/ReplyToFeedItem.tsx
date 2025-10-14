@@ -268,6 +268,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
           {/* Actions */}
           <div className="mt-4 flex items-center justify-between">
             <div className="inline-flex items-center gap-4 md:gap-2">
+              <PostTipButton toAddress={authorAddress} postId={String(postId)} />
             <button
               type="button"
               onClick={(e) => {
@@ -288,7 +289,6 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
               <MessageCircle className="w-[14px] h-[14px]" strokeWidth={2.25} />
               {commentCount}
             </button>
-              <PostTipButton toAddress={authorAddress} postId={String(postId)} />
             </div>
             <SharePopover postId={item.id} />
           </div>

@@ -369,38 +369,6 @@ export default function TokenSelector({
               </div>
             )}
           </div>
-
-          {/* Footer */}
-          <div style={{
-            marginTop: 20,
-            paddingTop: 16,
-            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-            textAlign: 'center'
-          }}>
-            <button
-              style={{
-                padding: '12px 24px',
-                borderRadius: 12,
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: 'var(--standard-font-color)',
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              View Token List
-            </button>
-          </div>
         </Dialog.Content>
       </Dialog.Portal>
 

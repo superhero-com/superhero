@@ -1,5 +1,5 @@
 import waeACI from 'dex-contracts-v2/build/WAE.aci.json';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { CONFIG } from '../../../config';
 import { useAeSdk, useRecentActivities } from '../../../hooks';
 import { Decimal } from '../../../libs/decimal';
@@ -24,6 +24,8 @@ export function useSwapExecution() {
   const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [allowanceInfo, setAllowanceInfo] = useState<string | null>(null);
+  const [swapStep, setSwapStep] = useState<{ current: number; total: number; label: string } | null>(null);
+  const needsApprovalInCurrentSwap = useRef(false);
 
   function isAeToWae(tokenIn: any, tokenOut: any): boolean {
     const isAetoWae = tokenIn.address == 'AE' && tokenOut.address == DEX_ADDRESSES.wae;
@@ -79,21 +81,38 @@ export function useSwapExecution() {
     return result?.hash || null;
   }
 
-  async function approveIfNeeded(amountAettos: bigint, tokenIn: any) {
-    if (!tokenIn || tokenIn.is_ae) return; // AE does not need allowance
+  async function approveIfNeeded(amountAettos: bigint, tokenIn: any): Promise<boolean> {
+    if (!tokenIn || tokenIn.is_ae) return false; // AE does not need allowance
+
+    // Check if we need approval
+    const currentAllowance = await getRouterTokenAllowance(sdk, tokenIn.address, activeAccount);
+    const needsApproval = currentAllowance < amountAettos;
+
+    if (needsApproval) {
+      needsApprovalInCurrentSwap.current = true;
+      setSwapStep({ current: 1, total: 2, label: 'Approve token' });
+    }
 
     // eslint-disable-next-line no-console
     console.info('[dex] Ensuring allowance for router…', {
       token: tokenIn.address,
-      amount: amountAettos.toString()
+      amount: amountAettos.toString(),
+      currentAllowance: currentAllowance.toString(),
+      needsApproval
     });
 
     await ensureAllowanceForRouter(sdk, tokenIn.address, activeAccount, amountAettos);
 
     try {
       const current = await getRouterTokenAllowance(sdk, tokenIn.address, activeAccount);
+      console.log('[dex] current', current);
+      // if (current !== 0n) {
+      //   setAllowanceInfo(`Allowance: ${fromAettos(current, tokenIn.decimals)} ${tokenIn.symbol}`);
+      // }
       setAllowanceInfo(`Allowance: ${fromAettos(current, tokenIn.decimals)} ${tokenIn.symbol}`);
     } catch { }
+
+    return needsApproval;
   }
 
   //
@@ -101,6 +120,8 @@ export function useSwapExecution() {
     console.log('[dex] executeSwap->params::', params);
 
     setLoading(true);
+    setSwapStep(null);
+    needsApprovalInCurrentSwap.current = false;
     //
     try {
       // Pre-execution validation
@@ -182,6 +203,13 @@ export function useSwapExecution() {
       const isInAe = !!params.tokenIn?.is_ae;
       const isOutAe = !!params.tokenOut?.is_ae;
 
+      // Determine step based on whether approval was needed
+      if (needsApprovalInCurrentSwap.current) {
+        setSwapStep({ current: 2, total: 2, label: 'Execute swap' });
+      } else {
+        setSwapStep({ current: 1, total: 1, label: 'Execute swap' });
+      }
+
       let txHash: string | undefined;
 
 
@@ -209,6 +237,12 @@ export function useSwapExecution() {
           const inNeeded = decodedResult[0] as bigint;
           const maxIn = (BigInt(addSlippage(inNeeded, params.slippagePct).toString()));
           await approveIfNeeded(maxIn, params.tokenIn);
+          // Set step for exact-out swap
+          if (needsApprovalInCurrentSwap.current) {
+            setSwapStep({ current: 2, total: 2, label: 'Execute swap' });
+          } else {
+            setSwapStep({ current: 1, total: 1, label: 'Execute swap' });
+          }
           // eslint-disable-next-line no-console
           console.info('[dex] swap_tokens_for_exact_tokens', {
             amountOutAettos: amountOutAettos.toString(),
@@ -292,6 +326,12 @@ export function useSwapExecution() {
           const inNeeded = decodedResult[0] as bigint;
           const maxIn = addSlippage(inNeeded, params.slippagePct);
           await approveIfNeeded(maxIn, params.tokenIn);
+          // Set step for exact-out swap
+          if (needsApprovalInCurrentSwap.current) {
+            setSwapStep({ current: 2, total: 2, label: 'Execute swap' });
+          } else {
+            setSwapStep({ current: 1, total: 1, label: 'Execute swap' });
+          }
           // eslint-disable-next-line no-console
           console.info('[dex] swap_tokens_for_exact_ae', {
             amountOutAettos: amountOutAettos.toString(),
@@ -384,12 +424,14 @@ export function useSwapExecution() {
       throw new Error(errorMsg);
     } finally {
       setLoading(false);
+      setSwapStep(null);
     }
   }
 
   return {
     loading,
     allowanceInfo,
+    swapStep,
     executeSwap,
   };
 }

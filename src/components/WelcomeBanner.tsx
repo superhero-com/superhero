@@ -1,0 +1,99 @@
+import React, { useEffect, useState } from "react";
+import { cn } from "../lib/utils";
+import { Link } from "react-router-dom";
+import { IconDiamond } from "../icons";
+
+type WelcomeBannerProps = {
+  className?: string;
+};
+
+const DISMISS_KEY = "welcome_banner_dismissed_until";
+
+export default function WelcomeBanner({ className }: WelcomeBannerProps) {
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    try {
+      const until = localStorage.getItem(DISMISS_KEY);
+      if (!until) return;
+      const ts = Date.parse(until);
+      if (!Number.isNaN(ts) && ts > Date.now()) setHidden(true);
+    } catch {}
+  }, []);
+
+  const handleDismiss = () => {
+    try {
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      localStorage.setItem(DISMISS_KEY, expiresAt.toISOString());
+    } catch {}
+    setHidden(true);
+  };
+
+  if (hidden) return null;
+  return (
+    <div
+      className={cn(
+        "relative w-full overflow-hidden rounded-2xl p-4 sm:p-6 md:p-7",
+        "bg-gradient-to-br from-indigo-900/70 via-violet-900/60 to-fuchsia-900/60",
+        "backdrop-blur-md backdrop-saturate-150",
+        "text-white shadow-[0_10px_30px_rgba(0,0,0,0.35)]",
+        "border border-white/10",
+        "transition-all duration-300 ease-out",
+        className
+      )}
+      style={{ minHeight: 112 }}
+      aria-label="Welcome to Superhero"
+    >
+      {/* translucent gradient blends with page background; no black overlay */}
+
+      <button
+        type="button"
+        onClick={handleDismiss}
+        aria-label="Dismiss welcome banner"
+        className={cn(
+          "absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center",
+          "rounded-full bg-white/15 text-white/90 hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/60"
+        )}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      <div className="pointer-events-none absolute inset-0 opacity-10">
+        <div className="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-white blur-3xl" />
+        <div className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full bg-fuchsia-300 blur-3xl" />
+      </div>
+
+      <div className="relative flex flex-col gap-2 md:gap-3 pr-12 sm:pr-0">
+        <h2
+          className="flex items-center gap-2 text-lg sm:text-xl md:text-2xl font-semibold tracking-tight leading-[1.15] sm:leading-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)] text-white"
+          style={{ WebkitTextFillColor: 'white', background: 'none' }}
+        >
+          <IconDiamond className="hidden sm:inline-block w-6 h-6 md:w-7 md:h-7 text-white/90 shrink-0" aria-hidden="true" />
+          <span>Superhero — the all‑in‑one social + crypto app</span>
+        </h2>
+        <p className="text-sm md:text-base leading-snug text-white/95 max-w-3xl">
+          Posts are timestamped and stored on the æternity blockchain forever.
+          <br className="hidden md:block" />
+          Tokenize trends. Own the hype. Build communities.
+        </p>
+        <div className="mt-2 flex items-center gap-2">
+          <Link
+            to="/trending/tokens"
+            className="banner-cta inline-flex items-center rounded-lg px-3 py-2 text-sm font-semibold shadow-sm transition hover:bg-white/95 focus:outline-none focus:ring-2 focus:ring-violet-400 banner-explore-btn"
+          >
+            <span className="no-gradient-text">Explore Trends</span>
+          </Link>
+          <Link
+            to="/faq"
+            className="banner-cta banner-learn-btn inline-flex items-center rounded-lg border border-white/35 bg-white/10 px-3 py-2 text-sm font-medium transition hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/50"
+          >
+            <span className="no-gradient-text">Learn more</span>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+

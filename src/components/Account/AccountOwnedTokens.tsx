@@ -1,3 +1,4 @@
+import { PriceDto } from "@/api/generated/models/PriceDto";
 import { AccountTokensService } from "@/api/generated/services/AccountTokensService";
 import {
   DataTable,
@@ -27,6 +28,15 @@ export default function AccountOwnedTokens({
     })) as unknown as Promise<{ items: any[]; meta?: any }>;
     return response as unknown as DataTableResponse<any>;
   };
+
+  function calculateTotalValue(balance: string, price: PriceDto): PriceDto {
+    const balanceInDecimal = Decimal.from(balance);
+    return Object.entries(price).reduce((acc, [key, value]) => {
+      acc[key as keyof PriceDto] = Number(Decimal.from(value).mul(balanceInDecimal).toString());
+      return acc;
+    }, {} as PriceDto);
+  }
+  
 
   return (
     <div className="mt-4 space-y-4">
@@ -77,16 +87,17 @@ export default function AccountOwnedTokens({
                   className="owned-token-row grid grid-cols-1 md:grid-cols-4 gap-4 px-6 py-4 rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
                 >
                   <div className="flex items-center min-w-0">
+                    <span className="text-white/60 text-[.85em] mr-0.5 align-baseline font-semibold">#</span>
                     {tokenHref ? (
                       <a
                         href={tokenHref}
-                        className="token-name text-md font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent hover:underline truncate"
+                        className="token-name text-md font-bold hover:underline truncate"
                       >
-                        {tokenName}
+                        <span className="bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent font-bold">{tokenName}</span>
                       </a>
                     ) : (
-                      <div className="token-name text-md font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent truncate">
-                        {tokenName}
+                      <div className="token-name text-md font-bold truncate">
+                        <span className="bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent font-bold">{tokenName}</span>
                       </div>
                     )}
                   </div>
@@ -109,16 +120,15 @@ export default function AccountOwnedTokens({
                   </div>
 
                   <div className="flex items-center">
-                    {balanceData ? (
+                   
                       <div className="bg-gradient-to-r text-sm from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                         <PriceDataFormatter
+                          bignumber
                           watchPrice={false}
-                          priceData={balanceData}
+                          priceData={calculateTotalValue(balance, priceData)}
                         />
                       </div>
-                    ) : (
-                      <span className="text-white/60">-</span>
-                    )}
+                   
                   </div>
                 </div>
               );
@@ -127,8 +137,6 @@ export default function AccountOwnedTokens({
               address: address,
               orderBy: "balance",
               orderDirection: ownedOrderDirection,
-              limit: 100,
-              page: 1,
               enabled: !!address && tab === "owned",
               staleTime: 60_000,
             }}

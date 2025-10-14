@@ -10,6 +10,7 @@ import { encode, Encoded, Encoding } from "@aeternity/aepp-sdk";
 import { useToast } from "../ToastProvider";
 import { useAtom } from 'jotai';
 import { tipStatusAtom, type TipPhase, makeTipKey } from '../../atoms/tipAtoms';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function TipModal({ toAddress, onClose, payload }: { toAddress: string; onClose: () => void; payload?: string }) {
   const { sdk, activeAccount, activeNetwork } = useAeSdk();
@@ -17,6 +18,7 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
   const { chainName } = useChainName(toAddress);
   const toast = useToast();
   const [tipStatus, setTipStatus] = useAtom(tipStatusAtom);
+  const queryClient = useQueryClient();
 
   const aeBalanceAe = useMemo(() => {
     try {
@@ -70,6 +72,11 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
       const hash = res?.hash || res?.transactionHash || res?.tx?.hash || null;
       if (tipKey) {
         setTipStatus((s) => ({ ...s, [tipKey]: { status: 'success', updatedAt: Date.now() } }));
+        // Invalidate the post tip summary so the button reflects the new total
+        const idV3 = postIdForKey;
+        if (idV3) {
+          queryClient.invalidateQueries({ queryKey: ['post-tip-summary', idV3] });
+        }
         // Auto-reset success state after 2.5s
         setTimeout(() => {
           setTipStatus((s) => {

@@ -18,10 +18,6 @@ interface AccountTradesProps {
 }
 
 export default function AccountTrades({ address, tab }: AccountTradesProps) {
-  // Transactions pagination
-  const [txItemsPerPage, setTxItemsPerPage] = useState(10);
-  const [txCurrentPage, setTxCurrentPage] = useState(1);
-
   const isChainName = address?.endsWith(".chain");
   const { address: resolvedAddress } = useAddressByChainName(
     isChainName ? address : undefined
@@ -36,43 +32,17 @@ export default function AccountTrades({ address, tab }: AccountTradesProps) {
     return response as unknown as DataTableResponse<any>;
   };
 
-  // const {
-  //   data: txResp,
-  //   isFetching: loadingTx,
-  //   refetch: refetchTx,
-  //   error: txError,
-  // } = useQuery({
-  //   queryKey: [
-  //     "TransactionsService.listTransactions",
-  //     "account",
-  //     effectiveAddress,
-  //     txItemsPerPage,
-  //     txCurrentPage,
-  //   ],
-  //   queryFn: () =>
-  //     TransactionsService.listTransactions({
-  //       accountAddress: effectiveAddress,
-  //       includes: "token",
-  //       limit: txItemsPerPage,
-  //       page: txCurrentPage,
-  //     }) as unknown as Promise<{
-  //       items: any[];
-  //       meta: { totalItems: number; totalPages: number; currentPage: number };
-  //     }>,
-  //   enabled: !!effectiveAddress && tab === "transactions",
-  //   staleTime: 30_000,
-  //   refetchInterval: 60_000,
-  // });
-
   return (
     <div className="mt-4 space-y-4">
       {/* Table header */}
-      <div className="hidden md:grid grid-cols-7 gap-4 px-6 py-4 border border-white/10 rounded-2xl bg-white/[0.02] text-xs font-semibold text-white/60 uppercase tracking-wide">
+      <div
+        className={`hidden md:grid md:grid-cols-[2fr_1fr_1fr_1.5fr_1fr_2fr] gap-2 px-4 py-2 border border-white/10 rounded-2xl bg-white/[0.02] text-[10px] font-semibold text-white/60 uppercase tracking-wide`}
+      >
         <div>Token</div>
         <div>Type</div>
         <div>Volume</div>
-        <div>Unit Price</div>
-        <div>Total Price</div>
+        <div>Price</div>
+        {/* <div>Total Price</div> */}
         <div>Date</div>
         <div>Transaction</div>
       </div>
@@ -140,18 +110,27 @@ export default function AccountTrades({ address, tab }: AccountTradesProps) {
             return (
               <div
                 key={transaction.id}
-                className="grid grid-cols-1 md:grid-cols-7 gap-4 px-4 py-4 bg-white/[0.01]"
+                className={`grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1.5fr_1fr_2fr] gap-2 px-3 py-2 bg-white/[0.01]`}
               >
-                <div className="flex items-center p-1">
+                <div className="flex items-center">
                   <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
                     Token:
                   </div>
                   {tokenHref ? (
-                    <a href={tokenHref} className="text-white hover:underline">
+                    <a
+                      href={tokenHref}
+                      className="text-white hover:underline truncate text-sm"
+                      title={tokenName}
+                    >
                       {tokenName}
                     </a>
                   ) : (
-                    <div className="text-white">{tokenName}</div>
+                    <div
+                      className="text-white truncate text-sm"
+                      title={tokenName}
+                    >
+                      {tokenName}
+                    </div>
                   )}
                 </div>
 
@@ -160,7 +139,7 @@ export default function AccountTrades({ address, tab }: AccountTradesProps) {
                     Type:
                   </div>
                   <div
-                    className={`px-2 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${chipStyles.textColor} ${chipStyles.chipBg} border ${chipStyles.borderColor}`}
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${chipStyles.textColor} ${chipStyles.chipBg} border ${chipStyles.borderColor}`}
                   >
                     {transaction?.tx_type === TX_FUNCTIONS.create_community
                       ? "CREATED"
@@ -174,41 +153,42 @@ export default function AccountTrades({ address, tab }: AccountTradesProps) {
                   <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
                     Volume:
                   </div>
-                  <div className="text-white font-medium">
+                  <div className="text-white font-medium text-xs">
                     {formatVolume(transaction?.volume)}
                   </div>
                 </div>
 
-                <div className="flex items-center">
+                <div className="flex items-center text-xs">
                   <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
                     Unit Price:
                   </div>
-                  <PriceDataFormatter
-                    watchPrice={false}
-                    priceData={transaction?.unit_price}
-                  />
-                </div>
-
-                <div className="flex items-center">
-                  <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
-                    Total:
+                  <div className="flex md:flex-col flex-row  ga-4">
+                    <PriceDataFormatter
+                      watchPrice={false}
+                      priceData={transaction?.amount}
+                      hideFiatPrice
+                    />
+                    <div className="flex flex-row items-center ml-4 md:ml-0">
+                      <div>@&nbsp;</div>
+                      <PriceDataFormatter
+                        watchPrice={false}
+                        priceData={transaction?.unit_price}
+                        hideFiatPrice
+                      />
+                    </div>
                   </div>
-                  <PriceDataFormatter
-                    watchPrice={false}
-                    priceData={transaction?.amount}
-                  />
                 </div>
 
                 <div className="flex items-center">
                   <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
                     Date:
                   </div>
-                  <div className="text-white/70 text-sm">
+                  <div className="text-white/70 text-xs">
                     {formatLongDate(transaction?.created_at)}
                   </div>
                 </div>
 
-                <div className="flex items-center">
+                <div className="flex items-center text-xs">
                   <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
                     Tx:
                   </div>
@@ -217,18 +197,16 @@ export default function AccountTrades({ address, tab }: AccountTradesProps) {
               </div>
             );
           }}
-          itemsPerPage={20}
+          itemsPerPage={10}
           initialParams={{
             accountAddress: effectiveAddress,
             includes: "token",
-            limit: txItemsPerPage,
-            page: txCurrentPage,
             enabled: !!effectiveAddress && tab === "transactions",
             staleTime: 30_000,
             refetchInterval: 60_000,
           }}
           emptyMessage="No transactions found matching your."
-          className="space-y-4"
+          className="space-y-4 mb-4"
           errorComponent={(error) => (
             <div className="text-center py-12">
               <div className="text-red-400 text-lg mb-2">⚠️</div>

@@ -610,7 +610,7 @@ export default function CreateTokenView() {
                           type="submit"
                           variant="primary"
                           size="lg"
-                          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-12 md:h-13 py-3"
                           disabled={!tokenName || isCreating}
                         >
                           Create Token

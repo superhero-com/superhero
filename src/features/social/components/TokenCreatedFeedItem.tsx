@@ -98,7 +98,7 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
             className="mt-3 mb-2 w-full text-left bg-white/[0.04] rounded-xl p-3"
             title="Open token"
           >
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-1 min-w-0">
               <span className="text-[11px] text-white/65 shrink-0">Created</span>
               {tokenName && (
                 <span className="text-[12px] text-white/90 truncate">

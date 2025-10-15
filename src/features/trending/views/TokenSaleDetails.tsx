@@ -1,6 +1,6 @@
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { TokensService } from "../../../api/generated/services/TokensService";
 import { useAeSdk } from "../../../hooks/useAeSdk";
@@ -58,6 +58,11 @@ export default function TokenSaleDetails() {
   const [performance, setPerformance] = useState<any | null>(null);
   const [pendingLastsLong, setPendingLastsLong] = useState(false);
   const { ownedTokens } = useOwnedTokens();
+
+  // Ensure token page starts at top on mount
+  useEffect(() => {
+    try { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); } catch { window.scrollTo(0, 0); }
+  }, []);
 
   // Check if token is newly created (from local storage or state)
   const isTokenNewlyCreated = useMemo(() => {

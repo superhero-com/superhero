@@ -55,10 +55,10 @@ const TokenCreatedActivityItem = memo(({ item }: TokenCreatedActivityItemProps) 
       className="relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 py-2 md:w-full md:mx-0 md:p-3 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:rounded-2xl md:backdrop-blur-xl transition-colors hover:border-white/25 hover:shadow-none"
       aria-label={tokenName ? `Open trend ${tokenName}` : 'Open trend'}
     >
-      <div className="flex items-center justify-between gap-3 h-7">
+      <div className="flex items-center justify-between gap-3 h-8">
         <div className="flex items-center gap-2 min-w-0">
           <AddressAvatarWithChainNameFeed address={creator} size={20} overlaySize={12} showAddressAndChainName={false} />
-          <div className="flex items-center gap-1 min-w-0 text-[13px] leading-none">
+          <div className="flex items-center gap-1 min-w-0 text-[13px] leading-[1.2]">
             <span className="text-white/85 truncate max-w-[22ch]">{displayName}</span>
             <span className="text-white/50">·</span>
             <span className="text-white/70 shrink-0">Created</span>

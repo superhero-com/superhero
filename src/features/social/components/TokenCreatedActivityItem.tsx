@@ -59,7 +59,14 @@ const TokenCreatedActivityItem = memo(({ item }: TokenCreatedActivityItemProps) 
         <div className="flex items-center gap-1 min-w-0">
           <AddressAvatarWithChainNameFeed address={creator} size={20} overlaySize={12} showAddressAndChainName={false} />
           <div className="flex items-center gap-1 min-w-0 text-[13px] leading-[1.2]">
-            <span className="font-semibold text-white/90 truncate whitespace-nowrap max-w-[22ch]">{displayName}</span>
+            <a
+              href={`/users/${creator}`}
+              onClick={(e) => e.stopPropagation()}
+              className="font-semibold text-white/90 truncate whitespace-nowrap max-w-[22ch] no-gradient-text hover:underline underline-offset-2"
+              title={displayName}
+            >
+              {displayName}
+            </a>
             <span className="text-white/70 shrink-0">created</span>
             {tokenName && (
               <span className="truncate max-w-[24ch] text-white/90">

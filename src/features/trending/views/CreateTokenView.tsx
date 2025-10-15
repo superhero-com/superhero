@@ -66,6 +66,7 @@ export default function CreateTokenView() {
   // AE-first input mode and amounts
   const [inputMode, setInputMode] = useState<'AE' | 'TOKEN'>('AE');
   const [aeAmount, setAeAmount] = useState<string>('');
+  const [aeAmountDisplay, setAeAmountDisplay] = useState<string>('');
   const [collectionModel, setCollectionModel] = useState<CollectionId>();
   const [tokenMetaInfo, setTokenMetaInfo] = useState<TokenMetaInfo>({
     collection: 'word',
@@ -233,6 +234,39 @@ export default function CreateTokenView() {
     const regex = convertRulesToRegex(selectedCollection.allowed_name_chars);
     const processedValue = value.toUpperCase().replace(/ /g, '-').replace(regex, '');
     setTokenName(processedValue);
+  };
+
+  // Formatting helpers (thousands separator while preserving decimals typing)
+  const sanitizeNumeric = (value: string): string => {
+    let sanitized = value.replace(/,/g, '').replace(/[^0-9.]/g, '');
+    const parts = sanitized.split('.');
+    if (parts.length > 2) {
+      sanitized = parts[0] + '.' + parts.slice(1).join('');
+    }
+    const [intPart, decPart = ''] = sanitized.split('.');
+    const limitedDec = decPart.substring(0, 21);
+    return limitedDec ? `${intPart}.${limitedDec}` : intPart;
+  };
+
+  const formatThousands = (value: string): string => {
+    if (!value) return '';
+    const [intPart, decPart] = value.split('.');
+    const withSep = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return decPart !== undefined ? `${withSep}.${decPart}` : withSep;
+  };
+
+  const formatDisplayPreserveRaw = (raw: string): { display: string; sanitized: string } => {
+    const sanitized = sanitizeNumeric(raw);
+    const hasDot = raw.includes('.');
+    const rawDec = hasDot ? raw.split('.')[1] ?? '' : '';
+    const intSan = sanitizeNumeric(raw.split('.')[0] || '');
+    const intFormatted = formatThousands(intSan);
+    if (!hasDot) {
+      return { display: intFormatted, sanitized };
+    }
+    const cleanedRawDec = (rawDec || '').replace(/[^0-9]/g, '').substring(0, 21);
+    const display = `${intFormatted}.${cleanedRawDec}`;
+    return { display, sanitized };
   };
 
   // Focus and select Trend token name on mount
@@ -464,18 +498,22 @@ export default function CreateTokenView() {
                             <input
                               type="text"
                               inputMode="decimal"
-                              value={aeAmount}
-                              onChange={(e) => setAeAmount(e.target.value.replace(/[^0-9.]/g, ''))}
+                              value={aeAmountDisplay}
+                              onChange={(e) => {
+                                const { display, sanitized } = formatDisplayPreserveRaw(e.target.value);
+                                setAeAmountDisplay(display);
+                                setAeAmount(sanitized);
+                              }}
                               placeholder="0.0"
                               className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none"
                             />
                             <div className="text-white/80 font-semibold">AE</div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <button type="button" onClick={() => setAeAmount('1')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">1 AE</button>
-                            <button type="button" onClick={() => setAeAmount('10')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">10 AE</button>
-                            <button type="button" onClick={() => setAeAmount('100')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100 AE</button>
-                            <button type="button" onClick={() => setAeAmount('500')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">500 AE</button>
+                            <button type="button" onClick={() => { setAeAmount('1'); setAeAmountDisplay('1'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">1 AE</button>
+                            <button type="button" onClick={() => { setAeAmount('10'); setAeAmountDisplay('10'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">10 AE</button>
+                            <button type="button" onClick={() => { setAeAmount('100'); setAeAmountDisplay('100'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100 AE</button>
+                            <button type="button" onClick={() => { setAeAmount('500'); setAeAmountDisplay('500'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">500 AE</button>
                           </div>
                           <div className="text-sm text-white/70">
                             Estimated tokens you'll receive: <span className="text-white">{estimatedTokens.prettify()}</span>
@@ -488,8 +526,8 @@ export default function CreateTokenView() {
                             <input
                               type="text"
                               inputMode="decimal"
-                              value={initialBuyVolume}
-                              onChange={(e) => setInitialBuyVolume(e.target.value.replace(/[^0-9.]/g, ''))}
+                              value={formatThousands(initialBuyVolume)}
+                              onChange={(e) => setInitialBuyVolume(sanitizeNumeric(e.target.value))}
                               placeholder="0.0"
                               className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none"
                             />

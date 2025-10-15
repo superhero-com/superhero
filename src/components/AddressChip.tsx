@@ -97,7 +97,7 @@ export function AddressChip({
           ? (large ? "text-xs font-light font-mono" : "text-[10px] font-light font-mono")
           : (large ? "text-sm font-semibold" : "text-xs font-semibold")
       )}>
-        {formatAddress(address, large ? 8 : 6, true)}
+        {formatAddress(address, large ? 6 : 3, true)}
       </span>
       
       {/* Copy icon */}

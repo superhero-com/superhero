@@ -6,6 +6,7 @@ import { PriceDto } from "@/api/generated";
 import PriceDataFormatter from "@/features/shared/components/PriceDataFormatter";
 import { toAe } from '@aeternity/aepp-sdk';
 import { TokenDto } from "@/api/generated/models/TokenDto";
+import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 interface TokenSummaryProps {
   token: TokenDto;
   holders?: any[];
@@ -140,7 +141,7 @@ export default function TokenSummary({
             <div className="text-xs text-white/60 font-medium">
               Created By:
             </div>
-            <AddressChip address={token.creator_address} linkToExplorer />
+            <AddressAvatarWithChainName address={token.creator_address} />
           </div>
         )}
       </div>

@@ -368,18 +368,20 @@ export default function FeedList({
         {((sortBy !== "hot" && !activitiesLoading) || sortBy === "hot") && !isLoading && renderFeedItems}
       </div>
 
-      {!initialLoading && showLoadMore && hasNextPage && filteredAndSortedList.length > 0 && (
+      {!initialLoading && hasNextPage && filteredAndSortedList.length > 0 && (
         <>
           {/* Desktop: explicit load more button */}
-          <div className="hidden md:block p-4 md:p-6 text-center">
-            <AeButton
-              loading={isFetchingNextPage}
-              onClick={() => fetchNextPage()}
-              className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
-            >
-              Load more
-            </AeButton>
-          </div>
+          {showLoadMore && (
+            <div className="hidden md:block p-4 md:p-6 text-center">
+              <AeButton
+                loading={isFetchingNextPage}
+                onClick={() => fetchNextPage()}
+                className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
+              >
+                Load more
+              </AeButton>
+            </div>
+          )}
           {/* Auto-load sentinel for all breakpoints */}
           <div id="feed-infinite-sentinel" className="h-10" ref={sentinelRef} />
         </>

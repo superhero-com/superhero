@@ -456,8 +456,9 @@ export default function CreateTokenView() {
                       />
                       </div>
                       {validateStringWithCustomErrors(tokenName)}
-                      <div className="text-xs text-white/60 mt-1">
-                        {tokenName.length}/20 characters • Allowed: CAPITAL LETTERS and dashes (-)
+                      <div className="text-xs text-white/60 mt-1 flex items-center justify-between">
+                        <span>{tokenName.length}/20 characters</span>
+                        <span className="opacity-80">Allowed: CAPITAL LETTERS and dashes (-)</span>
                       </div>
                     </div>
 

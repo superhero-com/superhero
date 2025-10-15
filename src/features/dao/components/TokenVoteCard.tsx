@@ -105,7 +105,7 @@ export default function TokenVoteCard({
             className="border-white/20 bg-white/5 text-white hover:bg-white/10"
             onClick={() => {
               navigate(
-                `/trending/dao/${saleAddress}/vote/${voteId.toString()}/${address.toString()}`
+                `/trends/dao/${saleAddress}/vote/${voteId.toString()}/${address.toString()}`
               );
             }}
           >

@@ -19,10 +19,10 @@ export const navigationItems: NavigationItem[] = [
   configs.features.trending && {
     id: "trending",
     label: "Trends",
-    path: "/trending/tokens",
+    path: "/trends/tokens",
     icon: "📈",
     children: [
-      { id: "invite", label: "Invite & Earn", path: "/trending/invite", icon: "🎁" },
+      { id: "invite", label: "Invite & Earn", path: "/trends/invite", icon: "🎁" },
     ],
   },
   {

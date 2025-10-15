@@ -56,7 +56,7 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
                 textAnchor="middle"
                 fill={['#3b82f6', '#f59e0b', '#10b981', '#ef4444'][i % 4]}
                 className="cursor-pointer font-extrabold hover:opacity-80 transition-opacity duration-200"
-                onClick={() => window.location.assign(`/trending/create?new=${encodeURIComponent(w.text)}`)}
+                onClick={() => window.location.assign(`/trends/create?new=${encodeURIComponent(w.text)}`)}
               >
                 {w.text}
               </text>
@@ -77,7 +77,7 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
           <div className="text-xs opacity-75 text-white/75">Alternative layout powered by visx wordcloud.</div>
         </div>
         <a 
-          href="/trending" 
+          href="/trends" 
           className="px-3 py-2 rounded-full border border-white/20 bg-white text-black no-underline hover:bg-gray-100 transition-colors duration-200 text-sm font-medium"
         >
           Switch to default

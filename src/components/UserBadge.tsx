@@ -57,7 +57,7 @@ export default function UserBadge({
 
   const hrefPath =
     linkTo === "account"
-      ? `/trending/accounts/${address}`
+      ? `/trends/accounts/${address}`
       : `/users/${address}`;
 
   return (

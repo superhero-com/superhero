@@ -163,7 +163,7 @@ export default function Dao() {
         
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
           <Link
-            to={`/trending/tokens/${encodeURIComponent(saleAddress || "")}`}
+            to={`/trends/tokens/${encodeURIComponent(saleAddress || "")}`}
             className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
           >
             ← Back to token sale

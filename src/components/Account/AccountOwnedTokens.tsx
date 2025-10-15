@@ -72,7 +72,7 @@ export default function AccountOwnedTokens({
                 `Token ${index + 1}`;
               const tokenHref =
                 token?.name || token?.address
-                  ? `/trending/tokens/${encodeURIComponent(
+                  ? `/trends/tokens/${encodeURIComponent(
                       token?.name || token?.address
                     )}`
                   : undefined;

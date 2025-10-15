@@ -1,11 +1,11 @@
 import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter';
 import { AssetInput } from '@/features/trending';
 import { Decimal } from '@/libs/decimal';
-import { calculateBuyPriceWithAffiliationFee, toDecimals } from '@/utils/bondingCurve';
+import { calculateBuyPriceWithAffiliationFee, calculateTokensFromAE, toDecimals } from '@/utils/bondingCurve';
 import { toAe } from "@aeternity/aepp-sdk";
 import { createCommunity } from "bctsl-sdk";
 import BigNumber from "bignumber.js";
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { TrendminerApi } from '../../../api/backend';
 import AeButton from '../../../components/AeButton';
@@ -47,6 +47,7 @@ export default function CreateTokenView() {
   const navigate = useNavigate();
   const location = useLocation();
   const { activeAccount, sdk } = useAeSdk();
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const {
     activeFactorySchema,
     activeFactoryCollections,
@@ -60,7 +61,12 @@ export default function CreateTokenView() {
 
   // Form state
   const [tokenName, setTokenName] = useState(initialTokenName);
+  // Token count (used in TOKEN mode)
   const [initialBuyVolume, setInitialBuyVolume] = useState<string>('');
+  // AE-first input mode and amounts
+  const [inputMode, setInputMode] = useState<'AE' | 'TOKEN'>('AE');
+  const [aeAmount, setAeAmount] = useState<string>('');
+  const [aeAmountDisplay, setAeAmountDisplay] = useState<string>('');
   const [collectionModel, setCollectionModel] = useState<CollectionId>();
   const [tokenMetaInfo, setTokenMetaInfo] = useState<TokenMetaInfo>({
     collection: 'word',
@@ -74,7 +80,7 @@ export default function CreateTokenView() {
   const [errorMessage, setErrorMessage] = useState<string>();
   const [alreadyRegisteredName, setAlreadyRegisteredName] = useState<string>();
   const [alreadyRegisteredAs, setAlreadyRegisteredAs] = useState<string>();
-  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  // Advanced options removed
   const [loadingPrice, setLoadingPrice] = useState(false);
   const [price, setPrice] = useState(Decimal.ZERO);
 
@@ -82,6 +88,7 @@ export default function CreateTokenView() {
   const [loading, setLoading] = useState(true);
 
   const initialBuyVolumeDebounced = useDebounce(initialBuyVolume, 300);
+  const aeAmountDebounced = useDebounce(aeAmount, 300);
 
   // Computed values - use from the hook
   const activeFactoryCollectionsArr = useMemo(() =>
@@ -118,28 +125,27 @@ export default function CreateTokenView() {
     }
   }, [activeFactorySchema, collectionModel, activeFactoryCollectionsArr]);
 
-  // Price calculation effect
+  // Price/estimate calculation effects
+  // TOKEN mode: estimate AE cost from token count
   useEffect(() => {
-    const calculatePrice = async () => {
+    if (inputMode !== 'TOKEN') return;
+    const run = async () => {
       if (!initialBuyVolumeDebounced || isNaN(Number(initialBuyVolumeDebounced))) {
         setPrice(Decimal.ZERO);
         return;
       }
-
       setLoadingPrice(true);
       try {
-        // This would use your actual price calculation logic
-        // For now, using a simplified calculation
-        const volume = Number(initialBuyVolumeDebounced);
-        const calculatedPrice = !volume || isNaN(volume) ? Decimal.ZERO : Decimal.from(
+        const tokenCount = Number(initialBuyVolumeDebounced);
+        const cost = !tokenCount || isNaN(tokenCount) ? Decimal.ZERO : Decimal.from(
           toAe(
             calculateBuyPriceWithAffiliationFee(
               new BigNumber(0),
-              new BigNumber(toDecimals(volume, 18).toString()),
+              new BigNumber(toDecimals(tokenCount, 18).toString()),
             ),
           ),
         );
-        setPrice(calculatedPrice);
+        setPrice(cost);
       } catch (error) {
         console.error('Price calculation error:', error);
         setPrice(Decimal.ZERO);
@@ -147,9 +153,32 @@ export default function CreateTokenView() {
         setLoadingPrice(false);
       }
     };
+    run();
+  }, [inputMode, initialBuyVolumeDebounced]);
 
-    calculatePrice();
-  }, [initialBuyVolumeDebounced]);
+  // AE mode: estimate tokens from AE amount
+  const [estimatedTokens, setEstimatedTokens] = useState<Decimal>(Decimal.ZERO);
+  useEffect(() => {
+    if (inputMode !== 'AE') return;
+    const run = async () => {
+      if (!aeAmountDebounced || isNaN(Number(aeAmountDebounced))) {
+        setEstimatedTokens(Decimal.ZERO);
+        return;
+      }
+      setLoadingPrice(true);
+      try {
+        const ae = Number(aeAmountDebounced);
+        const tokensBn = calculateTokensFromAE(new BigNumber(0), ae);
+        setEstimatedTokens(Decimal.from(tokensBn.toString()));
+      } catch (error) {
+        console.error('Token estimation error:', error);
+        setEstimatedTokens(Decimal.ZERO);
+      } finally {
+        setLoadingPrice(false);
+      }
+    };
+    run();
+  }, [inputMode, aeAmountDebounced]);
 
   // Validation functions
   const convertRulesToRegex = (rules: IAllowedNameChars[]): RegExp => {
@@ -207,6 +236,47 @@ export default function CreateTokenView() {
     setTokenName(processedValue);
   };
 
+  // Formatting helpers (thousands separator while preserving decimals typing)
+  const sanitizeNumeric = (value: string): string => {
+    let sanitized = value.replace(/,/g, '').replace(/[^0-9.]/g, '');
+    const parts = sanitized.split('.');
+    if (parts.length > 2) {
+      sanitized = parts[0] + '.' + parts.slice(1).join('');
+    }
+    const [intPart, decPart = ''] = sanitized.split('.');
+    const limitedDec = decPart.substring(0, 21);
+    return limitedDec ? `${intPart}.${limitedDec}` : intPart;
+  };
+
+  const formatThousands = (value: string): string => {
+    if (!value) return '';
+    const [intPart, decPart] = value.split('.');
+    const withSep = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return decPart !== undefined ? `${withSep}.${decPart}` : withSep;
+  };
+
+  const formatDisplayPreserveRaw = (raw: string): { display: string; sanitized: string } => {
+    const sanitized = sanitizeNumeric(raw);
+    const hasDot = raw.includes('.');
+    const rawDec = hasDot ? raw.split('.')[1] ?? '' : '';
+    const intSan = sanitizeNumeric(raw.split('.')[0] || '');
+    const intFormatted = formatThousands(intSan);
+    if (!hasDot) {
+      return { display: intFormatted, sanitized };
+    }
+    const cleanedRawDec = (rawDec || '').replace(/[^0-9]/g, '').substring(0, 21);
+    const display = `${intFormatted}.${cleanedRawDec}`;
+    return { display, sanitized };
+  };
+
+  // Focus and select Trend token name on mount
+  useEffect(() => {
+    if (nameInputRef.current) {
+      nameInputRef.current.focus();
+      nameInputRef.current.select();
+    }
+  }, []);
+
   // Token creation
   const deploy = async () => {
     try {
@@ -224,6 +294,18 @@ export default function CreateTokenView() {
         throw new Error('SDK not available');
       }
 
+      // Determine initial buy token count from selected mode
+      let initialBuyCount: number = 0;
+      if (inputMode === 'AE') {
+        const ae = Number(aeAmount || 0);
+        if (ae > 0) {
+          const tokensBn = calculateTokensFromAE(new BigNumber(0), ae);
+          initialBuyCount = Number(tokensBn.toString());
+        }
+      } else {
+        initialBuyCount = Number(initialBuyVolume || 0);
+      }
+
       await createCommunity(
         sdk,
         selectedCollection.id,
@@ -232,14 +314,14 @@ export default function CreateTokenView() {
             name: tokenName,
           },
           metaInfo: new Map(Object.entries(tokenMetaInfo)),
-          initialBuyCount: initialBuyVolume || 0,
+          initialBuyCount,
         },
         undefined,
         factory.address
       );
 
       // Navigate to token details
-      navigate(`/trending/tokens/${tokenName}`);
+      navigate(`/trends/tokens/${tokenName}`);
     } catch (error: any) {
       console.error('Error creating token:', error);
       const message = error?.message || error?.reason || 'Unknown error';
@@ -291,9 +373,9 @@ export default function CreateTokenView() {
   }
 
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-4">
-      <div className="rounded-[24px] mt-4 mb-6 mx-4" style={{ background: 'linear-gradient(90deg, rgba(244, 193, 12, 0.1), rgba(255, 109, 21, 0.1))' }}>
-        <div className="max-w-[1400px] mx-auto p-4 sm:p-6">
+    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-2 md:px-4">
+      <div className="rounded-[24px] mt-4 mb-6 mx-0 md:mx-4 md:[background:linear-gradient(90deg,rgba(244,193,12,0.1),rgba(255,109,21,0.1))]">
+        <div className="max-w-[1400px] mx-auto p-0 md:p-6">
           <div className="flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
             {/* Left Side - Banner Content */}
             <div className="min-w-0 flex-1">
@@ -307,7 +389,7 @@ export default function CreateTokenView() {
                     Own the Trend.
                   </span>
                 </div>
-                <p className="text-white/75 max-w-3xl lg:max-w-none text-lg leading-relaxed mb-6">
+                <p className="text-white/75 max-w-3xl lg:max-w-none text-lg leading-relaxed mb-0 md:mb-6">
                   Tokenized trends are community tokens launched on a bonding curve.
                   Price moves with buys/sells, no order books. Each token mints a DAO treasury
                   that can fund initiatives via on-chain votes.
@@ -316,8 +398,8 @@ export default function CreateTokenView() {
             </div>
 
             {/* Right Side - Create Token Form */}
-            <div className="max-w-[500px] flex-shrink-0">
-              <div className="bg-white/5 rounded-[24px] border border-white/10 backdrop-blur-xl p-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))' }}>
+            <div className="max-w-[620px] flex-shrink-0">
+              <div className="bg-white/5 rounded-[16px] md:rounded-[24px] border border-white/10 backdrop-blur-xl py-3 px-2 md:p-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))' }}>
                 {!activeFactorySchema ? (
                   <div className="space-y-4">
                     <div className="animate-pulse">
@@ -356,22 +438,27 @@ export default function CreateTokenView() {
                       </div>
                     )}
 
-                    {/* Token Name Input */}
+                    {/* Trend token name */}
                     <div>
                       <label className="block text-sm font-medium text-white/80 mb-2">
-                        Unique Token Name
+                        Trend token name
                       </label>
+                      <div className="flex items-center gap-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 focus-within:border-white/30">
+                        <span className="text-white/70 text-2xl font-bold select-none">#</span>
                       <Input
+                          ref={nameInputRef}
                         value={tokenName}
                         onChange={(e) => onNameUpdate(e.target.value)}
-                        placeholder={selectedCollection ? `Enter ${selectedCollection.name?.toLowerCase()} name` : 'Enter token name'}
+                          placeholder={'TREND'}
                         maxLength={20}
                         required
-                        className="bg-transparent text-white border-gray-600/50 placeholder:text-white/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 rounded-lg transition-all duration-200 autofill:bg-transparent autofill:text-white"
+                          className="flex-1 bg-transparent text-white text-2xl md:text-3xl font-extrabold leading-tight border-0 border-none outline-none focus-visible:outline-none shadow-none placeholder:text-white/30 focus:border-0 focus:ring-0 focus-visible:ring-0 px-0 autofill:bg-transparent autofill:text-white"
                       />
+                      </div>
                       {validateStringWithCustomErrors(tokenName)}
-                      <div className="text-xs text-white/60 mt-1">
-                        {tokenName.length}/20 characters
+                      <div className="text-xs text-white/60 mt-1 md:flex md:items-center md:justify-between">
+                        <span>{tokenName.length}/20 characters</span>
+                        <span className="opacity-80 block md:inline mt-1 md:mt-0">Allowed are CAPITAL LETTERS and dashes (-)</span>
                       </div>
                     </div>
 
@@ -382,7 +469,7 @@ export default function CreateTokenView() {
                           Token <span className="font-mono font-bold">{alreadyRegisteredName}</span> is already registered.{' '}
                           <button
                             type="button"
-                            onClick={() => navigate(`/trending/tokens/${alreadyRegisteredAs}`)}
+                            onClick={() => navigate(`/trends/tokens/${alreadyRegisteredAs}`)}
                             className="text-blue-400 hover:text-blue-300 underline"
                           >
                             Buy it here
@@ -391,99 +478,121 @@ export default function CreateTokenView() {
                       </div>
                     )}
 
-                    {/* Initial Buy Volume */}
+                    {/* Initial Buy - AE-first with toggle */}
                     <div>
-                      <label className="block text-sm font-medium text-white/80 mb-2">
-                        Initial Buy Volume (AE)
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <label className="block text-sm font-medium text-white/80">
+                            {inputMode === 'AE' ? 'Amount to spend (AE)' : 'Tokens to buy'}
                       </label>
-                      <AssetInput
-                        modelValue={initialBuyVolume}
-                        onUpdateModelValue={(value) => setInitialBuyVolume(value)}
-                        tokenSymbol={tokenName}
-                        isCoin={false}
-                        maxBtnAllowed
-                        className="bg-transparent text-white border-0 placeholder:text-white/50 focus:ring-2 focus:ring-purple-400/20 rounded-lg transition-all duration-200 autofill:bg-transparent"
-                      />
-                      <div className="text-sm text-white/70 mt-2">
-                        <p>This amount will be used to buy initial tokens for your wallet.</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          <span>Cost:</span>
+                          {/* Tooltip */}
+                          <div className="relative group inline-block align-middle">
+                            <span
+                              tabIndex={0}
+                              className="text-white/70 cursor-help select-none leading-none px-1"
+                              aria-label={inputMode === 'AE' 
+                                ? "This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"
+                                : "This is the number of tokens you'll pre-buy before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}
+                            >
+                              ⓘ
+                            </span>
+                            <div className="fixed left-1/2 -translate-x-1/2 top-24 sm:absolute sm:left-0 sm:translate-x-0 sm:top-full mt-1 hidden group-hover:block group-focus-within:block w-[320px] max-w-[min(92vw,360px)] rounded-lg border border-white/10 bg-black/80 text-white text-xs p-3 shadow-xl z-50">
+                              {inputMode === 'AE'
+                                ? "This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"
+                                : "This is the number of tokens you'll pre-buy before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setInputMode(inputMode === 'AE' ? 'TOKEN' : 'AE')}
+                          className="text-xs underline text-purple-300 hover:text-purple-200"
+                        >
+                          Switch to {inputMode === 'AE' ? 'Tokens' : 'AE'}
+                        </button>
+                      </div>
+
+                      {inputMode === 'AE' ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={aeAmountDisplay}
+                              onChange={(e) => {
+                                const { display, sanitized } = formatDisplayPreserveRaw(e.target.value);
+                                setAeAmountDisplay(display);
+                                setAeAmount(sanitized);
+                              }}
+                              placeholder="0.0"
+                              title={"This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}
+                              className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none shadow-none"
+                            />
+                            <div className="text-white font-extrabold text-2xl leading-none">AE</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => { setAeAmount('1'); setAeAmountDisplay('1'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">1 AE</button>
+                            <button type="button" onClick={() => { setAeAmount('10'); setAeAmountDisplay('10'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">10 AE</button>
+                            <button type="button" onClick={() => { setAeAmount('100'); setAeAmountDisplay('100'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100 AE</button>
+                            <button type="button" onClick={() => { setAeAmount('500'); setAeAmountDisplay('500'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">500 AE</button>
+                            <button type="button" onClick={() => { setAeAmount('100000'); setAeAmountDisplay('100,000'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100K AE</button>
+                          </div>
+                          <div className="text-sm text-white/70">
+                            Estimated tokens you'll receive: <span className="text-white">{estimatedTokens.prettify()}</span>
+                          </div>
+                          
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={formatThousands(initialBuyVolume)}
+                              onChange={(e) => setInitialBuyVolume(sanitizeNumeric(e.target.value))}
+                              placeholder="0.0"
+                              className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none shadow-none"
+                            />
+                            <div className="text-white font-extrabold text-2xl leading-none">TOKENS</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => setInitialBuyVolume('500000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">500K</button>
+                            <button type="button" onClick={() => setInitialBuyVolume('1000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">1M</button>
+                            <button type="button" onClick={() => setInitialBuyVolume('5000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">5M</button>
+                            <button type="button" onClick={() => setInitialBuyVolume('10000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">10M</button>
+                            <button type="button" onClick={() => setInitialBuyVolume('100000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100M</button>
+                          </div>
+                          <div className="text-sm text-white/70 mt-1">
+                            <div className="flex flex-wrap gap-1 items-center">
+                              <span>Estimated cost:</span>
                           <LivePriceFormatter
                             row
                             aePrice={price}
                             watchPrice={false}
                             priceLoading={loadingPrice}
                           />
-                          <span>including fees.</span>
-                        </div>
-                      </div>
+                              <span>(incl. fees)</span>
                     </div>
-
-                    {/* Advanced Options Toggle */}
-                    <button
-                      type="button"
-                      onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
-                      className="text-purple-400 hover:text-purple-300 text-sm underline"
-                    >
-                      {showAdvancedOptions ? 'Hide' : 'Show'} Advanced Options
-                    </button>
-
-                    {/* Advanced Options */}
-                    {showAdvancedOptions && (
-                      <div className="space-y-4 pt-4 border-t border-white/10">
-                        <div>
-                          <label className="block text-sm font-medium text-white/80 mb-2">
-                            Description
-                          </label>
-                          <textarea
-                            value={tokenMetaInfo.description}
-                            onChange={(e) => setTokenMetaInfo(prev => ({ ...prev, description: e.target.value }))}
-                            placeholder="Describe your token..."
-                            maxLength={500}
-                            rows={3}
-                            className="w-full px-3 py-2 bg-transparent text-white border border-gray-600/50 rounded-lg focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 placeholder:text-white/50 resize-none transition-all duration-200"
-                          />
-                          <div className="text-xs text-white/60 mt-1">
-                            {tokenMetaInfo.description.length}/500 characters
                           </div>
                         </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-white/80 mb-2">
-                            Website
-                          </label>
-                          <Input
-                            type="url"
-                            value={tokenMetaInfo.website}
-                            onChange={(e) => setTokenMetaInfo(prev => ({ ...prev, website: e.target.value }))}
-                            placeholder="https://mytoken.com"
-                            className="bg-transparent text-white border-gray-600/50 placeholder:text-white/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 rounded-lg transition-all duration-200 autofill:bg-transparent autofill:text-white"
-                          />
+                      )}
+                      {/* Shared explanatory note (tooltip carries the AE explanation now) */}
+                      <div className="text-sm text-white/80 bg-white/5 rounded-lg p-3 mt-2 space-y-1">
+                        <div className="text-white text-sm md:text-md">
+                          Once created, your token will be available for trading on the platform. The bonding curve mechanism ensures fair price discovery based on supply and demand.
                         </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-white/80 mb-2">
-                            Twitter
-                          </label>
-                          <Input
-                            type="url"
-                            value={tokenMetaInfo.twitter}
-                            onChange={(e) => setTokenMetaInfo(prev => ({ ...prev, twitter: e.target.value }))}
-                            placeholder="https://twitter.com/mytoken"
-                            className="bg-transparent text-white border-gray-600/50 placeholder:text-white/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 rounded-lg transition-all duration-200 autofill:bg-transparent autofill:text-white"
-                          />
+                        <div className="opacity-80">
+                          You'll deploy the token contract directly from your own wallet. Superhero simply facilitates the creation process.
                         </div>
                       </div>
-                    )}
-
-                    {/* Note */}
-                    <div className="text-sm text-white/70 bg-white/5 rounded-lg p-3">
-                      <strong>Note:</strong> Once created, your token will be available for trading on our platform.
-                      The bonding curve mechanism ensures fair price discovery based on supply and demand.
                     </div>
 
+                    {/* Advanced options removed */}
+
+                    {/* Note consolidated above with input explanatory block */}
+
                     {/* Submit Section */}
-                    <div className="pt-4">
+                    <div className="md:pt-4">
                       {!activeAccount ? (
                         <div className="space-y-3">
                           <ConnectWalletButton
@@ -516,7 +625,7 @@ export default function CreateTokenView() {
                           type="submit"
                           variant="primary"
                           size="lg"
-                          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-12 md:h-13 py-3"
                           disabled={!tokenName || isCreating}
                         >
                           Create Token

@@ -145,14 +145,14 @@ export default function TokenSaleDetails() {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => navigate("/trending/tokens")}
+              onClick={() => navigate("/trends/tokens")}
               className="border-white/20 bg-white/5 text-white hover:bg-white/10"
             >
               ← Back to Token List
             </Button>
             <Button
               size="lg"
-              onClick={() => navigate(`/trending/create?name=${tokenName}`)}
+              onClick={() => navigate(`/trends/create?name=${tokenName}`)}
               className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] hover:shadow-lg"
             >
               Claim It
@@ -412,7 +412,7 @@ export default function TokenSaleDetails() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => navigate("/trending/tokens")}
+              onClick={() => navigate("/trends/tokens")}
               className="border-white/20 bg-white/5 text-white hover:bg-white/10"
             >
               ←

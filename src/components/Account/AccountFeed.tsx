@@ -117,7 +117,7 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
         enabled: !!address && tab === "feed",
       }}
       itemsPerPage={10}
-      emptyMessage="No feed found matching your criteria."
+      emptyMessage={createdActivities.length > 0 ? "" : "No posts yet"}
       className="space-y-4"
     />
     </>

@@ -484,14 +484,23 @@ export default function CreateTokenView() {
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <AssetInput
-                            modelValue={initialBuyVolume}
-                            onUpdateModelValue={(value) => setInitialBuyVolume(value)}
-                            tokenSymbol={tokenName}
-                            isCoin={false}
-                            maxBtnAllowed
-                            className="bg-transparent text-white border-0 placeholder:text-white/50 focus:ring-2 focus:ring-purple-400/20 rounded-lg transition-all duration-200 autofill:bg-transparent"
-                          />
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={initialBuyVolume}
+                              onChange={(e) => setInitialBuyVolume(e.target.value.replace(/[^0-9.]/g, ''))}
+                              placeholder="0.0"
+                              className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none"
+                            />
+                            <div className="text-white/80 font-semibold">TOKENS</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => setInitialBuyVolume('500000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">500K</button>
+                            <button type="button" onClick={() => setInitialBuyVolume('1000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">1M</button>
+                            <button type="button" onClick={() => setInitialBuyVolume('5000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">5M</button>
+                            <button type="button" onClick={() => setInitialBuyVolume('10000000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">10M</button>
+                          </div>
                           <div className="text-sm text-white/70 mt-1">
                             <div className="flex flex-wrap gap-1 items-center">
                               <span>Estimated cost:</span>

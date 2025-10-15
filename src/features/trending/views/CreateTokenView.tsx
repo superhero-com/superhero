@@ -364,7 +364,7 @@ export default function CreateTokenView() {
             </div>
 
             {/* Right Side - Create Token Form */}
-            <div className="max-w-[500px] flex-shrink-0">
+            <div className="max-w-[620px] flex-shrink-0">
               <div className="bg-white/5 rounded-[24px] border border-white/10 backdrop-blur-xl p-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))' }}>
                 {!activeFactorySchema ? (
                   <div className="space-y-4">

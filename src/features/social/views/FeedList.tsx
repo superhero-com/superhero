@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PostsService } from "../../../api/generated";
 import type { PostDto } from "../../../api/generated";
 import { TrendminerApi } from "../../../api/backend";
@@ -29,6 +29,7 @@ export default function FeedList({
   const navigate = useNavigate();
   const urlQuery = useUrlQuery();
   const { chainNames } = useWallet();
+  const queryClient = useQueryClient();
 
   // Comment counts are now provided directly by the API in post.total_comments
 
@@ -38,9 +39,6 @@ export default function FeedList({
   const filterBy = urlQuery.get("filterBy") || "all";
 
   const [localSearch, setLocalSearch] = useState(search);
-
-  // Token-created events mapped into Post-like items
-  const [tokenEvents, setTokenEvents] = useState<PostDto[]>([]);
 
   // Helper to map a token object or websocket payload into a Post-like item
   const mapTokenCreatedToPost = useCallback((payload: any): PostDto => {
@@ -75,56 +73,51 @@ export default function FeedList({
     } as PostDto;
   }, []);
 
-  // Initial fetch of recent token-created events
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const resp = await TrendminerApi.listTokens({
-          orderBy: "created_at",
-          orderDirection: "DESC",
-          limit: 50,
-        }).catch(() => ({ items: [] }));
-        if (cancelled) return;
-        const items: any[] = resp?.items || [];
-        const mapped = items
-          .map((t) => ({
-            sale_address: t?.sale_address || t?.address || "",
-            token_name: t?.name || "Unknown",
-            created_at: t?.created_at || new Date().toISOString(),
-            creator_address:
-              t?.creator_address ||
-              t?.creatorAddress ||
-              (t?.creator && (t?.creator.address || t?.creator)) ||
-              t?.owner_address ||
-              "",
-          }))
-          .map(mapTokenCreatedToPost);
-        setTokenEvents(mapped);
-      } catch {
-        if (!cancelled) setTokenEvents([]);
-      }
-    }
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [mapTokenCreatedToPost]);
+  // Activities (token-created) fetched in parallel
+  const {
+    data: activityList = [],
+    isLoading: activitiesLoading,
+  } = useQuery<PostDto[]>({
+    queryKey: ["home-activities"],
+    enabled: sortBy !== "hot",
+    staleTime: 30_000,
+    queryFn: async () => {
+      const resp = await TrendminerApi.listTokens({
+        orderBy: "created_at",
+        orderDirection: "DESC",
+        limit: 50,
+      }).catch(() => ({ items: [] }));
+      const items: any[] = resp?.items || [];
+      return items
+        .map((t) => ({
+          sale_address: t?.sale_address || t?.address || "",
+          token_name: t?.name || "Unknown",
+          created_at: t?.created_at || new Date().toISOString(),
+          creator_address:
+            t?.creator_address ||
+            t?.creatorAddress ||
+            (t?.creator && (t?.creator.address || t?.creator)) ||
+            t?.owner_address ||
+            "",
+        }))
+        .map(mapTokenCreatedToPost);
+    },
+  });
 
   // Live updates for token-created via websocket
   useEffect(() => {
+    if (sortBy === "hot") return;
     const unsubscribe = WebSocketClient.subscribeToNewTokenSales((payload: any) => {
-      setTokenEvents((prev) => {
-        const mapped = mapTokenCreatedToPost(payload);
-        // avoid duplicates by id
-        if (prev.some((p) => p.id === mapped.id)) return prev;
+      const mapped = mapTokenCreatedToPost(payload);
+      queryClient.setQueryData(["home-activities"], (prev: any[] = []) => {
+        if (prev.some((p) => p?.id === mapped.id)) return prev;
         return [mapped, ...prev].slice(0, 100);
       });
     });
     return () => {
       if (typeof unsubscribe === "function") unsubscribe();
     };
-  }, [mapTokenCreatedToPost]);
+  }, [mapTokenCreatedToPost, queryClient, sortBy]);
 
   // Infinite query for posts
   const {
@@ -165,7 +158,7 @@ export default function FeedList({
 
   // Derived state: posts list
   const list = useMemo(
-    () => data?.pages?.flatMap((page) => page?.items ?? []) ?? [],
+    () => (data?.pages ? (data.pages as any[]).flatMap((page: any) => page?.items ?? []) : []),
     [data]
   );
 
@@ -173,13 +166,13 @@ export default function FeedList({
   const combinedList = useMemo(() => {
     // Hide token-created events on the popular (hot) tab
     const includeEvents = sortBy !== "hot";
-    const merged = includeEvents ? [...tokenEvents, ...list] : [...list];
+    const merged = includeEvents ? [...activityList, ...list] : [...list];
     return merged.sort((a: any, b: any) => {
       const at = new Date(a?.created_at || 0).getTime();
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     });
-  }, [list, tokenEvents, sortBy]);
+  }, [list, activityList, sortBy]);
 
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {
@@ -245,13 +238,14 @@ export default function FeedList({
 
   // Render helpers
   const renderEmptyState = () => {
+    const initialLoading = (sortBy !== "hot" && activitiesLoading) || isLoading;
     if (error) {
       return <EmptyState type="error" error={error} onRetry={refetch} />;
     }
-    if (!error && filteredAndSortedList.length === 0 && !isLoading) {
+    if (!error && filteredAndSortedList.length === 0 && !initialLoading) {
       return <EmptyState type="empty" hasSearch={!!localSearch} />;
     }
-    if (isLoading && filteredAndSortedList.length === 0) {
+    if (initialLoading && filteredAndSortedList.length === 0) {
       return <EmptyState type="loading" />;
     }
     return null;

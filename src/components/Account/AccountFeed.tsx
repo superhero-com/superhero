@@ -4,6 +4,7 @@ import {
   DataTableResponse,
 } from "@/features/shared/components/DataTable";
 import ReplyToFeedItem from "@/features/social/components/ReplyToFeedItem";
+import TokenCreatedFeedItem from "@/features/social/components/TokenCreatedFeedItem";
 import { PostApiResponse } from "@/features/social/types";
 import { useNavigate } from "react-router-dom";
 
@@ -25,15 +26,28 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
   return (
     <DataTable
       queryFn={fetchFeed}
-      renderRow={({ item, index }) => (
-        <ReplyToFeedItem
-          key={item.id}
-          item={item}
-          commentCount={item.total_comments ?? 0}
-          allowInlineRepliesToggle={false}
-          onOpenPost={(id: string) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)}
-        />
-      )}
+      renderRow={({ item, index }) => {
+        const postId = item.id;
+        const isTokenCreated = String(postId).startsWith("token-created:");
+        if (isTokenCreated) {
+          return (
+            <TokenCreatedFeedItem
+              key={postId}
+              item={item}
+              onOpenPost={(id: string) => navigate(`/trends/tokens/${String(id)}`)}
+            />
+          );
+        }
+        return (
+          <ReplyToFeedItem
+            key={item.id}
+            item={item}
+            commentCount={item.total_comments ?? 0}
+            allowInlineRepliesToggle={false}
+            onOpenPost={(id: string) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)}
+          />
+        );
+      }}
       initialParams={{
         accountAddress: address,
         orderBy: "created_at",

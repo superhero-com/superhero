@@ -170,13 +170,15 @@ export default function FeedList({
 
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo(() => {
-    const merged = [...tokenEvents, ...list];
+    // Hide token-created events on the popular (hot) tab
+    const includeEvents = sortBy !== "hot";
+    const merged = includeEvents ? [...tokenEvents, ...list] : [...list];
     return merged.sort((a: any, b: any) => {
       const at = new Date(a?.created_at || 0).getTime();
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     });
-  }, [list, tokenEvents]);
+  }, [list, tokenEvents, sortBy]);
 
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {

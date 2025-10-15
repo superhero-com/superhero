@@ -374,8 +374,8 @@ export default function CreateTokenView() {
 
   return (
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-0 md:px-4">
-      <div className="rounded-[24px] mt-4 mb-6 mx-4" style={{ background: 'linear-gradient(90deg, rgba(244, 193, 12, 0.1), rgba(255, 109, 21, 0.1))' }}>
-        <div className="max-w-[1400px] mx-auto p-4 sm:p-6">
+      <div className="rounded-[24px] mt-4 mb-6 mx-0 md:mx-4 md:[background:linear-gradient(90deg,rgba(244,193,12,0.1),rgba(255,109,21,0.1))]">
+        <div className="max-w-[1400px] mx-auto p-0 md:p-6">
           <div className="flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
             {/* Left Side - Banner Content */}
             <div className="min-w-0 flex-1">

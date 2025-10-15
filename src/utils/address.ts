@@ -76,7 +76,7 @@ export function formatAddress(address: string, length = 6, truncate = false): st
     return address; // Don't truncate short addresses
   }
   
-  return `${address.slice(0, length)}...${address.slice(-length)}`;
+  return `${address.slice(0, (length + 3))}...${address.slice(-length)}`;
 }
 
 /**

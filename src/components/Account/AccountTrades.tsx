@@ -102,7 +102,7 @@ export default function AccountTrades({ address, tab }: AccountTradesProps) {
             const tokenName = token?.name || transaction?.token_name || "Token";
             const tokenHref =
               token?.name || token?.address
-                ? `/trending/tokens/${encodeURIComponent(
+                ? `/trends/tokens/${encodeURIComponent(
                     token?.name || token?.address
                   )}`
                 : undefined;

@@ -1,5 +1,5 @@
 import React, { lazy } from "react";
-import { RouteObject, Navigate } from "react-router-dom";
+import { RouteObject, Navigate, useParams } from "react-router-dom";
 import SocialLayout from "./components/layout/SocialLayout";
 
 const FeedList = lazy(() => import("./features/social/views/FeedList"));
@@ -57,6 +57,32 @@ const TokenDetail = lazy(() => import("./views/TokenDetail"));
 const PoolDetail = lazy(() => import("./views/PoolDetail"));
 const AddTokens = lazy(() => import("./views/AddTokens"));
 
+// Redirect helpers for legacy /trending/* paths
+function NavigateTrendingToken() {
+  const { tokenName } = useParams();
+  return <Navigate to={`/trends/tokens/${encodeURIComponent(tokenName || "")}`} replace />;
+}
+
+function NavigateTrendingDao() {
+  const { saleAddress } = useParams();
+  return <Navigate to={`/trends/dao/${encodeURIComponent(saleAddress || "")}`} replace />;
+}
+
+function NavigateTrendingVote() {
+  const { saleAddress, voteId, voteAddress } = useParams();
+  return (
+    <Navigate
+      to={`/trends/dao/${encodeURIComponent(saleAddress || "")}/vote/${encodeURIComponent(voteId || "")}/${encodeURIComponent(voteAddress || "")}`}
+      replace
+    />
+  );
+}
+
+function NavigateTrendingAccount() {
+  const { address } = useParams();
+  return <Navigate to={`/trends/accounts/${encodeURIComponent(address || "")}`} replace />;
+}
+
 export const routes: RouteObject[] = [
   {
     path: "/",
@@ -71,18 +97,32 @@ export const routes: RouteObject[] = [
       { path: "users/:address", element: <UserProfile standalone={false} /> },
     ],
   },
-  { path: "/trending/tokens", element: <TokenList /> },
-  { path: "/trending", element: <TrendCloud /> },
-  { path: "/trending/visx", element: <TrendCloudVisx /> },
-  { path: "/trending/tokens/:tokenName", element: <TokenSaleDetails /> },
+  // New trends routes
+  { path: "/trends/tokens", element: <TokenList /> },
+  { path: "/trends", element: <TrendCloud /> },
+  { path: "/trends/visx", element: <TrendCloudVisx /> },
+  { path: "/trends/tokens/:tokenName", element: <TokenSaleDetails /> },
   { path: "/tx-queue/:id", element: <TxQueue /> },
-  { path: "/trending/invite", element: <TrendInvite /> },
-  { path: "/trending/daos", element: <TrendDaos /> },
-  { path: "/trending/dao/:saleAddress", element: <TrendDao /> },
-  { path: "/trending/dao/:saleAddress/vote/:voteId/:voteAddress", element: <VoteView /> },
-  { path: "/trending/accounts", element: <TrendAccounts /> },
-  { path: "/trending/accounts/:address", element: <TrendAccountDetails /> },
-  { path: "/trending/create", element: <TrendCreate /> },
+  { path: "/trends/invite", element: <TrendInvite /> },
+  { path: "/trends/daos", element: <TrendDaos /> },
+  { path: "/trends/dao/:saleAddress", element: <TrendDao /> },
+  { path: "/trends/dao/:saleAddress/vote/:voteId/:voteAddress", element: <VoteView /> },
+  { path: "/trends/accounts", element: <TrendAccounts /> },
+  { path: "/trends/accounts/:address", element: <TrendAccountDetails /> },
+  { path: "/trends/create", element: <TrendCreate /> },
+  // Legacy redirects from /trending/* -> /trends/*
+  { path: "/trending", element: <Navigate to="/trends" replace /> },
+  { path: "/trending/tokens", element: <Navigate to="/trends/tokens" replace /> },
+  { path: "/trending/visx", element: <Navigate to="/trends/visx" replace /> },
+  { path: "/trending/invite", element: <Navigate to="/trends/invite" replace /> },
+  { path: "/trending/daos", element: <Navigate to="/trends/daos" replace /> },
+  { path: "/trending/accounts", element: <Navigate to="/trends/accounts" replace /> },
+  { path: "/trending/create", element: <Navigate to="/trends/create" replace /> },
+  // Param redirects using small wrappers
+  { path: "/trending/tokens/:tokenName", element: <NavigateTrendingToken /> },
+  { path: "/trending/dao/:saleAddress", element: <NavigateTrendingDao /> },
+  { path: "/trending/dao/:saleAddress/vote/:voteId/:voteAddress", element: <NavigateTrendingVote /> },
+  { path: "/trending/accounts/:address", element: <NavigateTrendingAccount /> },
   // Kept for backward compatibility; redirecting into SocialLayout version
   { path: "/users/:address", element: <UserProfile /> },
   { path: "/landing", element: <Landing /> },

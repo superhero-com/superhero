@@ -33,61 +33,64 @@ export default function Invite() {
         </div>
         {/* Info Card */}
         {showInfo && (
-          <div className="mb-8 bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-30">
-            <div className="flex items-start gap-6 relative z-10 flex-wrap">
-              <div className="text-3xl md:text-4xl lg:text-5xl flex-shrink-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+          <div className="mb-6 sm:mb-8 bg-black/20 backdrop-blur-lg border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-30">
+            {/* Close button - absolute positioned on all screen sizes for better space usage */}
+            <button
+              onClick={() => {
+                try {
+                  localStorage.setItem("invite_info_dismissed", "1");
+                } catch { }
+                setShowInfo(false);
+              }}
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-white/10 border border-white/20 text-white text-lg sm:text-xl cursor-pointer p-2 sm:p-2.5 w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl transition-all duration-300 flex items-center justify-center backdrop-blur-lg hover:bg-pink-500/20 hover:border-pink-400 hover:text-pink-400 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-pink-500/30 active:translate-y-0 z-20"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+
+            <div className="flex items-start gap-3 sm:gap-4 md:gap-5 relative z-10 pr-10 sm:pr-12">
+              <div className="text-2xl sm:text-3xl md:text-4xl flex-shrink-0 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
                 💡
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="m-0 mb-6 text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
+                <h3 className="m-0 mb-4 sm:mb-5 md:mb-6 text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
                   How it works
                 </h3>
-                <div className="grid gap-5">
-                  <div className="flex items-start gap-5 p-3 rounded-xl transition-all duration-300 hover:bg-white/3 hover:translate-x-1 flex-wrap">
-                    <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center font-bold text-white flex-shrink-0 shadow-lg shadow-pink-500/30 relative after:content-[''] after:absolute after:inset-[-2px] after:rounded-full after:bg-gradient-to-r after:from-pink-500 after:to-purple-500 after:opacity-30 after:z-[-1] after:animate-pulse text-sm md:text-base">
+                <div className="grid gap-3 sm:gap-4">
+                  <div className="flex items-start gap-3 sm:gap-4 p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl transition-all duration-300 hover:bg-white/3 hover:translate-x-1">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center font-bold text-white flex-shrink-0 shadow-lg shadow-pink-500/30 relative after:content-[''] after:absolute after:inset-[-2px] after:rounded-full after:bg-gradient-to-r after:from-pink-500 after:to-purple-500 after:opacity-30 after:z-[-1] after:animate-pulse text-xs sm:text-sm md:text-base">
                       1
                     </div>
-                    <div className="text-slate-400 leading-relaxed text-sm md:text-base flex-1 min-w-0 break-words">
+                    <div className="text-slate-400 leading-relaxed text-xs sm:text-sm md:text-base flex-1 min-w-0 break-words pt-0.5">
                       Generate invite links by staking AE per invite
                     </div>
                   </div>
-                  <div className="flex items-start gap-5 p-3 rounded-xl transition-all duration-300 hover:bg-white/3 hover:translate-x-1 flex-wrap">
-                    <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center font-bold text-white flex-shrink-0 shadow-lg shadow-pink-500/30 relative after:content-[''] after:absolute after:inset-[-2px] after:rounded-full after:bg-gradient-to-r after:from-pink-500 after:to-purple-500 after:opacity-30 after:z-[-1] after:animate-pulse text-sm md:text-base">
+                  <div className="flex items-start gap-3 sm:gap-4 p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl transition-all duration-300 hover:bg-white/3 hover:translate-x-1">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center font-bold text-white flex-shrink-0 shadow-lg shadow-pink-500/30 relative after:content-[''] after:absolute after:inset-[-2px] after:rounded-full after:bg-gradient-to-r after:from-pink-500 after:to-purple-500 after:opacity-30 after:z-[-1] after:animate-pulse text-xs sm:text-sm md:text-base">
                       2
                     </div>
-                    <div className="text-slate-400 leading-relaxed text-sm md:text-base flex-1 min-w-0 break-words">
+                    <div className="text-slate-400 leading-relaxed text-xs sm:text-sm md:text-base flex-1 min-w-0 break-words pt-0.5">
                       Share links with friends and community
                     </div>
                   </div>
-                  <div className="flex items-start gap-5 p-3 rounded-xl transition-all duration-300 hover:bg-white/3 hover:translate-x-1 flex-wrap">
-                    <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center font-bold text-white flex-shrink-0 shadow-lg shadow-pink-500/30 relative after:content-[''] after:absolute after:inset-[-2px] after:rounded-full after:bg-gradient-to-r after:from-pink-500 after:to-purple-500 after:opacity-30 after:z-[-1] after:animate-pulse text-sm md:text-base">
+                  <div className="flex items-start gap-3 sm:gap-4 p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl transition-all duration-300 hover:bg-white/3 hover:translate-x-1">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center font-bold text-white flex-shrink-0 shadow-lg shadow-pink-500/30 relative after:content-[''] after:absolute after:inset-[-2px] after:rounded-full after:bg-gradient-to-r after:from-pink-500 after:to-purple-500 after:opacity-30 after:z-[-1] after:animate-pulse text-xs sm:text-sm md:text-base">
                       3
                     </div>
-                    <div className="text-slate-400 leading-relaxed text-sm md:text-base flex-1 min-w-0 break-words">
+                    <div className="text-slate-400 leading-relaxed text-xs sm:text-sm md:text-base flex-1 min-w-0 break-words pt-0.5">
                       When 4+ invitees purchase tokens, earn rewards
                     </div>
                   </div>
-                  <div className="flex items-start gap-5 p-3 rounded-xl transition-all duration-300 hover:bg-white/3 hover:translate-x-1 flex-wrap">
-                    <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center font-bold text-white flex-shrink-0 shadow-lg shadow-pink-500/30 relative after:content-[''] after:absolute after:inset-[-2px] after:rounded-full after:bg-gradient-to-r after:from-pink-500 after:to-purple-500 after:opacity-30 after:z-[-1] after:animate-pulse text-sm md:text-base">
+                  <div className="flex items-start gap-3 sm:gap-4 p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl transition-all duration-300 hover:bg-white/3 hover:translate-x-1">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center font-bold text-white flex-shrink-0 shadow-lg shadow-pink-500/30 relative after:content-[''] after:absolute after:inset-[-2px] after:rounded-full after:bg-gradient-to-r after:from-pink-500 after:to-purple-500 after:opacity-30 after:z-[-1] after:animate-pulse text-xs sm:text-sm md:text-base">
                       4
                     </div>
-                    <div className="text-slate-400 leading-relaxed text-sm md:text-base flex-1 min-w-0 break-words">
+                    <div className="text-slate-400 leading-relaxed text-xs sm:text-sm md:text-base flex-1 min-w-0 break-words pt-0.5">
                       Withdraw rewards anytime after eligibility
                     </div>
                   </div>
                 </div>
               </div>
-              <button
-                onClick={() => {
-                  try {
-                    localStorage.setItem("invite_info_dismissed", "1");
-                  } catch { }
-                  setShowInfo(false);
-                }}
-                className="bg-white/10 border border-white/20 text-white text-base md:text-lg lg:text-xl cursor-pointer p-3 rounded-xl transition-all duration-300 flex-shrink-0 min-w-10 min-h-10 md:min-w-12 md:min-h-12 lg:min-w-14 lg:min-h-14 flex items-center justify-center backdrop-blur-lg hover:bg-pink-500/20 hover:border-pink-400 hover:text-pink-400 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-pink-500/30 active:translate-y-0"
-              >
-                ✕
-              </button>
             </div>
           </div>
         )}

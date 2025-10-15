@@ -6,6 +6,7 @@ import { PriceDto } from "@/api/generated";
 import PriceDataFormatter from "@/features/shared/components/PriceDataFormatter";
 import { toAe } from '@aeternity/aepp-sdk';
 import { TokenDto } from "@/api/generated/models/TokenDto";
+import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 interface TokenSummaryProps {
   token: TokenDto;
   holders?: any[];
@@ -140,7 +141,7 @@ export default function TokenSummary({
             <div className="text-xs text-white/60 font-medium">
               Created By:
             </div>
-            <AddressChip address={token.creator_address} linkToExplorer />
+            <AddressAvatarWithChainName address={token.creator_address} />
           </div>
         )}
       </div>
@@ -156,7 +157,7 @@ export default function TokenSummary({
       <div className="flex gap-3 flex-wrap">
         {token.sale_address && (
           <a
-            href={`/trending/dao/${encodeURIComponent(token.sale_address)}`}
+            href={`/trends/dao/${encodeURIComponent(token.sale_address)}`}
             className="inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-purple-700 no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:shadow-[0_8px_25px_rgba(147,51,234,0.4)] hover:-translate-y-0.5 active:translate-y-0"
           >
             Open DAO
@@ -164,7 +165,7 @@ export default function TokenSummary({
         )}
         <div className="flex gap-3 ">
         <a
-          href="/trending/invite"
+          href="/trends/invite"
           className="inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white border border-white/10 bg-white/[0.05] no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 active:translate-y-0"
         >
           Invite & Earn

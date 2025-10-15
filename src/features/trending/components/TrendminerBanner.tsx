@@ -21,7 +21,7 @@ export default function TrendminerBanner() {
                   variant="primary"
                   size="md"
                   rounded
-                  onClick={() => (window.location.href = "/trending/create")}
+                  onClick={() => (window.location.href = "/trends/create")}
                   className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   TOKENIZE A TREND
@@ -31,7 +31,7 @@ export default function TrendminerBanner() {
                   variant="accent"
                   size="md"
                   rounded
-                  onClick={() => (window.location.href = "/trending/daos")}
+                  onClick={() => (window.location.href = "/trends/daos")}
                   className="bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   EXPLORE DAOS
@@ -41,7 +41,7 @@ export default function TrendminerBanner() {
                   size="md"
                   rounded
                   onClick={() =>
-                    (window.location.href = "/trending/invite")
+                    (window.location.href = "/trends/invite")
                   }
                   className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
                 >

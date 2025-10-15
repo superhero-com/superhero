@@ -317,6 +317,8 @@ export default function FeedList({
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const fetchingRef = useRef(false);
   const initialLoading = (sortBy !== "hot" && activitiesLoading) || isLoading;
+  const [showLoadMore, setShowLoadMore] = useState(false);
+  useEffect(() => { setShowLoadMore(false); }, [sortBy]);
   useEffect(() => {
     if (initialLoading) return;
     if (!('IntersectionObserver' in window)) return;
@@ -325,6 +327,7 @@ export default function FeedList({
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
       if (!entry.isIntersecting || fetchingRef.current) return;
+      setShowLoadMore(true);
       fetchingRef.current = true;
       const tasks: Promise<any>[] = [];
       if (hasNextPage && !isFetchingNextPage) tasks.push(fetchNextPage());
@@ -365,7 +368,7 @@ export default function FeedList({
         {((sortBy !== "hot" && !activitiesLoading) || sortBy === "hot") && !isLoading && renderFeedItems}
       </div>
 
-      {hasNextPage && filteredAndSortedList.length > 0 && (
+      {!initialLoading && showLoadMore && hasNextPage && filteredAndSortedList.length > 0 && (
         <>
           {/* Desktop: explicit load more button */}
           <div className="hidden md:block p-4 md:p-6 text-center">

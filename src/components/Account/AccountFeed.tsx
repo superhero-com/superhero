@@ -118,7 +118,7 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
       }}
       itemsPerPage={10}
       emptyMessage={createdActivities.length > 0 ? "" : "No posts yet"}
-      className="space-y-4"
+      className="space-y-4 mb-8 md:mb-10"
     />
     </>
   );

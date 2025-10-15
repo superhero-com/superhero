@@ -508,7 +508,9 @@ export default function CreateTokenView() {
                       )}
                       {/* Shared explanatory note for both modes */}
                       <div className="text-xs text-white/70 bg-white/5 rounded-lg p-3 mt-2">
-                        This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!
+                        {inputMode === 'AE'
+                          ? "This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"
+                          : "This is the number of tokens you'll pre-buy before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}
                         <br />
                         <span className="opacity-80">Note: You'll deploy the token contract directly from your own wallet. Superhero simply facilitates the creation process.</span>
                       </div>

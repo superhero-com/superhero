@@ -528,7 +528,7 @@ export default function CreateTokenView() {
                               title={"This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}
                               className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none shadow-none"
                             />
-                            <div className="text-white/80 font-semibold">AE</div>
+                            <div className="text-white font-extrabold text-2xl leading-none">AE</div>
                           </div>
                           <div className="flex items-center gap-2">
                             <button type="button" onClick={() => { setAeAmount('1'); setAeAmountDisplay('1'); }} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">1 AE</button>
@@ -553,7 +553,7 @@ export default function CreateTokenView() {
                               placeholder="0.0"
                               className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none shadow-none"
                             />
-                            <div className="text-white/80 font-semibold">TOKENS</div>
+                            <div className="text-white font-extrabold text-2xl leading-none">TOKENS</div>
                           </div>
                           <div className="flex items-center gap-2">
                             <button type="button" onClick={() => setInitialBuyVolume('500000')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">500K</button>

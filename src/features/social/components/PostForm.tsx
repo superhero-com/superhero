@@ -400,10 +400,7 @@ export default function PostForm({
                         open={showGif} 
                         onOpenChange={setShowGif}
                         mediaUrls={mediaUrls}
-                        removeMedia={removeMedia}
-                        onSelectGif={(gifUrl) => {
-                          setMediaUrls((prev) => [...prev, gifUrl]);
-                        }} 
+                        onMediaUrlsChange={setMediaUrls}
                       />
                     )}
                   </div>

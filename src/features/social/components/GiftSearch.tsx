@@ -8,20 +8,18 @@ import {
 } from "@/components/ui/dialog";
 import { IconClose } from "@/icons";
 
-interface GiftSearchProps {
+interface GifSelectorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectGif: (gifUrl: string) => void;
   mediaUrls: string[];
-  removeMedia: (index: number) => void;
+  onMediaUrlsChange: (mediaUrls: string[]) => void;
 }
-export default function GiftSearch({
+export default function GifSelectorDialog({
   open,
   onOpenChange,
-  onSelectGif,
   mediaUrls,
-  removeMedia,
-}: GiftSearchProps) {
+  onMediaUrlsChange,
+}: GifSelectorDialogProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [resultCount, setResultCount] = useState("");
@@ -66,7 +64,7 @@ export default function GiftSearch({
   }, [query, offset, open]);
 
   const handleGifClick = (gif: any) => {
-    onSelectGif(gif.original);
+    onMediaUrlsChange([...mediaUrls, gif.original]);
   };
 
   return (
@@ -113,7 +111,7 @@ export default function GiftSearch({
                   <button
                     type="button"
                     className="absolute top-1 right-1 bg-black/70 border-none text-white w-5 h-5 rounded-full cursor-pointer grid place-items-center transition-all duration-200 hover:bg-black/90 hover:scale-105"
-                    onClick={() => removeMedia(index)}
+                    onClick={() => onMediaUrlsChange(mediaUrls.filter((_, i) => i !== index))}
                   >
                     <IconClose className="w-2.5 h-2.5" />
                   </button>

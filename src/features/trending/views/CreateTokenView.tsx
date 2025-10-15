@@ -484,7 +484,7 @@ export default function CreateTokenView() {
                         <div className="flex items-center gap-2">
                           <label className="block text-sm font-medium text-white/80">
                             {inputMode === 'AE' ? 'Amount to spend (AE)' : 'Tokens to buy'}
-                          </label>
+                      </label>
                           {/* Tooltip */}
                           <div className="relative group inline-block align-middle">
                             <span
@@ -496,7 +496,7 @@ export default function CreateTokenView() {
                             >
                               ⓘ
                             </span>
-                            <div className="absolute left-0 top-full mt-1 hidden group-hover:block group-focus-within:block w-[320px] max-w-[80vw] rounded-lg border border-white/10 bg-black/80 text-white text-xs p-3 shadow-xl z-20">
+                            <div className="fixed left-1/2 -translate-x-1/2 top-24 sm:absolute sm:left-0 sm:translate-x-0 sm:top-full mt-1 hidden group-hover:block group-focus-within:block w-[320px] max-w-[min(92vw,360px)] rounded-lg border border-white/10 bg-black/80 text-white text-xs p-3 shadow-xl z-50">
                               {inputMode === 'AE'
                                 ? "This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"
                                 : "This is the number of tokens you'll pre-buy before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}

@@ -62,7 +62,7 @@ const TokenCreatedActivityItem = memo(({ item }: TokenCreatedActivityItemProps) 
             <a
               href={`/users/${creator}`}
               onClick={(e) => e.stopPropagation()}
-              className="font-semibold text-white/90 truncate whitespace-nowrap max-w-[22ch] no-gradient-text hover:underline underline-offset-2"
+              className="font-semibold text-white/90 truncate whitespace-nowrap max-w-[22ch] no-gradient-text"
               title={displayName}
             >
               {displayName}

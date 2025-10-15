@@ -1,14 +1,9 @@
 import { PostsService } from "@/api/generated/services/PostsService";
-import {
-  DataTable,
-  DataTableResponse,
-} from "@/features/shared/components/DataTable";
 import ReplyToFeedItem from "@/features/social/components/ReplyToFeedItem";
-import TokenCreatedFeedItem from "@/features/social/components/TokenCreatedFeedItem";
 import TokenCreatedActivityItem from "@/features/social/components/TokenCreatedActivityItem";
-import { PostApiResponse } from "@/features/social/types";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { TrendminerApi } from "@/api/backend";
 import type { PostDto } from "@/api/generated";
 
@@ -21,12 +16,57 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
   const navigate = useNavigate();
   const [createdActivities, setCreatedActivities] = useState<PostDto[]>([]);
 
-  const fetchFeed = async (params: any) => {
-    const response = (await PostsService.listAll({
-      ...params,
-    })) as unknown as Promise<PostApiResponse>;
-    return response as unknown as DataTableResponse<any>;
-  };
+  // Infinite posts for this profile
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["profile-posts", address],
+    enabled: !!address && tab === "feed",
+    initialPageParam: 1,
+    queryFn: ({ pageParam = 1 }) =>
+      PostsService.listAll({
+        accountAddress: address,
+        orderBy: "created_at",
+        orderDirection: "DESC",
+        limit: 10,
+        page: pageParam,
+      }) as any,
+    getNextPageParam: (lastPage: any) => {
+      if (
+        lastPage?.meta?.currentPage &&
+        lastPage?.meta?.totalPages &&
+        lastPage.meta.currentPage < lastPage.meta.totalPages
+      ) {
+        return lastPage.meta.currentPage + 1;
+      }
+      return undefined;
+    },
+  });
+
+  const list = useMemo(
+    () => data?.pages?.flatMap((p: any) => p?.items ?? []) ?? [],
+    [data]
+  );
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (tab !== "feed") return;
+    if (!('IntersectionObserver' in window)) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    }, { root: null, rootMargin: '600px 0px', threshold: 0 });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [tab, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Map Trendminer token -> Post-like activity item
   function mapTokenCreatedToPost(payload: any): PostDto {
@@ -78,7 +118,7 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
   }, [address, tab]);
 
   return (
-    <>
+    <div className="w-full">
       {createdActivities.length > 0 && (
         <div className="flex flex-col gap-0 md:gap-2 mb-0 md:mb-2">
           {createdActivities.map((it) => (
@@ -86,20 +126,8 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
           ))}
         </div>
       )}
-    <DataTable
-      queryFn={fetchFeed}
-      renderRow={({ item, index }) => {
-        const postId = item.id;
-        const isTokenCreated = String(postId).startsWith("token-created:");
-        if (isTokenCreated) {
-          return (
-            <TokenCreatedActivityItem
-              key={postId}
-              item={item}
-            />
-          );
-        }
-        return (
+      <div className="w-full flex flex-col gap-0 md:gap-2 mb-8 md:mb-10">
+        {list.map((item: any) => (
           <ReplyToFeedItem
             key={item.id}
             item={item}
@@ -107,19 +135,12 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
             allowInlineRepliesToggle={false}
             onOpenPost={(id: string) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)}
           />
-        );
-      }}
-      initialParams={{
-        accountAddress: address,
-        orderBy: "created_at",
-        orderDirection: "DESC",
-        search: "",
-        enabled: !!address && tab === "feed",
-      }}
-      itemsPerPage={10}
-      emptyMessage={createdActivities.length > 0 ? "" : "No posts yet"}
-      className="space-y-4 mb-8 md:mb-10"
-    />
-    </>
+        ))}
+        {hasNextPage && <div ref={sentinelRef} className="h-10" />}
+        {!isLoading && list.length === 0 && createdActivities.length === 0 && (
+          <div className="p-8 text-center text-muted-foreground">No posts yet</div>
+        )}
+      </div>
+    </div>
   );
 }

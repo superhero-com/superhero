@@ -122,7 +122,7 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
                 </button>
               )}
             </div>
-            <SharePopover postId={item.id} urlOverride={tokenLink} />
+            <SharePopover postId={item.id} urlOverride={tokenLink} label="trend" />
           </div>
         </div>
       </div>

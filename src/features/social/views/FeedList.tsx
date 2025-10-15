@@ -182,6 +182,8 @@ export default function FeedList({
     // Hide token-created events on the popular (hot) tab
     const includeEvents = sortBy !== "hot";
     const merged = includeEvents ? [...activityList, ...list] : [...list];
+    // Keep backend order for 'hot'; only sort by time when we interleave activities
+    if (!includeEvents) return merged;
     return merged.sort((a: any, b: any) => {
       const at = new Date(a?.created_at || 0).getTime();
       const bt = new Date(b?.created_at || 0).getTime();
@@ -226,9 +228,12 @@ export default function FeedList({
   // Memoized event handlers for better performance
   const handleSortChange = useCallback(
     (newSortBy: string) => {
+      // Clear cached pages to avoid showing stale lists during rapid tab switches
+      queryClient.removeQueries({ queryKey: ["posts"], exact: false });
+      queryClient.removeQueries({ queryKey: ["home-activities"], exact: false });
       navigate(`/?sortBy=${newSortBy}`);
     },
-    [navigate]
+    [navigate, queryClient]
   );
 
   const handleItemClick = useCallback(
@@ -310,20 +315,27 @@ export default function FeedList({
 
   // Auto-load more when reaching bottom using IntersectionObserver (all screens)
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const fetchingRef = useRef(false);
+  const initialLoading = (sortBy !== "hot" && activitiesLoading) || isLoading;
   useEffect(() => {
+    if (initialLoading) return;
     if (!('IntersectionObserver' in window)) return;
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
-      if (entry.isIntersecting) {
-        if (hasNextPage && !isFetchingNextPage) fetchNextPage();
-        if (sortBy !== "hot" && hasMoreActivities && !fetchingMoreActivities) fetchNextActivities();
-      }
-    }, { root: null, rootMargin: '600px 0px', threshold: 0 });
+      if (!entry.isIntersecting || fetchingRef.current) return;
+      fetchingRef.current = true;
+      const tasks: Promise<any>[] = [];
+      if (hasNextPage && !isFetchingNextPage) tasks.push(fetchNextPage());
+      if (sortBy !== "hot" && hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
+      Promise.all(tasks).finally(() => {
+        fetchingRef.current = false;
+      });
+    }, { root: null, rootMargin: '200px 0px', threshold: 0.01 });
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage, sortBy, hasMoreActivities, fetchingMoreActivities, fetchNextActivities]);
+  }, [initialLoading, hasNextPage, isFetchingNextPage, fetchNextPage, sortBy, hasMoreActivities, fetchingMoreActivities, fetchNextActivities]);
 
   const content = (
     <div className="w-full">

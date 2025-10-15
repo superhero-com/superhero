@@ -80,21 +80,27 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
   );
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const fetchingRef = useRef(false);
+  const initialLoading = aLoading || isLoading;
   useEffect(() => {
-    if (tab !== "feed") return;
+    if (tab !== "feed" || initialLoading) return;
     if (!('IntersectionObserver' in window)) return;
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
-      if (entry.isIntersecting) {
-        if (hasNextPage && !isFetchingNextPage) fetchNextPage();
-        if (hasMoreActivities && !fetchingMoreActivities) fetchNextActivities();
-      }
-    }, { root: null, rootMargin: '600px 0px', threshold: 0 });
+      if (!entry.isIntersecting || fetchingRef.current) return;
+      fetchingRef.current = true;
+      const tasks: Promise<any>[] = [];
+      if (hasNextPage && !isFetchingNextPage) tasks.push(fetchNextPage());
+      if (hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
+      Promise.all(tasks).finally(() => {
+        fetchingRef.current = false;
+      });
+    }, { root: null, rootMargin: '200px 0px', threshold: 0.01 });
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [tab, hasNextPage, isFetchingNextPage, fetchNextPage, hasMoreActivities, fetchingMoreActivities, fetchNextActivities]);
+  }, [tab, initialLoading, hasNextPage, isFetchingNextPage, fetchNextPage, hasMoreActivities, fetchingMoreActivities, fetchNextActivities]);
 
   // Map Trendminer token -> Post-like activity item
   function mapTokenCreatedToPost(payload: any): PostDto {

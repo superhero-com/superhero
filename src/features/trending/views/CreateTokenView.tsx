@@ -373,7 +373,7 @@ export default function CreateTokenView() {
   }
 
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-4">
+    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-0 md:px-4">
       <div className="rounded-[24px] mt-4 mb-6 mx-4" style={{ background: 'linear-gradient(90deg, rgba(244, 193, 12, 0.1), rgba(255, 109, 21, 0.1))' }}>
         <div className="max-w-[1400px] mx-auto p-4 sm:p-6">
           <div className="flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
@@ -578,7 +578,7 @@ export default function CreateTokenView() {
                       )}
                       {/* Shared explanatory note (tooltip carries the AE explanation now) */}
                       <div className="text-sm text-white/80 bg-white/5 rounded-lg p-3 mt-2 space-y-1">
-                        <div className="text-white text-sm md:text-base">
+                        <div className="text-white text-sm md:text-md">
                           Once created, your token will be available for trading on the platform. The bonding curve mechanism ensures fair price discovery based on supply and demand.
                         </div>
                         <div className="opacity-80">

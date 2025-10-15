@@ -224,7 +224,7 @@ a.no-gradient-text::after {
 /* Reduce gap only between consecutive token activity items on desktop, not between activity and posts */
 @media (min-width: 768px) {
   .token-activity + .token-activity {
-    margin-top: -8px; /* slightly tighter stack */
+    margin-top: -2px; /* slightly tighter stack */
   }
 }
 

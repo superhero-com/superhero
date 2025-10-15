@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { formatAddress } from './address';
 
 // URL matcher (external links)
@@ -131,7 +132,7 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
     if (segLast < segment.length) urlLinkedParts.push(segment.slice(segLast));
   });
 
-  // Pass 3: Hashtags → link to trending tokens page (/trends/tokens/<UPPERCASE>)
+  // Pass 3: Hashtags → router link to trending tokens page (/trends/tokens/<UPPERCASE>)
   const finalParts: React.ReactNode[] = [];
   urlLinkedParts.forEach((node, idx) => {
     if (typeof node !== 'string') {
@@ -144,8 +145,8 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
       if (off > last) finalParts.push(segment.slice(last, off));
       const target = `/trends/tokens/${tag.toUpperCase()}`;
       finalParts.push(
-        <a
-          href={target}
+        <Link
+          to={target}
           key={`hashtag-${tag}-${idx}-${off}`}
           className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
           style={{
@@ -157,7 +158,7 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
           onClick={(e) => e.stopPropagation()}
         >
           {m}
-        </a>
+        </Link>
       );
       last = off + m.length;
       return m;

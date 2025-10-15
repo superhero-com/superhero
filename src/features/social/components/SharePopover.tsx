@@ -12,13 +12,19 @@ import { cn } from "@/lib/utils";
 type SharePopoverProps = {
   postId: string | number;
   className?: string;
+  urlOverride?: string; // when provided, share this URL instead of building a post URL
+  label?: string; // copy context: 'post' (default) or custom like 'trend'
 };
 
-export default function SharePopover({ postId, className }: SharePopoverProps) {
+export default function SharePopover({ postId, className, urlOverride, label = "post" }: SharePopoverProps) {
   const url = useMemo(() => {
+    if (urlOverride) {
+      const isAbsolute = /^https?:\/\//i.test(urlOverride);
+      return isAbsolute ? urlOverride : `${window.location.origin}${urlOverride.startsWith('/') ? '' : '/'}${urlOverride}`;
+    }
     const path = `/post/${String(postId).replace(/_v3$/, "")}`;
     return `${window.location.origin}${path}`;
-  }, [postId]);
+  }, [postId, urlOverride]);
 
   return (
     <DropdownMenu>
@@ -26,11 +32,11 @@ export default function SharePopover({ postId, className }: SharePopoverProps) {
         <button
           type="button"
           className={cn(
-            "inline-flex items-center justify-center gap-1.5 h-auto min-h-0 min-w-0 md:h-[28px] md:min-h-[28px] px-2 rounded-lg bg-transparent border-0 md:px-2.5 md:bg-white/[0.04] md:border md:border-white/10 md:hover:border-white/20 md:ring-1 md:ring-white/15 md:hover:ring-white/25 transition-colors",
+            "inline-flex items-center justify-center gap-1.5 h-auto min-h-0 min-w-0 md:h-[28px] md:min-h-[28px] px-2 rounded-lg bg-transparent border-0 md:px-2.5 md:bg-white/[0.04] md:border md:border-white/10 md:hover:border-white/20 md:ring-1 md:ring-white/15 md:hover:ring-white/25 md:transition-colors",
             className
           )}
-          aria-label="Share post"
-          title="Share post"
+          aria-label={`Share ${label}`}
+          title={`Share ${label}`}
           onClick={(e) => e.stopPropagation()}
         >
           <Share className="w-[14px] h-[14px] opacity-80" strokeWidth={2.25} />
@@ -61,7 +67,7 @@ export default function SharePopover({ postId, className }: SharePopoverProps) {
           }}
         >
           <Share className="w-4 h-4 opacity-85" strokeWidth={2.25} />
-          <span>Share post via …</span>
+          <span>{`Share ${label} via …`}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

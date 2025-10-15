@@ -1,7 +1,10 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { PostsService } from "../../../api/generated";
+import type { PostDto } from "../../../api/generated";
+import { TrendminerApi } from "../../../api/backend";
+import WebSocketClient from "../../../libs/WebSocketClient";
 import AeButton from "../../../components/AeButton";
 import WelcomeBanner from "../../../components/WelcomeBanner";
 import Shell from "../../../components/layout/Shell";
@@ -11,6 +14,8 @@ import CreatePost from "../components/CreatePost";
 import SortControls from "../components/SortControls";
 import EmptyState from "../components/EmptyState";
 import ReplyToFeedItem from "../components/ReplyToFeedItem";
+import TokenCreatedFeedItem from "../components/TokenCreatedFeedItem";
+import TokenCreatedActivityItem from "../components/TokenCreatedActivityItem";
 import { PostApiResponse } from "../types";
 
 // Custom hook
@@ -24,6 +29,7 @@ export default function FeedList({
   const navigate = useNavigate();
   const urlQuery = useUrlQuery();
   const { chainNames } = useWallet();
+  const queryClient = useQueryClient();
 
   // Comment counts are now provided directly by the API in post.total_comments
 
@@ -33,6 +39,100 @@ export default function FeedList({
   const filterBy = urlQuery.get("filterBy") || "all";
 
   const [localSearch, setLocalSearch] = useState(search);
+
+  // Helper to map a token object or websocket payload into a Post-like item
+  const mapTokenCreatedToPost = useCallback((payload: any): PostDto => {
+    const saleAddress: string = payload?.sale_address || payload?.address || "";
+    const name: string = payload?.token_name || payload?.name || "Unknown";
+    const createdAt: string = payload?.created_at || new Date().toISOString();
+    const creatorAddress: string = payload?.creator_address || payload?.creatorAddress || payload?.creator || "";
+    const encodedName = encodeURIComponent(name);
+    const id = `token-created:${encodedName}:${saleAddress}:${createdAt}_v3`;
+    const content = "";
+    return {
+      id,
+      tx_hash: payload?.tx_hash || "",
+      tx_args: [
+        { token_name: name },
+        { sale_address: saleAddress },
+        { kind: "token-created" },
+      ],
+      sender_address: creatorAddress || saleAddress || "",
+      contract_address: saleAddress || "",
+      type: "TOKEN_CREATED",
+      content,
+      topics: [
+        "token:created",
+        `token_name:${name}`,
+        `#${name}`,
+        saleAddress ? `token_sale:${saleAddress}` : "",
+      ].filter(Boolean) as string[],
+      media: [],
+      total_comments: 0,
+      created_at: createdAt,
+    } as PostDto;
+  }, []);
+
+  // Activities (token-created) fetched in parallel with smaller initial batch + pagination
+  const {
+    data: activitiesPages,
+    isLoading: activitiesLoading,
+    fetchNextPage: fetchNextActivities,
+    hasNextPage: hasMoreActivities,
+    isFetchingNextPage: fetchingMoreActivities,
+  } = useInfiniteQuery<PostDto[], Error>({
+    queryKey: ["home-activities"],
+    enabled: sortBy !== "hot",
+    initialPageParam: 1,
+    queryFn: async ({ pageParam = 1 }) => {
+      const resp = await TrendminerApi.listTokens({
+        orderBy: "created_at",
+        orderDirection: "DESC",
+        limit: 20,
+        page: pageParam as number,
+      }).catch(() => ({ items: [] }));
+      const items: any[] = resp?.items || [];
+      return items
+        .map((t) => ({
+          sale_address: t?.sale_address || t?.address || "",
+          token_name: t?.name || "Unknown",
+          created_at: t?.created_at || new Date().toISOString(),
+          creator_address:
+            t?.creator_address ||
+            t?.creatorAddress ||
+            (t?.creator && (t?.creator.address || t?.creator)) ||
+            t?.owner_address ||
+            "",
+        }))
+        .map(mapTokenCreatedToPost);
+    },
+    getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === 20 ? pages.length + 1 : undefined),
+  });
+  const activityList: PostDto[] = useMemo(
+    () => (activitiesPages?.pages ? (activitiesPages.pages as PostDto[][]).flatMap((p) => p) : []),
+    [activitiesPages]
+  );
+
+  // Live updates for token-created via websocket
+  useEffect(() => {
+    if (sortBy === "hot") return;
+    const unsubscribe = WebSocketClient.subscribeToNewTokenSales((payload: any) => {
+      const mapped = mapTokenCreatedToPost(payload);
+      queryClient.setQueryData(["home-activities"], (prev: any) => {
+        // prev is infinite data shape { pages: PostDto[][], pageParams: any[] }
+        if (!prev || !prev.pages) {
+          return { pages: [[mapped]], pageParams: [1] };
+        }
+        const first: PostDto[] = prev.pages[0] || [];
+        if (first.some((p) => p?.id === mapped.id)) return prev;
+        const newFirst = [mapped, ...first].slice(0, 20);
+        return { ...prev, pages: [newFirst, ...prev.pages.slice(1)] };
+      });
+    });
+    return () => {
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
+  }, [mapTokenCreatedToPost, queryClient, sortBy]);
 
   // Infinite query for posts
   const {
@@ -71,15 +171,29 @@ export default function FeedList({
     initialPageParam: 1,
   });
 
-  // Derived state
+  // Derived state: posts list
   const list = useMemo(
-    () => data?.pages?.flatMap((page) => page?.items ?? []) ?? [],
+    () => (data?.pages ? (data.pages as any[]).flatMap((page: any) => page?.items ?? []) : []),
     [data]
   );
 
+  // Combine posts with token-created events and sort by created_at DESC
+  const combinedList = useMemo(() => {
+    // Hide token-created events on the popular (hot) tab
+    const includeEvents = sortBy !== "hot";
+    const merged = includeEvents ? [...activityList, ...list] : [...list];
+    // Keep backend order for 'hot'; only sort by time when we interleave activities
+    if (!includeEvents) return merged;
+    return merged.sort((a: any, b: any) => {
+      const at = new Date(a?.created_at || 0).getTime();
+      const bt = new Date(b?.created_at || 0).getTime();
+      return bt - at;
+    });
+  }, [list, activityList, sortBy]);
+
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {
-    let filtered = [...list];
+    let filtered = [...combinedList];
 
     if (localSearch.trim()) {
       const searchTerm = localSearch.toLowerCase();
@@ -109,23 +223,34 @@ export default function FeedList({
     }
 
     return filtered;
-  }, [list, localSearch, filterBy, chainNames]);
+  }, [combinedList, localSearch, filterBy, chainNames]);
 
   // Memoized event handlers for better performance
   const handleSortChange = useCallback(
     (newSortBy: string) => {
+      // Clear cached pages to avoid showing stale lists during rapid tab switches
+      queryClient.removeQueries({ queryKey: ["posts"], exact: false });
+      queryClient.removeQueries({ queryKey: ["home-activities"], exact: false });
       navigate(`/?sortBy=${newSortBy}`);
     },
-    [navigate]
+    [navigate, queryClient]
   );
 
   const handleItemClick = useCallback(
     (postId: string) => {
-      // Save current feed scroll position before leaving
+      const idStr = String(postId);
+      if (idStr.startsWith("token-created:")) {
+        const parts = idStr.replace(/_v3$/, "").split(":");
+        const tokenNameEnc = parts[1] || "";
+        const tokenName = decodeURIComponent(tokenNameEnc);
+        navigate(`/trends/tokens/${tokenName}`);
+        return;
+      }
+      // Save current feed scroll position before leaving only for post detail
       try {
         sessionStorage.setItem("feedScrollY", String(window.scrollY || 0));
       } catch {}
-      const cleanId = String(postId).replace(/_v3$/, "");
+      const cleanId = idStr.replace(/_v3$/, "");
       navigate(`/post/${cleanId}`);
     },
     [navigate]
@@ -133,13 +258,14 @@ export default function FeedList({
 
   // Render helpers
   const renderEmptyState = () => {
+    const initialLoading = (sortBy !== "hot" && activitiesLoading) || isLoading;
     if (error) {
       return <EmptyState type="error" error={error} onRetry={refetch} />;
     }
-    if (!error && filteredAndSortedList.length === 0 && !isLoading) {
+    if (!error && filteredAndSortedList.length === 0 && !initialLoading) {
       return <EmptyState type="empty" hasSearch={!!localSearch} />;
     }
-    if (isLoading && filteredAndSortedList.length === 0) {
+    if (initialLoading && filteredAndSortedList.length === 0) {
       return <EmptyState type="loading" />;
     }
     return null;
@@ -147,23 +273,28 @@ export default function FeedList({
 
   // Memoized render function for better performance
   const renderFeedItems = useMemo(() => {
-    return filteredAndSortedList.map((item, index) => {
+    return filteredAndSortedList.map((item) => {
       const postId = item.id;
-      const authorAddress = item.sender_address;
-      const commentCount = item.total_comments ?? 0;
-      const chainName = chainNames?.[authorAddress];
-
+      const isTokenCreated = String(postId).startsWith("token-created:");
+      if (isTokenCreated) {
+        return (
+          <TokenCreatedActivityItem
+            key={postId}
+            item={item}
+          />
+        );
+      }
       return (
         <ReplyToFeedItem
           key={postId}
           item={item}
-          commentCount={commentCount}
+          commentCount={item.total_comments ?? 0}
           allowInlineRepliesToggle={false}
           onOpenPost={handleItemClick}
         />
       );
     });
-  }, [filteredAndSortedList, chainNames, handleItemClick]);
+  }, [filteredAndSortedList, handleItemClick]);
 
   // Preload PostDetail chunk to avoid first-click lazy load delay
   useEffect(() => {
@@ -184,19 +315,30 @@ export default function FeedList({
 
   // Auto-load more when reaching bottom using IntersectionObserver (all screens)
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const fetchingRef = useRef(false);
+  const initialLoading = (sortBy !== "hot" && activitiesLoading) || isLoading;
+  const [showLoadMore, setShowLoadMore] = useState(false);
+  useEffect(() => { setShowLoadMore(false); }, [sortBy]);
   useEffect(() => {
+    if (initialLoading) return;
     if (!('IntersectionObserver' in window)) return;
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
-      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
-      }
-    }, { root: null, rootMargin: '600px 0px', threshold: 0 });
+      if (!entry.isIntersecting || fetchingRef.current) return;
+      setShowLoadMore(true);
+      fetchingRef.current = true;
+      const tasks: Promise<any>[] = [];
+      if (hasNextPage && !isFetchingNextPage) tasks.push(fetchNextPage());
+      if (sortBy !== "hot" && hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
+      Promise.all(tasks).finally(() => {
+        fetchingRef.current = false;
+      });
+    }, { root: null, rootMargin: '200px 0px', threshold: 0.01 });
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [initialLoading, hasNextPage, isFetchingNextPage, fetchNextPage, sortBy, hasMoreActivities, fetchingMoreActivities, fetchNextActivities]);
 
   const content = (
     <div className="w-full">
@@ -221,23 +363,25 @@ export default function FeedList({
         <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
       </div>
 
-      <div className="w-full flex flex-col gap-0 md:gap-4 md:mx-0">
+      <div className="w-full flex flex-col gap-0 md:gap-2 md:mx-0">
         {renderEmptyState()}
-        {renderFeedItems}
+        {((sortBy !== "hot" && !activitiesLoading) || sortBy === "hot") && !isLoading && renderFeedItems}
       </div>
 
-      {hasNextPage && filteredAndSortedList.length > 0 && (
+      {!initialLoading && hasNextPage && filteredAndSortedList.length > 0 && (
         <>
           {/* Desktop: explicit load more button */}
-          <div className="hidden md:block p-4 md:p-6 text-center">
-            <AeButton
-              loading={isFetchingNextPage}
-              onClick={() => fetchNextPage()}
-              className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
-            >
-              Load more
-            </AeButton>
-          </div>
+          {showLoadMore && (
+            <div className="hidden md:block p-4 md:p-6 text-center">
+              <AeButton
+                loading={isFetchingNextPage}
+                onClick={() => fetchNextPage()}
+                className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
+              >
+                Load more
+              </AeButton>
+            </div>
+          )}
           {/* Auto-load sentinel for all breakpoints */}
           <div id="feed-infinite-sentinel" className="h-10" ref={sentinelRef} />
         </>

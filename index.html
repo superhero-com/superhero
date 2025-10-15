@@ -3,12 +3,46 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <style>
+      /* Prevent slow color/fill/stroke fades on first paint (iOS Safari) */
+      html.preload *, html.preload *::before, html.preload *::after { transition: none !important; }
+    </style>
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('theme');
+          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var theme = saved || (prefersDark ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.classList.add('preload');
+          // Set immediate baseline colors to avoid initial black flash
+          if (theme === 'dark') {
+            document.documentElement.style.backgroundColor = '#0a0a0f';
+            document.documentElement.style.color = '#f8fafc';
+          } else {
+            document.documentElement.style.backgroundColor = '#fafafa';
+            document.documentElement.style.color = '#1e293b';
+          }
+        } catch (e) {}
+      })();
+    </script>
     <title>Superhero</title>
     <link rel="icon" type="image/svg+xml" href="/src/svg/favicon.svg" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Re-enable transitions after first paint
+      window.addEventListener('load', function () {
+        requestAnimationFrame(function () {
+          document.documentElement.classList.remove('preload');
+          document.documentElement.style.backgroundColor = '';
+          document.documentElement.style.color = '';
+        });
+      });
+    </script>
   </body>
   </html>
 

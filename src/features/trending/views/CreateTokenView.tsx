@@ -458,7 +458,7 @@ export default function CreateTokenView() {
                       {validateStringWithCustomErrors(tokenName)}
                       <div className="text-xs text-white/60 mt-1 flex items-center justify-between">
                         <span>{tokenName.length}/20 characters</span>
-                        <span className="opacity-80">Allowed: CAPITAL LETTERS and dashes (-)</span>
+                        <span className="opacity-80">Allowed are CAPITAL LETTERS and dashes (-)</span>
                       </div>
                     </div>
 
@@ -567,7 +567,7 @@ export default function CreateTokenView() {
                           You'll deploy the token contract directly from your own wallet. Superhero simply facilitates the creation process.
                         </div>
                         <div className="opacity-80">
-                          Once created, your token will be available for trading on our platform. The bonding curve mechanism ensures fair price discovery based on supply and demand.
+                          Once created, your token will be available for trading on the platform. The bonding curve mechanism ensures fair price discovery based on supply and demand.
                         </div>
                       </div>
                     </div>

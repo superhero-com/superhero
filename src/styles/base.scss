@@ -221,6 +221,14 @@ a.no-gradient-text::after {
   display: none;
 }
 
+/* Reduce gap only between consecutive token activity items on desktop, not between activity and posts */
+@media (min-width: 768px) {
+  .token-activity + .token-activity {
+    margin-top: -6px; /* slightly tighter stack */
+    margin-bottom: -6px;
+  }
+}
+
 /* Specific override for white-with-purple CTA on banner */
 .banner-explore-btn {
   background: #ffffff !important;

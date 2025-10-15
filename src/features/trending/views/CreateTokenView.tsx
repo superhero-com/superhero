@@ -577,8 +577,8 @@ export default function CreateTokenView() {
                         </div>
                       )}
                       {/* Shared explanatory note (tooltip carries the AE explanation now) */}
-                      <div className="text-xs text-white/80 bg-white/5 rounded-lg p-3 mt-2 space-y-1">
-                        <div className="text-white">
+                      <div className="text-sm text-white/80 bg-white/5 rounded-lg p-3 mt-2 space-y-1">
+                        <div className="text-white text-sm md:text-base">
                           Once created, your token will be available for trading on the platform. The bonding curve mechanism ensures fair price discovery based on supply and demand.
                         </div>
                         <div className="opacity-80">

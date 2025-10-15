@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { IconClose } from "@/icons";
+import { CONFIG } from "@/config";
 
 interface GifSelectorDialogProps {
   open: boolean;
@@ -43,7 +44,9 @@ export function GifSelectorDialog({
       if (query) url.searchParams.set("q", query);
       url.searchParams.set("limit", "12");
       url.searchParams.set("offset", pageParam.toString());
-      url.searchParams.set("api_key", "P16yBDlSeEfcrJfp1rwnamtEZmQHxHNM");
+      if (CONFIG.GIPHY_API_KEY) {
+        url.searchParams.set("api_key", CONFIG.GIPHY_API_KEY);
+      }
       const { data, pagination } = await fetchJson(url.toString());
       return {
         results: data.map(({ images }: any) => ({

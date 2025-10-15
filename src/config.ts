@@ -38,7 +38,7 @@ const defaultConfig: AppConfig = {
   JITSI_DOMAIN: "meet.jit.si",
   EXPLORER_URL: "https://aescan.io",
   IMGUR_API_CLIENT_ID: "",
-  GIPHY_API_KEY: "",
+  GIPHY_API_KEY: process.env.VITE_GIPHY_API_KEY ?? 'P16yBDlSeEfcrJfp1rwnamtEZmQHxHNM',
   COMMIT_HASH: "",
   DEX_BACKEND_URL: "https://dex-backend-mainnet.prd.service.aepps.com",
   MAINNET_DEX_BACKEND_URL: "https://dex-backend-mainnet.prd.service.aepps.com",

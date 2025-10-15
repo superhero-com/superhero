@@ -225,7 +225,6 @@ a.no-gradient-text::after {
 @media (min-width: 768px) {
   .token-activity + .token-activity {
     margin-top: -6px; /* slightly tighter stack */
-    margin-bottom: -6px;
   }
 }
 

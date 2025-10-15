@@ -1,16 +1,16 @@
+import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import React, { useEffect, useRef, useState } from "react";
-import { IconClose, IconGif, IconImage, IconSmile } from "../../../icons";
 import AeButton from "../../../components/AeButton";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
-import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
+import { IconClose, IconGif, IconSmile } from "../../../icons";
 // @ts-ignore
+import { useQueryClient } from "@tanstack/react-query";
 import TIPPING_V3_ACI from "tipping-contract/generated/Tipping_v3.aci.json";
 import { PostsService } from "../../../api/generated";
 import { CONFIG } from "../../../config";
 import { useAccount } from "../../../hooks/useAccount";
 import { useAeSdk } from "../../../hooks/useAeSdk";
-import { useQueryClient } from "@tanstack/react-query";
-import GiftSearch from "./GiftSearch";
+import { GifSelectorDialog } from "./GifSelectorDialog";
 
 interface PostFormProps {
   // Common props
@@ -188,7 +188,7 @@ export default function PostForm({
           await PostsService.getById({
             id: `${decodedResult}_v3`,
           });
-        } catch {}
+        } catch { }
       } else if (postId) {
         // For replies: optimistically show the new reply immediately
         try {
@@ -269,9 +269,8 @@ export default function PostForm({
 
   return (
     <div
-      className={`${
-        isPost ? "w-full max-w-none" : "mx-auto"
-      } mb-2 md:mb-4 ${className}`}
+      className={`${isPost ? "w-full max-w-none" : "mx-auto"
+        } mb-2 md:mb-4 ${className}`}
     >
       <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="relative">
@@ -290,54 +289,54 @@ export default function PostForm({
             )}
             <div className={activeAccount ? "md:col-start-2" : "md:col-span-2"}>
               <div className="relative">
-              <textarea
-                ref={textareaRef}
-                placeholder={currentPlaceholder}
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pr-14 md:pb-12 md:text-base"
-                style={{ minHeight: computedMinHeight }}
-                rows={2}
-                maxLength={characterLimit}
-              />
-              
-              <div className="md:hidden absolute bottom-5 left-2">
-                {/* Mobile-only GIF button inside textarea corner */}
-                {showGifInput && (
-                  <button
-                    type="button"
-                    className="md:hidden  inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
-                    title="GIF"
-                    ref={gifBtnRef}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setShowGif((s) => !s);
-                      setShowEmoji(false);
-                    }}
-                    onTouchStart={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onTouchEnd={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setShowGif((s) => !s);
-                      setShowEmoji(false);
-                    }}
-                  >
-                    <span className="uppercase tracking-wide">GIF</span>
-                  </button>
-                )}
-              </div>
-              {characterLimit && (
-                <div className="absolute bottom-4 right-2 md:bottom-4 md:right-4 text-white/60 text-sm font-semibold pointer-events-none select-none">
-                  {text.length}/{characterLimit}
+                <textarea
+                  ref={textareaRef}
+                  placeholder={currentPlaceholder}
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pr-14 md:pb-12 md:text-base"
+                  style={{ minHeight: computedMinHeight }}
+                  rows={2}
+                  maxLength={characterLimit}
+                />
+
+                <div className="md:hidden absolute bottom-5 left-2">
+                  {/* Mobile-only GIF button inside textarea corner */}
+                  {showGifInput && (
+                    <button
+                      type="button"
+                      className="md:hidden  inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
+                      title="GIF"
+                      ref={gifBtnRef}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowGif((s) => !s);
+                        setShowEmoji(false);
+                      }}
+                      onTouchStart={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowGif((s) => !s);
+                        setShowEmoji(false);
+                      }}
+                    >
+                      <span className="uppercase tracking-wide">GIF</span>
+                    </button>
+                  )}
                 </div>
-              )}
+                {characterLimit && (
+                  <div className="absolute bottom-4 right-2 md:bottom-4 md:right-4 text-white/60 text-sm font-semibold pointer-events-none select-none">
+                    {text.length}/{characterLimit}
+                  </div>
+                )}
 
 
-             
+
               </div>
 
               {(showEmojiPicker || showGifInput) && (
@@ -396,8 +395,8 @@ export default function PostForm({
                     )}
 
                     {showGifInput && (
-                      <GiftSearch 
-                        open={showGif} 
+                      <GifSelectorDialog
+                        open={showGif}
                         onOpenChange={setShowGif}
                         mediaUrls={mediaUrls}
                         onMediaUrlsChange={setMediaUrls}
@@ -418,8 +417,8 @@ export default function PostForm({
                             ? "Posting…"
                             : "Posting..."
                           : isPost
-                          ? "Post"
-                          : "Post Reply"}
+                            ? "Post"
+                            : "Post Reply"}
                       </AeButton>
                     ) : (
                       <ConnectWalletButton className="rounded-full" />
@@ -478,8 +477,8 @@ export default function PostForm({
                       ? "Posting…"
                       : "Posting..."
                     : isPost
-                    ? "Post"
-                    : "Post Reply"}
+                      ? "Post"
+                      : "Post Reply"}
                 </AeButton>
               ) : (
                 <ConnectWalletButton block className="w-full rounded-xl md:rounded-full" />

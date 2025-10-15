@@ -1,5 +1,6 @@
 import { fetchJson } from "@/utils/common";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -14,54 +15,78 @@ interface GifSelectorDialogProps {
   mediaUrls: string[];
   onMediaUrlsChange: (mediaUrls: string[]) => void;
 }
-export default function GifSelectorDialog({
+
+
+export function GifSelectorDialog({
   open,
   onOpenChange,
   mediaUrls,
   onMediaUrlsChange,
 }: GifSelectorDialogProps) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<any[]>([]);
-  const [resultCount, setResultCount] = useState("");
-  const [offset, setOffset] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const handleSearch = async () => {
-    setLoading(true);
-    setError(null);
-    setResults([]);
-    setResultCount("0 Results");
-    setOffset(0);
-
-    try {
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  
+  const { 
+    data, 
+    isLoading, 
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["giphy", query],
+    queryFn: async ({ pageParam = 0 }) => {
       const url = new URL(
         `https://api.giphy.com/v1/gifs/${query ? "search" : "trending"}`
       );
       if (query) url.searchParams.set("q", query);
-      url.searchParams.set("limit", "10");
-      url.searchParams.set("offset", offset.toString());
+      url.searchParams.set("limit", "12");
+      url.searchParams.set("offset", pageParam.toString());
       url.searchParams.set("api_key", "P16yBDlSeEfcrJfp1rwnamtEZmQHxHNM");
       const { data, pagination } = await fetchJson(url.toString());
-      setResults(
-        data.map(({ images }) => ({
+      return {
+        results: data.map(({ images }: any) => ({
           still: images.fixed_width_still.url,
           animated: images.fixed_width.url,
           original: images.original.url,
-        }))
-      );
-      setResultCount(`${pagination.total_count.toLocaleString()} Results`);
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+        })),
+        totalCount: pagination.total_count,
+        nextOffset: pagination.offset + pagination.count,
+        hasMore: pagination.offset + pagination.count < pagination.total_count,
+      };
+    },
+    getNextPageParam: (lastPage) => {
+      return lastPage.hasMore ? lastPage.nextOffset : undefined;
+    },
+    initialPageParam: 0,
+    enabled: open,
+  });
 
+  const results = data?.pages.flatMap(page => page.results) || [];
+  const totalCount = data?.pages[0]?.totalCount || 0;
+  const resultCount = `${totalCount.toLocaleString()} Results`;
+
+  // Auto-load more when reaching bottom using IntersectionObserver
   useEffect(() => {
-    if (open) {
-      handleSearch();
-    }
-  }, [query, offset, open]);
+    if (!('IntersectionObserver' in window)) return;
+    const sentinel = sentinelRef.current;
+    const scrollContainer = scrollContainerRef.current;
+    if (!sentinel || !scrollContainer) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { root: scrollContainer, rootMargin: '100px', threshold: 0 }
+    );
+    
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleGifClick = (gif: any) => {
     onMediaUrlsChange([...mediaUrls, gif.original]);
@@ -119,18 +144,21 @@ export default function GifSelectorDialog({
               ))}
             </div>
           )}
-          {loading && (
+          {isLoading && (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin h-8 w-8 border-4 border-primary-400 border-t-transparent rounded-full" />
             </div>
           )}
 
           {error && (
-            <div className="text-red-500 text-center py-4">Error: {error}</div>
+            <div className="text-red-500 text-center py-4">Error: {error.message}</div>
           )}
 
-          {!loading && !error && (
-            <div className="grid grid-cols-3 gap-3 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+          {!isLoading && !error && (
+            <div 
+              ref={scrollContainerRef}
+              className="grid grid-cols-3 gap-3 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+            >
               {results.map((result, index) => (
                 <div
                   key={index}
@@ -151,6 +179,13 @@ export default function GifSelectorDialog({
                   />
                 </div>
               ))}
+              {/* Sentinel for infinite scroll */}
+              <div ref={sentinelRef} className="col-span-3 h-4" />
+              {isFetchingNextPage && (
+                <div className="col-span-3 flex items-center justify-center py-4">
+                  <div className="animate-spin h-6 w-6 border-3 border-primary-400 border-t-transparent rounded-full" />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -158,3 +193,6 @@ export default function GifSelectorDialog({
     </Dialog>
   );
 }
+
+
+export default GifSelectorDialog;

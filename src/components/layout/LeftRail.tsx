@@ -248,10 +248,10 @@ export default function LeftRail() {
         navigate("/dex");
         break;
       case "nfts":
-        navigate("/trending");
+        navigate("/trends");
         break;
       case "trending":
-        navigate("/trending");
+        navigate("/trends");
         break;
       case "governance":
         navigate("/voting");
@@ -265,11 +265,11 @@ export default function LeftRail() {
   };
 
   const handleTrendingTopic = (topic: string) => {
-    navigate(`/trending?q=${encodeURIComponent(topic)}`);
+    navigate(`/trends?q=${encodeURIComponent(topic)}`);
   };
 
   const handleTokenClick = (token: TokenItem) => {
-    navigate(`/trending/tokens/${token.name}`);
+    navigate(`/trends/tokens/${token.name}`);
   };
 
   const formatMarketCap = (amount: number): string => {
@@ -463,7 +463,7 @@ export default function LeftRail() {
               transition: "all 0.2s ease",
               marginLeft: "auto",
             }}
-            onClick={() => navigate("/trending")}
+            onClick={() => navigate("/trends")}
             title="Explore all trends"
             onMouseEnter={(e) => {
               e.currentTarget.style.background = "rgba(0, 255, 157, 0.1)";

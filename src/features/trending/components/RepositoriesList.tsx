@@ -86,9 +86,9 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
 
   const onCardAction = (repo: Repository) => {
     if (hasToken(repo)) {
-      navigate(`/trending/tokens/${repo.tag}`);
+      navigate(`/trends/tokens/${repo.tag}`);
     } else {
-      navigate(`/trending/create?platform=${repo.source}&repo=${repo.tag}`);
+      navigate(`/trends/create?platform=${repo.source}&repo=${repo.tag}`);
     }
   };
 
@@ -214,8 +214,8 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
                   {
                     hasToken(repo) ? (
                       <div className="text-xs text-white/60 font-medium truncate">
-                        {Decimal.from(repo.token?.price).prettify()} AE
-                        Holders: {repo.token?.holders_count}
+                        {Decimal.from((repo as any).token?.price || 0).prettify()} AE
+                        Holders: {(repo as any).token?.holders_count ?? 0}
 
                       </div>
                     ) : (
@@ -251,7 +251,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
                         className="px-2 py-1 rounded-lg border-none text-white cursor-pointer text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/trending/tokens/${repo.tag}`);
+                          navigate(`/trends/tokens/${repo.tag}`);
                         }}
                       >
                         View
@@ -261,7 +261,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
                         className="px-2 py-1 rounded-lg border-none text-white cursor-pointer text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/trending/create?platform=${repo.source}&repo=${repo.tag}`);
+                          navigate(`/trends/create?platform=${repo.source}&repo=${repo.tag}`);
                         }}
                       >
                         Tokenize

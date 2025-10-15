@@ -291,7 +291,7 @@ export default function RightRail({
             subtitle: `${token.symbol} • ${token.holders_count || 0} holders`,
             icon: "💎",
             relevance,
-            url: `/trending/tokens/${token.name || token.symbol}`,
+            url: `/trends/tokens/${token.name || token.symbol}`,
           });
         });
         resultIndex++;
@@ -318,7 +318,7 @@ export default function RightRail({
               subtitle: `${mentionCount} mentions`,
               icon: "🏷️",
               relevance,
-              url: `/trending?q=${encodeURIComponent(topic[0])}`,
+              url: `/trends?q=${encodeURIComponent(topic[0])}`,
             });
           }
         });
@@ -340,7 +340,7 @@ export default function RightRail({
             subtitle: `DAO • ${dao.members_count || 0} members`,
             icon: "🏛️",
             relevance,
-            url: `/trending/dao/${dao.address}`,
+            url: `/trends/dao/${dao.address}`,
           });
         });
         resultIndex++;
@@ -587,10 +587,10 @@ export default function RightRail({
         navigate("/defi");
         break;
       case "nfts":
-        navigate("/trending");
+        navigate("/trends");
         break;
       case "trending":
-        navigate("/trending");
+        navigate("/trends");
         break;
       case "governance":
         navigate("/voting");
@@ -604,7 +604,7 @@ export default function RightRail({
   };
 
   const handleTokenClick = (token: any) => {
-    if (token?.name) navigate(`/trending/tokens/${token.name}`);
+    if (token?.name) navigate(`/trends/tokens/${token.name}`);
   };
 
   // Simulate price alerts
@@ -759,7 +759,7 @@ export default function RightRail({
           <h4 className="m-0 text-base font-bold text-[var(--standard-font-color)] flex-1">Trending Topics</h4>
           <button
             className="bg-none border-none text-[var(--neon-teal)] text-base cursor-pointer p-1 rounded transition-all duration-200 hover:bg-[rgba(0,255,157,0.1)] hover:scale-110"
-            onClick={() => window.location.href = '/trending'}
+            onClick={() => window.location.href = '/trends'}
             title="Explore all trends"
           >
             🔍

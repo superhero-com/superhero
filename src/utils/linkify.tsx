@@ -131,7 +131,7 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
     if (segLast < segment.length) urlLinkedParts.push(segment.slice(segLast));
   });
 
-  // Pass 3: Hashtags → link to trending tokens page (/trending/tokens/<UPPERCASE>)
+  // Pass 3: Hashtags → link to trending tokens page (/trends/tokens/<UPPERCASE>)
   const finalParts: React.ReactNode[] = [];
   urlLinkedParts.forEach((node, idx) => {
     if (typeof node !== 'string') {
@@ -142,7 +142,7 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
     let last = 0;
     segment.replace(HASHTAG_REGEX, (m: string, tag: string, off: number) => {
       if (off > last) finalParts.push(segment.slice(last, off));
-      const target = `/trending/tokens/${tag.toUpperCase()}`;
+      const target = `/trends/tokens/${tag.toUpperCase()}`;
       finalParts.push(
         <a
           href={target}

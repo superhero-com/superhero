@@ -317,7 +317,7 @@ export default function TrendCloud() {
             </label>
             
             <a 
-              href="/trending/tokens" 
+              href="/trends/tokens" 
               className="px-4 py-2 rounded-xl border border-white/20 bg-white text-black no-underline text-sm font-medium transition-all duration-200 min-h-9 flex items-center justify-center hover:bg-gray-100 hover:border-white/40 hover:-translate-y-0.5"
             >
               View Tokens
@@ -544,7 +544,7 @@ export default function TrendCloud() {
           >
             {filteredTags.map((t) => {
               const token = tagTokenMap[t.tag];
-              const href = token ? `/trending/tokens/${encodeURIComponent(token.name || token.address || t.tag)}` : `/trending/create?new=${encodeURIComponent(t.tag)}`;
+              const href = token ? `/trends/tokens/${encodeURIComponent(token.name || token.address || t.tag)}` : `/trends/create?new=${encodeURIComponent(t.tag)}`;
               let text = t.tag;
               if (textCase === 'upper') text = text.toUpperCase();
               else if (textCase === 'lower') text = text.toLowerCase();
@@ -617,7 +617,7 @@ export default function TrendCloud() {
               className="grid-item"
             >
               <a 
-                href={tagTokenMap[t.tag] ? `/trending/tokens/${encodeURIComponent(tagTokenMap[t.tag].name || tagTokenMap[t.tag].address || t.tag)}` : `/trending/create?new=${encodeURIComponent(t.tag)}`}
+                href={tagTokenMap[t.tag] ? `/trends/tokens/${encodeURIComponent(tagTokenMap[t.tag].name || tagTokenMap[t.tag].address || t.tag)}` : `/trends/create?new=${encodeURIComponent(t.tag)}`}
                 className="grid-link"
               >
                 <div className="grid-title">{t.tag.toUpperCase()}</div>
@@ -647,14 +647,14 @@ export default function TrendCloud() {
           <div className="selected-actions">
             {tagTokenMap[selected.tag] ? (
               <a 
-                href={`/trending/tokens/${encodeURIComponent(tagTokenMap[selected.tag].name || tagTokenMap[selected.tag].address || selected.tag)}`}
+                href={`/trends/tokens/${encodeURIComponent(tagTokenMap[selected.tag].name || tagTokenMap[selected.tag].address || selected.tag)}`}
                 className="action-btn primary"
               >
                 View token
               </a>
             ) : (
               <a 
-                href={`/trending/create?new=${encodeURIComponent(selected.tag)}`}
+                href={`/trends/create?new=${encodeURIComponent(selected.tag)}`}
                 className="action-btn primary"
               >
                 Tokenize

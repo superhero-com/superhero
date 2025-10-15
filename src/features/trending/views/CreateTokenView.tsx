@@ -321,7 +321,7 @@ export default function CreateTokenView() {
       );
 
       // Navigate to token details
-      navigate(`/trending/tokens/${tokenName}`);
+      navigate(`/trends/tokens/${tokenName}`);
     } catch (error: any) {
       console.error('Error creating token:', error);
       const message = error?.message || error?.reason || 'Unknown error';
@@ -469,7 +469,7 @@ export default function CreateTokenView() {
                           Token <span className="font-mono font-bold">{alreadyRegisteredName}</span> is already registered.{' '}
                           <button
                             type="button"
-                            onClick={() => navigate(`/trending/tokens/${alreadyRegisteredAs}`)}
+                            onClick={() => navigate(`/trends/tokens/${alreadyRegisteredAs}`)}
                             className="text-blue-400 hover:text-blue-300 underline"
                           >
                             Buy it here

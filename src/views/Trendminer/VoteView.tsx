@@ -117,7 +117,7 @@ export default function VoteView() {
               {/* Back button */}
               <div className="mb-4 flex items-center gap-4">
                 <Link
-                  to={`/trending/dao/${saleAddress}`}
+                  to={`/trends/dao/${saleAddress}`}
                   className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
                 >
                   ← Back to Treasury
@@ -248,7 +248,7 @@ export default function VoteView() {
                         Get {token.symbol} tokens to vote on this proposal
                       </div>
                       <Link
-                        to={`/trending/tokens/${token.symbol}`}
+                        to={`/trends/tokens/${token.symbol}`}
                         className="inline-block"
                       >
                         Get {token.symbol} Tokens

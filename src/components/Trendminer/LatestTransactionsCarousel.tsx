@@ -250,7 +250,7 @@ export default function LatestTransactionsCarousel() {
         }}
         onClick={() => {
           if (saleAddress) {
-            window.location.href = `/trending/tokens/${encodeURIComponent(
+            window.location.href = `/trends/tokens/${encodeURIComponent(
               tokenName
             )}`;
           }

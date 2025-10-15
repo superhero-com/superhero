@@ -74,7 +74,7 @@ export default function CreateTokenView() {
   const [errorMessage, setErrorMessage] = useState<string>();
   const [alreadyRegisteredName, setAlreadyRegisteredName] = useState<string>();
   const [alreadyRegisteredAs, setAlreadyRegisteredAs] = useState<string>();
-  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  // Advanced options removed
   const [loadingPrice, setLoadingPrice] = useState(false);
   const [price, setPrice] = useState(Decimal.ZERO);
 
@@ -419,62 +419,7 @@ export default function CreateTokenView() {
                       </div>
                     </div>
 
-                    {/* Advanced Options Toggle */}
-                    <button
-                      type="button"
-                      onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
-                      className="text-purple-400 hover:text-purple-300 text-sm underline"
-                    >
-                      {showAdvancedOptions ? 'Hide' : 'Show'} Advanced Options
-                    </button>
-
-                    {/* Advanced Options */}
-                    {showAdvancedOptions && (
-                      <div className="space-y-4 pt-4 border-t border-white/10">
-                        <div>
-                          <label className="block text-sm font-medium text-white/80 mb-2">
-                            Description
-                          </label>
-                          <textarea
-                            value={tokenMetaInfo.description}
-                            onChange={(e) => setTokenMetaInfo(prev => ({ ...prev, description: e.target.value }))}
-                            placeholder="Describe your token..."
-                            maxLength={500}
-                            rows={3}
-                            className="w-full px-3 py-2 bg-transparent text-white border border-gray-600/50 rounded-lg focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 placeholder:text-white/50 resize-none transition-all duration-200"
-                          />
-                          <div className="text-xs text-white/60 mt-1">
-                            {tokenMetaInfo.description.length}/500 characters
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-white/80 mb-2">
-                            Website
-                          </label>
-                          <Input
-                            type="url"
-                            value={tokenMetaInfo.website}
-                            onChange={(e) => setTokenMetaInfo(prev => ({ ...prev, website: e.target.value }))}
-                            placeholder="https://mytoken.com"
-                            className="bg-transparent text-white border-gray-600/50 placeholder:text-white/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 rounded-lg transition-all duration-200 autofill:bg-transparent autofill:text-white"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-white/80 mb-2">
-                            Twitter
-                          </label>
-                          <Input
-                            type="url"
-                            value={tokenMetaInfo.twitter}
-                            onChange={(e) => setTokenMetaInfo(prev => ({ ...prev, twitter: e.target.value }))}
-                            placeholder="https://twitter.com/mytoken"
-                            className="bg-transparent text-white border-gray-600/50 placeholder:text-white/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 rounded-lg transition-all duration-200 autofill:bg-transparent autofill:text-white"
-                          />
-                        </div>
-                      </div>
-                    )}
+                    {/* Advanced options removed */}
 
                     {/* Note */}
                     <div className="text-sm text-white/70 bg-white/5 rounded-lg p-3">

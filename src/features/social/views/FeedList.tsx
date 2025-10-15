@@ -15,6 +15,7 @@ import SortControls from "../components/SortControls";
 import EmptyState from "../components/EmptyState";
 import ReplyToFeedItem from "../components/ReplyToFeedItem";
 import TokenCreatedFeedItem from "../components/TokenCreatedFeedItem";
+import TokenCreatedActivityItem from "../components/TokenCreatedActivityItem";
 import { PostApiResponse } from "../types";
 
 // Custom hook
@@ -263,10 +264,9 @@ export default function FeedList({
       const isTokenCreated = String(postId).startsWith("token-created:");
       if (isTokenCreated) {
         return (
-          <TokenCreatedFeedItem
+          <TokenCreatedActivityItem
             key={postId}
             item={item}
-            onOpenPost={handleItemClick}
           />
         );
       }

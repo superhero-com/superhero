@@ -5,6 +5,7 @@ import {
 } from "@/features/shared/components/DataTable";
 import ReplyToFeedItem from "@/features/social/components/ReplyToFeedItem";
 import TokenCreatedFeedItem from "@/features/social/components/TokenCreatedFeedItem";
+import TokenCreatedActivityItem from "@/features/social/components/TokenCreatedActivityItem";
 import { PostApiResponse } from "@/features/social/types";
 import { useNavigate } from "react-router-dom";
 
@@ -31,10 +32,9 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
         const isTokenCreated = String(postId).startsWith("token-created:");
         if (isTokenCreated) {
           return (
-            <TokenCreatedFeedItem
+            <TokenCreatedActivityItem
               key={postId}
               item={item}
-              onOpenPost={(id: string) => navigate(`/trends/tokens/${String(id)}`)}
             />
           );
         }

@@ -578,11 +578,11 @@ export default function CreateTokenView() {
                       )}
                       {/* Shared explanatory note (tooltip carries the AE explanation now) */}
                       <div className="text-xs text-white/80 bg-white/5 rounded-lg p-3 mt-2 space-y-1">
-                        <div className="opacity-80">
-                          You'll deploy the token contract directly from your own wallet. Superhero simply facilitates the creation process.
+                        <div className="text-white">
+                          Once created, your token will be available for trading on the platform. The bonding curve mechanism ensures fair price discovery based on supply and demand.
                         </div>
                         <div className="opacity-80">
-                          Once created, your token will be available for trading on the platform. The bonding curve mechanism ensures fair price discovery based on supply and demand.
+                          You'll deploy the token contract directly from your own wallet. Superhero simply facilitates the creation process.
                         </div>
                       </div>
                     </div>

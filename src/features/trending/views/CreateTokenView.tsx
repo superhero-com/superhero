@@ -445,15 +445,15 @@ export default function CreateTokenView() {
                       </label>
                       <div className="flex items-center gap-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 focus-within:border-white/30">
                         <span className="text-white/70 text-2xl font-bold select-none">#</span>
-                        <Input
+                      <Input
                           ref={nameInputRef}
-                          value={tokenName}
-                          onChange={(e) => onNameUpdate(e.target.value)}
+                        value={tokenName}
+                        onChange={(e) => onNameUpdate(e.target.value)}
                           placeholder={'TREND'}
-                          maxLength={20}
-                          required
+                        maxLength={20}
+                        required
                           className="flex-1 bg-transparent text-white text-2xl md:text-3xl font-extrabold leading-tight border-0 border-none outline-none focus-visible:outline-none shadow-none placeholder:text-white/30 focus:border-0 focus:ring-0 focus-visible:ring-0 px-0 autofill:bg-transparent autofill:text-white"
-                        />
+                      />
                       </div>
                       {validateStringWithCustomErrors(tokenName)}
                       <div className="text-xs text-white/60 mt-1">
@@ -482,7 +482,7 @@ export default function CreateTokenView() {
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-sm font-medium text-white/80">
                           {inputMode === 'AE' ? 'Amount to spend (AE)' : 'Tokens to buy'}
-                        </label>
+                      </label>
                         <button
                           type="button"
                           onClick={() => setInputMode(inputMode === 'AE' ? 'TOKEN' : 'AE')}
@@ -544,34 +544,36 @@ export default function CreateTokenView() {
                           <div className="text-sm text-white/70 mt-1">
                             <div className="flex flex-wrap gap-1 items-center">
                               <span>Estimated cost:</span>
-                              <LivePriceFormatter
-                                row
-                                aePrice={price}
-                                watchPrice={false}
-                                priceLoading={loadingPrice}
-                              />
+                          <LivePriceFormatter
+                            row
+                            aePrice={price}
+                            watchPrice={false}
+                            priceLoading={loadingPrice}
+                          />
                               <span>(incl. fees)</span>
-                            </div>
+                    </div>
                           </div>
                         </div>
                       )}
                       {/* Shared explanatory note for both modes */}
-                      <div className="text-xs text-white/70 bg-white/5 rounded-lg p-3 mt-2">
-                        {inputMode === 'AE'
-                          ? "This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"
-                          : "This is the number of tokens you'll pre-buy before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}
-                        <br />
-                        <span className="opacity-80">Note: You'll deploy the token contract directly from your own wallet. Superhero simply facilitates the creation process.</span>
+                      <div className="text-xs text-white/80 bg-white/5 rounded-lg p-3 mt-2 space-y-1">
+                        <div>
+                          {inputMode === 'AE'
+                            ? "This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"
+                            : "This is the number of tokens you'll pre-buy before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}
+                        </div>
+                        <div className="opacity-80">
+                          You'll deploy the token contract directly from your own wallet. Superhero simply facilitates the creation process.
+                        </div>
+                        <div className="opacity-80">
+                          Once created, your token will be available for trading on our platform. The bonding curve mechanism ensures fair price discovery based on supply and demand.
+                        </div>
                       </div>
                     </div>
 
                     {/* Advanced options removed */}
 
-                    {/* Note */}
-                    <div className="text-sm text-white/70 bg-white/5 rounded-lg p-3">
-                      <strong>Note:</strong> Once created, your token will be available for trading on our platform.
-                      The bonding curve mechanism ensures fair price discovery based on supply and demand.
-                    </div>
+                    {/* Note consolidated above with input explanatory block */}
 
                     {/* Submit Section */}
                     <div className="pt-4">

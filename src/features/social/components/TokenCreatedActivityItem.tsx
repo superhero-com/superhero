@@ -56,10 +56,10 @@ const TokenCreatedActivityItem = memo(({ item }: TokenCreatedActivityItemProps) 
       aria-label={tokenName ? `Open trend ${tokenName}` : 'Open trend'}
     >
       <div className="flex items-center justify-between gap-3 h-8">
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-1 min-w-0">
           <AddressAvatarWithChainNameFeed address={creator} size={20} overlaySize={12} showAddressAndChainName={false} />
           <div className="flex items-center gap-1 min-w-0 text-[13px] leading-[1.2]">
-            <span className="text-white/85 truncate max-w-[22ch]">{displayName}</span>
+            <span className="font-semibold text-white/90 truncate whitespace-nowrap max-w-[22ch]">{displayName}</span>
             <span className="text-white/50">·</span>
             <span className="text-white/70 shrink-0">Created</span>
             {tokenName && (

@@ -418,7 +418,7 @@ export default function CreateTokenView() {
                           placeholder={'TREND'}
                           maxLength={20}
                           required
-                          className="flex-1 bg-transparent text-white text-2xl md:text-3xl leading-tight border-0 outline-none shadow-none placeholder:text-white/30 focus:border-0 focus:ring-0 autofill:bg-transparent autofill:text-white"
+                          className="flex-1 bg-transparent text-white text-2xl md:text-3xl leading-tight border-0 border-none outline-none focus-visible:outline-none shadow-none placeholder:text-white/30 focus:border-0 focus:ring-0 focus-visible:ring-0 autofill:bg-transparent autofill:text-white"
                         />
                       </div>
                       {validateStringWithCustomErrors(tokenName)}

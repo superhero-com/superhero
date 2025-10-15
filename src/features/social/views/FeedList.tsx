@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { PostsService } from "../../../api/generated";
 import type { PostDto } from "../../../api/generated";
 import { TrendminerApi } from "../../../api/backend";
@@ -73,19 +73,23 @@ export default function FeedList({
     } as PostDto;
   }, []);
 
-  // Activities (token-created) fetched in parallel
+  // Activities (token-created) fetched in parallel with smaller initial batch + pagination
   const {
-    data: activityList = [],
+    data: activitiesPages,
     isLoading: activitiesLoading,
-  } = useQuery<PostDto[]>({
+    fetchNextPage: fetchNextActivities,
+    hasNextPage: hasMoreActivities,
+    isFetchingNextPage: fetchingMoreActivities,
+  } = useInfiniteQuery<PostDto[], Error>({
     queryKey: ["home-activities"],
     enabled: sortBy !== "hot",
-    staleTime: 30_000,
-    queryFn: async () => {
+    initialPageParam: 1,
+    queryFn: async ({ pageParam = 1 }) => {
       const resp = await TrendminerApi.listTokens({
         orderBy: "created_at",
         orderDirection: "DESC",
-        limit: 50,
+        limit: 20,
+        page: pageParam as number,
       }).catch(() => ({ items: [] }));
       const items: any[] = resp?.items || [];
       return items
@@ -102,16 +106,27 @@ export default function FeedList({
         }))
         .map(mapTokenCreatedToPost);
     },
+    getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === 20 ? pages.length + 1 : undefined),
   });
+  const activityList: PostDto[] = useMemo(
+    () => (activitiesPages?.pages ? (activitiesPages.pages as PostDto[][]).flatMap((p) => p) : []),
+    [activitiesPages]
+  );
 
   // Live updates for token-created via websocket
   useEffect(() => {
     if (sortBy === "hot") return;
     const unsubscribe = WebSocketClient.subscribeToNewTokenSales((payload: any) => {
       const mapped = mapTokenCreatedToPost(payload);
-      queryClient.setQueryData(["home-activities"], (prev: any[] = []) => {
-        if (prev.some((p) => p?.id === mapped.id)) return prev;
-        return [mapped, ...prev].slice(0, 100);
+      queryClient.setQueryData(["home-activities"], (prev: any) => {
+        // prev is infinite data shape { pages: PostDto[][], pageParams: any[] }
+        if (!prev || !prev.pages) {
+          return { pages: [[mapped]], pageParams: [1] };
+        }
+        const first: PostDto[] = prev.pages[0] || [];
+        if (first.some((p) => p?.id === mapped.id)) return prev;
+        const newFirst = [mapped, ...first].slice(0, 20);
+        return { ...prev, pages: [newFirst, ...prev.pages.slice(1)] };
       });
     });
     return () => {
@@ -301,13 +316,14 @@ export default function FeedList({
     if (!sentinel) return;
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
-      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
+      if (entry.isIntersecting) {
+        if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+        if (sortBy !== "hot" && hasMoreActivities && !fetchingMoreActivities) fetchNextActivities();
       }
     }, { root: null, rootMargin: '600px 0px', threshold: 0 });
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, sortBy, hasMoreActivities, fetchingMoreActivities, fetchNextActivities]);
 
   const content = (
     <div className="w-full">

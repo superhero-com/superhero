@@ -2,7 +2,7 @@ import { PostsService } from "@/api/generated/services/PostsService";
 import ReplyToFeedItem from "@/features/social/components/ReplyToFeedItem";
 import TokenCreatedActivityItem from "@/features/social/components/TokenCreatedActivityItem";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { TrendminerApi } from "@/api/backend";
 import type { PostDto } from "@/api/generated";
@@ -14,7 +14,34 @@ interface AccountFeedProps {
 
 export default function AccountFeed({ address, tab }: AccountFeedProps) {
   const navigate = useNavigate();
-  const [createdActivities, setCreatedActivities] = useState<PostDto[]>([]);
+  // Infinite activities for this profile (smaller initial batch)
+  const {
+    data: createdActivitiesPages,
+    isLoading: aLoading,
+    fetchNextPage: fetchNextActivities,
+    hasNextPage: hasMoreActivities,
+    isFetchingNextPage: fetchingMoreActivities,
+  } = useInfiniteQuery<PostDto[], Error>({
+    queryKey: ["profile-activities", address],
+    enabled: !!address && tab === "feed",
+    initialPageParam: 1,
+    queryFn: async ({ pageParam = 1 }) => {
+      const resp = await TrendminerApi.listTokens({
+        creatorAddress: address,
+        orderBy: "created_at",
+        orderDirection: "DESC",
+        limit: 20,
+        page: pageParam as number,
+      }).catch(() => ({ items: [] }));
+      const items = (resp?.items || []).map(mapTokenCreatedToPost);
+      return items;
+    },
+    getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === 20 ? pages.length + 1 : undefined),
+  });
+  const createdActivities: PostDto[] = useMemo(
+    () => (createdActivitiesPages?.pages ? (createdActivitiesPages.pages as PostDto[][]).flatMap((p) => p) : []),
+    [createdActivitiesPages]
+  );
 
   // Infinite posts for this profile
   const {
@@ -60,13 +87,14 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
     if (!sentinel) return;
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
-      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
+      if (entry.isIntersecting) {
+        if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+        if (hasMoreActivities && !fetchingMoreActivities) fetchNextActivities();
       }
     }, { root: null, rootMargin: '600px 0px', threshold: 0 });
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [tab, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [tab, hasNextPage, isFetchingNextPage, fetchNextPage, hasMoreActivities, fetchingMoreActivities, fetchNextActivities]);
 
   // Map Trendminer token -> Post-like activity item
   function mapTokenCreatedToPost(payload: any): PostDto {
@@ -94,28 +122,7 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
     } as PostDto;
   }
 
-  // Load user's created trends as activity items for profile feed
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      if (!address || tab !== "feed") return;
-      try {
-        const resp = await TrendminerApi.listTokens({
-          creatorAddress: address,
-          orderBy: "created_at",
-          orderDirection: "DESC",
-          limit: 20,
-        }).catch(() => ({ items: [] }));
-        if (cancelled) return;
-        const items = (resp?.items || []).map(mapTokenCreatedToPost);
-        setCreatedActivities(items);
-      } catch {
-        if (!cancelled) setCreatedActivities([]);
-      }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, [address, tab]);
+  // (no separate effect: activities are handled by the infinite query above)
 
   return (
     <div className="w-full">

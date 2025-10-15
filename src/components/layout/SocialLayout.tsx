@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Shell from "./Shell";
 import RightRail from "./RightRail";
@@ -9,6 +9,11 @@ export default function SocialLayout({
   children?: React.ReactNode;
 }) {
   const containerClassName = "max-w-[min(1200px,100%)]";
+  // Scroll to top on layout mount; individual pages can also do this, but this
+  // ensures navigation into token pages starts at the top.
+  useEffect(() => {
+    try { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); } catch { window.scrollTo(0, 0); }
+  }, []);
   return (
     <Shell right={<RightRail />} containerClassName={containerClassName}>
       <Suspense fallback={<div className="loading-fallback" />}>

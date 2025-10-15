@@ -481,9 +481,28 @@ export default function CreateTokenView() {
                     {/* Initial Buy - AE-first with toggle */}
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium text-white/80">
-                          {inputMode === 'AE' ? 'Amount to spend (AE)' : 'Tokens to buy'}
-                      </label>
+                        <div className="flex items-center gap-2">
+                          <label className="block text-sm font-medium text-white/80">
+                            {inputMode === 'AE' ? 'Amount to spend (AE)' : 'Tokens to buy'}
+                          </label>
+                          {/* Tooltip */}
+                          <div className="relative group inline-block align-middle">
+                            <span
+                              tabIndex={0}
+                              className="text-white/70 cursor-help select-none leading-none px-1"
+                              aria-label={inputMode === 'AE' 
+                                ? "This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"
+                                : "This is the number of tokens you'll pre-buy before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}
+                            >
+                              ⓘ
+                            </span>
+                            <div className="absolute left-0 top-full mt-1 hidden group-hover:block group-focus-within:block w-[320px] max-w-[80vw] rounded-lg border border-white/10 bg-black/80 text-white text-xs p-3 shadow-xl z-20">
+                              {inputMode === 'AE'
+                                ? "This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"
+                                : "This is the number of tokens you'll pre-buy before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}
+                            </div>
+                          </div>
+                        </div>
                         <button
                           type="button"
                           onClick={() => setInputMode(inputMode === 'AE' ? 'TOKEN' : 'AE')}
@@ -506,6 +525,7 @@ export default function CreateTokenView() {
                                 setAeAmount(sanitized);
                               }}
                               placeholder="0.0"
+                              title={"This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}
                               className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none shadow-none"
                             />
                             <div className="text-white/80 font-semibold">AE</div>
@@ -556,13 +576,8 @@ export default function CreateTokenView() {
                           </div>
                         </div>
                       )}
-                      {/* Shared explanatory note for both modes */}
+                      {/* Shared explanatory note (tooltip carries the AE explanation now) */}
                       <div className="text-xs text-white/80 bg-white/5 rounded-lg p-3 mt-2 space-y-1">
-                        <div>
-                          {inputMode === 'AE'
-                            ? "This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"
-                            : "This is the number of tokens you'll pre-buy before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!"}
-                        </div>
                         <div className="opacity-80">
                           You'll deploy the token contract directly from your own wallet. Superhero simply facilitates the creation process.
                         </div>

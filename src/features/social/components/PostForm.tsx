@@ -174,8 +174,8 @@ export default function PostForm({
         // For posts, include media URLs
         postMedia = [...mediaUrls];
       } else if (postId) {
-        // For replies, reference the parent post
-        postMedia = [`comment:${postId}`];
+
+        postMedia = [`comment:${postId}`, ...mediaUrls];
       }
 
       const { decodedResult } = await contract.post_without_tip(

@@ -2,6 +2,9 @@ import React, { useMemo, useState, useCallback, useEffect, useRef } from "react"
 import { useLocation, useNavigate } from "react-router-dom";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { PostsService } from "../../../api/generated";
+import type { PostDto } from "../../../api/generated";
+import { TrendminerApi } from "../../../api/backend";
+import WebSocketClient from "../../../libs/WebSocketClient";
 import AeButton from "../../../components/AeButton";
 import WelcomeBanner from "../../../components/WelcomeBanner";
 import Shell from "../../../components/layout/Shell";
@@ -11,6 +14,7 @@ import CreatePost from "../components/CreatePost";
 import SortControls from "../components/SortControls";
 import EmptyState from "../components/EmptyState";
 import ReplyToFeedItem from "../components/ReplyToFeedItem";
+import TokenCreatedFeedItem from "../components/TokenCreatedFeedItem";
 import { PostApiResponse } from "../types";
 
 // Custom hook
@@ -33,6 +37,93 @@ export default function FeedList({
   const filterBy = urlQuery.get("filterBy") || "all";
 
   const [localSearch, setLocalSearch] = useState(search);
+
+  // Token-created events mapped into Post-like items
+  const [tokenEvents, setTokenEvents] = useState<PostDto[]>([]);
+
+  // Helper to map a token object or websocket payload into a Post-like item
+  const mapTokenCreatedToPost = useCallback((payload: any): PostDto => {
+    const saleAddress: string = payload?.sale_address || payload?.address || "";
+    const name: string = payload?.token_name || payload?.name || "Unknown";
+    const createdAt: string = payload?.created_at || new Date().toISOString();
+    const creatorAddress: string = payload?.creator_address || payload?.creatorAddress || payload?.creator || "";
+    const encodedName = encodeURIComponent(name);
+    const id = `token-created:${encodedName}:${saleAddress}:${createdAt}_v3`;
+    const content = "";
+    return {
+      id,
+      tx_hash: payload?.tx_hash || "",
+      tx_args: [
+        { token_name: name },
+        { sale_address: saleAddress },
+        { kind: "token-created" },
+      ],
+      sender_address: creatorAddress || saleAddress || "",
+      contract_address: saleAddress || "",
+      type: "TOKEN_CREATED",
+      content,
+      topics: [
+        "token:created",
+        `token_name:${name}`,
+        `#${name}`,
+        saleAddress ? `token_sale:${saleAddress}` : "",
+      ].filter(Boolean) as string[],
+      media: [],
+      total_comments: 0,
+      created_at: createdAt,
+    } as PostDto;
+  }, []);
+
+  // Initial fetch of recent token-created events
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const resp = await TrendminerApi.listTokens({
+          orderBy: "created_at",
+          orderDirection: "DESC",
+          limit: 50,
+        }).catch(() => ({ items: [] }));
+        if (cancelled) return;
+        const items: any[] = resp?.items || [];
+        const mapped = items
+          .map((t) => ({
+            sale_address: t?.sale_address || t?.address || "",
+            token_name: t?.name || "Unknown",
+            created_at: t?.created_at || new Date().toISOString(),
+            creator_address:
+              t?.creator_address ||
+              t?.creatorAddress ||
+              (t?.creator && (t?.creator.address || t?.creator)) ||
+              t?.owner_address ||
+              "",
+          }))
+          .map(mapTokenCreatedToPost);
+        setTokenEvents(mapped);
+      } catch {
+        if (!cancelled) setTokenEvents([]);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [mapTokenCreatedToPost]);
+
+  // Live updates for token-created via websocket
+  useEffect(() => {
+    const unsubscribe = WebSocketClient.subscribeToNewTokenSales((payload: any) => {
+      setTokenEvents((prev) => {
+        const mapped = mapTokenCreatedToPost(payload);
+        // avoid duplicates by id
+        if (prev.some((p) => p.id === mapped.id)) return prev;
+        return [mapped, ...prev].slice(0, 100);
+      });
+    });
+    return () => {
+      if (typeof unsubscribe === "function") unsubscribe();
+    };
+  }, [mapTokenCreatedToPost]);
 
   // Infinite query for posts
   const {
@@ -71,15 +162,25 @@ export default function FeedList({
     initialPageParam: 1,
   });
 
-  // Derived state
+  // Derived state: posts list
   const list = useMemo(
     () => data?.pages?.flatMap((page) => page?.items ?? []) ?? [],
     [data]
   );
 
+  // Combine posts with token-created events and sort by created_at DESC
+  const combinedList = useMemo(() => {
+    const merged = [...tokenEvents, ...list];
+    return merged.sort((a: any, b: any) => {
+      const at = new Date(a?.created_at || 0).getTime();
+      const bt = new Date(b?.created_at || 0).getTime();
+      return bt - at;
+    });
+  }, [list, tokenEvents]);
+
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {
-    let filtered = [...list];
+    let filtered = [...combinedList];
 
     if (localSearch.trim()) {
       const searchTerm = localSearch.toLowerCase();
@@ -109,7 +210,7 @@ export default function FeedList({
     }
 
     return filtered;
-  }, [list, localSearch, filterBy, chainNames]);
+  }, [combinedList, localSearch, filterBy, chainNames]);
 
   // Memoized event handlers for better performance
   const handleSortChange = useCallback(
@@ -125,7 +226,15 @@ export default function FeedList({
       try {
         sessionStorage.setItem("feedScrollY", String(window.scrollY || 0));
       } catch {}
-      const cleanId = String(postId).replace(/_v3$/, "");
+      const idStr = String(postId);
+      if (idStr.startsWith("token-created:")) {
+        const parts = idStr.replace(/_v3$/, "").split(":");
+        const tokenNameEnc = parts[1] || "";
+        const tokenName = decodeURIComponent(tokenNameEnc);
+        navigate(`/trends/tokens/${tokenName}`);
+        return;
+      }
+      const cleanId = idStr.replace(/_v3$/, "");
       navigate(`/post/${cleanId}`);
     },
     [navigate]
@@ -147,23 +256,29 @@ export default function FeedList({
 
   // Memoized render function for better performance
   const renderFeedItems = useMemo(() => {
-    return filteredAndSortedList.map((item, index) => {
+    return filteredAndSortedList.map((item) => {
       const postId = item.id;
-      const authorAddress = item.sender_address;
-      const commentCount = item.total_comments ?? 0;
-      const chainName = chainNames?.[authorAddress];
-
+      const isTokenCreated = String(postId).startsWith("token-created:");
+      if (isTokenCreated) {
+        return (
+          <TokenCreatedFeedItem
+            key={postId}
+            item={item}
+            onOpenPost={handleItemClick}
+          />
+        );
+      }
       return (
         <ReplyToFeedItem
           key={postId}
           item={item}
-          commentCount={commentCount}
+          commentCount={item.total_comments ?? 0}
           allowInlineRepliesToggle={false}
           onOpenPost={handleItemClick}
         />
       );
     });
-  }, [filteredAndSortedList, chainNames, handleItemClick]);
+  }, [filteredAndSortedList, handleItemClick]);
 
   // Preload PostDetail chunk to avoid first-click lazy load delay
   useEffect(() => {

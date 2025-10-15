@@ -12,13 +12,18 @@ import { cn } from "@/lib/utils";
 type SharePopoverProps = {
   postId: string | number;
   className?: string;
+  urlOverride?: string; // when provided, share this URL instead of building a post URL
 };
 
-export default function SharePopover({ postId, className }: SharePopoverProps) {
+export default function SharePopover({ postId, className, urlOverride }: SharePopoverProps) {
   const url = useMemo(() => {
+    if (urlOverride) {
+      const isAbsolute = /^https?:\/\//i.test(urlOverride);
+      return isAbsolute ? urlOverride : `${window.location.origin}${urlOverride.startsWith('/') ? '' : '/'}${urlOverride}`;
+    }
     const path = `/post/${String(postId).replace(/_v3$/, "")}`;
     return `${window.location.origin}${path}`;
-  }, [postId]);
+  }, [postId, urlOverride]);
 
   return (
     <DropdownMenu>

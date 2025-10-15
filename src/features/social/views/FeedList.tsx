@@ -334,7 +334,7 @@ export default function FeedList({
 
       <div className="w-full flex flex-col gap-0 md:gap-2 md:mx-0">
         {renderEmptyState()}
-        {renderFeedItems}
+        {((sortBy !== "hot" && !activitiesLoading) || sortBy === "hot") && !isLoading && renderFeedItems}
       </div>
 
       {hasNextPage && filteredAndSortedList.length > 0 && (

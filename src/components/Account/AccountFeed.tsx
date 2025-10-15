@@ -120,13 +120,13 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
   return (
     <div className="w-full">
       {createdActivities.length > 0 && (
-        <div className="flex flex-col gap-0 md:gap-2 mb-0 md:mb-2">
+        <div className="flex flex-col gap-2 mb-0 md:mb-2">
           {createdActivities.map((it) => (
             <TokenCreatedActivityItem key={it.id} item={it} />
           ))}
         </div>
       )}
-      <div className="w-full flex flex-col gap-0 md:gap-2 mb-8 md:mb-10">
+      <div className="w-full flex flex-col gap-2 mb-8 md:mb-10">
         {list.map((item: any) => (
           <ReplyToFeedItem
             key={item.id}

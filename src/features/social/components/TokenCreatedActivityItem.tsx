@@ -60,8 +60,7 @@ const TokenCreatedActivityItem = memo(({ item }: TokenCreatedActivityItemProps) 
           <AddressAvatarWithChainNameFeed address={creator} size={20} overlaySize={12} showAddressAndChainName={false} />
           <div className="flex items-center gap-1 min-w-0 text-[13px] leading-[1.2]">
             <span className="font-semibold text-white/90 truncate whitespace-nowrap max-w-[22ch]">{displayName}</span>
-            <span className="text-white/50">·</span>
-            <span className="text-white/70 shrink-0">Created</span>
+            <span className="text-white/70 shrink-0">created</span>
             {tokenName && (
               <span className="truncate max-w-[24ch] text-white/90">
                 {linkify(`#${tokenName}`)}

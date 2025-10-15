@@ -71,7 +71,7 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
           style={{ WebkitTextFillColor: 'white', background: 'none' }}
         >
           <IconDiamond className="hidden sm:inline-block w-6 h-6 md:w-7 md:h-7 text-white/90 shrink-0" aria-hidden="true" />
-          <span>Superhero — the all‑in‑one social + crypto app</span>
+          <span>The all‑in‑one social & crypto app</span>
         </h2>
         <p className="text-sm md:text-base leading-snug text-white/95 max-w-3xl">
           Posts are timestamped and stored on the æternity blockchain forever.

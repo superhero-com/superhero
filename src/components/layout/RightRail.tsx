@@ -1083,6 +1083,20 @@ export default function RightRail({
 
         <div className="grid gap-2.5">
           <button
+            className="bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(236,72,153,0.35)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            onClick={() => navigate('/trends')}
+            title="Explore trends"
+          >
+            🔍 Explore Trends
+          </button>
+          <button
+            className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(244,63,94,0.35)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            onClick={() => navigate('/trends/create')}
+            title="Tokenize a trend"
+          >
+            🚀 Tokenize a Trend
+          </button>
+          <button
             className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-none rounded-xl py-2.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(16,185,129,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/defi/swap')}
             title="Swap tokens on the DEX"

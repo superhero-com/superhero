@@ -80,7 +80,7 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
   return (
     <>
       {createdActivities.length > 0 && (
-        <div className="grid gap-2 md:gap-1 mb-3">
+        <div className="flex flex-col gap-0 md:gap-4 mb-3 md:mb-4">
           {createdActivities.map((it) => (
             <TokenCreatedActivityItem key={it.id} item={it} />
           ))}

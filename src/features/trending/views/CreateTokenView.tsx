@@ -506,7 +506,7 @@ export default function CreateTokenView() {
                                 setAeAmount(sanitized);
                               }}
                               placeholder="0.0"
-                              className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none"
+                              className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none shadow-none"
                             />
                             <div className="text-white/80 font-semibold">AE</div>
                           </div>
@@ -531,7 +531,7 @@ export default function CreateTokenView() {
                               value={formatThousands(initialBuyVolume)}
                               onChange={(e) => setInitialBuyVolume(sanitizeNumeric(e.target.value))}
                               placeholder="0.0"
-                              className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none"
+                              className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none shadow-none"
                             />
                             <div className="text-white/80 font-semibold">TOKENS</div>
                           </div>

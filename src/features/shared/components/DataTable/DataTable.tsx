@@ -121,9 +121,9 @@ export function DataTable<T>({
   }
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`space-y-2 ${className}`}>
       {/* Data Table Content */}
-      <div className="space-y-4">
+      <div className="space-y-2">
         {data.items.map((item, index) => (
           <div key={index}>
             {renderRow({ item, index })}

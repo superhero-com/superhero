@@ -238,10 +238,6 @@ export default function FeedList({
 
   const handleItemClick = useCallback(
     (postId: string) => {
-      // Save current feed scroll position before leaving
-      try {
-        sessionStorage.setItem("feedScrollY", String(window.scrollY || 0));
-      } catch {}
       const idStr = String(postId);
       if (idStr.startsWith("token-created:")) {
         const parts = idStr.replace(/_v3$/, "").split(":");
@@ -250,6 +246,10 @@ export default function FeedList({
         navigate(`/trends/tokens/${tokenName}`);
         return;
       }
+      // Save current feed scroll position before leaving only for post detail
+      try {
+        sessionStorage.setItem("feedScrollY", String(window.scrollY || 0));
+      } catch {}
       const cleanId = idStr.replace(/_v3$/, "");
       navigate(`/post/${cleanId}`);
     },

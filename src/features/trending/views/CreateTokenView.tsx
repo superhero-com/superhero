@@ -1,11 +1,11 @@
 import LivePriceFormatter from '@/features/shared/components/LivePriceFormatter';
 import { AssetInput } from '@/features/trending';
 import { Decimal } from '@/libs/decimal';
-import { calculateBuyPriceWithAffiliationFee, toDecimals } from '@/utils/bondingCurve';
+import { calculateBuyPriceWithAffiliationFee, calculateTokensFromAE, toDecimals } from '@/utils/bondingCurve';
 import { toAe } from "@aeternity/aepp-sdk";
 import { createCommunity } from "bctsl-sdk";
 import BigNumber from "bignumber.js";
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { TrendminerApi } from '../../../api/backend';
 import AeButton from '../../../components/AeButton';
@@ -47,6 +47,7 @@ export default function CreateTokenView() {
   const navigate = useNavigate();
   const location = useLocation();
   const { activeAccount, sdk } = useAeSdk();
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const {
     activeFactorySchema,
     activeFactoryCollections,
@@ -60,7 +61,11 @@ export default function CreateTokenView() {
 
   // Form state
   const [tokenName, setTokenName] = useState(initialTokenName);
+  // Token count (used in TOKEN mode)
   const [initialBuyVolume, setInitialBuyVolume] = useState<string>('');
+  // AE-first input mode and amounts
+  const [inputMode, setInputMode] = useState<'AE' | 'TOKEN'>('AE');
+  const [aeAmount, setAeAmount] = useState<string>('');
   const [collectionModel, setCollectionModel] = useState<CollectionId>();
   const [tokenMetaInfo, setTokenMetaInfo] = useState<TokenMetaInfo>({
     collection: 'word',
@@ -82,6 +87,7 @@ export default function CreateTokenView() {
   const [loading, setLoading] = useState(true);
 
   const initialBuyVolumeDebounced = useDebounce(initialBuyVolume, 300);
+  const aeAmountDebounced = useDebounce(aeAmount, 300);
 
   // Computed values - use from the hook
   const activeFactoryCollectionsArr = useMemo(() =>
@@ -118,28 +124,27 @@ export default function CreateTokenView() {
     }
   }, [activeFactorySchema, collectionModel, activeFactoryCollectionsArr]);
 
-  // Price calculation effect
+  // Price/estimate calculation effects
+  // TOKEN mode: estimate AE cost from token count
   useEffect(() => {
-    const calculatePrice = async () => {
+    if (inputMode !== 'TOKEN') return;
+    const run = async () => {
       if (!initialBuyVolumeDebounced || isNaN(Number(initialBuyVolumeDebounced))) {
         setPrice(Decimal.ZERO);
         return;
       }
-
       setLoadingPrice(true);
       try {
-        // This would use your actual price calculation logic
-        // For now, using a simplified calculation
-        const volume = Number(initialBuyVolumeDebounced);
-        const calculatedPrice = !volume || isNaN(volume) ? Decimal.ZERO : Decimal.from(
+        const tokenCount = Number(initialBuyVolumeDebounced);
+        const cost = !tokenCount || isNaN(tokenCount) ? Decimal.ZERO : Decimal.from(
           toAe(
             calculateBuyPriceWithAffiliationFee(
               new BigNumber(0),
-              new BigNumber(toDecimals(volume, 18).toString()),
+              new BigNumber(toDecimals(tokenCount, 18).toString()),
             ),
           ),
         );
-        setPrice(calculatedPrice);
+        setPrice(cost);
       } catch (error) {
         console.error('Price calculation error:', error);
         setPrice(Decimal.ZERO);
@@ -147,9 +152,32 @@ export default function CreateTokenView() {
         setLoadingPrice(false);
       }
     };
+    run();
+  }, [inputMode, initialBuyVolumeDebounced]);
 
-    calculatePrice();
-  }, [initialBuyVolumeDebounced]);
+  // AE mode: estimate tokens from AE amount
+  const [estimatedTokens, setEstimatedTokens] = useState<Decimal>(Decimal.ZERO);
+  useEffect(() => {
+    if (inputMode !== 'AE') return;
+    const run = async () => {
+      if (!aeAmountDebounced || isNaN(Number(aeAmountDebounced))) {
+        setEstimatedTokens(Decimal.ZERO);
+        return;
+      }
+      setLoadingPrice(true);
+      try {
+        const ae = Number(aeAmountDebounced);
+        const tokensBn = calculateTokensFromAE(new BigNumber(0), ae);
+        setEstimatedTokens(Decimal.from(tokensBn.toString()));
+      } catch (error) {
+        console.error('Token estimation error:', error);
+        setEstimatedTokens(Decimal.ZERO);
+      } finally {
+        setLoadingPrice(false);
+      }
+    };
+    run();
+  }, [inputMode, aeAmountDebounced]);
 
   // Validation functions
   const convertRulesToRegex = (rules: IAllowedNameChars[]): RegExp => {
@@ -207,6 +235,14 @@ export default function CreateTokenView() {
     setTokenName(processedValue);
   };
 
+  // Focus and select Trend token name on mount
+  useEffect(() => {
+    if (nameInputRef.current) {
+      nameInputRef.current.focus();
+      nameInputRef.current.select();
+    }
+  }, []);
+
   // Token creation
   const deploy = async () => {
     try {
@@ -224,6 +260,18 @@ export default function CreateTokenView() {
         throw new Error('SDK not available');
       }
 
+      // Determine initial buy token count from selected mode
+      let initialBuyCount: number = 0;
+      if (inputMode === 'AE') {
+        const ae = Number(aeAmount || 0);
+        if (ae > 0) {
+          const tokensBn = calculateTokensFromAE(new BigNumber(0), ae);
+          initialBuyCount = Number(tokensBn.toString());
+        }
+      } else {
+        initialBuyCount = Number(initialBuyVolume || 0);
+      }
+
       await createCommunity(
         sdk,
         selectedCollection.id,
@@ -232,7 +280,7 @@ export default function CreateTokenView() {
             name: tokenName,
           },
           metaInfo: new Map(Object.entries(tokenMetaInfo)),
-          initialBuyCount: initialBuyVolume || 0,
+          initialBuyCount,
         },
         undefined,
         factory.address
@@ -356,22 +404,26 @@ export default function CreateTokenView() {
                       </div>
                     )}
 
-                    {/* Token Name Input */}
+                    {/* Trend token name */}
                     <div>
                       <label className="block text-sm font-medium text-white/80 mb-2">
-                        Unique Token Name
+                        Trend token name
                       </label>
-                      <Input
-                        value={tokenName}
-                        onChange={(e) => onNameUpdate(e.target.value)}
-                        placeholder={selectedCollection ? `Enter ${selectedCollection.name?.toLowerCase()} name` : 'Enter token name'}
-                        maxLength={20}
-                        required
-                        className="bg-transparent text-white border-gray-600/50 placeholder:text-white/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 rounded-lg transition-all duration-200 autofill:bg-transparent autofill:text-white"
-                      />
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 focus-within:border-white/30">
+                        <span className="text-white/70 text-2xl font-bold select-none">#</span>
+                        <Input
+                          ref={nameInputRef}
+                          value={tokenName}
+                          onChange={(e) => onNameUpdate(e.target.value)}
+                          placeholder={'TREND'}
+                          maxLength={20}
+                          required
+                          className="flex-1 bg-transparent text-white text-2xl md:text-3xl leading-tight border-0 outline-none shadow-none placeholder:text-white/30 focus:border-0 focus:ring-0 autofill:bg-transparent autofill:text-white"
+                        />
+                      </div>
                       {validateStringWithCustomErrors(tokenName)}
                       <div className="text-xs text-white/60 mt-1">
-                        {tokenName.length}/20 characters
+                        {tokenName.length}/20 characters • Allowed: CAPITAL LETTERS and dashes (-)
                       </div>
                     </div>
 
@@ -391,32 +443,73 @@ export default function CreateTokenView() {
                       </div>
                     )}
 
-                    {/* Initial Buy Volume */}
+                    {/* Initial Buy - AE-first with toggle */}
                     <div>
-                      <label className="block text-sm font-medium text-white/80 mb-2">
-                        Initial Buy Volume (AE)
-                      </label>
-                      <AssetInput
-                        modelValue={initialBuyVolume}
-                        onUpdateModelValue={(value) => setInitialBuyVolume(value)}
-                        tokenSymbol={tokenName}
-                        isCoin={false}
-                        maxBtnAllowed
-                        className="bg-transparent text-white border-0 placeholder:text-white/50 focus:ring-2 focus:ring-purple-400/20 rounded-lg transition-all duration-200 autofill:bg-transparent"
-                      />
-                      <div className="text-sm text-white/70 mt-2">
-                        <p>This amount will be used to buy initial tokens for your wallet.</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          <span>Cost:</span>
-                          <LivePriceFormatter
-                            row
-                            aePrice={price}
-                            watchPrice={false}
-                            priceLoading={loadingPrice}
-                          />
-                          <span>including fees.</span>
-                        </div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-white/80">
+                          {inputMode === 'AE' ? 'Amount to spend (AE)' : 'Tokens to buy'}
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setInputMode(inputMode === 'AE' ? 'TOKEN' : 'AE')}
+                          className="text-xs underline text-purple-300 hover:text-purple-200"
+                        >
+                          Switch to {inputMode === 'AE' ? 'Tokens' : 'AE'}
+                        </button>
                       </div>
+
+                      {inputMode === 'AE' ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={aeAmount}
+                              onChange={(e) => setAeAmount(e.target.value.replace(/[^0-9.]/g, ''))}
+                              placeholder="0.0"
+                              className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-lg focus:border-[#4ecdc4] focus:outline-none"
+                            />
+                            <div className="text-white/80 font-semibold">AE</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => setAeAmount('1')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">1 AE</button>
+                            <button type="button" onClick={() => setAeAmount('10')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">10 AE</button>
+                            <button type="button" onClick={() => setAeAmount('100')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">100 AE</button>
+                            <button type="button" onClick={() => setAeAmount('500')} className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.06] text-white/90 text-xs hover:bg-white/[0.1] transition-colors">500 AE</button>
+                          </div>
+                          <div className="text-sm text-white/70">
+                            Estimated tokens you'll receive: <span className="text-white">{estimatedTokens.prettify()}</span>
+                          </div>
+                          <div className="text-xs text-white/70 bg-white/5 rounded-lg p-3">
+                            This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!
+                            <br />
+                            <span className="opacity-80">Note: You'll deploy the token contract directly from your own wallet. Superhero simply facilitates the creation process.</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <AssetInput
+                            modelValue={initialBuyVolume}
+                            onUpdateModelValue={(value) => setInitialBuyVolume(value)}
+                            tokenSymbol={tokenName}
+                            isCoin={false}
+                            maxBtnAllowed
+                            className="bg-transparent text-white border-0 placeholder:text-white/50 focus:ring-2 focus:ring-purple-400/20 rounded-lg transition-all duration-200 autofill:bg-transparent"
+                          />
+                          <div className="text-sm text-white/70 mt-1">
+                            <div className="flex flex-wrap gap-1 items-center">
+                              <span>Estimated cost:</span>
+                              <LivePriceFormatter
+                                row
+                                aePrice={price}
+                                watchPrice={false}
+                                priceLoading={loadingPrice}
+                              />
+                              <span>(incl. fees)</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Advanced options removed */}

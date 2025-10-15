@@ -373,7 +373,7 @@ export default function CreateTokenView() {
   }
 
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-0 md:px-4">
+    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-2 md:px-4">
       <div className="rounded-[24px] mt-4 mb-6 mx-0 md:mx-4 md:[background:linear-gradient(90deg,rgba(244,193,12,0.1),rgba(255,109,21,0.1))]">
         <div className="max-w-[1400px] mx-auto p-0 md:p-6">
           <div className="flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
@@ -389,7 +389,7 @@ export default function CreateTokenView() {
                     Own the Trend.
                   </span>
                 </div>
-                <p className="text-white/75 max-w-3xl lg:max-w-none text-lg leading-relaxed mb-6">
+                <p className="text-white/75 max-w-3xl lg:max-w-none text-lg leading-relaxed mb-0 md:mb-6">
                   Tokenized trends are community tokens launched on a bonding curve.
                   Price moves with buys/sells, no order books. Each token mints a DAO treasury
                   that can fund initiatives via on-chain votes.
@@ -399,7 +399,7 @@ export default function CreateTokenView() {
 
             {/* Right Side - Create Token Form */}
             <div className="max-w-[620px] flex-shrink-0">
-              <div className="bg-white/5 rounded-[24px] border border-white/10 backdrop-blur-xl p-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))' }}>
+              <div className="bg-white/5 rounded-[16px] md:rounded-[24px] border border-white/10 backdrop-blur-xl py-3 px-2 md:p-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))' }}>
                 {!activeFactorySchema ? (
                   <div className="space-y-4">
                     <div className="animate-pulse">
@@ -456,7 +456,7 @@ export default function CreateTokenView() {
                       />
                       </div>
                       {validateStringWithCustomErrors(tokenName)}
-                      <div className="text-xs text-white/60 mt-1 flex items-center justify-between">
+                      <div className="text-xs text-white/60 mt-1 md:flex md:items-center md:justify-between">
                         <span>{tokenName.length}/20 characters</span>
                         <span className="opacity-80">Allowed are CAPITAL LETTERS and dashes (-)</span>
                       </div>

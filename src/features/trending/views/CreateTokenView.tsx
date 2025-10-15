@@ -409,7 +409,7 @@ export default function CreateTokenView() {
                       <label className="block text-sm font-medium text-white/80 mb-2">
                         Trend token name
                       </label>
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 focus-within:border-white/30">
+                      <div className="flex items-center gap-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 focus-within:border-white/30">
                         <span className="text-white/70 text-2xl font-bold select-none">#</span>
                         <Input
                           ref={nameInputRef}
@@ -418,7 +418,7 @@ export default function CreateTokenView() {
                           placeholder={'TREND'}
                           maxLength={20}
                           required
-                          className="flex-1 bg-transparent text-white text-2xl md:text-3xl leading-tight border-0 border-none outline-none focus-visible:outline-none shadow-none placeholder:text-white/30 focus:border-0 focus:ring-0 focus-visible:ring-0 autofill:bg-transparent autofill:text-white"
+                          className="flex-1 bg-transparent text-white text-2xl md:text-3xl font-extrabold leading-tight border-0 border-none outline-none focus-visible:outline-none shadow-none placeholder:text-white/30 focus:border-0 focus:ring-0 focus-visible:ring-0 px-0 autofill:bg-transparent autofill:text-white"
                         />
                       </div>
                       {validateStringWithCustomErrors(tokenName)}

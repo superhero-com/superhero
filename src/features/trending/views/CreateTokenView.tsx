@@ -480,11 +480,7 @@ export default function CreateTokenView() {
                           <div className="text-sm text-white/70">
                             Estimated tokens you'll receive: <span className="text-white">{estimatedTokens.prettify()}</span>
                           </div>
-                          <div className="text-xs text-white/70 bg-white/5 rounded-lg p-3">
-                            This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!
-                            <br />
-                            <span className="opacity-80">Note: You'll deploy the token contract directly from your own wallet. Superhero simply facilitates the creation process.</span>
-                          </div>
+                          
                         </div>
                       ) : (
                         <div className="space-y-2">
@@ -510,6 +506,12 @@ export default function CreateTokenView() {
                           </div>
                         </div>
                       )}
+                      {/* Shared explanatory note for both modes */}
+                      <div className="text-xs text-white/70 bg-white/5 rounded-lg p-3 mt-2">
+                        This is the amount of AE you'll spend to pre-buy tokens before the bonding curve is available to the public, at the lowest possible price. You can buy as much or as little as you want!
+                        <br />
+                        <span className="opacity-80">Note: You'll deploy the token contract directly from your own wallet. Superhero simply facilitates the creation process.</span>
+                      </div>
                     </div>
 
                     {/* Advanced options removed */}

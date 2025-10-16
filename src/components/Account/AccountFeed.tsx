@@ -169,7 +169,7 @@ function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
         const isFirst = idx === 0;
         const mobileNoTopPadding = hasMultiple && isLast; // last: no top padding
         const mobileNoBottomPadding = hasMultiple && isFirst; // first: no bottom padding
-        const footer = !expanded && isLast && showToggle ? (
+        const footer = isLast && showToggle ? (
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); toggle(); }}
@@ -178,7 +178,7 @@ function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
             style={{ WebkitTapHighlightColor: 'transparent' }}
             aria-expanded={expanded}
           >
-            {`Show ${items.length - 3} more`}
+            {expanded ? 'Show less' : `Show ${items.length - 3} more`}
           </button>
         ) : undefined;
         return (

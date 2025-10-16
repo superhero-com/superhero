@@ -329,7 +329,7 @@ export default function FeedList({
         const isFirstVisible = j === 0;
         const mobileNoTopPadding = hasMultiple && isLastVisible; // last: no top padding
         const mobileNoBottomPadding = hasMultiple && isFirstVisible; // first: no bottom padding
-        const footer = collapsed && isLastVisible && groupItems.length > 3 ? (
+        const footer = isLastVisible && groupItems.length > 3 ? (
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); toggleGroup(groupId); }}
@@ -338,7 +338,7 @@ export default function FeedList({
             style={{ WebkitTapHighlightColor: 'transparent' }}
             aria-expanded={!collapsed}
           >
-            {`Show ${groupItems.length - 3} more`}
+            {collapsed ? `Show ${groupItems.length - 3} more` : 'Show less'}
           </button>
         ) : undefined;
         nodes.push(

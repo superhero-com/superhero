@@ -48,12 +48,10 @@ export default function Shell({ left, right, children, containerClassName }: She
 
           {hasRight && (
             <aside className="hidden lg:block min-w-0 overflow-visible">
-              <div className="sticky top-0 z-0 overflow-visible">
-                <div className="right-rail-bleed -mx-2 lg:-mx-4 px-2 lg:px-4 pt-[80px] overflow-visible">
-                  <div className="right-rail-scroll max-h-screen overflow-y-auto overflow-x-visible overscroll-contain">
-                    <div className="min-w-0">{right}</div>
-                    <FooterSection />
-                  </div>
+              <div className="right-rail-bleed -mx-2 lg:-mx-4 px-2 lg:px-4 overflow-visible">
+                <div className="right-rail-scroll overflow-visible">
+                  <div className="min-w-0">{right}</div>
+                  <FooterSection />
                 </div>
               </div>
             </aside>

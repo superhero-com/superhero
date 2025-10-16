@@ -322,28 +322,42 @@ export default function FeedList({
 
       for (let j = 0; j < visibleCount; j += 1) {
         const gi = groupItems[j];
-        const hideDivider = collapsed && j === visibleCount - 1;
+        const isLastVisible = j === visibleCount - 1;
+        const hideDivider = collapsed ? !isLastVisible : false; // hide dividers between middle items on mobile when collapsed
+        const mobileTight = collapsed && !isLastVisible && j > 0; // remove extra vertical padding for middle items
+        const footer = collapsed && isLastVisible && groupItems.length > 3 ? (
+          <button
+            type="button"
+            onClick={() => toggleGroup(groupId)}
+            className="inline-flex items-center justify-center text-[13px] px-2 py-1 bg-transparent border-0 text-white/80 hover:text-white"
+            aria-expanded={!collapsed}
+          >
+            {`Show ${groupItems.length - 3} more`}
+          </button>
+        ) : undefined;
         nodes.push(
-          <TokenCreatedActivityItem key={gi.id} item={gi} hideMobileDivider={hideDivider} />
+          <TokenCreatedActivityItem
+            key={gi.id}
+            item={gi}
+            hideMobileDivider={hideDivider}
+            mobileTight={mobileTight}
+            footer={footer}
+          />
         );
       }
 
-      if (groupItems.length > 3) {
-        const remaining = groupItems.length - 3;
+      if (groupItems.length > 3 && !collapsed) {
+        // Expanded state: render Show less as its own small row (desktop + mobile)
         nodes.push(
-          <div key={`${groupId}-toggle`} className="w-full px-2 md:px-0">
+          <div key={`${groupId}-toggle-expanded`} className="w-full px-2 md:px-0">
             <button
               type="button"
               onClick={() => toggleGroup(groupId)}
               className="w-full md:w-auto mx-auto flex items-center justify-center text-[13px] md:text-sm px-3 py-2 md:px-0 md:py-0 bg-transparent border-0 text-white/80 hover:text-white transition-colors"
               aria-expanded={!collapsed}
             >
-              {collapsed ? `Show ${remaining} more` : 'Show less'}
+              Show less
             </button>
-            {/* Mobile: full-bleed divider sits below the button */}
-            {collapsed && (
-              <div className="md:hidden pointer-events-none w-[100dvw] ml-[calc(50%-50dvw)] h-px bg-white/10" />
-            )}
           </div>
         );
       }

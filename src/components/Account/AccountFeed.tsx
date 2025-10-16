@@ -161,23 +161,43 @@ function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
   const showToggle = items.length > 3;
   return (
     <div className="flex flex-col gap-2 mb-0 md:mb-2">
-      {visible.map((it, idx) => (
-        <TokenCreatedActivityItem key={it.id} item={it} hideMobileDivider={!expanded && idx === visible.length - 1} />
-      ))}
-      {showToggle && (
-        <div className="w-full px-2 md:px-0">
+      {visible.map((it, idx) => {
+        const isLast = idx === visible.length - 1;
+        const hideDivider = !expanded ? !isLast : false; // hide middle lines on mobile when collapsed
+        const mobileTight = !expanded && !isLast && idx > 0;
+        const footer = !expanded && isLast && showToggle ? (
           <button
             type="button"
             onClick={toggle}
-            className="w-full md:w-auto mx-auto flex items-center justify-center text-[13px] md:text-sm px-3 py-2 md:px-0 md:py-0 bg-transparent border-0 text-white/80 hover:text-white transition-colors"
+            className="inline-flex items-center justify-center text-[13px] px-2 py-1 bg-transparent border-0 text-white/80 hover:text-white"
             aria-expanded={expanded}
           >
-            {expanded ? 'Show less' : `Show ${items.length - 3} more`}
+            {`Show ${items.length - 3} more`}
           </button>
-          {!expanded && (
-            <div className="md:hidden pointer-events-none w-[100dvw] ml-[calc(50%-50dvw)] h-px bg-white/10" />
-          )}
-        </div>
+        ) : undefined;
+        return (
+          <TokenCreatedActivityItem
+            key={it.id}
+            item={it}
+            hideMobileDivider={hideDivider}
+            mobileTight={mobileTight}
+            footer={footer}
+          />
+        );
+      })}
+      {showToggle && (
+        expanded && (
+          <div className="w-full px-2 md:px-0">
+            <button
+              type="button"
+              onClick={toggle}
+              className="w-full md:w-auto mx-auto flex items-center justify-center text-[13px] md:text-sm px-3 py-2 md:px-0 md:py-0 bg-transparent border-0 text-white/80 hover:text-white transition-colors"
+              aria-expanded={expanded}
+            >
+              Show less
+            </button>
+          </div>
+        )
       )}
     </div>
   );

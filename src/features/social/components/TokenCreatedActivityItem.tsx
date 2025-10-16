@@ -10,6 +10,8 @@ import { compactTime } from "../../../utils/time";
 interface TokenCreatedActivityItemProps {
   item: PostDto;
   hideMobileDivider?: boolean;
+  mobileTight?: boolean; // reduce vertical padding on mobile for middle items in a group
+  footer?: React.ReactNode; // optional mobile-only footer area (e.g., Show more) rendered just above divider
 }
 
 function useTokenName(item: PostDto): string | null {
@@ -35,7 +37,7 @@ function useTokenName(item: PostDto): string | null {
   }, [item]);
 }
 
-const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false }: TokenCreatedActivityItemProps) => {
+const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false, mobileTight = false, footer }: TokenCreatedActivityItemProps) => {
   const navigate = useNavigate();
   const { chainNames } = useWallet();
   const creator = item.sender_address;
@@ -53,7 +55,7 @@ const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false }: Toke
       tabIndex={0}
       onClick={(e) => { e.stopPropagation(); onOpen(); }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
-      className="token-activity relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 py-2 md:w-full md:mx-0 md:py-1 md:px-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-transparent md:hover:border-white/25 md:rounded-[12px] md:backdrop-blur-xl transition-colors hover:shadow-none"
+      className={`token-activity relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 ${mobileTight ? 'py-1' : 'py-2'} md:w-full md:mx-0 md:py-1 md:px-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-transparent md:hover:border-white/25 md:rounded-[12px] md:backdrop-blur-xl transition-colors hover:shadow-none`}
       aria-label={tokenName ? `Open trend ${tokenName}` : 'Open trend'}
     >
       <div className="flex items-center justify-between gap-3 h-8">
@@ -92,7 +94,13 @@ const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false }: Toke
           )}
         </div>
       </div>
-      {/* Full-bleed divider on mobile for visual rhythm (can be hidden when followed by a Show more button) */}
+      {/* Optional footer (mobile) */}
+      {footer && (
+        <div className="md:hidden mt-1 text-center">
+          {footer}
+        </div>
+      )}
+      {/* Full-bleed divider on mobile for visual rhythm (can be hidden for middle items or when followed by footer) */}
       {!hideMobileDivider && (
         <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />
       )}

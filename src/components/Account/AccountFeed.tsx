@@ -163,7 +163,7 @@ function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
     <div className="flex flex-col gap-2 mb-0 md:mb-2">
       {visible.map((it, idx) => {
         const isLast = idx === visible.length - 1;
-        const hideDivider = !expanded ? !isLast : false; // hide middle lines on mobile when collapsed
+        const hideDivider = !isLast; // on mobile, never show lines between items, only at the end
         const mobileTight = !expanded && !isLast && idx > 0;
         const footer = !expanded && isLast && showToggle ? (
           <button

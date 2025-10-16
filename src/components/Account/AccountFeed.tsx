@@ -187,15 +187,15 @@ function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
         );
       })}
       {showToggle && (
-        expanded && (
-          <div className="w-full px-2 md:px-0">
+        (
+          <div className="hidden md:block w-full px-2 md:px-0">
             <button
               type="button"
               onClick={toggle}
               className="w-full md:w-auto mx-auto flex items-center justify-center text-[13px] md:text-sm px-3 py-2 md:px-0 md:py-0 bg-transparent border-0 text-white/80 hover:text-white transition-colors"
               aria-expanded={expanded}
             >
-              Show less
+              {expanded ? 'Show less' : `Show ${items.length - 3} more`}
             </button>
           </div>
         )

@@ -58,7 +58,7 @@ const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false, mobile
       className={`token-activity relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 ${mobileTight ? 'py-1' : 'py-2'} md:w-full md:mx-0 md:py-1 md:px-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-transparent md:hover:border-white/25 md:rounded-[12px] md:backdrop-blur-xl transition-colors hover:shadow-none`}
       aria-label={tokenName ? `Open trend ${tokenName}` : 'Open trend'}
     >
-      <div className="flex items-center justify-between gap-3 h-8">
+      <div className="flex items-center justify-between gap-3 md:h-8">
         <div className="flex items-center gap-1 min-w-0">
           <AddressAvatarWithChainNameFeed address={creator} size={20} overlaySize={12} showAddressAndChainName={false} />
           <div className="flex items-center gap-1 min-w-0 text-[13px] leading-[1.2]">
@@ -96,7 +96,7 @@ const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false, mobile
       </div>
       {/* Optional footer (mobile) */}
       {footer && (
-        <div className="mt-1 text-center">
+        <div className="md:hidden mt-1 text-center">
           {footer}
         </div>
       )}

@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function BackToTop() {
+export default function BackToTop({ inline = false }: { inline?: boolean }) {
   const scrollTop = () => {
     try {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -10,7 +10,11 @@ export default function BackToTop() {
   };
 
   return (
-    <div className="mt-6 sticky bottom-3 pr-2 z-[5] pointer-events-none w-full flex justify-end">
+    <div className={[
+      inline ? "mt-4 w-full flex justify-end" : "mt-6 sticky bottom-3 pr-2 w-full flex justify-end",
+      "z-[5] pointer-events-none"
+    ].join(" ")}
+    >
       <button
         type="button"
         aria-label="Back to top"

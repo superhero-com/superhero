@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import BackToTop from './BackToTop';
 import { Link } from 'react-router-dom';
 import { Backend, TrendminerApi } from '../../api/backend';
 import configs from '../../configs';
@@ -138,10 +139,8 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
           </div>
         </div>
       </div>
-      {/* Sentinel for BackToTop anchoring below footer */}
-      {!compact && (
-        <div id="right-rail-bottom-sentinel" className="h-1 w-full"></div>
-      )}
+      {/* BackToTop should render inside the footer at the very bottom */}
+      {!compact && <BackToTop inline />}
     </footer>
   );
 }

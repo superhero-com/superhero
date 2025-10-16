@@ -83,7 +83,7 @@
     overflow: visible;
     
     &:hover {
-      transform: translateY(-4px);
+      transform: none;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(255, 107, 107, 0.2);
     }
     
@@ -754,6 +754,12 @@
     }
   }
 }
+
+/* Allow horizontal bleed beyond grid track/gap */
+.right-rail-bleed { overflow: visible; }
+
+/* Scroller: vertical only; allow horizontal overflow for shadows */
+.right-rail-scroll { overflow-x: visible; }
 
 // Animations
 @keyframes pulse {

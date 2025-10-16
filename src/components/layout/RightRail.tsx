@@ -1141,8 +1141,9 @@ export default function RightRail({
       <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-4 shadow-none">
         <BuyAeWidget embedded={true} />
       </div>
-      {/* Back to top, sticky within right rail; appears after scrolling */}
-      <BackToTop />
+
+      {/* Back to top below the footer; becomes fixed when sentinel enters view */}
+      <BackToTop anchorId="right-rail-bottom-sentinel" />
     </div>
   );
 }

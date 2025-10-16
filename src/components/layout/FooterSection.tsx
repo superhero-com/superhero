@@ -138,6 +138,10 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
           </div>
         </div>
       </div>
+      {/* Sentinel for BackToTop anchoring below footer */}
+      {!compact && (
+        <div id="right-rail-bottom-sentinel" className="h-1 w-full"></div>
+      )}
     </footer>
   );
 }

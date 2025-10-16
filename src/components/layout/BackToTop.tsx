@@ -1,16 +1,26 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
-export default function BackToTop() {
-  const [visible, setVisible] = useState(false);
+export default function BackToTop({ anchorId }: { anchorId: string }) {
+  const [isFixed, setIsFixed] = useState(false);
+  const btnRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const onScroll = () => {
-      setVisible(window.scrollY > 400);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    const anchor = document.getElementById(anchorId);
+    if (!anchor) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        // When the sentinel (just above footer) is visible near the bottom,
+        // pin the button to viewport bottom; otherwise keep it in flow.
+        setIsFixed(entry.isIntersecting);
+      },
+      { root: null, threshold: 0.01 }
+    );
+
+    observer.observe(anchor);
+    return () => observer.disconnect();
+  }, [anchorId]);
 
   const scrollTop = () => {
     try {
@@ -21,7 +31,13 @@ export default function BackToTop() {
   };
 
   return (
-    <div className="sticky bottom-3 z-[5] pointer-events-none">
+    <div
+      ref={btnRef}
+      className={[
+        isFixed ? "fixed left-auto right-4 bottom-4" : "sticky bottom-3",
+        "z-[5] pointer-events-none",
+      ].join(" ")}
+    >
       <button
         type="button"
         aria-label="Back to top"
@@ -32,7 +48,6 @@ export default function BackToTop() {
           "px-4 py-2 text-xs font-semibold",
           "bg-[rgba(20,20,28,0.85)] text-white backdrop-blur",
           "hover:bg-[rgba(20,20,28,0.95)] transition-colors",
-          visible ? "opacity-100" : "opacity-0",
         ].join(" ")}
       >
         ↑ Back to top

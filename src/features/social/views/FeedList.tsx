@@ -271,30 +271,78 @@ export default function FeedList({
     return null;
   };
 
-  // Memoized render function for better performance
+  // Collapsible groups state keyed by first item id in the group
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const toggleGroup = useCallback((groupId: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) next.delete(groupId);
+      else next.add(groupId);
+      return next;
+    });
+  }, []);
+
+  // Grouped render: collapse consecutive token-created items (>3) with a toggle pill
   const renderFeedItems = useMemo(() => {
-    return filteredAndSortedList.map((item) => {
+    const nodes: React.ReactNode[] = [];
+    let i = 0;
+    while (i < filteredAndSortedList.length) {
+      const item = filteredAndSortedList[i];
       const postId = item.id;
       const isTokenCreated = String(postId).startsWith("token-created:");
-      if (isTokenCreated) {
-        return (
-          <TokenCreatedActivityItem
+
+      if (!isTokenCreated) {
+        nodes.push(
+          <ReplyToFeedItem
             key={postId}
             item={item}
+            commentCount={item.total_comments ?? 0}
+            allowInlineRepliesToggle={false}
+            onOpenPost={handleItemClick}
           />
         );
+        i += 1;
+        continue;
       }
-      return (
-        <ReplyToFeedItem
-          key={postId}
-          item={item}
-          commentCount={item.total_comments ?? 0}
-          allowInlineRepliesToggle={false}
-          onOpenPost={handleItemClick}
-        />
-      );
-    });
-  }, [filteredAndSortedList, handleItemClick]);
+
+      // Collect consecutive token-created items into a group
+      const startIndex = i;
+      const groupItems: PostDto[] = [];
+      while (
+        i < filteredAndSortedList.length &&
+        String(filteredAndSortedList[i].id).startsWith("token-created:")
+      ) {
+        groupItems.push(filteredAndSortedList[i] as PostDto);
+        i += 1;
+      }
+
+      const groupId = String(groupItems[0]?.id || `group-${startIndex}`);
+      const collapsed = groupItems.length > 3 && !expandedGroups.has(groupId);
+      const visibleCount = collapsed ? 3 : groupItems.length;
+
+      for (let j = 0; j < visibleCount; j += 1) {
+        const gi = groupItems[j];
+        nodes.push(<TokenCreatedActivityItem key={gi.id} item={gi} />);
+      }
+
+      if (groupItems.length > 3) {
+        const remaining = groupItems.length - 3;
+        nodes.push(
+          <div key={`${groupId}-toggle`} className="w-full px-2 md:px-0">
+            <button
+              type="button"
+              onClick={() => toggleGroup(groupId)}
+              className="w-full md:w-auto mx-auto flex items-center justify-center gap-2 text-[13px] md:text-sm px-3 py-2 md:px-3 md:py-1 rounded-[12px] md:rounded-lg bg-white/[0.04] md:bg-white/[0.04] border border-white/20 md:border-white/25 hover:border-white/40 ring-1 ring-white/10 hover:ring-white/20 transition-colors"
+              aria-expanded={!collapsed}
+            >
+              {collapsed ? `Show ${remaining} more` : 'Show less'}
+            </button>
+          </div>
+        );
+      }
+    }
+    return nodes;
+  }, [filteredAndSortedList, handleItemClick, expandedGroups, toggleGroup]);
 
   // Preload PostDetail chunk to avoid first-click lazy load delay
   useEffect(() => {

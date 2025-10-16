@@ -2,7 +2,7 @@ import { PostsService } from "@/api/generated/services/PostsService";
 import ReplyToFeedItem from "@/features/social/components/ReplyToFeedItem";
 import TokenCreatedActivityItem from "@/features/social/components/TokenCreatedActivityItem";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { TrendminerApi } from "@/api/backend";
 import type { PostDto } from "@/api/generated";
@@ -133,11 +133,7 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
   return (
     <div className="w-full">
       {createdActivities.length > 0 && (
-        <div className="flex flex-col gap-2 mb-0 md:mb-2">
-          {createdActivities.map((it) => (
-            <TokenCreatedActivityItem key={it.id} item={it} />
-          ))}
-        </div>
+        <ActivitiesWithCollapse items={createdActivities} />
       )}
       <div className="w-full flex flex-col gap-2 mb-8 md:mb-10">
         {list.map((item: any) => (
@@ -154,6 +150,32 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
           <div className="p-8 text-center text-muted-foreground">No posts yet</div>
         )}
       </div>
+    </div>
+  );
+}
+
+function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const toggle = useCallback(() => setExpanded((v) => !v), []);
+  const visible = expanded ? items : items.slice(0, 3);
+  const showToggle = items.length > 3;
+  return (
+    <div className="flex flex-col gap-2 mb-0 md:mb-2">
+      {visible.map((it) => (
+        <TokenCreatedActivityItem key={it.id} item={it} />
+      ))}
+      {showToggle && (
+        <div className="w-full px-2 md:px-0">
+          <button
+            type="button"
+            onClick={toggle}
+            className="w-full md:w-auto mx-auto flex items-center justify-center gap-2 text-[13px] md:text-sm px-3 py-2 md:px-3 md:py-1 rounded-[12px] md:rounded-lg bg-white/[0.04] md:bg-white/[0.04] border border-white/20 md:border-white/25 hover:border-white/40 ring-1 ring-white/10 hover:ring-white/20 transition-colors"
+            aria-expanded={expanded}
+          >
+            {expanded ? 'Show less' : `Show ${items.length - 3} more`}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

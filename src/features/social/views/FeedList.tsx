@@ -334,8 +334,8 @@ export default function FeedList({
             type="button"
             onClick={(e) => { e.stopPropagation(); toggleGroup(groupId); }}
             onMouseDown={(e) => e.stopPropagation()}
-            className="inline-flex items-center justify-center text-[13px] px-2 py-1 bg-transparent border-0 text-white/80 hover:text-white outline-none focus:outline-none"
-            style={{ WebkitTapHighlightColor: 'transparent' }}
+            className="inline-flex items-center justify-center text-[13px] px-2 py-1 bg-transparent border-0 text-white/80 hover:text-white outline-none focus:outline-none [text-shadow:none]"
+            style={{ WebkitTapHighlightColor: 'transparent', filter: 'none' }}
             aria-expanded={!collapsed}
           >
             {collapsed ? `Show ${groupItems.length - 3} more` : 'Show less'}
@@ -361,8 +361,8 @@ export default function FeedList({
             <button
               type="button"
               onClick={() => toggleGroup(groupId)}
-              className="w-full md:w-auto mx-auto flex items-center justify-center text-[13px] md:text-sm px-3 py-2 md:px-0 md:py-0 bg-transparent border-0 text-white/80 hover:text-white transition-colors outline-none focus:outline-none"
-              style={{ WebkitTapHighlightColor: 'transparent' }}
+              className="w-full md:w-auto mx-auto flex items-center justify-center text-[13px] md:text-sm px-3 py-2 md:px-0 md:py-0 bg-transparent border-0 text-white/80 hover:text-white transition-colors outline-none focus:outline-none [text-shadow:none]"
+              style={{ WebkitTapHighlightColor: 'transparent', filter: 'none' }}
               aria-expanded={!collapsed}
             >
               {collapsed ? `Show ${groupItems.length - 3} more` : 'Show less'}

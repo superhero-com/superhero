@@ -49,7 +49,7 @@ export default function Shell({ left, right, children, containerClassName }: She
           {hasRight && (
             <aside className="hidden lg:block min-w-0">
               <div className="sticky top-[80px]">
-                <div className="max-h-[calc(100vh-80px)] overflow-visible overscroll-contain">
+                <div className="max-h-[calc(100vh-80px)] overflow-x-visible overflow-y-auto overscroll-contain">
                   <div className="min-w-0">{right}</div>
                   <FooterSection />
                 </div>

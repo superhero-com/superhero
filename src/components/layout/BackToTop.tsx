@@ -5,7 +5,7 @@ type BackToTopProps = {
   bottomOffset?: number;  // px from viewport bottom when fixed
 };
 
-export default function BackToTop({ threshold, bottomOffset = 16 }: BackToTopProps) {
+export default function BackToTop({ threshold, bottomOffset = 32 }: BackToTopProps) {
   const [visible, setVisible] = useState(false);
   const [leftOffset, setLeftOffset] = useState<number>(16);
   const [computedThreshold, setComputedThreshold] = useState<number>(threshold ?? 400);
@@ -74,7 +74,7 @@ export default function BackToTop({ threshold, bottomOffset = 16 }: BackToTopPro
           "pointer-events-auto select-none transition-opacity duration-200",
           "rounded-full px-4 py-2 text-xs font-semibold",
           // Glass styling
-          "bg-[var(--glass-bg)] text-white border border-[var(--glass-border)]",
+          "bg-[var(--glass-bg)] text-white border border-white/20",
           "backdrop-blur-[12px] shadow-[var(--glass-shadow)]",
           // Hover/active
           "hover:bg-white/15 transition-colors",

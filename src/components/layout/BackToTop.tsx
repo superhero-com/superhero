@@ -25,9 +25,10 @@ export default function BackToTop({ threshold = 400, align = 'left' }: BackToTop
   return (
     <div
       className={[
-        "mt-6 sticky bottom-3 w-full flex pointer-events-none z-[5]",
+        "mt-6 sticky w-full flex pointer-events-none z-[5]",
         align === 'left' ? 'justify-start pl-2' : 'justify-end pr-2'
       ].join(' ')}
+      style={{ top: 'calc(100vh - 56px)' }}
     >
       <button
         type="button"

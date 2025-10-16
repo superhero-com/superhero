@@ -599,6 +599,7 @@ export default function CreateTokenView() {
                             block
                             label="Connect Wallet to Create Token"
                             className="w-full"
+                            muted
                           />
                           <p className="text-sm text-white/70 text-center">
                             You need to connect your wallet to create a token.

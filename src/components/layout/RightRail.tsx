@@ -1142,8 +1142,8 @@ export default function RightRail({
         <BuyAeWidget embedded={true} />
       </div>
 
-      {/* Back to top below the footer; becomes fixed when sentinel enters view */}
-      <BackToTop anchorId="right-rail-bottom-sentinel" />
+      {/* Back to top: sticky at the rail's bottom; when scrolled below its spot it remains visible like fixed */}
+      <BackToTop />
     </div>
   );
 }

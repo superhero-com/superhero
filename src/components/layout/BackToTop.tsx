@@ -1,27 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 
-export default function BackToTop({ anchorId }: { anchorId: string }) {
-  const [isFixed, setIsFixed] = useState(false);
-  const btnRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const anchor = document.getElementById(anchorId);
-    if (!anchor) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        // When the sentinel (just above footer) is visible near the bottom,
-        // pin the button to viewport bottom; otherwise keep it in flow.
-        setIsFixed(entry.isIntersecting);
-      },
-      { root: null, threshold: 0.01 }
-    );
-
-    observer.observe(anchor);
-    return () => observer.disconnect();
-  }, [anchorId]);
-
+export default function BackToTop() {
   const scrollTop = () => {
     try {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -31,13 +10,7 @@ export default function BackToTop({ anchorId }: { anchorId: string }) {
   };
 
   return (
-    <div
-      ref={btnRef}
-      className={[
-        isFixed ? "fixed left-auto right-4 bottom-4" : "sticky bottom-3",
-        "z-[5] pointer-events-none",
-      ].join(" ")}
-    >
+    <div className="sticky bottom-3 z-[5] pointer-events-none w-full flex justify-end pr-2">
       <button
         type="button"
         aria-label="Back to top"

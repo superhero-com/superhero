@@ -11,8 +11,9 @@ export default function BackToTop({ inline = false }: { inline?: boolean }) {
 
   return (
     <div className={[
-      inline ? "mt-4 w-full flex justify-start pl-2" : "mt-6 sticky bottom-3 pr-2 w-full flex justify-end",
-      "z-[5] pointer-events-none"
+      inline ? "fixed left-4 bottom-4" : "mt-6 sticky bottom-3 pr-2 w-full flex justify-end",
+      "z-[50] pointer-events-none w-full flex",
+      inline ? "justify-start" : "justify-end"
     ].join(" ")}
     >
       <button

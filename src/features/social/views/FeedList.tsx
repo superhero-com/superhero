@@ -325,8 +325,10 @@ export default function FeedList({
         const isLastVisible = j === visibleCount - 1;
         const hideDivider = !isLastVisible; // on mobile, never show lines between items, only at the end
         const mobileTight = j > 0 && !isLastVisible; // remove extra vertical padding for middle items on mobile (collapsed or expanded)
-        const mobileNoTopPadding = false; // keep top padding on first item
-        const mobileNoBottomPadding = false; // keep bottom padding on last item
+        const hasMultiple = visibleCount > 1;
+        const isFirstVisible = j === 0;
+        const mobileNoTopPadding = hasMultiple && isLastVisible; // last: no top padding
+        const mobileNoBottomPadding = hasMultiple && isFirstVisible; // first: no bottom padding
         const footer = collapsed && isLastVisible && groupItems.length > 3 ? (
           <button
             type="button"

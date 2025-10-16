@@ -165,8 +165,10 @@ function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
         const isLast = idx === visible.length - 1;
         const hideDivider = !isLast; // on mobile, never show lines between items, only at the end
         const mobileTight = idx > 0 && !isLast; // tighten middle items on mobile regardless of expanded/collapsed
-        const mobileNoTopPadding = false; // keep top padding on first item
-        const mobileNoBottomPadding = false; // keep bottom padding on last item
+        const hasMultiple = visible.length > 1;
+        const isFirst = idx === 0;
+        const mobileNoTopPadding = hasMultiple && isLast; // last: no top padding
+        const mobileNoBottomPadding = hasMultiple && isFirst; // first: no bottom padding
         const footer = !expanded && isLast && showToggle ? (
           <button
             type="button"

@@ -14,6 +14,7 @@ interface AccountFeedProps {
 
 export default function AccountFeed({ address, tab }: AccountFeedProps) {
   const navigate = useNavigate();
+  const ACTIVITY_PAGE_SIZE = 50;
   // Infinite activities for this profile (smaller initial batch)
   const {
     data: createdActivitiesPages,
@@ -30,13 +31,13 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
         creatorAddress: address,
         orderBy: "created_at",
         orderDirection: "DESC",
-        limit: 20,
+        limit: ACTIVITY_PAGE_SIZE,
         page: pageParam as number,
       }).catch(() => ({ items: [] }));
       const items = (resp?.items || []).map(mapTokenCreatedToPost);
       return items;
     },
-    getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === 20 ? pages.length + 1 : undefined),
+    getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === ACTIVITY_PAGE_SIZE ? pages.length + 1 : undefined),
   });
   const createdActivities: PostDto[] = useMemo(
     () => (createdActivitiesPages?.pages ? (createdActivitiesPages.pages as PostDto[][]).flatMap((p) => p) : []),

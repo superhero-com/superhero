@@ -30,6 +30,7 @@ export default function FeedList({
   const urlQuery = useUrlQuery();
   const { chainNames } = useWallet();
   const queryClient = useQueryClient();
+  const ACTIVITY_PAGE_SIZE = 50;
 
   // Comment counts are now provided directly by the API in post.total_comments
 
@@ -88,7 +89,7 @@ export default function FeedList({
       const resp = await TrendminerApi.listTokens({
         orderBy: "created_at",
         orderDirection: "DESC",
-        limit: 20,
+        limit: ACTIVITY_PAGE_SIZE,
         page: pageParam as number,
       }).catch(() => ({ items: [] }));
       const items: any[] = resp?.items || [];
@@ -106,7 +107,7 @@ export default function FeedList({
         }))
         .map(mapTokenCreatedToPost);
     },
-    getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === 20 ? pages.length + 1 : undefined),
+    getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === ACTIVITY_PAGE_SIZE ? pages.length + 1 : undefined),
   });
   const activityList: PostDto[] = useMemo(
     () => (activitiesPages?.pages ? (activitiesPages.pages as PostDto[][]).flatMap((p) => p) : []),
@@ -125,7 +126,7 @@ export default function FeedList({
         }
         const first: PostDto[] = prev.pages[0] || [];
         if (first.some((p) => p?.id === mapped.id)) return prev;
-        const newFirst = [mapped, ...first].slice(0, 20);
+        const newFirst = [mapped, ...first].slice(0, ACTIVITY_PAGE_SIZE);
         return { ...prev, pages: [newFirst, ...prev.pages.slice(1)] };
       });
     });

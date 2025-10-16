@@ -10,7 +10,7 @@ export default function BackToTop() {
   };
 
   return (
-    <div className="sticky bottom-3 pr-2 z-[5] pointer-events-none w-full flex justify-end">
+    <div className="mt-6 sticky bottom-3 pr-2 z-[5] pointer-events-none w-full flex justify-end">
       <button
         type="button"
         aria-label="Back to top"

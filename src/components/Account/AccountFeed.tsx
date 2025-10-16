@@ -97,7 +97,7 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
       Promise.all(tasks).finally(() => {
         fetchingRef.current = false;
       });
-    }, { root: null, rootMargin: '200px 0px', threshold: 0.01 });
+    }, { root: null, rootMargin: '800px 0px', threshold: 0.01 });
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [tab, initialLoading, hasNextPage, isFetchingNextPage, fetchNextPage, hasMoreActivities, fetchingMoreActivities, fetchNextActivities]);

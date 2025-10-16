@@ -161,19 +161,22 @@ function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
   const showToggle = items.length > 3;
   return (
     <div className="flex flex-col gap-2 mb-0 md:mb-2">
-      {visible.map((it) => (
-        <TokenCreatedActivityItem key={it.id} item={it} />
+      {visible.map((it, idx) => (
+        <TokenCreatedActivityItem key={it.id} item={it} hideMobileDivider={!expanded && idx === visible.length - 1} />
       ))}
       {showToggle && (
         <div className="w-full px-2 md:px-0">
           <button
             type="button"
             onClick={toggle}
-            className="w-full md:w-auto mx-auto flex items-center justify-center gap-2 text-[13px] md:text-sm px-3 py-2 md:px-3 md:py-1 rounded-[12px] md:rounded-lg bg-white/[0.04] md:bg-white/[0.04] border border-white/20 md:border-white/25 hover:border-white/40 ring-1 ring-white/10 hover:ring-white/20 transition-colors"
+            className="w-full md:w-auto mx-auto flex items-center justify-center text-[13px] md:text-sm px-3 py-2 md:px-0 md:py-0 bg-transparent border-0 text-white/80 hover:text-white transition-colors"
             aria-expanded={expanded}
           >
             {expanded ? 'Show less' : `Show ${items.length - 3} more`}
           </button>
+          {!expanded && (
+            <div className="md:hidden pointer-events-none w-[100dvw] ml-[calc(50%-50dvw)] h-px bg-white/10" />
+          )}
         </div>
       )}
     </div>

@@ -322,7 +322,10 @@ export default function FeedList({
 
       for (let j = 0; j < visibleCount; j += 1) {
         const gi = groupItems[j];
-        nodes.push(<TokenCreatedActivityItem key={gi.id} item={gi} />);
+        const hideDivider = collapsed && j === visibleCount - 1;
+        nodes.push(
+          <TokenCreatedActivityItem key={gi.id} item={gi} hideMobileDivider={hideDivider} />
+        );
       }
 
       if (groupItems.length > 3) {
@@ -332,11 +335,15 @@ export default function FeedList({
             <button
               type="button"
               onClick={() => toggleGroup(groupId)}
-              className="w-full md:w-auto mx-auto flex items-center justify-center gap-2 text-[13px] md:text-sm px-3 py-2 md:px-3 md:py-1 rounded-[12px] md:rounded-lg bg-white/[0.04] md:bg-white/[0.04] border border-white/20 md:border-white/25 hover:border-white/40 ring-1 ring-white/10 hover:ring-white/20 transition-colors"
+              className="w-full md:w-auto mx-auto flex items-center justify-center text-[13px] md:text-sm px-3 py-2 md:px-0 md:py-0 bg-transparent border-0 text-white/80 hover:text-white transition-colors"
               aria-expanded={!collapsed}
             >
               {collapsed ? `Show ${remaining} more` : 'Show less'}
             </button>
+            {/* Mobile: full-bleed divider sits below the button */}
+            {collapsed && (
+              <div className="md:hidden pointer-events-none w-[100dvw] ml-[calc(50%-50dvw)] h-px bg-white/10" />
+            )}
           </div>
         );
       }

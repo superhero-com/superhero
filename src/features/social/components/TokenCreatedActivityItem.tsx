@@ -9,6 +9,7 @@ import { compactTime } from "../../../utils/time";
 
 interface TokenCreatedActivityItemProps {
   item: PostDto;
+  hideMobileDivider?: boolean;
 }
 
 function useTokenName(item: PostDto): string | null {
@@ -34,7 +35,7 @@ function useTokenName(item: PostDto): string | null {
   }, [item]);
 }
 
-const TokenCreatedActivityItem = memo(({ item }: TokenCreatedActivityItemProps) => {
+const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false }: TokenCreatedActivityItemProps) => {
   const navigate = useNavigate();
   const { chainNames } = useWallet();
   const creator = item.sender_address;
@@ -91,8 +92,10 @@ const TokenCreatedActivityItem = memo(({ item }: TokenCreatedActivityItemProps) 
           )}
         </div>
       </div>
-      {/* Full-bleed divider on mobile for visual rhythm */}
-      <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />
+      {/* Full-bleed divider on mobile for visual rhythm (can be hidden when followed by a Show more button) */}
+      {!hideMobileDivider && (
+        <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />
+      )}
     </article>
   );
 });

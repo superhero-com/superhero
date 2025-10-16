@@ -96,7 +96,7 @@ const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false, mobile
       </div>
       {/* Optional footer (mobile) */}
       {footer && (
-        <div className="md:hidden mt-1 text-center">
+        <div className="mt-1 text-center">
           {footer}
         </div>
       )}

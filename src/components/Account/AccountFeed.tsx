@@ -168,7 +168,8 @@ function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
         const footer = !expanded && isLast && showToggle ? (
           <button
             type="button"
-            onClick={toggle}
+            onClick={(e) => { e.stopPropagation(); toggle(); }}
+            onMouseDown={(e) => e.stopPropagation()}
             className="inline-flex items-center justify-center text-[13px] px-2 py-1 bg-transparent border-0 text-white/80 hover:text-white"
             aria-expanded={expanded}
           >

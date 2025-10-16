@@ -328,7 +328,8 @@ export default function FeedList({
         const footer = collapsed && isLastVisible && groupItems.length > 3 ? (
           <button
             type="button"
-            onClick={() => toggleGroup(groupId)}
+            onClick={(e) => { e.stopPropagation(); toggleGroup(groupId); }}
+            onMouseDown={(e) => e.stopPropagation()}
             className="inline-flex items-center justify-center text-[13px] px-2 py-1 bg-transparent border-0 text-white/80 hover:text-white"
             aria-expanded={!collapsed}
           >

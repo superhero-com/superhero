@@ -17,10 +17,20 @@ export default function BackToTop({ threshold, bottomOffset = 32 }: BackToTopPro
       setComputedThreshold(threshold);
       return;
     }
-    const el = document.querySelector('.right-rail-bleed') as HTMLElement | null;
-    const h = el?.clientHeight ?? 400;
-    const EXTRA_OFFSET = 300; // increased: show 300px later than the rail height
-    setComputedThreshold(h + EXTRA_OFFSET);
+    const compute = () => {
+      const el = document.querySelector('.right-rail-bleed') as HTMLElement | null;
+      const h = el?.getBoundingClientRect().height ?? 400;
+      const EXTRA_OFFSET = 300; // increased: show 300px later than the rail height
+      setComputedThreshold(window.scrollY + h + EXTRA_OFFSET);
+    };
+    compute();
+    // Recompute after a tick and on resize to catch layout shifts
+    const t = window.setTimeout(compute, 0);
+    window.addEventListener('resize', compute);
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener('resize', compute);
+    };
   }, [threshold]);
 
   // Media query watcher for md+

@@ -54,7 +54,7 @@ export default function Shell({ left, right, children, containerClassName }: She
                   <div className="min-w-0">{right}</div>
                   <FooterSection />
                   {/* Back to top anchored at very bottom of the aside */}
-                  <BackToTop threshold={600} align="left" />
+                  <BackToTop />
                 </div>
               </div>
             </aside>

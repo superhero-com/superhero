@@ -11,7 +11,7 @@ export default function BackToTop({ inline = false }: { inline?: boolean }) {
 
   return (
     <div className={[
-      inline ? "mt-4 w-full flex justify-end" : "mt-6 sticky bottom-3 pr-2 w-full flex justify-end",
+      inline ? "mt-4 w-full flex justify-start pl-2" : "mt-6 sticky bottom-3 pr-2 w-full flex justify-end",
       "z-[5] pointer-events-none"
     ].join(" ")}
     >

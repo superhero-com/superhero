@@ -1,49 +1,54 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 type BackToTopProps = {
-  threshold?: number;     // show after this scroll amount
+  threshold?: number;     // optional override; defaults to .right-rail-bleed height
   bottomOffset?: number;  // px from viewport bottom when fixed
 };
 
-export default function BackToTop({ threshold = 400, bottomOffset = 16 }: BackToTopProps) {
+export default function BackToTop({ threshold, bottomOffset = 16 }: BackToTopProps) {
   const [visible, setVisible] = useState(false);
-  const [stuck, setStuck] = useState(false);
   const [leftOffset, setLeftOffset] = useState<number>(16);
-  const anchorRef = useRef<HTMLDivElement | null>(null);
+  const [computedThreshold, setComputedThreshold] = useState<number>(threshold ?? 400);
+  const [isMdUp, setIsMdUp] = useState<boolean>(() => window.matchMedia('(min-width: 768px)').matches);
 
+  // Compute threshold from .right-rail-bleed height if not provided
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > threshold);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    if (threshold != null) {
+      setComputedThreshold(threshold);
+      return;
+    }
+    const el = document.querySelector('.right-rail-bleed') as HTMLElement | null;
+    const h = el?.clientHeight ?? 400;
+    setComputedThreshold(h);
   }, [threshold]);
-  // Become fixed after the anchor passes near the bottom of viewport
-  useEffect(() => {
-    if (!anchorRef.current) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setStuck(!entry.isIntersecting),
-      { root: null, rootMargin: `0px 0px -${bottomOffset + 48}px 0px`, threshold: 0 }
-    );
-    observer.observe(anchorRef.current);
-    return () => observer.disconnect();
-  }, [bottomOffset]);
 
-  // Keep horizontally inside the right rail when fixed
+  // Media query watcher for md+
   useEffect(() => {
-    const updateLeft = () => {
-      const rail = document.getElementById('right-rail-root');
-      if (!rail) return;
-      const rect = rail.getBoundingClientRect();
-      setLeftOffset(Math.max(8, rect.left + 8));
-    };
-    updateLeft();
-    window.addEventListener('resize', updateLeft);
-    window.addEventListener('scroll', updateLeft, { passive: true });
-    return () => {
-      window.removeEventListener('resize', updateLeft);
-      window.removeEventListener('scroll', updateLeft);
-    };
+    const mq = window.matchMedia('(min-width: 768px)');
+    const handler = () => setIsMdUp(mq.matches);
+    mq.addEventListener('change', handler);
+    handler();
+    return () => mq.removeEventListener('change', handler);
   }, []);
+
+  // Toggle visibility after threshold and keep horizontally inside right rail
+  useEffect(() => {
+    const onScrollOrResize = () => {
+      setVisible(isMdUp && window.scrollY > computedThreshold);
+      const rail = document.getElementById('right-rail-root');
+      if (rail) {
+        const rect = rail.getBoundingClientRect();
+        setLeftOffset(Math.max(8, rect.left + 8));
+      }
+    };
+    onScrollOrResize();
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
+    return () => {
+      window.removeEventListener('scroll', onScrollOrResize);
+      window.removeEventListener('resize', onScrollOrResize);
+    };
+  }, [computedThreshold, isMdUp]);
 
   const scrollTop = () => {
     try {
@@ -53,30 +58,29 @@ export default function BackToTop({ threshold = 400, bottomOffset = 16 }: BackTo
     }
   };
 
+  if (!isMdUp) return null;
+
   return (
-    <>
-      <div ref={anchorRef} className="h-0" aria-hidden />
-      <div
-        className={["w-full pointer-events-none z-[10]", stuck ? "" : "mt-6 sticky bottom-3 flex justify-start pl-2"].join(" ")}
-        style={stuck ? { position: 'fixed', bottom: bottomOffset, left: leftOffset } as React.CSSProperties : undefined}
+    <div
+      className="pointer-events-none z-[50]"
+      style={{ position: 'fixed', bottom: bottomOffset, left: leftOffset }}
+    >
+      <button
+        type="button"
+        aria-label="Back to top"
+        onClick={scrollTop}
+        className={[
+          "pointer-events-auto select-none transition-opacity duration-200",
+          "rounded-full shadow-md border border-white/10",
+          "px-4 py-2 text-xs font-semibold",
+          "bg-[rgba(20,20,28,0.85)] text-white backdrop-blur",
+          "hover:bg-[rgba(20,20,28,0.95)] transition-colors",
+          visible ? 'opacity-100' : 'opacity-0'
+        ].join(" ")}
       >
-        <button
-          type="button"
-          aria-label="Back to top"
-          onClick={scrollTop}
-          className={[
-            "pointer-events-auto select-none transition-opacity duration-200",
-            "rounded-full shadow-md border border-white/10",
-            "px-4 py-2 text-xs font-semibold",
-            "bg-[rgba(20,20,28,0.85)] text-white backdrop-blur",
-            "hover:bg-[rgba(20,20,28,0.95)] transition-colors",
-            visible ? 'opacity-100' : 'opacity-0'
-          ].join(" ")}
-        >
-          ↑ Back to top
-        </button>
-      </div>
-    </>
+        ↑ Back to top
+      </button>
+    </div>
   );
 }
 

@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function BackToTop({ inline = false }: { inline?: boolean }) {
+export default function BackToTop({ inline = false, withinRightRail = false }: { inline?: boolean; withinRightRail?: boolean }) {
   const scrollTop = () => {
     try {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -9,9 +9,12 @@ export default function BackToTop({ inline = false }: { inline?: boolean }) {
     }
   };
 
+  // Positioning: if withinRightRail, anchor the fixed button to the rail's left edge
+  const fixedClass = withinRightRail ? "fixed bottom-4 left-[max(0px,calc(50vw+360px-50%))]" : "fixed left-4 bottom-4";
+
   return (
     <div className={[
-      inline ? "fixed left-4 bottom-4" : "mt-6 sticky bottom-3 pr-2 w-full flex justify-end",
+      inline ? fixedClass : "mt-6 sticky bottom-3 pr-2 w-full flex justify-end",
       "z-[50] pointer-events-none w-full flex",
       inline ? "justify-start" : "justify-end"
     ].join(" ")}

@@ -139,8 +139,8 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
           </div>
         </div>
       </div>
-      {/* BackToTop should render inside the footer at the very bottom */}
-      {!compact && <BackToTop inline />}
+      {/* BackToTop inside footer at the very bottom; fixed relative to right rail horizontally */}
+      {!compact && <BackToTop inline withinRightRail />}
     </footer>
   );
 }

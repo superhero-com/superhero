@@ -19,7 +19,7 @@ export default function BackToTop({ threshold, bottomOffset = 32 }: BackToTopPro
     }
     const el = document.querySelector('.right-rail-bleed') as HTMLElement | null;
     const h = el?.clientHeight ?? 400;
-    const EXTRA_OFFSET = 150; // show 150px later than the rail height
+    const EXTRA_OFFSET = 300; // increased: show 300px later than the rail height
     setComputedThreshold(h + EXTRA_OFFSET);
   }, [threshold]);
 

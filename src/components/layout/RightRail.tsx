@@ -7,7 +7,6 @@ import { useAeSdk } from "../../hooks/useAeSdk";
 import { useToast } from "../ToastProvider";
 import Sparkline from "../Trendminer/Sparkline";
 import { BuyAeWidget } from "../../features/bridge";
-import BackToTop from "./BackToTop";
 
 import { useWallet } from "../../hooks";
 interface SearchSuggestion {
@@ -1142,8 +1141,6 @@ export default function RightRail({
         <BuyAeWidget embedded={true} />
       </div>
 
-      {/* Back to top inside right rail: sticky, shows after scroll */}
-      <BackToTop threshold={600} align="left" />
 
     </div>
   );

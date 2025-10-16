@@ -1,4 +1,5 @@
 import React from "react";
+import BackToTop from "./BackToTop";
 import FooterSection from "./FooterSection";
 
 type ShellProps = {
@@ -52,6 +53,8 @@ export default function Shell({ left, right, children, containerClassName }: She
                 <div className="right-rail-scroll overflow-visible">
                   <div className="min-w-0">{right}</div>
                   <FooterSection />
+                  {/* Back to top anchored at very bottom of the aside */}
+                  <BackToTop threshold={600} align="left" />
                 </div>
               </div>
             </aside>

@@ -72,10 +72,12 @@ export default function BackToTop({ threshold, bottomOffset = 16 }: BackToTopPro
         onClick={scrollTop}
         className={[
           "pointer-events-auto select-none transition-opacity duration-200",
-          "rounded-full shadow-md border border-white/10",
-          "px-4 py-2 text-xs font-semibold",
-          "bg-[rgba(20,20,28,0.85)] text-white backdrop-blur",
-          "hover:bg-[rgba(20,20,28,0.95)] transition-colors",
+          "rounded-full px-4 py-2 text-xs font-semibold",
+          // Glass styling
+          "bg-[var(--glass-bg)] text-white border border-[var(--glass-border)]",
+          "backdrop-blur-[12px] shadow-[var(--glass-shadow)]",
+          // Hover/active
+          "hover:bg-white/15 transition-colors",
           visible ? 'opacity-100' : 'opacity-0'
         ].join(" ")}
       >

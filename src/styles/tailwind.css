@@ -25,6 +25,8 @@
     --input: 220 1.6% 13.7%;
     --ring: 220 5% 65.9%;
     --radius: 0.5rem;
+    /* Global animation speed multiplier (1 = desktop baseline) */
+    --anim-speed: 1;
   }
 
   .dark {
@@ -72,6 +74,10 @@
 }
 
 @layer components {
+  /* Slow down animations a touch on small screens to match desktop perception */
+  @media (max-width: 640px) {
+    :root { --anim-speed: 1.2; }
+  }
   /* Reusable DEX title style: superhero blue */
   .dex-title {
     @apply font-bold text-white;

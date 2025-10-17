@@ -1,20 +1,19 @@
 import { DexService } from "@/api/generated";
+import { PriceDataFormatter } from "@/features/shared/components";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AddressChip } from "../components/AddressChip";
 import AeButton from "../components/AeButton";
 import { TokenChip } from "../components/TokenChip";
-import { TransactionCard } from "../components/TransactionCard";
 import { PoolCandlestickChart } from "../features/dex/components/charts/PoolCandlestickChart";
+import { TransactionCard } from "../features/dex/components/TransactionCard";
+import { DataTable, DataTableResponse } from "../features/shared/components/DataTable/DataTable";
 import { useAeSdk } from "../hooks";
-import { Decimal } from "../libs/decimal";
 import {
-  getHistory,
   getPairDetails,
   getTokenWithUsd,
 } from "../libs/dexBackend";
-import { PriceDataFormatter } from "@/features/shared/components";
 
 // Pool-specific data interface (modified from TokenData)
 interface PoolData {
@@ -46,31 +45,21 @@ interface PoolData {
   };
 }
 
-// Keep the same TransactionData interface as TokenDetail
-interface TransactionData {
-  hash: string;
-  type: "SwapTokens" | "CreatePair" | "PairMint";
-  pairAddress?: string;
-  senderAccount?: string;
-  reserve0?: string;
-  reserve1?: string;
-  deltaReserve0?: string;
-  deltaReserve1?: string;
-  token0AePrice?: string;
-  token1AePrice?: string;
-  aeUsdPrice?: string;
-  height?: number;
-  microBlockHash?: string;
-  microBlockTime?: string;
-  transactionHash?: string;
-  transactionIndex?: string;
-  logIndex?: number;
-  reserve0Usd?: string;
-  reserve1Usd?: string;
-  delta0UsdValue?: string;
-  delta1UsdValue?: string;
-  txUsdFee?: string;
-}
+// Wrapper function to convert API response to DataTable format
+const fetchTransactions = async (params: any, pairAddress?: string): Promise<DataTableResponse<any>> => {
+  if (!pairAddress) {
+    return { items: [], meta: { totalItems: 0, itemCount: 0, itemsPerPage: 10, totalPages: 0, currentPage: 1 } };
+  }
+  
+  const response = await DexService.listAllPairTransactions({
+    ...params,
+    pairAddress,
+    orderBy: 'created_at',
+    orderDirection: 'DESC',
+  });
+
+  return response as unknown as DataTableResponse<any>;
+};
 
 export default function PoolDetail() {
   const { activeNetwork } = useAeSdk();
@@ -87,79 +76,9 @@ export default function PoolDetail() {
   const [pool, setPool] = useState<PoolData | null>(null); // Changed from token to pool
   const [token0Data, setToken0Data] = useState<any | null>(null); // New: token0 metadata
   const [token1Data, setToken1Data] = useState<any | null>(null); // New: token1 metadata
-  const [history, setHistory] = useState<TransactionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tokenSymbolCache, setTokenSymbolCache] = useState<
-    Record<string, string>
-  >({});
   const [selectedPeriod, setSelectedPeriod] = useState<"24h" | "7d" | "30d">("24h");
-
-
-  // Helper function to get token metadata (same as TokenDetail)
-  async function getTokenMetaData(_tokenAddress: string) {
-    const result = await fetch(
-      `${activeNetwork.middlewareUrl}/v3/aex9/${_tokenAddress}`
-    );
-    const data = await result.json();
-    return data;
-  }
-
-  // Function to get token symbol with caching (same as TokenDetail)
-  const getTokenSymbol = useCallback(
-    async (address: string): Promise<string> => {
-      if (!address || address === "" || address === "AE") return "AE";
-      if (typeof address !== "string") return "Unknown";
-
-      // Check cache first
-      if (tokenSymbolCache[address]) {
-        return tokenSymbolCache[address];
-      }
-
-      try {
-        const metadata = await getTokenMetaData(address);
-        const symbol = metadata?.symbol || address.slice(0, 6);
-
-        // Update cache
-        setTokenSymbolCache((prev) => ({
-          ...prev,
-          [address]: symbol,
-        }));
-
-        return symbol;
-      } catch (error) {
-        // Fallback to shortened address
-        const fallback = address.slice(0, 6);
-        setTokenSymbolCache((prev) => ({
-          ...prev,
-          [address]: fallback,
-        }));
-        return fallback;
-      }
-    },
-    [activeNetwork.middlewareUrl, tokenSymbolCache]
-  );
-
-  // Get token symbol from cache (synchronous) (same as TokenDetail)
-  const getCachedTokenSymbol = useCallback(
-    (address: string): string => {
-      if (!address || address === "" || address === "AE") return "AE";
-      if (typeof address !== "string") return "Unknown";
-      return tokenSymbolCache[address] || address.slice(0, 6);
-    },
-    [tokenSymbolCache]
-  );
-
-  // Get transaction token symbols (simplified for pools since we have the data)
-  const getTransactionTokens = useCallback(
-    (tx: TransactionData): { token0Symbol: string; token1Symbol: string } => {
-      return {
-        token0Symbol: pool?.token0?.symbol || "Token A",
-        token1Symbol: pool?.token1?.symbol || "Token B",
-      };
-    },
-    [pool]
-  );
 
   // Load pool data (modified from TokenDetail's useEffect)
   useEffect(() => {
@@ -169,18 +88,14 @@ export default function PoolDetail() {
       setError(null);
 
       try {
-        // Get pool details and history
-        const [poolData, hist] = await Promise.all([
-          getPairDetails(poolAddress),
-          getHistory({ pairAddress: poolAddress, order: "desc" }),
-        ]);
+        // Get pool details
+        const poolData = await getPairDetails(poolAddress);
 
         if (!poolData) {
           throw new Error("Pool not found");
         }
 
         setPool(poolData);
-        setHistory(hist || []);
 
         // Get token data for both tokens in the pool
         const [token0Info, token1Info] = await Promise.all([
@@ -190,22 +105,6 @@ export default function PoolDetail() {
 
         setToken0Data(token0Info);
         setToken1Data(token1Info);
-
-        // Pre-populate token symbol cache using the new structure
-        const initialCache: Record<string, string> = {
-          AE: "AE",
-        };
-
-        // Use symbols from the pool data directly
-        if (poolData.token0?.symbol) {
-          initialCache[poolData.token0.address] = poolData.token0.symbol;
-        }
-
-        if (poolData.token1?.symbol) {
-          initialCache[poolData.token1.address] = poolData.token1.symbol;
-        }
-
-        setTokenSymbolCache(initialCache);
       } catch (e: any) {
         setError(e.message || "Failed to load pool data");
       } finally {
@@ -667,80 +566,25 @@ export default function PoolDetail() {
       {/* Recent Transactions */}
       <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] relative overflow-hidden">
         <h3 className="text-lg font-semibold text-white m-0 mb-6">
-          Recent Transactions ({history.length})
+          Recent Transactions
         </h3>
-        <div>
-          {history.length === 0 ? (
-            <div
-              style={{
-                textAlign: "center",
-                padding: 40,
-                background: "rgba(255, 255, 255, 0.03)",
-                borderRadius: 16,
-                border: "1px solid var(--glass-border)",
-                backdropFilter: "blur(10px)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 48,
-                  marginBottom: 16,
-                  opacity: 0.3,
-                }}
-              >
-                📊
-              </div>
-              <div
-                style={{
-                  fontSize: 16,
-                  fontWeight: 600,
-                  marginBottom: 8,
-                  color: "var(--standard-font-color)",
-                }}
-              >
-                No transactions found
-              </div>
-              <div
-                style={{
-                  fontSize: 14,
-                  color: "var(--light-font-color)",
-                  lineHeight: 1.5,
-                }}
-              >
-                Trading activity for this pool will appear here
-              </div>
-            </div>
-          ) : (
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: 12 }}
-            >
-              {history.slice(0, 20).map((tx, index) => (
-                <TransactionCard
-                  key={tx.hash || index}
-                  transaction={tx}
-                  getTransactionTokens={getTransactionTokens}
-                />
-              ))}
-              {history.length > 20 && (
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: 12,
-                    fontSize: 12,
-                    color: "var(--light-font-color)",
-                    fontWeight: 600,
-                    opacity: 0.8,
-                    background: "rgba(255, 255, 255, 0.02)",
-                    borderRadius: 12,
-                    border: "1px dashed var(--glass-border)",
-                  }}
-                >
-                  📈 +{history.length - 20} more transactions
-                </div>
-              )}
-            </div>
+        <DataTable
+          queryFn={(params) => fetchTransactions(params, poolAddress)}
+          renderRow={({ item, index }) => (
+            <TransactionCard
+              key={item.tx_hash || index}
+              transaction={item}
+            />
           )}
-        </div>
+          initialParams={{
+            orderBy: 'created_at',
+            orderDirection: 'DESC',
+            pairAddress: poolAddress,
+          }}
+          itemsPerPage={10}
+          emptyMessage="No transactions found for this pool. Trading activity will appear here."
+          className="space-y-4"
+        />
       </div>
     </div>
   );

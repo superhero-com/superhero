@@ -165,11 +165,13 @@ function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
       {visible.map((it, idx) => {
         const isLast = idx === visible.length - 1;
         const hideDivider = !isLast; // on mobile, never show lines between items, only at the end
-        const mobileTight = idx > 0 && !isLast; // tighten middle items on mobile regardless of expanded/collapsed
         const hasMultiple = visible.length > 1;
         const isFirst = idx === 0;
-        const mobileNoTopPadding = hasMultiple && isLast; // last: no top padding
-        const mobileNoBottomPadding = hasMultiple && isFirst; // first: no bottom padding
+        const isMiddle = idx > 0 && !isLast;
+        // When collapsed: keep middle items compact (py-1). When expanded: remove padding (pt-0 pb-0) for middle items.
+        const mobileTight = !expanded && isMiddle;
+        const mobileNoTopPadding = (expanded && isMiddle) || (hasMultiple && isLast);
+        const mobileNoBottomPadding = (expanded && isMiddle) || (hasMultiple && isFirst);
         const footer = isLast && showToggle ? (
           <button
             type="button"

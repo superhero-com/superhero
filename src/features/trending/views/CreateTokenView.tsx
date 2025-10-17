@@ -6,6 +6,9 @@ import { toAe } from "@aeternity/aepp-sdk";
 import { createCommunity } from "bctsl-sdk";
 import BigNumber from "bignumber.js";
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import Spinner from '../../../components/Spinner';
+import VerifiedIcon from '../../../svg/verifiedUrl.svg?react';
+import NotVerifiedIcon from '../../../svg/notVerifiedUrl.svg?react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { TrendminerApi } from '../../../api/backend';
 import AeButton from '../../../components/AeButton';
@@ -48,6 +51,10 @@ export default function CreateTokenView() {
   const location = useLocation();
   const { activeAccount, sdk } = useAeSdk();
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const leftHeroRef = useRef<HTMLDivElement>(null);
+  const rightCardRef = useRef<HTMLDivElement>(null);
+  const [rightMinHeight, setRightMinHeight] = useState<number | undefined>(undefined);
+  const [rightMinWidth, setRightMinWidth] = useState<number | undefined>(undefined);
   const {
     activeFactorySchema,
     activeFactoryCollections,
@@ -83,12 +90,16 @@ export default function CreateTokenView() {
   // Advanced options removed
   const [loadingPrice, setLoadingPrice] = useState(false);
   const [price, setPrice] = useState(Decimal.ZERO);
+  // Name availability check state
+  const [nameStatus, setNameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  const [foundToken, setFoundToken] = useState<{ address: string; sale_address?: string; name: string; price?: number; holders?: number } | null>(null);
 
   // Factory and collections state
   const [loading, setLoading] = useState(true);
 
   const initialBuyVolumeDebounced = useDebounce(initialBuyVolume, 300);
   const aeAmountDebounced = useDebounce(aeAmount, 300);
+  const tokenNameDebounced = useDebounce(tokenName, 400);
 
   // Computed values - use from the hook
   const activeFactoryCollectionsArr = useMemo(() =>
@@ -236,6 +247,70 @@ export default function CreateTokenView() {
     setTokenName(processedValue);
   };
 
+  // Debounced name availability check
+  const nameCheckSeqRef = useRef(0);
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      setFoundToken(null);
+      setAlreadyRegisteredAs(undefined);
+      setAlreadyRegisteredName(undefined);
+      const trimmed = (tokenNameDebounced || '').trim();
+      if (!trimmed) {
+        setNameStatus('idle');
+        return;
+      }
+      const validation = validateStringWithCustomErrors(trimmed);
+      if (validation !== true) {
+        setNameStatus('invalid');
+        return;
+      }
+      setNameStatus('checking');
+      const mySeq = ++nameCheckSeqRef.current;
+      try {
+        const res = await TrendminerApi.listTokens({ limit: 5, search: trimmed });
+        if (cancelled || mySeq !== nameCheckSeqRef.current) return;
+        const items: any[] = res?.items || [];
+        const exact = items.find((t: any) => t?.name === trimmed);
+        if (exact && exact.address) {
+          setFoundToken({
+            address: exact.address,
+            sale_address: exact.sale_address,
+            name: exact.name,
+            price: typeof exact.price === 'number' ? exact.price : (exact.price ? Number(exact.price) : undefined),
+            holders: typeof exact.holders_count === 'number' ? exact.holders_count : (exact.holders_count ? Number(exact.holders_count) : undefined),
+          });
+          setNameStatus('taken');
+        } else {
+          setNameStatus('available');
+        }
+      } catch {
+        if (cancelled) return;
+        // On error, do not block user; treat as idle to avoid false negatives
+        setNameStatus('idle');
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [tokenNameDebounced]);
+
+  // Keep focus in the name input when a taken state is detected
+  useEffect(() => {
+    if (nameStatus === 'taken' && nameInputRef.current) {
+      // Restore focus and keep caret at end
+      const input = nameInputRef.current;
+      input.focus();
+      const len = input.value.length;
+      try {
+        input.setSelectionRange(len, len);
+      } catch {}
+    }
+  }, [nameStatus]);
+
+  // Sparkline removed per request; no history fetching to avoid extra network calls
+
   // Formatting helpers (thousands separator while preserving decimals typing)
   const sanitizeNumeric = (value: string): string => {
     let sanitized = value.replace(/,/g, '').replace(/[^0-9.]/g, '');
@@ -275,6 +350,27 @@ export default function CreateTokenView() {
       nameInputRef.current.focus();
       nameInputRef.current.select();
     }
+  }, []);
+
+  // After load, lock the right card minimum height to the left hero height
+  useEffect(() => {
+    const recalc = () => {
+      const leftH = leftHeroRef.current?.offsetHeight || 0;
+      const currentRightH = rightCardRef.current?.offsetHeight || 0;
+      const minH = Math.max(leftH, currentRightH);
+      setRightMinHeight(minH || undefined);
+      // Lock width after initial layout on medium+ screens to avoid jumpy width
+      const w = rightCardRef.current?.getBoundingClientRect().width || 0;
+      if (w && (window.innerWidth || 0) >= 768) {
+        setRightMinWidth(w);
+      } else {
+        setRightMinWidth(undefined);
+      }
+    };
+    // Initial and on resize
+    recalc();
+    window.addEventListener('resize', recalc);
+    return () => window.removeEventListener('resize', recalc);
   }, []);
 
   // Token creation
@@ -376,9 +472,9 @@ export default function CreateTokenView() {
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-2 md:px-4">
       <div className="rounded-[24px] mt-4 mb-6 mx-0 md:mx-4 md:[background:linear-gradient(90deg,rgba(244,193,12,0.1),rgba(255,109,21,0.1))]">
         <div className="max-w-[1400px] mx-auto p-0 md:p-6">
-          <div className="flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
+          <div className="flex flex-col lg:flex-row gap-6 lg:items-start lg:justify-between">
             {/* Left Side - Banner Content */}
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 md:pt-2 lg:pt-[170px]" ref={leftHeroRef}>
               <div className="text-center lg:text-left">
                 <div className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-white mb-4">
                   Create Your Token.
@@ -398,8 +494,8 @@ export default function CreateTokenView() {
             </div>
 
             {/* Right Side - Create Token Form */}
-            <div className="max-w-[620px] flex-shrink-0">
-              <div className="bg-white/5 rounded-[16px] md:rounded-[24px] border border-white/10 backdrop-blur-xl py-3 px-2 md:p-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))' }}>
+            <div className="max-w-[620px] flex-shrink-0" ref={rightCardRef}>
+              <div className="bg-white/5 rounded-[16px] md:rounded-[24px] border border-white/10 backdrop-blur-xl py-3 px-2 md:p-6 shadow-2xl" style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))', minHeight: rightMinHeight ? `${rightMinHeight}px` : undefined, minWidth: rightMinWidth ? `${Math.round(rightMinWidth)}px` : undefined }}>
                 {!activeFactorySchema ? (
                   <div className="space-y-4">
                     <div className="animate-pulse">
@@ -443,9 +539,9 @@ export default function CreateTokenView() {
                       <label className="block text-sm font-medium text-white/80 mb-2">
                         Trend token name
                       </label>
-                      <div className="flex items-center gap-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 focus-within:border-white/30">
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 focus-within:border-white/30">
                         <span className="text-white/70 text-2xl font-bold select-none">#</span>
-                      <Input
+                        <Input
                           ref={nameInputRef}
                         value={tokenName}
                         onChange={(e) => onNameUpdate(e.target.value)}
@@ -453,33 +549,75 @@ export default function CreateTokenView() {
                         maxLength={20}
                         required
                           className="flex-1 bg-transparent text-white text-2xl md:text-3xl font-extrabold leading-tight border-0 border-none outline-none focus-visible:outline-none shadow-none placeholder:text-white/30 focus:border-0 focus:ring-0 focus-visible:ring-0 px-0 autofill:bg-transparent autofill:text-white"
-                      />
+                        />
+                        {/* Inline status icon */}
+                        {nameStatus === 'checking' && (
+                          <Spinner />
+                        )}
+                        {nameStatus === 'available' && (
+                          <VerifiedIcon className="w-5 h-5 text-emerald-400" />
+                        )}
+                        {nameStatus === 'taken' && (
+                          <NotVerifiedIcon className="w-5 h-5 text-red-400" />
+                        )}
                       </div>
-                      {validateStringWithCustomErrors(tokenName)}
-                      <div className="text-xs text-white/60 mt-1 md:flex md:items-center md:justify-between">
+                      {/* Helper/status text - fixed height, no layout jumps */}
+                      <div className="text-xs text-white/60 mt-1 flex items-center justify-between min-h-[20px]" aria-live="polite">
                         <span>{tokenName.length}/20 characters</span>
-                        <span className="opacity-80 block md:inline mt-1 md:mt-0">Allowed: A–Z, 0–9, and -</span>
+                        <span className="opacity-80">
+                          {nameStatus === 'invalid' ? 'Invalid characters' : 'Allowed: A–Z, 0–9, and -'}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Already Registered Warning */}
-                    {alreadyRegisteredAs && alreadyRegisteredName && (
-                      <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-red-400">
-                        <p>
-                          Token <span className="font-mono font-bold">{alreadyRegisteredName}</span> is already registered.{' '}
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/trends/tokens/${alreadyRegisteredAs}`)}
-                            className="text-blue-400 hover:text-blue-300 underline"
-                          >
-                            Buy it here
-                          </button>
-                        </p>
+                    {/* Positive taken CTA is rendered below (replacing amount section) */}
+
+                    {/* If taken, show richer Live box above */}
+                    {nameStatus === 'taken' && (foundToken || alreadyRegisteredAs) && (
+                      <div className="mt-20 text-xs bg-white/5 border border-white/10 rounded-lg p-3 space-y-2">
+                        {/* Row 1: Badge + Name + Price + Holders (left) · Sparkline (right) */}
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-3 flex-wrap w-full">
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-400/30">
+                              <span className="relative inline-flex">
+                                <span className="absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
+                                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400"></span>
+                              </span>
+                            <span className="font-medium">Trading live</span>
+                            </span>
+                            <div className="flex-1 w-full flex flex-wrap items-center gap-x-6 gap-y-2 justify-between">
+                              <div className="text-white/80">
+                                <span className="text-white/60">Token</span> <span className="font-mono font-bold text-white">{alreadyRegisteredName || foundToken?.name}</span>
+                              </div>
+                              {foundToken?.price != null && (
+                                <div className="text-white/80">
+                                  <span className="text-white/60">Price</span> <strong className="text-white">{foundToken.price}</strong>
+                                </div>
+                              )}
+                              {foundToken?.holders != null && (
+                                <div className="text-white/80">
+                                  <span className="text-white/60">Holders</span> <strong className="text-white">{foundToken.holders.toLocaleString?.() || foundToken.holders}</strong>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          {/* Sparkline removed */}
+                        </div>
+
+                        {/* Row 2: Full-width Buy button */}
+                        <AeButton
+                          size="md"
+                          variant="success"
+                          className="w-full"
+                          onClick={() => navigate(`/trends/tokens/${foundToken?.address || alreadyRegisteredAs}`)}
+                        >
+                          BUY TOKEN
+                        </AeButton>
                       </div>
                     )}
 
-                    {/* Initial Buy - AE-first with toggle */}
-                    <div>
+                    {/* Initial Buy - AE-first with toggle (always shown; greyed out when taken) */}
+                    <div className={nameStatus === 'taken' ? 'opacity-40 pointer-events-none select-none' : ''} aria-disabled={nameStatus === 'taken'}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <label className="block text-sm font-medium text-white/80">
@@ -588,11 +726,10 @@ export default function CreateTokenView() {
                     </div>
 
                     {/* Advanced options removed */}
-
                     {/* Note consolidated above with input explanatory block */}
 
-                    {/* Submit Section */}
-                    <div className="md:pt-4">
+                    {/* Submit Section (shown even when taken, but greyed out/inactive) */}
+                    <div className={`md:pt-4 ${nameStatus === 'taken' ? 'opacity-40 pointer-events-none select-none' : ''}`} aria-disabled={nameStatus === 'taken'}>
                       {!activeAccount ? (
                         <div className="space-y-3">
                           <ConnectWalletButton
@@ -608,7 +745,7 @@ export default function CreateTokenView() {
                             variant="secondary"
                             size="md"
                             outlined
-                            onClick={() => window.open('https://wallet.superhero.com', '_blank')}
+                            onClick={() => { window.open('https://wallet.superhero.com', '_blank'); }}
                             className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
                           >
                             Get Superhero Wallet ↗
@@ -623,11 +760,11 @@ export default function CreateTokenView() {
                         </div>
                       ) : (
                         <AeButton
-                          type="submit"
                           variant="primary"
                           size="lg"
+                          type="submit"
+                          disabled={!tokenName || isCreating || nameStatus === 'checking' || nameStatus === 'taken' || nameStatus === 'invalid'}
                           className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-12 md:h-13 py-3"
-                          disabled={!tokenName || isCreating}
                         >
                           Create Token
                         </AeButton>

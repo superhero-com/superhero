@@ -30,6 +30,7 @@ export default function FeedList({
   const urlQuery = useUrlQuery();
   const { chainNames } = useWallet();
   const queryClient = useQueryClient();
+  const ACTIVITY_PAGE_SIZE = 50;
 
   // Comment counts are now provided directly by the API in post.total_comments
 
@@ -88,7 +89,7 @@ export default function FeedList({
       const resp = await TrendminerApi.listTokens({
         orderBy: "created_at",
         orderDirection: "DESC",
-        limit: 20,
+        limit: ACTIVITY_PAGE_SIZE,
         page: pageParam as number,
       }).catch(() => ({ items: [] }));
       const items: any[] = resp?.items || [];
@@ -106,7 +107,7 @@ export default function FeedList({
         }))
         .map(mapTokenCreatedToPost);
     },
-    getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === 20 ? pages.length + 1 : undefined),
+    getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === ACTIVITY_PAGE_SIZE ? pages.length + 1 : undefined),
   });
   const activityList: PostDto[] = useMemo(
     () => (activitiesPages?.pages ? (activitiesPages.pages as PostDto[][]).flatMap((p) => p) : []),
@@ -125,7 +126,7 @@ export default function FeedList({
         }
         const first: PostDto[] = prev.pages[0] || [];
         if (first.some((p) => p?.id === mapped.id)) return prev;
-        const newFirst = [mapped, ...first].slice(0, 20);
+        const newFirst = [mapped, ...first].slice(0, ACTIVITY_PAGE_SIZE);
         return { ...prev, pages: [newFirst, ...prev.pages.slice(1)] };
       });
     });
@@ -271,30 +272,114 @@ export default function FeedList({
     return null;
   };
 
-  // Memoized render function for better performance
+  // Collapsible groups state keyed by first item id in the group
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const toggleGroup = useCallback((groupId: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) next.delete(groupId);
+      else next.add(groupId);
+      return next;
+    });
+  }, []);
+
+  // Grouped render: collapse consecutive token-created items (>3) with a toggle pill
   const renderFeedItems = useMemo(() => {
-    return filteredAndSortedList.map((item) => {
+    const nodes: React.ReactNode[] = [];
+    let i = 0;
+    while (i < filteredAndSortedList.length) {
+      const item = filteredAndSortedList[i];
       const postId = item.id;
       const isTokenCreated = String(postId).startsWith("token-created:");
-      if (isTokenCreated) {
-        return (
-          <TokenCreatedActivityItem
+
+      if (!isTokenCreated) {
+        nodes.push(
+          <ReplyToFeedItem
             key={postId}
             item={item}
+            commentCount={item.total_comments ?? 0}
+            allowInlineRepliesToggle={false}
+            onOpenPost={handleItemClick}
+          />
+        );
+        i += 1;
+        continue;
+      }
+
+      // Collect consecutive token-created items into a group
+      const startIndex = i;
+      const groupItems: PostDto[] = [];
+      while (
+        i < filteredAndSortedList.length &&
+        String(filteredAndSortedList[i].id).startsWith("token-created:")
+      ) {
+        groupItems.push(filteredAndSortedList[i] as PostDto);
+        i += 1;
+      }
+
+      const groupId = String(groupItems[0]?.id || `group-${startIndex}`);
+      const collapsed = groupItems.length > 3 && !expandedGroups.has(groupId);
+      const visibleCount = collapsed ? 3 : groupItems.length;
+
+      for (let j = 0; j < visibleCount; j += 1) {
+        const gi = groupItems[j];
+        const isLastVisible = j === visibleCount - 1;
+        const hideDivider = !isLastVisible; // on mobile, never show lines between items, only at the end
+        const hasMultiple = visibleCount > 1;
+        const isFirstVisible = j === 0;
+        const isMiddle = j > 0 && !isLastVisible;
+        // Middle items should always be compact (py-1) on mobile; first/last keep default, with special edges.
+        const mobileTight = isMiddle;
+        const mobileNoTopPadding = false; // keep a minimal top (we'll use tight variants instead)
+        const mobileNoBottomPadding = false; // keep a minimal bottom (we'll use tight variants instead)
+        const mobileTightTop = hasMultiple && isLastVisible; // last: pt-0.5
+        const mobileTightBottom = hasMultiple && isFirstVisible; // first: pb-0.5
+        const footer = isLastVisible && groupItems.length > 3 ? (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); toggleGroup(groupId); }}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="inline-flex items-center justify-center text-[13px] px-2 py-1 bg-transparent border-0 text-white/80 hover:text-white outline-none focus:outline-none shadow-none ring-0 focus:ring-0 appearance-none [text-shadow:none]"
+            style={{ WebkitTapHighlightColor: 'transparent', filter: 'none', WebkitAppearance: 'none', background: 'transparent', boxShadow: 'none' }}
+            aria-expanded={!collapsed}
+          >
+            {collapsed ? `Show ${groupItems.length - 3} more` : 'Show less'}
+          </button>
+        ) : undefined;
+        nodes.push(
+          <TokenCreatedActivityItem
+            key={gi.id}
+            item={gi}
+            hideMobileDivider={hideDivider}
+            mobileTight={mobileTight}
+            mobileNoTopPadding={mobileNoTopPadding}
+            mobileNoBottomPadding={mobileNoBottomPadding}
+            mobileTightTop={mobileTightTop}
+            mobileTightBottom={mobileTightBottom}
+            footer={footer}
           />
         );
       }
-      return (
-        <ReplyToFeedItem
-          key={postId}
-          item={item}
-          commentCount={item.total_comments ?? 0}
-          allowInlineRepliesToggle={false}
-          onOpenPost={handleItemClick}
-        />
-      );
-    });
-  }, [filteredAndSortedList, handleItemClick]);
+
+      if (groupItems.length > 3) {
+        // Expanded state: render Show less as its own small row (desktop + mobile)
+        nodes.push(
+          <div key={`${groupId}-toggle-expanded`} className="hidden md:block w-full px-2 md:px-0">
+            <button
+              type="button"
+              onClick={() => toggleGroup(groupId)}
+              className="w-full md:w-auto mx-auto flex items-center justify-center text-[13px] md:text-xs px-3 py-2 md:px-0 md:py-0 bg-transparent border-0 text-white/80 hover:text-white transition-colors outline-none focus:outline-none shadow-none ring-0 focus:ring-0 appearance-none [text-shadow:none]"
+              style={{ WebkitTapHighlightColor: 'transparent', filter: 'none', WebkitAppearance: 'none', background: 'transparent', boxShadow: 'none' }}
+              aria-expanded={!collapsed}
+            >
+              {collapsed ? `Show ${groupItems.length - 3} more` : 'Show less'}
+            </button>
+          </div>
+        );
+      }
+    }
+    return nodes;
+  }, [filteredAndSortedList, handleItemClick, expandedGroups, toggleGroup]);
 
   // Preload PostDetail chunk to avoid first-click lazy load delay
   useEffect(() => {
@@ -335,7 +420,7 @@ export default function FeedList({
       Promise.all(tasks).finally(() => {
         fetchingRef.current = false;
       });
-    }, { root: null, rootMargin: '200px 0px', threshold: 0.01 });
+    }, { root: null, rootMargin: '800px 0px', threshold: 0.01 });
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [initialLoading, hasNextPage, isFetchingNextPage, fetchNextPage, sortBy, hasMoreActivities, fetchingMoreActivities, fetchNextActivities]);

@@ -138,6 +138,7 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
           </div>
         </div>
       </div>
+      {/* No BackToTop in footer; it is rendered inside the right rail only */}
     </footer>
   );
 }

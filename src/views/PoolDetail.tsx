@@ -1,18 +1,20 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { DexService } from "@/api/generated";
+import { useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AddressChip } from "../components/AddressChip";
 import AeButton from "../components/AeButton";
 import { TokenChip } from "../components/TokenChip";
 import { TransactionCard } from "../components/TransactionCard";
+import { PoolCandlestickChart } from "../features/dex/components/charts/PoolCandlestickChart";
 import { useAeSdk } from "../hooks";
 import { Decimal } from "../libs/decimal";
 import {
-  getPairDetails,
   getHistory,
+  getPairDetails,
   getTokenWithUsd,
 } from "../libs/dexBackend";
-import moment from "moment";
-import { PoolCandlestickChart } from "../features/dex/components/charts/PoolCandlestickChart";
+import { PriceDataFormatter } from "@/features/shared/components";
 
 // Pool-specific data interface (modified from TokenData)
 interface PoolData {
@@ -75,6 +77,12 @@ export default function PoolDetail() {
   const { poolAddress } = useParams(); // Changed from tokenAddress to poolAddress
   const navigate = useNavigate();
 
+  const { data: pairSummary } = useQuery({
+    queryFn: () => DexService.getPairSummary({ address: poolAddress }),
+    queryKey: ["DexService.getPairSummary", poolAddress],
+    enabled: !!poolAddress,
+  })
+
   // Pool-specific state (modified from token state)
   const [pool, setPool] = useState<PoolData | null>(null); // Changed from token to pool
   const [token0Data, setToken0Data] = useState<any | null>(null); // New: token0 metadata
@@ -88,6 +96,7 @@ export default function PoolDetail() {
   const [tokenSymbolCache, setTokenSymbolCache] = useState<
     Record<string, string>
   >({});
+  const [selectedPeriod, setSelectedPeriod] = useState<"24h" | "7d" | "30d">("24h");
 
 
   // Helper function to get token metadata (same as TokenDetail)
@@ -331,53 +340,73 @@ export default function PoolDetail() {
 
             {/* Pool Stats Overview (modified from Token Stats) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              {/* TVL Card */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-green-400/10 to-white/5 border border-green-400/20 backdrop-blur-xl relative overflow-hidden">
+              {/* Total Volume Card */}
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-400/10 to-white/5 border border-blue-400/20 backdrop-blur-xl relative overflow-hidden">
                 <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
-                  🏦 Total Value Locked
+                  📈 Total Volume
                 </div>
-                <div className="text-2xl font-extrabold text-green-400 mb-1 font-mono">
-                  $
-                  {poolStats
-                    ? Decimal.from(poolStats.totalLiquidity || 0).prettify(2)
-                    : "0"}
+                <div className="text-2xl font-extrabold text-blue-400 mb-1 font-mono">
+                  <PriceDataFormatter priceData={pairSummary?.total_volume} bignumber />
                 </div>
                 <div className="text-xs text-white/60 font-medium">
-                  Pool liquidity value
+                  All-time trading volume
                 </div>
               </div>
 
-              {/* Volume Card */}
+              {/* Volume Card with Dropdown */}
               <div className="p-5 rounded-2xl bg-gradient-to-br from-purple-600/10 to-white/5 border border-purple-600/20 backdrop-blur-xl relative overflow-hidden">
-                <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
-                  📊 Volume (24h)
+                <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center justify-between gap-1.5">
+                  <span className="flex items-center gap-1.5">📊 Volume</span>
+                  <select
+                    value={selectedPeriod}
+                    onChange={(e) => setSelectedPeriod(e.target.value as "24h" | "7d" | "30d")}
+                    className="text-[10px] bg-white/10 border border-white/20 rounded px-2 py-1 text-white outline-none cursor-pointer hover:bg-white/20 transition-colors"
+                    style={{ colorScheme: 'dark' }}
+                  >
+                    <option value="24h" style={{ backgroundColor: '#1a1a1a' }}>24h</option>
+                    <option value="7d" style={{ backgroundColor: '#1a1a1a' }}>7d</option>
+                    <option value="30d" style={{ backgroundColor: '#1a1a1a' }}>30d</option>
+                  </select>
                 </div>
                 <div className="text-2xl font-extrabold text-purple-400 mb-1 font-mono">
-                  $0
+                  <PriceDataFormatter priceData={pairSummary?.change?.[selectedPeriod]?.volume} bignumber />
                 </div>
                 <div className="text-xs text-white/60 font-medium">
-                  24h trading volume
+                  {selectedPeriod === "24h" ? "Last 24 hours" : selectedPeriod === "7d" ? "Last 7 days" : "Last 30 days"}
                 </div>
               </div>
 
-              {/* Status Card (new for pools) */}
+              {/* Price Change Card with Dropdown */}
               <div
-                className={`p-5 rounded-2xl backdrop-blur-xl relative overflow-hidden ${pool?.synchronized
+                className={`p-5 rounded-2xl backdrop-blur-xl relative overflow-hidden ${Number(pairSummary?.change?.[selectedPeriod]?.price_change?.percentage) >= 0
                     ? "bg-gradient-to-br from-green-400/10 to-white/5 border border-green-400/20"
                     : "bg-gradient-to-br from-red-400/10 to-white/5 border border-red-400/20"
                   }`}
               >
-                <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
-                  ⚡ Status
+                <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center justify-between gap-1.5">
+                  <span className="flex items-center gap-1.5">📊 Price Change</span>
+                  <select
+                    value={selectedPeriod}
+                    onChange={(e) => setSelectedPeriod(e.target.value as "24h" | "7d" | "30d")}
+                    className="text-[10px] bg-white/10 border border-white/20 rounded px-2 py-1 text-white outline-none cursor-pointer hover:bg-white/20 transition-colors"
+                    style={{ colorScheme: 'dark' }}
+                  >
+                    <option value="24h" style={{ backgroundColor: '#1a1a1a' }}>24h</option>
+                    <option value="7d" style={{ backgroundColor: '#1a1a1a' }}>7d</option>
+                    <option value="30d" style={{ backgroundColor: '#1a1a1a' }}>30d</option>
+                  </select>
                 </div>
                 <div
-                  className={`text-2xl font-extrabold mb-1 font-mono ${pool?.synchronized ? "text-green-400" : "text-red-400"
+                  className={`text-2xl font-extrabold mb-1 font-mono ${Number(pairSummary?.change?.[selectedPeriod]?.price_change?.percentage) >= 0
+                      ? "text-green-400"
+                      : "text-red-400"
                     }`}
                 >
-                  {pool?.synchronized ? "Active" : "Inactive"}
+                  {Number(pairSummary?.change?.[selectedPeriod]?.price_change?.percentage) >= 0 ? "+" : ""}
+                  {Number(pairSummary?.change?.[selectedPeriod]?.price_change?.percentage || 0).toFixed(2)}%
                 </div>
                 <div className="text-xs text-white/60 font-medium">
-                  Pool information
+                  <PriceDataFormatter priceData={pairSummary?.change?.[selectedPeriod]?.price_change?.value} />
                 </div>
               </div>
             </div>
@@ -448,8 +477,8 @@ export default function PoolDetail() {
           <button
             onClick={() => setActiveTab("overview")}
             className={`px-6 py-3 border-none transition-all duration-300 rounded-t-lg ${activeTab === "overview"
-                ? "bg-white/10 border-b-2 border-purple-400 text-white"
-                : "bg-transparent border-b-2 border-transparent text-white/60 hover:text-white/80"
+              ? "bg-white/10 border-b-2 border-purple-400 text-white"
+              : "bg-transparent border-b-2 border-transparent text-white/60 hover:text-white/80"
               }`}
           >
             <span className="text-base font-semibold">Pool Overview</span>
@@ -457,8 +486,8 @@ export default function PoolDetail() {
           <button
             onClick={() => setActiveTab("transactions")}
             className={`px-6 py-3 border-none transition-all duration-300 rounded-t-lg ${activeTab === "transactions"
-                ? "bg-white/10 border-b-2 border-purple-400 text-white"
-                : "bg-transparent border-b-2 border-transparent text-white/60 hover:text-white/80"
+              ? "bg-white/10 border-b-2 border-purple-400 text-white"
+              : "bg-transparent border-b-2 border-transparent text-white/60 hover:text-white/80"
               }`}
           >
             <span className="text-base font-semibold">
@@ -621,7 +650,7 @@ export default function PoolDetail() {
             </div>
 
             {/* Additional Pool Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               {/* LP Token Supply */}
               <div
                 style={{
@@ -701,7 +730,10 @@ export default function PoolDetail() {
                     marginBottom: 2,
                   }}
                 >
-                  $0
+                  $
+                  {pairSummary?.total_volume?.usd
+                    ? Decimal.from(pairSummary.total_volume.usd).prettify(2)
+                    : "0"}
                 </div>
                 <div
                   style={{
@@ -714,6 +746,158 @@ export default function PoolDetail() {
                 </div>
               </div>
             </div>
+
+            {/* Volume by Period */}
+            {pairSummary?.change && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* 24h Volume */}
+                <div
+                  style={{
+                    padding: 18,
+                    borderRadius: 14,
+                    background: "rgba(255, 255, 255, 0.03)",
+                    border: "1px solid var(--glass-border)",
+                    backdropFilter: "blur(10px)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: "var(--light-font-color)",
+                      marginBottom: 8,
+                      fontWeight: 600,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.8px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    📊 Volume (24h)
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 700,
+                      color: "var(--standard-font-color)",
+                      marginBottom: 2,
+                    }}
+                  >
+                    $
+                    {pairSummary.change['24h']?.volume?.usd
+                      ? Decimal.from(pairSummary.change['24h'].volume.usd).prettify(2)
+                      : "0"}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "var(--light-font-color)",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Last 24 hours
+                  </div>
+                </div>
+
+                {/* 7d Volume */}
+                <div
+                  style={{
+                    padding: 18,
+                    borderRadius: 14,
+                    background: "rgba(255, 255, 255, 0.03)",
+                    border: "1px solid var(--glass-border)",
+                    backdropFilter: "blur(10px)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: "var(--light-font-color)",
+                      marginBottom: 8,
+                      fontWeight: 600,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.8px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    📊 Volume (7d)
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 700,
+                      color: "var(--standard-font-color)",
+                      marginBottom: 2,
+                    }}
+                  >
+                    $
+                    {pairSummary.change['7d']?.volume?.usd
+                      ? Decimal.from(pairSummary.change['7d'].volume.usd).prettify(2)
+                      : "0"}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "var(--light-font-color)",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Last 7 days
+                  </div>
+                </div>
+
+                {/* 30d Volume */}
+                <div
+                  style={{
+                    padding: 18,
+                    borderRadius: 14,
+                    background: "rgba(255, 255, 255, 0.03)",
+                    border: "1px solid var(--glass-border)",
+                    backdropFilter: "blur(10px)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: "var(--light-font-color)",
+                      marginBottom: 8,
+                      fontWeight: 600,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.8px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    📊 Volume (30d)
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 700,
+                      color: "var(--standard-font-color)",
+                      marginBottom: 2,
+                    }}
+                  >
+                    $
+                    {pairSummary.change['30d']?.volume?.usd
+                      ? Decimal.from(pairSummary.change['30d'].volume.usd).prettify(2)
+                      : "0"}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: "var(--light-font-color)",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Last 30 days
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

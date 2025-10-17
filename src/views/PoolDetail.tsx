@@ -1,5 +1,6 @@
 import { DexService } from "@/api/generated";
 import { PriceDataFormatter } from "@/features/shared/components";
+import { Decimal } from "@/libs/decimal";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -50,7 +51,7 @@ const fetchTransactions = async (params: any, pairAddress?: string): Promise<Dat
   if (!pairAddress) {
     return { items: [], meta: { totalItems: 0, itemCount: 0, itemsPerPage: 10, totalPages: 0, currentPage: 1 } };
   }
-  
+
   const response = await DexService.listAllPairTransactions({
     ...params,
     pairAddress,
@@ -323,13 +324,7 @@ export default function PoolDetail() {
                   🪙 {pool?.token0?.symbol || "Token"} Reserve
                 </div>
                 <div className="text-lg font-bold text-white mb-0.5">
-                  {formatTokenAmount(pool?.liquidityInfo?.reserve0 || 0)}
-                </div>
-                <div className="text-xs text-white/60 font-medium">
-                  ≈ $
-                  {poolStats
-                    ? formatNumber(poolStats.reserve0 * poolStats.token0Price)
-                    : "0"}
+                  {Decimal.fromBigNumberString(pool?.liquidityInfo?.reserve0?.toString() || "0").prettify()}
                 </div>
               </div>
 
@@ -347,13 +342,7 @@ export default function PoolDetail() {
                   🪙 {pool?.token1?.symbol || "Token"} Reserve
                 </div>
                 <div className="text-lg font-bold text-white mb-0.5">
-                  {formatTokenAmount(pool?.liquidityInfo?.reserve1 || 0)}
-                </div>
-                <div className="text-xs text-white/60 font-medium">
-                  ≈ $
-                  {poolStats
-                    ? formatNumber(poolStats.reserve1 * poolStats.token1Price)
-                    : "0"}
+                  {Decimal.fromBigNumberString(pool?.liquidityInfo?.reserve1?.toString() || "0").prettify()}
                 </div>
               </div>
 
@@ -390,7 +379,7 @@ export default function PoolDetail() {
                     marginBottom: 2,
                   }}
                 >
-                  {formatTokenAmount(pool?.liquidityInfo?.totalSupply || 0)}
+                  {Decimal.fromBigNumberString(pool?.liquidityInfo?.totalSupply?.toString() || "0").prettify()}
                 </div>
                 <div
                   style={{

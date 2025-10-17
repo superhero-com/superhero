@@ -57,7 +57,7 @@ const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false, mobile
       tabIndex={0}
       onClick={(e) => { e.stopPropagation(); onOpen(); }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
-      className={`token-activity relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 ${mobileNoTopPadding ? 'pt-0' : (mobileTight ? 'pt-1' : 'pt-2')} ${mobileNoBottomPadding ? 'pb-0' : (mobileTight ? 'pb-1' : 'pb-2')} md:w-full md:mx-0 md:py-1 md:px-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-transparent md:hover:border-white/25 md:rounded-[12px] md:backdrop-blur-xl transition-colors hover:shadow-none`}
+      className={`token-activity relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 ${mobileNoTopPadding ? 'pt-0' : (mobileTight ? 'pt-0.5' : 'pt-2')} ${mobileNoBottomPadding ? 'pb-0' : (mobileTight ? 'pb-0.5' : 'pb-2')} md:w-full md:mx-0 md:py-1 md:px-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-transparent md:hover:border-white/25 md:rounded-[12px] md:backdrop-blur-xl transition-colors hover:shadow-none`}
       aria-label={tokenName ? `Open trend ${tokenName}` : 'Open trend'}
     >
       <div className="flex items-center justify-between gap-3 md:h-8">

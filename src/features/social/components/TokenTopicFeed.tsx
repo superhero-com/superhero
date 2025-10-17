@@ -4,7 +4,7 @@ import ReplyToFeedItem from "./ReplyToFeedItem";
 import AeButton from "../../../components/AeButton";
 import { TrendminerApi } from "../../../api/backend";
 
-export default function TokenTopicFeed({ topicName }: { topicName: string }) {
+export default function TokenTopicFeed({ topicName, showHeader = false }: { topicName: string; showHeader?: boolean }) {
   const lookup = useMemo(() => `#${String(topicName || '').replace(/^#/, '').toLowerCase()}`, [topicName]);
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
@@ -52,12 +52,14 @@ export default function TokenTopicFeed({ topicName }: { topicName: string }) {
 
   return (
     <div className="grid gap-2">
-      <div className="flex items-center justify-between mb-1">
-        <h4 className="m-0 text-white/90 font-semibold">Posts for {lookup.toUpperCase()}</h4>
-        {postCount != null && (
-          <div className="text-xs text-white/60">{postCount} total</div>
-        )}
-      </div>
+      {showHeader && (
+        <div className="flex items-center justify-between mb-1">
+          <h4 className="m-0 text-white/90 font-semibold">Posts for {lookup.toUpperCase()}</h4>
+          {postCount != null && (
+            <div className="text-xs text-white/60">{postCount} total</div>
+          )}
+        </div>
+      )}
       {sortedPosts.length === 0 && (
         <div className="text-white/60 text-sm">Be the first to speak about {lookup.toUpperCase()}.</div>
       )}

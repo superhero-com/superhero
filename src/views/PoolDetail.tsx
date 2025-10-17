@@ -201,6 +201,7 @@ export default function PoolDetail() {
                 }
                 variant="secondary-dark"
                 size="medium"
+                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 Swap
               </AeButton>
@@ -212,6 +213,7 @@ export default function PoolDetail() {
                 }
                 variant="secondary-dark"
                 size="medium"
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 Add Liquidity
               </AeButton>
@@ -221,6 +223,7 @@ export default function PoolDetail() {
                 }
                 variant="secondary-dark"
                 size="medium"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 View {pool?.token0?.symbol || "Token"}
               </AeButton>
@@ -230,6 +233,7 @@ export default function PoolDetail() {
                 }
                 variant="secondary-dark"
                 size="medium"
+                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 View {pool?.token1?.symbol || "Token"}
               </AeButton>

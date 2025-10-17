@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import Shell from "@/components/layout/Shell";
 import "./DexLayout.scss";
 
 interface NavigationItem {
@@ -192,13 +193,11 @@ export default function DexLayout({ children }: DexLayoutProps) {
     </button>
   );
 
-  return (
-    <>
-      <div className="min-h-screen w-full max-w-[min(1400px,100%)] mx-auto flex flex-col pb-24 md:pb-0">
-        {/* Top pill navigation for tablet/desktop */}
-        <div className="hidden md:block sticky top-0 z-30 md:mb-2">
-          <div className="w-full px-2 py-2 md:px-3 md:py-0 h-full flex items-center">
-            <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+  const leftNav = (
+    <div className="hidden md:block">
+      <div className="sticky top-0 z-30 md:mb-2">
+        <div className="w-full px-2 py-2 md:px-3 md:py-0 h-full flex items-center">
+          <div className="flex items-center gap-2 md:gap-3 flex-wrap">
               {navigationItems.map((item) => (
                 <button
                   key={item.id}
@@ -275,12 +274,16 @@ export default function DexLayout({ children }: DexLayoutProps) {
             </div>
           </div>
         </div>
+      </div>
+  );
 
-        {/* Content */}
-        <div className="flex-grow grid grid-cols-1 gap-0 p-1 px-2 md:gap-0 md:p-1 md:px-4">
+  return (
+    <>
+      <Shell left={leftNav} containerClassName="max-w-[min(1200px,100%)] mx-auto">
+        <div className="pb-24 md:pb-0">
           <main className="min-w-0 overflow-hidden pt-1">{children}</main>
         </div>
-      </div>
+      </Shell>
 
       {/* Mobile: Horizontal bottom navigation (kept for small screens) */}
       <div

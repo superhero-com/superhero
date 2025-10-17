@@ -14,6 +14,7 @@ export default function TokenTopicFeed({ topicName }: { topicName: string }) {
   });
 
   const posts: any[] = Array.isArray((data as any)?.posts) ? (data as any).posts : [];
+  const postCount: number | undefined = typeof (data as any)?.post_count === 'number' ? (data as any).post_count : undefined;
 
   useEffect(() => {
     // initial refetch safety if needed
@@ -39,6 +40,12 @@ export default function TokenTopicFeed({ topicName }: { topicName: string }) {
 
   return (
     <div className="grid gap-2">
+      <div className="flex items-center justify-between mb-1">
+        <h4 className="m-0 text-white/90 font-semibold">Posts for {lookup.toUpperCase()}</h4>
+        {postCount != null && (
+          <div className="text-xs text-white/60">{postCount} total</div>
+        )}
+      </div>
       {posts.length === 0 && (
         <div className="text-white/60 text-sm">Be the first to post with {lookup.toUpperCase()}.</div>
       )}

@@ -432,31 +432,9 @@ export default function PoolDetail() {
                     fontFamily: "monospace",
                   }}
                 >
-                  {formatTokenAmount(pool?.liquidityInfo?.reserve0 || 0)}
+                  {Decimal.fromBigNumberString(pool?.liquidityInfo?.reserve0?.toString() || "0").prettify()}
+                  <span className="text-xs text-white/60"> {pool?.token0?.symbol || "Token"}</span>
                 </div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: "var(--light-font-color)",
-                    fontWeight: 500,
-                  }}
-                >
-                  ≈ $
-                  {poolStats
-                    ? formatNumber(poolStats.reserve0 * poolStats.token0Price)
-                    : "0"}
-                </div>
-                {poolStats && poolStats.token0Price > 0 && (
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: "var(--light-font-color)",
-                      marginTop: 4,
-                    }}
-                  >
-                    ${poolStats.token0Price.toFixed(6)} per token
-                  </div>
-                )}
               </div>
 
               {/* Ratio Display */}
@@ -521,31 +499,9 @@ export default function PoolDetail() {
                     fontFamily: "monospace",
                   }}
                 >
-                  {formatTokenAmount(pool?.liquidityInfo?.reserve1 || 0)}
+                  {Decimal.fromBigNumberString(pool?.liquidityInfo?.reserve1?.toString() || "0").prettify()}
+                  <span className="text-xs text-white/60"> {pool?.token1?.symbol || "Token"}</span>
                 </div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: "var(--light-font-color)",
-                    fontWeight: 500,
-                  }}
-                >
-                  ≈ $
-                  {poolStats
-                    ? formatNumber(poolStats.reserve1 * poolStats.token1Price)
-                    : "0"}
-                </div>
-                {poolStats && poolStats.token1Price > 0 && (
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: "var(--light-font-color)",
-                      marginTop: 4,
-                    }}
-                  >
-                    ${poolStats.token1Price.toFixed(6)} per token
-                  </div>
-                )}
               </div>
             </div>
           </div>

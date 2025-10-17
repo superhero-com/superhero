@@ -416,9 +416,7 @@ export default function TokenSaleDetails() {
                 <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4 md:p-5 backdrop-blur-[5px] relative z-0">
                   <TokenTopicComposer tokenName={(token.name || token.symbol || '').toString()} />
                 </div>
-                <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4 md:p-5 backdrop-blur-[5px] relative z-0">
-                  <TokenTopicFeed topicName={`#${String(token.name || token.symbol || '').toLowerCase()}`} />
-                </div>
+                <TokenTopicFeed topicName={`#${String(token.name || token.symbol || '').toLowerCase()}`} />
               </div>
             )}
 

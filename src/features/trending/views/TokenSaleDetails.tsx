@@ -224,11 +224,15 @@ export default function TokenSaleDetails() {
   );
 
   return (
-    <Shell right={rightRail} containerClassName="max-w-[min(1200px,100%)] mx-auto">
-      <div className="min-h-screen text-white px-4">
+    <>
+      {/* Top-of-page band above rails (1200px container) */}
+      <div className="max-w-[min(1200px,100%)] mx-auto text-white px-4">
         <LatestTransactionsCarousel />
+      </div>
 
-      {/* Deploy Success Message */}
+      <Shell right={rightRail} containerClassName="max-w-[min(1200px,100%)] mx-auto">
+        <div className="min-h-screen text-white px-4">
+          {/* Deploy Success Message */}
       {showDeployedMessage && (
         <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-4 mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -421,7 +425,8 @@ export default function TokenSaleDetails() {
             {activeTab === TAB_HOLDERS && <TokenHolders token={token} />}
           </div>
         </div>
-      </div>
+        </div>
+      </Shell>
 
       {/* Mobile Trading Bottom Sheet */}
       {isMobile && (
@@ -474,6 +479,6 @@ export default function TokenSaleDetails() {
         shareUrl={shareUrl}
         title={`Share ${token.name || token.symbol || "Token"}`}
       />
-    </Shell>
+    </>
   );
 }

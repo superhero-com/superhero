@@ -38,11 +38,16 @@ export default function TokenTopicFeed({ topicName }: { topicName: string }) {
   }
 
   if (error) {
-    return (
-      <div className="text-white/80">
-        Failed to load posts. <AeButton size="small" variant="ghost" onClick={() => refetch()} className="inline-flex ml-2">Retry</AeButton>
-      </div>
-    );
+    const msg = ((error as any)?.message || '').toString();
+    const isNotFound = /404|not found/i.test(msg);
+    if (!isNotFound) {
+      return (
+        <div className="text-white/80">
+          Failed to load posts for {lookup.toUpperCase()}. <AeButton size="small" variant="ghost" onClick={() => refetch()} className="inline-flex ml-2">Retry</AeButton>
+        </div>
+      );
+    }
+    // If topic not found yet → treat as empty state
   }
 
   return (

@@ -21,7 +21,7 @@ export default function BackToTop({ threshold, bottomOffset = 32 }: BackToTopPro
       const el = document.querySelector('.right-rail-bleed') as HTMLElement | null;
       const h = el?.getBoundingClientRect().height ?? 400;
       const EXTRA_OFFSET = 300; // increased: show 300px later than the rail height
-      setComputedThreshold(window.scrollY + h + EXTRA_OFFSET);
+      setComputedThreshold(h + EXTRA_OFFSET);
     };
     compute();
     // Recompute after a tick and on resize to catch layout shifts

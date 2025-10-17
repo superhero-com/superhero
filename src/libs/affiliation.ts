@@ -1,4 +1,4 @@
-import { DefaultService } from '@/api/generated';
+import { AppService } from '@/api/generated';
 import type { AeSdk } from '@aeternity/aepp-sdk';
 import { initCommunityFactory } from 'bctsl-sdk';
 
@@ -6,7 +6,7 @@ import { initCommunityFactory } from 'bctsl-sdk';
  * Returns the active Community Factory address from the Trendminer backend schema.
  */
 export async function getFactoryAddress(): Promise<string> {
-  const schema = await DefaultService.getFactory();
+  const schema = await AppService.getFactory();
   const address: string | undefined = schema?.address;
   if (!address) throw new Error('Community Factory address not available');
   return address;

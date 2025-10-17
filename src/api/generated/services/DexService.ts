@@ -5,6 +5,7 @@
 import type { DexTokenDto } from '../models/DexTokenDto';
 import type { Pagination } from '../models/Pagination';
 import type { PairDto } from '../models/PairDto';
+import type { PairSummaryDto } from '../models/PairSummaryDto';
 import type { PairTransactionDto } from '../models/PairTransactionDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -137,6 +138,36 @@ export class DexService {
                 'convertTo': convertTo,
                 'limit': limit,
                 'page': page,
+            },
+        });
+    }
+    /**
+     * Get pair summary
+     * Get comprehensive summary data for a pair including volume, locked value, and price changes. Volume calculations can be based on token0, token1, or default to WAE if available.
+     * @returns PairSummaryDto
+     * @throws ApiError
+     */
+    public static getPairSummary({
+        address,
+        token,
+    }: {
+        /**
+         * Pair contract address
+         */
+        address: string,
+        /**
+         * Token address to use as base for volume calculations (token0 or token1). If not provided, defaults to WAE if one of the tokens is WAE
+         */
+        token?: string,
+    }): CancelablePromise<PairSummaryDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/dex/pairs/{address}/summary',
+            path: {
+                'address': address,
+            },
+            query: {
+                'token': token,
             },
         });
     }

@@ -7,7 +7,7 @@ import {
   initCommunityFactory,
 } from "bctsl-sdk";
 
-import { DefaultService } from "../api/generated";
+import { AppService } from "../api/generated";
 import { activeFactorySchemaAtom } from "../atoms/factoryAtoms";
 import { ICommunityFactorySchema } from "../utils/types";
 import { useAeSdk } from "./useAeSdk";
@@ -29,7 +29,7 @@ export function useCommunityFactory() {
 
   const loadFactorySchema = useCallback(async (): Promise<ICommunityFactorySchema> => {
     try {
-      const result = await DefaultService.getFactory();
+      const result = await AppService.getFactory();
       setActiveFactorySchema(result);
       return result;
     } catch (error) {

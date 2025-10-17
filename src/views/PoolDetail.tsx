@@ -1,18 +1,20 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { DexService } from "@/api/generated";
+import { PriceDataFormatter } from "@/features/shared/components";
+import { Decimal } from "@/libs/decimal";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AddressChip } from "../components/AddressChip";
 import AeButton from "../components/AeButton";
 import { TokenChip } from "../components/TokenChip";
-import { TransactionCard } from "../components/TransactionCard";
+import { PoolCandlestickChart } from "../features/dex/components/charts/PoolCandlestickChart";
+import { TransactionCard } from "../features/dex/components/TransactionCard";
+import { DataTable, DataTableResponse } from "../features/shared/components/DataTable/DataTable";
 import { useAeSdk } from "../hooks";
-import { Decimal } from "../libs/decimal";
 import {
   getPairDetails,
-  getHistory,
   getTokenWithUsd,
 } from "../libs/dexBackend";
-import moment from "moment";
-import { PoolCandlestickChart } from "../features/dex/components/charts/PoolCandlestickChart";
 
 // Pool-specific data interface (modified from TokenData)
 interface PoolData {
@@ -44,116 +46,40 @@ interface PoolData {
   };
 }
 
-// Keep the same TransactionData interface as TokenDetail
-interface TransactionData {
-  hash: string;
-  type: "SwapTokens" | "CreatePair" | "PairMint";
-  pairAddress?: string;
-  senderAccount?: string;
-  reserve0?: string;
-  reserve1?: string;
-  deltaReserve0?: string;
-  deltaReserve1?: string;
-  token0AePrice?: string;
-  token1AePrice?: string;
-  aeUsdPrice?: string;
-  height?: number;
-  microBlockHash?: string;
-  microBlockTime?: string;
-  transactionHash?: string;
-  transactionIndex?: string;
-  logIndex?: number;
-  reserve0Usd?: string;
-  reserve1Usd?: string;
-  delta0UsdValue?: string;
-  delta1UsdValue?: string;
-  txUsdFee?: string;
-}
+// Wrapper function to convert API response to DataTable format
+const fetchTransactions = async (params: any, pairAddress?: string): Promise<DataTableResponse<any>> => {
+  if (!pairAddress) {
+    return { items: [], meta: { totalItems: 0, itemCount: 0, itemsPerPage: 10, totalPages: 0, currentPage: 1 } };
+  }
+
+  const response = await DexService.listAllPairTransactions({
+    ...params,
+    pairAddress,
+    orderBy: 'created_at',
+    orderDirection: 'DESC',
+  });
+
+  return response as unknown as DataTableResponse<any>;
+};
 
 export default function PoolDetail() {
   const { activeNetwork } = useAeSdk();
   const { poolAddress } = useParams(); // Changed from tokenAddress to poolAddress
   const navigate = useNavigate();
 
+  const { data: pairSummary } = useQuery({
+    queryFn: () => DexService.getPairSummary({ address: poolAddress }),
+    queryKey: ["DexService.getPairSummary", poolAddress],
+    enabled: !!poolAddress,
+  })
+
   // Pool-specific state (modified from token state)
   const [pool, setPool] = useState<PoolData | null>(null); // Changed from token to pool
   const [token0Data, setToken0Data] = useState<any | null>(null); // New: token0 metadata
   const [token1Data, setToken1Data] = useState<any | null>(null); // New: token1 metadata
-  const [history, setHistory] = useState<TransactionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"overview" | "transactions">(
-    "overview"
-  ); // Changed tab names
-  const [tokenSymbolCache, setTokenSymbolCache] = useState<
-    Record<string, string>
-  >({});
-
-
-  // Helper function to get token metadata (same as TokenDetail)
-  async function getTokenMetaData(_tokenAddress: string) {
-    const result = await fetch(
-      `${activeNetwork.middlewareUrl}/v3/aex9/${_tokenAddress}`
-    );
-    const data = await result.json();
-    return data;
-  }
-
-  // Function to get token symbol with caching (same as TokenDetail)
-  const getTokenSymbol = useCallback(
-    async (address: string): Promise<string> => {
-      if (!address || address === "" || address === "AE") return "AE";
-      if (typeof address !== "string") return "Unknown";
-
-      // Check cache first
-      if (tokenSymbolCache[address]) {
-        return tokenSymbolCache[address];
-      }
-
-      try {
-        const metadata = await getTokenMetaData(address);
-        const symbol = metadata?.symbol || address.slice(0, 6);
-
-        // Update cache
-        setTokenSymbolCache((prev) => ({
-          ...prev,
-          [address]: symbol,
-        }));
-
-        return symbol;
-      } catch (error) {
-        // Fallback to shortened address
-        const fallback = address.slice(0, 6);
-        setTokenSymbolCache((prev) => ({
-          ...prev,
-          [address]: fallback,
-        }));
-        return fallback;
-      }
-    },
-    [activeNetwork.middlewareUrl, tokenSymbolCache]
-  );
-
-  // Get token symbol from cache (synchronous) (same as TokenDetail)
-  const getCachedTokenSymbol = useCallback(
-    (address: string): string => {
-      if (!address || address === "" || address === "AE") return "AE";
-      if (typeof address !== "string") return "Unknown";
-      return tokenSymbolCache[address] || address.slice(0, 6);
-    },
-    [tokenSymbolCache]
-  );
-
-  // Get transaction token symbols (simplified for pools since we have the data)
-  const getTransactionTokens = useCallback(
-    (tx: TransactionData): { token0Symbol: string; token1Symbol: string } => {
-      return {
-        token0Symbol: pool?.token0?.symbol || "Token A",
-        token1Symbol: pool?.token1?.symbol || "Token B",
-      };
-    },
-    [pool]
-  );
+  const [selectedPeriod, setSelectedPeriod] = useState<"24h" | "7d" | "30d">("24h");
 
   // Load pool data (modified from TokenDetail's useEffect)
   useEffect(() => {
@@ -163,18 +89,14 @@ export default function PoolDetail() {
       setError(null);
 
       try {
-        // Get pool details and history
-        const [poolData, hist] = await Promise.all([
-          getPairDetails(poolAddress),
-          getHistory({ pairAddress: poolAddress, order: "desc" }),
-        ]);
+        // Get pool details
+        const poolData = await getPairDetails(poolAddress);
 
         if (!poolData) {
           throw new Error("Pool not found");
         }
 
         setPool(poolData);
-        setHistory(hist || []);
 
         // Get token data for both tokens in the pool
         const [token0Info, token1Info] = await Promise.all([
@@ -184,22 +106,6 @@ export default function PoolDetail() {
 
         setToken0Data(token0Info);
         setToken1Data(token1Info);
-
-        // Pre-populate token symbol cache using the new structure
-        const initialCache: Record<string, string> = {
-          AE: "AE",
-        };
-
-        // Use symbols from the pool data directly
-        if (poolData.token0?.symbol) {
-          initialCache[poolData.token0.address] = poolData.token0.symbol;
-        }
-
-        if (poolData.token1?.symbol) {
-          initialCache[poolData.token1.address] = poolData.token1.symbol;
-        }
-
-        setTokenSymbolCache(initialCache);
       } catch (e: any) {
         setError(e.message || "Failed to load pool data");
       } finally {
@@ -295,6 +201,7 @@ export default function PoolDetail() {
                 }
                 variant="secondary-dark"
                 size="medium"
+                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 Swap
               </AeButton>
@@ -306,6 +213,7 @@ export default function PoolDetail() {
                 }
                 variant="secondary-dark"
                 size="medium"
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 Add Liquidity
               </AeButton>
@@ -315,6 +223,7 @@ export default function PoolDetail() {
                 }
                 variant="secondary-dark"
                 size="medium"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 View {pool?.token0?.symbol || "Token"}
               </AeButton>
@@ -324,6 +233,7 @@ export default function PoolDetail() {
                 }
                 variant="secondary-dark"
                 size="medium"
+                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 View {pool?.token1?.symbol || "Token"}
               </AeButton>
@@ -331,53 +241,73 @@ export default function PoolDetail() {
 
             {/* Pool Stats Overview (modified from Token Stats) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              {/* TVL Card */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-green-400/10 to-white/5 border border-green-400/20 backdrop-blur-xl relative overflow-hidden">
+              {/* Total Volume Card */}
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-400/10 to-white/5 border border-blue-400/20 backdrop-blur-xl relative overflow-hidden">
                 <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
-                  🏦 Total Value Locked
+                  📈 Total Volume
                 </div>
-                <div className="text-2xl font-extrabold text-green-400 mb-1 font-mono">
-                  $
-                  {poolStats
-                    ? Decimal.from(poolStats.totalLiquidity || 0).prettify(2)
-                    : "0"}
+                <div className="text-2xl font-extrabold text-blue-400 mb-1 font-mono">
+                  <PriceDataFormatter priceData={pairSummary?.total_volume} bignumber />
                 </div>
                 <div className="text-xs text-white/60 font-medium">
-                  Pool liquidity value
+                  All-time trading volume
                 </div>
               </div>
 
-              {/* Volume Card */}
+              {/* Volume Card with Dropdown */}
               <div className="p-5 rounded-2xl bg-gradient-to-br from-purple-600/10 to-white/5 border border-purple-600/20 backdrop-blur-xl relative overflow-hidden">
-                <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
-                  📊 Volume (24h)
+                <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center justify-between gap-1.5">
+                  <span className="flex items-center gap-1.5">📊 Volume</span>
+                  <select
+                    value={selectedPeriod}
+                    onChange={(e) => setSelectedPeriod(e.target.value as "24h" | "7d" | "30d")}
+                    className="text-[10px] bg-white/10 border border-white/20 rounded px-2 py-1 text-white outline-none cursor-pointer hover:bg-white/20 transition-colors"
+                    style={{ colorScheme: 'dark' }}
+                  >
+                    <option value="24h" style={{ backgroundColor: '#1a1a1a' }}>24h</option>
+                    <option value="7d" style={{ backgroundColor: '#1a1a1a' }}>7d</option>
+                    <option value="30d" style={{ backgroundColor: '#1a1a1a' }}>30d</option>
+                  </select>
                 </div>
                 <div className="text-2xl font-extrabold text-purple-400 mb-1 font-mono">
-                  $0
+                  <PriceDataFormatter priceData={pairSummary?.change?.[selectedPeriod]?.volume} bignumber />
                 </div>
                 <div className="text-xs text-white/60 font-medium">
-                  24h trading volume
+                  {selectedPeriod === "24h" ? "Last 24 hours" : selectedPeriod === "7d" ? "Last 7 days" : "Last 30 days"}
                 </div>
               </div>
 
-              {/* Status Card (new for pools) */}
+              {/* Price Change Card with Dropdown */}
               <div
-                className={`p-5 rounded-2xl backdrop-blur-xl relative overflow-hidden ${pool?.synchronized
-                    ? "bg-gradient-to-br from-green-400/10 to-white/5 border border-green-400/20"
-                    : "bg-gradient-to-br from-red-400/10 to-white/5 border border-red-400/20"
+                className={`p-5 rounded-2xl backdrop-blur-xl relative overflow-hidden ${Number(pairSummary?.change?.[selectedPeriod]?.price_change?.percentage) >= 0
+                  ? "bg-gradient-to-br from-green-400/10 to-white/5 border border-green-400/20"
+                  : "bg-gradient-to-br from-red-400/10 to-white/5 border border-red-400/20"
                   }`}
               >
-                <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center gap-1.5">
-                  ⚡ Status
+                <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center justify-between gap-1.5">
+                  <span className="flex items-center gap-1.5">📊 Price Change</span>
+                  <select
+                    value={selectedPeriod}
+                    onChange={(e) => setSelectedPeriod(e.target.value as "24h" | "7d" | "30d")}
+                    className="text-[10px] bg-white/10 border border-white/20 rounded px-2 py-1 text-white outline-none cursor-pointer hover:bg-white/20 transition-colors"
+                    style={{ colorScheme: 'dark' }}
+                  >
+                    <option value="24h" style={{ backgroundColor: '#1a1a1a' }}>24h</option>
+                    <option value="7d" style={{ backgroundColor: '#1a1a1a' }}>7d</option>
+                    <option value="30d" style={{ backgroundColor: '#1a1a1a' }}>30d</option>
+                  </select>
                 </div>
                 <div
-                  className={`text-2xl font-extrabold mb-1 font-mono ${pool?.synchronized ? "text-green-400" : "text-red-400"
+                  className={`text-2xl font-extrabold mb-1 font-mono ${Number(pairSummary?.change?.[selectedPeriod]?.price_change?.percentage) >= 0
+                    ? "text-green-400"
+                    : "text-red-400"
                     }`}
                 >
-                  {pool?.synchronized ? "Active" : "Inactive"}
+                  {Number(pairSummary?.change?.[selectedPeriod]?.price_change?.percentage) >= 0 ? "+" : ""}
+                  {Number(pairSummary?.change?.[selectedPeriod]?.price_change?.percentage || 0).toFixed(2)}%
                 </div>
                 <div className="text-xs text-white/60 font-medium">
-                  Pool information
+                  ${Number(pairSummary?.change?.[selectedPeriod]?.price_change?.value || 0).toFixed(6)}
                 </div>
               </div>
             </div>
@@ -398,13 +328,7 @@ export default function PoolDetail() {
                   🪙 {pool?.token0?.symbol || "Token"} Reserve
                 </div>
                 <div className="text-lg font-bold text-white mb-0.5">
-                  {formatTokenAmount(pool?.liquidityInfo?.reserve0 || 0)}
-                </div>
-                <div className="text-xs text-white/60 font-medium">
-                  ≈ $
-                  {poolStats
-                    ? formatNumber(poolStats.reserve0 * poolStats.token0Price)
-                    : "0"}
+                  {Decimal.fromBigNumberString(pool?.liquidityInfo?.reserve0?.toString() || "0").prettify()}
                 </div>
               </div>
 
@@ -422,206 +346,10 @@ export default function PoolDetail() {
                   🪙 {pool?.token1?.symbol || "Token"} Reserve
                 </div>
                 <div className="text-lg font-bold text-white mb-0.5">
-                  {formatTokenAmount(pool?.liquidityInfo?.reserve1 || 0)}
-                </div>
-                <div className="text-xs text-white/60 font-medium">
-                  ≈ $
-                  {poolStats
-                    ? formatNumber(poolStats.reserve1 * poolStats.token1Price)
-                    : "0"}
+                  {Decimal.fromBigNumberString(pool?.liquidityInfo?.reserve1?.toString() || "0").prettify()}
                 </div>
               </div>
-            </div>
-          </div>
 
-          {pool?.address && (
-            <PoolCandlestickChart
-              className="w-full"
-              pairAddress={pool.address} height={400} />
-          )}
-        </div>
-      </div>
-      {/* Tabbed Card (modified from TokenDetail) */}
-      <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] relative overflow-hidden">
-        {/* Tab Headers (modified for pools) */}
-        <div className="flex mb-6 border-b border-white/10">
-          <button
-            onClick={() => setActiveTab("overview")}
-            className={`px-6 py-3 border-none transition-all duration-300 rounded-t-lg ${activeTab === "overview"
-                ? "bg-white/10 border-b-2 border-purple-400 text-white"
-                : "bg-transparent border-b-2 border-transparent text-white/60 hover:text-white/80"
-              }`}
-          >
-            <span className="text-base font-semibold">Pool Overview</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("transactions")}
-            className={`px-6 py-3 border-none transition-all duration-300 rounded-t-lg ${activeTab === "transactions"
-                ? "bg-white/10 border-b-2 border-purple-400 text-white"
-                : "bg-transparent border-b-2 border-transparent text-white/60 hover:text-white/80"
-              }`}
-          >
-            <span className="text-base font-semibold">
-              Transactions ({history.length})
-            </span>
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        {activeTab === "overview" && (
-          <div>
-            {/* Pool Composition (new for pools) */}
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-white/8 to-white/2 border border-white/10 backdrop-blur-xl mb-5">
-              <h3 className="text-lg font-semibold text-white m-0 mb-4">
-                Pool Composition
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center">
-                {/* Token 0 Info */}
-                <div style={{ textAlign: "center" }}>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color: "var(--standard-font-color)",
-                      marginBottom: 8,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                    }}
-                  >
-                    <TokenChip address={pool?.token0?.address || "AE"} />
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 700,
-                      color: "var(--standard-font-color)",
-                      marginBottom: 4,
-                      fontFamily: "monospace",
-                    }}
-                  >
-                    {formatTokenAmount(pool?.liquidityInfo?.reserve0 || 0)}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: "var(--light-font-color)",
-                      fontWeight: 500,
-                    }}
-                  >
-                    ≈ $
-                    {poolStats
-                      ? formatNumber(poolStats.reserve0 * poolStats.token0Price)
-                      : "0"}
-                  </div>
-                  {poolStats && poolStats.token0Price > 0 && (
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: "var(--light-font-color)",
-                        marginTop: 4,
-                      }}
-                    >
-                      ${poolStats.token0Price.toFixed(6)} per token
-                    </div>
-                  )}
-                </div>
-
-                {/* Ratio Display */}
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 24,
-                      color: "var(--accent-color)",
-                      fontWeight: 700,
-                    }}
-                  >
-                    ⚖️
-                  </div>
-                  {poolStats && (
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: "var(--light-font-color)",
-                        textAlign: "center",
-                        lineHeight: 1.3,
-                      }}
-                    >
-                      1 {pool?.token0?.symbol || "Token"} ={" "}
-                      {poolStats.ratio0to1.toFixed(6)}{" "}
-                      {pool?.token1?.symbol || "Token"}
-                      <br />1 {pool?.token1?.symbol || "Token"} ={" "}
-                      {poolStats.ratio1to0.toFixed(6)}{" "}
-                      {pool?.token0?.symbol || "Token"}
-                    </div>
-                  )}
-                </div>
-
-                {/* Token 1 Info */}
-                <div style={{ textAlign: "center" }}>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color: "var(--standard-font-color)",
-                      marginBottom: 8,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                    }}
-                  >
-                    <TokenChip address={pool?.token1?.address || "AE"} />
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 700,
-                      color: "var(--standard-font-color)",
-                      marginBottom: 4,
-                      fontFamily: "monospace",
-                    }}
-                  >
-                    {formatTokenAmount(pool?.liquidityInfo?.reserve1 || 0)}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: "var(--light-font-color)",
-                      fontWeight: 500,
-                    }}
-                  >
-                    ≈ $
-                    {poolStats
-                      ? formatNumber(poolStats.reserve1 * poolStats.token1Price)
-                      : "0"}
-                  </div>
-                  {poolStats && poolStats.token1Price > 0 && (
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: "var(--light-font-color)",
-                        marginTop: 4,
-                      }}
-                    >
-                      ${poolStats.token1Price.toFixed(6)} per token
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Additional Pool Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* LP Token Supply */}
               <div
                 style={{
@@ -655,7 +383,7 @@ export default function PoolDetail() {
                     marginBottom: 2,
                   }}
                 >
-                  {formatTokenAmount(pool?.liquidityInfo?.totalSupply || 0)}
+                  {Decimal.fromBigNumberString(pool?.liquidityInfo?.totalSupply?.toString() || "0").prettify()}
                 </div>
                 <div
                   style={{
@@ -667,130 +395,145 @@ export default function PoolDetail() {
                   LP tokens in circulation
                 </div>
               </div>
+            </div>
+          </div>
 
-              {/* All-time Volume */}
+          {pool?.address && (
+            <PoolCandlestickChart
+              className="w-full"
+              pairAddress={pool.address} height={400} />
+          )}
+
+          {/* Pool Composition */}
+          <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] relative overflow-hidden">
+            <h3 className="text-lg font-semibold text-white m-0 mb-4">
+              Pool Composition
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center">
+              {/* Token 0 Info */}
+              <div style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "var(--standard-font-color)",
+                    marginBottom: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
+                >
+                  <TokenChip address={pool?.token0?.address || "AE"} />
+                </div>
+                <div
+                  style={{
+                    fontSize: 20,
+                    fontWeight: 700,
+                    color: "var(--standard-font-color)",
+                    marginBottom: 4,
+                    fontFamily: "monospace",
+                  }}
+                >
+                  {Decimal.fromBigNumberString(pool?.liquidityInfo?.reserve0?.toString() || "0").prettify()}
+                  <span className="text-xs text-white/60"> {pool?.token0?.symbol || "Token"}</span>
+                </div>
+              </div>
+
+              {/* Ratio Display */}
               <div
                 style={{
-                  padding: 18,
-                  borderRadius: 14,
-                  background: "rgba(255, 255, 255, 0.03)",
-                  border: "1px solid var(--glass-border)",
-                  backdropFilter: "blur(10px)",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 8,
                 }}
               >
                 <div
                   style={{
-                    fontSize: 10,
-                    color: "var(--light-font-color)",
-                    marginBottom: 8,
+                    fontSize: 24,
+                    color: "var(--accent-color)",
+                    fontWeight: 700,
+                  }}
+                >
+                  ⚖️
+                </div>
+                {poolStats && (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "var(--light-font-color)",
+                      textAlign: "center",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    1 {pool?.token0?.symbol || "Token"} ={" "}
+                    {poolStats.ratio0to1.toFixed(6)}{" "}
+                    {pool?.token1?.symbol || "Token"}
+                    <br />1 {pool?.token1?.symbol || "Token"} ={" "}
+                    {poolStats.ratio1to0.toFixed(6)}{" "}
+                    {pool?.token0?.symbol || "Token"}
+                  </div>
+                )}
+              </div>
+
+              {/* Token 1 Info */}
+              <div style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                    fontSize: 14,
                     fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.8px",
+                    color: "var(--standard-font-color)",
+                    marginBottom: 8,
                     display: "flex",
                     alignItems: "center",
-                    gap: 4,
+                    justifyContent: "center",
+                    gap: 8,
                   }}
                 >
-                  📈 All-time Volume
+                  <TokenChip address={pool?.token1?.address || "AE"} />
                 </div>
                 <div
                   style={{
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: 700,
                     color: "var(--standard-font-color)",
-                    marginBottom: 2,
+                    marginBottom: 4,
+                    fontFamily: "monospace",
                   }}
                 >
-                  $0
-                </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "var(--light-font-color)",
-                    fontWeight: 500,
-                  }}
-                >
-                  Total trading volume
+                  {Decimal.fromBigNumberString(pool?.liquidityInfo?.reserve1?.toString() || "0").prettify()}
+                  <span className="text-xs text-white/60"> {pool?.token1?.symbol || "Token"}</span>
                 </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      </div>
 
-        {activeTab === "transactions" && (
-          <div>
-            {history.length === 0 ? (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: 40,
-                  background: "rgba(255, 255, 255, 0.03)",
-                  borderRadius: 16,
-                  border: "1px solid var(--glass-border)",
-                  backdropFilter: "blur(10px)",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 48,
-                    marginBottom: 16,
-                    opacity: 0.3,
-                  }}
-                >
-                  📊
-                </div>
-                <div
-                  style={{
-                    fontSize: 16,
-                    fontWeight: 600,
-                    marginBottom: 8,
-                    color: "var(--standard-font-color)",
-                  }}
-                >
-                  No transactions found
-                </div>
-                <div
-                  style={{
-                    fontSize: 14,
-                    color: "var(--light-font-color)",
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Trading activity for this pool will appear here
-                </div>
-              </div>
-            ) : (
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: 12 }}
-              >
-                {history.slice(0, 20).map((tx, index) => (
-                  <TransactionCard
-                    key={tx.hash || index}
-                    transaction={tx}
-                    getTransactionTokens={getTransactionTokens}
-                  />
-                ))}
-                {history.length > 20 && (
-                  <div
-                    style={{
-                      textAlign: "center",
-                      padding: 12,
-                      fontSize: 12,
-                      color: "var(--light-font-color)",
-                      fontWeight: 600,
-                      opacity: 0.8,
-                      background: "rgba(255, 255, 255, 0.02)",
-                      borderRadius: 12,
-                      border: "1px dashed var(--glass-border)",
-                    }}
-                  >
-                    📈 +{history.length - 20} more transactions
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+      {/* Recent Transactions */}
+      <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] relative overflow-hidden">
+        <h3 className="text-lg font-semibold text-white m-0 mb-6">
+          Recent Transactions
+        </h3>
+        <DataTable
+          queryFn={(params) => fetchTransactions(params, poolAddress)}
+          renderRow={({ item, index }) => (
+            <TransactionCard
+              key={item.tx_hash || index}
+              transaction={item}
+            />
+          )}
+          initialParams={{
+            orderBy: 'created_at',
+            orderDirection: 'DESC',
+            pairAddress: poolAddress,
+          }}
+          itemsPerPage={10}
+          emptyMessage="No transactions found for this pool. Trading activity will appear here."
+          className="space-y-4"
+        />
       </div>
     </div>
   );

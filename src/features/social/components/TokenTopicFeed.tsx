@@ -15,6 +15,13 @@ export default function TokenTopicFeed({ topicName }: { topicName: string }) {
 
   const posts: any[] = Array.isArray((data as any)?.posts) ? (data as any).posts : [];
   const postCount: number | undefined = typeof (data as any)?.post_count === 'number' ? (data as any).post_count : undefined;
+  const sortedPosts = useMemo(() => {
+    return posts.slice().sort((a: any, b: any) => {
+      const at = new Date(a?.created_at || 0).getTime();
+      const bt = new Date(b?.created_at || 0).getTime();
+      return bt - at; // newest first
+    });
+  }, [posts]);
 
   useEffect(() => {
     // initial refetch safety if needed
@@ -46,10 +53,10 @@ export default function TokenTopicFeed({ topicName }: { topicName: string }) {
           <div className="text-xs text-white/60">{postCount} total</div>
         )}
       </div>
-      {posts.length === 0 && (
+      {sortedPosts.length === 0 && (
         <div className="text-white/60 text-sm">Be the first to post with {lookup.toUpperCase()}.</div>
       )}
-      {posts.map((item: any) => (
+      {sortedPosts.map((item: any) => (
         <ReplyToFeedItem key={item.id} item={item} commentCount={item.total_comments ?? 0} onOpenPost={() => { /* caller sets navigation */ }} />
       ))}
       <div className="text-center mt-1.5">

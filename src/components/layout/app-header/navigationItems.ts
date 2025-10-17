@@ -12,13 +12,13 @@ export interface NavigationItem {
 export const navigationItems: NavigationItem[] = [
   {
     id: "home",
-    label: "Social",
+    label: "Feed",
     path: "/",
     icon: "🏠",
   },
   configs.features.trending && {
     id: "trending",
-    label: "Trends",
+    label: "Trend",
     path: "/trends/tokens",
     icon: "📈",
     children: [
@@ -27,7 +27,7 @@ export const navigationItems: NavigationItem[] = [
   },
   {
     id: "dex",
-    label: "DeFi",
+    label: "DeFi tools",
     path: "/defi",
     icon: "💱",
     children: [

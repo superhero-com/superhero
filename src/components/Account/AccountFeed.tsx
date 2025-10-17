@@ -80,6 +80,16 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
     [data]
   );
 
+  // Combine posts with token-created events and sort by created_at DESC
+  const combinedList = useMemo(() => {
+    const merged: PostDto[] = [...createdActivities, ...list];
+    return merged.sort((a: any, b: any) => {
+      const at = new Date(a?.created_at || 0).getTime();
+      const bt = new Date(b?.created_at || 0).getTime();
+      return bt - at;
+    });
+  }, [createdActivities, list]);
+
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const fetchingRef = useRef(false);
   const initialLoading = aLoading || isLoading;
@@ -131,65 +141,83 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
 
   // (no separate effect: activities are handled by the infinite query above)
 
-  return (
-    <div className="w-full">
-      {createdActivities.length > 0 && (
-        <ActivitiesWithCollapse items={createdActivities} />
-      )}
-      <div className="w-full flex flex-col gap-2 mb-8 md:mb-10">
-        {list.map((item: any) => (
+  // Collapsible groups state keyed by first item id in the group (for token-created runs)
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const toggleGroup = useCallback((groupId: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) next.delete(groupId);
+      else next.add(groupId);
+      return next;
+    });
+  }, []);
+
+  const renderItems = useMemo(() => {
+    const nodes: React.ReactNode[] = [];
+    let i = 0;
+    while (i < combinedList.length) {
+      const item: any = combinedList[i];
+      const postId = item.id;
+      const isTokenCreated = String(postId).startsWith("token-created:");
+
+      if (!isTokenCreated) {
+        nodes.push(
           <ReplyToFeedItem
-            key={item.id}
+            key={postId}
             item={item}
             commentCount={item.total_comments ?? 0}
             allowInlineRepliesToggle={false}
             onOpenPost={(id: string) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)}
           />
-        ))}
-        {hasNextPage && <div ref={sentinelRef} className="h-10" />}
-        {!isLoading && list.length === 0 && createdActivities.length === 0 && (
-          <div className="p-8 text-center text-muted-foreground">No posts yet</div>
-        )}
-      </div>
-    </div>
-  );
-}
+        );
+        i += 1;
+        continue;
+      }
 
-function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
-  const [expanded, setExpanded] = useState(false);
-  const toggle = useCallback(() => setExpanded((v) => !v), []);
-  const visible = expanded ? items : items.slice(0, 3);
-  const showToggle = items.length > 3;
-  return (
-    <div className="flex flex-col gap-2 mb-0 md:mb-2">
-      {visible.map((it, idx) => {
-        const isLast = idx === visible.length - 1;
-        const hideDivider = !isLast; // on mobile, never show lines between items, only at the end
-        const hasMultiple = visible.length > 1;
-        const isFirst = idx === 0;
-        const isMiddle = idx > 0 && !isLast;
-        // Middle items should always be compact (py-1) on mobile; first/last keep default, with special edges.
-        const mobileTight = isMiddle;
+      // Group consecutive token-created items
+      const startIndex = i;
+      const groupItems: PostDto[] = [];
+      while (
+        i < combinedList.length &&
+        String(combinedList[i].id).startsWith("token-created:")
+      ) {
+        groupItems.push(combinedList[i] as PostDto);
+        i += 1;
+      }
+
+      const groupId = String(groupItems[0]?.id || `group-${startIndex}`);
+      const collapsed = groupItems.length > 3 && !expandedGroups.has(groupId);
+      const visibleCount = collapsed ? 3 : groupItems.length;
+      const hasMultiple = visibleCount > 1;
+
+      for (let j = 0; j < visibleCount; j += 1) {
+        const gi = groupItems[j];
+        const isLastVisible = j === visibleCount - 1;
+        const isFirstVisible = j === 0;
+        const isMiddle = j > 0 && !isLastVisible;
+        const hideDivider = !isLastVisible; // only after last on mobile
+        const mobileTight = isMiddle; // py-0.5
         const mobileNoTopPadding = false;
         const mobileNoBottomPadding = false;
-        const mobileTightTop = hasMultiple && isLast; // last: pt-0.5
-        const mobileTightBottom = hasMultiple && isFirst; // first: pb-0.5
-        const footer = isLast && showToggle ? (
+        const mobileTightTop = hasMultiple && isLastVisible; // last pt-0.5
+        const mobileTightBottom = hasMultiple && isFirstVisible; // first pb-0.5
+        const footer = isLastVisible && groupItems.length > 3 ? (
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); toggle(); }}
+            onClick={(e) => { e.stopPropagation(); toggleGroup(groupId); }}
             onMouseDown={(e) => e.stopPropagation()}
             className="inline-flex items-center justify-center text-[13px] px-2 py-1 bg-transparent border-0 text-white/80 hover:text-white outline-none focus:outline-none shadow-none ring-0 focus:ring-0 appearance-none [text-shadow:none]"
             style={{ WebkitTapHighlightColor: 'transparent', filter: 'none', WebkitAppearance: 'none', background: 'transparent', boxShadow: 'none' }}
-            aria-expanded={expanded}
+            aria-expanded={!collapsed}
           >
-            {expanded ? 'Show less' : `Show ${items.length - 3} more`}
+            {collapsed ? `Show ${groupItems.length - 3} more` : 'Show less'}
           </button>
         ) : undefined;
-        return (
+
+        nodes.push(
           <TokenCreatedActivityItem
-            key={it.id}
-            item={it}
+            key={gi.id}
+            item={gi}
             hideMobileDivider={hideDivider}
             mobileTight={mobileTight}
             mobileNoTopPadding={mobileNoTopPadding}
@@ -199,22 +227,37 @@ function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
             footer={footer}
           />
         );
-      })}
-      {showToggle && (
-        (
-          <div className="hidden md:block w-full px-2 md:px-0">
+      }
+
+      // Desktop row for toggle
+      if (groupItems.length > 3) {
+        nodes.push(
+          <div key={`${groupId}-toggle-expanded`} className="hidden md:block w-full px-2 md:px-0">
             <button
               type="button"
-              onClick={toggle}
+              onClick={() => toggleGroup(groupId)}
               className="w-full md:w-auto mx-auto flex items-center justify-center text-[13px] md:text-xs px-3 py-2 md:px-0 md:py-0 bg-transparent border-0 text-white/80 hover:text-white transition-colors outline-none focus:outline-none shadow-none ring-0 focus:ring-0 appearance-none [text-shadow:none]"
               style={{ WebkitTapHighlightColor: 'transparent', filter: 'none', WebkitAppearance: 'none', background: 'transparent', boxShadow: 'none' }}
-              aria-expanded={expanded}
+              aria-expanded={!collapsed}
             >
-              {expanded ? 'Show less' : `Show ${items.length - 3} more`}
+              {collapsed ? `Show ${groupItems.length - 3} more` : 'Show less'}
             </button>
           </div>
-        )
-      )}
+        );
+      }
+    }
+    return nodes;
+  }, [combinedList, expandedGroups, navigate, toggleGroup]);
+
+  return (
+    <div className="w-full">
+      <div className="w-full flex flex-col gap-2 mb-8 md:mb-10">
+        {renderItems}
+        {(hasNextPage || hasMoreActivities) && <div ref={sentinelRef} className="h-10" />}
+        {!isLoading && combinedList.length === 0 && (
+          <div className="p-8 text-center text-muted-foreground">No posts yet</div>
+        )}
+      </div>
     </div>
   );
 }

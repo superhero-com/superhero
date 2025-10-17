@@ -170,8 +170,10 @@ function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
         const isMiddle = idx > 0 && !isLast;
         // Middle items should always be compact (py-1) on mobile; first/last keep default, with special edges.
         const mobileTight = isMiddle;
-        const mobileNoTopPadding = hasMultiple && isLast; // last: no top padding
-        const mobileNoBottomPadding = hasMultiple && isFirst; // first: no bottom padding
+        const mobileNoTopPadding = false;
+        const mobileNoBottomPadding = false;
+        const mobileTightTop = hasMultiple && isLast; // last: pt-0.5
+        const mobileTightBottom = hasMultiple && isFirst; // first: pb-0.5
         const footer = isLast && showToggle ? (
           <button
             type="button"
@@ -192,6 +194,8 @@ function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
             mobileTight={mobileTight}
             mobileNoTopPadding={mobileNoTopPadding}
             mobileNoBottomPadding={mobileNoBottomPadding}
+            mobileTightTop={mobileTightTop}
+            mobileTightBottom={mobileTightBottom}
             footer={footer}
           />
         );

@@ -330,8 +330,10 @@ export default function FeedList({
         const isMiddle = j > 0 && !isLastVisible;
         // Middle items should always be compact (py-1) on mobile; first/last keep default, with special edges.
         const mobileTight = isMiddle;
-        const mobileNoTopPadding = hasMultiple && isLastVisible; // last: no top padding
-        const mobileNoBottomPadding = hasMultiple && isFirstVisible; // first: no bottom padding
+        const mobileNoTopPadding = false; // keep a minimal top (we'll use tight variants instead)
+        const mobileNoBottomPadding = false; // keep a minimal bottom (we'll use tight variants instead)
+        const mobileTightTop = hasMultiple && isLastVisible; // last: pt-0.5
+        const mobileTightBottom = hasMultiple && isFirstVisible; // first: pb-0.5
         const footer = isLastVisible && groupItems.length > 3 ? (
           <button
             type="button"
@@ -352,6 +354,8 @@ export default function FeedList({
             mobileTight={mobileTight}
             mobileNoTopPadding={mobileNoTopPadding}
             mobileNoBottomPadding={mobileNoBottomPadding}
+            mobileTightTop={mobileTightTop}
+            mobileTightBottom={mobileTightBottom}
             footer={footer}
           />
         );

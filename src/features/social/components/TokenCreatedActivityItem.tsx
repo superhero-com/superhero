@@ -14,6 +14,8 @@ interface TokenCreatedActivityItemProps {
   footer?: React.ReactNode; // optional mobile-only footer area (e.g., Show more) rendered just above divider
   mobileNoTopPadding?: boolean;
   mobileNoBottomPadding?: boolean;
+  mobileTightTop?: boolean; // apply pt-0.5 on mobile
+  mobileTightBottom?: boolean; // apply pb-0.5 on mobile
 }
 
 function useTokenName(item: PostDto): string | null {
@@ -39,7 +41,7 @@ function useTokenName(item: PostDto): string | null {
   }, [item]);
 }
 
-const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false, mobileTight = false, footer, mobileNoTopPadding = false, mobileNoBottomPadding = false }: TokenCreatedActivityItemProps) => {
+const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false, mobileTight = false, footer, mobileNoTopPadding = false, mobileNoBottomPadding = false, mobileTightTop = false, mobileTightBottom = false }: TokenCreatedActivityItemProps) => {
   const navigate = useNavigate();
   const { chainNames } = useWallet();
   const creator = item.sender_address;
@@ -57,7 +59,7 @@ const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false, mobile
       tabIndex={0}
       onClick={(e) => { e.stopPropagation(); onOpen(); }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
-      className={`token-activity relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 ${mobileNoTopPadding ? 'pt-0' : (mobileTight ? 'pt-0.5' : 'pt-2')} ${mobileNoBottomPadding ? 'pb-0' : (mobileTight ? 'pb-0.5' : 'pb-2')} md:w-full md:mx-0 md:py-1 md:px-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-transparent md:hover:border-white/25 md:rounded-[12px] md:backdrop-blur-xl transition-colors hover:shadow-none`}
+      className={`token-activity relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 ${mobileNoTopPadding ? 'pt-0' : ((mobileTightTop || mobileTight) ? 'pt-0.5' : 'pt-2')} ${mobileNoBottomPadding ? 'pb-0' : ((mobileTightBottom || mobileTight) ? 'pb-0.5' : 'pb-2')} md:w-full md:mx-0 md:py-1 md:px-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-transparent md:hover:border-white/25 md:rounded-[12px] md:backdrop-blur-xl transition-colors hover:shadow-none`}
       aria-label={tokenName ? `Open trend ${tokenName}` : 'Open trend'}
     >
       <div className="flex items-center justify-between gap-3 md:h-8">

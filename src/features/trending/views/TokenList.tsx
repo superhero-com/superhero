@@ -190,16 +190,18 @@ export default function TokenList() {
   );
 
   return (
-    <Shell right={rightRail} containerClassName="max-w-[min(1200px,100%)] mx-auto">
-      <div className="min-h-screen text-white px-4">
+    <>
+      {/* Top-of-page bands above rails (1200px container) */}
+      <div className="max-w-[min(1200px,100%)] mx-auto text-white px-4">
         <TrendminerBanner />
-
         <LatestTransactionsCarousel />
-
         <TrendingPillsCarousel />
+      </div>
 
-        {/* Main content */}
-        <div className="w-full">
+      <Shell right={rightRail} containerClassName="max-w-[min(1200px,100%)] mx-auto">
+        <div className="min-h-screen text-white px-4">
+          {/* Main content */}
+          <div className="w-full">
           <div className="flex flex-col items-start mb-6 gap-3 w-full">
             <div className="flex text-xl sm:text-2xl font-bold text-white w-full">
               Tokenized Trends
@@ -270,30 +272,31 @@ export default function TokenList() {
             orderDirection={finalOrderDirection}
             onSort={handleSort}
           />
-        </div>
-
-        {/* Load More Button */}
-        {hasNextPage && (
-          <div className="text-center pt-2 pb-4">
-            <button
-              ref={loadMoreBtn}
-              onClick={() => fetchNextPage()}
-              disabled={isFetching}
-              className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isFetching
-                ? 'bg-white/10 cursor-not-allowed opacity-60'
-                : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'
-                }`}
-            >
-              {isFetching ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  Loading...
-                </div>
-              ) : 'Load More'}
-            </button>
           </div>
-        )}
-      </div>
-    </Shell>
+
+          {/* Load More Button */}
+          {hasNextPage && (
+            <div className="text-center pt-2 pb-4">
+              <button
+                ref={loadMoreBtn}
+                onClick={() => fetchNextPage()}
+                disabled={isFetching}
+                className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isFetching
+                  ? 'bg-white/10 cursor-not-allowed opacity-60'
+                  : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'
+                  }`}
+              >
+                {isFetching ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Loading...
+                  </div>
+                ) : 'Load More'}
+              </button>
+            </div>
+          )}
+        </div>
+      </Shell>
+    </>
   );
 }

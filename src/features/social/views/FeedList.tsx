@@ -362,7 +362,7 @@ export default function FeedList({
             <button
               type="button"
               onClick={() => toggleGroup(groupId)}
-              className="w-full md:w-auto mx-auto flex items-center justify-center text-[13px] md:text-sm px-3 py-2 md:px-0 md:py-0 bg-transparent border-0 text-white/80 hover:text-white transition-colors outline-none focus:outline-none [text-shadow:none]"
+              className="w-full md:w-auto mx-auto flex items-center justify-center text-[13px] md:text-xs px-3 py-2 md:px-0 md:py-0 bg-transparent border-0 text-white/80 hover:text-white transition-colors outline-none focus:outline-none [text-shadow:none]"
               style={{ WebkitTapHighlightColor: 'transparent', filter: 'none' }}
               aria-expanded={!collapsed}
             >

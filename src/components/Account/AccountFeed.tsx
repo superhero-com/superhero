@@ -175,8 +175,8 @@ function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
             type="button"
             onClick={(e) => { e.stopPropagation(); toggle(); }}
             onMouseDown={(e) => e.stopPropagation()}
-            className="inline-flex items-center justify-center text-[13px] px-2 py-1 bg-transparent border-0 text-white/80 hover:text-white outline-none focus:outline-none [text-shadow:none]"
-            style={{ WebkitTapHighlightColor: 'transparent', filter: 'none' }}
+            className="inline-flex items-center justify-center text-[13px] px-2 py-1 bg-transparent border-0 text-white/80 hover:text-white outline-none focus:outline-none shadow-none ring-0 focus:ring-0 appearance-none [text-shadow:none]"
+            style={{ WebkitTapHighlightColor: 'transparent', filter: 'none', WebkitAppearance: 'none', background: 'transparent', boxShadow: 'none' }}
             aria-expanded={expanded}
           >
             {expanded ? 'Show less' : `Show ${items.length - 3} more`}
@@ -200,8 +200,8 @@ function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
             <button
               type="button"
               onClick={toggle}
-              className="w-full md:w-auto mx-auto flex items-center justify-center text-[13px] md:text-xs px-3 py-2 md:px-0 md:py-0 bg-transparent border-0 text-white/80 hover:text-white transition-colors outline-none focus:outline-none [text-shadow:none]"
-              style={{ WebkitTapHighlightColor: 'transparent', filter: 'none' }}
+              className="w-full md:w-auto mx-auto flex items-center justify-center text-[13px] md:text-xs px-3 py-2 md:px-0 md:py-0 bg-transparent border-0 text-white/80 hover:text-white transition-colors outline-none focus:outline-none shadow-none ring-0 focus:ring-0 appearance-none [text-shadow:none]"
+              style={{ WebkitTapHighlightColor: 'transparent', filter: 'none', WebkitAppearance: 'none', background: 'transparent', boxShadow: 'none' }}
               aria-expanded={expanded}
             >
               {expanded ? 'Show less' : `Show ${items.length - 3} more`}

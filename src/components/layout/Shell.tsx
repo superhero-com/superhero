@@ -20,7 +20,7 @@ export default function Shell({ left, right, children, containerClassName }: She
       <div className={[
         "min-h-screen w-full mx-auto flex flex-col",
         // Respect caller-provided max-w classes; otherwise use default
-        containerClassName && /(^|\s)max-w-/.test(containerClassName) ? "" : "max-w-[min(1400px,100%)]",
+        containerClassName && /(^|\s)max-w-/.test(containerClassName) ? "" : "max-w-[min(1200px,100%)]",
         containerClassName || ""
       ].filter(Boolean).join(" ")}
       >

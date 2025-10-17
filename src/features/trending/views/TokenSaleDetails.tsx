@@ -136,7 +136,7 @@ export default function TokenSaleDetails() {
   if (isError && !isTokenNewlyCreated) {
     return (
       <div className="max-w-[min(1200px,100%)] mx-auto min-h-screen  text-white px-4">
-        <div className="text-center relative z-10 py-16">
+        <div className="text-center relative z-10 py-16 max-w-[min(1200px,100%)] mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Token{" "}
             <span className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">

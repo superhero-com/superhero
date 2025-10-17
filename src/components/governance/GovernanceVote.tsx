@@ -58,7 +58,7 @@ export default function GovernanceVote({
   };
   return (
     <div className="min-h-screen">
-      <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
+      <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-[min(1200px,100%)] mx-auto">
         {/* Enhanced Header */}
         <div className="relative mb-8">
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl blur-xl"></div>

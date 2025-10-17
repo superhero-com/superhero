@@ -16,7 +16,7 @@ export default function GovernancePolls() {
 
   return (
     <div className="min-h-screen">
-      <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
+      <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-[min(1200px,100%)] mx-auto">
         {/* Enhanced Header Section */}
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-3xl blur-3xl -z-10" />

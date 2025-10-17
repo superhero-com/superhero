@@ -58,7 +58,7 @@ export default function SwapTabSwitcher({
 
   return (
     <div 
-      className={cn("flex gap-6 max-w-6xl mx-auto", className)}
+      className={cn("flex gap-6 max-w-[min(1200px,100%)] mx-auto", className)}
       style={style}
     >
       {/* Vertical Tab Navigation */}

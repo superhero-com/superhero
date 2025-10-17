@@ -49,7 +49,7 @@ export default function GovernanceAccount() {
 
   return (
     <div className="min-h-screen">
-      <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
+      <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-[min(1200px,100%)] mx-auto">
         {/* Enhanced Header Section */}
         <div className="text-center mb-12 animate-slideInUp">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 shadow-2xl shadow-purple-500/25 mb-6 animate-float">

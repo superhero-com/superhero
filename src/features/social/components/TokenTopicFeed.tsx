@@ -54,7 +54,7 @@ export default function TokenTopicFeed({ topicName }: { topicName: string }) {
         )}
       </div>
       {sortedPosts.length === 0 && (
-        <div className="text-white/60 text-sm">Be the first to post with {lookup.toUpperCase()}.</div>
+        <div className="text-white/60 text-sm">Be the first to speak about {lookup.toUpperCase()}.</div>
       )}
       {sortedPosts.map((item: any) => (
         <ReplyToFeedItem key={item.id} item={item} commentCount={item.total_comments ?? 0} onOpenPost={() => { /* caller sets navigation */ }} />

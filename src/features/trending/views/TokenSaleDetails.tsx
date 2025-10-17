@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { TokensService } from "../../../api/generated/services/TokensService";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { useOwnedTokens } from "../../../hooks/useOwnedTokens";
+import Shell from "@/components/layout/Shell";
 
 // Components
 // import CommentsList from "../../../components/Trendminer/CommentsList";
@@ -134,7 +135,7 @@ export default function TokenSaleDetails() {
   // Render error state (token not found)
   if (isError && !isTokenNewlyCreated) {
     return (
-      <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
+      <div className="max-w-[min(1200px,100%)] mx-auto min-h-screen  text-white px-4">
         <div className="text-center relative z-10 py-16">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Token{" "}
@@ -201,9 +202,31 @@ export default function TokenSaleDetails() {
     );
   }
 
+  const rightRail = (
+    <div className="hidden lg:block">
+      {!token?.sale_address ? (
+        <TokenSaleSidebarSkeleton boilerplate={isTokenPending} />
+      ) : (
+        <>
+          <TokenTradeCard token={token} />
+          <TokenSummary token={token} />
+          <TokenRanking token={token} />
+          <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4">
+            <h4 className="text-white/90 font-semibold mb-2">Community Chat</h4>
+            <p className="text-white/70 text-sm mb-3">Join token rooms on Quali.chat</p>
+            <a href={`https://app.quali.chat/`} target="_blank" rel="noopener noreferrer" className="text-[#4ecdc4] underline">
+              Open Quali.chat ↗
+            </a>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
-      <LatestTransactionsCarousel />
+    <Shell right={rightRail} containerClassName="max-w-[min(1200px,100%)] mx-auto">
+      <div className="min-h-screen text-white px-4">
+        <LatestTransactionsCarousel />
 
       {/* Deploy Success Message */}
       {showDeployedMessage && (
@@ -232,38 +255,8 @@ export default function TokenSaleDetails() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Desktop Sidebar (Left Column) */}
-        {!isMobile && (
-          <div className="lg:col-span-1 flex flex-col gap-6">
-            {!token?.sale_address ? (
-              <TokenSaleSidebarSkeleton boilerplate={isTokenPending} />
-            ) : (
-              <>
-                <TokenTradeCard token={token} />
-                <TokenSummary
-                  token={token}
-                />
-                <TokenRanking token={token} />
-                {/* Moved Quali chat CTA into left sidebar (kept simple link) */}
-                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4">
-                  <h4 className="text-white/90 font-semibold mb-2">Community Chat</h4>
-                  <p className="text-white/70 text-sm mb-3">Join token rooms on Quali.chat</p>
-                  {/* We keep the existing CTA logic in TokenChat component; for now provide a generic link */}
-                  <a href={`https://app.quali.chat/`} target="_blank" rel="noopener noreferrer" className="text-[#4ecdc4] underline">
-                    Open Quali.chat ↗
-                  </a>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Main Content (Right Column on Desktop, Full Width on Mobile) */}
-        <div
-          className={`${isMobile ? "col-span-1 mb-8" : "lg:col-span-2"
-            } flex flex-col gap-6`}
-        >
+        {/* Main Content */}
+        <div className="flex flex-col gap-6">
           {/* Token Header */}
           <Card className="bg-white/[0.02] border-white/10">
             <div className="p-2">
@@ -481,6 +474,6 @@ export default function TokenSaleDetails() {
         shareUrl={shareUrl}
         title={`Share ${token.name || token.symbol || "Token"}`}
       />
-    </div>
+    </Shell>
   );
 }

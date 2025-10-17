@@ -449,7 +449,7 @@ export default function CreateTokenView() {
 
   if (loading) {
     return (
-      <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+      <div className="max-w-[min(1200px,100%)] mx-auto min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
         <div className="p-6">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-700 rounded w-1/3 mb-4"></div>
@@ -469,9 +469,9 @@ export default function CreateTokenView() {
   }
 
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-2 md:px-4">
+    <div className="max-w-[min(1200px,100%)] mx-auto min-h-screen text-white px-2 md:px-4">
       <div className="rounded-[24px] mt-4 mb-6 mx-0 md:mx-4 md:[background:linear-gradient(90deg,rgba(244,193,12,0.1),rgba(255,109,21,0.1))]">
-        <div className="max-w-[1400px] mx-auto p-0 md:p-6">
+        <div className="max-w-[1200px] mx-auto p-0 md:p-6">
           <div className="flex flex-col lg:flex-row gap-6 lg:items-start lg:justify-between">
             {/* Left Side - Banner Content */}
             <div className="min-w-0 flex-1 md:pt-2 lg:pt-[170px]" ref={leftHeroRef}>

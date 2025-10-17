@@ -5,48 +5,7 @@
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
-export class DefaultService {
-    /**
-     * @returns any
-     * @throws ApiError
-     */
-    public static getApiStats(): CancelablePromise<any> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/stats',
-        });
-    }
-    /**
-     * @deprecated
-     * @returns any
-     * @throws ApiError
-     */
-    public static getContracts(): CancelablePromise<any> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/contracts',
-        });
-    }
-    /**
-     * @returns any
-     * @throws ApiError
-     */
-    public static getFactory(): CancelablePromise<any> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/factory',
-        });
-    }
-    /**
-     * @returns any
-     * @throws ApiError
-     */
-    public static debugFailedTransactionsControllerGetFailedTransactions(): CancelablePromise<any> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/debug/failed-transactions',
-        });
-    }
+export class BullBoardService {
     /**
      * @returns any
      * @throws ApiError
@@ -124,7 +83,7 @@ export class DefaultService {
     public static bullBoardControllerAdminGet1(): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/bull-board/*',
+            url: '/api/bull-board/{path}',
         });
     }
     /**
@@ -134,7 +93,7 @@ export class DefaultService {
     public static bullBoardControllerAdminPost1(): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/bull-board/*',
+            url: '/api/bull-board/{path}',
         });
     }
     /**
@@ -144,7 +103,7 @@ export class DefaultService {
     public static bullBoardControllerAdminPut1(): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'PUT',
-            url: '/api/bull-board/*',
+            url: '/api/bull-board/{path}',
         });
     }
     /**
@@ -154,7 +113,7 @@ export class DefaultService {
     public static bullBoardControllerAdminDelete1(): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'DELETE',
-            url: '/api/bull-board/*',
+            url: '/api/bull-board/{path}',
         });
     }
     /**
@@ -164,7 +123,7 @@ export class DefaultService {
     public static bullBoardControllerAdminPatch1(): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'PATCH',
-            url: '/api/bull-board/*',
+            url: '/api/bull-board/{path}',
         });
     }
     /**
@@ -174,7 +133,7 @@ export class DefaultService {
     public static bullBoardControllerAdminOptions1(): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'OPTIONS',
-            url: '/api/bull-board/*',
+            url: '/api/bull-board/{path}',
         });
     }
     /**
@@ -184,7 +143,7 @@ export class DefaultService {
     public static bullBoardControllerAdminHead1(): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'HEAD',
-            url: '/api/bull-board/*',
+            url: '/api/bull-board/{path}',
         });
     }
 }

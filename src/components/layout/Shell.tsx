@@ -1,4 +1,5 @@
 import React from "react";
+import BackToTop from "./BackToTop";
 import FooterSection from "./FooterSection";
 
 type ShellProps = {
@@ -47,11 +48,13 @@ export default function Shell({ left, right, children, containerClassName }: She
           <main className="min-w-0 overflow-visible">{children}</main>
 
           {hasRight && (
-            <aside className="hidden lg:block min-w-0">
-              <div className="sticky top-[80px]">
-                <div className="max-h-[calc(100vh-80px)] overflow-y-hidden hover:overflow-y-auto overscroll-contain">
+            <aside className="hidden lg:block min-w-0 overflow-visible">
+              <div className="right-rail-bleed -mx-2 lg:-mx-4 px-2 lg:px-4 overflow-visible">
+                <div className="right-rail-scroll overflow-visible">
                   <div className="min-w-0">{right}</div>
                   <FooterSection />
+                  {/* Back to top anchored at very bottom of the aside */}
+                  <BackToTop />
                 </div>
               </div>
             </aside>

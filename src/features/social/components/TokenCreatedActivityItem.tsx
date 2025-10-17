@@ -9,6 +9,13 @@ import { compactTime } from "../../../utils/time";
 
 interface TokenCreatedActivityItemProps {
   item: PostDto;
+  hideMobileDivider?: boolean;
+  mobileTight?: boolean; // reduce vertical padding on mobile for middle items in a group
+  footer?: React.ReactNode; // optional mobile-only footer area (e.g., Show more) rendered just above divider
+  mobileNoTopPadding?: boolean;
+  mobileNoBottomPadding?: boolean;
+  mobileTightTop?: boolean; // apply pt-0.5 on mobile
+  mobileTightBottom?: boolean; // apply pb-0.5 on mobile
 }
 
 function useTokenName(item: PostDto): string | null {
@@ -34,7 +41,7 @@ function useTokenName(item: PostDto): string | null {
   }, [item]);
 }
 
-const TokenCreatedActivityItem = memo(({ item }: TokenCreatedActivityItemProps) => {
+const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false, mobileTight = false, footer, mobileNoTopPadding = false, mobileNoBottomPadding = false, mobileTightTop = false, mobileTightBottom = false }: TokenCreatedActivityItemProps) => {
   const navigate = useNavigate();
   const { chainNames } = useWallet();
   const creator = item.sender_address;
@@ -52,10 +59,10 @@ const TokenCreatedActivityItem = memo(({ item }: TokenCreatedActivityItemProps) 
       tabIndex={0}
       onClick={(e) => { e.stopPropagation(); onOpen(); }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
-      className="token-activity relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 py-2 md:w-full md:mx-0 md:py-1 md:px-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-transparent md:hover:border-white/25 md:rounded-[12px] md:backdrop-blur-xl transition-colors hover:shadow-none"
+      className={`token-activity relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 ${mobileNoTopPadding ? 'pt-0' : ((mobileTightTop || mobileTight) ? 'pt-0.5' : 'pt-2')} ${mobileNoBottomPadding ? 'pb-0' : ((mobileTightBottom || mobileTight) ? 'pb-0.5' : 'pb-2')} md:w-full md:mx-0 md:py-1 md:px-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-transparent md:hover:border-white/25 md:rounded-[12px] md:backdrop-blur-xl transition-colors hover:shadow-none`}
       aria-label={tokenName ? `Open trend ${tokenName}` : 'Open trend'}
     >
-      <div className="flex items-center justify-between gap-3 h-8">
+      <div className="flex items-center justify-between gap-3 md:h-8">
         <div className="flex items-center gap-1 min-w-0">
           <AddressAvatarWithChainNameFeed address={creator} size={20} overlaySize={12} showAddressAndChainName={false} />
           <div className="flex items-center gap-1 min-w-0 text-[13px] leading-[1.2]">
@@ -91,8 +98,16 @@ const TokenCreatedActivityItem = memo(({ item }: TokenCreatedActivityItemProps) 
           )}
         </div>
       </div>
-      {/* Full-bleed divider on mobile for visual rhythm */}
-      <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />
+      {/* Optional footer (mobile) */}
+      {footer && (
+        <div className="md:hidden mt-1 text-center" style={{ WebkitTapHighlightColor: 'transparent' }}>
+          {footer}
+        </div>
+      )}
+      {/* Full-bleed divider on mobile for visual rhythm (can be hidden for middle items or when followed by footer) */}
+      {!hideMobileDivider && (
+        <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />
+      )}
     </article>
   );
 });

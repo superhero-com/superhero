@@ -10,9 +10,10 @@ type Props = {
   style?: React.CSSProperties;
   className?: string;
   variant?: 'default' | 'dex';
+  muted?: boolean; // greyed-out appearance while still clickable
 };
 
-export default function ConnectWalletButton({ label = 'Connect Wallet', block, style, className, variant = 'default' }: Props) {
+export default function ConnectWalletButton({ label = 'Connect Wallet', block, style, className, variant = 'default', muted = false }: Props) {
   const { activeAccount } = useAeSdk()
   const { connectWallet, connectingWallet } = useWalletConnect()
   const { openModal } = useModal();
@@ -33,6 +34,12 @@ export default function ConnectWalletButton({ label = 'Connect Wallet', block, s
     'bg-[#1161FE] text-white border-none rounded-xl sm:rounded-full'
   );
 
+  const mutedClasses = cn(
+    'rounded-xl sm:rounded-full text-sm',
+    'bg-white/10 text-white/70 border border-white/10 hover:bg-white/10 hover:text-white/80',
+    'shadow-none'
+  );
+
   return (
     <AeButton
       onClick={() => openModal({ name: 'connect-wallet' })}
@@ -41,7 +48,7 @@ export default function ConnectWalletButton({ label = 'Connect Wallet', block, s
       variant="ghost"
       size={variant === 'dex' ? 'default' : 'default'}
       fullWidth={block}
-      className={cn(variant === 'dex' ? dexClasses : baseClasses, className)}
+      className={cn(muted ? mutedClasses : (variant === 'dex' ? dexClasses : baseClasses), className)}
       style={style}
     >
       <span className="hidden sm:inline-flex items-center gap-2">

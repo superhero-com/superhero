@@ -77,14 +77,14 @@
     backdrop-filter: blur(20px);
     border-radius: 20px;
     padding: 20px;
-    box-shadow: var(--glass-shadow);
+    box-shadow: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     
     &:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(255, 107, 107, 0.2);
+      transform: none;
+      box-shadow: none;
     }
     
     &::before {
@@ -754,6 +754,12 @@
     }
   }
 }
+
+/* Allow horizontal bleed beyond grid track/gap */
+.right-rail-bleed { overflow: visible; }
+
+/* Scroller: vertical only; allow horizontal overflow for shadows */
+.right-rail-scroll { overflow-x: visible; }
 
 // Animations
 @keyframes pulse {

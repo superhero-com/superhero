@@ -7,7 +7,9 @@ import { useAeSdk } from "../../../hooks/useAeSdk";
 import { useOwnedTokens } from "../../../hooks/useOwnedTokens";
 
 // Components
-import CommentsList from "../../../components/Trendminer/CommentsList";
+// import CommentsList from "../../../components/Trendminer/CommentsList";
+import TokenTopicFeed from "../../social/components/TokenTopicFeed";
+import TokenTopicComposer from "../../social/components/TokenTopicComposer";
 import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
 import Token24hChange from "../../../components/Trendminer/Token24hChange";
 import TokenHolders from "../../../components/Trendminer/TokenHolders";
@@ -33,7 +35,7 @@ import { useLiveTokenData } from "../hooks/useLiveTokenData";
 
 // Tab constants
 const TAB_DETAILS = "details";
-const TAB_CHAT = "comments";
+const TAB_CHAT = "posts";
 const TAB_TRANSACTIONS = "transactions";
 const TAB_HOLDERS = "holders";
 
@@ -243,6 +245,15 @@ export default function TokenSaleDetails() {
                   token={token}
                 />
                 <TokenRanking token={token} />
+                {/* Moved Quali chat CTA into left sidebar (kept simple link) */}
+                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4">
+                  <h4 className="text-white/90 font-semibold mb-2">Community Chat</h4>
+                  <p className="text-white/70 text-sm mb-3">Join token rooms on Quali.chat</p>
+                  {/* We keep the existing CTA logic in TokenChat component; for now provide a generic link */}
+                  <a href={`https://app.quali.chat/`} target="_blank" rel="noopener noreferrer" className="text-[#4ecdc4] underline">
+                    Open Quali.chat ↗
+                  </a>
+                </div>
               </>
             )}
           </div>
@@ -368,7 +379,7 @@ export default function TokenSaleDetails() {
                 : "text-white/60 hover:text-white"
                 }`}
             >
-              Chat
+              Posts
             </button>
             <button
               onClick={() => setActiveTab(TAB_TRANSACTIONS)}
@@ -400,7 +411,16 @@ export default function TokenSaleDetails() {
               </div>
             )}
 
-            {activeTab === TAB_CHAT && <CommentsList token={token} />}
+            {activeTab === TAB_CHAT && (
+              <div className="grid gap-3">
+                <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4 md:p-5 backdrop-blur-[5px] relative z-0">
+                  <TokenTopicComposer tokenName={(token.name || token.symbol || '').toString()} />
+                </div>
+                <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4 md:p-5 backdrop-blur-[5px] relative z-0">
+                  <TokenTopicFeed topicName={`#${String(token.name || token.symbol || '').toLowerCase()}`} />
+                </div>
+              </div>
+            )}
 
             {activeTab === TAB_TRANSACTIONS && (
               <TokenTrades token={token} />

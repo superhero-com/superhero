@@ -168,10 +168,10 @@ function ActivitiesWithCollapse({ items }: { items: PostDto[] }) {
         const hasMultiple = visible.length > 1;
         const isFirst = idx === 0;
         const isMiddle = idx > 0 && !isLast;
-        // When collapsed: keep middle items compact (py-1). When expanded: remove padding (pt-0 pb-0) for middle items.
-        const mobileTight = !expanded && isMiddle;
-        const mobileNoTopPadding = (expanded && isMiddle) || (hasMultiple && isLast);
-        const mobileNoBottomPadding = (expanded && isMiddle) || (hasMultiple && isFirst);
+        // Middle items should always be compact (py-1) on mobile; first/last keep default, with special edges.
+        const mobileTight = isMiddle;
+        const mobileNoTopPadding = hasMultiple && isLast; // last: no top padding
+        const mobileNoBottomPadding = hasMultiple && isFirst; // first: no bottom padding
         const footer = isLast && showToggle ? (
           <button
             type="button"

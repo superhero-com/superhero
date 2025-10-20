@@ -7,9 +7,10 @@ type ShellProps = {
   right?: React.ReactNode;
   children: React.ReactNode;
   containerClassName?: string;
+  hideRailFooter?: boolean;
 };
 
-export default function Shell({ left, right, children, containerClassName }: ShellProps) {
+export default function Shell({ left, right, children, containerClassName, hideRailFooter }: ShellProps) {
   // 3-column grid on large screens: left | center | right
   // On smaller screens show only center; right rail stays hidden; left can be rendered separately if desired
   const hasRight = Boolean(right);
@@ -49,7 +50,7 @@ export default function Shell({ left, right, children, containerClassName }: She
             <div className="right-rail-bleed -mx-2 lg:-mx-4 px-2 lg:px-4 overflow-visible">
               <div className="right-rail-scroll overflow-visible">
                 <div className="min-w-0">{right}</div>
-                <FooterSection />
+                {!hideRailFooter && <FooterSection />}
                 {/* Back to top anchored at very bottom of the aside */}
                 <BackToTop />
               </div>

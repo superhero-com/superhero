@@ -268,7 +268,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
   return (
     <>
       {topNav}
-      <Shell containerClassName="max-w-[min(1200px,100%)] mx-auto">
+      <Shell containerClassName="max-w-[min(1200px,100%)] mx-auto" hideRailFooter>
         <div className="pb-24 md:pb-0">
           <main className="min-w-0 overflow-hidden pt-1">{children}</main>
         </div>

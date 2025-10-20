@@ -75,6 +75,44 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     return () => window.cancelAnimationFrame(id);
   }, [postData, ancestors.length]);
 
+  // Compute total descendant comments (all levels) for current post
+  const { data: descendantCount } = useQuery<number>({
+    queryKey: ['post-desc-count', postId],
+    enabled: !!postId,
+    refetchInterval: 120 * 1000,
+    queryFn: async () => {
+      const normalize = (id: string) => (String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`);
+      const queue: string[] = [normalize(String(postId))];
+      let total = 0;
+      let requestBudget = 200; // safety cap
+      while (queue.length > 0 && requestBudget > 0) {
+        const current = queue.shift()!;
+        // paginate through comments for this id
+        let page = 1;
+        // loop pages
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          if (requestBudget <= 0) break;
+          requestBudget -= 1;
+          const res: any = await PostsService.getComments({ id: current, orderDirection: 'ASC', page, limit: 50 });
+          const items: PostDto[] = res?.items || [];
+          total += items.length;
+          // enqueue children that have further replies
+          for (const child of items) {
+            if ((child.total_comments ?? 0) > 0) {
+              queue.push(normalize(String(child.id)));
+            }
+          }
+          const meta = res?.meta;
+          if (!meta?.currentPage || !meta?.totalPages || meta.currentPage >= meta.totalPages) break;
+          page = meta.currentPage + 1;
+        }
+      }
+      // Do not count the root itself, only descendants counted in total
+      return total;
+    },
+  });
+
   // No need for author helpers; cards handle display
 
   // Handle reply added callback
@@ -118,7 +156,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
       ))}
       {postData && (
         <div ref={currentPostRef}>
-          <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(postData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} isActive />
+          <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(descendantCount ?? (postData as any).total_comments ?? 0) as number} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} isActive />
         </div>
       )}
     </div>

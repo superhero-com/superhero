@@ -227,7 +227,7 @@ export default function TrendCloud() {
   const [selected, setSelected] = useState<TrendingTag | null>(null);
 
   return (
-    <div className="max-w-6xl mx-auto p-5 md:p-8 lg:p-10">
+    <div className="max-w-[min(1200px,100%)] mx-auto p-5 md:p-8 lg:p-10">
       {/* Header */}
       <div className="mb-6">
         <div className="mb-5">

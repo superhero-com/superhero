@@ -5,9 +5,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { TokensService } from "../../../api/generated/services/TokensService";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { useOwnedTokens } from "../../../hooks/useOwnedTokens";
+import Shell from "@/components/layout/Shell";
 
 // Components
-import CommentsList from "../../../components/Trendminer/CommentsList";
+// import CommentsList from "../../../components/Trendminer/CommentsList";
+import TokenTopicFeed from "../../social/components/TokenTopicFeed";
+import TokenTopicComposer from "../../social/components/TokenTopicComposer";
 import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
 import Token24hChange from "../../../components/Trendminer/Token24hChange";
 import TokenHolders from "../../../components/Trendminer/TokenHolders";
@@ -33,7 +36,7 @@ import { useLiveTokenData } from "../hooks/useLiveTokenData";
 
 // Tab constants
 const TAB_DETAILS = "details";
-const TAB_CHAT = "comments";
+const TAB_CHAT = "posts";
 const TAB_TRANSACTIONS = "transactions";
 const TAB_HOLDERS = "holders";
 
@@ -132,8 +135,8 @@ export default function TokenSaleDetails() {
   // Render error state (token not found)
   if (isError && !isTokenNewlyCreated) {
     return (
-      <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
-        <div className="text-center relative z-10 py-16">
+      <div className="max-w-[min(1200px,100%)] mx-auto min-h-screen  text-white px-4">
+        <div className="text-center relative z-10 py-16 max-w-[min(1200px,100%)] mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Token{" "}
             <span className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
@@ -171,7 +174,7 @@ export default function TokenSaleDetails() {
   // Render pending state
   if (isTokenPending) {
     return (
-      <div className="max-w-7xl mx-auto p-4 md:p-6">
+      <div className="max-w-[min(1200px,100%)] mx-auto p-4 md:p-6">
         <LatestTransactionsCarousel />
 
         <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-6 mb-6">
@@ -199,11 +202,37 @@ export default function TokenSaleDetails() {
     );
   }
 
-  return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
-      <LatestTransactionsCarousel />
+  const rightRail = (
+    <div className="hidden lg:block">
+      {!token?.sale_address ? (
+        <TokenSaleSidebarSkeleton boilerplate={isTokenPending} />
+      ) : (
+        <>
+          <TokenTradeCard token={token} />
+          <TokenSummary token={token} />
+          <TokenRanking token={token} />
+          <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4">
+            <h4 className="text-white/90 font-semibold mb-2">Community Chat</h4>
+            <p className="text-white/70 text-sm mb-3">Join token rooms on Quali.chat</p>
+            <a href={`https://app.quali.chat/`} target="_blank" rel="noopener noreferrer" className="text-[#4ecdc4] underline">
+              Open Quali.chat ↗
+            </a>
+          </div>
+        </>
+      )}
+    </div>
+  );
 
-      {/* Deploy Success Message */}
+  return (
+    <>
+      {/* Top-of-page band above rails (1200px container) */}
+      <div className="max-w-[min(1200px,100%)] mx-auto text-white px-4">
+        <LatestTransactionsCarousel />
+      </div>
+
+      <Shell right={rightRail} containerClassName="max-w-[min(1200px,100%)] mx-auto">
+        <div className="min-h-screen text-white px-4">
+          {/* Deploy Success Message */}
       {showDeployedMessage && (
         <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-4 mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -230,29 +259,8 @@ export default function TokenSaleDetails() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Desktop Sidebar (Left Column) */}
-        {!isMobile && (
-          <div className="lg:col-span-1 flex flex-col gap-6">
-            {!token?.sale_address ? (
-              <TokenSaleSidebarSkeleton boilerplate={isTokenPending} />
-            ) : (
-              <>
-                <TokenTradeCard token={token} />
-                <TokenSummary
-                  token={token}
-                />
-                <TokenRanking token={token} />
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Main Content (Right Column on Desktop, Full Width on Mobile) */}
-        <div
-          className={`${isMobile ? "col-span-1 mb-8" : "lg:col-span-2"
-            } flex flex-col gap-6`}
-        >
+        {/* Main Content */}
+        <div className="flex flex-col gap-6">
           {/* Token Header */}
           <Card className="bg-white/[0.02] border-white/10">
             <div className="p-2">
@@ -368,7 +376,7 @@ export default function TokenSaleDetails() {
                 : "text-white/60 hover:text-white"
                 }`}
             >
-              Chat
+              Posts
             </button>
             <button
               onClick={() => setActiveTab(TAB_TRANSACTIONS)}
@@ -400,7 +408,15 @@ export default function TokenSaleDetails() {
               </div>
             )}
 
-            {activeTab === TAB_CHAT && <CommentsList token={token} />}
+            {activeTab === TAB_CHAT && (
+              <div className="grid gap-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="m-0 text-white/90 font-semibold">Posts for #{String(token.name || token.symbol || '').toUpperCase()}</h3>
+                </div>
+                <TokenTopicComposer tokenName={(token.name || token.symbol || '').toString()} />
+                <TokenTopicFeed topicName={`#${String(token.name || token.symbol || '').toLowerCase()}`} />
+              </div>
+            )}
 
             {activeTab === TAB_TRANSACTIONS && (
               <TokenTrades token={token} />
@@ -409,7 +425,8 @@ export default function TokenSaleDetails() {
             {activeTab === TAB_HOLDERS && <TokenHolders token={token} />}
           </div>
         </div>
-      </div>
+        </div>
+      </Shell>
 
       {/* Mobile Trading Bottom Sheet */}
       {isMobile && (
@@ -462,6 +479,6 @@ export default function TokenSaleDetails() {
         shareUrl={shareUrl}
         title={`Share ${token.name || token.symbol || "Token"}`}
       />
-    </div>
+    </>
   );
 }

@@ -76,7 +76,7 @@ export default function Dao() {
   }
 
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-4">
+    <div className="max-w-[min(1200px,100%)] mx-auto min-h-screen text-white px-4">
       {/* Header Section */}
       <div className="mb-6">
         {token && (

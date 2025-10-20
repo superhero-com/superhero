@@ -1,5 +1,5 @@
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import AeButton from "../../../components/AeButton";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
 import { IconClose, IconGif, IconSmile } from "../../../icons";
@@ -26,6 +26,10 @@ interface PostFormProps {
   postId?: string;
   onCommentAdded?: () => void;
   placeholder?: string;
+
+  // Topic enforcement
+  initialText?: string; // prefilled content (e.g., "#nancy ")
+  requiredHashtag?: string; // canonical, lowercase content hashtag (e.g., "#nancy")
 
   // Feature toggles
   showMediaFeatures?: boolean;
@@ -80,6 +84,8 @@ export default function PostForm({
   postId,
   onCommentAdded,
   placeholder,
+  initialText,
+  requiredHashtag,
   showMediaFeatures = true,
   showEmojiPicker = true,
   showGifInput = true,
@@ -90,7 +96,7 @@ export default function PostForm({
   const { activeAccount, chainNames } = useAccount();
   const queryClient = useQueryClient();
 
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [showEmoji, setShowEmoji] = useState(false);
@@ -104,6 +110,12 @@ export default function PostForm({
   useEffect(() => {
     setPromptIndex(Math.floor(Math.random() * PROMPTS.length));
   }, []);
+
+  useEffect(() => {
+    // if initialText changes externally, update once when empty
+    if (initialText && !text) setText(initialText);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialText]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -157,7 +169,16 @@ export default function PostForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = text.trim();
+    // Enforce required hashtag: auto-append at end if missing
+    let next = text;
+    if (requiredHashtag) {
+      const hasAlready = new RegExp(`(^|\n|\s)${requiredHashtag}(\b|$)`, 'i').test(next);
+      if (!hasAlready) {
+        const separator = next.length > 0 && !/\s$/.test(next) ? ' ' : '';
+        next = `${next}${separator}${requiredHashtag}`;
+      }
+    }
+    const trimmed = next.trim();
     if (!trimmed) return;
     if (!activeAccount) return;
 
@@ -217,7 +238,7 @@ export default function PostForm({
       }
 
       // Reset after success
-      setText("");
+      setText(initialText || "");
       setMediaUrls([]);
       onSuccess?.();
     } finally {
@@ -267,6 +288,14 @@ export default function PostForm({
     && window.matchMedia('(min-width: 768px)').matches;
   const computedMinHeight = isDesktopViewport ? minHeight : '88px';
 
+  const requiredMissing = useMemo(() => {
+    if (!requiredHashtag) return false;
+    return !new RegExp(`(^|\n|\s)${requiredHashtag}(\b|$)`, 'i').test(text);
+  }, [text, requiredHashtag]);
+
+  // simple autocomplete: on typing '#', suggest the required hashtag if missing
+  const showAutoComplete = requiredHashtag && requiredMissing && /(^|\s)#$/i.test(text.slice(0, (textareaRef.current?.selectionStart ?? text.length))); 
+
   return (
     <div
       className={`${isPost ? "w-full max-w-none" : "mx-auto"
@@ -294,11 +323,26 @@ export default function PostForm({
                   placeholder={currentPlaceholder}
                   value={text}
                   onChange={(e) => setText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (!requiredHashtag || !showAutoComplete) return;
+                    if (e.key === 'Tab' || e.key === 'Enter') {
+                      e.preventDefault();
+                      const label = requiredHashtag + ' ';
+                      insertAtCursor(label);
+                    }
+                  }}
                   className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pr-14 md:pb-12 md:text-base"
                   style={{ minHeight: computedMinHeight }}
                   rows={2}
                   maxLength={characterLimit}
                 />
+
+                {showAutoComplete && (
+                  <div className="absolute top-2 left-3 bg-white/5 border border-white/10 text-white/70 rounded-md px-2 py-1 text-xs select-none">
+                    {(requiredHashtag || '').toUpperCase()}
+                    <span className="ml-2 text-white/50">Tab ↹ / Enter ⏎</span>
+                  </div>
+                )}
 
                 <div className="md:hidden absolute bottom-5 left-2">
                   {/* Mobile-only GIF button inside textarea corner */}
@@ -404,7 +448,10 @@ export default function PostForm({
                     )}
                   </div>
 
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-3">
+                    {requiredHashtag && requiredMissing && (
+                      <div className="text-[11px] text-white/70">Post needs to include {(requiredHashtag || '').toUpperCase()}</div>
+                    )}
                     {activeAccount ? (
                       <AeButton
                         type="submit"

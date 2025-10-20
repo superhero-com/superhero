@@ -125,7 +125,7 @@ export default function Daos() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-4 text-white">
+    <div className="max-w-[min(1200px,100%)] mx-auto p-4 text-white">
       <div className="flex justify-between items-center gap-3 flex-wrap mb-4">
         <div className="text-3xl font-extrabold text-white">DAOs</div>
         <div className="flex gap-2">

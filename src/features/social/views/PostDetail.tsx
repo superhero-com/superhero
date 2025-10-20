@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PostsService, PostDto } from '../../../api/generated';
 import AeButton from '../../../components/AeButton';
@@ -34,7 +34,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
 
   const isLoading = isPostLoading;
   const error = postError;
-  // Ensure detail page scrolls to top when opened
+  // Ensure detail page scrolls to top when opened (initial), we'll center the current post after data loads
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -63,6 +63,17 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
       return chain;
     },
   });
+
+  // Center the current post in the viewport once it's rendered
+  const currentPostRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!postData) return;
+    // Defer to the end of the frame to ensure layout is ready
+    const id = window.requestAnimationFrame(() => {
+      currentPostRef.current?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [postData, ancestors.length]);
 
   // No need for author helpers; cards handle display
 
@@ -106,7 +117,9 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
         />
       ))}
       {postData && (
-        <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(postData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} isActive />
+        <div ref={currentPostRef}>
+          <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(postData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} isActive />
+        </div>
       )}
     </div>
   );

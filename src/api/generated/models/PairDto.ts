@@ -2,7 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import { ChangeData } from './ChangeData';
 import type { DexTokenDto } from './DexTokenDto';
+import { PriceDto } from './PriceDto';
 export type PairDto = {
     /**
      * Pair contract address
@@ -36,5 +38,30 @@ export type PairDto = {
      * Pair creation timestamp
      */
     created_at: string;
+    /**
+     * Summary statistics for the pair
+     */
+    summary: {
+        /**
+         * Address of the trading pair
+         */
+        pair_address: string,
+        /**
+         * Volume token identifier
+         */
+        volume_token: string,
+        /**
+         * Position of the token in the pair (0 or 1)
+         */
+        token_position: string,
+        /**
+         * Total trading volume with price data
+         */
+        total_volume: PriceDto,
+        /**
+         * Price and volume change data over time
+         */
+        change: ChangeData
+    }
 };
 

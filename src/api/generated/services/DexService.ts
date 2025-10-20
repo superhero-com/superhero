@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { DexTokenDto } from '../models/DexTokenDto';
+import type { DexTokenSummaryDto } from '../models/DexTokenSummaryDto';
 import type { Pagination } from '../models/Pagination';
 import type { PairTransactionDto } from '../models/PairTransactionDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -79,6 +80,28 @@ export class DexService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/dex/tokens/{address}/price',
+            path: {
+                'address': address,
+            },
+        });
+    }
+    /**
+     * Get DEX token summary
+     * Get comprehensive summary data for a token including aggregated volume and price changes across all pools where the token appears.
+     * @returns DexTokenSummaryDto
+     * @throws ApiError
+     */
+    public static getDexTokenSummary({
+        address,
+    }: {
+        /**
+         * Token contract address
+         */
+        address: string,
+    }): CancelablePromise<DexTokenSummaryDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/dex/tokens/{address}/summary',
             path: {
                 'address': address,
             },

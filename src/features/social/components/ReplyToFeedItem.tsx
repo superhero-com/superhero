@@ -121,6 +121,39 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
     ? item.media.filter((m) => (typeof m === "string" ? !m.startsWith("comment:") : true))
     : [];
 
+  // Compute total descendant comments (all levels) for this item
+  const { data: descendantCount } = useQuery<number>({
+    queryKey: ["post-desc-count", postId],
+    enabled: !!postId,
+    refetchInterval: 120 * 1000,
+    queryFn: async () => {
+      const normalize = (id: string) => (String(id).endsWith("_v3") ? String(id) : `${String(id)}_v3`);
+      const root = normalize(String(postId));
+      const queue: string[] = [root];
+      let total = 0;
+      let requestBudget = 150; // safety cap per item
+      while (queue.length > 0 && requestBudget > 0) {
+        const current = queue.shift()!;
+        let page = 1;
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          if (requestBudget <= 0) break;
+          requestBudget -= 1;
+          const res: any = await PostsService.getComments({ id: current, orderDirection: "ASC", page, limit: 50 });
+          const items: PostDto[] = res?.items || [];
+          total += items.length;
+          for (const child of items) {
+            if ((child.total_comments ?? 0) > 0) queue.push(normalize(String(child.id)));
+          }
+          const meta = res?.meta;
+          if (!meta?.currentPage || !meta?.totalPages || meta.currentPage >= meta.totalPages) break;
+          page = meta.currentPage + 1;
+        }
+      }
+      return total;
+    },
+  });
+
   // Inline mined badge helper
   function MinedBadge({ txHash }: { txHash: string }) {
     const { status } = useTransactionStatus(txHash, { enabled: !!txHash, refetchInterval: 8000 });
@@ -287,7 +320,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
               aria-controls={`replies-${postId}`}
             >
               <MessageCircle className="w-[14px] h-[14px]" strokeWidth={2.25} />
-              {commentCount}
+            {typeof descendantCount === 'number' ? descendantCount : commentCount}
             </button>
             </div>
             <SharePopover postId={item.id} />

@@ -22,12 +22,8 @@ export type PairSummaryDto = {
      */
     total_volume: PriceDto;
     /**
-     * Total locked value (liquidity) data
-     */
-    total_locked_value: PriceDto;
-    /**
      * Data for different time periods (24h, 7d, 30d)
      */
-    change: ChangeData;
+    change: ChangeData | null;
 };
 

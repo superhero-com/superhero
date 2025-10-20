@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DexService, PairDto } from "../../../api/generated";
+import { DexPairService, DexService, PairDto } from "../../../api/generated";
 import { TokenChip } from "../../../components/TokenChip";
 
 // Define the actual API response structure
@@ -27,7 +27,7 @@ export default function DexExplorePools() {
 
   const { data, isLoading } = useQuery({
     queryFn: async () => {
-      const result = await DexService.listAllPairs({
+      const result = await DexPairService.listAllPairs({
         page: page,
         limit: limit,
         orderBy: sort,
@@ -37,7 +37,7 @@ export default function DexExplorePools() {
       return result as unknown as PaginatedResponse<PairDto>;
     },
     queryKey: [
-      "DexService.listAllPairs",
+      "DexPairService.listAllPairs",
       sort,
       sortDirection,
       search,

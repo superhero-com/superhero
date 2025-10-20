@@ -117,6 +117,7 @@ export class DexService {
         orderBy,
         orderDirection,
         pairAddress,
+        tokenAddress,
         txType,
         accountAddress,
         limit,
@@ -128,6 +129,10 @@ export class DexService {
          * Filter by specific pair address
          */
         pairAddress?: string,
+        /**
+         * Filter by account address
+         */
+        tokenAddress?: string,
         /**
          * Filter by transaction type
          */
@@ -146,6 +151,7 @@ export class DexService {
                 'order_by': orderBy,
                 'order_direction': orderDirection,
                 'pair_address': pairAddress,
+                'token_address': tokenAddress,
                 'tx_type': txType,
                 'account_address': accountAddress,
                 'limit': limit,

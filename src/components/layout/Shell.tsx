@@ -47,7 +47,7 @@ export default function Shell({ left, right, children, containerClassName, hideR
           )}
 
           <aside className="hidden lg:block min-w-0 overflow-visible">
-            <div className="right-rail-bleed -mx-2 lg:-mx-4 px-2 lg:px-4 overflow-visible">
+            <div className="overflow-visible">
               <div className="right-rail-scroll overflow-visible">
                 <div className="min-w-0">{right}</div>
                 {!hideRailFooter && <FooterSection />}

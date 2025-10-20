@@ -1,6 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { Token } from "../types/explore";
 import { DexTokenDto } from "../../../api/generated";
+import { PriceDataFormatter } from "@/features/shared/components";
+import { useMemo } from 'react';
+import { useAtomValue } from "jotai";
+import { performanceChartTimeframeAtom } from "@/features/trending/atoms";
+import PerformanceTimeframeSelector from "@/features/trending/components/PerformanceTimeframeSelector";
 
 interface TokenListCardsProps {
   tokens: DexTokenDto[];
@@ -38,6 +43,16 @@ export function TokenListCards({
   loading,
 }: TokenListCardsProps) {
   const navigate = useNavigate();
+
+  const performanceChartTimeframe = useAtomValue(performanceChartTimeframeAtom);
+
+  const timeBase = useMemo(() => {
+    if (performanceChartTimeframe === "1d") {
+      return "24h";
+    }
+
+    return performanceChartTimeframe;
+  }, [performanceChartTimeframe]);
 
   const handleSort = (
     key:
@@ -118,6 +133,9 @@ export function TokenListCards({
               >
                 {sort.asc ? "↑" : "↓"}
               </button>
+            </div>
+            <div className="flex items-center justify-center w-auto flex-shrink-0">
+            <PerformanceTimeframeSelector />
             </div>
           </div>
 
@@ -200,7 +218,7 @@ export function TokenListCards({
                     Price
                   </div>
                   <div className="text-sm text-white font-semibold">
-                    -
+                  <PriceDataFormatter priceData={token.price} bignumber />
                   </div>
                 </div>
 
@@ -210,27 +228,27 @@ export function TokenListCards({
                     TVL
                   </div>
                   <div className="text-sm text-white font-semibold">
-                    -
+                  <PriceDataFormatter priceData={token.summary.total_volume} bignumber />
                   </div>
                 </div>
 
                 {/* 24h Change */}
                 <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
-                    24h Change
+                    {timeBase} Change
                   </div>
                   <div className="text-sm font-semibold">
-                    -
+                  <PriceDataFormatter priceData={token.summary.change[timeBase].volume} bignumber />
                   </div>
                 </div>
 
                 {/* 24h Volume */}
                 <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
-                    24h Volume
+                  {timeBase} Volume
                   </div>
                   <div className="text-sm text-white font-semibold">
-                    -
+                  <PriceDataFormatter priceData={token.summary.change[timeBase].volume} bignumber />
                   </div>
                 </div>
               </div>

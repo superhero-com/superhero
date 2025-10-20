@@ -31,7 +31,7 @@ export default function Shell({ left, right, children, containerClassName }: She
             hasLeft && hasRight
               ? "lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)_minmax(360px,420px)]"
               : hasLeft && !hasRight
-              ? "lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)]"
+              ? "lg:grid-cols-[minmax(360px,420px)_minmax(560px,1fr)]"
               : !hasLeft && hasRight
               ? "lg:grid-cols-[minmax(0,1fr)_minmax(360px,420px)]"
               : "",
@@ -45,20 +45,20 @@ export default function Shell({ left, right, children, containerClassName }: She
             </aside>
           )}
 
+          <aside className="hidden lg:block min-w-0 overflow-visible">
+            <div className="right-rail-bleed -mx-2 lg:-mx-4 px-2 lg:px-4 overflow-visible">
+              <div className="right-rail-scroll overflow-visible">
+                <div className="min-w-0">{right}</div>
+                <FooterSection />
+                {/* Back to top anchored at very bottom of the aside */}
+                <BackToTop />
+              </div>
+            </div>
+          </aside>
+
           <main className="min-w-0 overflow-visible">{children}</main>
 
-          {hasRight && (
-            <aside className="hidden lg:block min-w-0 overflow-visible">
-              <div className="right-rail-bleed -mx-2 lg:-mx-4 px-2 lg:px-4 overflow-visible">
-                <div className="right-rail-scroll overflow-visible">
-                  <div className="min-w-0">{right}</div>
-                  <FooterSection />
-                  {/* Back to top anchored at very bottom of the aside */}
-                  <BackToTop />
-                </div>
-              </div>
-            </aside>
-          )}
+          {/* moved right rail to the left side; keep mobile hidden */}
         </div>
       </div>
     </>

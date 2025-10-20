@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DexPairService, PairDto } from "../../../api/generated";
 import { TokenChip } from "../../../components/TokenChip";
+import PairLineChart from "../components/charts/PairLineChart";
 
 // Define the actual API response structure
 interface PaginatedResponse<T> {
@@ -342,6 +343,9 @@ export default function DexExplorePools() {
                       <th className="text-left py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
                         TVL
                       </th>
+                      <th className="text-left py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
+                        Chart
+                      </th>
                       <th className="text-center py-4 px-3 text-sm text-[var(--light-font-color)] font-semibold tracking-wider">
                         Actions
                       </th>
@@ -388,6 +392,14 @@ export default function DexExplorePools() {
                         <td className="text-cnetr py-4 px-3 text-sm text-[var(--standard-font-color)] font-medium">
                           <PriceDataFormatter priceData={pair.summary?.total_volume} bignumber />
                         </td>
+                        <td className="text-cnetr py-4 px-3 text-sm text-[var(--standard-font-color)] font-medium w-[150px]">
+                          <PairLineChart
+                            pairAddres={pair.address}
+                            height={48}
+                            hideTimeframe={true}
+                          />
+                        </td>
+
 
                         <td className="text-center py-4 px-3">
                           <div className="flex gap-1.5 justify-center">

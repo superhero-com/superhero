@@ -13,6 +13,9 @@
 .hero-banner-carousel {
   position: relative;
   width: 100%;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
 
 .hero-banner {
@@ -21,12 +24,9 @@
   padding: clamp(16px, 2vw, 24px);
   display: grid;
   align-items: center;
-  overflow: hidden;
   isolation: isolate;
   background-size: 100% 100%, 100% 100%, 220% 220%;
   animation: bgShift 26s ease-in-out infinite;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .hero-banner__inner {

@@ -4,13 +4,13 @@ interface AspectMediaProps {
   src: string;
   alt?: string;
   className?: string;
-  maxHeight?: string | number; // e.g. "70vh" or 500
+  maxHeight?: string | number; // e.g. "50vh" or 500
 }
 
 // Renders media preserving its intrinsic aspect ratio.
 // - Parses optional w/h from URL hash (e.g. #w=480&h=270)
 // - Falls back to natural dimensions on load
-export function AspectMedia({ src, alt = "media", className = "", maxHeight = "70vh" }: AspectMediaProps) {
+export function AspectMedia({ src, alt = "media", className = "", maxHeight = "50vh" }: AspectMediaProps) {
   const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
 
   const isVideo = /\.(mp4|webm|mov)$/i.test(src);
@@ -44,8 +44,7 @@ export function AspectMedia({ src, alt = "media", className = "", maxHeight = "7
     };
   }, [src, isVideo]);
 
-  // Wrapper ensures height is computed from width based on aspect ratio
-  // Image uses h-auto to naturally fill the aspect-ratio constrained wrapper without cropping
+  // Wrapper with max-height constraint; image uses object-contain and left-align
   return (
     <div className={`w-full overflow-hidden rounded ${className}`} style={ratioStyle}>
       {isVideo ? (
@@ -53,14 +52,14 @@ export function AspectMedia({ src, alt = "media", className = "", maxHeight = "7
           ref={mediaRef as any}
           src={src}
           controls
-          className="w-full h-auto block"
+          className="w-full h-full object-contain object-left block"
         />
       ) : (
         <img
           ref={mediaRef as any}
           src={src}
           alt={alt}
-          className="w-full h-auto block"
+          className="w-full h-full object-contain object-left block"
         />
       )}
     </div>

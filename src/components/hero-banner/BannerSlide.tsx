@@ -34,10 +34,6 @@ export default function BannerSlide({
       <SpaceEffects supernovaColor={supernovaColor} />
 
       <div className="hero-banner__inner">
-        <div className="banner-brand">
-          <span className="banner-diamond" aria-hidden="true" />
-        </div>
-
         <h1 className="banner-h1">{title}</h1>
         <p className="banner-lede">{description}</p>
 

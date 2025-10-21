@@ -11,20 +11,7 @@ interface AspectMediaProps {
 // - Parses optional w/h from URL hash (e.g. #w=480&h=270)
 // - Falls back to natural dimensions on load
 export function AspectMedia({ src, alt = "media", className = "", maxHeight = "70vh" }: AspectMediaProps) {
-  const [dims, setDims] = useState<{ w: number; h: number } | null>(() => {
-    try {
-      const u = new URL(src);
-      if (u.hash.length > 1) {
-        const params = new URLSearchParams(u.hash.slice(1));
-        const w = Number(params.get("w") || "");
-        const h = Number(params.get("h") || "");
-        if (w > 0 && h > 0) return { w, h };
-      }
-    } catch {
-      // ignore
-    }
-    return null;
-  });
+  const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
 
   const isVideo = /\.(mp4|webm|mov)$/i.test(src);
   const ratioStyle = useMemo(() => {
@@ -55,9 +42,10 @@ export function AspectMedia({ src, alt = "media", className = "", maxHeight = "7
       if (isVideo) el.removeEventListener("loadedmetadata", onLoad);
       else el.removeEventListener("load", onLoad);
     };
-  }, [src, isVideo, dims]);
+  }, [src, isVideo]);
 
   // Wrapper ensures height is computed from width based on aspect ratio
+  // Image fills wrapper; since wrapper aspect matches image natural aspect, no cropping occurs
   return (
     <div className={`w-full overflow-hidden rounded ${className}`} style={ratioStyle}>
       {isVideo ? (
@@ -65,14 +53,14 @@ export function AspectMedia({ src, alt = "media", className = "", maxHeight = "7
           ref={mediaRef as any}
           src={src}
           controls
-          className={`w-full ${dims ? "h-full" : "h-auto"} object-contain block`}
+          className={dims ? "w-full h-full object-cover block" : "w-full h-auto block"}
         />
       ) : (
         <img
           ref={mediaRef as any}
           src={src}
           alt={alt}
-          className={`w-full ${dims ? "h-full" : "h-auto"} object-contain block`}
+          className={dims ? "w-full h-full object-cover block" : "w-full h-auto block"}
         />
       )}
     </div>

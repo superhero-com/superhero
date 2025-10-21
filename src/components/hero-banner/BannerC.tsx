@@ -9,8 +9,8 @@ export default function BannerC() {
       chips={["Fees → Treasury", "Creator payouts"]}
       primaryButtonText="Start a Purpose‑DAO"
       primaryButtonLink="/dao/new"
-      secondaryButtonText="See funded work"
-      secondaryButtonLink="/funded-work"
+      secondaryButtonText="See DAOs"
+      secondaryButtonLink="/trends/daos"
     />
   );
 }

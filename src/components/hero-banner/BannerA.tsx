@@ -8,7 +8,7 @@ export default function BannerA() {
       description="Share posts that settle on‑chain. Readers tip inline; creators get receipts automatically."
       chips={["Inline tipping", "On‑chain receipts"]}
       primaryButtonText="Start posting"
-      primaryButtonLink="/social"
+      primaryButtonLink="/social?post=new"
       secondaryButtonText="How it works"
       secondaryButtonLink="/faq"
     />

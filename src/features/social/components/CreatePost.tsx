@@ -6,9 +6,10 @@ interface CreatePostProps {
   onSuccess?: () => void;
   className?: string;
   onTextChange?: (text: string) => void;
+  autoFocus?: boolean;
 }
 
-export default function CreatePost({ onClose, onSuccess, className = '', onTextChange }: CreatePostProps) {
+export default function CreatePost({ onClose, onSuccess, className = '', onTextChange, autoFocus }: CreatePostProps) {
   return (
     <PostForm
       isPost={true}
@@ -21,6 +22,7 @@ export default function CreatePost({ onClose, onSuccess, className = '', onTextC
       showGifInput={true}
       characterLimit={280}
       minHeight="60px"
+      autoFocus={autoFocus}
     />
   );
 }

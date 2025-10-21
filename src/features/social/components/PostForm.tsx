@@ -37,6 +37,7 @@ interface PostFormProps {
   showGifInput?: boolean;
   characterLimit?: number;
   minHeight?: string;
+  autoFocus?: boolean;
 }
 
 const DEFAULT_EMOJIS = [
@@ -91,6 +92,7 @@ export default function PostForm({
   showGifInput = true,
   characterLimit = 280,
   minHeight = "60px",
+  autoFocus = false,
 }: PostFormProps) {
   const { sdk } = useAeSdk();
   const { activeAccount, chainNames } = useAccount();
@@ -149,8 +151,8 @@ export default function PostForm({
     const isDesktop = typeof window !== 'undefined' &&
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(min-width: 768px)').matches;
-    if (isDesktop && textareaRef.current) textareaRef.current.focus();
-  }, []);
+    if ((isDesktop || autoFocus) && textareaRef.current) textareaRef.current.focus();
+  }, [autoFocus]);
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {

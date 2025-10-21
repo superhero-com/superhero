@@ -38,6 +38,7 @@ export default function FeedList({
   const sortBy = urlQuery.get("sortBy") || "latest";
   const search = urlQuery.get("search") || "";
   const filterBy = urlQuery.get("filterBy") || "all";
+  const shouldAutoFocusPost = urlQuery.get("post") === "new";
 
   const [localSearch, setLocalSearch] = useState(search);
 
@@ -434,7 +435,7 @@ export default function FeedList({
       )}
       {/* Mobile: CreatePost first, then SortControls */}
       <div className="md:hidden">
-        <CreatePost onSuccess={refetch} />
+        <CreatePost onSuccess={refetch} autoFocus={shouldAutoFocusPost} />
         <SortControls
           sortBy={sortBy}
           onSortChange={handleSortChange}
@@ -444,7 +445,7 @@ export default function FeedList({
 
       {/* Desktop: CreatePost first, then SortControls */}
       <div className="hidden md:block">
-        <CreatePost onSuccess={refetch} />
+        <CreatePost onSuccess={refetch} autoFocus={shouldAutoFocusPost} />
         <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
       </div>
 

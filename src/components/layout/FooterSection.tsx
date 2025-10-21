@@ -144,10 +144,10 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
           href="https://github.com/superhero-com/superhero/issues"
           target="_blank"
           rel="noreferrer"
-          className="no-underline inline-flex items-center gap-2 text-white font-semibold rounded-full px-4 py-2 shadow-[0_8px_20px_rgba(98,0,238,0.35)] transition-all duration-200 hover:translate-y-[-1px] active:translate-y-0 focus:outline-none"
+          className="no-gradient-text no-underline inline-flex items-center gap-2 text-white font-semibold rounded-full px-4 py-2 transition-all duration-200 hover:translate-y-[-1px] active:translate-y-0 focus:outline-none"
           style={{
-            background: 'linear-gradient(90deg, #6D5DF6 0%, #8B5CF6 50%, #A855F7 100%)',
-            boxShadow: '0 10px 24px rgba(104, 64, 255, 0.35)'
+            background: 'var(--button-gradient)',
+            boxShadow: 'var(--button-shadow)'
           }}
           aria-label="Send Feedback on GitHub"
         >

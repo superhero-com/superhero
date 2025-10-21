@@ -160,7 +160,7 @@ export default function TokenSaleDetails() {
             </Button>
             <Button
               size="lg"
-              onClick={() => navigate(`/trends/create?name=${tokenName}`)}
+              onClick={() => navigate(`/trends/create?tokenName=${tokenName}`)}
               className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] hover:shadow-lg"
             >
               Claim It

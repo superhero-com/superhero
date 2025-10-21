@@ -42,7 +42,7 @@ export default function MobileTrendingTagCard({
     if (onTokenize) {
       onTokenize();
     } else {
-      window.location.href = `/trends/create?new=${encodeURIComponent(tag)}`;
+      window.location.href = `/trends/create?tokenName=${encodeURIComponent(tag)}`;
     }
   };
 

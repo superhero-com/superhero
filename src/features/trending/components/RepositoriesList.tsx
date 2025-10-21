@@ -88,7 +88,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
     if (hasToken(repo)) {
       navigate(`/trends/tokens/${repo.tag}`);
     } else {
-      navigate(`/trends/create?platform=${repo.source}&repo=${repo.tag}`);
+      navigate(`/trends/create?platform=${repo.source}&tokenName=${repo.tag}`);
     }
   };
 
@@ -261,7 +261,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
                         className="px-2 py-1 rounded-lg border-none text-white cursor-pointer text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/trends/create?platform=${repo.source}&repo=${repo.tag}`);
+                          navigate(`/trends/create?platform=${repo.source}&tokenName=${repo.tag}`);
                         }}
                       >
                         Tokenize

@@ -99,14 +99,35 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
             <Link
               to="/trends/tokens"
               className="inline-flex items-center rounded-[10px] px-[22px] py-[12px] text-sm font-bold transition-transform duration-100 hover:-translate-y-0.5 focus:outline-none"
-              style={{ background: '#fff', color: '#000', textDecoration: 'none' }}
+              style={{
+                background: '#fff',
+                color: '#000',
+                WebkitTextFillColor: '#000',
+                backgroundClip: 'initial',
+                WebkitBackgroundClip: 'initial',
+                textDecoration: 'none',
+                textShadow: 'none',
+                filter: 'none',
+                mixBlendMode: 'normal',
+              }}
             >
               <span>Explore Trends</span>
             </Link>
             <Link
               to="/faq"
               className="inline-flex items-center rounded-[10px] px-[22px] py-[12px] text-sm font-bold transition-transform duration-100 hover:-translate-y-0.5 focus:outline-none"
-              style={{ background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.45)', textDecoration: 'none' }}
+              style={{
+                background: 'transparent',
+                color: '#fff',
+                WebkitTextFillColor: '#fff',
+                backgroundClip: 'initial',
+                WebkitBackgroundClip: 'initial',
+                border: '1px solid rgba(255,255,255,0.45)',
+                textDecoration: 'none',
+                textShadow: 'none',
+                filter: 'none',
+                mixBlendMode: 'normal',
+              }}
             >
               <span>Learn more</span>
             </Link>

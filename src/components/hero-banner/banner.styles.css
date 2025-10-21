@@ -177,6 +177,7 @@
   opacity: 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  border: none;
   /* Override global link styles */
   -webkit-background-clip: unset !important;
   background-clip: unset !important;
@@ -216,16 +217,20 @@
   backdrop-filter: blur(8px);
 }
 
-.banner-btn--primary:hover,
-.banner-btn--ghost:hover {
+.banner-btn--primary:hover {
   filter: none !important;
   text-shadow: none !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4) !important;
 }
 
 .banner-btn--ghost:hover {
+  filter: none !important;
+  text-shadow: none !important;
   background: rgba(255, 255, 255, 0.15) !important;
   border-color: rgba(255, 255, 255, 0.8);
-  transform: translateY(-1px);
+  transform: translateY(-1px) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4) !important;
 }
 
 .banner-btn:active {

@@ -678,8 +678,9 @@
     font-size: clamp(24px, 5vw, 42px);
   }
 
-  /* Slow down animations moderately on mobile */
+  /* Reduce banner height on mobile */
   .hero-banner {
+    min-height: 280px;
     animation-duration: 45s !important;
   }
 

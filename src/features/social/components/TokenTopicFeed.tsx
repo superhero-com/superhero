@@ -4,8 +4,12 @@ import ReplyToFeedItem from "./ReplyToFeedItem";
 import AeButton from "../../../components/AeButton";
 import { TrendminerApi } from "../../../api/backend";
 
-export default function TokenTopicFeed({ topicName, showHeader = false }: { topicName: string; showHeader?: boolean }) {
+export default function TokenTopicFeed({ topicName, showHeader = false, displayTokenName }: { topicName: string; showHeader?: boolean; displayTokenName?: string }) {
   const lookup = useMemo(() => `#${String(topicName || '').replace(/^#/, '').toLowerCase()}`, [topicName]);
+  const displayTag = useMemo(() => {
+    const base = String(displayTokenName || topicName || '').replace(/^#/, '');
+    return `#${base ? base.toUpperCase() : ''}`;
+  }, [displayTokenName, topicName]);
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["topic-by-name", lookup],
@@ -54,14 +58,14 @@ export default function TokenTopicFeed({ topicName, showHeader = false }: { topi
     <div className="grid gap-2">
       {showHeader && (
         <div className="flex items-center justify-between mb-1">
-          <h4 className="m-0 text-white/90 font-semibold">Posts for {lookup.toUpperCase()}</h4>
+          <h4 className="m-0 text-white/90 font-semibold">Posts for {displayTag}</h4>
           {postCount != null && (
             <div className="text-xs text-white/60">{postCount} total</div>
           )}
         </div>
       )}
       {sortedPosts.length === 0 && (
-        <div className="text-white/60 text-sm">Be the first to speak about {lookup.toUpperCase()}.</div>
+        <div className="text-white/60 text-sm">Be the first to speak about {displayTag}.</div>
       )}
       {sortedPosts.map((item: any) => (
         <ReplyToFeedItem key={item.id} item={item} commentCount={item.total_comments ?? 0} onOpenPost={() => { /* caller sets navigation */ }} />

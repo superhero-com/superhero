@@ -417,7 +417,10 @@ export default function TokenSaleDetails() {
                   <h3 className="m-0 text-white/90 font-semibold">Posts for #{String(token.name || token.symbol || '').toUpperCase()}</h3>
                 </div>
                 <TokenTopicComposer tokenName={(token.name || token.symbol || '').toString()} />
-                <TokenTopicFeed topicName={`#${String(token.name || token.symbol || '').toLowerCase()}`} />
+                <TokenTopicFeed
+                  topicName={`#${String(token.name || token.symbol || '').toLowerCase()}`}
+                  displayTokenName={(token.name || token.symbol || '').toString()}
+                />
               </div>
             )}
 

@@ -1,5 +1,5 @@
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import AeButton from "../../../components/AeButton";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
 import { IconClose, IconGif, IconSmile } from "../../../icons";
@@ -26,6 +26,10 @@ interface PostFormProps {
   postId?: string;
   onCommentAdded?: () => void;
   placeholder?: string;
+
+  // Topic enforcement
+  initialText?: string; // prefilled content (e.g., "#nancy ")
+  requiredHashtag?: string; // canonical, lowercase content hashtag (e.g., "#nancy")
 
   // Feature toggles
   showMediaFeatures?: boolean;
@@ -80,6 +84,8 @@ export default function PostForm({
   postId,
   onCommentAdded,
   placeholder,
+  initialText,
+  requiredHashtag,
   showMediaFeatures = true,
   showEmojiPicker = true,
   showGifInput = true,
@@ -100,16 +106,38 @@ export default function PostForm({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiBtnRef = useRef<HTMLButtonElement>(null);
   const gifBtnRef = useRef<HTMLButtonElement>(null);
+  const [overlayComputed, setOverlayComputed] = useState<{ paddingTop: number; paddingRight: number; paddingBottom: number; paddingLeft: number; fontFamily: string; fontSize: string; fontWeight: string; lineHeight: string; letterSpacing: string; } | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     setPromptIndex(Math.floor(Math.random() * PROMPTS.length));
   }, []);
+
+  // Do not auto-fill from initialText anymore; keep user input empty by default
 
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
+  }, [text]);
+
+  // Sync overlay typography and padding with the textarea for precise positioning
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const cs = window.getComputedStyle(el);
+    setOverlayComputed({
+      paddingTop: parseFloat(cs.paddingTop || '0'),
+      paddingRight: parseFloat(cs.paddingRight || '0'),
+      paddingBottom: parseFloat(cs.paddingBottom || '0'),
+      paddingLeft: parseFloat(cs.paddingLeft || '0'),
+      fontFamily: cs.fontFamily || 'inherit',
+      fontSize: cs.fontSize || 'inherit',
+      fontWeight: cs.fontWeight || 'inherit',
+      lineHeight: cs.lineHeight || 'normal',
+      letterSpacing: cs.letterSpacing || 'normal',
+    });
   }, [text]);
 
   useEffect(() => {
@@ -157,6 +185,7 @@ export default function PostForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Do not auto-append the required hashtag; the Post button is disabled until present
     const trimmed = text.trim();
     if (!trimmed) return;
     if (!activeAccount) return;
@@ -185,9 +214,19 @@ export default function PostForm({
 
       if (isPost) {
         try {
-          await PostsService.getById({
-            id: `${decodedResult}_v3`,
-          });
+          const created = await PostsService.getById({ id: `${decodedResult}_v3` });
+          // Optimistically prepend the new post to the topic feed cache so it appears immediately
+          if (requiredHashtag && !requiredMissing) {
+            const topicKey = ["topic-by-name", (requiredHashtag || '').toLowerCase()];
+            queryClient.setQueryData(topicKey, (old: any) => {
+              const prevPosts = Array.isArray(old?.posts) ? old.posts : [];
+              return {
+                ...(old || {}),
+                posts: [created as any, ...prevPosts],
+                post_count: typeof old?.post_count === 'number' ? old.post_count + 1 : old?.post_count,
+              };
+            });
+          }
         } catch { }
       } else if (postId) {
         // For replies: optimistically show the new reply immediately
@@ -217,9 +256,15 @@ export default function PostForm({
       }
 
       // Reset after success
-      setText("");
+      setText(initialText || "");
       setMediaUrls([]);
       onSuccess?.();
+      // Also refetch any topic feeds related to this hashtag so other viewers update quickly
+      try {
+        if (requiredHashtag) {
+          queryClient.invalidateQueries({ queryKey: ["topic-by-name"] });
+        }
+      } catch {}
     } finally {
       setIsSubmitting(false);
     }
@@ -267,6 +312,55 @@ export default function PostForm({
     && window.matchMedia('(min-width: 768px)').matches;
   const computedMinHeight = isDesktopViewport ? minHeight : '88px';
 
+  const requiredMissing = useMemo(() => {
+    if (!requiredHashtag) return false;
+    const escaped = String(requiredHashtag).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Consider the tag present if it appears as a standalone hashtag token anywhere in the text
+    const pattern = new RegExp(`(^|[^A-Za-z0-9_])${escaped}(?![A-Za-z0-9_])`, 'i');
+    return !pattern.test(text);
+  }, [text, requiredHashtag]);
+
+  // Inline autocomplete: when typing a hashtag token that matches the start of requiredHashtag,
+  // show only the remaining characters (e.g., "#a" -> suggest "ENS").
+  const caretPosition = textareaRef.current?.selectionStart ?? text.length;
+  const textBeforeCaret = text.slice(0, caretPosition);
+  const activeHashtagMatch = textBeforeCaret.match(/(^|\s)#([a-zA-Z0-9_]*)$/);
+  const typedHashtagBody = activeHashtagMatch ? activeHashtagMatch[2] : '';
+  const requiredLower = (requiredHashtag || '').toLowerCase();
+  const typedLowerWithHash = `#${typedHashtagBody}`.toLowerCase();
+  const matchesRequiredPrefix = requiredHashtag
+    ? requiredLower.startsWith(typedLowerWithHash)
+    : false;
+  const remainingSuggestion = matchesRequiredPrefix
+    ? (requiredHashtag || '').toUpperCase().slice(1 + typedHashtagBody.length)
+    : '';
+  const showAutoComplete = Boolean(
+    requiredHashtag &&
+    requiredMissing &&
+    activeHashtagMatch &&
+    matchesRequiredPrefix &&
+    remainingSuggestion.length > 0
+  );
+
+  // Measure the pixel width of the prefix using canvas to fine-tune horizontal placement
+  const measuredLeft = useMemo(() => {
+    if (!overlayComputed) return 0;
+    const el = textareaRef.current;
+    if (!el) return 0;
+    const canvas = canvasRef.current || (canvasRef.current = document.createElement('canvas'));
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return 0;
+    ctx.font = `${overlayComputed.fontWeight} ${overlayComputed.fontSize} ${overlayComputed.fontFamily}`;
+    // Only measure the current token since last space/newline for stability
+    const prefix = textBeforeCaret.slice(textBeforeCaret.lastIndexOf('\n') + 1);
+    const metrics = ctx.measureText(prefix);
+    const base = metrics.width;
+    // Approximate letterSpacing effect
+    const ls = parseFloat(overlayComputed.letterSpacing as any) || 0;
+    const extra = ls * Math.max(prefix.length - 1, 0);
+    return overlayComputed.paddingLeft + base + extra;
+  }, [overlayComputed, textBeforeCaret]);
+
   return (
     <div
       className={`${isPost ? "w-full max-w-none" : "mx-auto"
@@ -294,11 +388,50 @@ export default function PostForm({
                   placeholder={currentPlaceholder}
                   value={text}
                   onChange={(e) => setText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (!requiredHashtag || !showAutoComplete) return;
+                    if (e.key === 'Tab' || e.key === 'Enter') {
+                      e.preventDefault();
+                      const el = textareaRef.current;
+                      const caret = el?.selectionStart ?? text.length;
+                      // Compute start index of current hashtag token (including '#')
+                      const tokenStart = caret - (typedHashtagBody.length + 1);
+                      const before = text.slice(0, tokenStart);
+                      const after = text.slice(caret);
+                      const fullUpper = (requiredHashtag || '').toUpperCase();
+                      const nextValue = `${before}${fullUpper} ${after}`;
+                      setText(nextValue);
+                      requestAnimationFrame(() => {
+                        const pos = (before + fullUpper + ' ').length;
+                        if (el) {
+                          el.focus();
+                          el.setSelectionRange(pos, pos);
+                        }
+                      });
+                    }
+                  }}
                   className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pr-14 md:pb-12 md:text-base"
                   style={{ minHeight: computedMinHeight }}
                   rows={2}
                   maxLength={characterLimit}
                 />
+
+                {showAutoComplete && overlayComputed && (
+                  <div
+                    className="absolute pointer-events-none select-none"
+                    style={{
+                      top: overlayComputed.paddingTop - 1,
+                      left: measuredLeft,
+                      fontFamily: overlayComputed.fontFamily,
+                      fontSize: overlayComputed.fontSize,
+                      fontWeight: overlayComputed.fontWeight,
+                      lineHeight: overlayComputed.lineHeight,
+                      letterSpacing: overlayComputed.letterSpacing,
+                    }}
+                  >
+                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>{remainingSuggestion}</span>
+                  </div>
+                )}
 
                 <div className="md:hidden absolute bottom-5 left-2">
                   {/* Mobile-only GIF button inside textarea corner */}
@@ -404,12 +537,37 @@ export default function PostForm({
                     )}
                   </div>
 
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-3">
+                    {requiredHashtag && requiredMissing && (
+                      <div className="flex items-center gap-2 text-[11px] text-white/70">
+                        <span>Post needs to include {(requiredHashtag || '').toUpperCase()}</span>
+                        <button
+                          type="button"
+                          className="px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-colors"
+                          onClick={() => {
+                            const tag = (requiredHashtag || '').toUpperCase();
+                            const needsSpace = text.length > 0 && !/\s$/.test(text);
+                            const next = `${text}${needsSpace ? ' ' : ''}${tag} `;
+                            setText(next);
+                            requestAnimationFrame(() => {
+                              if (textareaRef.current) {
+                                const pos = next.length;
+                                textareaRef.current.focus();
+                                textareaRef.current.setSelectionRange(pos, pos);
+                              }
+                            });
+                          }}
+                          title="Add required hashtag"
+                        >
+                          +Add
+                        </button>
+                      </div>
+                    )}
                     {activeAccount ? (
                       <AeButton
                         type="submit"
                         loading={isSubmitting}
-                        disabled={!text.trim()}
+                        disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
                         className="relative bg-[#1161FE] border-none text-white font-black px-6 py-3 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(0,0,0,0.3)] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none md:min-h-[44px] md:text-base"
                       >
                         {isSubmitting
@@ -464,12 +622,37 @@ export default function PostForm({
           </div>
 
           <div className="flex items-center justify-center w-full pt-0 -mt-3 md:hidden">
-            <div className="flex items-center justify-center w-full">
+            <div className="flex flex-col items-center justify-center w-full">
+            {requiredHashtag && requiredMissing && (
+              <div className="w-full mb-2 flex items-center justify-center gap-2 text-[12px] text-white/70">
+                <span>Post needs to include {(requiredHashtag || '').toUpperCase()}</span>
+                <button
+                  type="button"
+                  className="px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-colors"
+                  onClick={() => {
+                    const tag = (requiredHashtag || '').toUpperCase();
+                    const needsSpace = text.length > 0 && !/\s$/.test(text);
+                    const next = `${text}${needsSpace ? ' ' : ''}${tag} `;
+                    setText(next);
+                    requestAnimationFrame(() => {
+                      if (textareaRef.current) {
+                        const pos = next.length;
+                        textareaRef.current.focus();
+                        textareaRef.current.setSelectionRange(pos, pos);
+                      }
+                    });
+                  }}
+                  title="Add required hashtag"
+                >
+                  +Add
+                </button>
+              </div>
+            )}
               {activeAccount ? (
                 <AeButton
                   type="submit"
                   loading={isSubmitting}
-                  disabled={!text.trim()}
+                  disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
                   className="relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(0,0,0,0.3)] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
                 >
                   {isSubmitting

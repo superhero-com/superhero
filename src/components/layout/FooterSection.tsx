@@ -138,6 +138,26 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
           </div>
         </div>
       </div>
+      {/* Send Feedback button (very bottom) */}
+      <div className={`max-w-[min(1400px,100%)] mx-auto ${compact ? 'px-3' : 'px-4'} mt-6 flex ${compact ? 'justify-center' : 'justify-end'} md:justify-center md:px-4 sm:px-3`}>
+        <a
+          href="https://github.com/superhero-com/superhero/issues"
+          target="_blank"
+          rel="noreferrer"
+          className="no-underline inline-flex items-center gap-2 font-semibold rounded-full px-4 py-2 transition-all duration-200 hover:translate-y-[-1px] active:translate-y-0 focus:outline-none hover:shadow-[0_10px_24px_rgba(0,0,0,0.25)] focus:shadow-[0_10px_24px_rgba(0,0,0,0.25)]"
+          style={{
+            background: 'linear-gradient(to right, var(--neon-teal), var(--neon-teal), #5eead4)',
+            color: '#0a0a0f',
+            WebkitTextFillColor: '#0a0a0f',
+            backgroundClip: 'padding-box',
+            WebkitBackgroundClip: 'padding-box'
+          }}
+          aria-label="Send Feedback on GitHub"
+        >
+          <span className="text-lg" style={{ color: '#0a0a0f', WebkitTextFillColor: '#0a0a0f' }} aria-hidden="true">💬</span>
+          <span className={compact ? 'text-sm' : 'text-base'} style={{ color: '#0a0a0f', WebkitTextFillColor: '#0a0a0f' }}>Send Feedback</span>
+        </a>
+      </div>
       {/* No BackToTop in footer; it is rendered inside the right rail only */}
     </footer>
   );

@@ -7,11 +7,14 @@ import { useAeSdk } from "../../../hooks/useAeSdk";
 import { useOwnedTokens } from "../../../hooks/useOwnedTokens";
 
 // Components
-import CommentsList from "../../../components/Trendminer/CommentsList";
+// import CommentsList from "../../../components/Trendminer/CommentsList";
+import TokenTopicFeed from "../../social/components/TokenTopicFeed";
+import TokenTopicComposer from "../../social/components/TokenTopicComposer";
 import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
 import Token24hChange from "../../../components/Trendminer/Token24hChange";
 import TokenHolders from "../../../components/Trendminer/TokenHolders";
 import TokenTrades from "../../../components/Trendminer/TokenTrades";
+import TokenChat from "../../../components/Trendminer/TokenChat";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import {
@@ -33,7 +36,7 @@ import { useLiveTokenData } from "../hooks/useLiveTokenData";
 
 // Tab constants
 const TAB_DETAILS = "details";
-const TAB_CHAT = "comments";
+const TAB_CHAT = "posts";
 const TAB_TRANSACTIONS = "transactions";
 const TAB_HOLDERS = "holders";
 
@@ -243,6 +246,14 @@ export default function TokenSaleDetails() {
                   token={token}
                 />
                 <TokenRanking token={token} />
+                {/* Quali.chat CTA - old design cards */}
+                <TokenChat
+                  token={{
+                    name: String(token.name || token.symbol || ''),
+                    address: String((token as any).sale_address || (token as any).address || (token as any).token_address || ''),
+                  }}
+                  mode="ctaOnly"
+                />
               </>
             )}
           </div>
@@ -368,7 +379,7 @@ export default function TokenSaleDetails() {
                 : "text-white/60 hover:text-white"
                 }`}
             >
-              Chat
+              Posts
             </button>
             <button
               onClick={() => setActiveTab(TAB_TRANSACTIONS)}
@@ -391,16 +402,36 @@ export default function TokenSaleDetails() {
           </div>
 
           {/* Tab Content */}
-          <div className="p-0 md:p-1">
+          <div className={`p-0 md:p-1 ${isMobile ? 'mb-24 pb-4' : ''}`}>
             {isMobile && activeTab === TAB_DETAILS && (
               <div className="space-y-4">
                 <TokenSummary
                   token={{ ...token, decimals: String(token.decimals ?? '') as any }}
                 />
+                {/* Quali.chat CTA visible on mobile Info tab */}
+                <TokenChat
+                  token={{
+                    name: String(token.name || token.symbol || ''),
+                    address: String((token as any).sale_address || (token as any).address || (token as any).token_address || ''),
+                  }}
+                  mode="ctaOnly"
+                />
               </div>
             )}
 
-            {activeTab === TAB_CHAT && <CommentsList token={token} />}
+            {activeTab === TAB_CHAT && (
+              <div className="grid gap-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="m-0 text-white/90 font-semibold">Posts for #{String(token.name || token.symbol || '').toUpperCase()}</h3>
+                </div>
+                <TokenTopicComposer tokenName={(token.name || token.symbol || '').toString()} />
+                <TokenTopicFeed
+                  topicName={`#${String(token.name || token.symbol || '').toLowerCase()}`}
+                  displayTokenName={(token.name || token.symbol || '').toString()}
+                  showEmptyMessage={false}
+                />
+              </div>
+            )}
 
             {activeTab === TAB_TRANSACTIONS && (
               <TokenTrades token={token} />

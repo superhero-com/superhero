@@ -90,6 +90,10 @@
   color: #ffffff !important;
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
   animation: fadeUp 0.9s ease both 0.05s;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .banner-lede {

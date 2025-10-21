@@ -104,7 +104,19 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
         <div className="text-white/60 text-sm">Be the first to speak about {displayTag}.</div>
       )}
       {(sortedPosts.length > 0 ? sortedPosts : (altPosts.length > 0 ? altPosts : fallbackPosts)).map((item: any) => (
-        <ReplyToFeedItem key={item.id} item={item} commentCount={item.total_comments ?? 0} onOpenPost={() => { /* caller sets navigation */ }} />
+        <ReplyToFeedItem
+          key={item.id}
+          item={item}
+          commentCount={item.total_comments ?? 0}
+          onOpenPost={(id: string) => {
+            try {
+              const cleanId = String(id || item.id).replace(/_v3$/, "");
+              window.location.assign(`/post/${cleanId}`);
+            } catch {
+              // no-op
+            }
+          }}
+        />
       ))}
       <div className="text-center mt-1.5">
         <AeButton onClick={() => { refetch(); if (sortedPosts.length === 0) { refetchOriginal(); refetchFallback(); } }} disabled={isFetching || isFetchingOriginal || isFetchingFallback} loading={isFetching || isFetchingOriginal || isFetchingFallback} variant="ghost" size="medium" className="min-w-24">

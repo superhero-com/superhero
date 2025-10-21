@@ -185,13 +185,8 @@ export default function PostForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Enforce required hashtag: auto-append at end if missing
-    let next = text;
-    if (requiredHashtag && requiredMissing) {
-      const separator = next.length > 0 && !/\s$/.test(next) ? ' ' : '';
-      next = `${next}${separator}${requiredHashtag}`;
-    }
-    const trimmed = next.trim();
+    // Do not auto-append the required hashtag; the Post button is disabled until present
+    const trimmed = text.trim();
     if (!trimmed) return;
     if (!activeAccount) return;
 
@@ -221,7 +216,7 @@ export default function PostForm({
         try {
           const created = await PostsService.getById({ id: `${decodedResult}_v3` });
           // Optimistically prepend the new post to the topic feed cache so it appears immediately
-          if (requiredHashtag) {
+          if (requiredHashtag && !requiredMissing) {
             const topicKey = ["topic-by-name", (requiredHashtag || '').toLowerCase()];
             queryClient.setQueryData(topicKey, (old: any) => {
               const prevPosts = Array.isArray(old?.posts) ? old.posts : [];

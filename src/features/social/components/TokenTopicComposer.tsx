@@ -10,7 +10,7 @@ export default function TokenTopicComposer({ tokenName, isReply = false, postId,
   // Fetch topic to know if there are existing posts; if not found (404), treat as empty
   const { data } = useQuery({
     queryKey: ["topic-by-name", canonical],
-    queryFn: () => TrendminerApi.getTopicByName(canonical) as Promise<any>,
+    queryFn: () => TrendminerApi.getTopicByName(String(tokenName || '')) as Promise<any>,
     retry: 1,
   });
   const noPosts = !(Array.isArray((data as any)?.posts) && (data as any).posts.length > 0);

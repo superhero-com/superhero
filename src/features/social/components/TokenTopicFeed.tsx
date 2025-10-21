@@ -16,7 +16,7 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["topic-by-name", lookup],
-    queryFn: () => TrendminerApi.getTopicByName(lookup) as Promise<any>,
+    queryFn: () => TrendminerApi.getTopicByName(baseName) as Promise<any>,
     refetchInterval: 120 * 1000,
   });
 
@@ -34,7 +34,7 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
   const { data: dataOriginal, isFetching: isFetchingOriginal, refetch: refetchOriginal } = useQuery({
     queryKey: ["topic-by-name-original", lookupOriginal],
     enabled: sortedPosts.length === 0,
-    queryFn: () => TrendminerApi.getTopicByName(lookupOriginal) as Promise<any>,
+    queryFn: () => TrendminerApi.getTopicByName(baseName) as Promise<any>,
     refetchInterval: 120 * 1000,
   });
   const altPosts: any[] = useMemo(() => {

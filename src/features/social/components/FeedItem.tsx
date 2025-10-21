@@ -12,6 +12,7 @@ import { useWallet } from "../../../hooks";
 import { relativeTime, compactTime, fullTimestamp } from "../../../utils/time";
 import { CONFIG } from "../../../config";
 import BlockchainInfoPopover from "./BlockchainInfoPopover";
+import AspectMedia from "@/components/AspectMedia";
 
 interface FeedItemProps {
   item: PostDto;
@@ -237,51 +238,9 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
               
               // For single media, try to parse intrinsic width/height embedded in URL hash (w,h)
               // Example: https://...gif#w=480&h=270
-              const renderSingle = (url: string) => {
-                let widthAttr: number | undefined;
-                let heightAttr: number | undefined;
-                try {
-                  const u = new URL(url);
-                  if (u.hash && u.hash.length > 1) {
-                    const params = new URLSearchParams(u.hash.slice(1));
-                    const w = Number(params.get("w") || "");
-                    const h = Number(params.get("h") || "");
-                    if (w > 0 && h > 0) {
-                      widthAttr = w;
-                      heightAttr = h;
-                    }
-                  }
-                } catch {}
-
-                // If we have width/height, set them to preserve ratio and use CSS to fit width
-                if (widthAttr && heightAttr) {
-                  const ratio = `${widthAttr} / ${heightAttr}`;
-                  return (
-                    <div className="w-full rounded overflow-hidden" style={{ aspectRatio: ratio }}>
-                      <img
-                        src={url}
-                        alt="media"
-                        width={widthAttr}
-                        height={heightAttr}
-                        className="w-full h-full object-cover rounded"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </div>
-                  );
-                }
-
-                // Fallback: natural sizing with max height guard
-                return (
-                  <img
-                    src={url}
-                    alt="media"
-                    className="w-full rounded transition-transform hover:scale-105 max-h-[500px]"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                );
-              };
+              const renderSingle = (url: string) => (
+                <AspectMedia src={url} alt="media" />
+              );
 
               return (
                 <div
@@ -296,14 +255,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
                     filteredMedia.length === 1 ? (
                       <div key={`${postId}-${index}`}>{renderSingle(m)}</div>
                     ) : (
-                      <img
-                        key={`${postId}-${index}`}
-                        src={m}
-                        alt="media"
-                        className="w-full rounded transition-transform hover:scale-105 h-36 object-cover"
-                        loading="lazy"
-                        decoding="async"
-                      />
+                      <AspectMedia key={`${postId}-${index}`} src={m} alt="media" maxHeight={200} />
                     )
                   ))}
                 </div>

@@ -1,0 +1,76 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+
+interface AspectMediaProps {
+  src: string;
+  alt?: string;
+  className?: string;
+  maxHeight?: string | number; // e.g. "70vh" or 500
+}
+
+// Renders media preserving its intrinsic aspect ratio.
+// - Parses optional w/h from URL hash (e.g. #w=480&h=270)
+// - Falls back to natural dimensions on load
+export function AspectMedia({ src, alt = "media", className = "", maxHeight = "70vh" }: AspectMediaProps) {
+  const [dims, setDims] = useState<{ w: number; h: number } | null>(() => {
+    try {
+      const u = new URL(src);
+      if (u.hash.length > 1) {
+        const params = new URLSearchParams(u.hash.slice(1));
+        const w = Number(params.get("w") || "");
+        const h = Number(params.get("h") || "");
+        if (w > 0 && h > 0) return { w, h };
+      }
+    } catch {
+      // ignore
+    }
+    return null;
+  });
+
+  const isVideo = /\.(mp4|webm|mov)$/i.test(src);
+  const ratioStyle = useMemo(() => {
+    if (!dims) return undefined;
+    return { aspectRatio: `${dims.w} / ${dims.h}`, maxHeight } as React.CSSProperties;
+  }, [dims, maxHeight]);
+
+  const mediaRef = useRef<HTMLImageElement | HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    if (dims) return; // already have ratio
+
+    const el = mediaRef.current as any;
+    if (!el) return;
+
+    const onLoad = () => {
+      const w = isVideo ? el.videoWidth : el.naturalWidth;
+      const h = isVideo ? el.videoHeight : el.naturalHeight;
+      if (w > 0 && h > 0) setDims({ w, h });
+    };
+
+    if (isVideo) {
+      el.addEventListener("loadedmetadata", onLoad, { once: true });
+    } else {
+      if (el.complete) onLoad();
+      else el.addEventListener("load", onLoad, { once: true });
+    }
+
+    return () => {
+      if (isVideo) el.removeEventListener("loadedmetadata", onLoad);
+      else el.removeEventListener("load", onLoad);
+    };
+  }, [src, isVideo, dims]);
+
+  // Wrapper ensures height is computed from width based on aspect ratio
+  return (
+    <div className={`w-full overflow-hidden rounded ${className}`} style={ratioStyle}>
+      {isVideo ? (
+        <video ref={mediaRef as any} src={src} controls className="w-full h-full object-contain block" />
+      ) : (
+        <img ref={mediaRef as any} src={src} alt={alt} className="w-full h-full object-contain block" />
+      )}
+    </div>
+  );
+}
+
+export default AspectMedia;
+
+

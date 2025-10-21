@@ -13,6 +13,7 @@ import PostTipButton from "./PostTipButton";
 import { MessageCircle } from "lucide-react";
 import { useWallet } from "../../../hooks";
 import { relativeTime, compactTime, fullTimestamp } from "../../../utils/time";
+import AspectMedia from "@/components/AspectMedia";
 import { CONFIG } from "../../../config";
 
 interface ReplyToFeedItemProps {
@@ -253,14 +254,11 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
               )}
             >
               {media.slice(0, 4).map((m: string, index: number) => (
-                <img
-                  key={`${postId}-${index}`}
-                  src={m}
-                  alt="media"
-                  className={cn("w-full object-cover rounded transition-transform hover:scale-[1.02]", media.length === 1 ? "h-60" : "h-36")}
-                  loading="lazy"
-                  decoding="async"
-                />
+                media.length === 1 ? (
+                  <AspectMedia key={`${postId}-${index}`} src={m} alt="media" />
+                ) : (
+                  <AspectMedia key={`${postId}-${index}`} src={m} alt="media" maxHeight={200} />
+                )
               ))}
             </div>
           )}

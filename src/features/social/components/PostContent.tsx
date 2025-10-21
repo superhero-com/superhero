@@ -3,6 +3,7 @@ import { Backend } from '../../../api/backend';
 import { cn } from '@/lib/utils';
 import { linkify, formatUrl, truncateEnd } from '../../../utils/linkify';
 import { useWallet } from '../../../hooks';
+import AspectMedia from '@/components/AspectMedia';
 
 interface PostContentProps {
   post: any; // Using any for now since the old Backend API structure is different from PostDto
@@ -71,16 +72,11 @@ const PostContent = memo(({ post }: PostContentProps) => {
         post.media.length >= 3 && "grid-cols-2"
       )}>
         {post.media.slice(0, 4).map((m: string, index: number) => (
-          <img 
-            key={m} 
-            src={m} 
-            alt="media" 
-            className={cn(
-              "w-full object-cover rounded-lg transition-transform hover:scale-105",
-              post.media.length === 1 ? "h-64" : "h-32"
-            )}
-            loading="lazy"
-          />
+          post.media.length === 1 ? (
+            <AspectMedia key={m} src={m} alt="media" />
+          ) : (
+            <AspectMedia key={m} src={m} alt="media" maxHeight={200} />
+          )
         ))}
       </div>
     )}

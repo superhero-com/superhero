@@ -108,6 +108,7 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
           key={item.id}
           item={item}
           commentCount={item.total_comments ?? 0}
+          allowInlineRepliesToggle={false}
           onOpenPost={(id: string) => {
             try {
               const cleanId = String(id || item.id).replace(/_v3$/, "");

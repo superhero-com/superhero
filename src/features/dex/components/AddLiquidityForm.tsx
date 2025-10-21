@@ -198,6 +198,27 @@ export default function AddLiquidityForm() {
     };
   }, [tokens, location.search, tokenA, tokenB, selectedTokenA, selectedTokenB, findTokenByAddressOrSymbol, findToken]);
 
+  // Sync tokens from Pool context when a position is selected for adding liquidity
+  useEffect(() => {
+    if (!tokens.length) return;
+    if (currentAction !== "add") return;
+
+    const nextA = selectedTokenA ? findToken(selectedTokenA) : null;
+    const nextB = selectedTokenB ? findToken(selectedTokenB) : null;
+
+    const currentAId = tokenA?.is_ae ? "AE" : tokenA?.address;
+    const currentBId = tokenB?.is_ae ? "AE" : tokenB?.address;
+    const nextAId = nextA?.is_ae ? "AE" : nextA?.address;
+    const nextBId = nextB?.is_ae ? "AE" : nextB?.address;
+
+    if (nextA && nextAId !== currentAId) {
+      setTokenA(nextA);
+    }
+    if (nextB && nextBId !== currentBId) {
+      setTokenB(nextB);
+    }
+  }, [tokens, currentAction, selectedTokenA, selectedTokenB]);
+
   // Update URL parameters when tokens change (after initial load)
   useEffect(() => {
     // Skip URL updates during initial load or when tokens are being set from URL params

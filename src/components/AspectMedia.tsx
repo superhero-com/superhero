@@ -28,15 +28,13 @@ export function AspectMedia({ src, alt = "media", className = "", maxHeight = "7
 
   const isVideo = /\.(mp4|webm|mov)$/i.test(src);
   const ratioStyle = useMemo(() => {
-    if (!dims) return undefined;
+    if (!dims) return { maxHeight } as React.CSSProperties;
     return { aspectRatio: `${dims.w} / ${dims.h}`, maxHeight } as React.CSSProperties;
   }, [dims, maxHeight]);
 
   const mediaRef = useRef<HTMLImageElement | HTMLVideoElement | null>(null);
 
   useEffect(() => {
-    if (dims) return; // already have ratio
-
     const el = mediaRef.current as any;
     if (!el) return;
 
@@ -63,9 +61,19 @@ export function AspectMedia({ src, alt = "media", className = "", maxHeight = "7
   return (
     <div className={`w-full overflow-hidden rounded ${className}`} style={ratioStyle}>
       {isVideo ? (
-        <video ref={mediaRef as any} src={src} controls className="w-full h-full object-contain block" />
+        <video
+          ref={mediaRef as any}
+          src={src}
+          controls
+          className={`w-full ${dims ? "h-full" : "h-auto"} object-contain block`}
+        />
       ) : (
-        <img ref={mediaRef as any} src={src} alt={alt} className="w-full h-full object-contain block" />
+        <img
+          ref={mediaRef as any}
+          src={src}
+          alt={alt}
+          className={`w-full ${dims ? "h-full" : "h-auto"} object-contain block`}
+        />
       )}
     </div>
   );

@@ -32,6 +32,14 @@ export const TrendminerApi = {
     const query = qp.toString();
     return this.fetchJson(`/api/trending-tags${query ? `?${query}` : ''}`);
   },
+  // Topics API helpers
+  // GET /api/topics/name/{name} — expects raw topic (no leading '#')
+  // We accept either form and normalize by stripping a leading '#'.
+  getTopicByName(name: string) {
+    const topic = String(name || '').replace(/^#/, '');
+    const encoded = encodeURIComponent(topic);
+    return this.fetchJson(`/api/topics/name/${encoded}`);
+  },
   // GET /api/tokens?order_by=market_cap&order_direction=DESC
   listTokens(params: { orderBy?: 'name'|'price'|'market_cap'|'created_at'|'holders_count'|'trending_score'; orderDirection?: 'ASC'|'DESC'; collection?: 'all'|'word'|'number'; limit?: number; page?: number; search?: string; ownerAddress?: string; creatorAddress?: string; factoryAddress?: string } = {}) {
     const qp = new URLSearchParams();

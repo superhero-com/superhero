@@ -32,7 +32,7 @@
 .hero-banner__inner {
   max-width: 900px;
   margin: 0 auto;
-  padding: 0 48px;
+  padding: 0 60px;
   display: grid;
   gap: 8px;
   position: relative;
@@ -41,7 +41,7 @@
 
 @media (max-width: 768px) {
   .hero-banner__inner {
-    padding: 0 40px;
+    padding: 0 50px;
   }
 }
 
@@ -469,11 +469,11 @@
 }
 
 .carousel-arrow--prev {
-  left: -12px;
+  left: 12px;
 }
 
 .carousel-arrow--next {
-  right: -12px;
+  right: 12px;
 }
 
 /* Dismiss button */
@@ -663,11 +663,11 @@
   }
 
   .carousel-arrow--prev {
-    left: 4px;
+    left: 8px;
   }
 
   .carousel-arrow--next {
-    right: 4px;
+    right: 8px;
   }
 }
 

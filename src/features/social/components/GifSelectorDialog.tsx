@@ -53,6 +53,9 @@ export function GifSelectorDialog({
           still: images.fixed_width_still.url,
           animated: images.fixed_width.url,
           original: images.original.url,
+          // capture intrinsic dimensions to preserve aspect ratio downstream
+          width: Number(images.original.width),
+          height: Number(images.original.height),
         })),
         totalCount: pagination.total_count,
         nextOffset: pagination.offset + pagination.count,
@@ -92,7 +95,21 @@ export function GifSelectorDialog({
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleGifClick = (gif: any) => {
-    onMediaUrlsChange([...mediaUrls, gif.original]);
+    try {
+      const u = new URL(gif.original);
+      const params = new URLSearchParams();
+      if (gif?.width && gif?.height && Number(gif.width) > 0 && Number(gif.height) > 0) {
+        params.set("w", String(gif.width));
+        params.set("h", String(gif.height));
+      }
+      // store dimensions in the URL hash so media stays a simple string
+      if ([...params.keys()].length > 0) {
+        u.hash = params.toString();
+      }
+      onMediaUrlsChange([...mediaUrls, u.toString()]);
+    } catch {
+      onMediaUrlsChange([...mediaUrls, gif.original]);
+    }
   };
 
   return (
@@ -177,7 +194,7 @@ export function GifSelectorDialog({
                   <img
                     src={result.animated}
                     alt="GIF animated"
-                    className="w-full h-full object-cover hidden group-hover:block"
+                    className="w-full h-full object-contain hidden group-hover:block"
                     loading="lazy"
                   />
                 </div>

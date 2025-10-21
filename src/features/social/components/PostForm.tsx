@@ -1,5 +1,5 @@
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import AeButton from "../../../components/AeButton";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
 import { IconClose, IconGif, IconSmile } from "../../../icons";
@@ -37,6 +37,7 @@ interface PostFormProps {
   showGifInput?: boolean;
   characterLimit?: number;
   minHeight?: string;
+  autoFocus?: boolean;
 }
 
 const DEFAULT_EMOJIS = [
@@ -75,26 +76,41 @@ const PROMPTS: string[] = [
   "Teach us something in 1 line. 🧠",
 ];
 
-export default function PostForm({
-  onClose,
-  onSuccess,
-  className = "",
-  onTextChange,
-  isPost = true,
-  postId,
-  onCommentAdded,
-  placeholder,
-  initialText,
-  requiredHashtag,
-  showMediaFeatures = true,
-  showEmojiPicker = true,
-  showGifInput = true,
-  characterLimit = 280,
-  minHeight = "60px",
-}: PostFormProps) {
+const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) => {
+  const {
+    onClose,
+    onSuccess,
+    className = "",
+    onTextChange,
+    isPost = true,
+    postId,
+    onCommentAdded,
+    placeholder,
+    initialText,
+    requiredHashtag,
+    showMediaFeatures = true,
+    showEmojiPicker = true,
+    showGifInput = true,
+    characterLimit = 280,
+    minHeight = "60px",
+    autoFocus = false,
+  } = props;
   const { sdk } = useAeSdk();
   const { activeAccount, chainNames } = useAccount();
   const queryClient = useQueryClient();
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      // Use setTimeout to ensure focus happens after any ongoing UI updates
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          // On mobile, also scroll into view
+          textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    },
+  }));
 
   const [text, setText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -149,8 +165,8 @@ export default function PostForm({
     const isDesktop = typeof window !== 'undefined' &&
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(min-width: 768px)').matches;
-    if (isDesktop && textareaRef.current) textareaRef.current.focus();
-  }, []);
+    if ((isDesktop || autoFocus) && textareaRef.current) textareaRef.current.focus();
+  }, [autoFocus]);
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -672,6 +688,9 @@ export default function PostForm({
       </div>
     </div>
   );
-}
+});
 
+PostForm.displayName = 'PostForm';
+
+export default PostForm;
 export type { PostFormProps };

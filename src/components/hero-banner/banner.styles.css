@@ -32,7 +32,7 @@
 .hero-banner__inner {
   max-width: 900px;
   margin: 0 auto;
-  padding: 0 52px;
+  padding: 0 40px;
   display: grid;
   gap: 8px;
   position: relative;
@@ -41,7 +41,7 @@
 
 @media (max-width: 768px) {
   .hero-banner__inner {
-    padding: 0 16px;
+    padding: 0;
   }
 }
 

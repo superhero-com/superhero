@@ -89,7 +89,7 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
 
       <div className="relative flex flex-col md:flex-row items-center md:items-start justify-between gap-6 pr-0">
         <div className="text-left max-w-[640px] w-full">
-          <h2 className="text-2xl md:text-4xl font-semibold leading-tight tracking-tight text-white">
+          <h2 className="text-2xl md:text-4xl font-semibold leading-tight tracking-tight text-white" style={{ color: '#fff', WebkitTextFillColor: '#fff', background: 'none', backgroundClip: 'initial', WebkitBackgroundClip: 'initial' }}>
             Your on-chain social realm
           </h2>
           <p className="mt-3 text-sm md:text-base leading-snug text-white/90">
@@ -157,7 +157,7 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
         </div>
 
         <div
-          className="relative w-[280px] sm:w-[320px] md:w-[360px] aspect-square select-none"
+          className="hidden md:block relative w-[280px] sm:w-[320px] md:w-[360px] aspect-square select-none"
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           aria-hidden="true"

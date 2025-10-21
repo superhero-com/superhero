@@ -559,7 +559,7 @@ export default function PostForm({
                       <AeButton
                         type="submit"
                         loading={isSubmitting}
-                        disabled={!text.trim()}
+                        disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
                         className="relative bg-[#1161FE] border-none text-white font-black px-6 py-3 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(0,0,0,0.3)] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none md:min-h-[44px] md:text-base"
                       >
                         {isSubmitting
@@ -619,7 +619,7 @@ export default function PostForm({
                 <AeButton
                   type="submit"
                   loading={isSubmitting}
-                  disabled={!text.trim()}
+                  disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
                   className="relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(0,0,0,0.3)] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
                 >
                   {isSubmitting

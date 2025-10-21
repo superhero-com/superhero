@@ -18,8 +18,8 @@
 
 .hero-banner {
   position: relative;
-  min-height: 620px;
-  padding: clamp(18px, 3vw, 32px);
+  min-height: 380px;
+  padding: clamp(16px, 2vw, 24px);
   display: grid;
   align-items: center;
   overflow: hidden;
@@ -30,10 +30,10 @@
 }
 
 .hero-banner__inner {
-  max-width: 1120px;
+  max-width: 900px;
   margin: 0 auto;
   display: grid;
-  gap: 14px;
+  gap: 8px;
   position: relative;
   z-index: 4;
 }
@@ -75,20 +75,20 @@
 
 /* Typography */
 .banner-h1 {
-  font-size: clamp(28px, 5vw, 56px);
-  line-height: 1.05;
-  margin: 6px 0 2px;
-  letter-spacing: 0.2px;
+  font-size: clamp(20px, 3.5vw, 36px);
+  line-height: 1.1;
+  margin: 4px 0 2px;
+  letter-spacing: 0.1px;
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
   animation: fadeUp 0.9s ease both 0.05s;
 }
 
 .banner-lede {
-  max-width: 64ch;
+  max-width: 60ch;
   color: var(--banner-muted);
-  font-size: clamp(15px, 2.2vw, 20px);
-  line-height: 1.45;
-  margin: 6px 0 6px;
+  font-size: clamp(13px, 1.8vw, 16px);
+  line-height: 1.4;
+  margin: 4px 0 4px;
   animation: fadeUp 0.9s ease both 0.12s;
 }
 
@@ -96,14 +96,14 @@
 .banner-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin: 10px 0 2px;
+  gap: 6px;
+  margin: 6px 0 2px;
   padding: 0;
   list-style: none;
 }
 
 .banner-chip {
-  padding: 10px 14px;
+  padding: 6px 10px;
   border-radius: 999px;
   background: radial-gradient(
       120% 140% at 10% 10%,
@@ -118,10 +118,10 @@
   border: 1px solid var(--banner-stroke);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 11px;
   color: #eaf1ff;
   backdrop-filter: blur(6px);
-  transform: translateY(6px);
+  transform: translateY(4px);
   animation: chipIn 0.6s cubic-bezier(0.2, 0.7, 0.2, 1.1) both;
 }
 
@@ -138,24 +138,25 @@
 /* CTA */
 .banner-cta {
   display: flex;
-  gap: 14px;
-  margin-top: 8px;
+  gap: 10px;
+  margin-top: 6px;
   align-items: center;
   flex-wrap: wrap;
 }
 
 .banner-btn {
-  padding: 14px 26px;
-  border-radius: 14px;
+  padding: 10px 20px;
+  border-radius: 12px;
   font-weight: 800;
-  letter-spacing: 0.2px;
+  font-size: 13px;
+  letter-spacing: 0.1px;
   text-decoration: none;
   position: relative;
   display: inline-block;
   overflow: hidden;
-  transform: translateY(6px);
+  transform: translateY(4px);
   animation: fadeUp 0.8s ease both 0.2s;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   transition: transform 0.1s ease;
 }
 
@@ -191,14 +192,14 @@
 }
 
 .banner-btn:active {
-  transform: translateY(7px) scale(0.995);
+  transform: translateY(5px) scale(0.995);
 }
 
 .banner-micro {
-  margin-top: 14px;
+  margin-top: 8px;
   color: #c9d3ffbb;
-  font-size: 13px;
-  letter-spacing: 0.3px;
+  font-size: 11px;
+  letter-spacing: 0.2px;
 }
 
 /* Space FX */

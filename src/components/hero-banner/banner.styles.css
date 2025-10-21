@@ -242,8 +242,8 @@
   position: absolute;
   right: 6%;
   bottom: 8%;
-  width: 22vmax;
-  height: 22vmax;
+  width: 14vmax;
+  height: 14vmax;
   border-radius: 50%;
   background: radial-gradient(
     circle at 35% 35%,
@@ -252,7 +252,7 @@
     #5c6cff 60%,
     rgba(0, 0, 0, 0) 70%
   );
-  box-shadow: 0 0 60px rgba(122, 92, 255, 0.35);
+  box-shadow: 0 0 40px rgba(122, 92, 255, 0.35);
   filter: saturate(120%);
   animation: planetFloat 18s ease-in-out infinite;
   z-index: 2;
@@ -272,17 +272,17 @@
     rgba(255, 255, 255, 0)
   );
   transform: rotateX(65deg) rotate(20deg);
-  filter: blur(0.6px) drop-shadow(0 0 10px rgba(255, 255, 255, 0.25));
+  filter: blur(0.6px) drop-shadow(0 0 8px rgba(255, 255, 255, 0.25));
 }
 
 .banner-token {
   position: absolute;
-  width: 12px;
-  height: 12px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: radial-gradient(#fff, #7df8ff);
-  box-shadow: 0 0 18px rgba(0, 229, 255, 0.9);
-  transform-origin: 50% calc(50% + 10vmax);
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.9);
+  transform-origin: 50% calc(50% + 6vmax);
   top: 50%;
   left: 50%;
   animation: orbit 10s linear infinite;
@@ -290,13 +290,13 @@
 
 .banner-token.t2 {
   background: radial-gradient(#fff, #ff89d0);
-  box-shadow: 0 0 18px rgba(255, 94, 188, 0.9);
+  box-shadow: 0 0 12px rgba(255, 94, 188, 0.9);
   animation-duration: 14s;
 }
 
 .banner-token.t3 {
   background: radial-gradient(#fff, #7affc9);
-  box-shadow: 0 0 18px rgba(56, 255, 179, 0.9);
+  box-shadow: 0 0 12px rgba(56, 255, 179, 0.9);
   animation-duration: 18s;
 }
 
@@ -325,8 +325,8 @@
 /* Nova bursts */
 .banner-supernova {
   position: absolute;
-  width: 14vmax;
-  height: 14vmax;
+  width: 9vmax;
+  height: 9vmax;
   border-radius: 50%;
   left: 8%;
   top: 12%;
@@ -341,8 +341,8 @@
   top: auto;
   bottom: 12%;
   animation-delay: 6.5s;
-  width: 12vmax;
-  height: 12vmax;
+  width: 7vmax;
+  height: 7vmax;
 }
 
 /* Signal grid (subtle) */
@@ -354,8 +354,8 @@
       transparent 1px
     ),
     linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-  background-size: 60px 60px;
-  opacity: 0.07;
+  background-size: 40px 40px;
+  opacity: 0.06;
   animation: gridMove 26s linear infinite;
 }
 
@@ -364,15 +364,15 @@
   position: absolute;
   top: 12%;
   left: -15%;
-  width: 28vmin;
-  height: 2px;
+  width: 20vmin;
+  height: 1.5px;
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0),
     rgba(255, 255, 255, 0.95),
     rgba(255, 255, 255, 0)
   );
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.9));
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));
   transform: rotate(12deg);
   animation: comet 18s ease-in-out infinite 2s;
   z-index: 2;
@@ -583,7 +583,7 @@
     background-position: 0 0, 0 0;
   }
   to {
-    background-position: 60px 0, 0 60px;
+    background-position: 40px 0, 0 40px;
   }
 }
 

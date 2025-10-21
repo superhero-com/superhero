@@ -14,6 +14,7 @@ import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTra
 import Token24hChange from "../../../components/Trendminer/Token24hChange";
 import TokenHolders from "../../../components/Trendminer/TokenHolders";
 import TokenTrades from "../../../components/Trendminer/TokenTrades";
+import TokenChat from "../../../components/Trendminer/TokenChat";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import {
@@ -245,15 +246,14 @@ export default function TokenSaleDetails() {
                   token={token}
                 />
                 <TokenRanking token={token} />
-                {/* Moved Quali chat CTA into left sidebar (kept simple link) */}
-                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4">
-                  <h4 className="text-white/90 font-semibold mb-2">Community Chat</h4>
-                  <p className="text-white/70 text-sm mb-3">Join token rooms on Quali.chat</p>
-                  {/* We keep the existing CTA logic in TokenChat component; for now provide a generic link */}
-                  <a href={`https://app.quali.chat/`} target="_blank" rel="noopener noreferrer" className="text-[#4ecdc4] underline">
-                    Open Quali.chat ↗
-                  </a>
-                </div>
+                {/* Quali.chat CTA - old design cards */}
+                <TokenChat
+                  token={{
+                    name: String(token.name || token.symbol || ''),
+                    address: String((token as any).sale_address || (token as any).address || (token as any).token_address || ''),
+                  }}
+                  mode="ctaOnly"
+                />
               </>
             )}
           </div>

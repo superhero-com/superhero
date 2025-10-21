@@ -41,7 +41,7 @@
 
 @media (max-width: 768px) {
   .hero-banner__inner {
-    padding: 0 44px;
+    padding: 0 20px;
   }
 }
 
@@ -87,6 +87,7 @@
   line-height: 1.1;
   margin: 4px 0 2px;
   letter-spacing: 0.1px;
+  color: #ffffff;
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
   animation: fadeUp 0.9s ease both 0.05s;
 }
@@ -659,16 +660,52 @@
 
 @media (max-width: 768px) {
   .carousel-arrow {
-    width: 28px;
-    height: 28px;
+    display: none;
   }
 
-  .carousel-arrow--prev {
-    left: 8px;
+  /* Slow down all animations drastically on mobile */
+  .hero-banner {
+    animation-duration: 80s !important;
   }
 
-  .carousel-arrow--next {
-    right: 8px;
+  .banner-stars.near {
+    animation-duration: 200s !important;
+  }
+
+  .banner-stars.far {
+    animation-duration: 300s !important;
+  }
+
+  .banner-planet {
+    animation-duration: 60s !important;
+  }
+
+  .banner-token {
+    animation-duration: 40s !important;
+  }
+
+  .banner-token.t2 {
+    animation-duration: 50s !important;
+  }
+
+  .banner-token.t3 {
+    animation-duration: 60s !important;
+  }
+
+  .banner-aurora {
+    animation-duration: 120s !important;
+  }
+
+  .banner-supernova {
+    animation-duration: 50s !important;
+  }
+
+  .banner-grid {
+    animation-duration: 80s !important;
+  }
+
+  .banner-comet {
+    animation-duration: 60s !important;
   }
 }
 

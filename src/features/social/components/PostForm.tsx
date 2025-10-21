@@ -289,8 +289,27 @@ export default function PostForm({
     return !new RegExp(`(^|\n|\s)${requiredHashtag}(\b|$)`, 'i').test(text);
   }, [text, requiredHashtag]);
 
-  // simple autocomplete: on typing '#', suggest the required hashtag if missing
-  const showAutoComplete = requiredHashtag && requiredMissing && /(^|\s)#$/i.test(text.slice(0, (textareaRef.current?.selectionStart ?? text.length))); 
+  // Inline autocomplete: when typing a hashtag token that matches the start of requiredHashtag,
+  // show only the remaining characters (e.g., "#a" -> suggest "ENS").
+  const caretPosition = textareaRef.current?.selectionStart ?? text.length;
+  const textBeforeCaret = text.slice(0, caretPosition);
+  const activeHashtagMatch = textBeforeCaret.match(/(^|\s)#([a-zA-Z0-9_]*)$/);
+  const typedHashtagBody = activeHashtagMatch ? activeHashtagMatch[2] : '';
+  const requiredLower = (requiredHashtag || '').toLowerCase();
+  const typedLowerWithHash = `#${typedHashtagBody}`.toLowerCase();
+  const matchesRequiredPrefix = requiredHashtag
+    ? requiredLower.startsWith(typedLowerWithHash)
+    : false;
+  const remainingSuggestion = matchesRequiredPrefix
+    ? (requiredHashtag || '').toUpperCase().slice(1 + typedHashtagBody.length)
+    : '';
+  const showAutoComplete = Boolean(
+    requiredHashtag &&
+    requiredMissing &&
+    activeHashtagMatch &&
+    matchesRequiredPrefix &&
+    remainingSuggestion.length > 0
+  );
 
   return (
     <div
@@ -323,8 +342,8 @@ export default function PostForm({
                     if (!requiredHashtag || !showAutoComplete) return;
                     if (e.key === 'Tab' || e.key === 'Enter') {
                       e.preventDefault();
-                      const label = requiredHashtag + ' ';
-                      insertAtCursor(label);
+                      const toInsert = `${remainingSuggestion} `;
+                      insertAtCursor(toInsert);
                     }
                   }}
                   className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pr-14 md:pb-12 md:text-base"
@@ -344,7 +363,7 @@ export default function PostForm({
                       fontSize: '0.95rem',
                     }}
                   >
-                    {(requiredHashtag || '').toUpperCase()}
+                    {remainingSuggestion}
                   </div>
                 )}
 

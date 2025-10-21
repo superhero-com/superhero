@@ -388,7 +388,7 @@ export default function PostForm({
                     }}
                   >
                     <span style={{ color: 'transparent' }}>{textBeforeCaret}</span>
-                    <span style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>{remainingSuggestion}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: overlayComputed.fontWeight as any }}>{remainingSuggestion}</span>
                   </div>
                 )}
 

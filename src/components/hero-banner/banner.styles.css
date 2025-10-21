@@ -668,6 +668,16 @@
     display: none;
   }
 
+  /* Hide chips on mobile */
+  .banner-chips {
+    display: none;
+  }
+
+  /* Increase title font size on mobile */
+  .banner-h1 {
+    font-size: clamp(24px, 5vw, 42px);
+  }
+
   /* Slow down animations moderately on mobile */
   .hero-banner {
     animation-duration: 45s !important;

@@ -44,22 +44,22 @@ export function AspectMedia({ src, alt = "media", className = "", maxHeight = "5
     };
   }, [src, isVideo]);
 
-  // Wrapper sized to image with max-height constraint; border radius applied to image itself
+  // Wrapper sized to image with max-height constraint and rounded corners
   return (
-    <div className={`inline-block max-w-full ${className}`} style={ratioStyle}>
+    <div className={`inline-block max-w-full rounded-xl overflow-hidden ${className}`} style={ratioStyle}>
       {isVideo ? (
         <video
           ref={mediaRef as any}
           src={src}
           controls
-          className="w-full h-full object-contain object-left block rounded"
+          className="w-full h-full object-contain object-left block"
         />
       ) : (
         <img
           ref={mediaRef as any}
           src={src}
           alt={alt}
-          className="w-full h-full object-contain object-left block rounded"
+          className="w-full h-full object-contain object-left block"
         />
       )}
     </div>

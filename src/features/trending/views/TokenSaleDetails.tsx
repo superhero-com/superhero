@@ -420,6 +420,7 @@ export default function TokenSaleDetails() {
                 <TokenTopicFeed
                   topicName={`#${String(token.name || token.symbol || '').toLowerCase()}`}
                   displayTokenName={(token.name || token.symbol || '').toString()}
+                  showEmptyMessage={false}
                 />
               </div>
             )}

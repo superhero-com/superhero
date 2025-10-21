@@ -4,7 +4,7 @@ import ReplyToFeedItem from "./ReplyToFeedItem";
 import AeButton from "../../../components/AeButton";
 import { TrendminerApi } from "../../../api/backend";
 
-export default function TokenTopicFeed({ topicName, showHeader = false, displayTokenName }: { topicName: string; showHeader?: boolean; displayTokenName?: string }) {
+export default function TokenTopicFeed({ topicName, showHeader = false, displayTokenName, showEmptyMessage = false }: { topicName: string; showHeader?: boolean; displayTokenName?: string; showEmptyMessage?: boolean }) {
   const lookup = useMemo(() => `#${String(topicName || '').replace(/^#/, '').toLowerCase()}`, [topicName]);
   const displayTag = useMemo(() => {
     const base = String(displayTokenName || topicName || '').replace(/^#/, '');
@@ -64,7 +64,7 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
           )}
         </div>
       )}
-      {sortedPosts.length === 0 && (
+      {sortedPosts.length === 0 && showEmptyMessage && (
         <div className="text-white/60 text-sm">Be the first to speak about {displayTag}.</div>
       )}
       {sortedPosts.map((item: any) => (

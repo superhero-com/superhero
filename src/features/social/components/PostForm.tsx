@@ -222,9 +222,19 @@ export default function PostForm({
 
       if (isPost) {
         try {
-          await PostsService.getById({
-            id: `${decodedResult}_v3`,
-          });
+          const created = await PostsService.getById({ id: `${decodedResult}_v3` });
+          // Optimistically prepend the new post to the topic feed cache so it appears immediately
+          if (requiredHashtag) {
+            const topicKey = ["topic-by-name", (requiredHashtag || '').toLowerCase()];
+            queryClient.setQueryData(topicKey, (old: any) => {
+              const prevPosts = Array.isArray(old?.posts) ? old.posts : [];
+              return {
+                ...(old || {}),
+                posts: [created as any, ...prevPosts],
+                post_count: typeof old?.post_count === 'number' ? old.post_count + 1 : old?.post_count,
+              };
+            });
+          }
         } catch { }
       } else if (postId) {
         // For replies: optimistically show the new reply immediately
@@ -257,6 +267,12 @@ export default function PostForm({
       setText(initialText || "");
       setMediaUrls([]);
       onSuccess?.();
+      // Also refetch any topic feeds related to this hashtag so other viewers update quickly
+      try {
+        if (requiredHashtag) {
+          queryClient.invalidateQueries({ queryKey: ["topic-by-name"] });
+        }
+      } catch {}
     } finally {
       setIsSubmitting(false);
     }

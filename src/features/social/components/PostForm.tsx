@@ -616,7 +616,7 @@ export default function PostForm({
           <div className="flex items-center justify-center w-full pt-0 -mt-3 md:hidden">
             <div className="flex flex-col items-center justify-center w-full">
             {requiredHashtag && requiredMissing && (
-              <div className="w-full mb-2 flex flex-col items-center justify-center gap-2 text-[12px] text-white/70">
+              <div className="w-full mb-2 flex items-center justify-center gap-2 text-[12px] text-white/70">
                 <span>Post needs to include {(requiredHashtag || '').toUpperCase()}</span>
                 <button
                   type="button"

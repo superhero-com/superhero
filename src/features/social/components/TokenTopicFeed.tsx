@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo } from "react";
+import { Backend } from "../../../api/backend";
 import { useQuery } from "@tanstack/react-query";
 import ReplyToFeedItem from "./ReplyToFeedItem";
 import AeButton from "../../../components/AeButton";
@@ -26,6 +27,27 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
       return bt - at; // newest first
     });
   }, [posts]);
+
+  // Fallback: if Trendminer has no posts for this topic, search the on-chain feed by hashtag
+  const { data: fallbackFeed, refetch: refetchFallback, isFetching: isFetchingFallback } = useQuery({
+    queryKey: ["fallback-feed-hashtag", lookup],
+    enabled: sortedPosts.length === 0,
+    queryFn: async () => {
+      // Page 1, newest first; include posts (v3). Search supports substring match server-side.
+      const res = await Backend.getFeed(1, "new", null, lookup);
+      return res;
+    },
+    refetchInterval: 120 * 1000,
+  });
+
+  const fallbackPosts: any[] = useMemo(() => {
+    if (!fallbackFeed || sortedPosts.length > 0) return [];
+    const regex = new RegExp(`(^|[^A-Za-z0-9_])${lookup.replace(/[#]/g, "#")}([^A-Za-z0-9_]|$)`, "i");
+    const items = Array.isArray((fallbackFeed as any)?.results || (fallbackFeed as any)?.items)
+      ? ((fallbackFeed as any).results || (fallbackFeed as any).items)
+      : [];
+    return items.filter((p: any) => regex.test(String(p?.text || p?.title || "")));
+  }, [fallbackFeed, lookup, sortedPosts.length]);
 
   useEffect(() => {
     // initial refetch safety if needed
@@ -67,11 +89,11 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
       {sortedPosts.length === 0 && showEmptyMessage && (
         <div className="text-white/60 text-sm">Be the first to speak about {displayTag}.</div>
       )}
-      {sortedPosts.map((item: any) => (
+      {(sortedPosts.length > 0 ? sortedPosts : fallbackPosts).map((item: any) => (
         <ReplyToFeedItem key={item.id} item={item} commentCount={item.total_comments ?? 0} onOpenPost={() => { /* caller sets navigation */ }} />
       ))}
       <div className="text-center mt-1.5">
-        <AeButton onClick={() => refetch()} disabled={isFetching} loading={isFetching} variant="ghost" size="medium" className="min-w-24">
+        <AeButton onClick={() => { refetch(); if (sortedPosts.length === 0) refetchFallback(); }} disabled={isFetching || isFetchingFallback} loading={isFetching || isFetchingFallback} variant="ghost" size="medium" className="min-w-24">
           {isFetching ? 'Loading…' : 'Refresh'}
         </AeButton>
       </div>

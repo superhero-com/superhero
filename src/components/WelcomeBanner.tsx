@@ -101,14 +101,14 @@ export default function WelcomeBanner({ className }: WelcomeBannerProps) {
               className="inline-flex items-center rounded-[10px] px-[22px] py-[12px] text-sm font-bold transition-transform duration-100 hover:-translate-y-0.5 focus:outline-none"
               style={{ background: '#fff', color: '#000', textDecoration: 'none' }}
             >
-              <span className="no-gradient-text">Explore Trends</span>
+              <span>Explore Trends</span>
             </Link>
             <Link
               to="/faq"
               className="inline-flex items-center rounded-[10px] px-[22px] py-[12px] text-sm font-bold transition-transform duration-100 hover:-translate-y-0.5 focus:outline-none"
               style={{ background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.45)', textDecoration: 'none' }}
             >
-              <span className="no-gradient-text">Learn more</span>
+              <span>Learn more</span>
             </Link>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">

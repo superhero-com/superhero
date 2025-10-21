@@ -32,10 +32,17 @@
 .hero-banner__inner {
   max-width: 900px;
   margin: 0 auto;
+  padding: 0 48px;
   display: grid;
   gap: 8px;
   position: relative;
   z-index: 4;
+}
+
+@media (max-width: 768px) {
+  .hero-banner__inner {
+    padding: 0 40px;
+  }
 }
 
 /* Brand */
@@ -462,11 +469,11 @@
 }
 
 .carousel-arrow--prev {
-  left: 8px;
+  left: -12px;
 }
 
 .carousel-arrow--next {
-  right: 8px;
+  right: -12px;
 }
 
 /* Dismiss button */
@@ -656,11 +663,11 @@
   }
 
   .carousel-arrow--prev {
-    left: 6px;
+    left: 4px;
   }
 
   .carousel-arrow--next {
-    right: 6px;
+    right: 4px;
   }
 }
 

@@ -41,8 +41,6 @@ export default function BannerContent({
           {secondaryButtonText}
         </Link>
       </div>
-
-      <p className="banner-micro">Popularity game • Information market • Purpose-DAOs</p>
     </div>
   );
 }

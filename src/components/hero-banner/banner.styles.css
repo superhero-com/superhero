@@ -161,8 +161,10 @@
 }
 
 .banner-btn--primary {
-  color: #0c1820;
+  color: #0a1015;
   background: linear-gradient(90deg, #38ffb3, #a0ffd9);
+  font-weight: 900;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .banner-btn--primary::before {
@@ -182,13 +184,15 @@
 }
 
 .banner-btn--ghost {
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  color: var(--banner-text);
-  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 800;
 }
 
 .banner-btn--ghost:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.7);
 }
 
 .banner-btn:active {
@@ -418,8 +422,8 @@
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 50%;
-  width: 48px;
-  height: 48px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -436,11 +440,11 @@
 }
 
 .carousel-arrow--prev {
-  left: 20px;
+  left: 8px;
 }
 
 .carousel-arrow--next {
-  right: 20px;
+  right: 8px;
 }
 
 /* Dismiss button */
@@ -625,16 +629,16 @@
 
 @media (max-width: 768px) {
   .carousel-arrow {
-    width: 40px;
-    height: 40px;
+    width: 28px;
+    height: 28px;
   }
 
   .carousel-arrow--prev {
-    left: 10px;
+    left: 6px;
   }
 
   .carousel-arrow--next {
-    right: 10px;
+    right: 6px;
   }
 }
 

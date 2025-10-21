@@ -10,7 +10,7 @@ import HeroBannerCarousel from "../../../components/hero-banner/HeroBannerCarous
 import Shell from "../../../components/layout/Shell";
 import RightRail from "../../../components/layout/RightRail";
 import { useWallet } from "../../../hooks";
-import CreatePost from "../components/CreatePost";
+import CreatePost, { CreatePostRef } from "../components/CreatePost";
 import SortControls from "../components/SortControls";
 import EmptyState from "../components/EmptyState";
 import ReplyToFeedItem from "../components/ReplyToFeedItem";
@@ -31,6 +31,7 @@ export default function FeedList({
   const { chainNames } = useWallet();
   const queryClient = useQueryClient();
   const ACTIVITY_PAGE_SIZE = 50;
+  const createPostRef = useRef<CreatePostRef>(null);
 
   // Comment counts are now provided directly by the API in post.total_comments
 
@@ -430,12 +431,14 @@ export default function FeedList({
     <div className="w-full">
       {!standalone && (
         <div className="mb-3 md:mb-4">
-          <HeroBannerCarousel />
+          <HeroBannerCarousel 
+            onStartPosting={() => createPostRef.current?.focus()} 
+          />
         </div>
       )}
       {/* Mobile: CreatePost first, then SortControls */}
       <div className="md:hidden">
-        <CreatePost onSuccess={refetch} autoFocus={shouldAutoFocusPost} />
+        <CreatePost ref={createPostRef} onSuccess={refetch} autoFocus={shouldAutoFocusPost} />
         <SortControls
           sortBy={sortBy}
           onSortChange={handleSortChange}
@@ -445,7 +448,7 @@ export default function FeedList({
 
       {/* Desktop: CreatePost first, then SortControls */}
       <div className="hidden md:block">
-        <CreatePost onSuccess={refetch} autoFocus={shouldAutoFocusPost} />
+        <CreatePost ref={createPostRef} onSuccess={refetch} autoFocus={shouldAutoFocusPost} />
         <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
       </div>
 

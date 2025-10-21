@@ -6,7 +6,8 @@ interface BannerContentProps {
   description: string;
   chips: string[];
   primaryButtonText: string;
-  primaryButtonLink: string;
+  primaryButtonLink?: string;
+  primaryButtonOnClick?: () => void;
   secondaryButtonText: string;
   secondaryButtonLink: string;
 }
@@ -17,6 +18,7 @@ export default function BannerContent({
   chips,
   primaryButtonText,
   primaryButtonLink,
+  primaryButtonOnClick,
   secondaryButtonText,
   secondaryButtonLink,
 }: BannerContentProps) {
@@ -48,9 +50,15 @@ export default function BannerContent({
       </ul>
 
       <div className="banner-cta">
-        <Link to={primaryButtonLink} className="banner-btn banner-btn--primary">
-          {primaryButtonText}
-        </Link>
+        {primaryButtonOnClick ? (
+          <button onClick={primaryButtonOnClick} className="banner-btn banner-btn--primary">
+            {primaryButtonText}
+          </button>
+        ) : (
+          <Link to={primaryButtonLink || "#"} className="banner-btn banner-btn--primary">
+            {primaryButtonText}
+          </Link>
+        )}
         <Link to={secondaryButtonLink} className="banner-btn banner-btn--ghost">
           {secondaryButtonText}
         </Link>

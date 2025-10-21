@@ -10,7 +10,11 @@ import "./banner.styles.css";
 
 const DISMISS_KEY = "hero_banner_dismissed_until";
 
-export default function HeroBannerCarousel() {
+interface HeroBannerCarouselProps {
+  onStartPosting?: () => void;
+}
+
+export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouselProps = {}) {
   const [hidden, setHidden] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -106,7 +110,7 @@ export default function HeroBannerCarousel() {
         <div className="overflow-hidden" ref={emblaRef}>
           <div className="flex">
             <div className="flex-[0_0_100%] min-w-0">
-              <BannerA />
+              <BannerA onStartPosting={onStartPosting} />
             </div>
             <div className="flex-[0_0_100%] min-w-0">
               <BannerB />

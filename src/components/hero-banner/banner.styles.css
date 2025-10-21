@@ -152,19 +152,20 @@
   letter-spacing: 0.1px;
   text-decoration: none;
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  transform: translateY(4px);
-  animation: fadeUp 0.8s ease both 0.2s;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  transition: transform 0.1s ease;
+  transition: all 0.2s ease;
+  opacity: 1;
 }
 
 .banner-btn--primary {
-  color: #0a1015;
+  color: #0d1f28 !important;
   background: linear-gradient(90deg, #38ffb3, #a0ffd9);
   font-weight: 900;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .banner-btn--primary::before {
@@ -184,19 +185,21 @@
 }
 
 .banner-btn--ghost {
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.08);
   font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .banner-btn--ghost:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: translateY(-1px);
 }
 
 .banner-btn:active {
-  transform: translateY(5px) scale(0.995);
+  transform: scale(0.98);
 }
 
 .banner-micro {

@@ -1,0 +1,639 @@
+/* Hero Banner Carousel Styles */
+:root {
+  --banner-text: #f5f6fa;
+  --banner-muted: #cbd2ff;
+  --banner-cy: #00e5ff;
+  --banner-gr: #38ffb3;
+  --banner-mg: #ff5ebc;
+  --banner-pu: #7a5cff;
+  --banner-glass: rgba(255, 255, 255, 0.08);
+  --banner-stroke: rgba(255, 255, 255, 0.18);
+}
+
+.hero-banner-carousel {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.hero-banner {
+  position: relative;
+  min-height: 620px;
+  padding: clamp(18px, 3vw, 32px);
+  display: grid;
+  align-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  background-size: 100% 100%, 100% 100%, 220% 220%;
+  animation: bgShift 26s ease-in-out infinite;
+  border-radius: 18px;
+}
+
+.hero-banner__inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: grid;
+  gap: 14px;
+  position: relative;
+  z-index: 4;
+}
+
+/* Brand */
+.banner-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.banner-diamond {
+  width: 26px;
+  height: 26px;
+  transform: rotate(45deg);
+  background: linear-gradient(180deg, var(--banner-cy), #7df8ff);
+  border-radius: 6px;
+  box-shadow: 0 0 22px rgba(0, 229, 255, 0.55),
+    inset 0 -6px 22px rgba(0, 0, 0, 0.4);
+  animation: float 6s ease-in-out infinite;
+}
+
+.banner-beta {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #d7deff;
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--banner-stroke);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.09),
+    rgba(255, 255, 255, 0.03)
+  );
+}
+
+/* Typography */
+.banner-h1 {
+  font-size: clamp(28px, 5vw, 56px);
+  line-height: 1.05;
+  margin: 6px 0 2px;
+  letter-spacing: 0.2px;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+  animation: fadeUp 0.9s ease both 0.05s;
+}
+
+.banner-lede {
+  max-width: 64ch;
+  color: var(--banner-muted);
+  font-size: clamp(15px, 2.2vw, 20px);
+  line-height: 1.45;
+  margin: 6px 0 6px;
+  animation: fadeUp 0.9s ease both 0.12s;
+}
+
+/* Chips */
+.banner-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0 2px;
+  padding: 0;
+  list-style: none;
+}
+
+.banner-chip {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: radial-gradient(
+      120% 140% at 10% 10%,
+      rgba(255, 255, 255, 0.18),
+      rgba(255, 255, 255, 0.06)
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0.02)
+    );
+  border: 1px solid var(--banner-stroke);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  font-weight: 700;
+  font-size: 14px;
+  color: #eaf1ff;
+  backdrop-filter: blur(6px);
+  transform: translateY(6px);
+  animation: chipIn 0.6s cubic-bezier(0.2, 0.7, 0.2, 1.1) both;
+}
+
+.banner-chip:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.banner-chip:nth-child(3) {
+  animation-delay: 0.16s;
+}
+.banner-chip:nth-child(4) {
+  animation-delay: 0.24s;
+}
+
+/* CTA */
+.banner-cta {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.banner-btn {
+  padding: 14px 26px;
+  border-radius: 14px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  transform: translateY(6px);
+  animation: fadeUp 0.8s ease both 0.2s;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  transition: transform 0.1s ease;
+}
+
+.banner-btn--primary {
+  color: #0c1820;
+  background: linear-gradient(90deg, #38ffb3, #a0ffd9);
+}
+
+.banner-btn--primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.38),
+    rgba(255, 255, 255, 0)
+  );
+  mix-blend-mode: screen;
+  transform: translateX(-120%);
+  animation: shine 3.5s ease-in-out infinite 0.6s;
+  pointer-events: none;
+}
+
+.banner-btn--ghost {
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  color: var(--banner-text);
+  background: transparent;
+}
+
+.banner-btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.banner-btn:active {
+  transform: translateY(7px) scale(0.995);
+}
+
+.banner-micro {
+  margin-top: 14px;
+  color: #c9d3ffbb;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+}
+
+/* Space FX */
+.banner-space {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.banner-stars {
+  position: absolute;
+  inset: -2% -2% 0 -2%;
+  width: 104%;
+  height: 104%;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.25));
+}
+
+.banner-twinkle > circle {
+  fill: #fff;
+  animation: twinkle 7s ease-in-out infinite alternate;
+}
+
+.banner-stars.near {
+  opacity: 0.9;
+  animation: driftX 65s linear infinite;
+  transform: translateX(0);
+}
+
+.banner-stars.far {
+  opacity: 0.55;
+  animation: driftX 120s linear infinite;
+  transform: translateX(0);
+}
+
+/* Planet with ring + orbiting tokens */
+.banner-planet {
+  position: absolute;
+  right: 6%;
+  bottom: 8%;
+  width: 22vmax;
+  height: 22vmax;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 35%,
+    #ffffff,
+    #a6b3ff,
+    #5c6cff 60%,
+    rgba(0, 0, 0, 0) 70%
+  );
+  box-shadow: 0 0 60px rgba(122, 92, 255, 0.35);
+  filter: saturate(120%);
+  animation: planetFloat 18s ease-in-out infinite;
+  z-index: 2;
+}
+
+.banner-ring {
+  position: absolute;
+  inset: -8% -12%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.35),
+    rgba(255, 255, 255, 0) 35%,
+    rgba(255, 255, 255, 0) 65%,
+    rgba(255, 255, 255, 0.35),
+    rgba(255, 255, 255, 0)
+  );
+  transform: rotateX(65deg) rotate(20deg);
+  filter: blur(0.6px) drop-shadow(0 0 10px rgba(255, 255, 255, 0.25));
+}
+
+.banner-token {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(#fff, #7df8ff);
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.9);
+  transform-origin: 50% calc(50% + 10vmax);
+  top: 50%;
+  left: 50%;
+  animation: orbit 10s linear infinite;
+}
+
+.banner-token.t2 {
+  background: radial-gradient(#fff, #ff89d0);
+  box-shadow: 0 0 18px rgba(255, 94, 188, 0.9);
+  animation-duration: 14s;
+}
+
+.banner-token.t3 {
+  background: radial-gradient(#fff, #7affc9);
+  box-shadow: 0 0 18px rgba(56, 255, 179, 0.9);
+  animation-duration: 18s;
+}
+
+/* Aurora ribbon */
+.banner-aurora {
+  position: absolute;
+  left: -20%;
+  top: -10%;
+  width: 160%;
+  height: 160%;
+  background: conic-gradient(
+    from 180deg,
+    rgba(0, 229, 255, 0),
+    rgba(0, 229, 255, 0.25),
+    rgba(122, 92, 255, 0.22),
+    rgba(255, 94, 188, 0.25),
+    rgba(56, 255, 179, 0.25),
+    rgba(0, 229, 255, 0)
+  );
+  filter: blur(60px) saturate(140%);
+  animation: aurora 40s linear infinite;
+  opacity: 0.6;
+  z-index: 2;
+}
+
+/* Nova bursts */
+.banner-supernova {
+  position: absolute;
+  width: 14vmax;
+  height: 14vmax;
+  border-radius: 50%;
+  left: 8%;
+  top: 12%;
+  animation: nova 14s ease-in-out infinite;
+  mix-blend-mode: screen;
+  z-index: 2;
+}
+
+.banner-supernova--2 {
+  left: auto;
+  right: 10%;
+  top: auto;
+  bottom: 12%;
+  animation-delay: 6.5s;
+  width: 12vmax;
+  height: 12vmax;
+}
+
+/* Signal grid (subtle) */
+.banner-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+      rgba(255, 255, 255, 0.06) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.07;
+  animation: gridMove 26s linear infinite;
+}
+
+/* Comet sweep */
+.banner-comet {
+  position: absolute;
+  top: 12%;
+  left: -15%;
+  width: 28vmin;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 255, 255, 0)
+  );
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.9));
+  transform: rotate(12deg);
+  animation: comet 18s ease-in-out infinite 2s;
+  z-index: 2;
+}
+
+/* Carousel Controls */
+.carousel-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.carousel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.carousel-dot:hover {
+  background: rgba(255, 255, 255, 0.5);
+  transform: scale(1.2);
+}
+
+.carousel-dot.active {
+  background: rgba(255, 255, 255, 0.9);
+  width: 24px;
+  border-radius: 5px;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+  color: white;
+  backdrop-filter: blur(10px);
+}
+
+.carousel-arrow:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-arrow--prev {
+  left: 20px;
+}
+
+.carousel-arrow--next {
+  right: 20px;
+}
+
+/* Dismiss button */
+.banner-dismiss {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  z-index: 10;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.banner-dismiss:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+/* Animations */
+@keyframes bgShift {
+  0% {
+    background-position: 0% 0%, 0% 0%, 0% 50%;
+  }
+  50% {
+    background-position: 0% 0%, 0% 0%, 100% 50%;
+  }
+  100% {
+    background-position: 0% 0%, 0% 0%, 0% 50%;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: rotate(45deg) translateY(0);
+  }
+  50% {
+    transform: rotate(45deg) translateY(-6px);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes chipIn {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(6px) scale(1);
+  }
+}
+
+@keyframes shine {
+  to {
+    transform: translateX(140%);
+  }
+}
+
+@keyframes twinkle {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes driftX {
+  from {
+    transform: translateX(-2%);
+  }
+  to {
+    transform: translateX(2%);
+  }
+}
+
+@keyframes aurora {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes planetFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes nova {
+  0%,
+  70% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  75% {
+    transform: scale(1);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes gridMove {
+  from {
+    background-position: 0 0, 0 0;
+  }
+  to {
+    background-position: 60px 0, 0 60px;
+  }
+}
+
+@keyframes comet {
+  0% {
+    transform: translateX(0) rotate(12deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  20% {
+    transform: translateX(130%) rotate(12deg);
+    opacity: 0.2;
+  }
+  25% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-banner,
+  .banner-diamond,
+  .banner-chip,
+  .banner-btn,
+  .banner-stars,
+  .banner-aurora,
+  .banner-supernova,
+  .banner-comet,
+  .banner-planet,
+  .banner-grid,
+  .banner-token {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel-arrow {
+    width: 40px;
+    height: 40px;
+  }
+
+  .carousel-arrow--prev {
+    left: 10px;
+  }
+
+  .carousel-arrow--next {
+    right: 10px;
+  }
+}
+

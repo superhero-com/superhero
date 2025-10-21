@@ -138,6 +138,23 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
           </div>
         </div>
       </div>
+      {/* Send Feedback button (very bottom) */}
+      <div className={`max-w-[min(1400px,100%)] mx-auto ${compact ? 'px-3' : 'px-4'} mt-3 flex ${compact ? 'justify-center' : 'justify-end'} md:justify-center md:px-4 sm:px-3`}>
+        <a
+          href="https://github.com/superhero-com/superhero/issues"
+          target="_blank"
+          rel="noreferrer"
+          className="no-underline inline-flex items-center gap-2 text-white font-semibold rounded-full px-4 py-2 shadow-[0_8px_20px_rgba(98,0,238,0.35)] transition-all duration-200 hover:translate-y-[-1px] active:translate-y-0 focus:outline-none"
+          style={{
+            background: 'linear-gradient(90deg, #6D5DF6 0%, #8B5CF6 50%, #A855F7 100%)',
+            boxShadow: '0 10px 24px rgba(104, 64, 255, 0.35)'
+          }}
+          aria-label="Send Feedback on GitHub"
+        >
+          <span className="text-lg" aria-hidden="true">💬</span>
+          <span className={`${compact ? 'text-sm' : 'text-base'}`}>Send Feedback</span>
+        </a>
+      </div>
       {/* No BackToTop in footer; it is rendered inside the right rail only */}
     </footer>
   );

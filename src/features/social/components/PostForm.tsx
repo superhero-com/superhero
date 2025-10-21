@@ -187,12 +187,9 @@ export default function PostForm({
     e.preventDefault();
     // Enforce required hashtag: auto-append at end if missing
     let next = text;
-    if (requiredHashtag) {
-      const hasAlready = new RegExp(`(^|\n|\s)${requiredHashtag}(\b|$)`, 'i').test(next);
-      if (!hasAlready) {
-        const separator = next.length > 0 && !/\s$/.test(next) ? ' ' : '';
-        next = `${next}${separator}${requiredHashtag}`;
-      }
+    if (requiredHashtag && requiredMissing) {
+      const separator = next.length > 0 && !/\s$/.test(next) ? ' ' : '';
+      next = `${next}${separator}${requiredHashtag}`;
     }
     const trimmed = next.trim();
     if (!trimmed) return;

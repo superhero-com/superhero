@@ -36,8 +36,6 @@ export default function BannerSlide({
       <div className="hero-banner__inner">
         <div className="banner-brand">
           <span className="banner-diamond" aria-hidden="true" />
-          <span>Superhero</span>
-          <span className="banner-beta">BETA</span>
         </div>
 
         <h1 className="banner-h1">{title}</h1>

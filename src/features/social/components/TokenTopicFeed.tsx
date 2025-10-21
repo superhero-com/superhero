@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import { Backend } from "../../../api/backend";
 import { useQuery } from "@tanstack/react-query";
 import ReplyToFeedItem from "./ReplyToFeedItem";
+import { PostsService } from "../../../api/generated";
 import AeButton from "../../../components/AeButton";
 import { TrendminerApi } from "../../../api/backend";
 
@@ -63,6 +64,19 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
     return items.filter((p: any) => regex.test(String(p?.text || p?.title || "")));
   }, [fallbackFeed, lookup, sortedPosts.length]);
 
+  // Include replies that reference the hashtag in their content or topics
+  const { data: repliesSearch, isFetching: isFetchingReplies } = useQuery({
+    queryKey: ["posts-search-hashtag", lookup],
+    enabled: sortedPosts.length === 0, // only needed when base topic had none
+    queryFn: () => PostsService.listAll({ orderBy: 'created_at', orderDirection: 'DESC', search: lookup }) as unknown as Promise<any>,
+    refetchInterval: 120 * 1000,
+  });
+  const replyMatches: any[] = useMemo(() => {
+    const items = Array.isArray((repliesSearch as any)?.items) ? (repliesSearch as any).items : [];
+    const regex = new RegExp(`(^|[^A-Za-z0-9_])${baseName}(?![A-Za-z0-9_])`, 'i');
+    return items.filter((p: any) => regex.test(String(p?.content || '')));
+  }, [repliesSearch, baseName]);
+
   useEffect(() => {
     // initial refetch safety if needed
   }, [lookup]);
@@ -103,7 +117,11 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
       {sortedPosts.length === 0 && showEmptyMessage && (
         <div className="text-white/60 text-sm">Be the first to speak about {displayTag}.</div>
       )}
-      {(sortedPosts.length > 0 ? sortedPosts : (altPosts.length > 0 ? altPosts : fallbackPosts)).map((item: any) => (
+      {(
+        sortedPosts.length > 0
+          ? sortedPosts
+          : (altPosts.length > 0 ? altPosts : [...replyMatches, ...fallbackPosts])
+        ).map((item: any) => (
         <ReplyToFeedItem
           key={item.id}
           item={item}

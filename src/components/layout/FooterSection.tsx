@@ -146,7 +146,7 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
           rel="noreferrer"
           className="no-underline inline-flex items-center gap-2 font-semibold rounded-full px-4 py-2 transition-all duration-200 hover:translate-y-[-1px] active:translate-y-0 focus:outline-none hover:shadow-[0_10px_24px_rgba(0,0,0,0.25)] focus:shadow-[0_10px_24px_rgba(0,0,0,0.25)]"
           style={{
-            background: 'linear-gradient(135deg, var(--neon-blue) 0%, #6bc5f7 100%)',
+            background: 'linear-gradient(to right, var(--neon-teal), var(--neon-teal), #5eead4)',
             color: '#ffffff',
             WebkitTextFillColor: '#ffffff',
             backgroundClip: 'padding-box',

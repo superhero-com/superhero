@@ -97,7 +97,21 @@
   -webkit-text-fill-color: #ffffff !important;
 }
 
-.mobile-break { display: none; }
+.mobile-break { 
+  display: none; 
+}
+
+/* Add spacing on desktop where mobile break occurs */
+@media (min-width: 769px) {
+  .mobile-break {
+    display: inline;
+    content: " ";
+  }
+  .mobile-break::after {
+    content: " ";
+    white-space: pre;
+  }
+}
 
 .banner-lede {
   max-width: 60ch;
@@ -158,6 +172,14 @@
   margin-top: 6px;
   align-items: center;
   flex-wrap: wrap;
+  /* Override global banner-cta hover */
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.banner-cta:hover {
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .banner-btn {

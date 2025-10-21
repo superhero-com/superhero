@@ -334,9 +334,17 @@ export default function PostForm({
                 />
 
                 {showAutoComplete && (
-                  <div className="absolute top-2 left-3 bg-white/5 border border-white/10 text-white/70 rounded-md px-2 py-1 text-xs select-none">
+                  <div
+                    className="absolute select-none pointer-events-none"
+                    style={{
+                      top: 10, // aligns roughly with textarea top padding
+                      left: 10, // aligns roughly with textarea left padding
+                      color: 'rgba(255,255,255,0.45)',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                    }}
+                  >
                     {(requiredHashtag || '').toUpperCase()}
-                    <span className="ml-2 text-white/50">Tab ↹ / Enter ⏎</span>
                   </div>
                 )}
 

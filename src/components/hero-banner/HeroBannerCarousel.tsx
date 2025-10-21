@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
+import SpaceEffects from "./SpaceEffects";
 import BannerA from "./BannerA";
 import BannerB from "./BannerB";
 import BannerC from "./BannerC";
@@ -92,22 +93,33 @@ export default function HeroBannerCarousel() {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex">
-          <div className="flex-[0_0_100%] min-w-0">
-            <BannerA />
-          </div>
-          <div className="flex-[0_0_100%] min-w-0">
-            <BannerB />
-          </div>
-          <div className="flex-[0_0_100%] min-w-0">
-            <BannerC />
-          </div>
-          <div className="flex-[0_0_100%] min-w-0">
-            <BannerD />
+      <section
+        className="hero-banner"
+        style={{
+          background:
+            "radial-gradient(1100px 520px at 85% -20%, rgba(0,229,255,.24), transparent 60%), radial-gradient(900px 520px at -10% 80%, rgba(0,229,255,.18), transparent 60%), linear-gradient(120deg, #080c1c, #1b0c36, #0d0b28)",
+        }}
+        aria-label="Superhero banner"
+      >
+        <SpaceEffects supernovaColor="rgba(255,94,188,.55)" />
+
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex">
+            <div className="flex-[0_0_100%] min-w-0">
+              <BannerA />
+            </div>
+            <div className="flex-[0_0_100%] min-w-0">
+              <BannerB />
+            </div>
+            <div className="flex-[0_0_100%] min-w-0">
+              <BannerC />
+            </div>
+            <div className="flex-[0_0_100%] min-w-0">
+              <BannerD />
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Dismiss button */}
       <button

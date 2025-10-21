@@ -144,15 +144,14 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
           href="https://github.com/superhero-com/superhero/issues"
           target="_blank"
           rel="noreferrer"
-          className="no-gradient-text no-underline inline-flex items-center gap-2 text-white font-semibold rounded-full px-4 py-2 transition-all duration-200 hover:translate-y-[-1px] active:translate-y-0 focus:outline-none"
+          className="no-underline inline-flex items-center gap-2 text-white font-semibold rounded-full px-4 py-2 transition-all duration-200 hover:translate-y-[-1px] active:translate-y-0 focus:outline-none hover:shadow-[0_10px_24px_rgba(0,0,0,0.25)] focus:shadow-[0_10px_24px_rgba(0,0,0,0.25)]"
           style={{
-            background: 'var(--button-gradient)',
-            boxShadow: 'var(--button-shadow)'
+            background: 'var(--primary-gradient)'
           }}
           aria-label="Send Feedback on GitHub"
         >
-          <span className="text-lg" aria-hidden="true">💬</span>
-          <span className={`${compact ? 'text-sm' : 'text-base'}`}>Send Feedback</span>
+          <span className="no-gradient-text text-lg" aria-hidden="true">💬</span>
+          <span className={`no-gradient-text ${compact ? 'text-sm' : 'text-base'}`}>Send Feedback</span>
         </a>
       </div>
       {/* No BackToTop in footer; it is rendered inside the right rail only */}

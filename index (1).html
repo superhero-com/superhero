@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Superhero – Banner with Text and Neon 3D Coins</title>
+  <style>
+    body{margin:0;font-family:system-ui;background:radial-gradient(circle at 30% 30%,#1a1a2e,#000);color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;}
+    .banner{display:flex;align-items:center;justify-content:space-between;width:90%;max-width:1200px;padding:40px;border-radius:20px;background:linear-gradient(145deg,#1d1836,#0a0a12);box-shadow:0 30px 70px rgba(0,0,0,.45),0 4px 14px rgba(0,0,0,.25);}
+    .text{max-width:55%;}
+    h1{font-size:3.4rem;margin:0 0 14px;}
+    p{color:#bbb;margin:0 0 28px;font-size:1.1rem;line-height:1.4;}
+    .buttons{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:30px;}
+    .btn{padding:12px 22px;border-radius:10px;font-weight:700;text-decoration:none;transition:transform .1s ease;background:#fff;color:#000;}
+    .btn:hover{transform:translateY(-2px);}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.45);color:#fff;}
+
+    .keywords{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+    .tag{display:inline-flex;align-items:center;gap:8px;width:max-content;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.02em;background:rgba(255,255,255,.08);color:#fff;backdrop-filter:blur(6px)}
+    .dot{width:8px;height:8px;border-radius:50%}
+    .dot.blue{background:#66d1ff;box-shadow:0 0 10px #66d1ff}
+    .dot.green{background:#6dff9c;box-shadow:0 0 10px #66ffb3}
+    .dot.orange{background:#ffb566;box-shadow:0 0 10px #ffb566}
+
+    .visual{width:360px;aspect-ratio:1/1;perspective:900px;}
+    .logo3d-wrap{width:100%;height:100%;transform-style:preserve-3d;transition:transform .2s ease-out;}
+  </style>
+</head>
+<body>
+  <section class="banner">
+    <div class="text">
+      <h1>Your on-chain social realm</h1>
+      <p>Where ideas gain value - every post is time‑stamped, communication is transparent, and trends are tokenizable.</p>
+      <div class="buttons">
+        <a href="#" class="btn">Explore Trends</a>
+        <a href="#" class="btn ghost">Learn More</a>
+        <a href="#" class="btn ghost">Manifesto</a>
+      </div>
+      <div class="keywords">
+        <span class="tag"><span class="dot blue"></span> Post</span>
+        <span class="tag"><span class="dot green"></span> Reward</span>
+        <span class="tag"><span class="dot orange"></span> Tokenize</span>
+        <span class="tag"><span class="dot blue"></span> Connect</span>
+        <span class="tag"><span class="dot green"></span> Earn</span>
+      </div>
+    </div>
+
+    <div class="visual" id="visual">
+      <div class="logo3d-wrap" id="logo3dWrap">
+        <svg class="logo3d" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- Neon gradients for 3 coins -->
+            <radialGradient id="turquoise" cx="35%" cy="35%" r="70%">
+              <stop offset="0" stop-color="#a0fff2"/>
+              <stop offset="0.6" stop-color="#00ffd0"/>
+              <stop offset="1" stop-color="#00a37a"/>
+            </radialGradient>
+            <radialGradient id="blue" cx="35%" cy="35%" r="70%">
+              <stop offset="0" stop-color="#c2e8ff"/>
+              <stop offset="0.6" stop-color="#57c7ff"/>
+              <stop offset="1" stop-color="#0077ff"/>
+            </radialGradient>
+            <radialGradient id="purple" cx="35%" cy="35%" r="70%">
+              <stop offset="0" stop-color="#e3c2ff"/>
+              <stop offset="0.6" stop-color="#b057ff"/>
+              <stop offset="1" stop-color="#6200ff"/>
+            </radialGradient>
+            <radialGradient id="shadow" cx="50%" cy="60%" r="70%">
+              <stop offset="0" stop-color="#000" stop-opacity=".45"/>
+              <stop offset="1" stop-color="#000" stop-opacity="0"/>
+            </radialGradient>
+
+            <!-- Stars glow -->
+            <filter id="starGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="b"/>
+              <feMerge>
+                <feMergeNode in="b"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- CENTER SCENE -->
+          <g transform="translate(100,100)">
+            <!-- ORBITING STARS (behind coins) -->
+            <g id="orbit" opacity="0.9">
+              <!-- Star 1: turquoise -->
+              <g transform="rotate(0)">
+                <g transform="translate(70,0)">
+                  <polygon points="0,-6 1.8,-1.8 6,0 1.8,1.8 0,6 -1.8,1.8 -6,0 -1.8,-1.8" fill="#00ffd0" filter="url(#starGlow)"/>
+                </g>
+              </g>
+              <!-- Star 2: light blue -->
+              <g transform="rotate(120)">
+                <g transform="translate(55,0)">
+                  <polygon points="0,-5 1.6,-1.6 5,0 1.6,1.6 0,5 -1.6,1.6 -5,0 -1.6,-1.6" fill="#57c7ff" filter="url(#starGlow)"/>
+                </g>
+              </g>
+              <!-- Star 3: purple -->
+              <g transform="rotate(240)">
+                <g transform="translate(85,0)">
+                  <polygon points="0,-4.5 1.5,-1.5 4.5,0 1.5,1.5 0,4.5 -1.5,1.5 -4.5,0 -1.5,-1.5" fill="#b057ff" filter="url(#starGlow)"/>
+                </g>
+              </g>
+              <!-- spin the whole orbit group -->
+              <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 0 0" to="360 0 0" dur="18s" repeatCount="indefinite"/>
+            </g>
+
+            <!-- COINS (LARGER) -->
+            <g class="coins">
+              <g class="coin" transform="translate(-60,-24)">
+                <ellipse cx="0" cy="24" rx="34" ry="9" fill="#000" opacity=".25"/>
+                <circle cx="0" cy="0" r="34" fill="url(#turquoise)"/>
+                <circle cx="0" cy="0" r="30" fill="none" stroke="#8affec" stroke-width="4"/>
+                <circle cx="-7" cy="-7" r="34" fill="url(#shadow)"/>
+              </g>
+              <g class="coin" transform="translate(0,12)">
+                <ellipse cx="0" cy="24" rx="30" ry="9" fill="#000" opacity=".25"/>
+                <circle cx="0" cy="0" r="30" fill="url(#blue)"/>
+                <circle cx="0" cy="0" r="26" fill="none" stroke="#8ad4ff" stroke-width="4"/>
+                <circle cx="-6" cy="-6" r="30" fill="url(#shadow)"/>
+              </g>
+              <g class="coin" transform="translate(60,0)">
+                <ellipse cx="0" cy="22" rx="26" ry="8" fill="#000" opacity=".25"/>
+                <circle cx="0" cy="0" r="26" fill="url(#purple)"/>
+                <circle cx="0" cy="0" r="22" fill="none" stroke="#d79fff" stroke-width="4"/>
+                <circle cx="-5" cy="-5" r="26" fill="url(#shadow)"/>
+              </g>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const wrap=document.getElementById('logo3dWrap');
+    const maxTilt=14,maxZ=22;
+    function tilt(xr,yr){
+      const rx=(yr-0.5)*-2*maxTilt;
+      const ry=(xr-0.5)* 2*maxTilt;
+      wrap.style.transform=`rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) translateZ(${maxZ}px)`;
+    }
+    document.getElementById('visual').addEventListener('mousemove',e=>{
+      const r=e.currentTarget.getBoundingClientRect();
+      tilt((e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height);
+    });
+    document.getElementById('visual').addEventListener('mouseleave',()=>wrap.style.transform='rotateX(0) rotateY(0)');
+  </script>
+</body>
+</html>

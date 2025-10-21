@@ -139,7 +139,7 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
         </div>
       </div>
       {/* Send Feedback button (very bottom) */}
-      <div className={`max-w-[min(1400px,100%)] mx-auto ${compact ? 'px-3' : 'px-4'} mt-3 flex ${compact ? 'justify-center' : 'justify-end'} md:justify-center md:px-4 sm:px-3`}>
+      <div className={`max-w-[min(1400px,100%)] mx-auto ${compact ? 'px-3' : 'px-4'} mt-6 flex ${compact ? 'justify-center' : 'justify-end'} md:justify-center md:px-4 sm:px-3`}>
         <a
           href="https://github.com/superhero-com/superhero/issues"
           target="_blank"

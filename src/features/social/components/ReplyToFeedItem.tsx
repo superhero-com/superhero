@@ -137,13 +137,14 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
   return (
     <article
       className={cn(
-        "relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 pt-4 pb-5 md:w-full md:mx-0 md:p-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:rounded-2xl md:backdrop-blur-xl transition-colors hover:border-white/25 hover:shadow-none",
+        "relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 pt-4 pb-5 md:w-full md:mx-0 md:p-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:rounded-2xl md:backdrop-blur-xl transition-colors",
+        !isActive && "cursor-pointer hover:border-white/25 hover:shadow-none",
         isActive && "bg-white/[0.06] md:bg-white/[0.08] md:border-white/40",
         isContextMuted && "md:bg-white/[0.03] md:border-white/10"
       )}
-      onClick={handleOpen}
-      role="button"
-      aria-label="Open post"
+      onClick={isActive ? undefined : handleOpen}
+      role={isActive ? undefined : "button"}
+      aria-label={isActive ? undefined : "Open post"}
     >
       {/* Top-right on-chain button */}
       {item.tx_hash && (

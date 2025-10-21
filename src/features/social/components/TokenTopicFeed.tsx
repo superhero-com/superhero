@@ -7,6 +7,7 @@ import AeButton from "../../../components/AeButton";
 import { TrendminerApi } from "../../../api/backend";
 
 export default function TokenTopicFeed({ topicName, showHeader = false, displayTokenName, showEmptyMessage = false }: { topicName: string; showHeader?: boolean; displayTokenName?: string; showEmptyMessage?: boolean }) {
+  const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const baseName = useMemo(() => String(topicName || '').replace(/^#/, ''), [topicName]);
   const lookup = useMemo(() => `#${baseName.toLowerCase()}`, [baseName]);
   const lookupOriginal = useMemo(() => `#${baseName}`, [baseName]);
@@ -57,7 +58,7 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
 
   const fallbackPosts: any[] = useMemo(() => {
     if (!fallbackFeed || sortedPosts.length > 0) return [];
-    const regex = new RegExp(`(^|[^A-Za-z0-9_])${lookup.replace(/[#]/g, "#")}([^A-Za-z0-9_]|$)`, "i");
+    const regex = new RegExp(`(^|[^A-Za-z0-9_])${escapeRegExp(lookup)}([^A-Za-z0-9_]|$)`, "i");
     const items = Array.isArray((fallbackFeed as any)?.results || (fallbackFeed as any)?.items)
       ? ((fallbackFeed as any).results || (fallbackFeed as any).items)
       : [];
@@ -73,7 +74,7 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
   });
   const replyMatches: any[] = useMemo(() => {
     const items = Array.isArray((repliesSearch as any)?.items) ? (repliesSearch as any).items : [];
-    const regex = new RegExp(`(^|[^A-Za-z0-9_])${baseName}(?![A-Za-z0-9_])`, 'i');
+    const regex = new RegExp(`(^|[^A-Za-z0-9_])#?${escapeRegExp(baseName)}(?![A-Za-z0-9_])`, 'i');
     return items.filter((p: any) => regex.test(String(p?.content || '')));
   }, [repliesSearch, baseName]);
 

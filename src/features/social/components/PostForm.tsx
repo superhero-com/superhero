@@ -307,7 +307,7 @@ export default function PostForm({
   const requiredMissing = useMemo(() => {
     if (!requiredHashtag) return false;
     const escaped = String(requiredHashtag).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    // Consider the tag present if appears as a standalone hashtag token anywhere in the text
+    // Consider the tag present if it appears as a standalone hashtag token anywhere in the text
     const pattern = new RegExp(`(^|[^A-Za-z0-9_])${escaped}(?![A-Za-z0-9_])`, 'i');
     return !pattern.test(text);
   }, [text, requiredHashtag]);

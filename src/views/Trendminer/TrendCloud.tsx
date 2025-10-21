@@ -544,7 +544,7 @@ export default function TrendCloud() {
           >
             {filteredTags.map((t) => {
               const token = tagTokenMap[t.tag];
-              const href = token ? `/trends/tokens/${encodeURIComponent(token.name || token.address || t.tag)}` : `/trends/create?new=${encodeURIComponent(t.tag)}`;
+              const href = token ? `/trends/tokens/${encodeURIComponent(token.name || token.address || t.tag)}` : `/trends/create?tokenName=${encodeURIComponent(t.tag)}`;
               let text = t.tag;
               if (textCase === 'upper') text = text.toUpperCase();
               else if (textCase === 'lower') text = text.toLowerCase();
@@ -617,7 +617,7 @@ export default function TrendCloud() {
               className="grid-item"
             >
               <a 
-                href={tagTokenMap[t.tag] ? `/trends/tokens/${encodeURIComponent(tagTokenMap[t.tag].name || tagTokenMap[t.tag].address || t.tag)}` : `/trends/create?new=${encodeURIComponent(t.tag)}`}
+                href={tagTokenMap[t.tag] ? `/trends/tokens/${encodeURIComponent(tagTokenMap[t.tag].name || tagTokenMap[t.tag].address || t.tag)}` : `/trends/create?tokenName=${encodeURIComponent(t.tag)}`}
                 className="grid-link"
               >
                 <div className="grid-title">{t.tag.toUpperCase()}</div>
@@ -654,7 +654,7 @@ export default function TrendCloud() {
               </a>
             ) : (
               <a 
-                href={`/trends/create?new=${encodeURIComponent(selected.tag)}`}
+                href={`/trends/create?tokenName=${encodeURIComponent(selected.tag)}`}
                 className="action-btn primary"
               >
                 Tokenize

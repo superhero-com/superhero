@@ -615,6 +615,31 @@ export default function PostForm({
 
           <div className="flex items-center justify-center w-full pt-0 -mt-3 md:hidden">
             <div className="flex items-center justify-center w-full">
+            {requiredHashtag && requiredMissing && (
+              <div className="absolute -top-7 left-0 right-0 flex items-center justify-center gap-2 text-[12px] text-white/70">
+                <span>Post needs to include {(requiredHashtag || '').toUpperCase()}</span>
+                <button
+                  type="button"
+                  className="px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-colors"
+                  onClick={() => {
+                    const tag = (requiredHashtag || '').toUpperCase();
+                    const needsSpace = text.length > 0 && !/\s$/.test(text);
+                    const next = `${text}${needsSpace ? ' ' : ''}${tag} `;
+                    setText(next);
+                    requestAnimationFrame(() => {
+                      if (textareaRef.current) {
+                        const pos = next.length;
+                        textareaRef.current.focus();
+                        textareaRef.current.setSelectionRange(pos, pos);
+                      }
+                    });
+                  }}
+                  title="Add required hashtag"
+                >
+                  +Add
+                </button>
+              </div>
+            )}
               {activeAccount ? (
                 <AeButton
                   type="submit"

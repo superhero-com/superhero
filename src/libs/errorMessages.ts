@@ -14,16 +14,17 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
   const lc = raw.toLowerCase();
 
   // Enhanced logging for debugging
-  if (process.env.NODE_ENV === 'development') {
-    console.debug('[errorToUserMessage] Processing error:', {
-      raw,
-      lc,
-      context: ctx,
-      errorType: typeof err,
-      errorName: (err as any)?.name,
-      errorCode: (err as any)?.code
-    });
-  }
+  console.log('===============================================')
+  console.log('errorToUserMessage->err::', err)
+  console.debug('[errorToUserMessage] Processing error:', {
+    raw,
+    lc,
+    context: ctx,
+    errorType: typeof err,
+    errorName: (err as any)?.name,
+    errorCode: (err as any)?.code
+  });
+  console.log('===============================================')
 
   // User cancelled in wallet
   if (lc.includes('rejected by user') || lc.includes('user rejected')) {
@@ -72,6 +73,15 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
   }
 
   // Balance / funds
+  // Check for specific ETH balance errors first
+  if (lc.includes('insufficient eth balance')) {
+    const ethMatch = raw.match(/required:\s*([\d.]+)\s*eth/i);
+    if (ethMatch && ethMatch[1]) {
+      return `Insufficient ETH balance. You need at least ${ethMatch[1]} ETH to complete this bridge operation.`;
+    }
+    return 'Insufficient ETH balance to complete this bridge operation.';
+  }
+  
   if (lc.includes('insufficient balance') || lc.includes('insufficient funds') || lc.includes('balance too low')) {
     return 'Not enough balance to complete this operation.';
   }

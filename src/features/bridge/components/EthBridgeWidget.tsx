@@ -170,6 +170,7 @@ export default function BuyAeWidget({
   };
 
   const handleMaxClick = () => {
+    //
     // For demo purposes, set a reasonable max amount
     // In production, you'd want to get the actual ETH balance
     setEthBridgeIn("0.1");
@@ -253,6 +254,9 @@ export default function BuyAeWidget({
             placeholder="0.0"
             value={ethBridgeIn}
             onChange={(e) => setEthBridgeIn(e.target.value)}
+            style={{
+              color: 'white',
+            }}
             className="flex-1 !bg-transparent !bg-none ![background:none] !border-none text-white text-xl sm:text-2xl font-semibold !outline-none focus:!outline-none active:!outline-none !shadow-none ![box-shadow:none] focus:!shadow-none active:!shadow-none !ring-0 focus:!ring-0 active:!ring-0 !backdrop-blur-0 ![backdrop-filter:none] !p-0 !min-h-0 !rounded-none min-w-0 overflow-hidden !appearance-none"
           />
 
@@ -293,9 +297,7 @@ export default function BuyAeWidget({
 
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div
-            className={`flex-1 text-xl sm:text-2xl font-semibold ${
-              ethBridgeQuoting ? "text-white/60" : "text-white"
-            } min-w-0 overflow-hidden`}
+            className={`flex-1 text-xl sm:text-2xl font-base text-white/60 min-w-0 overflow-hidden`}       
           >
             {ethBridgeQuoting ? "Quoting…" : ethBridgeOutAe || "0.0"}
           </div>

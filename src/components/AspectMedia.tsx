@@ -45,7 +45,7 @@ export function AspectMedia({ src, alt = "media", className = "", maxHeight = "7
   }, [src, isVideo]);
 
   // Wrapper ensures height is computed from width based on aspect ratio
-  // Image fills wrapper; since wrapper aspect matches image natural aspect, no cropping occurs
+  // Image uses h-auto to naturally fill the aspect-ratio constrained wrapper without cropping
   return (
     <div className={`w-full overflow-hidden rounded ${className}`} style={ratioStyle}>
       {isVideo ? (
@@ -53,14 +53,14 @@ export function AspectMedia({ src, alt = "media", className = "", maxHeight = "7
           ref={mediaRef as any}
           src={src}
           controls
-          className={dims ? "w-full h-full object-cover block" : "w-full h-auto block"}
+          className="w-full h-auto block"
         />
       ) : (
         <img
           ref={mediaRef as any}
           src={src}
           alt={alt}
-          className={dims ? "w-full h-full object-cover block" : "w-full h-auto block"}
+          className="w-full h-auto block"
         />
       )}
     </div>

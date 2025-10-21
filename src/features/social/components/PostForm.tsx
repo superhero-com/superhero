@@ -107,6 +107,7 @@ export default function PostForm({
   const emojiBtnRef = useRef<HTMLButtonElement>(null);
   const gifBtnRef = useRef<HTMLButtonElement>(null);
   const [overlayComputed, setOverlayComputed] = useState<{ paddingTop: number; paddingRight: number; paddingBottom: number; paddingLeft: number; fontFamily: string; fontSize: string; fontWeight: string; lineHeight: string; letterSpacing: string; } | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     setPromptIndex(Math.floor(Math.random() * PROMPTS.length));
@@ -330,6 +331,25 @@ export default function PostForm({
     remainingSuggestion.length > 0
   );
 
+  // Measure the pixel width of the prefix using canvas to fine-tune horizontal placement
+  const measuredLeft = useMemo(() => {
+    if (!overlayComputed) return 0;
+    const el = textareaRef.current;
+    if (!el) return 0;
+    const canvas = canvasRef.current || (canvasRef.current = document.createElement('canvas'));
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return 0;
+    ctx.font = `${overlayComputed.fontWeight} ${overlayComputed.fontSize} ${overlayComputed.fontFamily}`;
+    // Only measure the current token since last space/newline for stability
+    const prefix = textBeforeCaret.slice(textBeforeCaret.lastIndexOf('\n') + 1);
+    const metrics = ctx.measureText(prefix);
+    const base = metrics.width;
+    // Approximate letterSpacing effect
+    const ls = parseFloat(overlayComputed.letterSpacing as any) || 0;
+    const extra = ls * Math.max(prefix.length - 1, 0);
+    return overlayComputed.paddingLeft + base + extra;
+  }, [overlayComputed, textBeforeCaret]);
+
   return (
     <div
       className={`${isPost ? "w-full max-w-none" : "mx-auto"
@@ -373,22 +393,18 @@ export default function PostForm({
 
                 {showAutoComplete && overlayComputed && (
                   <div
-                    className="absolute inset-0 pointer-events-none select-none"
+                    className="absolute pointer-events-none select-none"
                     style={{
-                      paddingTop: overlayComputed.paddingTop,
-                      paddingRight: overlayComputed.paddingRight,
-                      paddingBottom: overlayComputed.paddingBottom,
-                      paddingLeft: overlayComputed.paddingLeft,
+                      top: overlayComputed.paddingTop,
+                      left: measuredLeft,
                       fontFamily: overlayComputed.fontFamily,
                       fontSize: overlayComputed.fontSize,
                       fontWeight: overlayComputed.fontWeight,
                       lineHeight: overlayComputed.lineHeight,
                       letterSpacing: overlayComputed.letterSpacing,
-                      whiteSpace: 'pre-wrap',
                     }}
                   >
-                    <span style={{ color: 'transparent' }}>{textBeforeCaret}</span>
-                    <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: overlayComputed.fontWeight as any }}>{remainingSuggestion}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>{remainingSuggestion}</span>
                   </div>
                 )}
 

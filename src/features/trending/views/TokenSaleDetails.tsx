@@ -402,7 +402,7 @@ export default function TokenSaleDetails() {
           </div>
 
           {/* Tab Content */}
-          <div className="p-0 md:p-1">
+          <div className={`p-0 md:p-1 ${isMobile ? 'mb-24 pb-4' : ''}`}>
             {isMobile && activeTab === TAB_DETAILS && (
               <div className="space-y-4">
                 <TokenSummary

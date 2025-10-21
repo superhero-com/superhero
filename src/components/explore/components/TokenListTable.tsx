@@ -756,7 +756,7 @@ export function TokenListTable({
                     fontWeight: 500,
                   }}
                 >
-                  <PriceDataFormatter priceData={token.price} bignumber />
+                  <PriceDataFormatter priceData={token.price} />
                 </td>
 
                 {/* 24h Volume Column */}

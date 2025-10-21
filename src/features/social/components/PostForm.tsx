@@ -101,7 +101,14 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
 
   useImperativeHandle(ref, () => ({
     focus: () => {
-      textareaRef.current?.focus();
+      // Use setTimeout to ensure focus happens after any ongoing UI updates
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          // On mobile, also scroll into view
+          textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
     },
   }));
 

@@ -10,7 +10,7 @@ export default function BannerB() {
       primaryButtonText="Launch a #trend"
       primaryButtonLink="/trends/create"
       secondaryButtonText="Explore #trends"
-      secondaryButtonLink="/trending"
+      secondaryButtonLink="/trends/tokens"
     />
   );
 }

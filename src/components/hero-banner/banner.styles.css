@@ -161,11 +161,16 @@
   opacity: 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Override global link styles */
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  -webkit-text-fill-color: unset !important;
+  filter: none !important;
 }
 
 .banner-btn--primary {
   color: #0a1820 !important;
-  background: linear-gradient(90deg, #38ffb3, #a0ffd9);
+  background: linear-gradient(90deg, #38ffb3, #a0ffd9) !important;
   font-weight: 900;
   text-shadow: none;
 }
@@ -189,20 +194,31 @@
 .banner-btn--ghost {
   border: 2px solid rgba(255, 255, 255, 0.7);
   color: #ffffff !important;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.3) !important;
   font-weight: 800;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(8px);
 }
 
+.banner-btn--primary:hover,
 .banner-btn--ghost:hover {
-  background: rgba(255, 255, 255, 0.15);
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+.banner-btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
   border-color: rgba(255, 255, 255, 0.8);
   transform: translateY(-1px);
 }
 
 .banner-btn:active {
-  transform: scale(0.98);
+  transform: scale(0.98) !important;
+}
+
+.banner-btn:hover::after,
+.banner-btn::after {
+  display: none !important;
 }
 
 .banner-micro {

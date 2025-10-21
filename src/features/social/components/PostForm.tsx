@@ -381,8 +381,22 @@ export default function PostForm({
                     if (!requiredHashtag || !showAutoComplete) return;
                     if (e.key === 'Tab' || e.key === 'Enter') {
                       e.preventDefault();
-                      const toInsert = `${remainingSuggestion} `;
-                      insertAtCursor(toInsert);
+                      const el = textareaRef.current;
+                      const caret = el?.selectionStart ?? text.length;
+                      // Compute start index of current hashtag token (including '#')
+                      const tokenStart = caret - (typedHashtagBody.length + 1);
+                      const before = text.slice(0, tokenStart);
+                      const after = text.slice(caret);
+                      const fullUpper = (requiredHashtag || '').toUpperCase();
+                      const nextValue = `${before}${fullUpper} ${after}`;
+                      setText(nextValue);
+                      requestAnimationFrame(() => {
+                        const pos = (before + fullUpper + ' ').length;
+                        if (el) {
+                          el.focus();
+                          el.setSelectionRange(pos, pos);
+                        }
+                      });
                     }
                   }}
                   className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pr-14 md:pb-12 md:text-base"

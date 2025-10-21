@@ -6,7 +6,9 @@ import AeButton from "../../../components/AeButton";
 import { TrendminerApi } from "../../../api/backend";
 
 export default function TokenTopicFeed({ topicName, showHeader = false, displayTokenName, showEmptyMessage = false }: { topicName: string; showHeader?: boolean; displayTokenName?: string; showEmptyMessage?: boolean }) {
-  const lookup = useMemo(() => `#${String(topicName || '').replace(/^#/, '').toLowerCase()}`, [topicName]);
+  const baseName = useMemo(() => String(topicName || '').replace(/^#/, ''), [topicName]);
+  const lookup = useMemo(() => `#${baseName.toLowerCase()}`, [baseName]);
+  const lookupOriginal = useMemo(() => `#${baseName}`, [baseName]);
   const displayTag = useMemo(() => {
     const base = String(displayTokenName || topicName || '').replace(/^#/, '');
     return `#${base ? base.toUpperCase() : ''}`;
@@ -27,6 +29,18 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
       return bt - at; // newest first
     });
   }, [posts]);
+
+  // Alternate casing fallback: try original-cased topic if lowercase is empty
+  const { data: dataOriginal, isFetching: isFetchingOriginal, refetch: refetchOriginal } = useQuery({
+    queryKey: ["topic-by-name-original", lookupOriginal],
+    enabled: sortedPosts.length === 0,
+    queryFn: () => TrendminerApi.getTopicByName(lookupOriginal) as Promise<any>,
+    refetchInterval: 120 * 1000,
+  });
+  const altPosts: any[] = useMemo(() => {
+    const items: any[] = Array.isArray((dataOriginal as any)?.posts) ? (dataOriginal as any).posts : [];
+    return items.slice().sort((a: any, b: any) => new Date(b?.created_at || 0).getTime() - new Date(a?.created_at || 0).getTime());
+  }, [dataOriginal]);
 
   // Fallback: if Trendminer has no posts for this topic, search the on-chain feed by hashtag
   const { data: fallbackFeed, refetch: refetchFallback, isFetching: isFetchingFallback } = useQuery({
@@ -89,11 +103,11 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
       {sortedPosts.length === 0 && showEmptyMessage && (
         <div className="text-white/60 text-sm">Be the first to speak about {displayTag}.</div>
       )}
-      {(sortedPosts.length > 0 ? sortedPosts : fallbackPosts).map((item: any) => (
+      {(sortedPosts.length > 0 ? sortedPosts : (altPosts.length > 0 ? altPosts : fallbackPosts)).map((item: any) => (
         <ReplyToFeedItem key={item.id} item={item} commentCount={item.total_comments ?? 0} onOpenPost={() => { /* caller sets navigation */ }} />
       ))}
       <div className="text-center mt-1.5">
-        <AeButton onClick={() => { refetch(); if (sortedPosts.length === 0) refetchFallback(); }} disabled={isFetching || isFetchingFallback} loading={isFetching || isFetchingFallback} variant="ghost" size="medium" className="min-w-24">
+        <AeButton onClick={() => { refetch(); if (sortedPosts.length === 0) { refetchOriginal(); refetchFallback(); } }} disabled={isFetching || isFetchingOriginal || isFetchingFallback} loading={isFetching || isFetchingOriginal || isFetchingFallback} variant="ghost" size="medium" className="min-w-24">
           {isFetching ? 'Loading…' : 'Refresh'}
         </AeButton>
       </div>

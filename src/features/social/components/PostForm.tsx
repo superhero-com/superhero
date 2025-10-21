@@ -395,7 +395,7 @@ export default function PostForm({
                   <div
                     className="absolute pointer-events-none select-none"
                     style={{
-                      top: overlayComputed.paddingTop - 2,
+                      top: overlayComputed.paddingTop - 1,
                       left: measuredLeft,
                       fontFamily: overlayComputed.fontFamily,
                       fontSize: overlayComputed.fontSize,

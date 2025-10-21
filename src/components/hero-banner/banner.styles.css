@@ -41,7 +41,7 @@
 
 @media (max-width: 768px) {
   .hero-banner__inner {
-    padding: 0 20px;
+    padding: 0 16px;
   }
 }
 
@@ -87,7 +87,7 @@
   line-height: 1.1;
   margin: 4px 0 2px;
   letter-spacing: 0.1px;
-  color: #ffffff;
+  color: #ffffff !important;
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
   animation: fadeUp 0.9s ease both 0.05s;
 }
@@ -663,49 +663,49 @@
     display: none;
   }
 
-  /* Slow down all animations drastically on mobile */
+  /* Slow down animations moderately on mobile */
   .hero-banner {
-    animation-duration: 80s !important;
+    animation-duration: 45s !important;
   }
 
   .banner-stars.near {
-    animation-duration: 200s !important;
+    animation-duration: 100s !important;
   }
 
   .banner-stars.far {
-    animation-duration: 300s !important;
+    animation-duration: 180s !important;
   }
 
   .banner-planet {
-    animation-duration: 60s !important;
+    animation-duration: 30s !important;
   }
 
   .banner-token {
-    animation-duration: 40s !important;
+    animation-duration: 18s !important;
   }
 
   .banner-token.t2 {
-    animation-duration: 50s !important;
+    animation-duration: 24s !important;
   }
 
   .banner-token.t3 {
-    animation-duration: 60s !important;
+    animation-duration: 30s !important;
   }
 
   .banner-aurora {
-    animation-duration: 120s !important;
+    animation-duration: 60s !important;
   }
 
   .banner-supernova {
-    animation-duration: 50s !important;
+    animation-duration: 24s !important;
   }
 
   .banner-grid {
-    animation-duration: 80s !important;
+    animation-duration: 45s !important;
   }
 
   .banner-comet {
-    animation-duration: 60s !important;
+    animation-duration: 30s !important;
   }
 }
 

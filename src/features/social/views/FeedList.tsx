@@ -6,7 +6,7 @@ import type { PostDto } from "../../../api/generated";
 import { TrendminerApi } from "../../../api/backend";
 import WebSocketClient from "../../../libs/WebSocketClient";
 import AeButton from "../../../components/AeButton";
-import WelcomeBanner from "../../../components/WelcomeBanner";
+import HeroBannerCarousel from "../../../components/hero-banner/HeroBannerCarousel";
 import Shell from "../../../components/layout/Shell";
 import RightRail from "../../../components/layout/RightRail";
 import { useWallet } from "../../../hooks";
@@ -429,7 +429,7 @@ export default function FeedList({
     <div className="w-full">
       {!standalone && (
         <div className="mb-3 md:mb-4">
-          <WelcomeBanner />
+          <HeroBannerCarousel />
         </div>
       )}
       {/* Mobile: CreatePost first, then SortControls */}

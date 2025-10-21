@@ -89,11 +89,16 @@ export default function TokenSaleDetails() {
     queryKey: ["TokensService.findByAddress", tokenName],
     queryFn: async () => {
       if (!tokenName) throw new Error("Token name is required");
-      const result = await TokensService.findByAddress({ address: tokenName });
-      if (!result) {
+      try {
+      const result = await TokensService.findByAddress({ address: tokenName.toUpperCase() });
+        if (!result) {
+          throw new Error("Token not found");
+        }
+        return result;
+      } catch (error) {
+        console.error("Error fetching token:", error);
         throw new Error("Token not found");
       }
-      return result;
     },
     retry: (failureCount) => {
       if (failureCount > 3) {

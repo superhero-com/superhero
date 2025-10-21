@@ -4,7 +4,7 @@ import PerformanceTimeframeSelector from "@/features/trending/components/Perform
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { DexPairService, PairDto } from "../../../api/generated";
 import { TokenChip } from "../../../components/TokenChip";
 import PairLineChart from "../components/charts/PairLineChart";
@@ -21,11 +21,11 @@ interface PaginatedResponse<T> {
 
 export default function DexExplorePools() {
   const navigate = useNavigate();
-
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tokenAddress = searchParams.get("tokenAddress");
   const [sort, setSort] = useState<"transactions_count" | "created_at">(
     "transactions_count"
   );
-  // const [timeBase, setTimeBase] = useState<"24h" | "7d" | "30d">("24h");
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -48,6 +48,7 @@ export default function DexExplorePools() {
         orderBy: sort,
         orderDirection: sortDirection,
         search,
+        tokenAddress: tokenAddress || undefined,
       });
       return result as unknown as PaginatedResponse<PairDto>;
     },
@@ -58,6 +59,7 @@ export default function DexExplorePools() {
       search,
       page,
       limit,
+      tokenAddress,
     ],
   });
 

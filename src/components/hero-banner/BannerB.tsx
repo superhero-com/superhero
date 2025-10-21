@@ -8,7 +8,7 @@ export default function BannerB() {
       description="#Trends are markets. Go long/short on culture and let prices surface what matters."
       chips={["Popularity signals", "Inline trading"]}
       primaryButtonText="Launch a #trend"
-      primaryButtonLink="/trends/new"
+      primaryButtonLink="/trends/create"
       secondaryButtonText="Explore #trends"
       secondaryButtonLink="/trending"
     />

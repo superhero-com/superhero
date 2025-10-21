@@ -8,7 +8,7 @@ export default function BannerC() {
       description="Buy fees on #trends auto‑seed DAOs so the best ideas get budgets and milestones."
       chips={["Fees → Treasury", "Creator payouts"]}
       primaryButtonText="Start a Purpose‑DAO"
-      primaryButtonLink="/dao/new"
+      primaryButtonLink="/trends/create"
       secondaryButtonText="See DAOs"
       secondaryButtonLink="/trends/daos"
     />

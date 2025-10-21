@@ -18,7 +18,7 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["topic-by-name", lookup],
-    queryFn: () => TrendminerApi.getTopicByName(baseName) as Promise<any>,
+    queryFn: () => TrendminerApi.getTopicByName(baseName.toLowerCase()) as Promise<any>,
     refetchInterval: 120 * 1000,
   });
 

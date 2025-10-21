@@ -228,32 +228,87 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
               {linkify(item.content, { knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}
             </div>
 
-            {item.media &&
-              Array.isArray(item.media) &&
-              item.media.filter((m) => typeof m === 'string' ? !m.startsWith('comment:') : true).length > 0 && (
+{(() => {
+              const filteredMedia = item.media && Array.isArray(item.media) 
+                ? item.media.filter((m) => typeof m === 'string' ? !m.startsWith('comment:') : true)
+                : [];
+              
+              if (filteredMedia.length === 0) return null;
+              
+              // For single media, try to parse intrinsic width/height embedded in URL hash (w,h)
+              // Example: https://...gif#w=480&h=270
+              const renderSingle = (url: string) => {
+                let widthAttr: number | undefined;
+                let heightAttr: number | undefined;
+                try {
+                  const u = new URL(url);
+                  if (u.hash && u.hash.length > 1) {
+                    const params = new URLSearchParams(u.hash.slice(1));
+                    const w = Number(params.get("w") || "");
+                    const h = Number(params.get("h") || "");
+                    if (w > 0 && h > 0) {
+                      widthAttr = w;
+                      heightAttr = h;
+                    }
+                  }
+                } catch {}
+
+                // If we have width/height, set them to preserve ratio and use CSS to fit width
+                if (widthAttr && heightAttr) {
+                  const ratio = `${widthAttr} / ${heightAttr}`;
+                  return (
+                    <div className="w-full rounded overflow-hidden" style={{ aspectRatio: ratio }}>
+                      <img
+                        src={url}
+                        alt="media"
+                        width={widthAttr}
+                        height={heightAttr}
+                        className="w-full h-full object-cover rounded"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
+                  );
+                }
+
+                // Fallback: natural sizing with max height guard
+                return (
+                  <img
+                    src={url}
+                    alt="media"
+                    className="w-full rounded transition-transform hover:scale-105 max-h-[500px]"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                );
+              };
+
+              return (
                 <div
                   className={cn(
                     "grid gap-2 rounded-lg overflow-hidden",
-                    item.media.length === 1 && "grid-cols-1",
-                    item.media.length === 2 && "grid-cols-2",
-                    item.media.length >= 3 && "grid-cols-2"
+                    filteredMedia.length === 1 && "grid-cols-1",
+                    filteredMedia.length === 2 && "grid-cols-2",
+                    filteredMedia.length >= 3 && "grid-cols-2"
                   )}
                 >
-                  {item.media.filter((m) => typeof m === 'string' ? !m.startsWith('comment:') : true).slice(0, 4).map((m: string, index: number) => (
-                    <img
-                      key={`${postId}-${index}`}
-                      src={m}
-                      alt="media"
-                      className={cn(
-                        "w-full object-cover rounded transition-transform hover:scale-105",
-                        item.media.length === 1 ? "h-60" : "h-36"
-                      )}
-                      loading="lazy"
-                      decoding="async"
-                    />
+                  {filteredMedia.slice(0, 4).map((m: string, index: number) => (
+                    filteredMedia.length === 1 ? (
+                      <div key={`${postId}-${index}`}>{renderSingle(m)}</div>
+                    ) : (
+                      <img
+                        key={`${postId}-${index}`}
+                        src={m}
+                        alt="media"
+                        className="w-full rounded transition-transform hover:scale-105 h-36 object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    )
                   ))}
                 </div>
-              )}
+              );
+            })()}
 
               <div className="flex items-center justify-between mt-3 pt-2">
                 <Badge

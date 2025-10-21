@@ -408,6 +408,14 @@ export default function TokenSaleDetails() {
                 <TokenSummary
                   token={{ ...token, decimals: String(token.decimals ?? '') as any }}
                 />
+                {/* Quali.chat CTA visible on mobile Info tab */}
+                <TokenChat
+                  token={{
+                    name: String(token.name || token.symbol || ''),
+                    address: String((token as any).sale_address || (token as any).address || (token as any).token_address || ''),
+                  }}
+                  mode="ctaOnly"
+                />
               </div>
             )}
 

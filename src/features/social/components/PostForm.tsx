@@ -96,8 +96,7 @@ export default function PostForm({
   const { activeAccount, chainNames } = useAccount();
   const queryClient = useQueryClient();
 
-  const [text, setText] = useState(initialText || "");
-  const previousInitialTextRef = useRef<string | undefined>(initialText);
+  const [text, setText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [showEmoji, setShowEmoji] = useState(false);
@@ -112,20 +111,7 @@ export default function PostForm({
     setPromptIndex(Math.floor(Math.random() * PROMPTS.length));
   }, []);
 
-  useEffect(() => {
-    // If initialText changes and the user hasn't typed (text is empty)
-    // or the current text still matches the previous auto-filled value,
-    // update the textarea to the new initialText.
-    if (initialText) {
-      const prev = previousInitialTextRef.current;
-      const userHasEdited = text && text !== prev;
-      if (!userHasEdited) {
-        setText(initialText);
-      }
-      previousInitialTextRef.current = initialText;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialText]);
+  // Do not auto-fill from initialText anymore; keep user input empty by default
 
   useEffect(() => {
     if (textareaRef.current) {

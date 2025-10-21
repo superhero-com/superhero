@@ -20,9 +20,23 @@ export default function BannerContent({
   secondaryButtonText,
   secondaryButtonLink,
 }: BannerContentProps) {
+  const renderTitle = () => {
+    // Insert a mobile-only line break after the first period
+    const parts = title.split(". ");
+    if (parts.length <= 1) return title;
+    const first = parts.shift() as string;
+    const rest = parts.join(". ");
+    return (
+      <>
+        {first}.
+        <br className="mobile-break" />
+        {rest}
+      </>
+    );
+  };
   return (
     <div className="hero-banner__inner">
-      <h1 className="banner-h1">{title}</h1>
+      <h1 className="banner-h1">{renderTitle()}</h1>
       <p className="banner-lede">{description}</p>
 
       <ul className="banner-chips" aria-label="Key features">

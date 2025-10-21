@@ -97,6 +97,8 @@
   -webkit-text-fill-color: #ffffff !important;
 }
 
+.mobile-break { display: none; }
+
 .banner-lede {
   max-width: 60ch;
   color: var(--banner-muted);
@@ -667,6 +669,7 @@
   .carousel-arrow {
     display: none;
   }
+  .mobile-break { display: inline; }
 
   /* Hide chips on mobile */
   .banner-chips {

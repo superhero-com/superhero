@@ -106,6 +106,7 @@ export default function PostForm({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiBtnRef = useRef<HTMLButtonElement>(null);
   const gifBtnRef = useRef<HTMLButtonElement>(null);
+  const [overlayComputed, setOverlayComputed] = useState<{ paddingTop: number; paddingRight: number; paddingBottom: number; paddingLeft: number; fontFamily: string; fontSize: string; fontWeight: string; lineHeight: string; letterSpacing: string; } | null>(null);
 
   useEffect(() => {
     setPromptIndex(Math.floor(Math.random() * PROMPTS.length));
@@ -118,6 +119,24 @@ export default function PostForm({
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
+  }, [text]);
+
+  // Sync overlay typography and padding with the textarea for precise positioning
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const cs = window.getComputedStyle(el);
+    setOverlayComputed({
+      paddingTop: parseFloat(cs.paddingTop || '0'),
+      paddingRight: parseFloat(cs.paddingRight || '0'),
+      paddingBottom: parseFloat(cs.paddingBottom || '0'),
+      paddingLeft: parseFloat(cs.paddingLeft || '0'),
+      fontFamily: cs.fontFamily || 'inherit',
+      fontSize: cs.fontSize || 'inherit',
+      fontWeight: cs.fontWeight || 'inherit',
+      lineHeight: cs.lineHeight || 'normal',
+      letterSpacing: cs.letterSpacing || 'normal',
+    });
   }, [text]);
 
   useEffect(() => {
@@ -352,18 +371,24 @@ export default function PostForm({
                   maxLength={characterLimit}
                 />
 
-                {showAutoComplete && (
+                {showAutoComplete && overlayComputed && (
                   <div
-                    className="absolute select-none pointer-events-none"
+                    className="absolute inset-0 pointer-events-none select-none"
                     style={{
-                      top: 10, // aligns roughly with textarea top padding
-                      left: 10, // aligns roughly with textarea left padding
-                      color: 'rgba(255,255,255,0.45)',
-                      fontWeight: 600,
-                      fontSize: '0.95rem',
+                      paddingTop: overlayComputed.paddingTop,
+                      paddingRight: overlayComputed.paddingRight,
+                      paddingBottom: overlayComputed.paddingBottom,
+                      paddingLeft: overlayComputed.paddingLeft,
+                      fontFamily: overlayComputed.fontFamily,
+                      fontSize: overlayComputed.fontSize,
+                      fontWeight: overlayComputed.fontWeight,
+                      lineHeight: overlayComputed.lineHeight,
+                      letterSpacing: overlayComputed.letterSpacing,
+                      whiteSpace: 'pre-wrap',
                     }}
                   >
-                    {remainingSuggestion}
+                    <span style={{ color: 'transparent' }}>{textBeforeCaret}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>{remainingSuggestion}</span>
                   </div>
                 )}
 

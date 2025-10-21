@@ -5,7 +5,7 @@ import SpaceEffects from "./SpaceEffects";
 import BannerA from "./BannerA";
 import BannerB from "./BannerB";
 import BannerC from "./BannerC";
-import BannerD from "./BannerD";
+// Removed BannerD to make the carousel 3 slides
 import "./banner.styles.css";
 
 const DISMISS_KEY = "hero_banner_dismissed_until";
@@ -114,9 +114,7 @@ export default function HeroBannerCarousel() {
             <div className="flex-[0_0_100%] min-w-0">
               <BannerC />
             </div>
-            <div className="flex-[0_0_100%] min-w-0">
-              <BannerD />
-            </div>
+            {/* 3 slides only */}
           </div>
         </div>
       </section>
@@ -186,7 +184,7 @@ export default function HeroBannerCarousel() {
 
       {/* Dot indicators */}
       <div className="carousel-controls">
-        {[0, 1, 2, 3].map((index) => (
+        {[0, 1, 2].map((index) => (
           <button
             key={index}
             type="button"

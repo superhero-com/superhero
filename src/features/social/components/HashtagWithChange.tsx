@@ -61,7 +61,7 @@ export default function HashtagWithChange({ tag }: { tag: string }) {
     <span className="inline-flex items-center gap-0.5 align-middle">
       <Link
         to={linkTo}
-        className="break-words"
+        className="break-words relative inline-block"
         style={{ color: '#00ff9d' }}
         onClick={(e) => e.stopPropagation()}
       >

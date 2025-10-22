@@ -38,20 +38,30 @@ export function useTokenPerformance(saleAddress?: string | null) {
       // Prefer fast generated endpoint
       const direct = await TokensService.performance({ address: saleAddress }).catch(() => null);
       const perfDirect = mapToCurrent24h(direct);
-      if (perfDirect) return perfDirect;
-      // Fallback to TrendminerApi (legacy/custom client)
-      const resp = await TrendminerApi.getTokenPerformance(saleAddress).catch(() => null);
-      const perf = mapToCurrent24h((resp as any)?.performance || resp || null);
-      if (perf) return perf;
-      // 2) Fallback: resolve canonical token and retry with its sale/address
-      const token: any = await TrendminerApi.getToken(saleAddress).catch(() => null);
-      const alt = token?.sale_address || token?.address;
-      if (alt && alt !== saleAddress) {
-        const resp2 = await TokensService.performance({ address: alt }).catch(() => null);
-        const perf2 = mapToCurrent24h(resp2);
-        if (perf2) return perf2;
+
+      // Also resolve canonical token via generated API and try again, then choose best
+      const tokenResolved = await TokensService.findByAddress({ address: saleAddress }).catch(() => null);
+      const altAddr = (tokenResolved as any)?.sale_address || (tokenResolved as any)?.address;
+      let perfAlt: TokenPerformance | null = null;
+      if (altAddr && altAddr !== saleAddress) {
+        const altResp = await TokensService.performance({ address: altAddr }).catch(() => null);
+        perfAlt = mapToCurrent24h(altResp);
       }
-      return perf;
+
+      // Fallback to TrendminerApi (legacy/custom client)
+      let perfLegacy: TokenPerformance | null = null;
+      if (!perfDirect && !perfAlt) {
+        const resp = await TrendminerApi.getTokenPerformance(saleAddress).catch(() => null);
+        perfLegacy = mapToCurrent24h((resp as any)?.performance || resp || null);
+      }
+
+      // Pick non-null with the largest absolute percentage (guards against 0% from wrong address)
+      const candidates = [perfDirect, perfAlt, perfLegacy].filter(Boolean) as TokenPerformance[];
+      if (candidates.length) {
+        candidates.sort((a, b) => Math.abs((b.current_change_percent ?? 0)) - Math.abs((a.current_change_percent ?? 0)));
+        return candidates[0];
+      }
+      return null;
     },
     refetchInterval: 60 * 1000,
     staleTime: 30 * 1000,

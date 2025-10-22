@@ -11,24 +11,30 @@ interface TokenListTableProps {
   tokens: DexTokenDto[];
   sort: {
     key:
+      | "pairs_count"
       | "name"
-      | "pairs"
-      | "priceUsd"
-      | "tvlUsd"
-      | "priceChangeDay"
-      | "volumeUsdDay"
-      | "volumeUsdAll";
+      | "symbol"
+      | "created_at"
+      | "price"
+      | "tvl"
+      | "24hchange"
+      | "24hvolume"
+      | "7dchange"
+      | "7dvolume";
     asc: boolean;
   };
   onSortChange: (
     key:
+      | "pairs_count"
       | "name"
-      | "pairs"
-      | "priceUsd"
-      | "tvlUsd"
-      | "priceChangeDay"
-      | "volumeUsdDay"
-      | "volumeUsdAll"
+      | "symbol"
+      | "created_at"
+      | "price"
+      | "tvl"
+      | "24hchange"
+      | "24hvolume"
+      | "7dchange"
+      | "7dvolume"
   ) => void;
   search: string;
   onSearchChange: (value: string) => void;
@@ -54,50 +60,8 @@ export function TokenListTable({
     return performanceChartTimeframe;
   }, [performanceChartTimeframe]);
 
-  // Client-side filter and sort to ensure controls work regardless of server params
-  const filteredTokens = useMemo(() => {
-    const term = (search || '').trim().toLowerCase();
-    if (!term) return tokens;
-    return tokens.filter((t) =>
-      [t.symbol, t.name, t.address]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(term))
-    );
-  }, [tokens, search]);
-
-  const sortedTokens = useMemo(() => {
-    const toNumber = (v: any) => (v == null || v === '' ? 0 : Number(v));
-    const items = [...filteredTokens];
-    items.sort((a, b) => {
-      switch (sort.key) {
-        case 'name': {
-          const av = String(a.name || a.symbol || '').toLowerCase();
-          const bv = String(b.name || b.symbol || '').toLowerCase();
-          return av.localeCompare(bv);
-        }
-        case 'pairs': {
-          const av = toNumber((a as any).pairs || (a as any).pairs_count);
-          const bv = toNumber((b as any).pairs || (b as any).pairs_count);
-          return av - bv;
-        }
-        case 'priceUsd':
-          return toNumber((a as any).priceUsd) - toNumber((b as any).priceUsd);
-        case 'tvlUsd':
-          return toNumber((a as any).tvlUsd) - toNumber((b as any).tvlUsd);
-        case 'priceChangeDay':
-          return toNumber((a as any).priceChangeDay) - toNumber((b as any).priceChangeDay);
-        case 'volumeUsdDay':
-          return toNumber((a as any).volumeUsdDay) - toNumber((b as any).volumeUsdDay);
-        case 'volumeUsdAll':
-          return toNumber((a as any).volumeUsdAll) - toNumber((b as any).volumeUsdAll);
-        default:
-          return 0;
-      }
-    });
-    return sort.asc ? items : items.reverse();
-  }, [filteredTokens, sort]);
-
-  const handleSort = (key: 'name' | 'pairs' | 'priceUsd' | 'tvlUsd' | 'priceChangeDay' | 'volumeUsdDay' | 'volumeUsdAll') => {
+  const handleSort = (key: 'pairs_count' | 'name' | 'symbol' | 'created_at' | 'price' | 'tvl' | '24hchange' | '24hvolume' | '7dchange' | '7dvolume') => {
+    console.log("key:", key);
     onSortChange(key);
   };
 
@@ -265,13 +229,15 @@ export function TokenListTable({
                     e.currentTarget.style.boxShadow = "none";
                   }}
                 >
-                  <option value="name">Name</option>
-                  <option value="pairs">Pools</option>
-                  <option value="priceUsd">Price</option>
-                  <option value="tvlUsd">TVL</option>
-                  <option value="priceChangeDay">24h Change</option>
-                  <option value="volumeUsdDay">24h Volume</option>
-                  <option value="volumeUsdAll">Total Volume</option>
+                  <option value="pairs_count">Pools</option>
+                  <option value="price">Price</option>
+                  <option value="tvl">TVL</option>
+                  <option value="24hchange">24h Change</option>
+                  <option value="24hvolume">24h Volume</option>
+                  <option value="7dchange">7d Change</option>
+                  <option value="7dvolume">7d Volume</option>
+                  <option value="created_at">Created At</option>
+
                 </select>
                 {/* Custom Dropdown Arrow */}
                 <div

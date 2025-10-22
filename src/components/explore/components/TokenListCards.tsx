@@ -11,24 +11,30 @@ interface TokenListCardsProps {
   tokens: DexTokenDto[];
   sort: {
     key:
+      | "pairs_count"
       | "name"
-      | "pairs"
-      | "priceUsd"
-      | "tvlUsd"
-      | "priceChangeDay"
-      | "volumeUsdDay"
-      | "volumeUsdAll";
+      | "symbol"
+      | "created_at"
+      | "price"
+      | "tvl"
+      | "24hchange"
+      | "24hvolume"
+      | "7dchange"
+      | "7dvolume";
     asc: boolean;
   };
   onSortChange: (
     key:
+      | "pairs_count"
       | "name"
-      | "pairs"
-      | "priceUsd"
-      | "tvlUsd"
-      | "priceChangeDay"
-      | "volumeUsdDay"
-      | "volumeUsdAll"
+      | "symbol"
+      | "created_at"
+      | "price"
+      | "tvl"
+      | "24hchange"
+      | "24hvolume"
+      | "7dchange"
+      | "7dvolume"
   ) => void;
   search: string;
   onSearchChange: (value: string) => void;
@@ -56,13 +62,16 @@ export function TokenListCards({
 
   const handleSort = (
     key:
+      | "pairs_count"
       | "name"
-      | "pairs"
-      | "priceUsd"
-      | "tvlUsd"
-      | "priceChangeDay"
-      | "volumeUsdDay"
-      | "volumeUsdAll"
+      | "symbol"
+      | "created_at"
+      | "price"
+      | "tvl"
+      | "24hchange"
+      | "24hvolume"
+      | "7dchange"
+      | "7dvolume"
   ) => {
     onSortChange(key);
   };
@@ -107,13 +116,16 @@ export function TokenListCards({
                   onChange={(e) => handleSort(e.target.value as any)}
                   className="appearance-none py-[6px] pr-7 pl-3 rounded-lg bg-white/10 text-white border border-white/10 backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[100px] focus:border-green-500 focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
                 >
+                  <option value="pairs_count">Pools</option>
                   <option value="name">Name</option>
-                  <option value="pairs">Pools</option>
-                  <option value="priceUsd">Price</option>
-                  <option value="tvlUsd">TVL</option>
-                  <option value="priceChangeDay">24h Change</option>
-                  <option value="volumeUsdDay">24h Volume</option>
-                  <option value="volumeUsdAll">Total Volume</option>
+                  <option value="symbol">Symbol</option>
+                  <option value="created_at">Created At</option>
+                  <option value="price">Price</option>
+                  <option value="tvl">TVL</option>
+                  <option value="24hchange">24h Change</option>
+                  <option value="24hvolume">24h Volume</option>
+                  <option value="7dchange">7d Change</option>
+                  <option value="7dvolume">7d Volume</option>
                 </select>
 
                 {/* Custom Dropdown Arrow */}

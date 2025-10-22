@@ -3,6 +3,7 @@ import MobileInput from "../MobileInput";
 import MobileCard from "../MobileCard";
 import { Link } from "react-router-dom";
 import { useGovernance } from "@/hooks";
+import DelegationSettings from "@/components/governance/DelegationSettings";
 
 export default function GovernancePolls() {
   const { usePolls } = useGovernance();
@@ -54,6 +55,11 @@ export default function GovernancePolls() {
                   {polls.length} {status === "open" ? "Active" : "Closing"}
                 </span>
               </div>
+              <Link to="/voting/create" className="no-gradient-text">
+                <div className="px-4 py-2 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 text-white border-transparent shadow-xl hover:-translate-y-0.5 transition-all">
+                  Create Poll
+                </div>
+              </Link>
             </div>
           </div>
         </div>
@@ -136,6 +142,11 @@ export default function GovernancePolls() {
           </div>
         </div>
 
+        {/* Delegation Settings (compact) */}
+        <div className="mb-6">
+          <DelegationSettings compact defaultCollapsed />
+        </div>
+
         {/* Enhanced Polls Grid */}
         <div className="space-y-6">
           {polls.length === 0 ? (
@@ -167,7 +178,7 @@ export default function GovernancePolls() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {polls.map((p, index) => (
               <Link
-                  to={`/voting/p/${p.poll}`}
+                  to={`/voting/poll/${p.poll}`}
                   key={p.id}
                   className="no-gradient-text text-inherit no-underline block group"
                 >

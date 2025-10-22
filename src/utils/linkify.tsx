@@ -29,12 +29,9 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
         <a
           href={`/users/${name}`}
           key={`aens-${name}-${offset}`}
-          className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+          className="underline-offset-2 hover:underline break-words"
           style={{
-            WebkitTextFillColor: 'currentColor',
-            WebkitBackgroundClip: 'initial',
-            backgroundClip: 'initial',
-            background: 'none',
+            color: '#00ff9d',
           }}
         >
           {match}
@@ -67,12 +64,9 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
         <a
           href={`/users/${address}`}
           key={`acc-${address}-${idx}-${off}`}
-          className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+          className="underline-offset-2 hover:underline break-words"
           style={{
-            WebkitTextFillColor: 'currentColor',
-            WebkitBackgroundClip: 'initial',
-            backgroundClip: 'initial',
-            background: 'none',
+            color: '#00ff9d',
           }}
         >
           {display}
@@ -109,16 +103,13 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
             key={`${href}-${idx}-${off}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words no-underline"
+            className="underline-offset-2 hover:underline break-words no-underline"
             style={{
               display: 'inline',
               lineHeight: 'inherit',
               margin: 0,
               padding: 0,
-              WebkitTextFillColor: 'currentColor',
-              WebkitBackgroundClip: 'initial',
-              backgroundClip: 'initial',
-              background: 'none',
+              color: '#00ff9d',
               verticalAlign: 'baseline',
             }}
             title={m}

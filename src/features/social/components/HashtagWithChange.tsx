@@ -61,7 +61,8 @@ export default function HashtagWithChange({ tag }: { tag: string }) {
     <span className="inline-flex items-center gap-1 align-middle">
       <Link
         to={linkTo}
-        className="text-white/90 hover:text-white underline-offset-2 hover:underline break-words"
+        className="hover:underline break-words"
+        style={{ color: '#00ff9d' }}
         onClick={(e) => e.stopPropagation()}
       >
         #{clean}

@@ -28,7 +28,7 @@ export default function GovernanceVote({
   const { data: delegation } = useDelegation();
   const { data: delegators = [] } = useDelegators();
   const pollAddress = isAddressValid(pollId, Encoding.ContractAddress) ? pollId : undefined;
-  if (!pollAddress) throw new Error('Invalid poll address');
+  if (!pollAddress) return null;
   const { data: poll } = usePoll(pollAddress);
 
   const { data: results } = usePollResults(pollAddress);

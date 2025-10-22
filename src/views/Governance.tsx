@@ -77,7 +77,9 @@ export default function Governance() {
 
       {/* Tab Content */}
       {activeTab === 'polls' && <GovernancePolls />}
-      {activeTab === 'vote' && <GovernanceVote pollId={pollId} setActiveTab={(tab: string) => setActiveTab(tab as TabType)} />}
+      {activeTab === 'vote' && pollId && (
+        <GovernanceVote pollId={pollId} setActiveTab={(tab: string) => setActiveTab(tab as TabType)} />
+      )}
       {activeTab === 'account' && <GovernanceAccount />}
       {activeTab === 'create' && <GovernanceCreate />}
     </Shell>

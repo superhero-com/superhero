@@ -16,12 +16,16 @@ export type PollCreatedEntryData = {
   totalVotes?: number;
 };
 
-export function adaptPollToEntry(pollAddress: Encoded.ContractAddress, data: Omit<PollCreatedEntryData, 'pollAddress'>): FeedEntry<PollCreatedEntryData> {
-  const createdAt = new Date().toISOString();
+export function adaptPollToEntry(
+  pollAddress: Encoded.ContractAddress,
+  data: Omit<PollCreatedEntryData, 'pollAddress'>,
+  createdAt?: string
+): FeedEntry<PollCreatedEntryData> {
+  const ts = createdAt || new Date().toISOString();
   return {
     id: `poll-created:${pollAddress}`,
     kind: 'poll-created',
-    createdAt,
+    createdAt: ts,
     data: { pollAddress, ...data },
   };
 }
@@ -37,25 +41,43 @@ export function registerPollCreatedPlugin() {
       const ordering = await GovernanceApi.getPollOrdering(false);
       const top = (ordering?.data || []).slice(0, 10);
       const entries: FeedEntry<PollCreatedEntryData>[] = [];
-      for (let i = 0; i < top.length; i += 1) {
-        const p = top[i];
-        try {
-          const ov = await GovernanceApi.getPollOverview(p.poll);
-          const meta = ov?.pollState?.metadata || ({} as any);
-          const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
-          const options = Object.entries(optsRec).map(([k, v]) => ({ id: Number(k), label: String(v), votes: 0 }));
-          const entry = adaptPollToEntry(p.poll as any, {
+      // First pass to collect create heights
+      const overviews = await Promise.all(
+        top.map(async (p) => {
+          try {
+            const ov = await GovernanceApi.getPollOverview(p.poll);
+            return { p, ov };
+          } catch {
+            return undefined as any;
+          }
+        })
+      );
+      const valid = overviews.filter(Boolean) as { p: any; ov: any }[];
+      const createHeights = valid.map(({ ov }) => Number(ov?.pollState?.create_height || 0));
+      const maxCreateHeight = Math.max(0, ...createHeights);
+      const APPROX_BLOCK_MS = 180000; // ~3 minutes per block
+
+      for (let i = 0; i < valid.length; i += 1) {
+        const { p, ov } = valid[i];
+        const meta = ov?.pollState?.metadata || ({} as any);
+        const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
+        const options = Object.entries(optsRec).map(([k, v]) => ({ id: Number(k), label: String(v), votes: 0 }));
+        const ch = Number(ov?.pollState?.create_height || 0);
+        const ageBlocks = Math.max(0, maxCreateHeight - ch);
+        const createdAt = new Date(Date.now() - ageBlocks * APPROX_BLOCK_MS).toISOString();
+        const entry = adaptPollToEntry(
+          p.poll as any,
+          {
             title: meta?.title || 'Untitled poll',
             author: ov?.pollState?.author as any,
             closeHeight: ov?.pollState?.close_height as any,
             createHeight: ov?.pollState?.create_height as any,
             options,
             totalVotes: p?.voteCount || 0,
-          });
-          entries.push(entry);
-        } catch {
-          // skip failures
-        }
+          },
+          createdAt
+        );
+        entries.push(entry);
       }
       return { entries, nextPage: undefined } as FeedPage<PollCreatedEntryData>;
     },

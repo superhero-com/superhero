@@ -61,7 +61,22 @@ export function registerPollCreatedPlugin() {
         const { p, ov } = valid[i];
         const meta = ov?.pollState?.metadata || ({} as any);
         const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
-        const options = Object.entries(optsRec).map(([k, v]) => ({ id: Number(k), label: String(v), votes: 0 }));
+        // Build votes per option using overview.stakesForOption[].votes length (vote count, not stake)
+        const votesByLabel = new Map<string, number>();
+        const sfo = (ov?.stakesForOption || []) as Array<{ option: string; votes: unknown[] }>;
+        for (const row of sfo) {
+          const label = String((row as any).option ?? '');
+          const count = Array.isArray((row as any).votes) ? (row as any).votes.length : 0;
+          votesByLabel.set(label, count);
+        }
+        const options = Object.entries(optsRec).map(([k, v]) => ({
+          id: Number(k),
+          label: String(v),
+          votes: votesByLabel.get(String(v)) ?? 0,
+        }));
+        const totalVotes = typeof ov?.voteCount === 'number' && !Number.isNaN(ov.voteCount)
+          ? ov.voteCount
+          : options.reduce((acc, o) => acc + (o.votes || 0), 0);
         const ch = Number(ov?.pollState?.create_height || 0);
         const ageBlocks = Math.max(0, maxCreateHeight - ch);
         const createdAt = new Date(Date.now() - ageBlocks * APPROX_BLOCK_MS).toISOString();
@@ -73,7 +88,7 @@ export function registerPollCreatedPlugin() {
             closeHeight: ov?.pollState?.close_height as any,
             createHeight: ov?.pollState?.create_height as any,
             options,
-            totalVotes: p?.voteCount || 0,
+            totalVotes,
           },
           createdAt
         );

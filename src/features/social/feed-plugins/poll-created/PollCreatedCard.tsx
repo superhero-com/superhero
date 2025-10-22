@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import styles from './PollCreatedCard.module.scss';
 import FeedPluginCard from '../FeedPluginCard';
 import { cn } from '@/lib/utils';
+import AddressAvatarWithChainNameFeed from '@/@components/Address/AddressAvatarWithChainNameFeed';
 
 export type PollCreatedCardProps = {
   title: string;
@@ -28,9 +29,14 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
 
   return (
     <FeedPluginCard className={cn(styles.root, 'feed-plugin poll-created')} role={onOpen ? 'button' : undefined} onClick={onOpen}>
-      <div className={styles.title}>{title}</div>
+      <div className="flex items-center gap-2">
+        {author && (
+          <AddressAvatarWithChainNameFeed address={author} size={18} overlaySize={10} showAddressAndChainName={true} />
+        )}
+        <div className={styles.title}>{title}</div>
+      </div>
       <div className={styles.metaRow}>
-        {author && <span>by {author}</span>}
+        {author && <span>by</span>}
         {timeLeft && <span>• {timeLeft}</span>}
       </div>
 

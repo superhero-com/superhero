@@ -200,7 +200,7 @@ export default function GovernancePolls() {
                       <div className="flex flex-col gap-4 pt-2">
                         {/* Title with enhanced typography */}
                         <div className="pr-20">
-                          <h3 className="font-bold text-xl leading-tight text-white group-hover/card:text-transparent group-hover/card:bg-gradient-to-r group-hover/card:from-pink-400 group-hover/card:via-purple-400 group-hover/card:to-blue-400 group-hover/card:bg-clip-text transition-all duration-300">
+                          <h3 className="font-bold text-xl leading-tight text-white transition-all duration-300">
                             {p.title}
                           </h3>
                         </div>

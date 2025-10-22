@@ -67,7 +67,7 @@ export default function HashtagWithChange({ tag }: { tag: string }) {
       </Link>
       {saleAddress && formatted && (
         <span
-          className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold leading-none ${
+          className={`inline-flex items-center px-1 py-0.5 rounded-full text-[10px] font-mono font-semibold leading-none tracking-tighter ${
             isUp
               ? 'bg-green-400/10 text-green-400 border border-green-400/20'
               : isDown

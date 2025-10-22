@@ -60,7 +60,7 @@ export default function HashtagWithChange({ tag }: { tag: string }) {
     <span className="inline-flex items-center gap-1 align-middle">
       <Link
         to={linkTo}
-        className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+        className="text-white/90 hover:text-white underline-offset-2 hover:underline break-words"
         onClick={(e) => e.stopPropagation()}
       >
         #{clean}

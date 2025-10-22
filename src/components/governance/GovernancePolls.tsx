@@ -64,80 +64,85 @@ export default function GovernancePolls() {
           </div>
         </div>
 
-        {/* Compact Controls Row: Search • Filter • Delegation */}
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-3xl blur-xl -z-10" />
-          <div className="bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-4">
-            <div className="flex flex-col lg:flex-row items-stretch gap-3">
-              <div className="flex-1">
-                <MobileInput
-                  label="Search polls"
-                  placeholder="Find polls by title or description..."
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                  }}
-                  variant="filled"
-                  size="large"
-                  rightIcon={
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                  }
-                />
-              </div>
-              <div className="lg:w-56">
-                <MobileInput
-                  as="select"
-                  label="Filter by status"
-                  value={status}
-                  onChange={(e) => {
-                    if (
-                      e.target.value !== "all" &&
-                      e.target.value !== "open" &&
-                      e.target.value !== "closed"
-                    ) {
-                      throw new Error("Invalid status");
+        {/* Compact Controls Row: Search • Filter | Delegation aside */}
+        <div className="flex flex-col lg:flex-row gap-3 items-stretch">
+          {/* Search + Filter wrapper */}
+          <div className="relative flex-1">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-3xl blur-xl -z-10" />
+            <div className="bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-4 h-full">
+              <div className="flex flex-col lg:flex-row items-stretch gap-3">
+                <div className="flex-1">
+                  <MobileInput
+                    label="Search polls"
+                    placeholder="Find polls by title or description..."
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                    }}
+                    variant="filled"
+                    size="large"
+                    rightIcon={
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
                     }
-                    setStatus(e.target.value);
-                  }}
-                  variant="filled"
-                  size="large"
-                  rightIcon={
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  }
-                >
-                  <option value="all">All polls</option>
-                  <option value="open">🟢 Open polls</option>
-                  <option value="closed">🔴 Closed polls</option>
-                </MobileInput>
-              </div>
-              <div className="w-full lg:w-[320px]">
-                <DelegationSettings compact defaultCollapsed />
+                  />
+                </div>
+                <div className="lg:w-56">
+                  <MobileInput
+                    as="select"
+                    label="Filter by status"
+                    value={status}
+                    onChange={(e) => {
+                      if (
+                        e.target.value !== "all" &&
+                        e.target.value !== "open" &&
+                        e.target.value !== "closed"
+                      ) {
+                        throw new Error("Invalid status");
+                      }
+                      setStatus(e.target.value);
+                    }}
+                    variant="filled"
+                    size="large"
+                    rightIcon={
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    }
+                  >
+                    <option value="all">All polls</option>
+                    <option value="open">🟢 Open polls</option>
+                    <option value="closed">🔴 Closed polls</option>
+                  </MobileInput>
+                </div>
               </div>
             </div>
+          </div>
+
+          {/* Delegation card aside (separate) */}
+          <div className="w-full lg:w-[340px]">
+            <DelegationSettings compact defaultCollapsed />
           </div>
         </div>
 

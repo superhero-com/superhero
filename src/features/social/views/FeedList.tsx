@@ -17,6 +17,9 @@ import ReplyToFeedItem from "../components/ReplyToFeedItem";
 import TokenCreatedFeedItem from "../components/TokenCreatedFeedItem";
 import TokenCreatedActivityItem from "../components/TokenCreatedActivityItem";
 import { PostApiResponse } from "../types";
+import FeedRenderer from "../feed-plugins/FeedRenderer";
+import { adaptPostToEntry } from "../feed-plugins/post";
+import type { FeedEntry } from "../feed-plugins/types";
 
 // Custom hook
 function useUrlQuery() {
@@ -295,15 +298,9 @@ export default function FeedList({
       const isTokenCreated = String(postId).startsWith("token-created:");
 
       if (!isTokenCreated) {
-        nodes.push(
-          <ReplyToFeedItem
-            key={postId}
-            item={item}
-            commentCount={item.total_comments ?? 0}
-            allowInlineRepliesToggle={false}
-            onOpenPost={handleItemClick}
-          />
-        );
+        // Render normal posts via FeedRenderer using the adapter
+        const entry: FeedEntry = adaptPostToEntry(item as PostDto, item.total_comments ?? 0);
+        nodes.push(<FeedRenderer key={postId} entry={entry} onOpenPost={handleItemClick} />);
         i += 1;
         continue;
       }

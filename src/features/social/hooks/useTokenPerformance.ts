@@ -12,11 +12,18 @@ function mapToCurrent24h(resp: any): TokenPerformance | null {
   if (!resp) return null;
   // Support both TokenPriceMovementDto shape and legacy flat shape
   const percent =
-    typeof resp?.current_change_percent === 'number'
+    // Newer shape: nested under past_24h.price_change.percentage (string)
+    (resp?.past_24h?.price_change?.percentage != null
+      ? parseFloat(String(resp?.past_24h?.price_change?.percentage))
+      : undefined) ??
+    // Alternative nested numeric field
+    (typeof resp?.past_24h?.current_change_percent === 'number'
+      ? resp?.past_24h?.current_change_percent
+      : undefined) ??
+    // Flat legacy field
+    (typeof resp?.current_change_percent === 'number'
       ? resp?.current_change_percent
-      : typeof resp?.past_24h?.current_change_percent === 'number'
-        ? resp?.past_24h?.current_change_percent
-        : undefined;
+      : undefined);
   return typeof percent === 'number' ? { current_change_percent: percent } : null;
 }
 

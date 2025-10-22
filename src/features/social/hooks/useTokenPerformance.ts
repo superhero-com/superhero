@@ -15,8 +15,23 @@ export function useTokenPerformance(saleAddress?: string | null) {
     enabled: !!saleAddress,
     queryFn: async () => {
       if (!saleAddress) return null;
-      const resp = await TrendminerApi.getTokenPerformance(saleAddress);
-      return (resp as any)?.performance || resp || null;
+      // 1) Try performance for provided address
+      const resp = await TrendminerApi.getTokenPerformance(saleAddress).catch(() => null);
+      const perf = (resp as any)?.performance || resp || null;
+      if (perf && typeof (perf as any)?.current_change_percent === 'number') {
+        return perf as TokenPerformance;
+      }
+      // 2) Fallback: resolve canonical token and retry with its sale/address
+      const token: any = await TrendminerApi.getToken(saleAddress).catch(() => null);
+      const alt = token?.sale_address || token?.address;
+      if (alt && alt !== saleAddress) {
+        const resp2 = await TrendminerApi.getTokenPerformance(alt).catch(() => null);
+        const perf2 = (resp2 as any)?.performance || resp2 || null;
+        if (perf2 && typeof (perf2 as any)?.current_change_percent === 'number') {
+          return perf2 as TokenPerformance;
+        }
+      }
+      return perf as TokenPerformance | null;
     },
     refetchInterval: 60 * 1000,
     staleTime: 30 * 1000,

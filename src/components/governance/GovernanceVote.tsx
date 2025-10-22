@@ -60,7 +60,7 @@ export default function GovernanceVote({
   };
   return (
     <div className="min-h-screen">
-      <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
+      <div className="flex flex-col gap-6 max-w-6xl mx-auto">
         {/* Back to polls button (outside the card) */}
         <div className="flex items-center mb-2">
           <AeButton
@@ -83,7 +83,7 @@ export default function GovernanceVote({
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-2 h-8 bg-gradient-to-b from-pink-400 to-purple-400 rounded-full"></div>
-                  <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
+                  <h1 className="text-2xl md:text-4xl font-bold text-white">
                     {poll?.pollState.metadata.title || "Governance Poll"}
                   </h1>
                 </div>

@@ -27,7 +27,20 @@ export default function HashtagWithChange({ tag }: { tag: string }) {
     refetchInterval: 60 * 1000,
   });
 
-  const saleAddress = mappedAddress || fallbackSaleAddress || undefined;
+  // Secondary fallback: resolve via topic lookup, which often carries token mapping
+  const { data: topicSaleAddress } = useQuery({
+    queryKey: ['hashtag:topic-lookup', upper],
+    enabled: !mappedAddress && !fallbackSaleAddress && !!upper,
+    queryFn: async () => {
+      const data: any = await TrendminerApi.getTopicByName(clean.toLowerCase());
+      const token = (data && (data.token || data?.items?.[0]?.token)) || null;
+      return token?.sale_address || token?.address || null;
+    },
+    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
+  });
+
+  const saleAddress = mappedAddress || topicSaleAddress || fallbackSaleAddress || undefined;
   const { performance } = useTokenPerformance(saleAddress);
 
   const change = performance?.current_change_percent;

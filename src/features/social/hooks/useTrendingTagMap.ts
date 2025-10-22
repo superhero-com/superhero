@@ -29,8 +29,9 @@ export function useTrendingTagMap() {
     const out: TagToSaleAddressMap = {};
     (data || []).forEach((it) => {
       const key = String(it.tag || '').toUpperCase();
-      const sale = it?.token?.sale_address || it?.token?.address || '';
-      if (key && sale) out[key] = sale;
+      // Prefer token contract address over sale address for performance endpoint
+      const tokenAddress = it?.token?.address || it?.token?.sale_address || '';
+      if (key && tokenAddress) out[key] = tokenAddress;
     });
     return out;
   }, [data]);

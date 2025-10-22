@@ -1,12 +1,41 @@
+import { PriceDataFormatter } from "@/features/shared/components";
+import { performanceChartTimeframeAtom } from "@/features/trending/atoms";
+import PerformanceTimeframeSelector from "@/features/trending/components/PerformanceTimeframeSelector";
+import { useAtomValue } from "jotai";
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Token } from '../types/explore';
 import { DexTokenDto } from '../../../api/generated';
+import { Token } from '../types/explore';
 
 interface TokenListTableProps {
   tokens: DexTokenDto[];
-  sort: { key: 'name' | 'pairs' | 'priceUsd' | 'tvlUsd' | 'priceChangeDay' | 'volumeUsdDay' | 'volumeUsdAll'; asc: boolean };
-  onSortChange: (key: 'name' | 'pairs' | 'priceUsd' | 'tvlUsd' | 'priceChangeDay' | 'volumeUsdDay' | 'volumeUsdAll') => void;
+  sort: {
+    key:
+      | "pairs_count"
+      | "name"
+      | "symbol"
+      | "created_at"
+      | "price"
+      | "tvl"
+      | "24hchange"
+      | "24hvolume"
+      | "7dchange"
+      | "7dvolume";
+    asc: boolean;
+  };
+  onSortChange: (
+    key:
+      | "pairs_count"
+      | "name"
+      | "symbol"
+      | "created_at"
+      | "price"
+      | "tvl"
+      | "24hchange"
+      | "24hvolume"
+      | "7dchange"
+      | "7dvolume"
+  ) => void;
   search: string;
   onSearchChange: (value: string) => void;
   loading: boolean;
@@ -18,54 +47,21 @@ export function TokenListTable({
   onSortChange,
   search,
   onSearchChange,
-  loading
+  loading,
 }: TokenListTableProps) {
   const navigate = useNavigate();
+  const performanceChartTimeframe = useAtomValue(performanceChartTimeframeAtom);
 
-  // Client-side filter and sort to ensure controls work regardless of server params
-  const filteredTokens = useMemo(() => {
-    const term = (search || '').trim().toLowerCase();
-    if (!term) return tokens;
-    return tokens.filter((t) =>
-      [t.symbol, t.name, t.address]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(term))
-    );
-  }, [tokens, search]);
+  const timeBase = useMemo(() => {
+    if (performanceChartTimeframe === "1d") {
+      return "24h";
+    }
 
-  const sortedTokens = useMemo(() => {
-    const toNumber = (v: any) => (v == null || v === '' ? 0 : Number(v));
-    const items = [...filteredTokens];
-    items.sort((a, b) => {
-      switch (sort.key) {
-        case 'name': {
-          const av = String(a.name || a.symbol || '').toLowerCase();
-          const bv = String(b.name || b.symbol || '').toLowerCase();
-          return av.localeCompare(bv);
-        }
-        case 'pairs': {
-          const av = toNumber((a as any).pairs || (a as any).pairs_count);
-          const bv = toNumber((b as any).pairs || (b as any).pairs_count);
-          return av - bv;
-        }
-        case 'priceUsd':
-          return toNumber((a as any).priceUsd) - toNumber((b as any).priceUsd);
-        case 'tvlUsd':
-          return toNumber((a as any).tvlUsd) - toNumber((b as any).tvlUsd);
-        case 'priceChangeDay':
-          return toNumber((a as any).priceChangeDay) - toNumber((b as any).priceChangeDay);
-        case 'volumeUsdDay':
-          return toNumber((a as any).volumeUsdDay) - toNumber((b as any).volumeUsdDay);
-        case 'volumeUsdAll':
-          return toNumber((a as any).volumeUsdAll) - toNumber((b as any).volumeUsdAll);
-        default:
-          return 0;
-      }
-    });
-    return sort.asc ? items : items.reverse();
-  }, [filteredTokens, sort]);
+    return performanceChartTimeframe;
+  }, [performanceChartTimeframe]);
 
-  const handleSort = (key: 'name' | 'pairs' | 'priceUsd' | 'tvlUsd' | 'priceChangeDay' | 'volumeUsdDay' | 'volumeUsdAll') => {
+  const handleSort = (key: 'pairs_count' | 'name' | 'symbol' | 'created_at' | 'price' | 'tvl' | '24hchange' | '24hvolume' | '7dchange' | '7dvolume') => {
+    console.log("key:", key);
     onSortChange(key);
   };
 
@@ -83,30 +79,36 @@ export function TokenListTable({
 
   if (loading && tokens.length === 0) {
     return (
-      <div style={{
-        textAlign: 'center',
-        padding: 60,
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '1px solid var(--glass-border)',
-        borderRadius: 16,
-        backdropFilter: 'blur(10px)'
-      }}>
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 12,
-          color: 'var(--light-font-color)',
-          fontSize: 16,
-          fontWeight: 500
-        }}>
-          <div style={{
-            width: 20,
-            height: 20,
-            border: '2px solid rgba(76, 175, 80, 0.3)',
-            borderTop: '2px solid var(--accent-color)',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
+      <div
+        style={{
+          textAlign: "center",
+          padding: 60,
+          background: "rgba(255, 255, 255, 0.02)",
+          border: "1px solid var(--glass-border)",
+          borderRadius: 16,
+          backdropFilter: "blur(10px)",
+        }}
+      >
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 12,
+            color: "var(--light-font-color)",
+            fontSize: 16,
+            fontWeight: 500,
+          }}
+        >
+          <div
+            style={{
+              width: 20,
+              height: 20,
+              border: "2px solid rgba(76, 175, 80, 0.3)",
+              borderTop: "2px solid var(--accent-color)",
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite",
+            }}
+          ></div>
           Loading tokens...
         </div>
         <style>{`
@@ -120,122 +122,144 @@ export function TokenListTable({
   }
 
   return (
-    <div style={{ overflowX: 'auto' }}>
+    <div style={{ overflowX: "auto" }}>
       {/* Compact Filter Controls */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.03)',
-        border: '1px solid var(--glass-border)',
-        borderRadius: 12,
-        padding: '12px 16px',
-        marginBottom: 20,
-        backdropFilter: 'blur(15px)',
-        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)'
-      }}>
+      <div
+        style={{
+          background: "rgba(255, 255, 255, 0.03)",
+          border: "1px solid var(--glass-border)",
+          borderRadius: 12,
+          padding: "12px 16px",
+          marginBottom: 20,
+          backdropFilter: "blur(15px)",
+          boxShadow: "0 2px 12px rgba(0, 0, 0, 0.08)",
+        }}
+      >
         {/* Compact Filter Layout */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 16,
-          flexWrap: 'wrap'
-        }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+            flexWrap: "wrap",
+          }}
+        >
           {/* Left: Filter & Sort Label + Controls */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6
-            }}>
-              <div style={{
-                width: 3,
-                height: 16,
-                background: 'var(--primary-gradient)',
-                borderRadius: 2
-              }}></div>
-              <span style={{
-                fontSize: 14,
-                fontWeight: 600,
-                color: 'var(--standard-font-color)',
-                background: 'var(--primary-gradient)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <div
+                style={{
+                  width: 3,
+                  height: 16,
+                  background: "var(--primary-gradient)",
+                  borderRadius: 2,
+                }}
+              ></div>
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "var(--standard-font-color)",
+                  background: "var(--primary-gradient)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
                 Filter & Sort
               </span>
             </div>
 
             {/* Enhanced Dropdown Container */}
-            <div style={{
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6
-            }}>
-              <div style={{
-                position: 'relative',
-                display: 'inline-block'
-              }}>
+            <div
+              style={{
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <div
+                style={{
+                  position: "relative",
+                  display: "inline-block",
+                }}
+              >
                 <select
                   value={sort.key}
                   onChange={(e) => handleSort(e.target.value as any)}
                   style={{
-                    appearance: 'none',
-                    WebkitAppearance: 'none',
-                    MozAppearance: 'none',
-                    padding: '6px 28px 6px 12px',
+                    appearance: "none",
+                    WebkitAppearance: "none",
+                    MozAppearance: "none",
+                    padding: "6px 28px 6px 12px",
                     borderRadius: 8,
-                    background: '#1a1a23',
-                    color: '#ffffff',
-                    border: '1px solid #3a3a4a',
+                    background: "var(--glass-bg)",
+                    color: "var(--standard-font-color)",
+                    border: "1px solid var(--glass-border)",
+                    backdropFilter: "blur(10px)",
                     fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    outline: 'none',
-                    minWidth: 120,
-                    backgroundImage: 'none'
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    outline: "none",
+                    minWidth: 100,
+                    backgroundImage: "none",
                   }}
                   onFocus={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--accent-color)';
-                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(76, 175, 80, 0.15)';
+                    e.currentTarget.style.borderColor = "var(--accent-color)";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 0 2px rgba(76, 175, 80, 0.1)";
                   }}
                   onBlur={(e) => {
-                    e.currentTarget.style.borderColor = '#3a3a4a';
-                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.borderColor = "var(--glass-border)";
+                    e.currentTarget.style.boxShadow = "none";
                   }}
                 >
-                  <option value="name">Name</option>
-                  <option value="pairs">Pools</option>
-                  <option value="priceUsd">Price</option>
-                  <option value="tvlUsd">TVL</option>
-                  <option value="priceChangeDay">24h Change</option>
-                  <option value="volumeUsdDay">24h Volume</option>
-                  <option value="volumeUsdAll">Total Volume</option>
+                  <option value="pairs_count">Pools</option>
+                  <option value="price">Price</option>
+                  <option value="tvl">TVL</option>
+                  <option value="24hchange">24h Change</option>
+                  <option value="24hvolume">24h Volume</option>
+                  <option value="7dchange">7d Change</option>
+                  <option value="7dvolume">7d Volume</option>
+                  <option value="created_at">Created At</option>
+
                 </select>
                 {/* Custom Dropdown Arrow */}
-                <div style={{
-                  position: 'absolute',
-                  right: 8,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  pointerEvents: 'none',
-                  color: '#cbd5e1',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 16,
-                  height: 16,
-                  background: 'rgba(255, 255, 255, 0.12)',
-                  borderRadius: 4,
-                  transition: 'all 0.2s ease'
-                }}>
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 8,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    pointerEvents: "none",
+                    color: "var(--light-font-color)",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 16,
+                    height: 16,
+                    background: "rgba(255, 255, 255, 0.1)",
+                    borderRadius: 4,
+                    transition: "all 0.3s ease",
+                  }}
+                >
                   ▼
                 </div>
               </div>
@@ -243,59 +267,72 @@ export function TokenListTable({
               <button
                 onClick={() => handleSort(sort.key)}
                 style={{
-                  padding: '6px 8px',
+                  padding: "6px 8px",
                   borderRadius: 6,
-                  border: '1px solid var(--glass-border)',
-                  background: sort.asc ? 'var(--accent-color)' : 'var(--glass-bg)',
-                  color: sort.asc ? 'white' : 'var(--standard-font-color)',
-                  cursor: 'pointer',
-                  backdropFilter: 'blur(10px)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  border: "1px solid var(--glass-border)",
+                  background: sort.asc
+                    ? "var(--accent-color)"
+                    : "var(--glass-bg)",
+                  color: sort.asc ? "white" : "var(--standard-font-color)",
+                  cursor: "pointer",
+                  backdropFilter: "blur(10px)",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   fontSize: 13,
                   fontWeight: 600,
                   minWidth: 28,
                   height: 28,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  outline: 'none'
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  outline: "none",
                 }}
                 onMouseOver={(e) => {
                   if (!sort.asc) {
-                    e.currentTarget.style.background = 'var(--accent-color)';
-                    e.currentTarget.style.color = 'white';
+                    e.currentTarget.style.background = "var(--accent-color)";
+                    e.currentTarget.style.color = "white";
                   }
-                  e.currentTarget.style.transform = 'translateY(-1px) scale(1.05)';
-                  e.currentTarget.style.boxShadow = '0 3px 8px rgba(76, 175, 80, 0.3)';
+                  e.currentTarget.style.transform =
+                    "translateY(-1px) scale(1.05)";
+                  e.currentTarget.style.boxShadow =
+                    "0 3px 8px rgba(76, 175, 80, 0.3)";
                 }}
                 onMouseOut={(e) => {
                   if (!sort.asc) {
-                    e.currentTarget.style.background = 'var(--glass-bg)';
-                    e.currentTarget.style.color = 'var(--standard-font-color)';
+                    e.currentTarget.style.background = "var(--glass-bg)";
+                    e.currentTarget.style.color = "var(--standard-font-color)";
                   }
-                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.transform = "translateY(0) scale(1)";
+                  e.currentTarget.style.boxShadow = "none";
                 }}
-                title={sort.asc ? 'Sort Ascending' : 'Sort Descending'}
+                title={sort.asc ? "Sort Ascending" : "Sort Descending"}
               >
-                {sort.asc ? '↑' : '↓'}
+                {sort.asc ? "↑" : "↓"}
               </button>
             </div>
           </div>
 
           {/* Center: Search Input */}
-          <div style={{ position: 'relative', flex: 1, minWidth: 200, maxWidth: 400 }}>
-            <div style={{
-              position: 'absolute',
-              left: 10,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#cbd5e1',
-              fontSize: 14,
-              pointerEvents: 'none',
-              opacity: 0.6,
-              zIndex: 1
-            }}>
+          <div
+            style={{
+              position: "relative",
+              flex: 1,
+              minWidth: 200,
+              maxWidth: 400,
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                left: 10,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "var(--light-font-color)",
+                fontSize: 14,
+                pointerEvents: "none",
+                opacity: 0.6,
+                zIndex: 1,
+              }}
+            >
               🔍
             </div>
             <input
@@ -303,60 +340,63 @@ export function TokenListTable({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               style={{
-                width: '100%',
-                padding: '8px 12px 8px 32px',
+                width: "100%",
+                padding: "8px 12px 8px 32px",
                 borderRadius: 8,
-                background: '#1a1a23',
-                color: '#ffffff',
-                border: '1px solid #3a3a4a',
+                background: "var(--glass-bg)",
+                color: "var(--standard-font-color)",
+                border: "1px solid var(--glass-border)",
+                backdropFilter: "blur(10px)",
                 fontSize: 13,
-                fontWeight: 500,
-                transition: 'all 0.2s ease',
-                outline: 'none',
-                boxSizing: 'border-box'
+                fontWeight: 400,
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                outline: "none",
+                boxSizing: "border-box",
               }}
               onFocus={(e) => {
-                e.currentTarget.style.borderColor = 'var(--accent-color)';
-                e.currentTarget.style.boxShadow = '0 0 0 2px rgba(76, 175, 80, 0.15)';
-                e.currentTarget.style.background = '#20202b';
+                e.currentTarget.style.borderColor = "var(--accent-color)";
+                e.currentTarget.style.boxShadow =
+                  "0 0 0 2px rgba(76, 175, 80, 0.1)";
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = '#3a3a4a';
-                e.currentTarget.style.boxShadow = 'none';
-                e.currentTarget.style.background = '#1a1a23';
+                e.currentTarget.style.borderColor = "var(--glass-border)";
+                e.currentTarget.style.boxShadow = "none";
+                e.currentTarget.style.background = "var(--glass-bg)";
               }}
             />
             {search && (
               <button
-                onClick={() => onSearchChange('')}
+                onClick={() => onSearchChange("")}
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   right: 6,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: 'none',
-                  borderRadius: '50%',
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "rgba(255, 255, 255, 0.1)",
+                  border: "none",
+                  borderRadius: "50%",
                   width: 20,
                   height: 20,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: 'var(--light-font-color)',
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  color: "var(--light-font-color)",
                   fontSize: 10,
-                  transition: 'all 0.3s ease',
-                  outline: 'none'
+                  transition: "all 0.3s ease",
+                  outline: "none",
                 }}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 107, 107, 0.2)';
-                  e.currentTarget.style.color = '#ff6b6b';
-                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+                  e.currentTarget.style.background = "rgba(255, 107, 107, 0.2)";
+                  e.currentTarget.style.color = "#ff6b6b";
+                  e.currentTarget.style.transform =
+                    "translateY(-50%) scale(1.1)";
                 }}
                 onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                  e.currentTarget.style.color = 'var(--light-font-color)';
-                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+                  e.currentTarget.style.color = "var(--light-font-color)";
+                  e.currentTarget.style.transform = "translateY(-50%) scale(1)";
                 }}
                 title="Clear search"
               >
@@ -366,101 +406,123 @@ export function TokenListTable({
           </div>
 
           {/* Right: Results Counter */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            background: 'rgba(76, 175, 80, 0.1)',
-            padding: '6px 10px',
-            borderRadius: 16,
-            border: '1px solid rgba(76, 175, 80, 0.2)',
-            flexShrink: 0
-          }}>
-            <div style={{
-              width: 5,
-              height: 5,
-              borderRadius: '50%',
-              background: 'var(--accent-color)',
-              animation: 'pulse 2s infinite'
-            }}></div>
-            <span style={{
-              fontSize: 11,
-              color: 'var(--accent-color)',
-              fontWeight: 600
-            }}>
-              {filteredTokens.length} {filteredTokens.length === 1 ? 'token' : 'tokens'}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              background: "rgba(76, 175, 80, 0.1)",
+              padding: "6px 10px",
+              borderRadius: 16,
+              border: "1px solid rgba(76, 175, 80, 0.2)",
+              flexShrink: 0,
+            }}
+          >
+            <div
+              style={{
+                width: 5,
+                height: 5,
+                borderRadius: "50%",
+                background: "var(--accent-color)",
+                animation: "pulse 2s infinite",
+              }}
+            ></div>
+            <span
+              style={{
+                fontSize: 11,
+                color: "var(--accent-color)",
+                fontWeight: 600,
+              }}
+            >
+              {tokens.length} {tokens.length === 1 ? "token" : "tokens"}
             </span>
           </div>
         </div>
 
         {/* Compact Active Filters Display */}
-        {(search || sort.key !== 'name') && (
-          <div style={{
-            marginTop: 10,
-            paddingTop: 10,
-            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            flexWrap: 'wrap'
-          }}>
-            <span style={{
-              fontSize: 11,
-              color: 'var(--light-font-color)',
-              fontWeight: 500,
-              opacity: 0.8
-            }}>
+        {(search || sort.key !== "name") && (
+          <div
+            style={{
+              marginTop: 10,
+              paddingTop: 10,
+              borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flexWrap: "wrap",
+            }}
+          >
+            <span
+              style={{
+                fontSize: 11,
+                color: "var(--light-font-color)",
+                fontWeight: 500,
+                opacity: 0.8,
+              }}
+            >
               Active:
             </span>
             {search && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                background: 'rgba(76, 175, 80, 0.12)',
-                padding: '2px 6px',
-                borderRadius: 8,
-                fontSize: 11,
-                color: 'var(--accent-color)',
-                border: '1px solid rgba(76, 175, 80, 0.2)'
-              }}>
-                <span>Search: "{search.length > 15 ? search.substring(0, 15) + '...' : search}"</span>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  background: "rgba(76, 175, 80, 0.12)",
+                  padding: "2px 6px",
+                  borderRadius: 8,
+                  fontSize: 11,
+                  color: "var(--accent-color)",
+                  border: "1px solid rgba(76, 175, 80, 0.2)",
+                }}
+              >
+                <span>
+                  Search: "
+                  {search.length > 15
+                    ? search.substring(0, 15) + "..."
+                    : search}
+                  "
+                </span>
                 <button
-                  onClick={() => onSearchChange('')}
+                  onClick={() => onSearchChange("")}
                   style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--accent-color)',
-                    cursor: 'pointer',
+                    background: "none",
+                    border: "none",
+                    color: "var(--accent-color)",
+                    cursor: "pointer",
                     fontSize: 9,
                     padding: 0,
-                    outline: 'none',
-                    opacity: 0.7
+                    outline: "none",
+                    opacity: 0.7,
                   }}
                   onMouseOver={(e) => {
-                    e.currentTarget.style.opacity = '1';
+                    e.currentTarget.style.opacity = "1";
                   }}
                   onMouseOut={(e) => {
-                    e.currentTarget.style.opacity = '0.7';
+                    e.currentTarget.style.opacity = "0.7";
                   }}
                 >
                   ✕
                 </button>
               </div>
             )}
-            {sort.key !== 'name' && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                background: 'rgba(76, 175, 80, 0.12)',
-                padding: '2px 6px',
-                borderRadius: 8,
-                fontSize: 11,
-                color: 'var(--accent-color)',
-                border: '1px solid rgba(76, 175, 80, 0.2)'
-              }}>
-                <span>Sort: {sort.key} {sort.asc ? '↑' : '↓'}</span>
+            {sort.key !== "name" && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  background: "rgba(76, 175, 80, 0.12)",
+                  padding: "2px 6px",
+                  borderRadius: 8,
+                  fontSize: 11,
+                  color: "var(--accent-color)",
+                  border: "1px solid rgba(76, 175, 80, 0.2)",
+                }}
+              >
+                <span>
+                  Sort: {sort.key} {sort.asc ? "↑" : "↓"}
+                </span>
               </div>
             )}
           </div>
@@ -486,232 +548,247 @@ export function TokenListTable({
       `}</style>
 
       {/* Table */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '1px solid var(--glass-border)',
-        borderRadius: 16,
-        overflow: 'hidden',
-        backdropFilter: 'blur(10px)'
-      }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div
+        style={{
+          background: "rgba(255, 255, 255, 0.02)",
+          border: "1px solid var(--glass-border)",
+          borderRadius: 16,
+          // overflow: 'hidden',
+          backdropFilter: "blur(10px)",
+        }}
+      >
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              borderBottom: '1px solid var(--glass-border)'
-            }}>
-              <th style={{
-                textAlign: 'left',
-                padding: '16px 12px',
-                fontSize: 14,
-                color: 'var(--light-font-color)',
-                fontWeight: 600,
-                letterSpacing: '0.5px'
-              }}>Name</th>
-              <th style={{
-                textAlign: 'center',
-                padding: '16px 12px',
-                fontSize: 14,
-                color: 'var(--light-font-color)',
-                fontWeight: 600,
-                letterSpacing: '0.5px'
-              }}>Pools</th>
-              <th style={{
-                textAlign: 'right',
-                padding: '16px 12px',
-                fontSize: 14,
-                color: 'var(--light-font-color)',
-                fontWeight: 600,
-                letterSpacing: '0.5px'
-              }}>Price</th>
-              <th style={{
-                textAlign: 'right',
-                padding: '16px 12px',
-                fontSize: 14,
-                color: 'var(--light-font-color)',
-                fontWeight: 600,
-                letterSpacing: '0.5px'
-              }}>TVL</th>
-              <th style={{
-                textAlign: 'right',
-                padding: '16px 12px',
-                fontSize: 14,
-                color: 'var(--light-font-color)',
-                fontWeight: 600,
-                letterSpacing: '0.5px'
-              }}>24h Change</th>
-              <th style={{
-                textAlign: 'right',
-                padding: '16px 12px',
-                fontSize: 14,
-                color: 'var(--light-font-color)',
-                fontWeight: 600,
-                letterSpacing: '0.5px'
-              }}>24h Volume</th>
-              <th style={{
-                textAlign: 'right',
-                padding: '16px 12px',
-                fontSize: 14,
-                color: 'var(--light-font-color)',
-                fontWeight: 600,
-                letterSpacing: '0.5px'
-              }}>Total Volume</th>
-              <th style={{
-                textAlign: 'center',
-                padding: '16px 12px',
-                fontSize: 14,
-                color: 'var(--light-font-color)',
-                fontWeight: 600,
-                letterSpacing: '0.5px'
-              }}>Actions</th>
+            <tr
+              style={{
+                background: "rgba(255, 255, 255, 0.05)",
+                borderBottom: "1px solid var(--glass-border)",
+              }}
+            >
+              <th
+                style={{
+                  textAlign: "left",
+                  padding: "16px 12px",
+                  fontSize: 14,
+                  color: "var(--light-font-color)",
+                  fontWeight: 600,
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Name
+              </th>
+              <th
+                style={{
+                  textAlign: "center",
+                  padding: "16px 12px",
+                  fontSize: 14,
+                  color: "var(--light-font-color)",
+                  fontWeight: 600,
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Pools
+              </th>
+              <th
+                style={{
+                  textAlign: "left",
+                  padding: "16px 12px",
+                  fontSize: 14,
+                  color: "var(--light-font-color)",
+                  fontWeight: 600,
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Price
+              </th>
+              <th
+                style={{
+                  textAlign: "left",
+                  padding: "16px 12px",
+                  fontSize: 14,
+                  color: "var(--light-font-color)",
+                  fontWeight: 600,
+                  letterSpacing: "0.5px",
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  Volume
+                  <div className="flex items-center justify-center w-auto flex-shrink-0">
+                    <PerformanceTimeframeSelector />
+                  </div>
+                </div>
+              </th>
+
+              <th
+                style={{
+                  textAlign: "left",
+                  padding: "16px 12px",
+                  fontSize: 14,
+                  color: "var(--light-font-color)",
+                  fontWeight: 600,
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Total Volume
+              </th>
+              <th
+                style={{
+                  textAlign: "center",
+                  padding: "16px 12px",
+                  fontSize: 14,
+                  color: "var(--light-font-color)",
+                  fontWeight: 600,
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
-            {sortedTokens.map((token) => (
-              <tr key={token.address} style={{
-                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                transition: 'all 0.3s ease'
-              }}
+            {tokens.map((token) => (
+              <tr
+                key={token.address}
+                style={{
+                  borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
+                  transition: "all 0.3s ease",
+                  cursor: "pointer",
+                }}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                  e.currentTarget.style.background =
+                    "rgba(255, 255, 255, 0.03)";
                 }}
                 onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.background = "transparent";
                 }}
+                onClick={() => handleTokenClick(token)}
               >
                 {/* Name Column */}
-                <td style={{ padding: '16px 12px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                    <button
-                      onClick={() => handleTokenClick(token)}
+                <td style={{ padding: "16px 12px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <div
                       style={{
-                        color: 'var(--accent-color)',
-                        textDecoration: 'none',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
+                        color: "var(--accent-color)",
+                        textDecoration: "none",
+                        background: "none",
+                        border: "none",
                         fontSize: 15,
                         fontWeight: 600,
-                        transition: 'all 0.3s ease',
+                        transition: "all 0.3s ease",
                         padding: 0,
-                        textAlign: 'left'
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.textDecoration = 'underline';
-                        e.currentTarget.style.transform = 'translateY(-1px)';
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.textDecoration = 'none';
-                        e.currentTarget.style.transform = 'translateY(0)';
+                        textAlign: "left",
                       }}
                     >
                       {token.symbol}
-                    </button>
-                    <span style={{
-                      color: 'var(--light-font-color)',
-                      fontSize: 10,
-                      fontWeight: 500,
-                    }}>
+                    </div>
+                    <span
+                      style={{
+                        color: "var(--light-font-color)",
+                        fontSize: 10,
+                        fontWeight: 500,
+                      }}
+                    >
                       {token.name}
                     </span>
                   </div>
                 </td>
 
                 {/* Pools Column */}
-                <td style={{
-                  textAlign: 'center',
-                  padding: '16px 12px',
-                  fontSize: 14,
-                  color: 'var(--standard-font-color)',
-                  fontWeight: 500
-                }}>
+                <td
+                  style={{
+                    textAlign: "center",
+                    padding: "16px 12px",
+                    fontSize: 14,
+                    color: "var(--standard-font-color)",
+                    fontWeight: 500,
+                  }}
+                >
                   {token.pairs_count || 0}
                 </td>
 
                 {/* Price Column */}
-                <td style={{
-                  textAlign: 'right',
-                  padding: '16px 12px',
-                  fontSize: 14,
-                  color: 'var(--standard-font-color)',
-                  fontWeight: 500
-                }}>
-                  {(token as any).priceUsd != null ? `$${Number((token as any).priceUsd).toFixed(4)}` : '-'}
-                </td>
-
-                {/* TVL Column */}
-                <td style={{
-                  textAlign: 'right',
-                  padding: '16px 12px',
-                  fontSize: 14,
-                  color: 'var(--standard-font-color)',
-                  fontWeight: 500
-                }}>
-                  {(token as any).tvlUsd != null ? `$${Number((token as any).tvlUsd).toLocaleString()}` : '-'}
-                </td>
-
-                {/* 24h Price Change Column */}
-                <td style={{
-                  textAlign: 'right',
-                  padding: '16px 12px',
-                  fontSize: 14,
-                  fontWeight: 500
-                }}>
-                  {(token as any).priceChangeDay != null ? (
-                    <span style={{
-                      color: Number((token as any).priceChangeDay) >= 0 ? 'var(--success-color)' : 'var(--error-color)',
-                      fontWeight: 600
-                    }}>
-                      {Number((token as any).priceChangeDay) >= 0 ? '+' : ''}{Number((token as any).priceChangeDay).toFixed(2)}%
-                    </span>
-                  ) : '-'}
+                <td
+                  style={{
+                    textAlign: "right",
+                    padding: "16px 12px",
+                    fontSize: 14,
+                    color: "var(--standard-font-color)",
+                    fontWeight: 500,
+                  }}
+                >
+                  <PriceDataFormatter priceData={token.price} />
                 </td>
 
                 {/* 24h Volume Column */}
-                <td style={{
-                  textAlign: 'right',
-                  padding: '16px 12px',
-                  fontSize: 14,
-                  color: 'var(--standard-font-color)',
-                  fontWeight: 500
-                }}>
-                  {(token as any).volumeUsdDay != null ? `$${Number((token as any).volumeUsdDay).toLocaleString()}` : '-'}
+                <td
+                  style={{
+                    textAlign: "right",
+                    padding: "16px 12px",
+                    fontSize: 14,
+                    color: "var(--standard-font-color)",
+                    fontWeight: 500,
+                  }}
+                >
+                  <PriceDataFormatter
+                    priceData={token.summary.change[timeBase].volume}
+                    bignumber
+                  />
                 </td>
 
                 {/* Total Volume Column */}
-                <td style={{
-                  textAlign: 'right',
-                  padding: '16px 12px',
-                  fontSize: 14,
-                  color: 'var(--standard-font-color)',
-                  fontWeight: 500
-                }}>
-                  {(token as any).volumeUsdAll != null ? `$${Number((token as any).volumeUsdAll).toLocaleString()}` : '-'}
+                <td
+                  style={{
+                    textAlign: "center",
+                    padding: "16px 12px",
+                    fontSize: 14,
+                    color: "var(--standard-font-color)",
+                    fontWeight: 500,
+                  }}
+                >
+                  <PriceDataFormatter
+                    priceData={token.summary.total_volume}
+                    bignumber
+                  />
                 </td>
-                <td style={{ textAlign: 'center', padding: '16px 12px' }}>
-                  <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                <td style={{ textAlign: "center", padding: "16px 12px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 6,
+                      justifyContent: "center",
+                    }}
+                  >
                     <button
                       onClick={() => handleSwapClick(token)}
                       style={{
-                        padding: '6px 12px',
+                        padding: "6px 12px",
                         borderRadius: 8,
-                        border: '1px solid var(--glass-border)',
-                        background: 'var(--glass-bg)',
-                        color: 'var(--standard-font-color)',
-                        cursor: 'pointer',
+                        border: "1px solid var(--glass-border)",
+                        background: "var(--glass-bg)",
+                        color: "var(--standard-font-color)",
+                        cursor: "pointer",
                         fontSize: 12,
                         fontWeight: 500,
-                        backdropFilter: 'blur(10px)',
-                        transition: 'all 0.3s ease'
+                        backdropFilter: "blur(10px)",
+                        transition: "all 0.3s ease",
                       }}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.background = 'var(--button-gradient)';
-                        e.currentTarget.style.transform = 'translateY(-1px)';
-                        e.currentTarget.style.color = 'white';
+                        e.currentTarget.style.background =
+                          "var(--button-gradient)";
+                        e.currentTarget.style.transform = "translateY(-1px)";
+                        e.currentTarget.style.color = "white";
                       }}
                       onMouseOut={(e) => {
-                        e.currentTarget.style.background = 'var(--glass-bg)';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.color = 'var(--standard-font-color)';
+                        e.currentTarget.style.background = "var(--glass-bg)";
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.color =
+                          "var(--standard-font-color)";
                       }}
                     >
                       Swap
@@ -719,26 +796,28 @@ export function TokenListTable({
                     <button
                       onClick={() => handleAddClick(token)}
                       style={{
-                        padding: '6px 12px',
+                        padding: "6px 12px",
                         borderRadius: 8,
-                        border: '1px solid var(--glass-border)',
-                        background: 'var(--glass-bg)',
-                        color: 'var(--standard-font-color)',
-                        cursor: 'pointer',
+                        border: "1px solid var(--glass-border)",
+                        background: "var(--glass-bg)",
+                        color: "var(--standard-font-color)",
+                        cursor: "pointer",
                         fontSize: 12,
                         fontWeight: 500,
-                        backdropFilter: 'blur(10px)',
-                        transition: 'all 0.3s ease'
+                        backdropFilter: "blur(10px)",
+                        transition: "all 0.3s ease",
                       }}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.background = 'var(--button-gradient)';
-                        e.currentTarget.style.transform = 'translateY(-1px)';
-                        e.currentTarget.style.color = 'white';
+                        e.currentTarget.style.background =
+                          "var(--button-gradient)";
+                        e.currentTarget.style.transform = "translateY(-1px)";
+                        e.currentTarget.style.color = "white";
                       }}
                       onMouseOut={(e) => {
-                        e.currentTarget.style.background = 'var(--glass-bg)';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.color = 'var(--standard-font-color)';
+                        e.currentTarget.style.background = "var(--glass-bg)";
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.color =
+                          "var(--standard-font-color)";
                       }}
                     >
                       Add
@@ -752,28 +831,34 @@ export function TokenListTable({
       </div>
 
       {tokens.length === 0 && !loading && (
-        <div style={{
-          textAlign: 'center',
-          padding: 60,
-          background: 'rgba(255, 255, 255, 0.02)',
-          border: '1px solid var(--glass-border)',
-          borderRadius: 16,
-          backdropFilter: 'blur(10px)',
-          marginTop: 20
-        }}>
-          <div style={{
-            color: 'var(--light-font-color)',
-            fontSize: 16,
-            fontWeight: 500,
-            marginBottom: 8
-          }}>
+        <div
+          style={{
+            textAlign: "center",
+            padding: 60,
+            background: "rgba(255, 255, 255, 0.02)",
+            border: "1px solid var(--glass-border)",
+            borderRadius: 16,
+            backdropFilter: "blur(10px)",
+            marginTop: 20,
+          }}
+        >
+          <div
+            style={{
+              color: "var(--light-font-color)",
+              fontSize: 16,
+              fontWeight: 500,
+              marginBottom: 8,
+            }}
+          >
             No tokens found
           </div>
-          <div style={{
-            color: 'var(--light-font-color)',
-            fontSize: 14,
-            opacity: 0.7
-          }}>
+          <div
+            style={{
+              color: "var(--light-font-color)",
+              fontSize: 14,
+              opacity: 0.7,
+            }}
+          >
             Try adjusting your search criteria
           </div>
         </div>
@@ -781,6 +866,5 @@ export function TokenListTable({
     </div>
   );
 }
-
 
 export default TokenListTable;

@@ -1,4 +1,4 @@
-import { DexService } from "@/api/generated";
+import { DexPairService, DexService } from "@/api/generated";
 import { PriceDataFormatter } from "@/features/shared/components";
 import { Decimal } from "@/libs/decimal";
 import { useQuery } from "@tanstack/react-query";
@@ -68,8 +68,8 @@ export default function PoolDetail() {
   const navigate = useNavigate();
 
   const { data: pairSummary } = useQuery({
-    queryFn: () => DexService.getPairSummary({ address: poolAddress }),
-    queryKey: ["DexService.getPairSummary", poolAddress],
+    queryFn: () => DexPairService.getPairSummary({ address: poolAddress }),
+    queryKey: ["DexPairService.getPairSummary", poolAddress],
     enabled: !!poolAddress,
   })
 

@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { DataTable, DataTableResponse } from '../../shared/components/DataTable';
 import { TransactionCard } from '../components/TransactionCard';
 import { Search, Filter, X, RefreshCw, Hash, User } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 
 // Transaction types mapping with meaningful names
 const TX_TYPES = [
@@ -37,6 +38,9 @@ const fetchTransactions = async (params: any): Promise<DataTableResponse<any>> =
 
 // Advanced example showing how to use DataTable with filters and custom parameters
 export default function DexExploreTransactions() {
+  const [searchParams] = useSearchParams();
+  const tokenAddress = searchParams.get("tokenAddress");
+
   const [filters, setFilters] = useState({
     txType: 'all',
     pairAddress: '',
@@ -204,6 +208,7 @@ export default function DexExploreTransactions() {
             txType: filters.txType,
             pairAddress: filters.pairAddress,
             accountAddress: filters.accountAddress,
+            tokenAddress: tokenAddress,
           }}
           itemsPerPage={10}
           emptyMessage="No transactions found matching your criteria."

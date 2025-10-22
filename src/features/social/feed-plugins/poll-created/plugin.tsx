@@ -124,6 +124,7 @@ export function registerPollCreatedPlugin() {
           options={options}
           totalVotes={totalVotes}
           onOpen={handleOpen}
+          createdAtIso={entry.createdAt}
         />
       );
     },

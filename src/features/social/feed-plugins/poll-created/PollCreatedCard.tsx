@@ -4,6 +4,7 @@ import FeedPluginCard from '../FeedPluginCard';
 import { cn } from '@/lib/utils';
 import AddressAvatarWithChainNameFeed from '@/@components/Address/AddressAvatarWithChainNameFeed';
 import { useChainName } from '@/hooks/useChainName';
+import { compactTime } from '@/utils/time';
 
 export type PollCreatedCardProps = {
   title: string;
@@ -13,9 +14,10 @@ export type PollCreatedCardProps = {
   options: { id: number; label: string; votes?: number }[];
   totalVotes?: number;
   onOpen?: () => void;
+  createdAtIso?: string;
 };
 
-export default function PollCreatedCard({ title, author, closeHeight, currentHeight, options, totalVotes = 0, onOpen }: PollCreatedCardProps) {
+export default function PollCreatedCard({ title, author, closeHeight, currentHeight, options, totalVotes = 0, onOpen, createdAtIso }: PollCreatedCardProps) {
   const { chainName } = useChainName(author || '');
   const timeLeft = useMemo(() => {
     if (!closeHeight || !currentHeight) return undefined;
@@ -31,18 +33,18 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
 
   return (
     <FeedPluginCard className={cn(styles.root, 'feed-plugin poll-created')} role={onOpen ? 'button' : undefined} onClick={onOpen}>
-      <div className="flex items-center gap-2">
-        <div className={styles.title}>{title}</div>
-      </div>
       <div className={styles.metaRow}>
         {author && (
           <>
-            <span>by</span>
-            <AddressAvatarWithChainNameFeed address={author} size={14} overlaySize={8} showAddressAndChainName={false} />
+            <span className="text-white/70">Poll by</span>
+            <AddressAvatarWithChainNameFeed address={author} size={20} overlaySize={12} showAddressAndChainName={false} />
             <span className={styles.byName}>{chainName || 'Legend'}</span>
+            {createdAtIso && <span>· {compactTime(createdAtIso)}</span>}
           </>
         )}
-        {timeLeft && <span>• {timeLeft}</span>}
+      </div>
+      <div className="flex items-center gap-2">
+        <div className={styles.title}>{title}</div>
       </div>
 
       <div className={styles.options}>

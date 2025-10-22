@@ -36,10 +36,12 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
       <div className={styles.metaRow}>
         {author && (
           <>
-            <AddressAvatarWithChainNameFeed address={author} size={20} overlaySize={12} showAddressAndChainName={false} />
-            <span className={styles.byName}>{chainName || 'Legend'}</span>
+            <span className="inline-flex items-center gap-1">
+              <AddressAvatarWithChainNameFeed address={author} size={20} overlaySize={12} showAddressAndChainName={false} />
+              <span className={styles.byName}>{chainName || 'Legend'}</span>
+            </span>
             <span className="text-white/70">created a poll</span>
-            {createdAtIso && <span>· {compactTime(createdAtIso)}</span>}
+            {createdAtIso && <span className="text-white/60">· {compactTime(createdAtIso)}</span>}
           </>
         )}
       </div>

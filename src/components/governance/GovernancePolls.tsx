@@ -17,11 +17,11 @@ export default function GovernancePolls() {
 
   return (
     <div className="min-h-screen">
-      <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
+      <div className="flex flex-col gap-4 px-4 md:px-6 py-4 max-w-6xl mx-auto">
         {/* Enhanced Header Section */}
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-3xl blur-3xl -z-10" />
-          <div className="flex items-center justify-between mb-8 py-8 px-6 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-3xl blur-2xl -z-10" />
+          <div className="flex items-center justify-between mb-4 py-5 px-5 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="relative">
                 <div className="w-16 h-16 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
@@ -39,7 +39,7 @@ export default function GovernancePolls() {
                 </p>
               </div>
             </div>
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2">
               <div
                 className={`px-4 py-2 rounded-2xl  ${
                   status === "open"
@@ -64,91 +64,85 @@ export default function GovernancePolls() {
           </div>
         </div>
 
-        {/* Enhanced Search and Filter Controls */}
-        <div className="sticky top-4 z-20 mb-8">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-3xl blur-2xl -z-10" />
-            <div className="bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 shadow-2xl">
-              <div className="flex flex-col lg:flex-row gap-4">
-                <div className="flex-1">
-                  <MobileInput
-                    label="Search polls"
-                    placeholder="Find polls by title or description..."
-                    value={search}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                    }}
-                    variant="filled"
-                    size="large"
-                    rightIcon={
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
-                      </svg>
+        {/* Compact Controls Row: Search • Filter • Delegation */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-3xl blur-xl -z-10" />
+          <div className="bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-4">
+            <div className="flex flex-col lg:flex-row items-stretch gap-3">
+              <div className="flex-1">
+                <MobileInput
+                  label="Search polls"
+                  placeholder="Find polls by title or description..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                  }}
+                  variant="filled"
+                  size="large"
+                  rightIcon={
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  }
+                />
+              </div>
+              <div className="lg:w-56">
+                <MobileInput
+                  as="select"
+                  label="Filter by status"
+                  value={status}
+                  onChange={(e) => {
+                    if (
+                      e.target.value !== "all" &&
+                      e.target.value !== "open" &&
+                      e.target.value !== "closed"
+                    ) {
+                      throw new Error("Invalid status");
                     }
-                    className="transition-all duration-300 focus-within:scale-[1.02] focus-within:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]"
-                  />
-                </div>
-                <div className="lg:w-64">
-                  <MobileInput
-                    as="select"
-                    label="Filter by status"
-                    value={status}
-                    onChange={(e) => {
-                      if (
-                        e.target.value !== "all" &&
-                        e.target.value !== "open" &&
-                        e.target.value !== "closed"
-                      ) {
-                        throw new Error("Invalid status");
-                      }
-                      setStatus(e.target.value);
-                    }}
-                    variant="filled"
-                    size="large"
-                    rightIcon={
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    }
-                    className="transition-all duration-300 focus-within:scale-[1.02] focus-within:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]"
-                  >
-                    <option value="all">All polls</option>
-                    <option value="open">🟢 Open polls</option>
-                    <option value="closed">🔴 Closed polls</option>
-                  </MobileInput>
-                </div>
+                    setStatus(e.target.value);
+                  }}
+                  variant="filled"
+                  size="large"
+                  rightIcon={
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  }
+                >
+                  <option value="all">All polls</option>
+                  <option value="open">🟢 Open polls</option>
+                  <option value="closed">🔴 Closed polls</option>
+                </MobileInput>
+              </div>
+              <div className="w-full lg:w-[320px]">
+                <DelegationSettings compact defaultCollapsed />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Delegation Settings (compact) */}
-        <div className="mb-6">
-          <DelegationSettings compact defaultCollapsed />
-        </div>
-
-        {/* Enhanced Polls Grid */}
-        <div className="space-y-6">
+        {/* Polls Grid */}
+        <div className="space-y-4">
           {polls.length === 0 ? (
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-3xl blur-2xl -z-10" />
@@ -175,7 +169,7 @@ export default function GovernancePolls() {
               </MobileCard>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {polls.map((p, index) => (
               <Link
                   to={`/voting/poll/${p.poll}`}
@@ -272,3 +266,4 @@ export default function GovernancePolls() {
     </div>
   );
 }
+

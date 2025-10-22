@@ -20,6 +20,10 @@ import { PostApiResponse } from "../types";
 import FeedRenderer from "../feed-plugins/FeedRenderer";
 import { adaptPostToEntry } from "../feed-plugins/post";
 import type { FeedEntry } from "../feed-plugins/types";
+import { adaptTokenCreatedToEntry, registerTokenCreatedPlugin } from "../feed-plugins/token-created";
+
+// Register built-in plugins once (idempotent)
+registerTokenCreatedPlugin();
 
 // Custom hook
 function useUrlQuery() {
@@ -345,19 +349,17 @@ export default function FeedList({
             {collapsed ? `Show ${groupItems.length - 3} more` : 'Show less'}
           </button>
         ) : undefined;
-        nodes.push(
-          <TokenCreatedActivityItem
-            key={gi.id}
-            item={gi}
-            hideMobileDivider={hideDivider}
-            mobileTight={mobileTight}
-            mobileNoTopPadding={mobileNoTopPadding}
-            mobileNoBottomPadding={mobileNoBottomPadding}
-            mobileTightTop={mobileTightTop}
-            mobileTightBottom={mobileTightBottom}
-            footer={footer}
-          />
-        );
+
+        const entry: FeedEntry = adaptTokenCreatedToEntry(gi, {
+          hideMobileDivider: hideDivider,
+          mobileTight,
+          mobileNoTopPadding,
+          mobileNoBottomPadding,
+          mobileTightTop,
+          mobileTightBottom,
+          footer,
+        });
+        nodes.push(<FeedRenderer key={gi.id} entry={entry} onOpenPost={handleItemClick} />);
       }
 
       if (groupItems.length > 3) {

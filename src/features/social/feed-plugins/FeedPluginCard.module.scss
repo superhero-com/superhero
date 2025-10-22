@@ -4,11 +4,8 @@
 }
 
 .card {
-  /* Align with app glass card aesthetics without relying on global class names */
-  background: color-mix(in oklab, white 6%, transparent);
-  border: 1px solid color-mix(in oklab, white 20%, transparent);
+  /* Keep only radius; background/border are controlled by utility classes to match post items */
   border-radius: 1rem;
-  backdrop-filter: blur(12px);
 }
 
 .content {

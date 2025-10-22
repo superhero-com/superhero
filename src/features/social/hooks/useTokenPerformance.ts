@@ -27,20 +27,20 @@ function mapToCurrent24h(resp: any): TokenPerformance | null {
   return typeof percent === 'number' ? { current_change_percent: percent } : null;
 }
 
-export function useTokenPerformance(saleAddress?: string | null) {
+export function useTokenPerformance(saleAddress?: string | null, symbolUpper?: string | null) {
   const queryClient = useQueryClient();
 
   const { data, isFetching, refetch } = useQuery<TokenPerformance | null>({
-    queryKey: ['token-performance:24h', saleAddress],
-    enabled: !!saleAddress,
+    queryKey: ['token-performance:24h', saleAddress, symbolUpper],
+    enabled: !!(saleAddress || symbolUpper),
     queryFn: async () => {
-      if (!saleAddress) return null;
-      // Prefer fast generated endpoint
-      const direct = await TokensService.performance({ address: saleAddress }).catch(() => null);
+      if (!saleAddress && !symbolUpper) return null;
+      // Prefer fast generated endpoint (symbol or address)
+      const direct = await TokensService.performance({ address: (symbolUpper || saleAddress)! }).catch(() => null);
       const perfDirect = mapToCurrent24h(direct);
 
       // Also resolve canonical token via generated API and try again, then choose best
-      const tokenResolved = await TokensService.findByAddress({ address: saleAddress }).catch(() => null);
+      const tokenResolved = await TokensService.findByAddress({ address: (symbolUpper || saleAddress)! }).catch(() => null);
       const altAddr = (tokenResolved as any)?.sale_address || (tokenResolved as any)?.address;
       let perfAlt: TokenPerformance | null = null;
       if (altAddr && altAddr !== saleAddress) {
@@ -69,15 +69,15 @@ export function useTokenPerformance(saleAddress?: string | null) {
 
   // Subscribe to trade events; if the traded addresses include this saleAddress, refetch
   useEffect(() => {
-    if (!saleAddress) return;
+    if (!saleAddress && !symbolUpper) return;
     const off = onTrade(({ addresses }) => {
-      if (addresses.includes(saleAddress)) {
-        queryClient.invalidateQueries({ queryKey: ['token-performance:24h', saleAddress] });
+      if ((saleAddress && addresses.includes(saleAddress)) || (symbolUpper && addresses.includes(symbolUpper))) {
+        queryClient.invalidateQueries({ queryKey: ['token-performance:24h', saleAddress, symbolUpper] });
         refetch();
       }
     });
     return () => off();
-  }, [saleAddress, queryClient, refetch]);
+  }, [saleAddress, symbolUpper, queryClient, refetch]);
 
   return { performance: data, loading: isFetching };
 }

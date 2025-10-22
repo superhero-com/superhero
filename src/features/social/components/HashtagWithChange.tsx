@@ -41,7 +41,7 @@ export default function HashtagWithChange({ tag }: { tag: string }) {
   });
 
   const saleAddress = mappedAddress || topicSaleAddress || fallbackSaleAddress || undefined;
-  const { performance } = useTokenPerformance(saleAddress);
+  const { performance } = useTokenPerformance(saleAddress, upper);
 
   const change = performance?.current_change_percent;
   const sign = (change ?? 0) > 0 ? '+' : '';

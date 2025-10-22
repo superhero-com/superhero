@@ -166,10 +166,10 @@ export default function GovernancePolls() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {polls.map((p, index) => (
-                <Link
+              <Link
                   to={`/voting/p/${p.poll}`}
                   key={p.id}
-                  className="text-inherit no-underline block group"
+                  className="no-gradient-text text-inherit no-underline block group"
                 >
                   <div className="relative flex flex-col gap-4">
                     <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-blue-500/5 rounded-3xl blur-2xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

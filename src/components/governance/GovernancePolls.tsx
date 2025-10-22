@@ -179,7 +179,7 @@ export default function GovernancePolls() {
                       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
 
                       {/* Status indicator with glow */}
-                      <div className="absolute top-4 right-4 z-10">
+                      <div className="absolute top-4 right-4 z-20">
                         <div
                           className={`relative px-3 py-2 rounded-2xl text-xs font-bold uppercase tracking-wide whitespace-nowrap transition-all duration-300 ${
                             p.status?.toLowerCase() === "open"
@@ -197,7 +197,7 @@ export default function GovernancePolls() {
                         </div>
                       </div>
 
-                      <div className="relative flex flex-col gap-4 pt-2 z-10">
+                      <div className="flex flex-col gap-4 pt-2">
                         {/* Title with enhanced typography */}
                         <div className="pr-20">
                           <h3 className="font-bold text-xl leading-tight text-white transition-all duration-300">
@@ -249,9 +249,6 @@ export default function GovernancePolls() {
                             </span>
                           </div>
                         </div>
-
-                        {/* Hover effect overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 rounded-3xl -z-10 pointer-events-none" />
                       </div>
                     </div>
                   </div>

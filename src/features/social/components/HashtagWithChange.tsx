@@ -49,8 +49,9 @@ export default function HashtagWithChange({ tag }: { tag: string }) {
   const isDown = (change ?? 0) < 0;
   const formatted = useMemo(() => {
     if (change == null) return null;
+    if (change === 0) return '0%';
     const abs = Math.abs(change);
-    const precision = abs < 0.01 ? 3 : 2;
+    const precision = abs >= 1 ? 1 : abs < 0.01 ? 3 : 2;
     return `${sign}${abs.toFixed(precision)}%`;
   }, [change, sign]);
 

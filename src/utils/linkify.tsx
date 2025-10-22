@@ -29,7 +29,7 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
         <a
           href={`/users/${name}`}
           key={`aens-${name}-${offset}`}
-          className="underline-offset-2 hover:underline break-words"
+          className="underline-offset-2 break-words"
           style={{
             color: '#00ff9d',
           }}
@@ -64,7 +64,7 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
         <a
           href={`/users/${address}`}
           key={`acc-${address}-${idx}-${off}`}
-          className="underline-offset-2 hover:underline break-words"
+          className="underline-offset-2 break-words"
           style={{
             color: '#00ff9d',
           }}
@@ -103,7 +103,7 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
             key={`${href}-${idx}-${off}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="underline-offset-2 hover:underline break-words no-underline"
+            className="underline-offset-2 break-words no-underline"
             style={{
               display: 'inline',
               lineHeight: 'inherit',

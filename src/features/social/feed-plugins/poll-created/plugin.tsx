@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import type { FeedEntry, FeedPage } from '../types';
 import { registerPlugin } from '../registry';
 import PollCreatedCard from './PollCreatedCard';
@@ -32,7 +32,8 @@ export function registerPollCreatedPlugin() {
     Render: ({ entry, onOpen }: { entry: FeedEntry<PollCreatedEntryData>; onOpen?: (id: string) => void }) => {
       const { pollAddress, title, author, closeHeight, createHeight, options, totalVotes } = entry.data;
       const { sdk } = useAeSdk();
-      const currentHeight = (sdk as any)?.getHeight ? undefined : undefined; // avoid calling during SSR; page data shows time left anyway
+      // do not block render on height; card computes rough time left even if undefined
+      const currentHeight = undefined as number | undefined;
       const handleOpen = () => onOpen?.(String(pollAddress));
       return (
         <PollCreatedCard

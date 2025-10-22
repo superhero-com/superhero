@@ -61,18 +61,31 @@ export function registerPollCreatedPlugin() {
         const { p, ov } = valid[i];
         const meta = ov?.pollState?.metadata || ({} as any);
         const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
-        // Build votes per option using overview.stakesForOption[].votes length (vote count, not stake)
-        const votesByLabel = new Map<string, number>();
+        // Build votes per option index using overview.stakesForOption[].option
+        // The backend may return either index or label; try both, prefer index.
+        const indexByLabel = new Map<string, number>(
+          Object.entries(optsRec).map(([idx, label]) => [String(label), Number(idx)])
+        );
+        const votesByIndex = new Map<number, number>();
         const sfo = (ov?.stakesForOption || []) as Array<{ option: string; votes: unknown[] }>;
         for (const row of sfo) {
-          const label = String((row as any).option ?? '');
+          const raw = (row as any).option;
           const count = Array.isArray((row as any).votes) ? (row as any).votes.length : 0;
-          votesByLabel.set(label, count);
+          let optIndex: number | undefined;
+          const asNum = Number(raw);
+          if (!Number.isNaN(asNum)) {
+            optIndex = asNum;
+          } else {
+            optIndex = indexByLabel.get(String(raw));
+          }
+          if (typeof optIndex === 'number' && !Number.isNaN(optIndex)) {
+            votesByIndex.set(optIndex, count);
+          }
         }
         const options = Object.entries(optsRec).map(([k, v]) => ({
           id: Number(k),
           label: String(v),
-          votes: votesByLabel.get(String(v)) ?? 0,
+          votes: votesByIndex.get(Number(k)) ?? 0,
         }));
         const totalVotes = typeof ov?.voteCount === 'number' && !Number.isNaN(ov.voteCount)
           ? ov.voteCount

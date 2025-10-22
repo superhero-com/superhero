@@ -140,9 +140,23 @@ export default function TokenDetail() {
           <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.3)] relative overflow-hidden">
             {/* Header */}
             <div className="mb-6">
-              <h1 className="text-[28px] font-bold text-white m-0 mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600 bg-clip-text text-transparent">
-                {tokenDetails ? `${tokenDetails?.symbol} / ${tokenDetails?.name}` : "Loading token…"}
-              </h1>
+              {
+                !tokenDetails ? (
+                  <div className="text-center text-white/60 flex flex-col items-center gap-4">
+                    <div className="w-8 h-8 border-[3px] border-white/10 border-t-purple-400 rounded-full animate-spin"></div>
+                    Loading token details...
+                  </div>
+                ) : (
+                  <h1 className="text-[28px] font-bold text-white m-0 mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-600 bg-clip-text text-transparent">
+                    {tokenDetails?.symbol} 
+                    {
+                      tokenDetails?.name && tokenDetails?.name !== tokenDetails?.symbol && (
+                        <span className="text-white/60"> / {tokenDetails?.name}</span>
+                      )
+                    }
+                  </h1>
+                )
+              }
               <p className="text-sm text-white/60 m-0 leading-relaxed">
                 Token details and statistics
               </p>

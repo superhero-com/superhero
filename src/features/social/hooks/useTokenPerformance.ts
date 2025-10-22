@@ -36,16 +36,23 @@ export function useTokenPerformance(saleAddress?: string | null, symbolUpper?: s
     queryFn: async () => {
       if (!saleAddress && !symbolUpper) return null;
       // Prefer fast generated endpoint (symbol or address)
-      const direct = await TokensService.performance({ address: (symbolUpper || saleAddress)! }).catch(() => null);
+      const directAddr = (symbolUpper || saleAddress)!;
+      const direct = await TokensService.performance({ address: directAddr }).catch(() => null);
+      console.log(`[useTokenPerformance] Symbol: ${symbolUpper}, Address: ${saleAddress}`);
+      console.log(`[useTokenPerformance] Raw response for ${directAddr}:`, JSON.stringify(direct, null, 2));
       const perfDirect = mapToCurrent24h(direct);
+      console.log(`[useTokenPerformance] Mapped perfDirect:`, perfDirect);
 
       // Also resolve canonical token via generated API and try again, then choose best
-      const tokenResolved = await TokensService.findByAddress({ address: (symbolUpper || saleAddress)! }).catch(() => null);
+      const tokenResolved = await TokensService.findByAddress({ address: directAddr }).catch(() => null);
+      console.log(`[useTokenPerformance] Resolved token:`, tokenResolved);
       const altAddr = (tokenResolved as any)?.sale_address || (tokenResolved as any)?.address;
       let perfAlt: TokenPerformance | null = null;
       if (altAddr && altAddr !== saleAddress) {
         const altResp = await TokensService.performance({ address: altAddr }).catch(() => null);
+        console.log(`[useTokenPerformance] Alt response for ${altAddr}:`, JSON.stringify(altResp, null, 2));
         perfAlt = mapToCurrent24h(altResp);
+        console.log(`[useTokenPerformance] Mapped perfAlt:`, perfAlt);
       }
 
       // Fallback to TrendminerApi (legacy/custom client)
@@ -57,10 +64,13 @@ export function useTokenPerformance(saleAddress?: string | null, symbolUpper?: s
 
       // Pick non-null with the largest absolute percentage (guards against 0% from wrong address)
       const candidates = [perfDirect, perfAlt, perfLegacy].filter(Boolean) as TokenPerformance[];
+      console.log(`[useTokenPerformance] All candidates:`, candidates);
       if (candidates.length) {
         candidates.sort((a, b) => Math.abs((b.current_change_percent ?? 0)) - Math.abs((a.current_change_percent ?? 0)));
+        console.log(`[useTokenPerformance] Selected:`, candidates[0]);
         return candidates[0];
       }
+      console.log(`[useTokenPerformance] No candidates found, returning null`);
       return null;
     },
     refetchInterval: 60 * 1000,

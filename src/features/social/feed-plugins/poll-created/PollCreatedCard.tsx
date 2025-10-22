@@ -3,6 +3,7 @@ import styles from './PollCreatedCard.module.scss';
 import FeedPluginCard from '../FeedPluginCard';
 import { cn } from '@/lib/utils';
 import AddressAvatarWithChainNameFeed from '@/@components/Address/AddressAvatarWithChainNameFeed';
+import { useChainName } from '@/hooks/useChainName';
 
 export type PollCreatedCardProps = {
   title: string;
@@ -15,6 +16,7 @@ export type PollCreatedCardProps = {
 };
 
 export default function PollCreatedCard({ title, author, closeHeight, currentHeight, options, totalVotes = 0, onOpen }: PollCreatedCardProps) {
+  const { chainName } = useChainName(author || '');
   const timeLeft = useMemo(() => {
     if (!closeHeight || !currentHeight) return undefined;
     const blocksLeft = Math.max(0, closeHeight - currentHeight);
@@ -30,13 +32,16 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
   return (
     <FeedPluginCard className={cn(styles.root, 'feed-plugin poll-created')} role={onOpen ? 'button' : undefined} onClick={onOpen}>
       <div className="flex items-center gap-2">
-        {author && (
-          <AddressAvatarWithChainNameFeed address={author} size={18} overlaySize={10} showAddressAndChainName={true} />
-        )}
         <div className={styles.title}>{title}</div>
       </div>
       <div className={styles.metaRow}>
-        {author && <span>by</span>}
+        {author && (
+          <>
+            <span>by</span>
+            <AddressAvatarWithChainNameFeed address={author} size={14} overlaySize={8} showAddressAndChainName={false} />
+            <span className={styles.byName}>{chainName || 'Legend'}</span>
+          </>
+        )}
         {timeLeft && <span>• {timeLeft}</span>}
       </div>
 

@@ -1,0 +1,23 @@
+.root {
+  /* Prevent external ancestors from affecting stacking contexts of internals */
+  isolation: isolate;
+}
+
+.card {
+  /* Align with app glass card aesthetics without relying on global class names */
+  background: color-mix(in oklab, white 6%, transparent);
+  border: 1px solid color-mix(in oklab, white 20%, transparent);
+  border-radius: 1rem;
+  backdrop-filter: blur(12px);
+}
+
+.content {
+  padding: 1.25rem;
+}
+
+.divider {
+  height: 1px;
+  background: color-mix(in oklab, white 12%, transparent);
+}
+
+

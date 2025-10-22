@@ -251,7 +251,7 @@ export default function GovernancePolls() {
                         </div>
 
                         {/* Hover effect overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 rounded-3xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 rounded-3xl -z-10 pointer-events-none" />
                       </div>
                     </div>
                   </div>

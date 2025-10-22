@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { FeedEntry, FeedPage } from '../types';
 import { registerPlugin } from '../registry';
 import PollCreatedCard from './PollCreatedCard';
@@ -112,8 +112,23 @@ export function registerPollCreatedPlugin() {
     Render: ({ entry, onOpen }: { entry: FeedEntry<PollCreatedEntryData>; onOpen?: (id: string) => void }) => {
       const { pollAddress, title, author, closeHeight, createHeight, options, totalVotes } = entry.data;
       const { sdk } = useAeSdk();
-      // do not block render on height; card computes rough time left even if undefined
-      const currentHeight = undefined as number | undefined;
+      const [currentHeight, setCurrentHeight] = useState<number | undefined>(undefined);
+      useEffect(() => {
+        let cancelled = false;
+        (async () => {
+          try {
+            const h = await (sdk as any)?.getHeight?.();
+            if (!cancelled && typeof h === 'number') setCurrentHeight(h);
+          } catch {
+            // ignore
+          }
+        })();
+        return () => { cancelled = true; };
+      }, [sdk]);
+      const APPROX_BLOCK_MS = 180000; // ~3m per block
+      const createdAtIso = (currentHeight != null && createHeight != null)
+        ? new Date(Date.now() - Math.max(0, Number(currentHeight) - Number(createHeight)) * APPROX_BLOCK_MS).toISOString()
+        : entry.createdAt;
       const handleOpen = () => onOpen?.(String(pollAddress));
       return (
         <PollCreatedCard
@@ -124,7 +139,7 @@ export function registerPollCreatedPlugin() {
           options={options}
           totalVotes={totalVotes}
           onOpen={handleOpen}
-          createdAtIso={entry.createdAt}
+          createdAtIso={createdAtIso}
         />
       );
     },

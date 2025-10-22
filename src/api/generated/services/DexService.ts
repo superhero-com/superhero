@@ -23,7 +23,7 @@ export class DexService {
         limit,
         page,
     }: {
-        orderBy?: 'pairs_count' | 'name' | 'symbol' | 'created_at',
+        orderBy?: 'pairs_count' | 'name' | 'symbol' | 'created_at' | 'price' | 'tvl' | '24hchange' | '24hvolume' | '7dchange' | '7dvolume',
         orderDirection?: 'ASC' | 'DESC',
         search?: string,
         limit?: number,

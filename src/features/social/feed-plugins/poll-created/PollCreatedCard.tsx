@@ -59,6 +59,9 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
         <div className={styles.title}>{title}</div>
       </div>
 
+      {/* Mobile bottom divider for visual rhythm to match other items */}
+      <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />
+
       <div className={styles.options}>
         {options.map((o) => {
           const pct = totalVotes > 0 ? Math.round(((o.votes || 0) / totalVotes) * 100) : 0;

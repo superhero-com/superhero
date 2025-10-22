@@ -199,7 +199,16 @@ export default function FeedList({
   const combinedList = useMemo(() => {
     // Hide token-created events on the popular (hot) tab
     const includeEvents = sortBy !== "hot";
-    const merged = includeEvents ? [...pluginEntries.entries, ...activityList, ...list] : [...list];
+    const pluginItems = includeEvents
+      ? (pluginEntries.entries || []).map((e: any) => ({
+          id: e.id,
+          created_at: e.createdAt,
+          content: e?.data?.title || "",
+          sender_address: e?.data?.author || "",
+          __feedEntry: e,
+        }))
+      : [];
+    const merged = includeEvents ? [...pluginItems, ...activityList, ...list] : [...list];
     // Keep backend order for 'hot'; only sort by time when we interleave activities
     if (!includeEvents) return merged;
     return merged.sort((a: any, b: any) => {

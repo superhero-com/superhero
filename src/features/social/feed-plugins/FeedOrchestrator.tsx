@@ -4,7 +4,7 @@ import type { AnyFeedPlugin, FeedEntry } from './types';
 
 // Call each plugin.fetchPage in parallel (if provided) and merge results by createdAt
 export function usePluginEntries(plugins: AnyFeedPlugin[], enabled: boolean) {
-  const { data } = useInfiniteQuery({
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ['feed-plugins', plugins.map((p) => p.kind)],
     enabled,
     initialPageParam: 1,
@@ -31,7 +31,7 @@ export function usePluginEntries(plugins: AnyFeedPlugin[], enabled: boolean) {
     return entries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [data]);
 
-  return { entries: merged };
+  return { entries: merged, fetchNextPage, hasNextPage, isFetchingNextPage };
 }
 
 

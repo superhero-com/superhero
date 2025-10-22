@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BridgeService, BridgeStatus, BridgeOptions } from "../index";
+import { getEthBalance, ensureEthProvider } from "../ethereum";
+import { formatEther } from "ethers";
 import { errorToUserMessage } from "../../../libs/errorMessages";
 import { useToast } from "../../../components/ToastProvider";
 import { CONFIG } from "../../../config";
@@ -26,9 +28,27 @@ export default function BuyAeWidget({
   const [ethBridgeProcessing, setEthBridgeProcessing] = useState(false);
   const [ethBridgeError, setEthBridgeError] = useState<string | null>(null);
   const [ethBridgeStep, setEthBridgeStep] = useState<BridgeStatus>("idle");
+  const [ethBalance, setEthBalance] = useState<string | null>(null);
+  const [fetchingBalance, setFetchingBalance] = useState(false);
 
   const bridgeService = BridgeService.getInstance();
 
+  // Fetch ETH balance
+  const fetchEthBalance = async () => {
+    try {
+      setFetchingBalance(true);
+      const provider = await ensureEthProvider();
+      const balanceWei = await getEthBalance(provider);
+      const balanceEth = formatEther(balanceWei);
+      setEthBalance(balanceEth);
+    } catch (error) {
+      setEthBridgeError("Failed to fetch ETH balance");
+      console.error("Failed to fetch ETH balance:", error);
+      setEthBalance(null);
+    } finally {
+      setFetchingBalance(false);
+    }
+  };
   // Automated ETH Bridge quoting
   useEffect(() => {
     if (!ethBridgeIn || Number(ethBridgeIn) <= 0) {
@@ -57,9 +77,10 @@ export default function BuyAeWidget({
 
   const handleEthBridge = async () => {
     try {
+      if (!activeAccount) return;
       setEthBridgeProcessing(true);
       setEthBridgeError(null);
-      if (!activeAccount) return;
+      
 
       const bridgeOptions: BridgeOptions = {
         amountEth: ethBridgeIn,
@@ -81,6 +102,7 @@ export default function BuyAeWidget({
           );
         }
       );
+      console.log("==== result:", result);
 
       if (result.success) {
         // Show success notification
@@ -169,11 +191,14 @@ export default function BuyAeWidget({
     }
   };
 
-  const handleMaxClick = () => {
-    //
-    // For demo purposes, set a reasonable max amount
-    // In production, you'd want to get the actual ETH balance
-    setEthBridgeIn("0.1");
+  const handleMaxClick = async () => {
+    if (!ethBalance && !fetchingBalance) {
+      await fetchEthBalance();
+    }
+    
+    if (ethBalance) {
+      setEthBridgeIn(parseFloat(ethBalance).toFixed(6));
+    }
   };
 
   const isDisabled =
@@ -238,12 +263,15 @@ export default function BuyAeWidget({
             From
           </label>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-xs text-white/60">Ethereum</span>
+            <span className="text-xs text-white/60">
+              {ethBalance && !fetchingBalance ? `Balance: ${parseFloat(ethBalance).toFixed(4)} ETH` : "Ethereum"}
+            </span>
             <button
               onClick={handleMaxClick}
-              className="text-[10px] text-[#4ecdc4] bg-transparent border border-[#4ecdc4] rounded px-1.5 py-0.5 cursor-pointer uppercase tracking-wider hover:bg-[#4ecdc4]/10 transition-all duration-300 flex-shrink-0"
+              disabled={fetchingBalance}
+              className={`text-[10px] text-[#4ecdc4] bg-transparent border border-[#4ecdc4] rounded px-1.5 py-0.5 cursor-pointer uppercase tracking-wider hover:bg-[#4ecdc4]/10 transition-all duration-300 flex-shrink-0 ${fetchingBalance ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              MAX
+              {fetchingBalance ? '...' : 'MAX'}
             </button>
           </div>
         </div>

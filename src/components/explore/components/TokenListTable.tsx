@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Token } from '../types/explore';
 import { DexTokenDto } from '../../../api/generated';
@@ -20,6 +21,49 @@ export function TokenListTable({
   loading
 }: TokenListTableProps) {
   const navigate = useNavigate();
+
+  // Client-side filter and sort to ensure controls work regardless of server params
+  const filteredTokens = useMemo(() => {
+    const term = (search || '').trim().toLowerCase();
+    if (!term) return tokens;
+    return tokens.filter((t) =>
+      [t.symbol, t.name, t.address]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(term))
+    );
+  }, [tokens, search]);
+
+  const sortedTokens = useMemo(() => {
+    const toNumber = (v: any) => (v == null || v === '' ? 0 : Number(v));
+    const items = [...filteredTokens];
+    items.sort((a, b) => {
+      switch (sort.key) {
+        case 'name': {
+          const av = String(a.name || a.symbol || '').toLowerCase();
+          const bv = String(b.name || b.symbol || '').toLowerCase();
+          return av.localeCompare(bv);
+        }
+        case 'pairs': {
+          const av = toNumber((a as any).pairs || (a as any).pairs_count);
+          const bv = toNumber((b as any).pairs || (b as any).pairs_count);
+          return av - bv;
+        }
+        case 'priceUsd':
+          return toNumber((a as any).priceUsd) - toNumber((b as any).priceUsd);
+        case 'tvlUsd':
+          return toNumber((a as any).tvlUsd) - toNumber((b as any).tvlUsd);
+        case 'priceChangeDay':
+          return toNumber((a as any).priceChangeDay) - toNumber((b as any).priceChangeDay);
+        case 'volumeUsdDay':
+          return toNumber((a as any).volumeUsdDay) - toNumber((b as any).volumeUsdDay);
+        case 'volumeUsdAll':
+          return toNumber((a as any).volumeUsdAll) - toNumber((b as any).volumeUsdAll);
+        default:
+          return 0;
+      }
+    });
+    return sort.asc ? items : items.reverse();
+  }, [filteredTokens, sort]);
 
   const handleSort = (key: 'name' | 'pairs' | 'priceUsd' | 'tvlUsd' | 'priceChangeDay' | 'volumeUsdDay' | 'volumeUsdAll') => {
     onSortChange(key);
@@ -145,24 +189,23 @@ export function TokenListTable({
                     MozAppearance: 'none',
                     padding: '6px 28px 6px 12px',
                     borderRadius: 8,
-                    background: 'var(--glass-bg)',
-                    color: 'var(--standard-font-color)',
-                    border: '1px solid var(--glass-border)',
-                    backdropFilter: 'blur(10px)',
+                    background: '#1a1a23',
+                    color: '#ffffff',
+                    border: '1px solid #3a3a4a',
                     fontSize: 13,
-                    fontWeight: 500,
+                    fontWeight: 600,
                     cursor: 'pointer',
-                    transition: 'all 0.3s ease',
+                    transition: 'all 0.2s ease',
                     outline: 'none',
-                    minWidth: 100,
+                    minWidth: 120,
                     backgroundImage: 'none'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = 'var(--accent-color)';
-                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(76, 175, 80, 0.1)';
+                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(76, 175, 80, 0.15)';
                   }}
                   onBlur={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--glass-border)';
+                    e.currentTarget.style.borderColor = '#3a3a4a';
                     e.currentTarget.style.boxShadow = 'none';
                   }}
                 >
@@ -181,7 +224,7 @@ export function TokenListTable({
                   top: '50%',
                   transform: 'translateY(-50%)',
                   pointerEvents: 'none',
-                  color: 'var(--light-font-color)',
+                  color: '#cbd5e1',
                   fontSize: 12,
                   fontWeight: 600,
                   display: 'flex',
@@ -189,9 +232,9 @@ export function TokenListTable({
                   justifyContent: 'center',
                   width: 16,
                   height: 16,
-                  background: 'rgba(255, 255, 255, 0.1)',
+                  background: 'rgba(255, 255, 255, 0.12)',
                   borderRadius: 4,
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.2s ease'
                 }}>
                   ▼
                 </div>
@@ -247,7 +290,7 @@ export function TokenListTable({
               left: 10,
               top: '50%',
               transform: 'translateY(-50%)',
-              color: 'var(--light-font-color)',
+              color: '#cbd5e1',
               fontSize: 14,
               pointerEvents: 'none',
               opacity: 0.6,
@@ -263,25 +306,24 @@ export function TokenListTable({
                 width: '100%',
                 padding: '8px 12px 8px 32px',
                 borderRadius: 8,
-                background: 'var(--glass-bg)',
-                color: 'var(--standard-font-color)',
-                border: '1px solid var(--glass-border)',
-                backdropFilter: 'blur(10px)',
+                background: '#1a1a23',
+                color: '#ffffff',
+                border: '1px solid #3a3a4a',
                 fontSize: 13,
-                fontWeight: 400,
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                fontWeight: 500,
+                transition: 'all 0.2s ease',
                 outline: 'none',
                 boxSizing: 'border-box'
               }}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = 'var(--accent-color)';
-                e.currentTarget.style.boxShadow = '0 0 0 2px rgba(76, 175, 80, 0.1)';
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.boxShadow = '0 0 0 2px rgba(76, 175, 80, 0.15)';
+                e.currentTarget.style.background = '#20202b';
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = 'var(--glass-border)';
+                e.currentTarget.style.borderColor = '#3a3a4a';
                 e.currentTarget.style.boxShadow = 'none';
-                e.currentTarget.style.background = 'var(--glass-bg)';
+                e.currentTarget.style.background = '#1a1a23';
               }}
             />
             {search && (
@@ -346,7 +388,7 @@ export function TokenListTable({
               color: 'var(--accent-color)',
               fontWeight: 600
             }}>
-              {tokens.length} {tokens.length === 1 ? 'token' : 'tokens'}
+              {filteredTokens.length} {filteredTokens.length === 1 ? 'token' : 'tokens'}
             </span>
           </div>
         </div>
@@ -524,7 +566,7 @@ export function TokenListTable({
             </tr>
           </thead>
           <tbody>
-            {tokens.map((token) => (
+            {sortedTokens.map((token) => (
               <tr key={token.address} style={{
                 borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
                 transition: 'all 0.3s ease'
@@ -593,7 +635,7 @@ export function TokenListTable({
                   color: 'var(--standard-font-color)',
                   fontWeight: 500
                 }}>
-                  {token.priceUsd != null ? `$${Number(token.priceUsd).toFixed(4)}` : '-'}
+                  {(token as any).priceUsd != null ? `$${Number((token as any).priceUsd).toFixed(4)}` : '-'}
                 </td>
 
                 {/* TVL Column */}
@@ -604,7 +646,7 @@ export function TokenListTable({
                   color: 'var(--standard-font-color)',
                   fontWeight: 500
                 }}>
-                  {token.tvlUsd != null ? `$${Number(token.tvlUsd).toLocaleString()}` : '-'}
+                  {(token as any).tvlUsd != null ? `$${Number((token as any).tvlUsd).toLocaleString()}` : '-'}
                 </td>
 
                 {/* 24h Price Change Column */}
@@ -614,12 +656,12 @@ export function TokenListTable({
                   fontSize: 14,
                   fontWeight: 500
                 }}>
-                  {token.priceChangeDay != null ? (
+                  {(token as any).priceChangeDay != null ? (
                     <span style={{
-                      color: Number(token.priceChangeDay) >= 0 ? 'var(--success-color)' : 'var(--error-color)',
+                      color: Number((token as any).priceChangeDay) >= 0 ? 'var(--success-color)' : 'var(--error-color)',
                       fontWeight: 600
                     }}>
-                      {Number(token.priceChangeDay) >= 0 ? '+' : ''}{Number(token.priceChangeDay).toFixed(2)}%
+                      {Number((token as any).priceChangeDay) >= 0 ? '+' : ''}{Number((token as any).priceChangeDay).toFixed(2)}%
                     </span>
                   ) : '-'}
                 </td>
@@ -632,7 +674,7 @@ export function TokenListTable({
                   color: 'var(--standard-font-color)',
                   fontWeight: 500
                 }}>
-                  {token.volumeUsdDay != null ? `$${Number(token.volumeUsdDay).toLocaleString()}` : '-'}
+                  {(token as any).volumeUsdDay != null ? `$${Number((token as any).volumeUsdDay).toLocaleString()}` : '-'}
                 </td>
 
                 {/* Total Volume Column */}
@@ -643,7 +685,7 @@ export function TokenListTable({
                   color: 'var(--standard-font-color)',
                   fontWeight: 500
                 }}>
-                  {token.volumeUsdAll != null ? `$${Number(token.volumeUsdAll).toLocaleString()}` : '-'}
+                  {(token as any).volumeUsdAll != null ? `$${Number((token as any).volumeUsdAll).toLocaleString()}` : '-'}
                 </td>
                 <td style={{ textAlign: 'center', padding: '16px 12px' }}>
                   <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>

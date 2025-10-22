@@ -100,6 +100,34 @@ export class DexPairService {
         });
     }
     /**
+     * Get all possible swap paths between two tokens
+     * Find all possible swap paths from one token to another, including direct pairs and multi-hop paths
+     * @returns any Returns all possible swap paths with direct pairs and multi-hop paths
+     * @throws ApiError
+     */
+    public static findPairsForTokens({
+        fromToken,
+        toToken,
+    }: {
+        /**
+         * Token address
+         */
+        fromToken: string,
+        /**
+         * Token address
+         */
+        toToken: string,
+    }): CancelablePromise<Record<string, any>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/dex/pairs/from/{from_token}/to/{to_token}/providers',
+            path: {
+                'from_token': fromToken,
+                'to_token': toToken,
+            },
+        });
+    }
+    /**
      * @returns any
      * @throws ApiError
      */

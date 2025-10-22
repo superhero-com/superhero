@@ -11,7 +11,7 @@ export type TokenPerformance = {
 function mapToCurrent24h(resp: any): TokenPerformance | null {
   if (!resp) return null;
   // Support both TokenPriceMovementDto shape and legacy flat shape
-  const percent =
+  let percent =
     // Newer shape: nested under past_24h.price_change.percentage (string)
     (resp?.past_24h?.price_change?.percentage != null
       ? parseFloat(String(resp?.past_24h?.price_change?.percentage))
@@ -24,6 +24,12 @@ function mapToCurrent24h(resp: any): TokenPerformance | null {
     (typeof resp?.current_change_percent === 'number'
       ? resp?.current_change_percent
       : undefined);
+  
+  // Fallback: if 24h is 0 (insufficient data), use all_time change
+  if (percent === 0 && typeof resp?.all_time?.current_change_percent === 'number') {
+    percent = resp.all_time.current_change_percent;
+  }
+  
   return typeof percent === 'number' ? { current_change_percent: percent } : null;
 }
 
@@ -57,10 +63,7 @@ export function useTokenPerformance(saleAddress?: string | null, symbolUpper?: s
       }
 
       // Pick non-null with the largest absolute percentage (guards against 0% from wrong address)
-      // Filter out exact zero (insufficient 24h data) before selecting
-      const candidates = [perfDirect, perfAlt, perfLegacy]
-        .filter(Boolean)
-        .filter((p) => (p as TokenPerformance).current_change_percent !== 0) as TokenPerformance[];
+      const candidates = [perfDirect, perfAlt, perfLegacy].filter(Boolean) as TokenPerformance[];
       if (candidates.length) {
         candidates.sort((a, b) => Math.abs((b.current_change_percent ?? 0)) - Math.abs((a.current_change_percent ?? 0)));
         return candidates[0];

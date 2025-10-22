@@ -2,12 +2,32 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTrendingTagMap } from '../hooks/useTrendingTagMap';
 import { useTokenPerformance } from '../hooks/useTokenPerformance';
+import { useQuery } from '@tanstack/react-query';
+import { TrendminerApi } from '../../../api/backend';
 
 export default function HashtagWithChange({ tag }: { tag: string }) {
   const clean = String(tag || '').replace(/^#/, '');
   const upper = clean.toUpperCase();
   const { map } = useTrendingTagMap();
-  const saleAddress = map[upper];
+  const mappedAddress = map[upper];
+
+  // Fallback: if tag not in trending map, try to find exact token by name/symbol
+  const { data: fallbackSaleAddress } = useQuery({
+    queryKey: ['hashtag:resolve-token', upper],
+    enabled: !mappedAddress && !!upper,
+    queryFn: async () => {
+      const resp: any = await TrendminerApi.listTokens({ search: clean, limit: 5 });
+      const items: any[] = Array.isArray(resp?.items) ? resp.items : Array.isArray(resp) ? resp : [];
+      const match = items.find((t) =>
+        String(t?.name || '').toUpperCase() === upper || String(t?.symbol || '').toUpperCase() === upper
+      );
+      return match?.sale_address || match?.address || null;
+    },
+    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
+  });
+
+  const saleAddress = mappedAddress || fallbackSaleAddress || undefined;
   const { performance } = useTokenPerformance(saleAddress);
 
   const change = performance?.current_change_percent;

@@ -21,7 +21,9 @@ import FeedRenderer from "../feed-plugins/FeedRenderer";
 import { adaptPostToEntry } from "../feed-plugins/post";
 import type { FeedEntry } from "../feed-plugins/types";
 import { adaptTokenCreatedToEntry, registerTokenCreatedPlugin } from "../feed-plugins/token-created";
-import { registerPollCreatedPlugin, adaptPollToEntry } from "../feed-plugins/poll-created";
+import { registerPollCreatedPlugin } from "../feed-plugins/poll-created";
+import { getAllPlugins } from "../feed-plugins/registry";
+import { usePluginEntries } from "../feed-plugins/FeedOrchestrator";
 import { GovernanceApi } from "@/api/governance";
 
 // Register built-in plugins once (idempotent)
@@ -190,57 +192,14 @@ export default function FeedList({
     [data]
   );
 
-  // Fetch latest open polls for feed (lightweight: map first page with titles/options)
-  const { data: pollsData } = useInfiniteQuery({
-    queryKey: ["feed-polls", { status: "open" }],
-    enabled: sortBy !== "hot",
-    initialPageParam: 0,
-    queryFn: async ({ pageParam = 0 }) => {
-      if (pageParam > 0) return { items: [], nextPage: undefined } as any; // single page for now
-      const ordering = await GovernanceApi.getPollOrdering(false);
-      const top = (ordering?.data || []).slice(0, 10);
-      const items = await Promise.all(
-        top.map(async (p, idx) => {
-          try {
-            const ov = await GovernanceApi.getPollOverview(p.poll);
-            const meta = ov?.pollState?.metadata || ({} as any);
-            const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
-            const options = Object.entries(optsRec).map(([k, v]) => ({ id: Number(k), label: String(v), votes: 0 }));
-            const createdAt = new Date(Date.now() - idx * 1000).toISOString();
-            return {
-              id: `poll-created:${p.poll}`,
-              created_at: createdAt,
-              content: meta?.title || "",
-              topics: [],
-              sender_address: ov?.pollState?.author || "",
-              __feedEntry: adaptPollToEntry(p.poll as any, {
-                title: meta?.title || "Untitled poll",
-                author: ov?.pollState?.author as any,
-                closeHeight: ov?.pollState?.close_height as any,
-                createHeight: ov?.pollState?.create_height as any,
-                options,
-                totalVotes: p?.voteCount || 0,
-              }),
-            } as any;
-          } catch {
-            return undefined;
-          }
-        })
-      );
-      return { items: items.filter(Boolean), nextPage: undefined } as any;
-    },
-    getNextPageParam: (lastPage: any) => lastPage?.nextPage,
-  });
-  const pollList: any[] = useMemo(
-    () => (pollsData?.pages ? (pollsData.pages as any[]).flatMap((p: any) => p?.items ?? []) : []),
-    [pollsData]
-  );
+  // Plugin-driven entries (includes poll-created via its fetchPage)
+  const pluginEntries = usePluginEntries(getAllPlugins(), sortBy !== "hot");
 
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo(() => {
     // Hide token-created events on the popular (hot) tab
     const includeEvents = sortBy !== "hot";
-    const merged = includeEvents ? [...activityList, ...pollList, ...list] : [...list];
+    const merged = includeEvents ? [...pluginEntries.entries, ...activityList, ...list] : [...list];
     // Keep backend order for 'hot'; only sort by time when we interleave activities
     if (!includeEvents) return merged;
     return merged.sort((a: any, b: any) => {
@@ -248,7 +207,7 @@ export default function FeedList({
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     });
-  }, [list, activityList, pollList, sortBy]);
+  }, [list, activityList, pluginEntries.entries, sortBy]);
 
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {
@@ -360,9 +319,15 @@ export default function FeedList({
       }
 
       if (isPollCreated) {
-        const entry: FeedEntry = (item as any).__feedEntry;
-        const onOpen = (id: string) => navigate(`/voting/p/${id}`);
-        nodes.push(<FeedRenderer key={postId} entry={entry} onOpenPost={onOpen} />);
+        // When polls come from pluginEntries they are already FeedEntry objects; but when merged with posts
+        // we carry them as lightweight items with id/created_at and a hidden __entry. Prefer __entry if present.
+        const entry: FeedEntry | undefined = (item as any).__feedEntry || undefined;
+        if (entry) {
+          const onOpen = (id: string) => navigate(`/voting/p/${id}`);
+          nodes.push(<FeedRenderer key={postId} entry={entry} onOpenPost={onOpen} />);
+          i += 1;
+          continue;
+        }
         i += 1;
         continue;
       }

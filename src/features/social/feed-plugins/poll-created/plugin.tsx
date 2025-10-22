@@ -29,6 +29,36 @@ export function adaptPollToEntry(pollAddress: Encoded.ContractAddress, data: Omi
 export function registerPollCreatedPlugin() {
   registerPlugin({
     kind: 'poll-created',
+    async fetchPage(page: number) {
+      // single first page for now
+      if (page && page > 1) {
+        return { entries: [], nextPage: undefined } as FeedPage<PollCreatedEntryData>;
+      }
+      const ordering = await GovernanceApi.getPollOrdering(false);
+      const top = (ordering?.data || []).slice(0, 10);
+      const entries: FeedEntry<PollCreatedEntryData>[] = [];
+      for (let i = 0; i < top.length; i += 1) {
+        const p = top[i];
+        try {
+          const ov = await GovernanceApi.getPollOverview(p.poll);
+          const meta = ov?.pollState?.metadata || ({} as any);
+          const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
+          const options = Object.entries(optsRec).map(([k, v]) => ({ id: Number(k), label: String(v), votes: 0 }));
+          const entry = adaptPollToEntry(p.poll as any, {
+            title: meta?.title || 'Untitled poll',
+            author: ov?.pollState?.author as any,
+            closeHeight: ov?.pollState?.close_height as any,
+            createHeight: ov?.pollState?.create_height as any,
+            options,
+            totalVotes: p?.voteCount || 0,
+          });
+          entries.push(entry);
+        } catch {
+          // skip failures
+        }
+      }
+      return { entries, nextPage: undefined } as FeedPage<PollCreatedEntryData>;
+    },
     Render: ({ entry, onOpen }: { entry: FeedEntry<PollCreatedEntryData>; onOpen?: (id: string) => void }) => {
       const { pollAddress, title, author, closeHeight, createHeight, options, totalVotes } = entry.data;
       const { sdk } = useAeSdk();

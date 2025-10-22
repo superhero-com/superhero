@@ -21,9 +21,11 @@ import FeedRenderer from "../feed-plugins/FeedRenderer";
 import { adaptPostToEntry } from "../feed-plugins/post";
 import type { FeedEntry } from "../feed-plugins/types";
 import { adaptTokenCreatedToEntry, registerTokenCreatedPlugin } from "../feed-plugins/token-created";
+import { registerPollCreatedPlugin } from "../feed-plugins/poll-created";
 
 // Register built-in plugins once (idempotent)
 registerTokenCreatedPlugin();
+registerPollCreatedPlugin();
 
 // Custom hook
 function useUrlQuery() {

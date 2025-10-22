@@ -1,0 +1,53 @@
+.root {
+  isolation: isolate;
+}
+
+.title {
+  font-weight: 600;
+}
+
+.metaRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: rgba(255,255,255,0.7);
+  font-size: 12px;
+}
+
+.options {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.option {
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bar {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(99,102,241,0.28), rgba(99,102,241,0.08));
+  transform-origin: left center;
+}
+
+.labelRow {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  color: rgba(255,255,255,0.7);
+  font-size: 12px;
+}
+
+

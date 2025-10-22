@@ -58,7 +58,7 @@ export default function HashtagWithChange({ tag }: { tag: string }) {
   const linkTo = `/trends/tokens/${upper}`;
 
   return (
-    <span className="inline-flex items-center gap-1 align-middle">
+    <span className="inline-flex items-center gap-0.5 align-middle">
       <Link
         to={linkTo}
         className="break-words"

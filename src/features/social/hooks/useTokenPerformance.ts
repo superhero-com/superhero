@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { TrendminerApi } from '../../../api/backend';
+import { TokensService } from '../../../api/generated';
 import { emitTrade, onTrade } from '../../../libs/events';
 
 export type TokenPerformance = {
@@ -27,7 +28,11 @@ export function useTokenPerformance(saleAddress?: string | null) {
     enabled: !!saleAddress,
     queryFn: async () => {
       if (!saleAddress) return null;
-      // 1) Try performance for provided address
+      // Prefer fast generated endpoint
+      const direct = await TokensService.performance({ address: saleAddress }).catch(() => null);
+      const perfDirect = mapToCurrent24h(direct);
+      if (perfDirect) return perfDirect;
+      // Fallback to TrendminerApi (legacy/custom client)
       const resp = await TrendminerApi.getTokenPerformance(saleAddress).catch(() => null);
       const perf = mapToCurrent24h((resp as any)?.performance || resp || null);
       if (perf) return perf;
@@ -35,8 +40,8 @@ export function useTokenPerformance(saleAddress?: string | null) {
       const token: any = await TrendminerApi.getToken(saleAddress).catch(() => null);
       const alt = token?.sale_address || token?.address;
       if (alt && alt !== saleAddress) {
-        const resp2 = await TrendminerApi.getTokenPerformance(alt).catch(() => null);
-        const perf2 = mapToCurrent24h((resp2 as any)?.performance || resp2 || null);
+        const resp2 = await TokensService.performance({ address: alt }).catch(() => null);
+        const perf2 = mapToCurrent24h(resp2);
         if (perf2) return perf2;
       }
       return perf;

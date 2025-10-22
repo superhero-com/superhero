@@ -32,7 +32,11 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
     const days = Math.floor(hours / 24);
     if (days < 7) return `${days}d left`;
     const weeks = Math.floor(days / 7);
-    return `${weeks}w left`;
+    if (weeks < 5) return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} left`;
+    const months = Math.floor(days / 30.4375); // average days/month
+    if (months < 12) return `${months} ${months === 1 ? 'month' : 'months'} left`;
+    const years = Math.floor(days / 365.25);
+    return `${years} ${years === 1 ? 'year' : 'years'} left`;
   }, [closeHeight, currentHeight]);
 
   const maxVotes = Math.max(0, ...options.map((o) => o.votes || 0));

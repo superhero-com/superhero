@@ -8,11 +8,13 @@ import { Encoding, isAddressValid } from "@aeternity/aepp-sdk";
 export default function DelegationSettings({ compact = true, defaultCollapsed = true }: { compact?: boolean; defaultCollapsed?: boolean }) {
   const {
     useDelegation,
+    useDelegators,
     useSetDelegation,
     useRevokeDelegation,
   } = useGovernance();
 
   const { data: delegation } = useDelegation();
+  const { data: delegators = [] } = useDelegators();
   const setDelegationMutation = useSetDelegation();
   const revokeDelegationMutation = useRevokeDelegation();
 
@@ -25,6 +27,9 @@ export default function DelegationSettings({ compact = true, defaultCollapsed = 
 
   const isSaving = setDelegationMutation.isPending;
   const isRevoking = revokeDelegationMutation.isPending;
+
+  // Simple voting power heuristic: if you delegated, power is used by delegatee; otherwise 1 (you) + delegators
+  const effectiveVotingPower = delegation ? 0 : 1 + (Array.isArray(delegators) ? delegators.length : 0);
 
   const handleSave = () => {
     const to = delegateAddress.trim();
@@ -56,16 +61,26 @@ export default function DelegationSettings({ compact = true, defaultCollapsed = 
             )}
           </div>
         </div>
-        <button
-          className="no-gradient-text px-3 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-white/80 hover:bg-white/10"
-          onClick={() => setCollapsed(!collapsed)}
-        >
-          {collapsed ? "Show" : "Hide"}
-        </button>
+        <div className="flex items-center gap-2">
+          <span className="px-3 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-white/80 whitespace-nowrap">
+            {delegation ? "Power: delegated" : `Power: ${effectiveVotingPower}`}
+          </span>
+          <button
+            className="no-gradient-text px-3 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-white/80 hover:bg-white/10"
+            onClick={() => setCollapsed(!collapsed)}
+          >
+            {collapsed ? "Show" : "Hide"}
+          </button>
+        </div>
       </div>
 
       {!collapsed && (
         <div className="mt-4 space-y-3">
+          {!delegation && (
+            <div className="text-xs text-slate-400">
+              Your current voting power includes you and {Array.isArray(delegators) ? delegators.length : 0} delegator{Array.isArray(delegators) && delegators.length === 1 ? '' : 's'}.
+            </div>
+          )}
           <MobileInput
             label="Delegate to address"
             placeholder="ak_..."

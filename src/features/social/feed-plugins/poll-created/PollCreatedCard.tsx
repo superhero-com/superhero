@@ -22,11 +22,9 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
   const timeLeft = useMemo(() => {
     if (!closeHeight || !currentHeight) return undefined;
     const blocksLeft = Math.max(0, closeHeight - currentHeight);
-    // rough estimate: ~3 minutes per block → convert to hours
-    const minutes = blocksLeft * 3;
-    if (minutes < 60) return `${minutes}m left`;
-    const hours = Math.round(minutes / 60);
-    return `${hours}h left`;
+    const ms = blocksLeft * 3 * 60 * 1000; // ~3 minutes per block
+    const target = Date.now() + ms;
+    return `${compactTime(target)} left`;
   }, [closeHeight, currentHeight]);
 
   const maxVotes = Math.max(0, ...options.map((o) => o.votes || 0));

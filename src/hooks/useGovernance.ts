@@ -151,6 +151,7 @@ export const useGovernance = () => {
         });
         return (await registry.delegatee(activeAccount)).decodedResult ?? null;
       },
+      enabled: !!activeAccount,
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };
@@ -162,6 +163,7 @@ export const useGovernance = () => {
       queryFn: async () => {
         return (await GovernanceApi.getDelegatedPower(activeAccount)).flattenedDelegationTree;
       },
+      enabled: !!activeAccount,
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };

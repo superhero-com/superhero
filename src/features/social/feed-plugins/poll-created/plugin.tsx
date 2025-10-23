@@ -5,6 +5,7 @@ import PollCreatedCard from './PollCreatedCard';
 import type { Encoded } from '@aeternity/aepp-sdk';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { GovernanceApi } from '@/api/governance';
+import { CONFIG } from '@/config';
 
 export type PollCreatedEntryData = {
   pollAddress: Encoded.ContractAddress;
@@ -54,18 +55,37 @@ export function registerPollCreatedPlugin() {
       );
       const valid = overviews.filter(Boolean) as { p: any; ov: any }[];
       // Resolve exact creation time from MDW by fetching contract_create tx for each poll
-      const mdwBase = (await import('@/configs')).configs.networks.ae_uat.middlewareUrl; // use active testnet config; swap if needed
-      async function fetchCreationTime(ct: string): Promise<{ time: string | null; hash?: string | null }> {
+      const mdwBase = CONFIG.MIDDLEWARE_URL.replace(/\/$/, '');
+      async function fetchCreationInfo(ct: string): Promise<{ time: string | null; hash?: string | null }> {
         try {
-          const res = await fetch(`${mdwBase}/v3/transactions?type=contract_create&contract_id=${ct}&direction=forward&limit=1`);
-          const json = await res.json();
-          const tx = json?.data?.[0] || json?.transactions?.[0] || json?.[0];
-          const hash = tx?.hash || tx?.tx_hash || tx?.tx_hash_str || null;
-          if (tx?.micro_time || tx?.block_time) return { time: new Date(tx.micro_time ?? tx.block_time).toISOString(), hash };
-          if (tx?.block_height) {
-            const kb = await fetch(`${mdwBase}/v3/key-blocks/${tx.block_height}`).then(r => r.json());
-            if (kb?.time) return { time: new Date(kb.time).toISOString(), hash };
+          // 1) Fetch contract details to get source_tx_hash
+          const c = await fetch(`${mdwBase}/v3/contracts/${ct}`).then(r => r.json());
+          const sourceTxHash = c?.source_tx_hash || c?.create_tx || c?.creation_tx || null;
+          // 2) Prefer exact tx time by fetching the transaction by hash
+          if (sourceTxHash) {
+            try {
+              const tx = await fetch(`${mdwBase}/v3/transactions/${sourceTxHash}`).then(r => r.json());
+              const t = tx?.micro_time || tx?.block_time;
+              if (t) return { time: new Date(t).toISOString(), hash: sourceTxHash };
+              if (tx?.block_height) {
+                const kb = await fetch(`${mdwBase}/v3/key-blocks/${tx.block_height}`).then(r => r.json());
+                if (kb?.time) return { time: new Date(kb.time).toISOString(), hash: sourceTxHash };
+              }
+            } catch {}
           }
+          // 3) Fallback: try filtered query (some MDWs)
+          try {
+            const res = await fetch(`${mdwBase}/v3/transactions?type=contract_create&contract_id=${ct}&direction=forward&limit=1`);
+            const json = await res.json();
+            const tx = json?.data?.[0] || json?.transactions?.[0] || json?.[0];
+            const hash = sourceTxHash || tx?.hash || tx?.tx_hash || tx?.tx_hash_str || null;
+            if (tx?.micro_time || tx?.block_time) return { time: new Date(tx.micro_time ?? tx.block_time).toISOString(), hash };
+            if (tx?.block_height) {
+              const kb = await fetch(`${mdwBase}/v3/key-blocks/${tx.block_height}`).then(r => r.json());
+              if (kb?.time) return { time: new Date(kb.time).toISOString(), hash };
+            }
+            return { time: null, hash };
+          } catch {}
         } catch {}
         return { time: null, hash: null };
       }
@@ -103,7 +123,7 @@ export function registerPollCreatedPlugin() {
         const totalVotes = typeof ov?.voteCount === 'number' && !Number.isNaN(ov.voteCount)
           ? ov.voteCount
           : options.reduce((acc, o) => acc + (o.votes || 0), 0);
-        const ctInfo = await fetchCreationTime(p.poll as any);
+        const ctInfo = await fetchCreationInfo(p.poll as any);
         const createdAt = ctInfo.time || new Date().toISOString();
         const entry = adaptPollToEntry(
           p.poll as any,

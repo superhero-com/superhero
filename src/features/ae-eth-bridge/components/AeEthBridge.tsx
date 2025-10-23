@@ -35,6 +35,8 @@ import { Asset, BRIDGE_AETERNITY_ACTION_TYPE, BRIDGE_ETH_ACTION_TYPE, BRIDGE_TOK
 import { addTokenToEthereumWallet } from '../utils/addTokenToEthereumWallet';
 import { getTxUrl } from '../utils/getTxUrl';
 import { Logger } from '../utils/logger';
+import { FromTo } from '@/features/shared/components';
+import { Decimal } from '@/libs/decimal';
 
 const checkEvmNetworkHasEnoughBalance = async (asset: any, normalizedAmount: BigNumber, walletProvider: Eip1193Provider) => {
     if (asset.symbol === 'WAE') return true;
@@ -174,15 +176,6 @@ export function AeEthBridge() {
             return aeBalances[asset.symbol] || '0';
         }
     }, [asset, direction, aeBalances, ethBalances]);
-
-    // Helper function to get current balance for validation
-    const getCurrentBalance = useCallback((assetSymbol: string, direction: Direction) => {
-        if (direction === Direction.EthereumToAeternity) {
-            return ethBalances[assetSymbol] || '0';
-        } else {
-            return aeBalances[assetSymbol] || '0';
-        }
-    }, [aeBalances, ethBalances]);
 
     // Fetch Ethereum accounts
     const fetchEthereumAccounts = useCallback(async () => {
@@ -715,21 +708,30 @@ export function AeEthBridge() {
         setButtonBusy(false);
     }, [asset, destination, normalizedAmount, isValidDestination, aeternityAddress, direction, sdk]);
 
-    const getDestinationTokenValue = () => {
-        if (direction === Direction.EthereumToAeternity && asset.symbol === 'WAE') {
-            return 'Native AE';
-        } else if (direction === Direction.AeternityToEthereum && asset.symbol === 'ETH') {
-            return 'Native ETH';
-        }
-
-        return (
-            (direction === Direction.EthereumToAeternity ? 'æ' : '') +
-            asset.symbol +
-            ` (${direction === Direction.EthereumToAeternity ? asset.aeAddress : asset.ethAddress})`
-        );
-    };
-
     const isBridgeActionFromAeternity = bridgeActionSummary?.direction === Direction.AeternityToEthereum;
+    const destinationTokenAddress = useMemo(() => (
+        direction === Direction.EthereumToAeternity ? asset.aeAddress : asset.ethAddress
+    ), [direction, asset]);
+    const destinationTokenLabel = useMemo(() => {
+        if (!asset) return '';
+        if (direction === Direction.EthereumToAeternity) {
+            // Destination is æternity → prefix with æ (except WAE which becomes AE)
+            return asset.symbol === 'WAE' ? 'AE' : `æ${asset.symbol}`;
+        }
+        // Destination is Ethereum → use plain symbol
+        return asset.symbol;
+    }, [asset, direction]);
+
+    const handleCopyTokenAddress = useCallback(async () => {
+        try {
+            if (destinationTokenAddress) {
+                await navigator.clipboard?.writeText(destinationTokenAddress);
+                showSnackMessage('Token address copied');
+            }
+        } catch (err) {
+            showSnackMessage('Failed to copy');
+        }
+    }, [destinationTokenAddress]);
 
     return (
         <AppKitProvider>
@@ -845,39 +847,24 @@ export function AeEthBridge() {
                         )}
 
 
-                        {/* Amount Input */}
-                        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 backdrop-blur-[10px]">
-                            <div className="flex justify-between items-center mb-2 min-w-0">
-                                <label className="text-xs text-white/60 font-medium uppercase tracking-wider flex-shrink-0">
-                                    Amount
-                                </label>
-                                {loadingBalance ? (
-                                    <span className="text-xs text-white/40">Loading balance...</span>
-                                ) : tokenBalance && parseFloat(tokenBalance) > 0 ? (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs text-white/60">
-                                            Balance: {tokenBalance}
-                                        </span>
-                                        <button
-                                            onClick={() => setAmount(tokenBalance)}
-                                            className="text-[10px] text-[#4ecdc4] bg-transparent border border-[#4ecdc4] rounded px-1.5 py-0.5 cursor-pointer uppercase tracking-wider hover:bg-[#4ecdc4]/10 transition-all duration-300 flex-shrink-0"
-                                        >
-                                            MAX
-                                        </button>
-                                    </div>
-                                ) : null}
-                            </div>
-
-                            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                                <input
-                                    type="number"
-                                    placeholder={`0.0`}
-                                    value={amount}
-                                    onChange={(e) => setAmount(e.target.value)}
-                                    step="0.000001"
-                                    className="flex-1 bg-transparent border-none text-white text-xl sm:text-2xl font-semibold outline-none min-w-0 overflow-hidden shadow-none"
-                                />
-
+                        {/* From/To Amount (visuals only) */}
+                        <FromTo
+                            fromLabel="From"
+                            toLabel="To"
+                            inputType="number"
+                            inputStep="0.000001"
+                            fromAmount={amount}
+                            onChangeFromAmount={setAmount}
+                            fromBalanceText={
+                                loadingBalance
+                                    ? 'Loading balance...'
+                                    : selectedEthAccount
+                                        ? `Balance: ${Decimal.from(tokenBalance).prettify()}`
+                                        : null
+                            }
+                            onMaxClick={tokenBalance ? () => setAmount(tokenBalance) : undefined}
+                            maxDisabled={false}
+                            fromTokenNode={(
                                 <BridgeTokenSelector
                                     selected={asset}
                                     onSelect={handleAssetChange}
@@ -887,28 +874,36 @@ export function AeEthBridge() {
                                     ethBalances={ethBalances}
                                     loadingBalances={loadingBalance}
                                 />
-                                {/* <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 rounded-xl border border-white/10 flex-shrink-0">
-                                    <img
-                                        src={asset.icon}
-                                        alt={asset.symbol}
-                                        className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover"
-                                    />
-                                    <span className="text-white text-sm sm:text-base font-semibold">
-                                        {getTokenDisplayName(asset, direction)}
-                                    </span>
-                                </div> */}
-                            </div>
-                        </div>
-
-                        {/* Destination Token Info */}
-                        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 backdrop-blur-[10px]">
-                            <label className="text-xs text-white/60 font-medium uppercase tracking-wider block mb-2">
-                                You'll Receive
-                            </label>
-                            <div className="text-white overflow-hidden text-ellipsis" style={{ fontSize: '10px' }}>
-                                {getDestinationTokenValue()}
-                            </div>
-                        </div>
+                            )}
+                            toValue={amount || '0.0'}
+                            toLoading={false}
+                            toTokenNode={(
+                                <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                    <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 rounded-xl border border-white/10">
+                                        <span className="text-white text-sm sm:text-base font-semibold">
+                                            {destinationTokenLabel}
+                                        </span>
+                                    </div>
+                                    {destinationTokenAddress && (
+                                        <div className="flex items-center gap-2 max-w-[200px]">
+                                            <span
+                                                className="font-mono text-[10px] text-white/60 truncate"
+                                                title={destinationTokenAddress}
+                                            >
+                                                {destinationTokenAddress}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={handleCopyTokenAddress}
+                                                className="text-[10px] text-[#4ecdc4] hover:text-[#3ab3aa]"
+                                            >
+                                                Copy
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        />
 
                         {/* Destination Address */}
                         <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-5 backdrop-blur-[10px]">

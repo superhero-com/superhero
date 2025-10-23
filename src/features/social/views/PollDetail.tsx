@@ -6,6 +6,7 @@ import RightRail from '@/components/layout/RightRail';
 import AeButton from '@/components/AeButton';
 import PollCreatedCard from '@/features/social/feed-plugins/poll-created/PollCreatedCard';
 import { GovernanceApi } from '@/api/governance';
+import { CONFIG } from '@/config';
 import { useAeSdk } from '@/hooks/useAeSdk';
 
 type PollDetailProps = { standalone?: boolean };
@@ -28,6 +29,7 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
   const [myVote, setMyVote] = useState<number | null>(null);
   const [voting, setVoting] = useState<boolean>(false);
   const [pendingOption, setPendingOption] = useState<number | null>(null);
+  const [txHash, setTxHash] = useState<string | undefined>(undefined);
 
   // Fetch current chain height
   useEffect(() => {
@@ -112,6 +114,38 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Resolve creation transaction hash for on-chain badge (same behavior as feed)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!pollAddress) return;
+      try {
+        const mdwBase = CONFIG.MIDDLEWARE_URL.replace(/\/$/, '');
+        // Attempt to fetch contract to get the source tx hash
+        const cRes = await fetch(`${mdwBase}/v3/contracts/${pollAddress}`);
+        if (cRes.ok) {
+          const c = await cRes.json();
+          const sourceTxHash = c?.source_tx_hash || c?.create_tx || c?.creation_tx || null;
+          if (sourceTxHash && !cancelled) {
+            setTxHash(String(sourceTxHash));
+            return;
+          }
+        }
+        // Fallback query
+        try {
+          const qRes = await fetch(`${mdwBase}/v3/transactions?type=contract_create&contract_id=${pollAddress}&direction=forward&limit=1`);
+          if (qRes.ok) {
+            const json = await qRes.json();
+            const tx = json?.data?.[0] || json?.transactions?.[0] || json?.[0];
+            const hash = tx?.hash || tx?.tx_hash || tx?.tx_hash_str || null;
+            if (hash && !cancelled) setTxHash(String(hash));
+          }
+        } catch {}
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [pollAddress]);
 
   const APPROX_BLOCK_MS = 180000; // ~3m per block
   const createdAtIso = useMemo(() => {
@@ -217,6 +251,7 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
             onVoteOption={submitVote}
             onRevoke={revokeVote}
             voting={voting}
+            txHash={txHash}
             contractAddress={pollAddress as any}
             pendingOption={pendingOption}
           />

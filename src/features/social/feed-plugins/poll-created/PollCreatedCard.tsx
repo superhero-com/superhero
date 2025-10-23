@@ -82,12 +82,12 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
           <>
             <span className="inline-flex items-center gap-1">
               <AddressAvatarWithChainNameFeed address={author} size={20} overlaySize={12} showAddressAndChainName={false} />
-              <span className={styles.byName}>{chainName || 'Legend'}</span>
+              <span className={cn(styles.byName, 'text-[12px] md:text-[13px]')}>{chainName || 'Legend'}</span>
             </span>
-            <span className="text-white/70">created a poll</span>
+            <span className="text-white/70 text-[12px] md:text-[13px]">created a poll</span>
             {createdAtIso && (
               <>
-                <span className="text-white/60">·</span>
+                <span className="text-white/60 text-[12px] md:text-[13px]">·</span>
                 {txHash ? (
                   <BlockchainInfoPopover
                     txHash={txHash}
@@ -101,7 +101,7 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
                     label="Poll"
                   />
                 ) : (
-                  <span className="text-white/60">{compactTime(createdAtIso)}</span>
+                  <span className="text-white/60 text-[12px] md:text-[13px]">{compactTime(createdAtIso)}</span>
                 )}
               </>
             )}

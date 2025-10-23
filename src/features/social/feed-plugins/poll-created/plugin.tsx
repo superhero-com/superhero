@@ -150,17 +150,25 @@ export function registerPollCreatedPlugin() {
       const [myVote, setMyVote] = useState<number | null>(null);
       const [displayOptions, setDisplayOptions] = useState(options);
       const [displayTotalVotes, setDisplayTotalVotes] = useState(totalVotes);
+      const [requestedVote, setRequestedVote] = useState<number | null>(null);
+      const [voteLockUntil, setVoteLockUntil] = useState<number>(0);
       const refreshMyVote = useCallback(async () => {
         try {
           if (!activeAccount) { setMyVote(null); return; }
           const ov = await GovernanceApi.getPollOverview(pollAddress as any);
           const votesMap = (ov?.pollState?.votes || {}) as Record<string, number>;
           const v = votesMap[activeAccount as string];
-          setMyVote(typeof v === 'number' ? v : null);
+          const now = Date.now();
+          if (now < voteLockUntil) {
+            // While locked, keep optimistic selection
+            setMyVote(requestedVote);
+          } else {
+            setMyVote(typeof v === 'number' ? v : null);
+          }
         } catch {
           // ignore
         }
-      }, [activeAccount, pollAddress]);
+      }, [activeAccount, pollAddress, requestedVote, voteLockUntil]);
 
       useEffect(() => { refreshMyVote(); }, [refreshMyVote]);
 
@@ -212,6 +220,8 @@ export function registerPollCreatedPlugin() {
           setPendingOption(opt);
           // Optimistic UI: show selection immediately
           setMyVote(opt);
+          setRequestedVote(opt);
+          setVoteLockUntil(Date.now() + 15000);
           // Optimistic counts update
           const prev = myVote;
           setDisplayOptions((curr) => curr.map((o) => {
@@ -253,6 +263,8 @@ export function registerPollCreatedPlugin() {
           setPendingOption(myVote);
           // Optimistic UI: clear selection immediately
           setMyVote(null);
+          setRequestedVote(null);
+          setVoteLockUntil(Date.now() + 15000);
           // Optimistic counts update (decrement old option and total)
           const prev = myVote;
           if (prev != null) {

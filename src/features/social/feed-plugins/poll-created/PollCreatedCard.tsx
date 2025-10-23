@@ -164,7 +164,8 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
           {onRevoke && myVote != null && (
             <button
               type="button"
-              className="text-xs text-white/70 hover:underline underline-offset-2 bg-transparent border-0 p-0 m-0 h-auto min-h-0 min-w-0 shadow-none ring-0 focus:ring-0 outline-none"
+              className="text-xs text-white/70 hover:underline underline-offset-2 bg-transparent hover:bg-transparent focus:bg-transparent active:bg-transparent border-0 p-0 m-0 h-auto min-h-0 min-w-0 shadow-none hover:shadow-none active:shadow-none ring-0 focus:ring-0 outline-none rounded-none"
+              style={{ WebkitAppearance: 'none', background: 'transparent', boxShadow: 'none', WebkitTapHighlightColor: 'transparent', filter: 'none' }}
               onClick={(e) => { e.stopPropagation(); onRevoke(); }}
               disabled={voting}
             >

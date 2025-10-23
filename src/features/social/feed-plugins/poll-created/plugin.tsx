@@ -53,9 +53,21 @@ export function registerPollCreatedPlugin() {
         })
       );
       const valid = overviews.filter(Boolean) as { p: any; ov: any }[];
-      const createHeights = valid.map(({ ov }) => Number(ov?.pollState?.create_height || 0));
-      const maxCreateHeight = Math.max(0, ...createHeights);
-      const APPROX_BLOCK_MS = 180000; // ~3 minutes per block
+      // Resolve exact creation time from MDW by fetching contract_create tx for each poll
+      const mdwBase = (await import('@/configs')).configs.networks.ae_uat.middlewareUrl; // use active testnet config; swap if needed
+      async function fetchCreationTime(ct: string): Promise<string | null> {
+        try {
+          const res = await fetch(`${mdwBase}/v3/transactions?type=contract_create&contract_id=${ct}&direction=forward&limit=1`);
+          const json = await res.json();
+          const tx = json?.data?.[0] || json?.transactions?.[0] || json?.[0];
+          if (tx?.micro_time || tx?.block_time) return new Date(tx.micro_time ?? tx.block_time).toISOString();
+          if (tx?.block_height) {
+            const kb = await fetch(`${mdwBase}/v3/key-blocks/${tx.block_height}`).then(r => r.json());
+            if (kb?.time) return new Date(kb.time).toISOString();
+          }
+        } catch {}
+        return null;
+      }
 
       for (let i = 0; i < valid.length; i += 1) {
         const { p, ov } = valid[i];
@@ -90,9 +102,7 @@ export function registerPollCreatedPlugin() {
         const totalVotes = typeof ov?.voteCount === 'number' && !Number.isNaN(ov.voteCount)
           ? ov.voteCount
           : options.reduce((acc, o) => acc + (o.votes || 0), 0);
-        const ch = Number(ov?.pollState?.create_height || 0);
-        const ageBlocks = Math.max(0, maxCreateHeight - ch);
-        const createdAt = new Date(Date.now() - ageBlocks * APPROX_BLOCK_MS).toISOString();
+        const createdAt = (await fetchCreationTime(p.poll as any)) || new Date().toISOString();
         const entry = adaptPollToEntry(
           p.poll as any,
           {

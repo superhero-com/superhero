@@ -52,7 +52,11 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
   const maxVotes = Math.max(0, ...options.map((o) => o.votes || 0));
 
   return (
-    <FeedPluginCard className={cn(styles.root, 'feed-plugin poll-created')}>
+    <FeedPluginCard
+      className={cn(styles.root, 'feed-plugin poll-created')}
+      role={onOpen ? 'button' : undefined}
+      onClick={() => onOpen?.()}
+    >
       {(txHash || contractAddress) && (
         <div className="absolute top-4 right-2 md:top-5 md:right-5 z-10">
           {txHash ? (

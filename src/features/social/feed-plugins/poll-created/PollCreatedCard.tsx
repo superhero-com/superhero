@@ -71,27 +71,18 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
           const pct = totalVotes > 0 ? Math.round(((o.votes || 0) / totalVotes) * 100) : 0;
           const widthPct = maxVotes > 0 ? Math.max(14, Math.round(((o.votes || 0) / maxVotes) * 100)) : 14;
           return (
-            <div key={o.id} className={styles.option} aria-label={`${o.label} ${pct}%`}>
+            <div
+              key={o.id}
+              className={cn(styles.option, myVote === o.id && styles.optionSelected)}
+              aria-label={`${o.label} ${pct}%`}
+              onClick={(e) => { e.stopPropagation(); onVoteOption?.(o.id); }}
+              role={onVoteOption ? 'button' : undefined}
+            >
               <div className={styles.bar} style={{ transform: `scaleX(${widthPct / 100})` }} />
               <div className={styles.labelRow}>
-                <span>{o.label}</span>
+                <span className={cn(myVote === o.id && styles.labelSelected)}>{o.label}</span>
                 <span className="flex items-center gap-2">
-                  {myVote === o.id ? (
-                    <>
-                      <span className="text-emerald-300 text-xs">Your vote</span>
-                      {onRevoke && (
-                        <button type="button" className="text-xs text-white/70 hover:text-white underline underline-offset-2" onClick={(e) => { e.stopPropagation(); onRevoke(); }} disabled={voting}>
-                          Retract
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    onVoteOption && (
-                      <button type="button" className="text-xs text-white/80 hover:text-white border border-white/20 rounded px-2 py-0.5" onClick={(e) => { e.stopPropagation(); onVoteOption(o.id); }} disabled={voting}>
-                        Vote
-                      </button>
-                    )
-                  )}
+                  {myVote === o.id && <span className="text-emerald-300 text-xs">Your vote</span>}
                   <span>{pct}%</span>
                 </span>
               </div>
@@ -102,7 +93,14 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
 
       <div className={styles.footer}>
         <span>{totalVotes} votes</span>
-        {timeLeft && <span>{timeLeft}</span>}
+        <span className="flex items-center gap-3">
+          {onRevoke && myVote != null && (
+            <button type="button" className="text-xs text-white/70 hover:text-white underline underline-offset-2" onClick={(e) => { e.stopPropagation(); onRevoke(); }} disabled={voting}>
+              Retract vote
+            </button>
+          )}
+          {timeLeft && <span>{timeLeft}</span>}
+        </span>
       </div>
     </FeedPluginCard>
   );

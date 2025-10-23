@@ -9,13 +9,14 @@ import ConnectWalletButton from "../../../components/ConnectWalletButton";
 
 import { useDex, useAeSdk, useRecentActivities } from "../../../hooks";
 
-interface EthBridgeWidgetProps {
+interface BuyAeWidgetProps {
   embedded?: boolean; // renders without outer card/padding for sidebars
 }
 
+//
 export default function BuyAeWidget({
   embedded = false,
-}: EthBridgeWidgetProps) {
+}: BuyAeWidgetProps) {
   const { activeAccount, sdk } = useAeSdk();
   const slippagePct = useDex().slippagePct;
   const deadlineMins = useDex().deadlineMins;

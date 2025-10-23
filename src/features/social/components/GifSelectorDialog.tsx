@@ -126,7 +126,7 @@ export function GifSelectorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-gray-900 border-white/12 text-white">
+      <DialogContent className="max-h-[60vh] sm:max-h-[90vh] overflow-y-auto sm:max-w-[600px] bg-gray-900 border-white/12 text-white">
         <DialogHeader>
           <DialogTitle className="text-white">Add a GIF</DialogTitle>
         </DialogHeader>

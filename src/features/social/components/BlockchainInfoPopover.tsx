@@ -41,6 +41,7 @@ export function BlockchainInfoPopover({
   const [open, setOpen] = useState(false);
   const [extraLoading, setExtraLoading] = useState(false);
   const [extraError, setExtraError] = useState<string | null>(null);
+  const [txTimeIso, setTxTimeIso] = useState<string | undefined>(undefined);
   const { status } = useTransactionStatus(txHash, { enabled: !!txHash, refetchInterval: 8000 });
 
   // Optional: fetch additional tx details from API when opened (non-blocking)
@@ -52,6 +53,29 @@ export function BlockchainInfoPopover({
         setExtraLoading(true);
         // Fire-and-forget; not all fields are required here
         await TransactionsService.getTransactionByHash({ txHash });
+        // Prefer exact timestamp from MDW transaction endpoint
+        try {
+          const mdwBase = (CONFIG.MIDDLEWARE_URL || '').replace(/\/$/, '');
+          if (mdwBase) {
+            const res = await fetch(`${mdwBase}/v3/transactions/${txHash}`);
+            if (res.ok) {
+              const json: any = await res.json();
+              const t = json?.micro_time ?? json?.block_time;
+              if (t) {
+                const date = new Date(t);
+                if (!Number.isNaN(date.getTime())) setTxTimeIso(date.toISOString());
+              } else if (json?.block_height) {
+                try {
+                  const kb = await fetch(`${mdwBase}/v3/key-blocks/${json.block_height}`).then(r => r.json());
+                  if (kb?.time) {
+                    const date = new Date(kb.time);
+                    if (!Number.isNaN(date.getTime())) setTxTimeIso(date.toISOString());
+                  }
+                } catch {}
+              }
+            }
+          }
+        } catch {}
       } catch (e: any) {
         // ignore; popover still works with base data
         setExtraError(e?.message || "");
@@ -67,7 +91,7 @@ export function BlockchainInfoPopover({
   const contractUrl = useMemo(() => (contract ? `${explorerBase}/contracts/${contract}` : undefined), [explorerBase, contract]);
 
   const shortHash = useMemo(() => `${txHash.slice(0, 6)}...${txHash.slice(-4)}`, [txHash]);
-  const absoluteTime = createdAt ? new Date(createdAt).toLocaleString() : undefined;
+  const absoluteTime = (txTimeIso || createdAt) ? new Date(txTimeIso || createdAt as string).toLocaleString() : undefined;
 
   const handleCopy = useCallback(async (value: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();

@@ -110,7 +110,8 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
               <div className={styles.labelRow}>
                 <span className={cn(myVote === o.id && styles.labelSelected)}>{o.label}</span>
                 <span className="flex items-center gap-2">
-                  {myVote === o.id && <span className="text-emerald-300 text-xs">Your vote</span>}
+                  {voting && <span className="text-amber-300 text-xs">Pending…</span>}
+                  {myVote === o.id && !voting && <span className="text-emerald-300 text-xs">Your vote</span>}
                   <span>{pct}%</span>
                 </span>
               </div>

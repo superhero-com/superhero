@@ -147,6 +147,8 @@ export function registerPollCreatedPlugin() {
       const { sdk, activeAccount } = useAeSdk() as any;
       const [voting, setVoting] = useState(false);
       const [myVote, setMyVote] = useState<number | null>(null);
+      const [displayOptions, setDisplayOptions] = useState(options);
+      const [displayTotalVotes, setDisplayTotalVotes] = useState(totalVotes);
       const refreshMyVote = useCallback(async () => {
         try {
           if (!activeAccount) { setMyVote(null); return; }
@@ -160,6 +162,29 @@ export function registerPollCreatedPlugin() {
       }, [activeAccount, pollAddress]);
 
       useEffect(() => { refreshMyVote(); }, [refreshMyVote]);
+
+      const rebuildFromOverview = useCallback((ov: any) => {
+        const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
+        const indexByLabel = new Map<string, number>(
+          Object.entries(optsRec).map(([idx, label]) => [String(label), Number(idx)])
+        );
+        const votesByIndex = new Map<number, number>();
+        const sfo = (ov?.stakesForOption || []) as Array<{ option: string; votes: unknown[] }>;
+        for (const row of sfo || []) {
+          const raw = (row as any).option;
+          const count = Array.isArray((row as any).votes) ? (row as any).votes.length : 0;
+          let optIndex: number | undefined;
+          const asNum = Number(raw);
+          if (!Number.isNaN(asNum)) optIndex = asNum; else optIndex = indexByLabel.get(String(raw));
+          if (typeof optIndex === 'number' && !Number.isNaN(optIndex)) votesByIndex.set(optIndex, count);
+        }
+        const nextOptions = Object.entries(optsRec).map(([k, v]) => ({ id: Number(k), label: String(v), votes: votesByIndex.get(Number(k)) ?? 0 }));
+        const nextTotal = typeof ov?.voteCount === 'number' && !Number.isNaN(ov.voteCount)
+          ? ov.voteCount
+          : nextOptions.reduce((acc, o) => acc + (o.votes || 0), 0);
+        setDisplayOptions(nextOptions);
+        setDisplayTotalVotes(nextTotal);
+      }, []);
       const [currentHeight, setCurrentHeight] = useState<number | undefined>(undefined);
       useEffect(() => {
         let cancelled = false;
@@ -179,7 +204,7 @@ export function registerPollCreatedPlugin() {
         : entry.createdAt;
       const handleOpen = () => onOpen?.(String(pollAddress));
       const submitVote = async (opt: number) => {
-        if (!sdk) return;
+        if (!sdk || voting) return;
         try {
           setVoting(true);
           const poll = await (await import('@aeternity/aepp-sdk')).Contract.initialize<{ vote: (o: number) => void }>({
@@ -189,12 +214,16 @@ export function registerPollCreatedPlugin() {
           } as any);
           await (poll as any).vote(opt);
           await refreshMyVote();
+          try {
+            const ov = await GovernanceApi.getPollOverview(pollAddress as any);
+            rebuildFromOverview(ov);
+          } catch {}
         } finally {
           setVoting(false);
         }
       };
       const revokeVote = async () => {
-        if (!sdk) return;
+        if (!sdk || voting) return;
         try {
           setVoting(true);
           const poll = await (await import('@aeternity/aepp-sdk')).Contract.initialize<{ revoke_vote: () => void }>({
@@ -204,6 +233,10 @@ export function registerPollCreatedPlugin() {
           } as any);
           await (poll as any).revoke_vote();
           await refreshMyVote();
+          try {
+            const ov = await GovernanceApi.getPollOverview(pollAddress as any);
+            rebuildFromOverview(ov);
+          } catch {}
         } finally {
           setVoting(false);
         }
@@ -214,8 +247,8 @@ export function registerPollCreatedPlugin() {
           author={author}
           closeHeight={closeHeight}
           currentHeight={currentHeight as any}
-          options={options}
-          totalVotes={totalVotes}
+          options={displayOptions}
+          totalVotes={displayTotalVotes}
           onOpen={handleOpen}
           createdAtIso={createdAtIso}
           myVote={myVote}

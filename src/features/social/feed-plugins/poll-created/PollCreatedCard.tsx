@@ -85,7 +85,26 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
               <span className={styles.byName}>{chainName || 'Legend'}</span>
             </span>
             <span className="text-white/70">created a poll</span>
-            {createdAtIso && <span className="text-white/60">· {compactTime(createdAtIso)}</span>}
+            {createdAtIso && (
+              <>
+                <span className="text-white/60">·</span>
+                {txHash ? (
+                  <BlockchainInfoPopover
+                    txHash={txHash}
+                    createdAt={createdAtIso}
+                    sender={author}
+                    contract={contractAddress}
+                    triggerContent={
+                      <span className="text-[12px] md:text-[13px] text-white/70 whitespace-nowrap">{compactTime(createdAtIso)}</span>
+                    }
+                    triggerClassName=""
+                    label="Poll"
+                  />
+                ) : (
+                  <span className="text-white/60">{compactTime(createdAtIso)}</span>
+                )}
+              </>
+            )}
           </>
         )}
       </div>

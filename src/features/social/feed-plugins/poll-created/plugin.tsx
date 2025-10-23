@@ -212,6 +212,21 @@ export function registerPollCreatedPlugin() {
           setPendingOption(opt);
           // Optimistic UI: show selection immediately
           setMyVote(opt);
+          // Optimistic counts update
+          const prev = myVote;
+          setDisplayOptions((curr) => curr.map((o) => {
+            if (prev == null) {
+              if (o.id === opt) return { ...o, votes: (o.votes || 0) + 1 };
+              return o;
+            }
+            if (prev !== opt) {
+              if (o.id === opt) return { ...o, votes: (o.votes || 0) + 1 };
+              if (o.id === prev) return { ...o, votes: Math.max(0, (o.votes || 0) - 1) };
+              return o;
+            }
+            return o;
+          }));
+          setDisplayTotalVotes((curr) => (prev == null ? curr + 1 : curr));
           const poll = await (await import('@aeternity/aepp-sdk')).Contract.initialize<{ vote: (o: number) => void }>({
             ...(sdk as any).getContext(),
             aci: (await import('@/api/GovernancePollACI.json')).default as any,
@@ -238,6 +253,12 @@ export function registerPollCreatedPlugin() {
           setPendingOption(myVote);
           // Optimistic UI: clear selection immediately
           setMyVote(null);
+          // Optimistic counts update (decrement old option and total)
+          const prev = myVote;
+          if (prev != null) {
+            setDisplayOptions((curr) => curr.map((o) => (o.id === prev ? { ...o, votes: Math.max(0, (o.votes || 0) - 1) } : o)));
+            setDisplayTotalVotes((curr) => Math.max(0, curr - 1));
+          }
           const poll = await (await import('@aeternity/aepp-sdk')).Contract.initialize<{ revoke_vote: () => void }>({
             ...(sdk as any).getContext(),
             aci: (await import('@/api/GovernancePollACI.json')).default as any,

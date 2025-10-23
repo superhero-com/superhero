@@ -355,7 +355,12 @@ export default function FeedList({
         // we carry them as lightweight items with id/created_at and a hidden __entry. Prefer __entry if present.
         const entry: FeedEntry | undefined = (item as any).__feedEntry || undefined;
         if (entry) {
-          const onOpen = (id: string) => navigate(`/poll/${id}`);
+          const onOpen = (id: string) => {
+            try {
+              sessionStorage.setItem("feedScrollY", String(window.scrollY || 0));
+            } catch {}
+            navigate(`/poll/${id}`);
+          };
           nodes.push(<FeedRenderer key={postId} entry={entry} onOpenPost={onOpen} />);
           i += 1;
           continue;

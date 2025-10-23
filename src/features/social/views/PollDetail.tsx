@@ -108,6 +108,11 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
     return () => { cancelled = true; };
   }, [pollAddress, activeAccount, rebuildFromOverview]);
 
+  // Ensure detail page scrolls to top when opened
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const APPROX_BLOCK_MS = 180000; // ~3m per block
   const createdAtIso = useMemo(() => {
     if (currentHeight != null && createHeight != null) {

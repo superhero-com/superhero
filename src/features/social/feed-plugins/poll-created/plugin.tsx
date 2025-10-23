@@ -206,14 +206,19 @@ export function registerPollCreatedPlugin() {
       const handleOpen = () => onOpen?.(String(pollAddress));
       const submitVote = async (opt: number) => {
         if (!sdk || voting) return;
+        if (myVote === opt) return; // no-op if selecting the same option
         try {
           setVoting(true);
           setPendingOption(opt);
-          const poll = await (await import('@aeternity/aepp-sdk')).Contract.initialize<{ vote: (o: number) => void }>({
+          const poll = await (await import('@aeternity/aepp-sdk')).Contract.initialize<{ vote: (o: number) => void; revoke_vote: () => void }>({
             ...(sdk as any).getContext(),
             aci: (await import('@/api/GovernancePollACI.json')).default as any,
             address: pollAddress,
           } as any);
+          // If user had a previous vote, revoke first to allow switching options
+          if (myVote != null && myVote !== opt && (poll as any).revoke_vote) {
+            await (poll as any).revoke_vote();
+          }
           await (poll as any).vote(opt);
           await refreshMyVote();
           try {

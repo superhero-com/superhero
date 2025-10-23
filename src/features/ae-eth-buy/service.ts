@@ -47,6 +47,7 @@ export class BridgeService {
       autoSwap = true,
       slippagePercent = 1,
       deadlineMinutes = 20,
+      walletProvider,
     } = options;
 
     let status: BridgeStatus = 'idle';
@@ -68,7 +69,7 @@ export class BridgeService {
       updateStatus('bridging', 'Bridging ETH to æETH...');
 
       // 1. Bridge ETH to æETH on Ethereum
-      const bridgeResult = await bridgeEthToAe({ amountEth, aeAccount });
+      const bridgeResult = await bridgeEthToAe({ amountEth, aeAccount, walletProvider });
 
       updateStatus('waiting', 'Waiting for æETH deposit on æternity...');
 

@@ -1,20 +1,24 @@
-import React, { useState, useEffect } from "react";
-import { BridgeService, BridgeStatus, BridgeOptions } from "../index";
-import { getEthBalance, ensureEthProvider } from "../ethereum";
-import { formatEther } from "ethers";
-import { errorToUserMessage } from "../../../libs/errorMessages";
+import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
+import { Eip1193Provider, formatEther } from 'ethers';
+import React, { useCallback, useEffect, useState } from "react";
+import { ConnectWalletButton } from "../../../components/ConnectWalletButton";
 import { useToast } from "../../../components/ToastProvider";
 import { CONFIG } from "../../../config";
-import ConnectWalletButton from "../../../components/ConnectWalletButton";
+import { errorToUserMessage } from "../../../libs/errorMessages";
+import { ensureEthProvider, getEthBalance } from "../ethereum";
+import { BridgeOptions, BridgeService, BridgeStatus } from "../index";
+import { AppKitProvider } from '../providers/AppKitProvider';
+import { ConnectEthereumWallet } from "./ConnectEthereumWallet";
 
-import { useDex, useAeSdk, useRecentActivities } from "../../../hooks";
+import { Decimal } from "@/libs/decimal";
+import { useAeSdk, useDex, useRecentActivities } from "../../../hooks";
 
 interface BuyAeWidgetProps {
   embedded?: boolean; // renders without outer card/padding for sidebars
 }
 
 //
-export default function BuyAeWidget({
+function BuyAeWidgetContent({
   embedded = false,
 }: BuyAeWidgetProps) {
   const { activeAccount, sdk } = useAeSdk();
@@ -22,6 +26,8 @@ export default function BuyAeWidget({
   const deadlineMins = useDex().deadlineMins;
   const { addActivity } = useRecentActivities();
   const toast = useToast();
+  const { walletProvider } = useAppKitProvider<Eip1193Provider>('eip155');
+  const { address: ethAddress, isConnected: ethConnected } = useAppKitAccount();
 
   const [ethBridgeIn, setEthBridgeIn] = useState("");
   const [ethBridgeOutAe, setEthBridgeOutAe] = useState("");
@@ -35,11 +41,16 @@ export default function BuyAeWidget({
   const bridgeService = BridgeService.getInstance();
 
   // Fetch ETH balance
-  const fetchEthBalance = async () => {
+  const fetchEthBalance = useCallback(async () => {
+    if (!walletProvider || !ethAddress) {
+      setEthBalance(null);
+      return;
+    }
+
     try {
       setFetchingBalance(true);
-      const provider = await ensureEthProvider();
-      const balanceWei = await getEthBalance(provider);
+      const provider = await ensureEthProvider(walletProvider);
+      const balanceWei = await getEthBalance(provider, ethAddress);
       const balanceEth = formatEther(balanceWei);
       setEthBalance(balanceEth);
     } catch (error) {
@@ -49,7 +60,25 @@ export default function BuyAeWidget({
     } finally {
       setFetchingBalance(false);
     }
-  };
+  }, [walletProvider, ethAddress]);
+
+  // Fetch ETH balance when wallet is connected
+  useEffect(() => {
+    if (ethConnected && walletProvider && ethAddress) {
+      fetchEthBalance();
+    } else {
+      // Clear balance when wallet is disconnected
+      setEthBalance(null);
+    }
+  }, [ethConnected, walletProvider, ethAddress, fetchEthBalance]);
+
+  // Handle Ethereum wallet disconnection
+  const handleEthDisconnected = useCallback(() => {
+    setEthBalance(null);
+    setEthBridgeIn("");
+    setEthBridgeOutAe("");
+    setEthBridgeError(null);
+  }, []);
   // Automated ETH Bridge quoting
   useEffect(() => {
     if (!ethBridgeIn || Number(ethBridgeIn) <= 0) {
@@ -81,7 +110,7 @@ export default function BuyAeWidget({
       if (!activeAccount) return;
       setEthBridgeProcessing(true);
       setEthBridgeError(null);
-      
+
 
       const bridgeOptions: BridgeOptions = {
         amountEth: ethBridgeIn,
@@ -91,6 +120,7 @@ export default function BuyAeWidget({
         deadlineMinutes: deadlineMins,
         depositTimeout: 300_000, // 5 minutes
         pollInterval: 6000, // 6 seconds
+        walletProvider: walletProvider || undefined,
       };
 
       const result = await bridgeService.bridgeEthToAe(
@@ -141,35 +171,35 @@ export default function BuyAeWidget({
                 "ETH→AE bridge completed successfully!"
               ),
               ethTxUrl &&
-                React.createElement(
-                  "a",
-                  {
-                    href: ethTxUrl,
-                    target: "_blank",
-                    rel: "noreferrer",
-                    style: {
-                      color: "#8bc9ff",
-                      textDecoration: "underline",
-                      display: "block",
-                    },
+              React.createElement(
+                "a",
+                {
+                  href: ethTxUrl,
+                  target: "_blank",
+                  rel: "noreferrer",
+                  style: {
+                    color: "#8bc9ff",
+                    textDecoration: "underline",
+                    display: "block",
                   },
-                  "View ETH transaction"
-                ),
+                },
+                "View ETH transaction"
+              ),
               aeTxUrl &&
-                React.createElement(
-                  "a",
-                  {
-                    href: aeTxUrl,
-                    target: "_blank",
-                    rel: "noreferrer",
-                    style: {
-                      color: "#8bc9ff",
-                      textDecoration: "underline",
-                      display: "block",
-                    },
+              React.createElement(
+                "a",
+                {
+                  href: aeTxUrl,
+                  target: "_blank",
+                  rel: "noreferrer",
+                  style: {
+                    color: "#8bc9ff",
+                    textDecoration: "underline",
+                    display: "block",
                   },
-                  "View AE swap transaction"
-                )
+                },
+                "View AE swap transaction"
+              )
             )
           );
         } catch (toastError) {
@@ -196,7 +226,7 @@ export default function BuyAeWidget({
     if (!ethBalance && !fetchingBalance) {
       await fetchEthBalance();
     }
-    
+
     if (ethBalance) {
       setEthBridgeIn(parseFloat(ethBalance).toFixed(6));
     }
@@ -205,6 +235,7 @@ export default function BuyAeWidget({
   const isDisabled =
     ethBridgeProcessing ||
     !activeAccount ||
+    !ethConnected ||
     !ethBridgeIn ||
     Number(ethBridgeIn) <= 0;
 
@@ -265,7 +296,7 @@ export default function BuyAeWidget({
           </label>
           <div className="flex items-center gap-2 flex-shrink-0">
             <span className="text-xs text-white/60">
-              {ethBalance && !fetchingBalance ? `Balance: ${parseFloat(ethBalance).toFixed(4)} ETH` : "Ethereum"}
+              {ethBalance && !fetchingBalance ? `Balance: ${Decimal.from(ethBalance ?? '0').prettify()} ETH` : "Ethereum"}
             </span>
             <button
               onClick={handleMaxClick}
@@ -290,9 +321,8 @@ export default function BuyAeWidget({
           />
 
           <div
-            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${
-              embedded ? "bg-transparent" : "bg-white/10"
-            } rounded-xl border border-white/10 flex-shrink-0`}
+            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${embedded ? "bg-transparent" : "bg-white/10"
+              } rounded-xl border border-white/10 flex-shrink-0`}
           >
             <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-[#627eea] to-[#8a92b2] flex items-center justify-center text-white text-xs font-bold">
               Ξ
@@ -326,15 +356,14 @@ export default function BuyAeWidget({
 
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div
-            className={`flex-1 text-xl sm:text-2xl font-base text-white/60 min-w-0 overflow-hidden`}       
+            className={`flex-1 text-xl sm:text-2xl font-base text-white/60 min-w-0 overflow-hidden`}
           >
             {ethBridgeQuoting ? "Quoting…" : ethBridgeOutAe || "0.0"}
           </div>
 
           <div
-            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${
-              embedded ? "bg-transparent" : "bg-white/10"
-            } rounded-xl border border-white/10 flex-shrink-0`}
+            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${embedded ? "bg-transparent" : "bg-white/10"
+              } rounded-xl border border-white/10 flex-shrink-0`}
           >
             <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-red-400 to-red-300 flex items-center justify-center text-white text-xs font-bold">
               Æ
@@ -352,27 +381,26 @@ export default function BuyAeWidget({
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-white/60">Bridge Status</span>
             <span
-              className={`text-sm font-semibold ${
-                ethBridgeStep === "completed"
-                  ? "text-green-400"
-                  : ethBridgeStep === "failed"
+              className={`text-sm font-semibold ${ethBridgeStep === "completed"
+                ? "text-green-400"
+                : ethBridgeStep === "failed"
                   ? "text-red-400"
                   : "text-yellow-400"
-              }`}
+                }`}
             >
               {ethBridgeStep === "connecting"
                 ? "Connecting to wallets"
                 : ethBridgeStep === "bridging"
-                ? "Bridging ETH → æETH"
-                : ethBridgeStep === "waiting"
-                ? "Waiting for æETH deposit"
-                : ethBridgeStep === "swapping"
-                ? "Swapping æETH → AE"
-                : ethBridgeStep === "completed"
-                ? "Completed successfully"
-                : ethBridgeStep === "failed"
-                ? "Failed"
-                : "Processing"}
+                  ? "Bridging ETH → æETH"
+                  : ethBridgeStep === "waiting"
+                    ? "Waiting for æETH deposit"
+                    : ethBridgeStep === "swapping"
+                      ? "Swapping æETH → AE"
+                      : ethBridgeStep === "completed"
+                        ? "Completed successfully"
+                        : ethBridgeStep === "failed"
+                          ? "Failed"
+                          : "Processing"}
             </span>
           </div>
 
@@ -391,42 +419,63 @@ export default function BuyAeWidget({
         </div>
       )}
 
-      {/* Bridge Button */}
-      {activeAccount ? (
-        <button
-          onClick={handleEthBridge}
-          disabled={isDisabled}
-          className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-            isDisabled
-              ? "bg-white/10 cursor-not-allowed opacity-60"
-              : "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
-          }`}
-        >
-          {ethBridgeProcessing ? (
-            <div className="flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              {ethBridgeStep === "connecting"
-                ? "Connecting…"
-                : ethBridgeStep === "bridging"
-                ? "Bridging…"
-                : ethBridgeStep === "waiting"
-                ? "Waiting for æETH…"
-                : ethBridgeStep === "swapping"
-                ? "Swapping…"
-                : "Processing…"}
-            </div>
-          ) : (
-            "Buy AE with ETH"
-          )}
-        </button>
-      ) : (
+      {/* Ethereum Wallet Connection */}
+      {!activeAccount ? (
         <ConnectWalletButton
           label={embedded ? "CONNECT WALLET" : "CONNECT WALLET TO BUY AE"}
           block
           className="text-sm"
           variant="dex"
         />
+      ) : (
+        <>
+          <ConnectEthereumWallet
+            label="Connect Ethereum Wallet"
+            showConnectedState={true}
+            onDisconnected={handleEthDisconnected}
+          />
+
+          {/* Bridge Button - Only show when both wallets are connected */}
+          {ethConnected && (
+            <button
+              onClick={handleEthBridge}
+              disabled={isDisabled}
+              className={`w-full mt-4 py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isDisabled
+                ? "bg-white/10 cursor-not-allowed opacity-60"
+                : "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:shadow-[0_12px_35px_rgba(255,107,107,0.5)] hover:-translate-y-0.5 active:translate-y-0"
+                }`}
+            >
+              {ethBridgeProcessing ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  {ethBridgeStep === "connecting"
+                    ? "Connecting…"
+                    : ethBridgeStep === "bridging"
+                      ? "Bridging…"
+                      : ethBridgeStep === "waiting"
+                        ? "Waiting for æETH…"
+                        : ethBridgeStep === "swapping"
+                          ? "Swapping…"
+                          : "Processing…"}
+                </div>
+              ) : (
+                "Buy AE with ETH"
+              )}
+            </button>
+          )}
+        </>
       )}
     </div>
   );
 }
+
+// Export wrapped with AppKitProvider
+export function BuyAeWidget(props: BuyAeWidgetProps) {
+  return (
+    <AppKitProvider>
+      <BuyAeWidgetContent {...props} />
+    </AppKitProvider>
+  );
+}
+
+export default BuyAeWidget;

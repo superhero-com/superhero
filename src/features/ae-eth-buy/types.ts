@@ -1,3 +1,5 @@
+import { Eip1193Provider } from 'ethers';
+
 /**
  * Bridge operation status
  */
@@ -39,6 +41,8 @@ export interface BridgeOptions {
   slippagePercent?: number;
   /** Deadline minutes for swap (if autoSwap is true) */
   deadlineMinutes?: number;
+  /** Optional WalletConnect/AppKit provider */
+  walletProvider?: Eip1193Provider;
 }
 
 /**

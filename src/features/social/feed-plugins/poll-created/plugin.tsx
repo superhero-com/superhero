@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import type { FeedEntry, FeedPage } from '../types';
 import { registerPlugin } from '../registry';
 import PollCreatedCard from './PollCreatedCard';
-import { GovernanceApi } from '@/api/governance';
 import type { Encoded } from '@aeternity/aepp-sdk';
 import { useAeSdk } from '@/hooks/useAeSdk';
+import { GovernanceApi } from '@/api/governance';
 
 export type PollCreatedEntryData = {
   pollAddress: Encoded.ContractAddress;
@@ -111,9 +111,22 @@ export function registerPollCreatedPlugin() {
     },
     Render: ({ entry, onOpen }: { entry: FeedEntry<PollCreatedEntryData>; onOpen?: (id: string) => void }) => {
       const { pollAddress, title, author, closeHeight, createHeight, options, totalVotes } = entry.data;
-      const { sdk } = useAeSdk();
+      const { sdk, activeAccount } = useAeSdk() as any;
       const [voting, setVoting] = useState(false);
       const [myVote, setMyVote] = useState<number | null>(null);
+      const refreshMyVote = useCallback(async () => {
+        try {
+          if (!activeAccount) { setMyVote(null); return; }
+          const ov = await GovernanceApi.getPollOverview(pollAddress as any);
+          const votesMap = (ov?.pollState?.votes || {}) as Record<string, number>;
+          const v = votesMap[activeAccount as string];
+          setMyVote(typeof v === 'number' ? v : null);
+        } catch {
+          // ignore
+        }
+      }, [activeAccount, pollAddress]);
+
+      useEffect(() => { refreshMyVote(); }, [refreshMyVote]);
       const [currentHeight, setCurrentHeight] = useState<number | undefined>(undefined);
       useEffect(() => {
         let cancelled = false;
@@ -142,7 +155,7 @@ export function registerPollCreatedPlugin() {
             address: pollAddress,
           } as any);
           await (poll as any).vote(opt);
-          setMyVote(opt);
+          await refreshMyVote();
         } finally {
           setVoting(false);
         }
@@ -157,7 +170,7 @@ export function registerPollCreatedPlugin() {
             address: pollAddress,
           } as any);
           await (poll as any).revoke_vote();
-          setMyVote(null);
+          await refreshMyVote();
         } finally {
           setVoting(false);
         }

@@ -146,6 +146,7 @@ export function registerPollCreatedPlugin() {
       const { pollAddress, title, author, closeHeight, createHeight, options, totalVotes } = entry.data;
       const { sdk, activeAccount } = useAeSdk() as any;
       const [voting, setVoting] = useState(false);
+      const [pendingOption, setPendingOption] = useState<number | null>(null);
       const [myVote, setMyVote] = useState<number | null>(null);
       const [displayOptions, setDisplayOptions] = useState(options);
       const [displayTotalVotes, setDisplayTotalVotes] = useState(totalVotes);
@@ -207,6 +208,7 @@ export function registerPollCreatedPlugin() {
         if (!sdk || voting) return;
         try {
           setVoting(true);
+          setPendingOption(opt);
           const poll = await (await import('@aeternity/aepp-sdk')).Contract.initialize<{ vote: (o: number) => void }>({
             ...(sdk as any).getContext(),
             aci: (await import('@/api/GovernancePollACI.json')).default as any,
@@ -220,12 +222,14 @@ export function registerPollCreatedPlugin() {
           } catch {}
         } finally {
           setVoting(false);
+          setPendingOption(null);
         }
       };
       const revokeVote = async () => {
         if (!sdk || voting) return;
         try {
           setVoting(true);
+          setPendingOption(myVote);
           const poll = await (await import('@aeternity/aepp-sdk')).Contract.initialize<{ revoke_vote: () => void }>({
             ...(sdk as any).getContext(),
             aci: (await import('@/api/GovernancePollACI.json')).default as any,
@@ -239,6 +243,7 @@ export function registerPollCreatedPlugin() {
           } catch {}
         } finally {
           setVoting(false);
+          setPendingOption(null);
         }
       };
       return (
@@ -257,6 +262,7 @@ export function registerPollCreatedPlugin() {
           voting={voting}
           txHash={(entry as any).data?.txHash}
           contractAddress={pollAddress as any}
+          pendingOption={pendingOption}
         />
       );
     },

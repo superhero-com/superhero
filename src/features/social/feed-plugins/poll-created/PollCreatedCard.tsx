@@ -23,9 +23,10 @@ export type PollCreatedCardProps = {
   voting?: boolean;
   txHash?: string;
   contractAddress?: string;
+  pendingOption?: number | null;
 };
 
-export default function PollCreatedCard({ title, author, closeHeight, currentHeight, options, totalVotes = 0, onOpen, createdAtIso, myVote = null, onVoteOption, onRevoke, voting = false, txHash, contractAddress }: PollCreatedCardProps) {
+export default function PollCreatedCard({ title, author, closeHeight, currentHeight, options, totalVotes = 0, onOpen, createdAtIso, myVote = null, onVoteOption, onRevoke, voting = false, txHash, contractAddress, pendingOption = null }: PollCreatedCardProps) {
   const { chainName } = useChainName(author || '');
   const timeLeft = useMemo(() => {
     if (!closeHeight || !currentHeight) return undefined;
@@ -110,7 +111,7 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
               <div className={styles.labelRow}>
                 <span className={cn(myVote === o.id && styles.labelSelected)}>{o.label}</span>
                 <span className="flex items-center gap-2">
-                  {voting && <span className="text-amber-300 text-xs">Pending…</span>}
+                  {voting && pendingOption === o.id && <span className="text-amber-300 text-xs">Pending…</span>}
                   {myVote === o.id && !voting && <span className="text-emerald-300 text-xs">Your vote</span>}
                   <span>{pct}%</span>
                 </span>

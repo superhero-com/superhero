@@ -31,6 +31,7 @@
   overflow: hidden;
   position: relative;
   cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, transform 60ms ease;
 }
 
 .optionSelected {
@@ -38,11 +39,24 @@
   border-color: rgba(255,255,255,0.35);
 }
 
+.option:hover {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.22);
+}
+
+.option:active {
+  transform: translateY(1px);
+}
+
 .bar {
   position: absolute;
   inset: 0;
   background: linear-gradient(90deg, rgba(99,102,241,0.28), rgba(99,102,241,0.08));
   transform-origin: left center;
+}
+
+.option:hover .bar {
+  background: linear-gradient(90deg, rgba(99,102,241,0.38), rgba(99,102,241,0.14));
 }
 
 .labelRow {
@@ -55,6 +69,10 @@
 
 .labelSelected {
   font-weight: 600;
+}
+
+.option:hover .labelRow {
+  color: #FAFAFA;
 }
 
 .footer {

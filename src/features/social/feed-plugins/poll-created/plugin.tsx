@@ -10,6 +10,7 @@ import { CONFIG } from '@/config';
 export type PollCreatedEntryData = {
   pollAddress: Encoded.ContractAddress;
   title: string;
+  description?: string;
   author?: string;
   closeHeight?: number;
   createHeight?: number;
@@ -129,6 +130,7 @@ export function registerPollCreatedPlugin() {
           p.poll as any,
           {
             title: meta?.title || 'Untitled poll',
+            description: meta?.description || undefined,
             author: ov?.pollState?.author as any,
             closeHeight: ov?.pollState?.close_height as any,
             createHeight: ov?.pollState?.create_height as any,
@@ -143,7 +145,7 @@ export function registerPollCreatedPlugin() {
       return { entries, nextPage: undefined } as FeedPage<PollCreatedEntryData>;
     },
     Render: ({ entry, onOpen }: { entry: FeedEntry<PollCreatedEntryData>; onOpen?: (id: string) => void }) => {
-      const { pollAddress, title, author, closeHeight, createHeight, options, totalVotes } = entry.data;
+      const { pollAddress, title, description, author, closeHeight, createHeight, options, totalVotes } = entry.data;
       const { sdk, activeAccount } = useAeSdk() as any;
       const [voting, setVoting] = useState(false);
       const [pendingOption, setPendingOption] = useState<number | null>(null);
@@ -277,6 +279,7 @@ export function registerPollCreatedPlugin() {
       return (
         <PollCreatedCard
           title={title}
+          description={description}
           author={author}
           closeHeight={closeHeight}
           currentHeight={currentHeight as any}

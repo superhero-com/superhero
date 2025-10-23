@@ -21,6 +21,7 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
   const [error, setError] = useState<string | null>(null);
 
   const [title, setTitle] = useState<string>('');
+  const [description, setDescription] = useState<string | undefined>(undefined);
   const [author, setAuthor] = useState<string | undefined>(undefined);
   const [closeHeight, setCloseHeight] = useState<number | undefined>(undefined);
   const [createHeight, setCreateHeight] = useState<number | undefined>(undefined);
@@ -48,6 +49,7 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
   const rebuildFromOverview = useCallback((ov: any) => {
     const md = ov?.pollState?.metadata || {};
     setTitle(String(md.title || ''));
+    setDescription(md.description ? String(md.description) : undefined);
     setAuthor(ov?.pollState?.author);
     setCloseHeight(ov?.pollState?.close_height);
     setCreateHeight(ov?.pollState?.create_height);
@@ -241,6 +243,7 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
         <article className="grid gap-4">
           <PollCreatedCard
             title={title}
+            description={description}
             author={author}
             closeHeight={closeHeight}
             currentHeight={currentHeight as any}

@@ -11,6 +11,7 @@ import { compactTime } from '@/utils/time';
 
 export type PollCreatedCardProps = {
   title: string;
+  description?: string;
   author?: string;
   closeHeight?: number;
   currentHeight?: number;
@@ -27,7 +28,7 @@ export type PollCreatedCardProps = {
   pendingOption?: number | null;
 };
 
-export default function PollCreatedCard({ title, author, closeHeight, currentHeight, options, totalVotes = 0, onOpen, createdAtIso, myVote = null, onVoteOption, onRevoke, voting = false, txHash, contractAddress, pendingOption = null }: PollCreatedCardProps) {
+export default function PollCreatedCard({ title, description, author, closeHeight, currentHeight, options, totalVotes = 0, onOpen, createdAtIso, myVote = null, onVoteOption, onRevoke, voting = false, txHash, contractAddress, pendingOption = null }: PollCreatedCardProps) {
   const { chainName } = useChainName(author || '');
   const timeLeft = useMemo(() => {
     if (!closeHeight || !currentHeight) return undefined;
@@ -96,6 +97,12 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
           {title}
         </div>
       </div>
+
+      {description && (
+        <div className="mt-2 text-[15px] leading-6 whitespace-pre-wrap break-words">
+          {description}
+        </div>
+      )}
 
       {/* Mobile bottom divider for visual rhythm to match other items */}
       <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />

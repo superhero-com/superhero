@@ -11,11 +11,11 @@ COPY . .
 RUN npm run build
 
 # Serve stage
-FROM caddy:2-alpine
+FROM nginx:1.25-alpine
 WORKDIR /srv
-COPY --from=builder /app/dist /srv
-
-# Dump Caddyfile
-RUN printf ":80 {\n  root * /srv\n  file_server\n  try_files {path} /index.html\n}" > /etc/caddy/Caddyfile
+COPY --from=builder /app/dist /usr/share/nginx/html
+RUN cp /usr/share/nginx/html/index.html /usr/share/nginx/html/index.template.html
+COPY docker/override-env.sh /docker-entrypoint.d/99-override-env.sh
+RUN apk add --no-cache gettext && chmod +x /docker-entrypoint.d/99-override-env.sh
 EXPOSE 80
-CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]
+CMD ["nginx", "-g", "daemon off;"]

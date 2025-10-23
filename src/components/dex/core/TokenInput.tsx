@@ -7,6 +7,7 @@ import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { AeCard, AeCardContent } from '../../ui/ae-card';
 import { cn } from '@/lib/utils';
+import { useAccount } from '@/hooks';
 
 interface TokenInputProps {
   label: string;
@@ -49,6 +50,8 @@ export default function TokenInput({
   onFocus,
   onBlur
 }: TokenInputProps) {
+  const { activeAccount: address } = useAccount();
+
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/,/g, '.');
     const decs = token?.decimals ?? 18;
@@ -65,13 +68,13 @@ export default function TokenInput({
       variant="glass" 
       className={cn(
         "transition-all duration-300 border-glass-border",
-        hasInsufficientBalance && "border-destructive"
+        hasInsufficientBalance && address && "border-destructive"
       )}
       style={{
         background: "radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.04), transparent 40%), rgba(255, 255, 255, 0.02)",
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
-        boxShadow: hasInsufficientBalance ? 
+        boxShadow: hasInsufficientBalance && address ? 
           "0 8px 25px rgba(255, 107, 107, 0.2)" : 
           "0 8px 25px rgba(0,0,0,0.2)"
       }}
@@ -162,7 +165,7 @@ export default function TokenInput({
         </div>
 
         {/* Insufficient Balance Warning */}
-        {hasInsufficientBalance && balance && amount && Number(amount) > 0 && (
+        {hasInsufficientBalance && address && balance && amount && Number(amount) > 0 && (
           <div className="mt-2 text-xs text-red-500 font-medium flex items-center gap-1">
             ⚠️ Insufficient {token?.symbol} balance. You need {Decimal.from(amount || '0').prettify()} but only have {Decimal.from(balance).prettify()}
           </div>

@@ -27,6 +27,7 @@ export function GifSelectorDialog({
   const [query, setQuery] = useState("");
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const isFetchingRef = useRef(false);
   
   const { 
     data, 
@@ -49,7 +50,8 @@ export function GifSelectorDialog({
       }
       const { data, pagination } = await fetchJson(url.toString());
       return {
-        results: data.map(({ images }: any) => ({
+        results: data.map(({ images, id }: any) => ({
+          id: id, // Use Giphy's unique ID
           still: images.fixed_width_still.url,
           animated: images.fixed_width.url,
           original: images.original.url,
@@ -77,17 +79,27 @@ export function GifSelectorDialog({
   useEffect(() => {
     if (!('IntersectionObserver' in window)) return;
     const sentinel = sentinelRef.current;
-    const scrollContainer = scrollContainerRef.current;
-    if (!sentinel || !scrollContainer) return;
+    if (!sentinel) return;
     
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
+        // Prevent multiple simultaneous fetches
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage && !isFetchingRef.current) {
+          isFetchingRef.current = true;
+          fetchNextPage().finally(() => {
+            // Add a small delay to prevent rapid re-triggering on iOS
+            setTimeout(() => {
+              isFetchingRef.current = false;
+            }, 300);
+          });
         }
       },
-      { root: scrollContainer, rootMargin: '100px', threshold: 0 }
+      { 
+        // Don't specify root for better iOS compatibility
+        rootMargin: '200px', 
+        threshold: 0 
+      }
     );
     
     observer.observe(sentinel);
@@ -179,22 +191,17 @@ export function GifSelectorDialog({
               ref={scrollContainerRef}
               className="grid grid-cols-3 gap-3 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
             >
-              {results.map((result, index) => (
+              {results.map((result) => (
                 <div
-                  key={index}
+                  key={result.id}
                   onClick={() => handleGifClick(result)}
-                  className="group relative aspect-square overflow-hidden rounded-lg cursor-pointer bg-white/5 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary-400/20 hover:ring-2 hover:ring-primary-400/50"
+                  className="relative w-full cursor-pointer bg-white/5 rounded-lg overflow-hidden transition-all duration-200 active:scale-95 sm:hover:scale-105 sm:hover:shadow-lg sm:hover:shadow-primary-400/20 sm:hover:ring-2 sm:hover:ring-primary-400/50"
+                  style={{ paddingBottom: '100%' }}
                 >
                   <img
                     src={result.still}
                     alt="GIF preview"
-                    className="w-full h-full object-cover group-hover:hidden"
-                    loading="lazy"
-                  />
-                  <img
-                    src={result.animated}
-                    alt="GIF animated"
-                    className="w-full h-full object-contain hidden group-hover:block"
+                    className="absolute top-0 left-0 w-full h-full object-cover"
                     loading="lazy"
                   />
                 </div>

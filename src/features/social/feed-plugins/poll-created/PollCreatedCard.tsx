@@ -114,8 +114,8 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
                 <span className="flex items-center gap-2">
                   {voting && pendingOption === o.id && (
                     <>
-                      <span className="hidden md:inline text-amber-300 text-xs">Pending…</span>
-                      <span className="inline md:hidden"><Spinner /></span>
+                      <Spinner />
+                      <span className="text-amber-300 text-xs">Pending…</span>
                     </>
                   )}
                   {myVote === o.id && !voting && <span className="text-emerald-300 text-xs">Your vote</span>}

@@ -23,6 +23,7 @@ type BlockchainInfoPopoverProps = {
   showLabel?: boolean;
   triggerContent?: ReactNode; // custom trigger content (e.g., timestamp text)
   triggerClassName?: string; // optional class for custom trigger
+  label?: string; // entity label for header e.g. "Post" (default) or "Poll"
 };
 
 export function BlockchainInfoPopover({
@@ -35,6 +36,7 @@ export function BlockchainInfoPopover({
   showLabel,
   triggerContent,
   triggerClassName,
+  label = "Post",
 }: BlockchainInfoPopoverProps) {
   const [open, setOpen] = useState(false);
   const [extraLoading, setExtraLoading] = useState(false);
@@ -110,7 +112,7 @@ export function BlockchainInfoPopover({
           <X className="w-4 h-4" />
         </button>
         <div className="px-1 pb-2 flex items-center justify-between gap-2">
-          <DropdownMenuLabel className="px-0 pb-0 text-[13px] font-semibold tracking-wide text-white/85">Post stored on the æternity blockchain</DropdownMenuLabel>
+          <DropdownMenuLabel className="px-0 pb-0 text-[13px] font-semibold tracking-wide text-white/85">{label} stored on the æternity blockchain</DropdownMenuLabel>
           <div className="ml-auto min-w-[48px] text-right">
             {extraLoading && <span className="text-[11px] text-white/70">Loading…</span>}
             {extraError && <span className="text-[11px] text-red-300/90">!</span>}

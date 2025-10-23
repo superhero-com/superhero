@@ -62,7 +62,7 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
       {(txHash || contractAddress) && (
         <div className="absolute top-4 right-2 md:top-5 md:right-5 z-10">
           {txHash ? (
-            <BlockchainInfoPopover txHash={txHash} createdAt={createdAtIso} sender={author} contract={contractAddress} className="px-2" showLabel />
+            <BlockchainInfoPopover txHash={txHash} createdAt={createdAtIso} sender={author} contract={contractAddress} className="px-2" showLabel label="Poll" />
           ) : (
             <a
               href={`${(CONFIG.EXPLORER_URL || 'https://aescan.io').replace(/\/$/, '')}/contracts/${contractAddress}`}

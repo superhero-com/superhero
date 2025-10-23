@@ -142,14 +142,19 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
       <div className={styles.footer}>
         <span className="flex items-center gap-3">
           <span>{totalVotes} votes</span>
-          {timeLeft && <span className="text-white/70">{timeLeft}</span>}
-        </span>
-        <span className="flex items-center gap-3">
           {onRevoke && myVote != null && (
-            <button type="button" className="text-xs text-white/70 hover:text-white underline underline-offset-2" onClick={(e) => { e.stopPropagation(); onRevoke(); }} disabled={voting}>
+            <button
+              type="button"
+              className="text-xs text-white/70 hover:text-white underline underline-offset-2"
+              onClick={(e) => { e.stopPropagation(); onRevoke(); }}
+              disabled={voting}
+            >
               Retract vote
             </button>
           )}
+        </span>
+        <span className="flex items-center gap-3">
+          {timeLeft && <span className="text-white/70">{timeLeft}</span>}
           {contractAddress && (
             <SharePopover urlOverride={`/poll/${String(contractAddress)}`} label="poll" />
           )}

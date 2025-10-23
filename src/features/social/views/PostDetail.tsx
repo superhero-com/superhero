@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PostsService, PostDto } from '../../../api/generated';
 import AeButton from '../../../components/AeButton';
@@ -8,7 +8,7 @@ import RightRail from '../../../components/layout/RightRail';
 import Shell from '../../../components/layout/Shell';
 import { extractParentId } from '../utils/postParent';
 import ReplyToFeedItem from '../components/ReplyToFeedItem';
-import PostTipButton from '../components/PostTipButton';
+// PostTipButton is intentionally not imported here as it's not used on detail page
 import DirectReplies from '../components/DirectReplies';
 import CommentForm from '../components/CommentForm';
 
@@ -30,34 +30,87 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     refetchInterval: 120 * 1000, // Auto-refresh every 2 minutes
   });
 
-
-
-
-
-  // Ancestors (max 2 levels): grandparent -> parent -> current
-  const { grandParent, parent } = useMemo(() => ({ grandParent: null as PostDto | null, parent: null as PostDto | null }), []);
+  // Full ancestor chain (oldest -> ... -> direct parent)
 
   const isLoading = isPostLoading;
   const error = postError;
-  // Ensure detail page scrolls to top when opened
+  // Ensure detail page scrolls to top when opened (initial), we'll center the current post after data loads
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
 
 
-  // Resolve parent/grandparent sequentially
+  // Resolve full ancestors iteratively
   const parentId = postData ? extractParentId(postData as any) : null;
-  const { data: parentData } = useQuery({
-    queryKey: ['post-parent', parentId],
-    queryFn: () => (parentId ? PostsService.getById({ id: parentId }) : Promise.resolve(null as any)),
-    enabled: !!parentId,
+  const { data: ancestors = [] } = useQuery<PostDto[]>({
+    queryKey: ['post-ancestors', postId, parentId],
+    enabled: !!postData,
+    refetchInterval: 120 * 1000,
+    queryFn: async () => {
+      const chain: PostDto[] = [];
+      const seen = new Set<string>();
+      let currentId: string | null = parentId || null;
+      let safety = 0;
+      while (currentId && !seen.has(currentId) && safety < 100) {
+        seen.add(currentId);
+        const p = (await PostsService.getById({ id: currentId })) as unknown as PostDto;
+        // unshift so the oldest ancestor is first
+        chain.unshift(p);
+        currentId = extractParentId(p as any);
+        safety += 1;
+      }
+      return chain;
+    },
   });
-  const grandId = parentData ? extractParentId(parentData as any) : null;
-  const { data: grandData } = useQuery({
-    queryKey: ['post-grand', grandId],
-    queryFn: () => (grandId ? PostsService.getById({ id: grandId }) : Promise.resolve(null as any)),
-    enabled: !!grandId,
+
+  // Center the current post in the viewport once it's rendered
+  const currentPostRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!postData) return;
+    // Defer to the end of the frame to ensure layout is ready
+    const id = window.requestAnimationFrame(() => {
+      currentPostRef.current?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [postData, ancestors.length]);
+
+  // Compute total descendant comments (all levels) for current post
+  const { data: descendantCount } = useQuery<number>({
+    queryKey: ['post-desc-count', postId],
+    enabled: !!postId,
+    refetchInterval: 120 * 1000,
+    queryFn: async () => {
+      const normalize = (id: string) => (String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`);
+      const queue: string[] = [normalize(String(postId))];
+      let total = 0;
+      let requestBudget = 200; // safety cap
+      while (queue.length > 0 && requestBudget > 0) {
+        const current = queue.shift()!;
+        // paginate through comments for this id
+        let page = 1;
+        // loop pages
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          if (requestBudget <= 0) break;
+          requestBudget -= 1;
+          const res: any = await PostsService.getComments({ id: current, orderDirection: 'ASC', page, limit: 50 });
+          const items: PostDto[] = res?.items || [];
+          total += items.length;
+          // enqueue children that have further replies
+          for (const child of items) {
+            if ((child.total_comments ?? 0) > 0) {
+              queue.push(normalize(String(child.id)));
+            }
+          }
+          const meta = res?.meta;
+          if (!meta?.currentPage || !meta?.totalPages || meta.currentPage >= meta.totalPages) break;
+          page = meta.currentPage + 1;
+        }
+      }
+      // Do not count the root itself, only descendants counted in total
+      return total;
+    },
   });
 
   // No need for author helpers; cards handle display
@@ -90,14 +143,21 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
 
   const renderStack = () => (
     <div className="grid gap-0 md:gap-2">
-      {grandData && (
-        <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={grandData as any} commentCount={(grandData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} isActive={false} />
-      )}
-      {parentData && (
-        <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={parentData as any} commentCount={(parentData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} isActive={false} />
-      )}
+      {ancestors.map((anc) => (
+        <ReplyToFeedItem
+          key={anc.id}
+          hideParentContext
+          allowInlineRepliesToggle={false}
+          item={anc as any}
+          commentCount={(anc as any).total_comments ?? 0}
+          onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)}
+          isActive={false}
+        />
+      ))}
       {postData && (
-        <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(postData as any).total_comments ?? 0} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} isActive />
+        <div ref={currentPostRef}>
+          <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(descendantCount ?? (postData as any).total_comments ?? 0) as number} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} isActive />
+        </div>
       )}
     </div>
   );

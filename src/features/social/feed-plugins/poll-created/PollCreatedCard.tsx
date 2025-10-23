@@ -164,7 +164,7 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
           {onRevoke && myVote != null && (
             <button
               type="button"
-              className="text-xs text-white/70"
+              className="text-xs text-white/70 hover:underline underline-offset-2 bg-transparent border-0 p-0 m-0 h-auto min-h-0 min-w-0 shadow-none ring-0 focus:ring-0 outline-none"
               onClick={(e) => { e.stopPropagation(); onRevoke(); }}
               disabled={voting}
             >

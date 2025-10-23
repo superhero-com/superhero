@@ -24,6 +24,7 @@ import { adaptTokenCreatedToEntry, registerTokenCreatedPlugin } from "../feed-pl
 import { registerPollCreatedPlugin } from "../feed-plugins/poll-created";
 import { getAllPlugins } from "../feed-plugins/registry";
 import { usePluginEntries } from "../feed-plugins/FeedOrchestrator";
+import { useAeSdk } from "@/hooks/useAeSdk";
 import { GovernanceApi } from "@/api/governance";
 
 // Register built-in plugins once (idempotent)
@@ -195,18 +196,40 @@ export default function FeedList({
   // Plugin-driven entries (includes poll-created via its fetchPage)
   const pluginEntries = usePluginEntries(getAllPlugins(), sortBy !== "hot");
 
+  // Fetch current chain height once to estimate accurate poll creation times
+  const { sdk } = useAeSdk();
+  const [chainHeight, setChainHeight] = useState<number | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const h = await (sdk as any)?.getHeight?.();
+        if (!cancelled && typeof h === "number") setChainHeight(h);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [sdk]);
+
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo(() => {
     // Hide token-created events on the popular (hot) tab
     const includeEvents = sortBy !== "hot";
+    const APPROX_BLOCK_MS = 180000; // ~3 minutes per block
     const pluginItems = includeEvents
-      ? (pluginEntries.entries || []).map((e: any) => ({
-          id: e.id,
-          created_at: e.createdAt,
-          content: e?.data?.title || "",
-          sender_address: e?.data?.author || "",
-          __feedEntry: e,
-        }))
+      ? (pluginEntries.entries || []).map((e: any) => {
+          let createdAtIso = e.createdAt;
+          if (e.kind === "poll-created" && chainHeight != null && e?.data?.createHeight != null) {
+            const deltaBlocks = Math.max(0, Number(chainHeight) - Number(e.data.createHeight));
+            createdAtIso = new Date(Date.now() - deltaBlocks * APPROX_BLOCK_MS).toISOString();
+          }
+          return {
+            id: e.id,
+            created_at: createdAtIso,
+            content: e?.data?.title || "",
+            sender_address: e?.data?.author || "",
+            __feedEntry: e,
+          };
+        })
       : [];
     const merged = includeEvents ? [...pluginItems, ...activityList, ...list] : [...list];
     // Keep backend order for 'hot'; only sort by time when we interleave activities

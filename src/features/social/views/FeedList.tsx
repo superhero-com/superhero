@@ -355,7 +355,7 @@ export default function FeedList({
         // we carry them as lightweight items with id/created_at and a hidden __entry. Prefer __entry if present.
         const entry: FeedEntry | undefined = (item as any).__feedEntry || undefined;
         if (entry) {
-          const onOpen = (id: string) => navigate(`/voting/p/${id}`);
+          const onOpen = (id: string) => navigate(`/poll/${id}`);
           nodes.push(<FeedRenderer key={postId} entry={entry} onOpenPost={onOpen} />);
           i += 1;
           continue;
@@ -441,6 +441,7 @@ export default function FeedList({
   useEffect(() => {
     // Vite supports preloading dynamic chunks via import()
     import("../views/PostDetail").catch(() => {});
+    import("../views/PollDetail").catch(() => {});
   }, []);
 
   // Restore scroll position when returning from detail pages

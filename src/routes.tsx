@@ -24,6 +24,7 @@ const TokenSaleDetails = lazy(
   () => import("./features/trending/views/TokenSaleDetails")
 );
 const PostDetail = lazy(() => import("./features/social/views/PostDetail"));
+const PollDetail = lazy(() => import("./features/social/views/PollDetail"));
 const UserProfile = lazy(() => import("./views/UserProfile"));
 const Landing = lazy(() => import("./views/Landing"));
 const Conference = lazy(() => import("./views/Conference"));
@@ -100,6 +101,7 @@ export const routes: RouteObject[] = [
         path: "post/:postId/comment/:id",
         element: <PostDetail standalone={false} />,
       },
+      { path: "poll/:pollAddress", element: <PollDetail standalone={false} /> },
       { path: "users/:address", element: <UserProfile standalone={false} /> },
     ],
   },

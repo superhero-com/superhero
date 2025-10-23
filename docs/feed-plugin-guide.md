@@ -67,4 +67,9 @@ export function adaptMyItemToEntry(obj: Any): FeedEntry<MyItemData> {
 - The host feed merges all items by `createdAt` and renders each `FeedEntry` via `FeedRenderer`.
 - If your plugin needs pagination, implement `fetchPage(page)` on the plugin and wire it in the host.
 
+### Detail pages
+- Poll detail route: `/poll/:pollAddress` renders a highlighted poll in the social shell (with RightRail).
+- From a plugin render, call `onOpen?.(id)`; the host will navigate appropriately.
+- The feed host adapts click handlers per kind; for polls it uses `/poll/:pollAddress`.
+
 

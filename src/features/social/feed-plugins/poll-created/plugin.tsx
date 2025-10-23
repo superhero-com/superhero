@@ -112,6 +112,8 @@ export function registerPollCreatedPlugin() {
     Render: ({ entry, onOpen }: { entry: FeedEntry<PollCreatedEntryData>; onOpen?: (id: string) => void }) => {
       const { pollAddress, title, author, closeHeight, createHeight, options, totalVotes } = entry.data;
       const { sdk } = useAeSdk();
+      const [voting, setVoting] = useState(false);
+      const [myVote, setMyVote] = useState<number | null>(null);
       const [currentHeight, setCurrentHeight] = useState<number | undefined>(undefined);
       useEffect(() => {
         let cancelled = false;
@@ -130,6 +132,36 @@ export function registerPollCreatedPlugin() {
         ? new Date(Date.now() - Math.max(0, Number(currentHeight) - Number(createHeight)) * APPROX_BLOCK_MS).toISOString()
         : entry.createdAt;
       const handleOpen = () => onOpen?.(String(pollAddress));
+      const submitVote = async (opt: number) => {
+        if (!sdk) return;
+        try {
+          setVoting(true);
+          const poll = await (await import('@aeternity/aepp-sdk')).Contract.initialize<{ vote: (o: number) => void }>({
+            ...(sdk as any).getContext(),
+            aci: (await import('@/api/GovernancePollACI.json')).default as any,
+            address: pollAddress,
+          } as any);
+          await (poll as any).vote(opt);
+          setMyVote(opt);
+        } finally {
+          setVoting(false);
+        }
+      };
+      const revokeVote = async () => {
+        if (!sdk) return;
+        try {
+          setVoting(true);
+          const poll = await (await import('@aeternity/aepp-sdk')).Contract.initialize<{ revoke_vote: () => void }>({
+            ...(sdk as any).getContext(),
+            aci: (await import('@/api/GovernancePollACI.json')).default as any,
+            address: pollAddress,
+          } as any);
+          await (poll as any).revoke_vote();
+          setMyVote(null);
+        } finally {
+          setVoting(false);
+        }
+      };
       return (
         <PollCreatedCard
           title={title}
@@ -140,6 +172,10 @@ export function registerPollCreatedPlugin() {
           totalVotes={totalVotes}
           onOpen={handleOpen}
           createdAtIso={createdAtIso}
+          myVote={myVote}
+          onVoteOption={submitVote}
+          onRevoke={revokeVote}
+          voting={voting}
         />
       );
     },

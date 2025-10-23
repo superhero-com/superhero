@@ -15,9 +15,13 @@ export type PollCreatedCardProps = {
   totalVotes?: number;
   onOpen?: () => void;
   createdAtIso?: string;
+  myVote?: number | null;
+  onVoteOption?: (id: number) => void;
+  onRevoke?: () => void;
+  voting?: boolean;
 };
 
-export default function PollCreatedCard({ title, author, closeHeight, currentHeight, options, totalVotes = 0, onOpen, createdAtIso }: PollCreatedCardProps) {
+export default function PollCreatedCard({ title, author, closeHeight, currentHeight, options, totalVotes = 0, onOpen, createdAtIso, myVote = null, onVoteOption, onRevoke, voting = false }: PollCreatedCardProps) {
   const { chainName } = useChainName(author || '');
   const timeLeft = useMemo(() => {
     if (!closeHeight || !currentHeight) return undefined;
@@ -71,7 +75,25 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
               <div className={styles.bar} style={{ transform: `scaleX(${widthPct / 100})` }} />
               <div className={styles.labelRow}>
                 <span>{o.label}</span>
-                <span>{pct}%</span>
+                <span className="flex items-center gap-2">
+                  {myVote === o.id ? (
+                    <>
+                      <span className="text-emerald-300 text-xs">Your vote</span>
+                      {onRevoke && (
+                        <button type="button" className="text-xs text-white/70 hover:text-white underline underline-offset-2" onClick={(e) => { e.stopPropagation(); onRevoke(); }} disabled={voting}>
+                          Retract
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    onVoteOption && (
+                      <button type="button" className="text-xs text-white/80 hover:text-white border border-white/20 rounded px-2 py-0.5" onClick={(e) => { e.stopPropagation(); onVoteOption(o.id); }} disabled={voting}>
+                        Vote
+                      </button>
+                    )
+                  )}
+                  <span>{pct}%</span>
+                </span>
               </div>
             </div>
           );

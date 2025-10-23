@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import AddressAvatarWithChainNameFeed from '@/@components/Address/AddressAvatarWithChainNameFeed';
 import BlockchainInfoPopover from '@/features/social/components/BlockchainInfoPopover';
 import { CONFIG } from '@/config';
+import Spinner from '@/components/Spinner';
 import { useChainName } from '@/hooks/useChainName';
 import { compactTime } from '@/utils/time';
 
@@ -111,7 +112,12 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
               <div className={styles.labelRow}>
                 <span className={cn(myVote === o.id && styles.labelSelected)}>{o.label}</span>
                 <span className="flex items-center gap-2">
-                  {voting && pendingOption === o.id && <span className="text-amber-300 text-xs">Pending…</span>}
+                  {voting && pendingOption === o.id && (
+                    <>
+                      <span className="hidden md:inline text-amber-300 text-xs">Pending…</span>
+                      <span className="inline md:hidden"><Spinner /></span>
+                    </>
+                  )}
                   {myVote === o.id && !voting && <span className="text-emerald-300 text-xs">Your vote</span>}
                   <span>{pct}%</span>
                 </span>

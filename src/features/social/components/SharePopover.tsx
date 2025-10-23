@@ -10,7 +10,7 @@ import { Share, Link as LinkIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type SharePopoverProps = {
-  postId: string | number;
+  postId?: string | number;
   className?: string;
   urlOverride?: string; // when provided, share this URL instead of building a post URL
   label?: string; // copy context: 'post' (default) or custom like 'trend'
@@ -22,7 +22,7 @@ export default function SharePopover({ postId, className, urlOverride, label = "
       const isAbsolute = /^https?:\/\//i.test(urlOverride);
       return isAbsolute ? urlOverride : `${window.location.origin}${urlOverride.startsWith('/') ? '' : '/'}${urlOverride}`;
     }
-    const path = `/post/${String(postId).replace(/_v3$/, "")}`;
+    const path = `/post/${String(postId ?? '').replace(/_v3$/, "")}`;
     return `${window.location.origin}${path}`;
   }, [postId, urlOverride]);
 

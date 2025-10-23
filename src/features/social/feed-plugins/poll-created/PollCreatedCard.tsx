@@ -3,6 +3,7 @@ import styles from './PollCreatedCard.module.scss';
 import FeedPluginCard from '../FeedPluginCard';
 import { cn } from '@/lib/utils';
 import AddressAvatarWithChainNameFeed from '@/@components/Address/AddressAvatarWithChainNameFeed';
+import SharePopover from '@/features/social/components/SharePopover';
 import BlockchainInfoPopover from '@/features/social/components/BlockchainInfoPopover';
 import { CONFIG } from '@/config';
 import Spinner from '@/components/Spinner';
@@ -139,14 +140,19 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
       </div>
 
       <div className={styles.footer}>
-        <span>{totalVotes} votes</span>
+        <span className="flex items-center gap-3">
+          <span>{totalVotes} votes</span>
+          {timeLeft && <span className="text-white/70">{timeLeft}</span>}
+        </span>
         <span className="flex items-center gap-3">
           {onRevoke && myVote != null && (
             <button type="button" className="text-xs text-white/70 hover:text-white underline underline-offset-2" onClick={(e) => { e.stopPropagation(); onRevoke(); }} disabled={voting}>
               Retract vote
             </button>
           )}
-          {timeLeft && <span>{timeLeft}</span>}
+          {contractAddress && (
+            <SharePopover urlOverride={`/poll/${String(contractAddress)}`} label="poll" />
+          )}
         </span>
       </div>
     </FeedPluginCard>

@@ -210,15 +210,13 @@ export function registerPollCreatedPlugin() {
         try {
           setVoting(true);
           setPendingOption(opt);
-          const poll = await (await import('@aeternity/aepp-sdk')).Contract.initialize<{ vote: (o: number) => void; revoke_vote: () => void }>({
+          // Optimistic UI: show selection immediately
+          setMyVote(opt);
+          const poll = await (await import('@aeternity/aepp-sdk')).Contract.initialize<{ vote: (o: number) => void }>({
             ...(sdk as any).getContext(),
             aci: (await import('@/api/GovernancePollACI.json')).default as any,
             address: pollAddress,
           } as any);
-          // If user had a previous vote, revoke first to allow switching options
-          if (myVote != null && myVote !== opt && (poll as any).revoke_vote) {
-            await (poll as any).revoke_vote();
-          }
           await (poll as any).vote(opt);
           await refreshMyVote();
           try {
@@ -235,6 +233,8 @@ export function registerPollCreatedPlugin() {
         try {
           setVoting(true);
           setPendingOption(myVote);
+          // Optimistic UI: clear selection immediately
+          setMyVote(null);
           const poll = await (await import('@aeternity/aepp-sdk')).Contract.initialize<{ revoke_vote: () => void }>({
             ...(sdk as any).getContext(),
             aci: (await import('@/api/GovernancePollACI.json')).default as any,

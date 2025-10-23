@@ -3,6 +3,7 @@ import styles from './PollCreatedCard.module.scss';
 import FeedPluginCard from '../FeedPluginCard';
 import { cn } from '@/lib/utils';
 import AddressAvatarWithChainNameFeed from '@/@components/Address/AddressAvatarWithChainNameFeed';
+import BlockchainInfoPopover from '@/features/social/components/BlockchainInfoPopover';
 import { useChainName } from '@/hooks/useChainName';
 import { compactTime } from '@/utils/time';
 
@@ -19,9 +20,10 @@ export type PollCreatedCardProps = {
   onVoteOption?: (id: number) => void;
   onRevoke?: () => void;
   voting?: boolean;
+  txHash?: string;
 };
 
-export default function PollCreatedCard({ title, author, closeHeight, currentHeight, options, totalVotes = 0, onOpen, createdAtIso, myVote = null, onVoteOption, onRevoke, voting = false }: PollCreatedCardProps) {
+export default function PollCreatedCard({ title, author, closeHeight, currentHeight, options, totalVotes = 0, onOpen, createdAtIso, myVote = null, onVoteOption, onRevoke, voting = false, txHash }: PollCreatedCardProps) {
   const { chainName } = useChainName(author || '');
   const timeLeft = useMemo(() => {
     if (!closeHeight || !currentHeight) return undefined;
@@ -47,6 +49,11 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
 
   return (
     <FeedPluginCard className={cn(styles.root, 'feed-plugin poll-created')} role={onOpen ? 'button' : undefined} onClick={onOpen}>
+      {txHash && (
+        <div className="absolute top-4 right-2 md:top-5 md:right-5 z-10">
+          <BlockchainInfoPopover txHash={txHash} createdAt={createdAtIso} sender={author} contract={author ? undefined : undefined} className="px-2" showLabel />
+        </div>
+      )}
       <div className={styles.metaRow}>
         {author && (
           <>

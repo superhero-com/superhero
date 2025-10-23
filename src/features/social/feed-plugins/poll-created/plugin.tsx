@@ -55,18 +55,19 @@ export function registerPollCreatedPlugin() {
       const valid = overviews.filter(Boolean) as { p: any; ov: any }[];
       // Resolve exact creation time from MDW by fetching contract_create tx for each poll
       const mdwBase = (await import('@/configs')).configs.networks.ae_uat.middlewareUrl; // use active testnet config; swap if needed
-      async function fetchCreationTime(ct: string): Promise<string | null> {
+      async function fetchCreationTime(ct: string): Promise<{ time: string | null; hash?: string | null }> {
         try {
           const res = await fetch(`${mdwBase}/v3/transactions?type=contract_create&contract_id=${ct}&direction=forward&limit=1`);
           const json = await res.json();
           const tx = json?.data?.[0] || json?.transactions?.[0] || json?.[0];
-          if (tx?.micro_time || tx?.block_time) return new Date(tx.micro_time ?? tx.block_time).toISOString();
+          const hash = tx?.hash || tx?.tx_hash || tx?.tx_hash_str || null;
+          if (tx?.micro_time || tx?.block_time) return { time: new Date(tx.micro_time ?? tx.block_time).toISOString(), hash };
           if (tx?.block_height) {
             const kb = await fetch(`${mdwBase}/v3/key-blocks/${tx.block_height}`).then(r => r.json());
-            if (kb?.time) return new Date(kb.time).toISOString();
+            if (kb?.time) return { time: new Date(kb.time).toISOString(), hash };
           }
         } catch {}
-        return null;
+        return { time: null, hash: null };
       }
 
       for (let i = 0; i < valid.length; i += 1) {
@@ -102,7 +103,8 @@ export function registerPollCreatedPlugin() {
         const totalVotes = typeof ov?.voteCount === 'number' && !Number.isNaN(ov.voteCount)
           ? ov.voteCount
           : options.reduce((acc, o) => acc + (o.votes || 0), 0);
-        const createdAt = (await fetchCreationTime(p.poll as any)) || new Date().toISOString();
+        const ctInfo = await fetchCreationTime(p.poll as any);
+        const createdAt = ctInfo.time || new Date().toISOString();
         const entry = adaptPollToEntry(
           p.poll as any,
           {
@@ -115,6 +117,7 @@ export function registerPollCreatedPlugin() {
           },
           createdAt
         );
+        (entry as any).data.txHash = ctInfo.hash || undefined;
         entries.push(entry);
       }
       return { entries, nextPage: undefined } as FeedPage<PollCreatedEntryData>;
@@ -199,6 +202,7 @@ export function registerPollCreatedPlugin() {
           onVoteOption={submitVote}
           onRevoke={revokeVote}
           voting={voting}
+          txHash={(entry as any).data?.txHash}
         />
       );
     },

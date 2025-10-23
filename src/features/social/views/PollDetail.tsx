@@ -212,7 +212,6 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
             currentHeight={currentHeight as any}
             options={options}
             totalVotes={totalVotes}
-            onOpen={() => {}}
             createdAtIso={createdAtIso}
             myVote={myVote}
             onVoteOption={submitVote}

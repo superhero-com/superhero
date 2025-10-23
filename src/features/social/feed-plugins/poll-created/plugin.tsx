@@ -218,11 +218,14 @@ export function registerPollCreatedPlugin() {
             address: pollAddress,
           } as any);
           await (poll as any).vote(opt);
-          await refreshMyVote();
+          // Notify governance backend to speed up cache updates
+          try { await GovernanceApi.submitContractEvent("Vote", pollAddress as any); } catch {}
           try {
             const ov = await GovernanceApi.getPollOverview(pollAddress as any);
             rebuildFromOverview(ov);
           } catch {}
+          // Refresh my vote a bit later to avoid stale snapshot overriding optimistic state
+          window.setTimeout(() => { refreshMyVote(); }, 2500);
         } finally {
           setVoting(false);
           setPendingOption(null);
@@ -241,11 +244,12 @@ export function registerPollCreatedPlugin() {
             address: pollAddress,
           } as any);
           await (poll as any).revoke_vote();
-          await refreshMyVote();
+          try { await GovernanceApi.submitContractEvent("RevokeVote", pollAddress as any); } catch {}
           try {
             const ov = await GovernanceApi.getPollOverview(pollAddress as any);
             rebuildFromOverview(ov);
           } catch {}
+          window.setTimeout(() => { refreshMyVote(); }, 2500);
         } finally {
           setVoting(false);
           setPendingOption(null);

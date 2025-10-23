@@ -4,6 +4,7 @@ import FeedPluginCard from '../FeedPluginCard';
 import { cn } from '@/lib/utils';
 import AddressAvatarWithChainNameFeed from '@/@components/Address/AddressAvatarWithChainNameFeed';
 import BlockchainInfoPopover from '@/features/social/components/BlockchainInfoPopover';
+import { CONFIG } from '@/config';
 import { useChainName } from '@/hooks/useChainName';
 import { compactTime } from '@/utils/time';
 
@@ -50,9 +51,22 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
 
   return (
     <FeedPluginCard className={cn(styles.root, 'feed-plugin poll-created')} role={onOpen ? 'button' : undefined} onClick={onOpen}>
-      {txHash && (
+      {(txHash || contractAddress) && (
         <div className="absolute top-4 right-2 md:top-5 md:right-5 z-10">
-          <BlockchainInfoPopover txHash={txHash} createdAt={createdAtIso} sender={author} contract={contractAddress} className="px-2" showLabel />
+          {txHash ? (
+            <BlockchainInfoPopover txHash={txHash} createdAt={createdAtIso} sender={author} contract={contractAddress} className="px-2" showLabel />
+          ) : (
+            <a
+              href={`${(CONFIG.EXPLORER_URL || 'https://aescan.io').replace(/\/$/, '')}/contracts/${contractAddress}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-white/[0.04] border border-white/10 hover:border-white/20 no-gradient-text"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span className="opacity-80">on-chain</span>
+              <span aria-hidden>↗</span>
+            </a>
+          )}
         </div>
       )}
       <div className={styles.metaRow}>

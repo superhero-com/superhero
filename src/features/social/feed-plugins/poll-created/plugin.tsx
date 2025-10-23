@@ -203,6 +203,7 @@ export function registerPollCreatedPlugin() {
           onRevoke={revokeVote}
           voting={voting}
           txHash={(entry as any).data?.txHash}
+          contractAddress={pollAddress as any}
         />
       );
     },

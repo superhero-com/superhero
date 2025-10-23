@@ -21,9 +21,10 @@ export type PollCreatedCardProps = {
   onRevoke?: () => void;
   voting?: boolean;
   txHash?: string;
+  contractAddress?: string;
 };
 
-export default function PollCreatedCard({ title, author, closeHeight, currentHeight, options, totalVotes = 0, onOpen, createdAtIso, myVote = null, onVoteOption, onRevoke, voting = false, txHash }: PollCreatedCardProps) {
+export default function PollCreatedCard({ title, author, closeHeight, currentHeight, options, totalVotes = 0, onOpen, createdAtIso, myVote = null, onVoteOption, onRevoke, voting = false, txHash, contractAddress }: PollCreatedCardProps) {
   const { chainName } = useChainName(author || '');
   const timeLeft = useMemo(() => {
     if (!closeHeight || !currentHeight) return undefined;
@@ -51,7 +52,7 @@ export default function PollCreatedCard({ title, author, closeHeight, currentHei
     <FeedPluginCard className={cn(styles.root, 'feed-plugin poll-created')} role={onOpen ? 'button' : undefined} onClick={onOpen}>
       {txHash && (
         <div className="absolute top-4 right-2 md:top-5 md:right-5 z-10">
-          <BlockchainInfoPopover txHash={txHash} createdAt={createdAtIso} sender={author} contract={author ? undefined : undefined} className="px-2" showLabel />
+          <BlockchainInfoPopover txHash={txHash} createdAt={createdAtIso} sender={author} contract={contractAddress} className="px-2" showLabel />
         </div>
       )}
       <div className={styles.metaRow}>

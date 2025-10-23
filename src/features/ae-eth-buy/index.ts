@@ -8,3 +8,7 @@ export type { BridgeStatus, BridgeResult, BridgeOptions } from './types';
 
 // Components
 export { default as BuyAeWidget } from './components/BuyAeWidget';
+export { default as ConnectEthereumWallet } from './components/ConnectEthereumWallet';
+
+// Providers
+export { AppKitProvider } from './providers/AppKitProvider';

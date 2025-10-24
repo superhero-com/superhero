@@ -342,11 +342,11 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     );
   }
 
-  // Desktop: 2-line height; Mobile: slightly taller for ergonomics
+  // Desktop: single-line height; Mobile: slightly taller for ergonomics
   const isDesktopViewport = typeof window !== 'undefined'
     && typeof window.matchMedia === 'function'
     && window.matchMedia('(min-width: 768px)').matches;
-  const computedMinHeight = isDesktopViewport ? '68px' : '88px';
+  const computedMinHeight = isDesktopViewport ? '52px' : '88px';
 
   const requiredMissing = useMemo(() => {
     if (!requiredHashtag) return false;

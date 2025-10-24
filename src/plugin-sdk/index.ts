@@ -81,7 +81,7 @@ export type ComposerAttachmentCtx = ComposerActionCtx & {
   // per-attachment namespaced state helpers
   getValue: <T = any>(ns: string) => T | undefined;
   setValue: <T = any>(ns: string, value: T) => void;
-  ensureWallet: () => Promise<void>;
+  ensureWallet: () => Promise<{ sdk: any; currentBlockHeight?: number }>
 };
 
 export type AttachmentValidationError = { field?: string; message: string };

@@ -194,7 +194,7 @@ export function GifSelectorDialog({
           {!isLoading && !error && (
           <div 
               ref={scrollContainerRef}
-              className="grid grid-cols-3 gap-3 max-h-[400px] overflow-y-auto overflow-x-visible scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent p-2 -m-2"
+              className="grid grid-cols-3 gap-3 h-[400px] overflow-y-auto overflow-x-visible scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent p-2 -m-2"
             >
               {results.map((result) => (
                 <div

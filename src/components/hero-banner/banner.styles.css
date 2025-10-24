@@ -39,17 +39,21 @@
   z-index: 4;
 }
 
-/* Add extra right padding on desktop so text doesn't collide with the planet */
-@media (min-width: 769px) {
+@media (max-width: 768px) {
   .hero-banner__inner {
+    padding: 0;
+  }
+}
+
+/* Apply right padding only to the lede paragraph to avoid planet overlap */
+@media (min-width: 769px) {
+  .banner-lede {
     padding-right: clamp(120px, 14vmax, 320px);
   }
 }
 
 @media (max-width: 768px) {
-  .hero-banner__inner {
-    padding: 0;
-    /* Add right padding so text/CTAs don't collide with the planet on mobile */
+  .banner-lede {
     padding-right: clamp(72px, 26vw, 160px);
   }
 }

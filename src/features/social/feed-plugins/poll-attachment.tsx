@@ -74,6 +74,7 @@ const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
               value={String(days)}
               onChange={(e) => setDays(Math.max(0, Math.min(30, Number(e.target.value || 0))))}
               className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 pt-5 pb-2 text-white outline-none focus:border-white/30 appearance-none"
+              style={{ backgroundImage: 'linear-gradient(45deg, transparent 50%, rgba(255,255,255,0.9) 50%), linear-gradient(135deg, rgba(255,255,255,0.9) 50%, transparent 50%)', backgroundPosition: 'calc(100% - 18px) 16px, calc(100% - 12px) 16px', backgroundSize: '6px 6px, 6px 6px', backgroundRepeat: 'no-repeat' }}
             >
               {Array.from({ length: 31 }, (_, i) => i).map((d) => (
                 <option key={d} value={d}>{d}</option>
@@ -86,6 +87,7 @@ const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
               value={String(hours)}
               onChange={(e) => setHours(Math.max(0, Math.min(23, Number(e.target.value || 0))))}
               className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 pt-5 pb-2 text-white outline-none focus:border-white/30 appearance-none"
+              style={{ backgroundImage: 'linear-gradient(45deg, transparent 50%, rgba(255,255,255,0.9) 50%), linear-gradient(135deg, rgba(255,255,255,0.9) 50%, transparent 50%)', backgroundPosition: 'calc(100% - 18px) 16px, calc(100% - 12px) 16px', backgroundSize: '6px 6px, 6px 6px', backgroundRepeat: 'no-repeat' }}
             >
               {Array.from({ length: 24 }, (_, i) => i).map((h) => (
                 <option key={h} value={h}>{h}</option>
@@ -98,6 +100,7 @@ const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
               value={String(minutes)}
               onChange={(e) => setMinutes(Math.max(0, Math.min(59, Number(e.target.value || 0))))}
               className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 pt-5 pb-2 text-white outline-none focus:border-white/30 appearance-none"
+              style={{ backgroundImage: 'linear-gradient(45deg, transparent 50%, rgba(255,255,255,0.9) 50%), linear-gradient(135deg, rgba(255,255,255,0.9) 50%, transparent 50%)', backgroundPosition: 'calc(100% - 18px) 16px, calc(100% - 12px) 16px', backgroundSize: '6px 6px, 6px 6px', backgroundRepeat: 'no-repeat' }}
             >
               {Array.from({ length: 60 }, (_, i) => i).map((m) => (
                 <option key={m} value={m}>{m}</option>

@@ -374,6 +374,8 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   let currentPlaceholder: string;
   if (placeholder) {
     currentPlaceholder = placeholder;
+  } else if (activeAttachmentId === 'poll') {
+    currentPlaceholder = "Ask a question";
   } else if (isPost) {
     currentPlaceholder = activeAccount
       ? PROMPTS[promptIndex]
@@ -384,7 +386,14 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       : "Connect your wallet to reply";
   }
 
-  // If not connected and it's a reply, show simple message
+  // Compute if submit is disabled
+  const isPollInvalid = useMemo(() => {
+    if (activeAttachmentId !== 'poll') return false;
+    const opts = (attachmentState.poll?.options || []) as string[];
+    const validOpts = opts.map((o: string) => o.trim()).filter(Boolean);
+    return validOpts.length < 2 || !text.trim();
+  }, [activeAttachmentId, attachmentState, text]);
+
   if (!activeAccount && !isPost) {
     return (
       <div
@@ -415,6 +424,8 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     const pattern = new RegExp(`(^|[^A-Za-z0-9_])${escaped}(?![A-Za-z0-9_])`, 'i');
     return !pattern.test(text);
   }, [text, requiredHashtag]);
+
+  const isSubmitDisabled = !text.trim() || (requiredHashtag ? requiredMissing : false) || isPollInvalid;
 
   // Inline autocomplete: when typing a hashtag token that matches the start of requiredHashtag,
   // show only the remaining characters (e.g., "#a" -> suggest "ENS").
@@ -704,7 +715,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                       <AeButton
                         type="submit"
                         loading={isSubmitting}
-                        disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
+                        disabled={isSubmitDisabled}
                         className="relative bg-[#1161FE] border-none text-white font-black px-6 py-3 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(0,0,0,0.3)] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none md:min-h-[44px] md:text-base"
                       >
                         {''}
@@ -790,7 +801,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                 <AeButton
                   type="submit"
                   loading={isSubmitting}
-                  disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
+                  disabled={isSubmitDisabled}
                   className="relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(0,0,0,0.3)] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
                 >
                   {isSubmitting

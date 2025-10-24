@@ -753,7 +753,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                       {activeAttachmentId === 'poll' ? (
                         <span>Remove poll</span>
                       ) : (
-                        <span className="flex items-center gap-1"><ChartColumn className="w-3.5 h-3.5" />Poll</span>
+                        <span>Poll</span>
                       )}
                     </button>
                   )}

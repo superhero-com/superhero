@@ -98,7 +98,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     minHeight = "60px",
     autoFocus = false,
   } = props;
-  const { sdk } = useAeSdk();
+  const { sdk, currentBlockHeight } = useAeSdk() as any;
   const { activeAccount, chainNames } = useAccount();
   const queryClient = useQueryClient();
 
@@ -171,7 +171,8 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     ...composerCtx,
     getValue: getAttachmentValue,
     setValue: setAttachmentValue,
-    ensureWallet: async () => ({ sdk, currentBlockHeight: (useAeSdk() as any)?.currentBlockHeight }),
+    currentBlockHeight,
+    ensureWallet: async () => ({ sdk, currentBlockHeight }),
     cacheLink: (postId: string, kind: string, payload: any) => {
       try {
         const key = 'sh:plugin:post-links';

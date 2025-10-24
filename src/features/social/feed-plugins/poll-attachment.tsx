@@ -75,9 +75,7 @@ const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
         </div>
         <div className="text-[12px] text-white/60">To create a never closing poll, set close height to 0.</div>
       </div>
-      <div className="mt-3 text-right">
-        <button type="button" onClick={onRemove} className="text-red-400 hover:text-red-300 text-[13px]">Remove poll</button>
-      </div>
+      {/* Remove inline remove button; Poll toolbar button toggles remove */}
     </div>
   );
 };

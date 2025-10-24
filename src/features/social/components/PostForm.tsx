@@ -574,7 +574,7 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
                             title={spec.label}
                           >
                             {spec.Icon ? <spec.Icon className="w-4 h-4" /> : null}
-                            <span>{spec.label}</span>
+                            <span>{activeAttachmentId === spec.id ? 'Remove poll' : spec.label}</span>
                           </button>
                         ))}
                       </div>
@@ -642,15 +642,6 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
                   </div>
 
                   <div className="flex items-center gap-3">
-                    {attachmentRegistry.length > 0 && (
-                      <button
-                        type="button"
-                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
-                        onClick={() => setActiveAttachmentId((id) => (id ? null : (attachmentRegistry[0]?.id || null)))}
-                      >
-                        <span>{pollActive ? 'Remove poll' : 'Poll'}</span>
-                      </button>
-                    )}
                     {composerActions.map((a) => (
                       <button
                         key={a.id}

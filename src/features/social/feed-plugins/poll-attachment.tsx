@@ -77,7 +77,7 @@ const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
                 <button
                   type="button"
                   onClick={addOption}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400 hover:text-blue-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400"
                 >
                   <Plus className="w-5 h-5" />
                 </button>

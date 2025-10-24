@@ -49,6 +49,8 @@
 @media (max-width: 768px) {
   .hero-banner__inner {
     padding: 0;
+    /* Add right padding so text/CTAs don't collide with the planet on mobile */
+    padding-right: clamp(56px, 22vw, 120px);
   }
 }
 

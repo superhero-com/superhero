@@ -708,12 +708,12 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                   </div>
                 )}
 
-                <div className="md:hidden absolute bottom-5 left-2">
+                <div className="md:hidden absolute bottom-5 left-2 flex items-center gap-2">
                   {/* Mobile-only GIF button inside textarea corner */}
-                  {showGifInput && (
+                  {showGifInput && !pollActive && (
                     <button
                       type="button"
-                      className="md:hidden  inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
+                      className="md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
                       title="GIF"
                       ref={gifBtnRef}
                       onClick={(e) => {
@@ -734,6 +734,27 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                       }}
                     >
                       <span className="uppercase tracking-wide">GIF</span>
+                    </button>
+                  )}
+                  {/* Mobile Poll toggle next to GIF */}
+                  {enableAttachments && (
+                    <button
+                      type="button"
+                      className="md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
+                      title={activeAttachmentId === 'poll' ? 'Remove poll' : 'Poll'}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setActiveAttachmentId((id) => (id === 'poll' ? null : 'poll'));
+                        // Clear GIF picker when opening poll
+                        setShowGif(false);
+                      }}
+                    >
+                      {activeAttachmentId === 'poll' ? (
+                        <span>Remove poll</span>
+                      ) : (
+                        <span className="flex items-center gap-1"><ChartColumn className="w-3.5 h-3.5" />Poll</span>
+                      )}
                     </button>
                   )}
                 </div>

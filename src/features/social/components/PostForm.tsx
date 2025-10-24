@@ -541,6 +541,17 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
 
               </div>
 
+              {/* Attachment panel mount (single active) under textarea, above Post button */}
+              {enableAttachments && activeAttachmentId && (
+                <div className="mt-3">
+                  {attachmentRegistry
+                    .filter((a) => a.id === activeAttachmentId)
+                    .map((a) => (
+                      <a.Panel key={a.id} ctx={attachmentsCtx} onRemove={() => setActiveAttachmentId(null)} />
+                    ))}
+                </div>
+              )}
+
               {(showEmojiPicker || showGifInput) && (
                 <div className="hidden md:flex items-center justify-between mt-3 gap-3">
                   <div className="flex items-center gap-2.5 relative">
@@ -683,17 +694,6 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
                 </div>
               )}
             </div>
-
-            {/* Attachment panel mount (single active) */}
-          {enableAttachments && activeAttachmentId && (
-              <div className="col-span-full md:col-start-2 mt-3 md:mt-4">
-                {attachmentRegistry
-                  .filter((a) => a.id === activeAttachmentId)
-                  .map((a) => (
-                    <a.Panel key={a.id} ctx={attachmentsCtx} onRemove={() => setActiveAttachmentId(null)} />
-                  ))}
-              </div>
-            )}
 
             {showMediaFeatures && mediaUrls.length > 0 && (
               <div className="col-span-full md:col-start-2 w-full overflow-x-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent -mx-4 px-4 md:mx-0 md:px-0">

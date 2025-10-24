@@ -43,6 +43,7 @@ const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
   const currentHeight = (ctx as any).currentBlockHeight as number | undefined;
   const totalMs = ((Math.max(0, days) * 24 + Math.max(0, hours)) * 60 + Math.max(0, minutes)) * 60 * 1000;
   const computedCloseHeight = totalMs === 0 ? 0 : (currentHeight ? currentHeight + blocksFromMs(totalMs) : 0);
+  const estCloseDate = totalMs === 0 ? null : new Date(Date.now() + totalMs);
 
   useEffect(() => { ctx.setValue('poll.closeHeight', computedCloseHeight); }, [computedCloseHeight]);
 
@@ -109,7 +110,7 @@ const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
           </div>
         </div>
         <div className="text-[12px] text-white/70">
-          Close at height: {computedCloseHeight || '—'}
+          Closes at: {estCloseDate ? `~ ${estCloseDate.toLocaleDateString()} ${estCloseDate.toLocaleTimeString().slice(0,5)}` : '—'} {computedCloseHeight ? `(height ${computedCloseHeight})` : ''}
         </div>
       </div>
       {/* Remove inline remove button; Poll toolbar button toggles remove */}

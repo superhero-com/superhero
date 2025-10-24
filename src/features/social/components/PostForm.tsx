@@ -76,7 +76,7 @@ const PROMPTS: string[] = [
   "Teach us something in 1 line. 🧠",
 ];
 
-const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) => {
+const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean }) => void }, PostFormProps>((props, ref) => {
   const {
     onClose,
     onSuccess,
@@ -100,15 +100,22 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
   const queryClient = useQueryClient();
 
   useImperativeHandle(ref, () => ({
-    focus: () => {
-      // Use setTimeout to ensure focus happens after any ongoing UI updates
-      setTimeout(() => {
-        if (textareaRef.current) {
+    focus: (opts?: { immediate?: boolean }) => {
+      const run = () => {
+        if (!textareaRef.current) return;
+        try {
+          // Prevent the browser from performing its own scroll on focus to avoid jumpiness
+          (textareaRef.current as any).focus?.({ preventScroll: true });
+        } catch {
           textareaRef.current.focus();
-          // On mobile, also scroll into view
-          textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      }, 100);
+        // Smoothly center the textarea in view
+        try {
+          textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch {}
+      };
+      if (opts?.immediate) run();
+      else setTimeout(run, 100);
     },
   }));
 

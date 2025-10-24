@@ -50,7 +50,7 @@
   .hero-banner__inner {
     padding: 0;
     /* Add right padding so text/CTAs don't collide with the planet on mobile */
-    padding-right: clamp(56px, 22vw, 120px);
+    padding-right: clamp(72px, 26vw, 160px);
   }
 }
 

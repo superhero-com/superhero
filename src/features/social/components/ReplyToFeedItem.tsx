@@ -14,6 +14,7 @@ import { MessageCircle } from "lucide-react";
 import { useWallet } from "../../../hooks";
 import { relativeTime, compactTime, fullTimestamp } from "../../../utils/time";
 import AspectMedia from "@/components/AspectMedia";
+import { InlinePoll } from "../feed-plugins/poll-attachment";
 import { CONFIG } from "../../../config";
 
 interface ReplyToFeedItemProps {
@@ -263,6 +264,9 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
               ))}
             </div>
           )}
+
+          {/* Inline poll pending/ready */}
+          <InlinePoll postId={String(postId)} />
 
           {/* Actions */}
           <div className="mt-4 flex items-center justify-between">

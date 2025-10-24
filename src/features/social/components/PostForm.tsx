@@ -11,6 +11,9 @@ import { CONFIG } from "../../../config";
 import { useAccount } from "../../../hooks/useAccount";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { GifSelectorDialog } from "./GifSelectorDialog";
+import { usePluginHostCtx } from "@/features/social/plugins/PluginHostProvider";
+import { composerRegistry } from "@/features/social/plugins/registries";
+import { getAllPlugins } from "@/features/social/feed-plugins/registry";
 
 interface PostFormProps {
   // Common props
@@ -124,6 +127,24 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
   const gifBtnRef = useRef<HTMLButtonElement>(null);
   const [overlayComputed, setOverlayComputed] = useState<{ paddingTop: number; paddingRight: number; paddingBottom: number; paddingLeft: number; fontFamily: string; fontSize: string; fontWeight: string; lineHeight: string; letterSpacing: string; } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Plugin composer actions
+  const host = usePluginHostCtx();
+  const composerCtx = useMemo(() => ({
+    ...host,
+    insertText: (t: string) => {
+      setText((prev) => {
+        const needsSpace = prev.length > 0 && !/\s$/.test(prev);
+        return `${prev}${needsSpace ? ' ' : ''}${t}`;
+      });
+    },
+  }), [host]);
+  const composerActions = useMemo(() => {
+    const fromRegistry = composerRegistry.flatMap((r) => r.getActions(composerCtx));
+    const fromFeedPlugins = getAllPlugins()
+      .flatMap((p: any) => (typeof p.getComposerActions === 'function' ? p.getComposerActions(composerCtx) : []));
+    return [...fromFeedPlugins, ...fromRegistry];
+  }, [composerCtx]);
 
   useEffect(() => {
     setPromptIndex(Math.floor(Math.random() * PROMPTS.length));
@@ -554,6 +575,17 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
                   </div>
 
                   <div className="flex items-center gap-3">
+                    {composerActions.map((a) => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+                        onClick={() => a.onClick(composerCtx)}
+                      >
+                        {a.Icon ? <a.Icon className="w-4 h-4" /> : null}
+                        <span>{a.label}</span>
+                      </button>
+                    ))}
                     {requiredHashtag && requiredMissing && (
                       <div className="flex items-center gap-2 text-[11px] text-white/70">
                         <span>Post needs to include {(requiredHashtag || '').toUpperCase()}</span>

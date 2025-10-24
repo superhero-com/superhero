@@ -1,4 +1,5 @@
 import type React from 'react';
+import type { ComposerAction, ComposerActionCtx } from '@/plugin-sdk';
 
 // Base shape for any entry in the unified feed
 export type FeedEntryBase = {
@@ -28,6 +29,8 @@ export type FeedPlugin<T = any> = {
   Render: (props: { entry: FeedEntry<T>; onOpen?: (id: string) => void }) => JSX.Element;
   // Optional placeholder while loading
   Skeleton?: React.FC;
+  // Optional: contribute composer actions (used by host if present)
+  getComposerActions?: (ctx: ComposerActionCtx) => ComposerAction[];
 };
 
 // Helper type guards

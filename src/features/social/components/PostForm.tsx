@@ -15,6 +15,11 @@ import { GifSelectorDialog } from "./GifSelectorDialog";
 import { usePluginHostCtx } from "@/features/social/plugins/PluginHostProvider";
 import { composerRegistry, attachmentRegistry } from "@/features/social/plugins/registries";
 import { getAllPlugins } from "@/features/social/feed-plugins/registry";
+import REGISTRY_WITH_EVENTS_ACI from "@/api/GovernanceRegistryACI.json";
+import POLL_ACI from "@/api/GovernancePollACI.json";
+import BYTECODE_HASHES from "@/api/GovernanceBytecodeHashes.json";
+import { Contract, Encoded } from "@aeternity/aepp-sdk";
+import { GovernanceApi } from "@/api/governance";
 
 interface PostFormProps {
   // Common props
@@ -275,6 +280,68 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     });
   };
 
+  const submitPoll = useCallback(async () => {
+    // Gather inputs
+    const question = text.trim();
+    const optionsRaw = getAttachmentValue<string[]>("poll.options") || [];
+    const options = optionsRaw.map((o) => o.trim()).filter(Boolean).slice(0, 4);
+    const closeHeight = Number(getAttachmentValue<number>("poll.closeHeight") || 0) || 0;
+
+    // Basic validation guard (button is also disabled when invalid)
+    if (!question || options.length < 2) {
+      return;
+    }
+
+    // Deploy poll contract
+    const pollBytecode = (BYTECODE_HASHES as any)["8.0.0"]["Poll_Iris.aes"].bytecode as Encoded.ContractBytearray;
+    const pollContract = await (sdk as any).initializeContract({ aci: POLL_ACI as any, bytecode: pollBytecode });
+    const metadata = { title: question, description: "", link: "", spec_ref: undefined as any };
+    const optionsRecord = options.reduce((acc, t, i) => ({ ...acc, [i]: t }), {} as Record<number, string>);
+    const initRes = await (pollContract as any).init(metadata, optionsRecord as any, closeHeight === 0 ? undefined : closeHeight, { omitUnknown: true });
+    const createdAddress = (initRes as any).address as string;
+
+    // Register in governance registry (listed)
+    const registry = await Contract.initialize<{
+      add_poll: (poll: any, is_listed: boolean) => Promise<{ decodedResult: number }>
+    }>({
+      ...(sdk as any).getContext(),
+      aci: REGISTRY_WITH_EVENTS_ACI as any,
+      address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
+    } as any);
+    await (registry as any).add_poll(createdAddress as Encoded.ContractAddress, true);
+
+    // Push feed entry for immediate visibility
+    try {
+      const ov = await GovernanceApi.getPollOverview(createdAddress as any);
+      const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
+      const optionsArr = Object.entries(optsRec).map(([k, v]) => ({ id: Number(k), label: String(v) }));
+      // Dispatch the same custom event used by plugin host
+      const entry = {
+        id: `poll-created:${createdAddress}`,
+        kind: "poll-created",
+        createdAt: new Date().toISOString(),
+        data: {
+          pollAddress: createdAddress,
+          title: question,
+          description: undefined,
+          author: undefined,
+          closeHeight: ov?.pollState?.close_height as any,
+          createHeight: ov?.pollState?.create_height as any,
+          options: optionsArr,
+          totalVotes: 0,
+        },
+      };
+      try { window.dispatchEvent(new CustomEvent('sh:plugin:feed:push', { detail: { kind: 'poll-created', entry } })); } catch {}
+    } catch {}
+
+    // Clear composer and close poll panel
+    setText("");
+    setAttachmentValue("poll.options", []);
+    setAttachmentValue("poll.closeHeight", 0);
+    setMediaUrls([]);
+    setActiveAttachmentId(null);
+  }, [text, getAttachmentValue, setAttachmentValue, sdk]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Do not auto-append the required hashtag; the Post button is disabled until present
@@ -284,6 +351,13 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
 
     setIsSubmitting(true);
     try {
+      // If Poll panel is active, submit on-chain poll instead of a standard post
+      if (activeAttachmentId === 'poll') {
+        await submitPoll();
+        setIsSubmitting(false);
+        return;
+      }
+
       const contract = await sdk.initializeContract({
         aci: TIPPING_V3_ACI as any,
         address: CONFIG.CONTRACT_V3_ADDRESS as `ct_${string}`,

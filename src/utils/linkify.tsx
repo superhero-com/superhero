@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import HashtagWithChange from '../features/social/components/HashtagWithChange';
 import { formatAddress } from './address';
 
 // URL matcher (external links)
@@ -28,12 +29,9 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
         <a
           href={`/users/${name}`}
           key={`aens-${name}-${offset}`}
-          className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+          className="underline-offset-2 break-words"
           style={{
-            WebkitTextFillColor: 'currentColor',
-            WebkitBackgroundClip: 'initial',
-            backgroundClip: 'initial',
-            background: 'none',
+            color: '#00ff9d',
           }}
         >
           {match}
@@ -66,12 +64,9 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
         <a
           href={`/users/${address}`}
           key={`acc-${address}-${idx}-${off}`}
-          className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+          className="underline-offset-2 break-words"
           style={{
-            WebkitTextFillColor: 'currentColor',
-            WebkitBackgroundClip: 'initial',
-            backgroundClip: 'initial',
-            background: 'none',
+            color: '#00ff9d',
           }}
         >
           {display}
@@ -108,16 +103,13 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
             key={`${href}-${idx}-${off}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words no-underline"
+            className="underline-offset-2 break-words no-underline"
             style={{
               display: 'inline',
               lineHeight: 'inherit',
               margin: 0,
               padding: 0,
-              WebkitTextFillColor: 'currentColor',
-              WebkitBackgroundClip: 'initial',
-              backgroundClip: 'initial',
-              background: 'none',
+              color: '#00ff9d',
               verticalAlign: 'baseline',
             }}
             title={m}
@@ -132,7 +124,7 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
     if (segLast < segment.length) urlLinkedParts.push(segment.slice(segLast));
   });
 
-  // Pass 3: Hashtags → router link to trending tokens page (/trends/tokens/<UPPERCASE>)
+  // Pass 3: Hashtags → router link with inline 24h change if tokenized trend
   const finalParts: React.ReactNode[] = [];
   urlLinkedParts.forEach((node, idx) => {
     if (typeof node !== 'string') {
@@ -143,22 +135,10 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
     let last = 0;
     segment.replace(HASHTAG_REGEX, (m: string, tag: string, off: number) => {
       if (off > last) finalParts.push(segment.slice(last, off));
-      const target = `/trends/tokens/${tag.toUpperCase()}`;
       finalParts.push(
-        <Link
-          to={target}
-          key={`hashtag-${tag}-${idx}-${off}`}
-          className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
-          style={{
-            WebkitTextFillColor: 'currentColor',
-            WebkitBackgroundClip: 'initial',
-            backgroundClip: 'initial',
-            background: 'none',
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {m}
-        </Link>
+        <span key={`hashtag-${tag}-${idx}-${off}`}>
+          <HashtagWithChange tag={`#${tag}`} />
+        </span>
       );
       last = off + m.length;
       return m;

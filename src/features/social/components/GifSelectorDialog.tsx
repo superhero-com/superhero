@@ -200,28 +200,30 @@ export function GifSelectorDialog({
                 <div
                   key={result.id}
                   onClick={() => handleGifClick(result)}
-                  className="relative w-full cursor-pointer bg-white/5 rounded-lg overflow-hidden transition-all duration-200 active:scale-95 sm:hover:scale-105 sm:hover:shadow-lg sm:hover:shadow-primary-400/20 sm:hover:ring-2 sm:hover:ring-primary-400/50"
+                  className="relative w-full cursor-pointer bg-white/5 rounded-lg transition-all duration-200 active:scale-95 sm:hover:scale-105 sm:hover:shadow-lg sm:hover:shadow-primary-400/20 sm:hover:ring-2 sm:hover:ring-primary-400/50 hover:z-20"
                   style={{ paddingBottom: '100%' }}
                 >
-                  {result?.mp4 ? (
-                    <video
-                      src={result.mp4}
-                      poster={result.still}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="metadata"
-                      className="absolute top-0 left-0 w-full h-full object-cover"
-                    />
-                  ) : (
-                    <img
-                      src={result.animated || result.still}
-                      alt="GIF preview"
-                      className="absolute top-0 left-0 w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  )}
+                  <div className="absolute inset-0 rounded-lg overflow-hidden">
+                    {result?.mp4 ? (
+                      <video
+                        src={result.mp4}
+                        poster={result.still}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        className="absolute top-0 left-0 w-full h-full object-cover"
+                      />
+                    ) : (
+                      <img
+                        src={result.animated || result.still}
+                        alt="GIF preview"
+                        className="absolute top-0 left-0 w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    )}
+                  </div>
                 </div>
               ))}
               {/* Sentinel for infinite scroll */}

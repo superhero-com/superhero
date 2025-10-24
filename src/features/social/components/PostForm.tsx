@@ -621,7 +621,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                           setShowEmoji(false);
                         }}
                       >
-                        <SquarePlay className="w-5 h-5" />
+                        <SquarePlay className="w-[18px] h-[18px]" />
                         <span>GIF</span>
                       </button>
                     )}

@@ -39,6 +39,13 @@
   z-index: 4;
 }
 
+/* Add extra right padding on desktop so text doesn't collide with the planet */
+@media (min-width: 769px) {
+  .hero-banner__inner {
+    padding-right: clamp(80px, 12vmax, 260px);
+  }
+}
+
 @media (max-width: 768px) {
   .hero-banner__inner {
     padding: 0;

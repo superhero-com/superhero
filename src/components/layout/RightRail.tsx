@@ -6,7 +6,7 @@ import WalletOverviewCard from "@/components/wallet/WalletOverviewCard";
 import { useAeSdk } from "../../hooks/useAeSdk";
 import { useToast } from "../ToastProvider";
 import Sparkline from "../Trendminer/Sparkline";
-import { BuyAeWidget } from "../../features/bridge";
+import { BuyAeWidget } from "../../features/ae-eth-buy";
 
 import { useWallet } from "../../hooks";
 interface SearchSuggestion {

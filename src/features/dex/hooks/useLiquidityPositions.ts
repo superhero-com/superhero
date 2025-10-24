@@ -1,4 +1,4 @@
-import { DexService, PairDto } from '@/api/generated';
+import { DexService, DexPairService, PairDto } from '@/api/generated';
 
 import { providedLiquidityAtom, useAccount, useAeSdk } from '@/hooks';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
@@ -44,7 +44,7 @@ export function useLiquidityPositions(): PoolListState & {
     if (!accountAddress) return;
 
     const accountAex9Balances = await loadAccountAex9Balances();
-    const listAllPairs: any = await DexService.listAllPairs({ limit: 1000, page: 1 });
+    const listAllPairs: any = await DexPairService.listAllPairs({ limit: 1000, page: 1 });
     // const pairs = await getPairs(false);
     const pairs: PairDto[] = listAllPairs.items;
 

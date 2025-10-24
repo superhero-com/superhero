@@ -71,11 +71,11 @@ const defaultConfig: AppConfig = {
 const envApiUrl = (import.meta as any)?.env?.VITE_SUPERHERO_API_URL as string | undefined;
 const envWsUrl = (import.meta as any)?.env?.VITE_SUPERHERO_WS_URL as string | undefined;
 
-export const CONFIG: AppConfig = {
-  ...defaultConfig,
-  ...(envApiUrl ? { SUPERHERO_API_URL: envApiUrl } : {}),
-  ...(envWsUrl ? { SUPERHERO_WS_URL: envWsUrl } : {}),
-};
+declare global {
+  interface Window {
+    __SUPERCONFIG__?: Partial<AppConfig>;
+  }
+}
 
 function toBool(v: any): boolean {
   if (typeof v === "boolean") return v;
@@ -83,3 +83,29 @@ function toBool(v: any): boolean {
   if (typeof v === "string") return v.toLowerCase() === "true" || v === "1";
   return false;
 }
+
+function isPlaceholder(v: unknown): boolean {
+  return typeof v === 'string' && (/^\$[A-Z0-9_]+$/.test(v) || v.trim() === '');
+}
+
+function coerceValue(key: keyof AppConfig, v: any): any {
+  if (key === 'LANDING_ENABLED' || key === 'WORDBAZAAR_ENABLED') return toBool(v);
+  return v;
+}
+
+const runtimeRaw = (typeof window !== 'undefined' ? window.__SUPERCONFIG__ : undefined) as Partial<AppConfig> | undefined;
+const runtimeConfig: Partial<AppConfig> = runtimeRaw
+  ? Object.fromEntries(
+      Object.entries(runtimeRaw)
+        .filter(([, v]) => v !== undefined && v !== null && !isPlaceholder(v))
+        .map(([k, v]) => [k, coerceValue(k as keyof AppConfig, v)])
+    ) as Partial<AppConfig>
+  : {};
+
+export const CONFIG: AppConfig = {
+  ...defaultConfig,
+  ...runtimeConfig,
+  // Vite env overrides for local builds
+  ...(envApiUrl ? { SUPERHERO_API_URL: envApiUrl } : {}),
+  ...(envWsUrl ? { SUPERHERO_WS_URL: envWsUrl } : {}),
+};

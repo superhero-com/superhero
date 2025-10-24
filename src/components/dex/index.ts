@@ -11,7 +11,7 @@ export { default as SwapConfirmation } from './core/SwapConfirmation';
 // Legacy export - use import from '../features/dex' instead
 export { WrapUnwrapWidget } from '../../features/dex';
 // Legacy export - use import from '../../features/bridge' instead
-export { BuyAeWidget } from '../../features/bridge';
+export { BuyAeWidget } from '../../features/ae-eth-buy';
 
 // Supporting components
 export { default as RecentActivity } from './supporting/RecentActivity';

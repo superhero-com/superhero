@@ -64,7 +64,7 @@ export default function CreateTokenView() {
 
   // Parse URL query params
   const searchParams = new URLSearchParams(location.search);
-  const initialTokenName = searchParams.get('repo') || '';
+  const initialTokenName = searchParams.get('tokenName') || '';
 
   // Form state
   const [tokenName, setTokenName] = useState(initialTokenName);

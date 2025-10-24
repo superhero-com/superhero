@@ -2,6 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { DexTokenSummaryDto } from './DexTokenSummaryDto';
+import type { PriceDto } from './PriceDto';
 export type DexTokenDto = {
     /**
      * Token contract address
@@ -31,5 +33,13 @@ export type DexTokenDto = {
      * Token is AE
      */
     is_ae: boolean;
+    /**
+     * Price Data
+     */
+    price: PriceDto;
+    /**
+     * Aggregated volume and price change summary across all pools for this token
+     */
+    summary: DexTokenSummaryDto | null;
 };
 

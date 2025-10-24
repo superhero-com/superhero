@@ -72,9 +72,21 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
       const hash = res?.hash || res?.transactionHash || res?.tx?.hash || null;
       if (tipKey) {
         setTipStatus((s) => ({ ...s, [tipKey]: { status: 'success', updatedAt: Date.now() } }));
-        // Invalidate the post tip summary so the button reflects the new total
+        // Ensure the button reflects the new total immediately by optimistically updating cache
         const idV3 = postIdForKey;
         if (idV3) {
+          // Optimistic bump: add the sent amount to current cached summary if present
+          try {
+            const current = queryClient.getQueryData<{ totalTips?: string }>(['post-tip-summary', idV3]);
+            const next = (() => {
+              const currentNum = current?.totalTips != null ? Number(current.totalTips) : 0;
+              const delta = Number(amount);
+              const sum = (Number.isFinite(currentNum) ? currentNum : 0) + (Number.isFinite(delta) ? delta : 0);
+              return { totalTips: String(sum) } as { totalTips?: string };
+            })();
+            queryClient.setQueryData(['post-tip-summary', idV3], next);
+          } catch {}
+          // Still revalidate from server to converge with canonical totals
           queryClient.invalidateQueries({ queryKey: ['post-tip-summary', idV3] });
         }
         // Auto-reset success state after 2.5s

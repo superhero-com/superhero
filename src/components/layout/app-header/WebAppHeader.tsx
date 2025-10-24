@@ -44,7 +44,7 @@ export default function WebAppHeader() {
       boxShadow: '0 6px 28px rgba(0,0,0,0.35)'
     }}>
       <div className="flex items-center gap-6 px-6 h-16 max-w-[min(1400px,100%)] mx-auto md:px-5 md:gap-5">
-        <Link to="/" className="flex items-center no-underline" style={{ color: 'var(--standard-font-color)' }} aria-label="Superhero Home">
+        <Link to="/" className="flex items-center no-underline hover:no-underline no-gradient-text" style={{ color: 'var(--standard-font-color)', textDecoration: 'none' }} aria-label="Superhero Home">
           <HeaderLogo className="h-8 w-auto" />
         </Link>
 

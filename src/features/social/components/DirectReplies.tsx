@@ -77,7 +77,7 @@ export default function DirectReplies({
   // If empty, do not render placeholder; the comment form below will be shown by the page
 
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-0 md:gap-3">
       {list.map((reply) => (
         <ReplyToFeedItem
           key={reply.id}

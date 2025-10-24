@@ -4,6 +4,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { OpenAPI } from './api/generated';
+import { CONFIG } from './config';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import ToastProvider from './components/ToastProvider';
@@ -12,9 +13,7 @@ import './i18n';
 import './styles/base.scss';
 import './styles/tailwind.css';
 
-// TODO: should be based on the active network
-// OpenAPI.BASE = `http://localhost:3000`;
-OpenAPI.BASE = `https://api.superhero.com`;
+OpenAPI.BASE = (CONFIG.SUPERHERO_API_URL || 'https://api.superhero.com').replace(/\/$/, '');
 
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 

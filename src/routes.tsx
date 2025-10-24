@@ -4,7 +4,6 @@ import SocialLayout from "./components/layout/SocialLayout";
 
 const FeedList = lazy(() => import("./features/social/views/FeedList"));
 const TokenList = lazy(() => import("./features/trending/views/TokenList"));
-const TrendCloud = lazy(() => import("./views/Trendminer/TrendCloud"));
 const TrendCloudVisx = lazy(() => import("./views/Trendminer/TrendCloudVisx"));
 const TrendInvite = lazy(() => import("./views/Trendminer/Invite"));
 
@@ -99,7 +98,7 @@ export const routes: RouteObject[] = [
   },
   // New trends routes
   { path: "/trends/tokens", element: <TokenList /> },
-  { path: "/trends", element: <TrendCloud /> },
+  { path: "/trends", element: <Navigate to="/trends/tokens" replace /> },
   { path: "/trends/visx", element: <TrendCloudVisx /> },
   { path: "/trends/tokens/:tokenName", element: <TokenSaleDetails /> },
   { path: "/tx-queue/:id", element: <TxQueue /> },
@@ -111,7 +110,7 @@ export const routes: RouteObject[] = [
   { path: "/trends/accounts/:address", element: <TrendAccountDetails /> },
   { path: "/trends/create", element: <TrendCreate /> },
   // Legacy redirects from /trending/* -> /trends/*
-  { path: "/trending", element: <Navigate to="/trends" replace /> },
+  { path: "/trending", element: <Navigate to="/trends/tokens" replace /> },
   { path: "/trending/tokens", element: <Navigate to="/trends/tokens" replace /> },
   { path: "/trending/visx", element: <Navigate to="/trends/visx" replace /> },
   { path: "/trending/invite", element: <Navigate to="/trends/invite" replace /> },

@@ -76,7 +76,7 @@ const PROMPTS: string[] = [
   "Teach us something in 1 line. 🧠",
 ];
 
-const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) => {
+const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => void }, PostFormProps>((props, ref) => {
   const {
     onClose,
     onSuccess,
@@ -100,15 +100,26 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
   const queryClient = useQueryClient();
 
   useImperativeHandle(ref, () => ({
-    focus: () => {
-      // Use setTimeout to ensure focus happens after any ongoing UI updates
-      setTimeout(() => {
-        if (textareaRef.current) {
+    focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => {
+      const run = () => {
+        if (!textareaRef.current) return;
+        try {
+          // Optionally prevent browser auto-scroll on focus
+          const ps = opts?.preventScroll ?? true;
+          (textareaRef.current as any).focus?.({ preventScroll: ps });
+        } catch {
           textareaRef.current.focus();
-          // On mobile, also scroll into view
-          textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      }, 100);
+        // Optional scroll mode
+        const mode = opts?.scroll || 'none';
+        if (mode !== 'none') {
+          try {
+            textareaRef.current.scrollIntoView({ behavior: 'smooth', block: mode });
+          } catch {}
+        }
+      };
+      if (opts?.immediate) run();
+      else setTimeout(run, 100);
     },
   }));
 
@@ -161,11 +172,15 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
   }, [text, onTextChange]);
 
   useEffect(() => {
-    // Avoid auto-focusing on mobile to prevent keyboard popping up
-    const isDesktop = typeof window !== 'undefined' &&
-      typeof window.matchMedia === 'function' &&
-      window.matchMedia('(min-width: 768px)').matches;
-    if ((isDesktop || autoFocus) && textareaRef.current) textareaRef.current.focus();
+    // Only auto-focus when explicitly requested by prop
+    if (!autoFocus) return;
+    const el = textareaRef.current;
+    if (!el) return;
+    try {
+      (el as any).focus?.({ preventScroll: true });
+    } catch {
+      el.focus();
+    }
   }, [autoFocus]);
 
   useEffect(() => {
@@ -265,6 +280,11 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
             if (!Array.isArray(old)) return [newReply];
             return [newReply, ...old];
           });
+          // Update nested comment replies list if present (used in CommentItem)
+          queryClient.setQueryData(["comment-replies", postId], (old: any) => {
+            if (!Array.isArray(old)) return [newReply];
+            return [newReply, ...old];
+          });
         } catch {}
         // Also trigger a refetch in the background to pick up any server-side changes
         queryClient.refetchQueries({ queryKey: ["post-comments", postId] });
@@ -322,11 +342,11 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
     );
   }
 
-  // Use a slightly taller min height on mobile for better ergonomics
+  // Desktop: single-line height; Mobile: slightly taller for ergonomics
   const isDesktopViewport = typeof window !== 'undefined'
     && typeof window.matchMedia === 'function'
     && window.matchMedia('(min-width: 768px)').matches;
-  const computedMinHeight = isDesktopViewport ? minHeight : '88px';
+  const computedMinHeight = isDesktopViewport ? '52px' : '88px';
 
   const requiredMissing = useMemo(() => {
     if (!requiredHashtag) return false;
@@ -426,9 +446,9 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
                       });
                     }
                   }}
-                  className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pr-14 md:pb-12 md:text-base"
+                  className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pr-14 md:pb-8 md:text-base"
                   style={{ minHeight: computedMinHeight }}
-                  rows={2}
+                  rows={1}
                   maxLength={characterLimit}
                 />
 

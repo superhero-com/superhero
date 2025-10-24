@@ -10,7 +10,7 @@ export default function LeftNav() {
 
   return (
   <nav className="flex flex-col gap-2 pr-2 min-h-screen">
-      <Link to="/" className="no-underline px-3 py-2 rounded-xl text-[var(--standard-font-color)] hover:bg-white/10 transition-colors w-fit" aria-label="Superhero Home">
+      <Link to="/" className="no-underline hover:no-underline no-gradient-text px-3 py-2 rounded-xl text-[var(--standard-font-color)] w-fit" style={{ textDecoration: 'none' }} aria-label="Superhero Home">
         <HeaderLogo className="h-8 w-auto" />
       </Link>
       <div className="grid gap-1">

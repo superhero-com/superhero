@@ -70,35 +70,39 @@ const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
         <div className="grid grid-cols-3 gap-2">
           <div className="relative">
             <div className="absolute top-1 left-3 text-[11px] text-white/60 pointer-events-none">Days</div>
-            <input
-              type="number"
-              min={0}
+            <select
               value={String(days)}
-              onChange={(e) => setDays(Math.max(0, Number(e.target.value || 0)))}
-              className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 pt-5 pb-2 text-white outline-none focus:border-white/30"
-            />
+              onChange={(e) => setDays(Math.max(0, Math.min(30, Number(e.target.value || 0))))}
+              className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 pt-5 pb-2 text-white outline-none focus:border-white/30 appearance-none"
+            >
+              {Array.from({ length: 31 }, (_, i) => i).map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
           </div>
           <div className="relative">
             <div className="absolute top-1 left-3 text-[11px] text-white/60 pointer-events-none">Hours</div>
-            <input
-              type="number"
-              min={0}
-              max={23}
+            <select
               value={String(hours)}
-              onChange={(e) => setHours(Math.min(23, Math.max(0, Number(e.target.value || 0))))}
-              className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 pt-5 pb-2 text-white outline-none focus:border-white/30"
-            />
+              onChange={(e) => setHours(Math.max(0, Math.min(23, Number(e.target.value || 0))))}
+              className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 pt-5 pb-2 text-white outline-none focus:border-white/30 appearance-none"
+            >
+              {Array.from({ length: 24 }, (_, i) => i).map((h) => (
+                <option key={h} value={h}>{h}</option>
+              ))}
+            </select>
           </div>
           <div className="relative">
             <div className="absolute top-1 left-3 text-[11px] text-white/60 pointer-events-none">Minutes</div>
-            <input
-              type="number"
-              min={0}
-              max={59}
+            <select
               value={String(minutes)}
-              onChange={(e) => setMinutes(Math.min(59, Math.max(0, Number(e.target.value || 0))))}
-              className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 pt-5 pb-2 text-white outline-none focus:border-white/30"
-            />
+              onChange={(e) => setMinutes(Math.max(0, Math.min(59, Number(e.target.value || 0))))}
+              className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 pt-5 pb-2 text-white outline-none focus:border-white/30 appearance-none"
+            >
+              {Array.from({ length: 60 }, (_, i) => i).map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
           </div>
         </div>
         <div className="text-[12px] text-white/70">

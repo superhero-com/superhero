@@ -300,6 +300,36 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     const initRes = await (pollContract as any).init(metadata, optionsRecord as any, closeHeight === 0 ? undefined : closeHeight, { omitUnknown: true });
     const createdAddress = (initRes as any).address as string;
 
+    // Push a pending feed entry immediately (after wallet confirmation)
+    try {
+      const pendingEntry = {
+        id: `poll-created:${createdAddress}`,
+        kind: "poll-created" as const,
+        createdAt: new Date().toISOString(),
+        data: {
+          pollAddress: createdAddress,
+          title: question,
+          description: undefined,
+          author: undefined,
+          closeHeight: closeHeight || undefined,
+          createHeight: undefined,
+          options: options.map((label, id) => ({ id, label })),
+          totalVotes: 0,
+          pending: true,
+        }
+      };
+      try { window.dispatchEvent(new CustomEvent('sh:plugin:feed:push', { detail: { kind: 'poll-created', entry: pendingEntry } })); } catch {}
+    } catch {}
+
+    // Persist pending so we can reconcile after reload
+    try {
+      const key = 'sh:pending-polls';
+      const raw = localStorage.getItem(key);
+      const obj = raw ? JSON.parse(raw) : {};
+      obj[createdAddress] = { t: Date.now() };
+      localStorage.setItem(key, JSON.stringify(obj));
+    } catch {}
+
     // Register in governance registry (listed)
     const registry = await Contract.initialize<{
       add_poll: (poll: any, is_listed: boolean) => Promise<{ decodedResult: number }>
@@ -310,7 +340,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     } as any);
     await (registry as any).add_poll(createdAddress as Encoded.ContractAddress, true);
 
-    // Push feed entry for immediate visibility
+    // Push final feed entry after registration with on-chain data
     try {
       const ov = await GovernanceApi.getPollOverview(createdAddress as any);
       const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
@@ -329,9 +359,18 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
           createHeight: ov?.pollState?.create_height as any,
           options: optionsArr,
           totalVotes: 0,
+          pending: false,
         },
       };
       try { window.dispatchEvent(new CustomEvent('sh:plugin:feed:push', { detail: { kind: 'poll-created', entry } })); } catch {}
+      // Clear pending store
+      try {
+        const key = 'sh:pending-polls';
+        const raw = localStorage.getItem(key);
+        const obj = raw ? JSON.parse(raw) : {};
+        delete obj[createdAddress];
+        localStorage.setItem(key, JSON.stringify(obj));
+      } catch {}
     } catch {}
 
     // Clear composer and close poll panel
@@ -341,6 +380,50 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     setMediaUrls([]);
     setActiveAttachmentId(null);
   }, [text, getAttachmentValue, setAttachmentValue, sdk]);
+
+  // Reconcile any pending polls on mount (e.g., after reload)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('sh:pending-polls');
+      if (!raw) return;
+      const obj = JSON.parse(raw) as Record<string, { t: number }>;
+      const addresses = Object.keys(obj);
+      if (addresses.length === 0) return;
+      (async () => {
+        for (const address of addresses) {
+          try {
+            const ov = await GovernanceApi.getPollOverview(address as any);
+            if (!ov?.pollState) continue;
+            const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
+            const optionsArr = Object.entries(optsRec).map(([k, v]) => ({ id: Number(k), label: String(v) }));
+            const entry = {
+              id: `poll-created:${address}`,
+              kind: 'poll-created' as const,
+              createdAt: new Date().toISOString(),
+              data: {
+                pollAddress: address,
+                title: ov?.pollState?.metadata?.title || '',
+                description: ov?.pollState?.metadata?.description || '',
+                author: undefined,
+                closeHeight: ov?.pollState?.close_height as any,
+                createHeight: ov?.pollState?.create_height as any,
+                options: optionsArr,
+                totalVotes: 0,
+                pending: false,
+              }
+            };
+            try { window.dispatchEvent(new CustomEvent('sh:plugin:feed:push', { detail: { kind: 'poll-created', entry } })); } catch {}
+            // remove from pending
+            const key = 'sh:pending-polls';
+            const raw2 = localStorage.getItem(key);
+            const obj2 = raw2 ? JSON.parse(raw2) : {};
+            delete obj2[address];
+            localStorage.setItem(key, JSON.stringify(obj2));
+          } catch {}
+        }
+      })();
+    } catch {}
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

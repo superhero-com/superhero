@@ -448,7 +448,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                   }}
                   className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pr-14 md:pb-8 md:text-base"
                   style={{ minHeight: computedMinHeight }}
-                  rows={2}
+                  rows={1}
                   maxLength={characterLimit}
                 />
 

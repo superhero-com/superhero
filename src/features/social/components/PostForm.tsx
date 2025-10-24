@@ -211,11 +211,14 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   // Do not auto-fill from initialText anymore; keep user input empty by default
 
   useEffect(() => {
+    // On mobile with poll open, keep textarea one row high (no auto-grow)
+    const isMobile = typeof window !== 'undefined' && typeof window.matchMedia === 'function' && !window.matchMedia('(min-width: 768px)').matches;
+    if (pollActive && isMobile) return;
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
-  }, [text]);
+  }, [text, pollActive]);
 
   // Sync overlay typography and padding with the textarea for precise positioning
   useEffect(() => {
@@ -583,7 +586,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   const isDesktopViewport = typeof window !== 'undefined'
     && typeof window.matchMedia === 'function'
     && window.matchMedia('(min-width: 768px)').matches;
-  const computedMinHeight = isDesktopViewport ? '52px' : '88px';
+  const computedMinHeight = isDesktopViewport ? '52px' : (pollActive ? '40px' : '88px');
 
   const requiredMissing = useMemo(() => {
     if (!requiredHashtag) return false;

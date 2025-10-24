@@ -3,7 +3,7 @@ import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, use
 import AeButton from "../../../components/AeButton";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
 import { IconClose, IconGif, IconSmile } from "../../../icons";
-import { Smile, ChartColumn } from "lucide-react";
+import { Smile, ChartColumn, SquarePlay } from "lucide-react";
 // @ts-ignore
 import { useQueryClient } from "@tanstack/react-query";
 import TIPPING_V3_ACI from "tipping-contract/generated/Tipping_v3.aci.json";
@@ -621,7 +621,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                           setShowEmoji(false);
                         }}
                       >
-                        <IconGif className="w-5 h-5" />
+                        <SquarePlay className="w-5 h-5" />
                         <span>GIF</span>
                       </button>
                     )}

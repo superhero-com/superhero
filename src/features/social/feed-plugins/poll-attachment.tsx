@@ -8,7 +8,7 @@ import BYTECODE_HASHES from '@/api/GovernanceBytecodeHashes.json';
 import { Contract, Encoded } from '@aeternity/aepp-sdk';
 import { GovernanceApi } from '@/api/governance';
 import PollCreatedCard from './poll-created/PollCreatedCard';
-import { ChevronDown, Plus } from 'lucide-react';
+import { ChevronDown, Plus, ChartColumn } from 'lucide-react';
 
 function blocksFromMs(ms: number): number {
   const APPROX_BLOCK_MS = 180000; // ~3m per block
@@ -142,6 +142,7 @@ export function registerPollAttachment() {
   const spec: ComposerAttachmentSpec = {
     id: 'poll',
     label: 'Poll',
+    Icon: ChartColumn,
     Panel: PollPanel,
     validate: (ctx) => {
       const opts = (ctx.getValue<string[]>('poll.options') || []).map((o) => o.trim()).filter(Boolean);

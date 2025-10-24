@@ -110,7 +110,7 @@ const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
           </div>
         </div>
         <div className="text-[12px] text-white/70">
-          Closes at ~{estCloseDate ? `${estCloseDate.toLocaleDateString()} ${estCloseDate.toLocaleTimeString().slice(0,5)}` : '—'}{computedCloseHeight ? ` (height ${computedCloseHeight})` : ''}
+          Closes at ~{estCloseDate ? `${estCloseDate.toLocaleDateString()} ${estCloseDate.toLocaleTimeString().slice(0,5)}` : '—'}{computedCloseHeight ? ` (#${computedCloseHeight.toLocaleString()})` : ''}
         </div>
       </div>
       {/* Remove inline remove button; Poll toolbar button toggles remove */}

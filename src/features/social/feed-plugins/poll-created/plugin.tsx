@@ -35,19 +35,7 @@ export function adaptPollToEntry(
 export function registerPollCreatedPlugin() {
   registerPlugin({
     kind: 'poll-created',
-    // Contribute a composer action via the host composer surface
-    // This will be picked up by PostForm through composerRegistry
-    // when external plugins are loaded or built-ins are registered.
-    // We keep this local registration minimal and navigation-only.
-    // The host is responsible for rendering the action button.
-    // @ts-expect-error augment at runtime by loader adapter if needed
-    getComposerActions: (ctx: any) => [
-      {
-        id: 'start-poll',
-        label: 'Start poll',
-        onClick: ({ navigate }: any) => navigate('/voting/create'),
-      },
-    ],
+    // Remove composer action; poll is now an attachment surfaced in the toolbar
     async fetchPage(page: number) {
       // single first page for now
       if (page && page > 1) {

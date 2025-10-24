@@ -77,7 +77,8 @@ const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
                 <button
                   type="button"
                   onClick={addOption}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400 cursor-pointer focus:outline-none active:transform-none active:scale-100"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
                   <Plus className="w-5 h-5" />
                 </button>

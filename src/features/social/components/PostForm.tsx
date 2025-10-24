@@ -176,6 +176,8 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
     },
   }), [composerCtx, getAttachmentValue, setAttachmentValue, sdk]);
 
+  const enableAttachments = (CONFIG.UNFINISHED_FEATURES || '').includes('composer-attachments');
+
   useEffect(() => {
     setPromptIndex(Math.floor(Math.random() * PROMPTS.length));
   }, []);
@@ -543,7 +545,7 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
                 <div className="hidden md:flex items-center justify-between mt-3 gap-3">
                   <div className="flex items-center gap-2.5 relative">
                     {/* Attachments toolbar: show Poll button; disable others when active */}
-                    {attachmentRegistry.length > 0 && (
+                    {enableAttachments && attachmentRegistry.length > 0 && (
                       <div className="inline-flex items-center gap-2.5">
                         {attachmentRegistry.map((spec) => (
                           <button
@@ -683,7 +685,7 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
             </div>
 
             {/* Attachment panel mount (single active) */}
-            {activeAttachmentId && (
+          {enableAttachments && activeAttachmentId && (
               <div className="col-span-full md:col-start-2 mt-3 md:mt-4">
                 {attachmentRegistry
                   .filter((a) => a.id === activeAttachmentId)

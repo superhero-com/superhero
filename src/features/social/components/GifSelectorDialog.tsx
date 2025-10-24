@@ -182,13 +182,13 @@ export function GifSelectorDialog({
             </div>
           )}
           {isLoading && (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center h-[400px]">
               <div className="animate-spin h-8 w-8 border-4 border-primary-400 border-t-transparent rounded-full" />
             </div>
           )}
 
           {error && (
-            <div className="text-red-500 text-center py-4">Error: {error.message}</div>
+            <div className="text-red-500 text-center h-[400px] flex items-center justify-center">Error: {error.message}</div>
           )}
 
           {!isLoading && !error && (

@@ -29,7 +29,7 @@ const CreatePost = forwardRef<CreatePostRef, CreatePostProps>(
         // Compute a target Y so composer lands just below top bar; avoid over-scrolling
         const rect = el.getBoundingClientRect();
         const currentY = window.scrollY || window.pageYOffset || 0;
-        const headerOffset = isMobileViewport ? 56 : 96; // tune if needed
+        const headerOffset = isMobileViewport ? 74 : 80; // tuned: mobile less scroll, desktop a bit further
         const targetY = Math.max(0, currentY + rect.top - headerOffset);
         try { window.scrollTo({ top: targetY, behavior: 'smooth' }); } catch {}
 

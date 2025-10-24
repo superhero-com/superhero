@@ -56,7 +56,6 @@ const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
 
   return (
     <div className="bg-white/[0.04] border border-white/15 rounded-xl p-3 md:p-4">
-      <div className="text-[13px] text-white/80 mb-2">Options</div>
       <div className="grid gap-2">
         {visible.map((val, idx) => {
           const isLast = idx === visible.length - 1;

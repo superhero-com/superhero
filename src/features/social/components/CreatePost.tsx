@@ -10,7 +10,7 @@ interface CreatePostProps {
 }
 
 export interface CreatePostRef {
-  focus: () => void;
+  focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => void;
 }
 
 const CreatePost = forwardRef<CreatePostRef, CreatePostProps>(

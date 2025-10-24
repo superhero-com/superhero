@@ -674,7 +674,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                             className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-1.5 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm disabled:opacity-50"
                             title={spec.label}
                           >
-                            {spec.Icon ? <spec.Icon className="w-4 h-4" /> : null}
+                            {(activeAttachmentId !== spec.id && spec.Icon) ? <spec.Icon className="w-4 h-4" /> : null}
                             <span>{activeAttachmentId === spec.id ? 'Remove poll' : spec.label}</span>
                           </button>
                         ))}

@@ -8,7 +8,7 @@ import BYTECODE_HASHES from '@/api/GovernanceBytecodeHashes.json';
 import { Contract, Encoded } from '@aeternity/aepp-sdk';
 import { GovernanceApi } from '@/api/governance';
 import PollCreatedCard from './poll-created/PollCreatedCard';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Plus } from 'lucide-react';
 
 function blocksFromMs(ms: number): number {
   const APPROX_BLOCK_MS = 180000; // ~3m per block
@@ -48,23 +48,43 @@ const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
 
   useEffect(() => { ctx.setValue('poll.closeHeight', computedCloseHeight); }, [computedCloseHeight]);
 
+  const addOption = () => {
+    if (visible.length < 4) {
+      set([...visible, '']);
+    }
+  };
+
   return (
     <div className="bg-white/[0.04] border border-white/15 rounded-xl p-3 md:p-4">
       <div className="text-[13px] text-white/80 mb-2">Options</div>
       <div className="grid gap-2">
-        {visible.map((val, idx) => (
-          <input
-            key={idx}
-            value={val}
-            onChange={(e) => {
-              const next = [...visible];
-              next[idx] = e.target.value;
-              set(next);
-            }}
-            placeholder="Add Option"
-            className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2 text-white outline-none focus:border-white/30"
-          />
-        ))}
+        {visible.map((val, idx) => {
+          const isLast = idx === visible.length - 1;
+          const canAddMore = visible.length < 4;
+          return (
+            <div key={idx} className="relative">
+              <input
+                value={val}
+                onChange={(e) => {
+                  const next = [...visible];
+                  next[idx] = e.target.value;
+                  set(next);
+                }}
+                placeholder={idx < 2 ? `Choice ${idx + 1}` : `Choice ${idx + 1} (optional)`}
+                className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2 text-white outline-none focus:border-white/30"
+              />
+              {isLast && canAddMore && (
+                <button
+                  type="button"
+                  onClick={addOption}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
 
         <div className="mt-4 grid gap-2">

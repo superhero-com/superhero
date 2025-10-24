@@ -1,5 +1,5 @@
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, useCallback } from "react";
 import AeButton from "../../../components/AeButton";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
 import { IconClose, IconGif, IconSmile } from "../../../icons";

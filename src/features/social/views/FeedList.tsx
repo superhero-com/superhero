@@ -21,7 +21,7 @@ import FeedRenderer from "../feed-plugins/FeedRenderer";
 import { adaptPostToEntry } from "../feed-plugins/post";
 import type { FeedEntry } from "../feed-plugins/types";
 import { adaptTokenCreatedToEntry, registerTokenCreatedPlugin } from "../feed-plugins/token-created";
-import { registerPollCreatedPlugin } from "../feed-plugins/poll-created";
+import { registerPollCreatedPlugin, registerPollAttachment } from "../feed-plugins/poll-created";
 import { getAllPlugins } from "../feed-plugins/registry";
 import { usePluginEntries } from "../feed-plugins/FeedOrchestrator";
 import { useAeSdk } from "@/hooks/useAeSdk";
@@ -30,6 +30,7 @@ import { GovernanceApi } from "@/api/governance";
 // Register built-in plugins once (idempotent)
 registerTokenCreatedPlugin();
 registerPollCreatedPlugin();
+registerPollAttachment();
 
 // Custom hook
 function useUrlQuery() {

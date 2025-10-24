@@ -265,6 +265,11 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
             if (!Array.isArray(old)) return [newReply];
             return [newReply, ...old];
           });
+          // Update nested comment replies list if present (used in CommentItem)
+          queryClient.setQueryData(["comment-replies", postId], (old: any) => {
+            if (!Array.isArray(old)) return [newReply];
+            return [newReply, ...old];
+          });
         } catch {}
         // Also trigger a refetch in the background to pick up any server-side changes
         queryClient.refetchQueries({ queryKey: ["post-comments", postId] });

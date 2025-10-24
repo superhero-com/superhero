@@ -138,6 +138,8 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   const [showEmoji, setShowEmoji] = useState(false);
   const [showGif, setShowGif] = useState(false);
   const [promptIndex, setPromptIndex] = useState(0);
+  // Track on-chain submit progress for poll: 0 idle, 1 deploy, 2 registry
+  const [submitStep, setSubmitStep] = useState<number>(0);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiBtnRef = useRef<HTMLButtonElement>(null);
@@ -292,7 +294,8 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       return;
     }
 
-    // Deploy poll contract
+    // Deploy poll contract (Step 1/2)
+    setSubmitStep(1);
     const pollBytecode = (BYTECODE_HASHES as any)["8.0.0"]["Poll_Iris.aes"].bytecode as Encoded.ContractBytearray;
     const pollContract = await (sdk as any).initializeContract({ aci: POLL_ACI as any, bytecode: pollBytecode });
     const metadata = { title: question, description: "", link: "", spec_ref: undefined as any };
@@ -335,7 +338,8 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       localStorage.setItem(key, JSON.stringify(obj));
     } catch {}
 
-    // Register in governance registry (listed)
+    // Register in governance registry (listed) (Step 2/2)
+    setSubmitStep(2);
     const registry = await Contract.initialize<{
       add_poll: (poll: any, is_listed: boolean) => Promise<{ decodedResult: number }>
     }>({
@@ -384,6 +388,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     setAttachmentValue("poll.closeHeight", 0);
     setMediaUrls([]);
     setActiveAttachmentId(null);
+    setSubmitStep(0);
   }, [text, getAttachmentValue, setAttachmentValue, sdk]);
 
   // Reconcile any pending polls on mount (e.g., after reload)
@@ -891,7 +896,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                         {''}
                         {isSubmitting
                           ? isPost
-                            ? "Posting…"
+                            ? (activeAttachmentId === 'poll' ? `Posting… ${submitStep}/2` : "Posting…")
                             : "Posting..."
                           : isPost
                             ? "Post"
@@ -976,7 +981,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                 >
                   {isSubmitting
                     ? isPost
-                      ? "Posting…"
+                      ? (activeAttachmentId === 'poll' ? `Posting… ${submitStep}/2` : "Posting…")
                       : "Posting..."
                     : isPost
                       ? "Post"

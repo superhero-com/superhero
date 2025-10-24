@@ -491,6 +491,7 @@ export function AeEthBridge() {
                 }
             }
 
+            let timeout: NodeJS.Timeout;
             try {
                 setConfirming(true);
                 setConfirmingMsg('Please confirm the bridge transaction in your wallet...');
@@ -525,8 +526,12 @@ export function AeEthBridge() {
                 });
 
                 setConfirmingMsg('Waiting for bridge confirmation...');
+                timeout = setTimeout(() => {
+                    setConfirmingMsg('It is taking longer than expected. Do not close the page.');
+                }, 30000);
                 Logger.log('Waiting for bridge confirmation...');
                 await bridgeOutResult.wait(1);
+                clearTimeout(timeout);
                 setConfirmingMsg('Bridge transaction confirmed!');
                 Logger.log('Bridge transaction confirmed');
                 console.log('==== bridgeOutResult==', bridgeOutResult);
@@ -546,6 +551,7 @@ export function AeEthBridge() {
                     },
                 });
             } catch (e: any) {
+                clearTimeout(timeout);
                 Logger.error('Bridge transaction error:', e);
                 let errorMsg = e.message || 'Bridge transaction failed';
 

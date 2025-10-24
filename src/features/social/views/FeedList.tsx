@@ -14,7 +14,6 @@ import CreatePost, { CreatePostRef } from "../components/CreatePost";
 import SortControls from "../components/SortControls";
 import EmptyState from "../components/EmptyState";
 import ReplyToFeedItem from "../components/ReplyToFeedItem";
-import TokenCreatedFeedItem from "../components/TokenCreatedFeedItem";
 import TokenCreatedActivityItem from "../components/TokenCreatedActivityItem";
 import { PostApiResponse } from "../types";
 
@@ -31,7 +30,8 @@ export default function FeedList({
   const { chainNames } = useWallet();
   const queryClient = useQueryClient();
   const ACTIVITY_PAGE_SIZE = 50;
-  const createPostRef = useRef<CreatePostRef>(null);
+  const createPostRefMobile = useRef<CreatePostRef>(null);
+  const createPostRefDesktop = useRef<CreatePostRef>(null);
 
   // Comment counts are now provided directly by the API in post.total_comments
 
@@ -427,18 +427,26 @@ export default function FeedList({
     return () => observer.disconnect();
   }, [initialLoading, hasNextPage, isFetchingNextPage, fetchNextPage, sortBy, hasMoreActivities, fetchingMoreActivities, fetchNextActivities]);
 
+  const focusVisibleCreatePost = useCallback(() => {
+    const isDesktop = typeof window !== 'undefined'
+      && typeof window.matchMedia === 'function'
+      && window.matchMedia('(min-width: 768px)').matches;
+    const target = isDesktop ? createPostRefDesktop.current : createPostRefMobile.current;
+    target?.focus();
+  }, []);
+
   const content = (
     <div className="w-full">
       {!standalone && (
         <div className="mb-3 md:mb-4">
           <HeroBannerCarousel 
-            onStartPosting={() => createPostRef.current?.focus()} 
+            onStartPosting={focusVisibleCreatePost} 
           />
         </div>
       )}
       {/* Mobile: CreatePost first, then SortControls */}
       <div className="md:hidden">
-        <CreatePost ref={createPostRef} onSuccess={refetch} autoFocus={shouldAutoFocusPost} />
+        <CreatePost ref={createPostRefMobile} onSuccess={refetch} autoFocus={shouldAutoFocusPost} />
         <SortControls
           sortBy={sortBy}
           onSortChange={handleSortChange}
@@ -448,7 +456,7 @@ export default function FeedList({
 
       {/* Desktop: CreatePost first, then SortControls */}
       <div className="hidden md:block">
-        <CreatePost ref={createPostRef} onSuccess={refetch} autoFocus={shouldAutoFocusPost} />
+        <CreatePost ref={createPostRefDesktop} onSuccess={refetch} autoFocus={shouldAutoFocusPost} />
         <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
       </div>
 

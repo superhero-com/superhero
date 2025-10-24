@@ -211,14 +211,12 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   // Do not auto-fill from initialText anymore; keep user input empty by default
 
   useEffect(() => {
-    // On mobile with poll open, keep textarea one row high (no auto-grow)
-    const isMobile = typeof window !== 'undefined' && typeof window.matchMedia === 'function' && !window.matchMedia('(min-width: 768px)').matches;
-    if (pollActive && isMobile) return;
+    // Always auto-grow based on content
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
-  }, [text, pollActive]);
+  }, [text]);
 
   // Sync overlay typography and padding with the textarea for precise positioning
   useEffect(() => {
@@ -586,7 +584,9 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   const isDesktopViewport = typeof window !== 'undefined'
     && typeof window.matchMedia === 'function'
     && window.matchMedia('(min-width: 768px)').matches;
-  const computedMinHeight = isDesktopViewport ? '52px' : (pollActive ? '40px' : '88px');
+  const isMobileViewport = typeof window !== 'undefined' && typeof window.matchMedia === 'function' && !window.matchMedia('(min-width: 768px)').matches;
+  const singleRowMinHeight = overlayComputed ? `${overlayComputed.paddingTop + overlayComputed.paddingBottom + parseFloat(overlayComputed.lineHeight as any)}px` : '40px';
+  const computedMinHeight = isDesktopViewport ? '52px' : '88px';
 
   const requiredMissing = useMemo(() => {
     if (!requiredHashtag) return false;
@@ -689,7 +689,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                     }
                   }}
                   className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pr-14 md:pb-8 md:text-base"
-                  style={{ minHeight: computedMinHeight }}
+                  style={{ minHeight: (pollActive && !isDesktopViewport) ? singleRowMinHeight : computedMinHeight }}
                   rows={1}
                   maxLength={characterLimit}
                 />

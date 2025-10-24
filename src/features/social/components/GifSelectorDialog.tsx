@@ -194,13 +194,13 @@ export function GifSelectorDialog({
           {!isLoading && !error && (
           <div 
               ref={scrollContainerRef}
-              className="grid grid-cols-3 gap-3 max-h-[400px] overflow-y-auto overflow-x-visible scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+              className="grid grid-cols-3 gap-3 max-h-[400px] overflow-y-auto overflow-x-visible scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent p-2 -m-2"
             >
               {results.map((result) => (
                 <div
                   key={result.id}
                   onClick={() => handleGifClick(result)}
-                  className="relative w-full cursor-pointer bg-white/5 rounded-lg transition-all duration-200 active:scale-95 sm:hover:scale-105 sm:hover:shadow-lg sm:hover:shadow-primary-400/20 sm:hover:ring-2 sm:hover:ring-primary-400/50 hover:z-20"
+                  className="relative w-full cursor-pointer bg-white/5 rounded-lg transition-all duration-200 active:scale-95 sm:hover:scale-105 sm:hover:shadow-lg sm:hover:shadow-primary-400/20 sm:hover:ring-2 sm:hover:ring-primary-400/50 hover:z-20 overflow-visible"
                   style={{ paddingBottom: '100%' }}
                 >
                   <div className="absolute inset-0 rounded-lg overflow-hidden">
@@ -213,13 +213,13 @@ export function GifSelectorDialog({
                         loop
                         playsInline
                         preload="metadata"
-                        className="absolute top-0 left-0 w-full h-full object-cover"
+                        className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
                       />
                     ) : (
                       <img
                         src={result.animated || result.still}
                         alt="GIF preview"
-                        className="absolute top-0 left-0 w-full h-full object-cover"
+                        className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
                         loading="lazy"
                       />
                     )}

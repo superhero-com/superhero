@@ -12,7 +12,7 @@ import { useAccount } from "../../../hooks/useAccount";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { GifSelectorDialog } from "./GifSelectorDialog";
 import { usePluginHostCtx } from "@/features/social/plugins/PluginHostProvider";
-import { composerRegistry } from "@/features/social/plugins/registries";
+import { composerRegistry, attachmentRegistry } from "@/features/social/plugins/registries";
 import { getAllPlugins } from "@/features/social/feed-plugins/registry";
 
 interface PostFormProps {
@@ -145,6 +145,36 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
       .flatMap((p: any) => (typeof p.getComposerActions === 'function' ? p.getComposerActions(composerCtx) : []));
     return [...fromFeedPlugins, ...fromRegistry];
   }, [composerCtx]);
+
+  // Attachments state (single active attachment; poll blocks others)
+  const [activeAttachmentId, setActiveAttachmentId] = useState<string | null>(null);
+  const [attachmentState, setAttachmentState] = useState<Record<string, any>>({});
+  const setAttachmentValue = useCallback((ns: string, value: any) => {
+    setAttachmentState((prev) => ({ ...prev, [ns]: value }));
+  }, []);
+  const getAttachmentValue = useCallback(<T = any,>(ns: string): T | undefined => {
+    return attachmentState[ns] as T | undefined;
+  }, [attachmentState]);
+
+  const attachmentsCtx = useMemo(() => ({
+    ...composerCtx,
+    getValue: getAttachmentValue,
+    setValue: setAttachmentValue,
+    ensureWallet: async () => ({ sdk, currentBlockHeight: (useAeSdk() as any)?.currentBlockHeight }),
+    cacheLink: (postId: string, kind: string, payload: any) => {
+      try {
+        const key = 'sh:plugin:post-links';
+        const curr = JSON.parse(localStorage.getItem(key) || '{}');
+        const next = { ...(curr || {}) };
+        next[String(postId)] = { kind, payload, updatedAt: Date.now() };
+        localStorage.setItem(key, JSON.stringify(next));
+        window.dispatchEvent(new CustomEvent('sh:plugin:post-links:update', { detail: { postId, kind, payload } }));
+      } catch {}
+    },
+    pushFeedEntry: (kind: string, entry: any) => {
+      try { window.dispatchEvent(new CustomEvent('sh:plugin:feed:push', { detail: { kind, entry } })); } catch {}
+    },
+  }), [composerCtx, getAttachmentValue, setAttachmentValue, sdk]);
 
   useEffect(() => {
     setPromptIndex(Math.floor(Math.random() * PROMPTS.length));
@@ -512,6 +542,24 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
               {(showEmojiPicker || showGifInput) && (
                 <div className="hidden md:flex items-center justify-between mt-3 gap-3">
                   <div className="flex items-center gap-2.5 relative">
+                    {/* Attachments toolbar: show Poll button; disable others when active */}
+                    {attachmentRegistry.length > 0 && (
+                      <div className="inline-flex items-center gap-2.5">
+                        {attachmentRegistry.map((spec) => (
+                          <button
+                            key={spec.id}
+                            type="button"
+                            disabled={!!activeAttachmentId && activeAttachmentId !== spec.id}
+                            onClick={() => setActiveAttachmentId((id) => (id === spec.id ? null : spec.id))}
+                            className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm disabled:opacity-50"
+                            title={spec.label}
+                          >
+                            {spec.Icon ? <spec.Icon className="w-4 h-4" /> : null}
+                            <span>{spec.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     {showEmojiPicker && (
                       <button
                         type="button"
@@ -633,6 +681,17 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
                 </div>
               )}
             </div>
+
+            {/* Attachment panel mount (single active) */}
+            {activeAttachmentId && (
+              <div className="col-span-full md:col-start-2 mt-3 md:mt-4">
+                {attachmentRegistry
+                  .filter((a) => a.id === activeAttachmentId)
+                  .map((a) => (
+                    <a.Panel key={a.id} ctx={attachmentsCtx} onRemove={() => setActiveAttachmentId(null)} />
+                  ))}
+              </div>
+            )}
 
             {showMediaFeatures && mediaUrls.length > 0 && (
               <div className="col-span-full md:col-start-2 w-full overflow-x-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent -mx-4 px-4 md:mx-0 md:px-0">

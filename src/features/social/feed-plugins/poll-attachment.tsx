@@ -68,36 +68,36 @@ const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
       <div className="mt-4 grid gap-2">
         <div className="text-[13px] text-white/80">Poll length</div>
         <div className="grid grid-cols-3 gap-2">
-          <div className="flex flex-col gap-1">
-            <label className="text-[12px] text-white/70">Days</label>
+          <div className="relative">
+            <div className="absolute top-1 left-3 text-[11px] text-white/60 pointer-events-none">Days</div>
             <input
               type="number"
               min={0}
               value={String(days)}
               onChange={(e) => setDays(Math.max(0, Number(e.target.value || 0)))}
-              className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2 text-white outline-none focus:border-white/30"
+              className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 pt-5 pb-2 text-white outline-none focus:border-white/30"
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-[12px] text-white/70">Hours</label>
+          <div className="relative">
+            <div className="absolute top-1 left-3 text-[11px] text-white/60 pointer-events-none">Hours</div>
             <input
               type="number"
               min={0}
               max={23}
               value={String(hours)}
               onChange={(e) => setHours(Math.min(23, Math.max(0, Number(e.target.value || 0))))}
-              className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2 text-white outline-none focus:border-white/30"
+              className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 pt-5 pb-2 text-white outline-none focus:border-white/30"
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-[12px] text-white/70">Minutes</label>
+          <div className="relative">
+            <div className="absolute top-1 left-3 text-[11px] text-white/60 pointer-events-none">Minutes</div>
             <input
               type="number"
               min={0}
               max={59}
               value={String(minutes)}
               onChange={(e) => setMinutes(Math.min(59, Math.max(0, Number(e.target.value || 0))))}
-              className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2 text-white outline-none focus:border-white/30"
+              className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 pt-5 pb-2 text-white outline-none focus:border-white/30"
             />
           </div>
         </div>

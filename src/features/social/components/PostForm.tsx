@@ -390,10 +390,10 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   // Compute if submit is disabled
   const isPollInvalid = useMemo(() => {
     if (activeAttachmentId !== 'poll') return false;
-    const opts = (attachmentState.poll?.options || []) as string[];
+    const opts = (getAttachmentValue<string[]>('poll.options') || []);
     const validOpts = opts.map((o: string) => o.trim()).filter(Boolean);
     return validOpts.length < 2 || !text.trim();
-  }, [activeAttachmentId, attachmentState, text]);
+  }, [activeAttachmentId, getAttachmentValue, text]);
 
   if (!activeAccount && !isPost) {
     return (

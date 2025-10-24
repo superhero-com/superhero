@@ -168,11 +168,15 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean }) => void },
   }, [text, onTextChange]);
 
   useEffect(() => {
-    // Avoid auto-focusing on mobile to prevent keyboard popping up
-    const isDesktop = typeof window !== 'undefined' &&
-      typeof window.matchMedia === 'function' &&
-      window.matchMedia('(min-width: 768px)').matches;
-    if ((isDesktop || autoFocus) && textareaRef.current) textareaRef.current.focus();
+    // Only auto-focus when explicitly requested by prop
+    if (!autoFocus) return;
+    const el = textareaRef.current;
+    if (!el) return;
+    try {
+      (el as any).focus?.({ preventScroll: true });
+    } catch {
+      el.focus();
+    }
   }, [autoFocus]);
 
   useEffect(() => {

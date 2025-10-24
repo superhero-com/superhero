@@ -42,7 +42,7 @@
 /* Add extra right padding on desktop so text doesn't collide with the planet */
 @media (min-width: 769px) {
   .hero-banner__inner {
-    padding-right: clamp(80px, 12vmax, 260px);
+    padding-right: clamp(120px, 14vmax, 320px);
   }
 }
 

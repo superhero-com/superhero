@@ -177,6 +177,12 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
   }), [composerCtx, getAttachmentValue, setAttachmentValue, sdk]);
 
   const enableAttachments = (CONFIG.UNFINISHED_FEATURES || '').includes('composer-attachments');
+  const pollActive = enableAttachments && Boolean(activeAttachmentId);
+
+  // If poll panel opens, hide/close GIF picker
+  useEffect(() => {
+    if (pollActive) setShowGif(false);
+  }, [pollActive]);
 
   useEffect(() => {
     setPromptIndex(Math.floor(Math.random() * PROMPTS.length));
@@ -589,7 +595,7 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
                       </button>
                     )}
 
-                    {showGifInput && (
+                    {showGifInput && !pollActive && (
                       <button
                         type="button"
                         className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
@@ -625,7 +631,7 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
                       </div>
                     )}
 
-                    {showGifInput && (
+                    {showGifInput && !pollActive && (
                       <GifSelectorDialog
                         open={showGif}
                         onOpenChange={setShowGif}
@@ -636,6 +642,15 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
                   </div>
 
                   <div className="flex items-center gap-3">
+                    {attachmentRegistry.length > 0 && (
+                      <button
+                        type="button"
+                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+                        onClick={() => setActiveAttachmentId((id) => (id ? null : (attachmentRegistry[0]?.id || null)))}
+                      >
+                        <span>{pollActive ? 'Remove poll' : 'Poll'}</span>
+                      </button>
+                    )}
                     {composerActions.map((a) => (
                       <button
                         key={a.id}
@@ -679,6 +694,7 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
                         disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
                         className="relative bg-[#1161FE] border-none text-white font-black px-6 py-3 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(0,0,0,0.3)] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none md:min-h-[44px] md:text-base"
                       >
+                        {pollActive ? 'Start poll · ' : ''}
                         {isSubmitting
                           ? isPost
                             ? "Posting…"

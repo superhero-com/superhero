@@ -17,6 +17,9 @@ export type ComposerActionCtx = {
   storage: { get: (k: string) => any; set: (k: string, v: any) => void };
   theme: { colorScheme: "light" | "dark" };
   events: { emit: (e: string, p?: any) => void; on: (e: string, h: (p: any) => void) => () => void };
+  // New helpers for attachments and feed pushes
+  cacheLink?: (postId: string, kind: string, payload: any) => void;
+  pushFeedEntry?: (kind: string, entry: any) => void;
 };
 
 export type ComposerAction = {
@@ -53,6 +56,8 @@ export type PluginExports = {
   itemActions?: (ctx: ComposerActionCtx) => ItemAction[];
   routes?: Array<{ path: string; element: React.ReactNode }>;
   modals?: Record<string, React.FC<any>>;
+  // Optional: composer attachments surface
+  attachments?: () => ComposerAttachmentSpec[];
 };
 
 export type PluginHostContext = {
@@ -68,5 +73,29 @@ export type SuperheroPlugin = {
 export function definePlugin(p: SuperheroPlugin) {
   return p;
 }
+
+// Attachments API
+export type AttachmentPanelProps = { ctx: ComposerAttachmentCtx; onRemove: () => void };
+
+export type ComposerAttachmentCtx = ComposerActionCtx & {
+  // per-attachment namespaced state helpers
+  getValue: <T = any>(ns: string) => T | undefined;
+  setValue: <T = any>(ns: string, value: T) => void;
+  ensureWallet: () => Promise<void>;
+};
+
+export type AttachmentValidationError = { field?: string; message: string };
+
+export type ComposerAttachmentSpec = {
+  id: string;
+  label: string;
+  Icon?: React.ComponentType<{ className?: string }>;
+  requiresWallet?: boolean;
+  maxPerPost?: number;
+  Panel: React.FC<AttachmentPanelProps>;
+  validate: (ctx: ComposerAttachmentCtx) => AttachmentValidationError[];
+  // Called after the post is mined; may enqueue work, push feed, update cache
+  onAfterPost: (ctx: ComposerAttachmentCtx, post: { id: string; text: string }) => Promise<void>;
+};
 
 

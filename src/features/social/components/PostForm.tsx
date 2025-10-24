@@ -76,7 +76,7 @@ const PROMPTS: string[] = [
   "Teach us something in 1 line. 🧠",
 ];
 
-const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean }) => void }, PostFormProps>((props, ref) => {
+const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => void }, PostFormProps>((props, ref) => {
   const {
     onClose,
     onSuccess,
@@ -100,19 +100,23 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean }) => void },
   const queryClient = useQueryClient();
 
   useImperativeHandle(ref, () => ({
-    focus: (opts?: { immediate?: boolean }) => {
+    focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => {
       const run = () => {
         if (!textareaRef.current) return;
         try {
-          // Prevent the browser from performing its own scroll on focus to avoid jumpiness
-          (textareaRef.current as any).focus?.({ preventScroll: true });
+          // Optionally prevent browser auto-scroll on focus
+          const ps = opts?.preventScroll ?? true;
+          (textareaRef.current as any).focus?.({ preventScroll: ps });
         } catch {
           textareaRef.current.focus();
         }
-        // Smoothly center the textarea in view
-        try {
-          textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } catch {}
+        // Optional scroll mode
+        const mode = opts?.scroll || 'none';
+        if (mode !== 'none') {
+          try {
+            textareaRef.current.scrollIntoView({ behavior: 'smooth', block: mode });
+          } catch {}
+        }
       };
       if (opts?.immediate) run();
       else setTimeout(run, 100);

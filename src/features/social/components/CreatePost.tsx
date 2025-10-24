@@ -21,17 +21,16 @@ const CreatePost = forwardRef<CreatePostRef, CreatePostProps>(
     useImperativeHandle(ref, () => ({
       focus: () => {
         const isMobileViewport = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
-        // On desktop: scroll the container near the top to avoid layout shifting, then focus with preventScroll and smooth center
         if (!isMobileViewport) {
-          try {
-            containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          } catch {}
-          setTimeout(() => postFormRef.current?.focus({ immediate: true }), 120);
+          // Desktop: avoid centering; place near top and let focus keep it there
+          try { containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch {}
+          setTimeout(() => postFormRef.current?.focus({ immediate: true, preventScroll: true, scroll: 'none' }), 100);
           return;
         }
-        // On mobile: focus immediately within the click to open keyboard promptly, then smooth scroll
-        try { postFormRef.current?.focus({ immediate: true }); } catch {}
-        try { containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch {}
+        // Mobile: allow focus to scroll (to trigger keyboard reliably), then adjust minimal scroll only if needed
+        try { postFormRef.current?.focus({ immediate: true, preventScroll: false, scroll: 'none' }); } catch {}
+        // Small nudge to ensure visibility without recentering
+        try { containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch {}
       },
     }));
 

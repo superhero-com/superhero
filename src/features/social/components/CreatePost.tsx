@@ -21,16 +21,25 @@ const CreatePost = forwardRef<CreatePostRef, CreatePostProps>(
     useImperativeHandle(ref, () => ({
       focus: () => {
         const isMobileViewport = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
-        if (!isMobileViewport) {
-          // Desktop: avoid centering; place near top and let focus keep it there
-          try { containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch {}
-          setTimeout(() => postFormRef.current?.focus({ immediate: true, preventScroll: true, scroll: 'none' }), 100);
+        const el = containerRef.current;
+        if (!el) {
+          try { postFormRef.current?.focus({ immediate: true, preventScroll: false, scroll: 'none' }); } catch {}
           return;
         }
-        // Mobile: allow focus to scroll (to trigger keyboard reliably), then adjust minimal scroll only if needed
-        try { postFormRef.current?.focus({ immediate: true, preventScroll: false, scroll: 'none' }); } catch {}
-        // Small nudge to ensure visibility without recentering
-        try { containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch {}
+        // Compute a target Y so composer lands just below top bar; avoid over-scrolling
+        const rect = el.getBoundingClientRect();
+        const currentY = window.scrollY || window.pageYOffset || 0;
+        const headerOffset = isMobileViewport ? 56 : 96; // tune if needed
+        const targetY = Math.max(0, currentY + rect.top - headerOffset);
+        try { window.scrollTo({ top: targetY, behavior: 'smooth' }); } catch {}
+
+        if (!isMobileViewport) {
+          // Desktop: don't let focus scroll again; keep position stable
+          setTimeout(() => postFormRef.current?.focus({ immediate: true, preventScroll: true, scroll: 'none' }), 100);
+        } else {
+          // Mobile: focus immediately so the keyboard opens, after initial scroll request
+          try { postFormRef.current?.focus({ immediate: true, preventScroll: false, scroll: 'none' }); } catch {}
+        }
       },
     }));
 

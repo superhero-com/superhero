@@ -297,7 +297,12 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     const pollContract = await (sdk as any).initializeContract({ aci: POLL_ACI as any, bytecode: pollBytecode });
     const metadata = { title: question, description: "", link: "", spec_ref: undefined as any };
     const optionsRecord = options.reduce((acc, t, i) => ({ ...acc, [i]: t }), {} as Record<number, string>);
-    const initRes = await (pollContract as any).init(metadata, optionsRecord as any, closeHeight === 0 ? undefined : closeHeight, { omitUnknown: true });
+    const initRes = await (pollContract as any).init(
+      metadata,
+      optionsRecord as any,
+      closeHeight === 0 ? undefined : closeHeight,
+      { omitUnknown: true, ttl: undefined }
+    );
     const createdAddress = (initRes as any).address as string;
 
     // Push a pending feed entry immediately (after wallet confirmation)
@@ -338,7 +343,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       aci: REGISTRY_WITH_EVENTS_ACI as any,
       address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
     } as any);
-    await (registry as any).add_poll(createdAddress as Encoded.ContractAddress, true);
+    await (registry as any).add_poll(createdAddress as Encoded.ContractAddress, true, { ttl: undefined });
 
     // Push final feed entry after registration with on-chain data
     try {

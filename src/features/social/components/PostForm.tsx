@@ -561,24 +561,6 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
               {(showEmojiPicker || showGifInput) && (
                 <div className="hidden md:flex items-center justify-between mt-3 gap-3">
                   <div className="flex items-center gap-2.5 relative">
-                    {/* Attachments toolbar: show Poll button; disable others when active */}
-                    {enableAttachments && attachmentRegistry.length > 0 && (
-                      <div className="inline-flex items-center gap-2.5">
-                        {attachmentRegistry.map((spec) => (
-                          <button
-                            key={spec.id}
-                            type="button"
-                            disabled={!!activeAttachmentId && activeAttachmentId !== spec.id}
-                            onClick={() => setActiveAttachmentId((id) => (id === spec.id ? null : spec.id))}
-                            className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm disabled:opacity-50"
-                            title={spec.label}
-                          >
-                            {spec.Icon ? <spec.Icon className="w-4 h-4" /> : null}
-                            <span>{activeAttachmentId === spec.id ? 'Remove poll' : spec.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
                     {showEmojiPicker && (
                       <button
                         type="button"
@@ -638,6 +620,25 @@ const PostForm = forwardRef<{ focus: () => void }, PostFormProps>((props, ref) =
                         mediaUrls={mediaUrls}
                         onMediaUrlsChange={setMediaUrls}
                       />
+                    )}
+
+                    {/* Attachments toolbar: show Poll button to the right of GIF; disable others when active */}
+                    {enableAttachments && attachmentRegistry.length > 0 && (
+                      <div className="inline-flex items-center gap-2.5">
+                        {attachmentRegistry.map((spec) => (
+                          <button
+                            key={spec.id}
+                            type="button"
+                            disabled={!!activeAttachmentId && activeAttachmentId !== spec.id}
+                            onClick={() => setActiveAttachmentId((id) => (id === spec.id ? null : spec.id))}
+                            className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm disabled:opacity-50"
+                            title={spec.label}
+                          >
+                            {spec.Icon ? <spec.Icon className="w-4 h-4" /> : null}
+                            <span>{activeAttachmentId === spec.id ? 'Remove poll' : spec.label}</span>
+                          </button>
+                        ))}
+                      </div>
                     )}
                   </div>
 

@@ -131,6 +131,16 @@ const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
         <div className="text-[12px] text-white/70">
           Closes at ~{estCloseDate ? `${estCloseDate.toLocaleDateString()} ${estCloseDate.toLocaleTimeString().slice(0,5)}` : '—'}{computedCloseHeight ? ` (#${computedCloseHeight.toLocaleString()})` : ''}
         </div>
+        {/* Mobile-only remove control under close line */}
+        <div className="md:hidden mt-2">
+          <button
+            type="button"
+            onClick={() => onRemove?.()}
+            className="text-white/90 underline underline-offset-2"
+          >
+            Remove poll
+          </button>
+        </div>
       </div>
       {/* Remove inline remove button; Poll toolbar button toggles remove */}
     </div>

@@ -736,25 +736,21 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                       <span className="uppercase tracking-wide">GIF</span>
                     </button>
                   )}
-                  {/* Mobile Poll toggle next to GIF */}
-                  {enableAttachments && (
+                  {/* Mobile Poll toggle next to GIF (hidden when poll is open) */}
+                  {enableAttachments && activeAttachmentId !== 'poll' && (
                     <button
                       type="button"
                       className="md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
-                      title={activeAttachmentId === 'poll' ? 'Remove poll' : 'Poll'}
+                      title="Poll"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setActiveAttachmentId((id) => (id === 'poll' ? null : 'poll'));
+                        setActiveAttachmentId('poll');
                         // Clear GIF picker when opening poll
                         setShowGif(false);
                       }}
                     >
-                      {activeAttachmentId === 'poll' ? (
-                        <span>Remove poll</span>
-                      ) : (
-                        <span>Poll</span>
-                      )}
+                      <span>Poll</span>
                     </button>
                   )}
                 </div>

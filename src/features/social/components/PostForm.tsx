@@ -426,7 +426,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     return !pattern.test(text);
   }, [text, requiredHashtag]);
 
-  const isSubmitDisabled = !text.trim() || (requiredHashtag ? requiredMissing : false) || isPollInvalid;
+  const isSubmitDisabled = (activeAttachmentId === 'poll' ? isPollInvalid : !text.trim()) || (requiredHashtag ? requiredMissing : false);
 
   // Inline autocomplete: when typing a hashtag token that matches the start of requiredHashtag,
   // show only the remaining characters (e.g., "#a" -> suggest "ENS").

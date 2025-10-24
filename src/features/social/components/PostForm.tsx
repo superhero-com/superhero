@@ -663,7 +663,14 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                             key={spec.id}
                             type="button"
                             disabled={!!activeAttachmentId && activeAttachmentId !== spec.id}
-                            onClick={() => setActiveAttachmentId((id) => (id === spec.id ? null : spec.id))}
+                            onClick={() => {
+                              const newId = activeAttachmentId === spec.id ? null : spec.id;
+                              setActiveAttachmentId(newId);
+                              // Clear GIFs when activating poll
+                              if (newId === 'poll' && mediaUrls.length > 0) {
+                                setMediaUrls([]);
+                              }
+                            }}
                             className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm disabled:opacity-50"
                             title={spec.label}
                           >

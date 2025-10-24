@@ -436,20 +436,20 @@ export default function FeedList({
           />
         </div>
       )}
-      {/* Mobile: CreatePost first, then SortControls */}
-      <div className="md:hidden">
+      {/* Single CreatePost instance for consistent focus/scroll across viewports */}
+      <div>
         <CreatePost ref={createPostRef} onSuccess={refetch} autoFocus={shouldAutoFocusPost} />
-        <SortControls
-          sortBy={sortBy}
-          onSortChange={handleSortChange}
-          className="sticky top-0 z-10 w-full"
-        />
-      </div>
-
-      {/* Desktop: CreatePost first, then SortControls */}
-      <div className="hidden md:block">
-        <CreatePost ref={createPostRef} onSuccess={refetch} autoFocus={shouldAutoFocusPost} />
-        <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
+        {/* Sort controls rendered once; styles adapt per breakpoint */}
+        <div className="md:hidden">
+          <SortControls
+            sortBy={sortBy}
+            onSortChange={handleSortChange}
+            className="sticky top-0 z-10 w-full"
+          />
+        </div>
+        <div className="hidden md:block">
+          <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
+        </div>
       </div>
 
       <div className="w-full flex flex-col gap-0 md:gap-2 md:mx-0">

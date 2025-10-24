@@ -112,7 +112,7 @@ export default function MobileAppHeader() {
       ) : (
         /* Normal Navigation Mode */
         <div className="px-3 flex items-center gap-2 w-full pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] sm:px-2 sm:gap-1.5">
-          <Link to="/" className="text-[var(--standard-font-color)] flex items-center min-h-[44px] min-w-[44px]" aria-label="Superhero Home">
+          <Link to="/" className="text-[var(--standard-font-color)] flex items-center min-h-[44px] min-w-[44px] no-underline hover:no-underline no-gradient-text" style={{ textDecoration: 'none' }} aria-label="Superhero Home">
             <HeaderLogo className="h-7 w-auto" />
           </Link>
           <div className="flex-grow hidden md:block" />

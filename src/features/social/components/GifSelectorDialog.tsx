@@ -52,12 +52,17 @@ export function GifSelectorDialog({
       return {
         results: data.map(({ images, id }: any) => ({
           id: id, // Use Giphy's unique ID
-          still: images.fixed_width_still.url,
-          animated: images.fixed_width.url,
-          original: images.original.url,
+          still: images?.fixed_width_still?.url,
+          animated: images?.fixed_width?.url,
+          // Prefer lightweight mp4 for smooth autoplay where available
+          mp4:
+            images?.fixed_width?.mp4 ||
+            images?.downsized_small?.mp4 ||
+            images?.original_mp4?.mp4,
+          original: images?.original?.url,
           // capture intrinsic dimensions to preserve aspect ratio downstream
-          width: Number(images.original.width),
-          height: Number(images.original.height),
+          width: Number(images?.original?.width),
+          height: Number(images?.original?.height),
         })),
         totalCount: pagination.total_count,
         nextOffset: pagination.offset + pagination.count,
@@ -177,33 +182,48 @@ export function GifSelectorDialog({
             </div>
           )}
           {isLoading && (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center h-[400px]">
               <div className="animate-spin h-8 w-8 border-4 border-primary-400 border-t-transparent rounded-full" />
             </div>
           )}
 
           {error && (
-            <div className="text-red-500 text-center py-4">Error: {error.message}</div>
+            <div className="text-red-500 text-center h-[400px] flex items-center justify-center">Error: {error.message}</div>
           )}
 
           {!isLoading && !error && (
-            <div 
+          <div 
               ref={scrollContainerRef}
-              className="grid grid-cols-3 gap-3 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+              className="grid grid-cols-3 gap-3 h-[400px] overflow-y-auto overflow-x-visible scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent p-2 -m-2"
             >
               {results.map((result) => (
                 <div
                   key={result.id}
                   onClick={() => handleGifClick(result)}
-                  className="relative w-full cursor-pointer bg-white/5 rounded-lg overflow-hidden transition-all duration-200 active:scale-95 sm:hover:scale-105 sm:hover:shadow-lg sm:hover:shadow-primary-400/20 sm:hover:ring-2 sm:hover:ring-primary-400/50"
+                  className="relative w-full cursor-pointer bg-white/5 rounded-lg transition-all duration-200 active:scale-95 sm:hover:scale-105 sm:hover:shadow-lg sm:hover:shadow-primary-400/20 sm:hover:ring-2 sm:hover:ring-primary-400/50 hover:z-20 overflow-visible"
                   style={{ paddingBottom: '100%' }}
                 >
-                  <img
-                    src={result.still}
-                    alt="GIF preview"
-                    className="absolute top-0 left-0 w-full h-full object-cover"
-                    loading="lazy"
-                  />
+                  <div className="absolute inset-0 rounded-lg overflow-hidden">
+                    {result?.mp4 ? (
+                      <video
+                        src={result.mp4}
+                        poster={result.still}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+                      />
+                    ) : (
+                      <img
+                        src={result.animated || result.still}
+                        alt="GIF preview"
+                        className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+                        loading="lazy"
+                      />
+                    )}
+                  </div>
                 </div>
               ))}
               {/* Sentinel for infinite scroll */}

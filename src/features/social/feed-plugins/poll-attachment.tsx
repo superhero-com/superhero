@@ -36,13 +36,15 @@ function useOptionsField(ctx: any) {
 
 const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
   const { visible, set } = useOptionsField(ctx);
-  const [closeHeight, setCloseHeight] = useState<number>(() => {
-    const h = (ctx as any).currentBlockHeight as number | undefined;
-    return h ? h + blocksFromMs(7 * 24 * 60 * 60 * 1000) : 0;
-  });
-  const estimated = estimateClose((ctx as any).currentBlockHeight, closeHeight);
+  // Duration selectors (default 3 days)
+  const [days, setDays] = useState<number>(3);
+  const [hours, setHours] = useState<number>(0);
+  const [minutes, setMinutes] = useState<number>(0);
+  const currentHeight = (ctx as any).currentBlockHeight as number | undefined;
+  const totalMs = ((Math.max(0, days) * 24 + Math.max(0, hours)) * 60 + Math.max(0, minutes)) * 60 * 1000;
+  const computedCloseHeight = totalMs === 0 ? 0 : (currentHeight ? currentHeight + blocksFromMs(totalMs) : 0);
 
-  useEffect(() => { ctx.setValue('poll.closeHeight', closeHeight); }, [closeHeight]);
+  useEffect(() => { ctx.setValue('poll.closeHeight', computedCloseHeight); }, [computedCloseHeight]);
 
   return (
     <div className="bg-white/[0.04] border border-white/15 rounded-xl p-3 md:p-4">
@@ -62,18 +64,40 @@ const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
           />
         ))}
       </div>
+
       <div className="mt-4 grid gap-2">
-        <div className="text-[13px] text-white/80">Close at height</div>
-        <input
-          type="number"
-          value={isFinite(closeHeight as any) ? String(closeHeight) : ''}
-          onChange={(e) => setCloseHeight(Number(e.target.value || 0))}
-          className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2 text-white outline-none focus:border-white/30"
-        />
-        <div className="text-[12px] text-white/70">
-          Est. close {estimated ? estimated.toLocaleDateString() : '—'} {estimated ? estimated.toLocaleTimeString().slice(0,5) : ''}
+        <div className="text-[13px] text-white/80">Poll length</div>
+        <div className="grid grid-cols-3 gap-2">
+          <input
+            type="number"
+            min={0}
+            value={String(days)}
+            onChange={(e) => setDays(Math.max(0, Number(e.target.value || 0)))}
+            className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2 text-white outline-none focus:border-white/30"
+            placeholder="Days"
+          />
+          <input
+            type="number"
+            min={0}
+            max={23}
+            value={String(hours)}
+            onChange={(e) => setHours(Math.min(23, Math.max(0, Number(e.target.value || 0))))}
+            className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2 text-white outline-none focus:border-white/30"
+            placeholder="Hours"
+          />
+          <input
+            type="number"
+            min={0}
+            max={59}
+            value={String(minutes)}
+            onChange={(e) => setMinutes(Math.min(59, Math.max(0, Number(e.target.value || 0))))}
+            className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-3 py-2 text-white outline-none focus:border-white/30"
+            placeholder="Minutes"
+          />
         </div>
-        <div className="text-[12px] text-white/60">To create a never closing poll, set close height to 0.</div>
+        <div className="text-[12px] text-white/70">
+          Close at height: {computedCloseHeight || '—'}
+        </div>
       </div>
       {/* Remove inline remove button; Poll toolbar button toggles remove */}
     </div>

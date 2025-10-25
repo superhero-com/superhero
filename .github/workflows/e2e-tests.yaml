@@ -1,0 +1,125 @@
+name: E2E Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+      - name: Wait for Netlify Preview
+        id: netlify
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          DEPLOY_URL="https://deploy-preview-${PR_NUMBER}--superhero-c9df18.netlify.app"
+          
+          echo "Waiting for Netlify deployment at: $DEPLOY_URL"
+          
+          SECONDS=0
+          MAX_WAIT=600
+          WAIT_INTERVAL=15
+          
+          while [ $SECONDS -lt $MAX_WAIT ]; do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOY_URL" || echo "000")
+            
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ Netlify deployment is ready!"
+              echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            
+            echo "Deployment not ready yet (HTTP $HTTP_STATUS). Waiting ${WAIT_INTERVAL}s..."
+            sleep $WAIT_INTERVAL
+            SECONDS=$((SECONDS + WAIT_INTERVAL))
+          done
+          
+          echo "❌ Deployment did not become ready within ${MAX_WAIT}s"
+          exit 1 
+
+      - name: Clone keypair-testing repo
+        uses: actions/checkout@v4
+        with:
+          repository: aeternity/keypair-testing
+          path: keypair-testing
+          token: ${{ secrets.KEYPAIR_TESTING_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: keypair-testing/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: keypair-testing
+        run: npm ci
+        
+      - name: Install Playwright browsers (Only Chrome)
+        working-directory: keypair-testing
+        run: npx playwright install --with-deps chromium
+        
+      - name: Run Superhero React E2E tests
+        id: test_run
+        working-directory: keypair-testing
+        env:
+          SUPERHERO_COM_BASE_URL: ${{ steps.netlify.outputs.url }}
+        run: |
+          SUPERHERO_COM_BASE_URL=$SUPERHERO_COM_BASE_URL npx playwright test tests_superhero_react/superhero-react.spec.ts --retries=1 --config=./playwright.config.ts 
+          
+      - name: Extract failed tests
+        if: always()
+        id: failed_tests
+        working-directory: keypair-testing
+        run: |
+          if [ -f "test-output.log" ]; then
+            # Extract failed test names from list reporter output
+            FAILED_TESTS=$(grep "✘" test-output.log | sed 's/^.*\[.*\]//' | sed 's/^[[:space:]]*//' | head -10)
+            
+            if [ -n "$FAILED_TESTS" ]; then
+              echo "failed<<EOF" >> $GITHUB_OUTPUT
+              echo "$FAILED_TESTS" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            else
+              echo "failed=" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "failed=" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.event.pull_request.number }}
+          path: keypair-testing/playwright-report/
+          retention-days: 30
+          if-no-files-found: warn
+          
+      - name: Comment PR with test results
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          retries: 3
+          retry-exempt-status-codes: 400,401,403,404
+          script: |
+            const jobStatus = '${{ job.status }}';
+            const status = jobStatus === 'success' ? '✅ E2E Tests PASSED' : '❌ E2E Tests FAILED';
+            const failedTests = `${{ steps.failed_tests.outputs.failed }}`.trim();
+            
+            let body = `## ${status}\n\n**Tested URL:** ${{ steps.netlify.outputs.url }}\n\n`;
+            
+            if (failedTests) {
+              body += `### ❌ Failed Tests:\n\`\`\`\n${failedTests}\n\`\`\`\n\n`;
+            }
+            
+            body += `📊 [View Full Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

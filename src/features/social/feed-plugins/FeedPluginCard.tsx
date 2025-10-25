@@ -25,7 +25,7 @@ export default function FeedPluginCard({ className, children, role, onClick }: F
       role={role}
       onClick={onClick}
     >
-      <div className={styles.content}>{children}</div>
+      <div className={cn(styles.content, 'px-2 md:px-5 py-3 md:py-5')}>{children}</div>
     </article>
   );
 }

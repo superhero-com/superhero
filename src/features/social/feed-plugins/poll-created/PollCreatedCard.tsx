@@ -77,7 +77,7 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
           )}
         </div>
       )}
-      <div className={cn(styles.metaRow, 'px-2 md:px-0')}>
+      <div className={cn(styles.metaRow, 'px-0')}>
         {author && (
           <>
             <span className="inline-flex items-center gap-1">

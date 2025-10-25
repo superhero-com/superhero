@@ -1,0 +1,28 @@
+.root {
+  /* Prevent external ancestors from affecting stacking contexts of internals */
+  isolation: isolate;
+}
+
+.card {
+  /* Keep only radius; background/border are controlled by utility classes to match post items */
+  border-radius: 1rem;
+}
+
+.content {
+  /* Mobile: 20px top/bottom, 0px left/right */
+  padding: 1.25rem 0rem;
+}
+
+@media (min-width: 768px) {
+  .content {
+    /* Desktop: 20px all around */
+    padding: 1.25rem;
+  }
+}
+
+.divider {
+  height: 1px;
+  background: color-mix(in oklab, white 12%, transparent);
+}
+
+

@@ -5,6 +5,9 @@ import { CollectInvitationLinkCard } from "./features/trending/components/Invita
 import ModalProvider from "./components/ModalProvider";
 import { useAeSdk, useAccount, useWalletConnect } from "./hooks";
 import { routes } from "./routes";
+import { PluginHostProvider, usePluginHostCtx } from "./features/social/plugins/PluginHostProvider";
+import { loadExternalPlugins } from "./features/social/plugins/loader";
+import { CONFIG } from "./config";
 import "./styles/genz-components.scss";
 import "./styles/mobile-optimizations.scss";
 import AppHeader from "./components/layout/app-header";
@@ -32,6 +35,17 @@ const ConnectWalletModal = React.lazy(
 const TipModal = React.lazy(
   () => import("./components/modals/TipModal")
 );
+
+function PluginBootstrap({ children }: { children: React.ReactNode }) {
+  const hostCtx = usePluginHostCtx();
+  useEffect(() => {
+    const urls = CONFIG.PLUGINS || [];
+    const allow = CONFIG.PLUGIN_CAPABILITIES_ALLOWLIST || [];
+    if (urls.length === 0) return;
+    loadExternalPlugins(urls, hostCtx, allow).catch(() => {});
+  }, [hostCtx]);
+  return <>{children}</>;
+}
 
 export default function App() {
   useSuperheroChainNames();
@@ -81,9 +95,13 @@ export default function App() {
           }}
         />
       </Suspense>
-      <Suspense fallback={<div className="loading-fallback" />}>
-        <div className="app-routes-container">{useRoutes(routes as any)}</div>
-      </Suspense>
+      <PluginHostProvider>
+        <PluginBootstrap>
+          <Suspense fallback={<div className="loading-fallback" />}>
+            <div className="app-routes-container">{useRoutes(routes as any)}</div>
+          </Suspense>
+        </PluginBootstrap>
+      </PluginHostProvider>
     </div>
   );
 }

@@ -42,13 +42,10 @@ export default function FeedList({
 }: { standalone?: boolean } = {}) {
   const navigate = useNavigate();
   const urlQuery = useUrlQuery();
-  const { chainNames } = useWallet();
+  const { chainNames, address: activeAccount } = useWallet();
   const queryClient = useQueryClient();
   const ACTIVITY_PAGE_SIZE = 50;
   const createPostRef = useRef<CreatePostRef>(null);
-
-  // Comment counts are now provided directly by the API in post.total_comments
-
   // URL parameters
   const sortBy = urlQuery.get("sortBy") || "latest";
   const search = urlQuery.get("search") || "";
@@ -56,6 +53,45 @@ export default function FeedList({
   const shouldAutoFocusPost = urlQuery.get("post") === "new";
 
   const [localSearch, setLocalSearch] = useState(search);
+
+  // Listen for injected feed entries (prepend/replace in caches)
+  useEffect(() => {
+    function onInject(ev: any) {
+      const entry = ev?.detail?.entry as any;
+      const targets: string[] = ev?.detail?.targets || [];
+      if (!entry || !entry.id) return;
+
+      const mutate = (key: any) => {
+        queryClient.setQueryData<any>(key, (prev: any) => {
+          if (!prev) return prev;
+          // Handles both infiniteQuery pages and flat arrays
+          const updateArray = (arr: any[]) => {
+            const idx = arr.findIndex((it: any) => it?.id === entry.id);
+            if (idx >= 0) {
+              const next = [...arr];
+              next[idx] = entry;
+              return next;
+            }
+            return [entry, ...arr];
+          };
+          if (prev?.pages && Array.isArray(prev.pages)) {
+            const first = prev.pages[0] || [];
+            const updatedFirst = updateArray(first);
+            return { ...prev, pages: [updatedFirst, ...prev.pages.slice(1)] };
+          }
+          if (Array.isArray(prev)) return updateArray(prev);
+          return prev;
+        });
+      };
+
+      if (targets.includes('global')) mutate(['home-posts', sortBy, filterBy, localSearch]);
+      if (targets.includes('profile') && activeAccount) mutate(['profile-posts', activeAccount]);
+    }
+    window.addEventListener('sh:feed:inject' as any, onInject as any);
+    return () => window.removeEventListener('sh:feed:inject' as any, onInject as any);
+  }, [queryClient, sortBy, filterBy, localSearch, activeAccount]);
+
+  // Comment counts are now provided directly by the API in post.total_comments
 
   // Helper to map a token object or websocket payload into a Post-like item
   const mapTokenCreatedToPost = useCallback((payload: any): PostDto => {

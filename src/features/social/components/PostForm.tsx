@@ -196,6 +196,13 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     },
   }), [composerCtx, getAttachmentValue, setAttachmentValue, sdk]);
 
+  // Helper: inject an entry to feeds (global + profile) for immediate visibility
+  const injectIntoFeeds = useCallback((entry: any) => {
+    try {
+      window.dispatchEvent(new CustomEvent('sh:feed:inject', { detail: { targets: ['global', 'profile'], entry } }));
+    } catch {}
+  }, []);
+
   const enableAttachments = (CONFIG.UNFINISHED_FEATURES || '').includes('composer-attachments');
   const pollActive = enableAttachments && Boolean(activeAttachmentId);
 
@@ -344,6 +351,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         }
       };
       try { window.dispatchEvent(new CustomEvent('sh:plugin:feed:push', { detail: { kind: 'poll-created', entry: pendingEntry } })); } catch {}
+      injectIntoFeeds(pendingEntry);
     } catch {}
 
     // Persist pending so we can reconcile after reload
@@ -389,6 +397,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         },
       };
       try { window.dispatchEvent(new CustomEvent('sh:plugin:feed:push', { detail: { kind: 'poll-created', entry } })); } catch {}
+      injectIntoFeeds(entry);
       // Clear pending store
       try {
         const key = 'sh:pending-polls';

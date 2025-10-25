@@ -108,7 +108,7 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
           </>
         )}
       </div>
-      <div className={cn('flex items-center gap-2', 'px-2 md:px-0')}>
+      <div className={cn('flex items-center gap-2', 'px-0 md:px-0')}>
         <div
           className={styles.title}
           role={onOpen ? 'button' : undefined}
@@ -119,7 +119,7 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
       </div>
 
       {description && (
-        <div className={cn('mt-2 text-[15px] leading-6 whitespace-pre-wrap break-words', 'px-2 md:px-0')}>
+        <div className={cn('mt-2 text-[15px] leading-6 whitespace-pre-wrap break-words', 'px-0 md:px-0')}>
           {description}
         </div>
       )}
@@ -127,7 +127,7 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
       {/* Mobile bottom divider for visual rhythm to match other items */}
       <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />
 
-      <div className={cn(styles.options, 'px-2 md:px-0')}>
+      <div className={cn(styles.options, 'px-0 md:px-0')}>
         {options.map((o) => {
           const pct = totalVotes > 0 ? Math.round(((o.votes || 0) / totalVotes) * 100) : 0;
           const widthPct = maxVotes > 0 ? Math.max(14, Math.round(((o.votes || 0) / maxVotes) * 100)) : 14;
@@ -158,7 +158,7 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
         })}
       </div>
 
-      <div className={cn(styles.footer, 'px-2 md:px-0')}>
+      <div className={cn(styles.footer, 'px-0 md:px-0')}>
         <span className="flex items-center gap-3">
           <span>{totalVotes} votes</span>
           {onRevoke && myVote != null && (

@@ -55,7 +55,7 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
 
   return (
     <FeedPluginCard
-      className={cn(styles.root, 'feed-plugin poll-created')}
+      className={cn(styles.root, 'feed-plugin poll-created px-2 md:px-0')}
       role={onOpen ? 'button' : undefined}
       onClick={() => onOpen?.()}
     >

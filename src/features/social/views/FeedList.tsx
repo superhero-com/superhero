@@ -84,7 +84,10 @@ export default function FeedList({
         });
       };
 
-      if (targets.includes('global')) mutate(['home-posts', sortBy, filterBy, localSearch]);
+      if (targets.includes('global')) {
+        mutate(["posts", { limit: 10, sortBy, search: localSearch, filterBy }]);
+        mutate(['home-posts', sortBy, filterBy, localSearch]);
+      }
       if (targets.includes('profile') && activeAccount) mutate(['profile-posts', activeAccount]);
     }
     window.addEventListener('sh:feed:inject' as any, onInject as any);

@@ -9,7 +9,14 @@
 }
 
 .content {
-  padding: 1.25rem;
+  /* Mobile: 8px horizontal padding equivalent */
+  padding: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .content {
+    padding: 1.25rem;
+  }
 }
 
 .divider {

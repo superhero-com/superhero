@@ -88,7 +88,10 @@ export default function FeedList({
         mutate(["posts", { limit: 10, sortBy, search: localSearch, filterBy }]);
         mutate(['home-posts', sortBy, filterBy, localSearch]);
       }
-      if (targets.includes('profile') && activeAccount) mutate(['profile-posts', activeAccount]);
+      if (targets.includes('profile')) {
+        const author = entry?.data?.author || activeAccount;
+        if (author) mutate(['profile-posts', author]);
+      }
     }
     window.addEventListener('sh:feed:inject' as any, onInject as any);
     return () => window.removeEventListener('sh:feed:inject' as any, onInject as any);

@@ -218,6 +218,22 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     }
   }, [text]);
 
+  // When toggling poll on mobile, immediately enforce single row (without needing focus)
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const isMobile = typeof window !== 'undefined' && typeof window.matchMedia === 'function' && !window.matchMedia('(min-width: 768px)').matches;
+    if (!isMobile) return;
+    if (pollActive) {
+      el.style.height = 'auto';
+      const oneRow = overlayComputed ? (overlayComputed.paddingTop + overlayComputed.paddingBottom + parseFloat(overlayComputed.lineHeight as any)) : 40;
+      el.style.height = `${oneRow}px`;
+    } else {
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight}px`;
+    }
+  }, [pollActive, overlayComputed]);
+
   // Sync overlay typography and padding with the textarea for precise positioning
   useEffect(() => {
     const el = textareaRef.current;

@@ -184,6 +184,66 @@ export default definePlugin({
             ? new Date(Date.now() - Math.max(0, Number(currentHeight) - Number(createHeight)) * APPROX_BLOCK_MS).toISOString()
             : entry.createdAt;
           const handleOpen = () => onOpen?.(String(pollAddress));
+          const submitVote = async (opt: number) => {
+            if (!sdk || voting) return;
+            if (myVote === opt) return;
+            try {
+              setVoting(true);
+              setPendingOption(opt);
+              const poll = await (await import('@aeternity/aepp-sdk')).Contract.initialize<{ vote: (o: number) => void }>({
+                ...(sdk as any).getContext(),
+                aci: (await import('@/api/GovernancePollACI.json')).default as any,
+                address: pollAddress,
+              } as any);
+              await (poll as any).vote(opt);
+              const prev = myVote;
+              setMyVote(opt);
+              setDisplayOptions((curr) => curr.map((o) => {
+                if (prev == null) {
+                  if (o.id === opt) return { ...o, votes: (o.votes || 0) + 1 };
+                  return o;
+                }
+                if (prev !== opt) {
+                  if (o.id === opt) return { ...o, votes: (o.votes || 0) + 1 };
+                  if (o.id === prev) return { ...o, votes: Math.max(0, (o.votes || 0) - 1) };
+                  return o;
+                }
+                return o;
+              }));
+              setDisplayTotalVotes((curr) => (prev == null ? curr + 1 : curr));
+              try { await GovernanceApi.submitContractEvent('Vote', pollAddress as any); } catch {}
+              try { const ov = await GovernanceApi.getPollOverview(pollAddress as any); rebuildFromOverview(ov); } catch {}
+              window.setTimeout(() => { refreshMyVote(); }, 2000);
+            } finally {
+              setVoting(false);
+              setPendingOption(null);
+            }
+          };
+          const revokeVote = async () => {
+            if (!sdk || voting) return;
+            try {
+              setVoting(true);
+              setPendingOption(myVote);
+              const prev = myVote;
+              const poll = await (await import('@aeternity/aepp-sdk')).Contract.initialize<{ revoke_vote: () => void }>({
+                ...(sdk as any).getContext(),
+                aci: (await import('@/api/GovernancePollACI.json')).default as any,
+                address: pollAddress,
+              } as any);
+              await (poll as any).revoke_vote();
+              setMyVote(null);
+              if (prev != null) {
+                setDisplayOptions((curr) => curr.map((o) => (o.id === prev ? { ...o, votes: Math.max(0, (o.votes || 0) - 1) } : o)));
+                setDisplayTotalVotes((curr) => Math.max(0, curr - 1));
+              }
+              try { await GovernanceApi.submitContractEvent('RevokeVote', pollAddress as any); } catch {}
+              try { const ov = await GovernanceApi.getPollOverview(pollAddress as any); rebuildFromOverview(ov); } catch {}
+              window.setTimeout(() => { refreshMyVote(); }, 2000);
+            } finally {
+              setVoting(false);
+              setPendingOption(null);
+            }
+          };
           return (
             <PollCreatedCard
               title={title}
@@ -196,8 +256,8 @@ export default definePlugin({
               onOpen={handleOpen}
               createdAtIso={createdAtIso}
               myVote={myVote}
-              onVoteOption={() => {}}
-              onRevoke={() => {}}
+              onVoteOption={submitVote}
+              onRevoke={revokeVote}
               voting={voting}
               txHash={(entry as any).data?.txHash}
               contractAddress={pollAddress as any}

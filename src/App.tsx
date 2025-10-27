@@ -7,6 +7,7 @@ import { useAeSdk, useAccount, useWalletConnect } from "./hooks";
 import { routes } from "./routes";
 import { PluginHostProvider, usePluginHostCtx } from "./features/social/plugins/PluginHostProvider";
 import { loadExternalPlugins } from "./features/social/plugins/loader";
+import { loadLocalPlugins } from "@/plugins/local";
 import { CONFIG } from "./config";
 import "./styles/genz-components.scss";
 import "./styles/mobile-optimizations.scss";
@@ -41,6 +42,8 @@ function PluginBootstrap({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const urls = CONFIG.PLUGINS || [];
     const allow = CONFIG.PLUGIN_CAPABILITIES_ALLOWLIST || [];
+    // Load first-party plugins first
+    try { loadLocalPlugins(hostCtx, allow); } catch {}
     if (urls.length === 0) return;
     loadExternalPlugins(urls, hostCtx, allow).catch(() => {});
   }, [hostCtx]);

@@ -48,12 +48,28 @@ function PluginBootstrap({ children }: { children: React.ReactNode }) {
     
     const urls = CONFIG.PLUGINS || [];
     const allow = CONFIG.PLUGIN_CAPABILITIES_ALLOWLIST || [];
-    try { loadLocalPlugins(hostCtx, allow); } catch {}
+    
+    // Load local plugins first (synchronous)
+    let localSuccess = false;
+    try {
+      loadLocalPlugins(hostCtx, allow);
+      localSuccess = true;
+    } catch (error) {
+      console.error('Local plugins failed to load:', error);
+    }
+    
+    // Then load external plugins (asynchronous)
     if (urls.length > 0) {
-      loadExternalPlugins(urls, hostCtx, allow).catch(() => {}).finally(() => {
-        setPluginsLoaded(true);
-      });
+      loadExternalPlugins(urls, hostCtx, allow)
+        .catch((error) => {
+          console.error('External plugins failed to load:', error);
+        })
+        .finally(() => {
+          // Mark as loaded after both local and external plugins have attempted to load
+          setPluginsLoaded(true);
+        });
     } else {
+      // No external plugins, mark as loaded after local plugins
       setPluginsLoaded(true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

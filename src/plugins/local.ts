@@ -1,6 +1,6 @@
 import type { PluginExports } from "@/plugin-sdk";
 import { registerPlugin as registerFeed } from "@/features/social/feed-plugins/registry";
-import { composerRegistry, itemActionRegistry, routeRegistry, modalRegistry, attachmentRegistry, navRegistry } from "@/features/social/plugins/registries";
+import { composerRegistry, itemActionRegistry, routeRegistry, modalRegistry, attachmentRegistry, navRegistry, resetAllRegistries } from "@/features/social/plugins/registries";
 
 // Local, first-party plugins can be imported statically here
 // Example: import nftMarketplace from '@/plugins/nft-marketplace';
@@ -16,6 +16,10 @@ const localPlugins: Array<any> = [
 ];
 
 export function loadLocalPlugins(hostCtx: any, allow: string[] = []) {
+  // In dev/hot-reload scenarios, ensure registries are clean before re-registering
+  if (process.env.NODE_ENV !== 'production') {
+    resetAllRegistries();
+  }
   const allowedCaps = (caps: string[]) => (allow && allow.length ? caps.filter((c) => allow.includes(c)) : caps);
   for (const plugin of localPlugins) {
     if (!plugin?.meta?.apiVersion?.startsWith('1.')) continue;

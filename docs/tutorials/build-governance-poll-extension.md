@@ -2,6 +2,8 @@
 
 This guide shows how to build a full Superhero App Extension using the Governance Polls example. You will add a feed plugin that renders polls, wire voting/revoking via Sophia contracts, add a composer attachment, integrate the Governance backend, and test locally. Follow the steps in order.
 
+See the [Extensions overview](../EXTENSIONS.md) for capabilities, loading modes, configuration and CI checks.
+
 ## Prerequisites
 - Node 18+, pnpm
 - Funded Aeternity testnet account (for signing votes)

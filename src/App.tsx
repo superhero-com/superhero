@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState, useMemo } from "react";
 import { useRoutes } from "react-router-dom";
 import GlobalNewAccountEducation from "./components/GlobalNewAccountEducation";
 import { CollectInvitationLinkCard } from "./features/trending/components/Invitation";
@@ -8,6 +8,7 @@ import { getRoutes } from "./routes";
 import { PluginHostProvider, usePluginHostCtx } from "./features/social/plugins/PluginHostProvider";
 import { loadExternalPlugins } from "./features/social/plugins/loader";
 import { loadLocalPlugins } from "@/plugins/local";
+import { routeRegistry } from "./features/social/plugins/registries";
 import { CONFIG } from "./config";
 import "./styles/genz-components.scss";
 import "./styles/mobile-optimizations.scss";
@@ -66,8 +67,9 @@ function PluginBootstrap({ children }: { children: React.ReactNode }) {
 }
 
 function DynamicRouter() {
-  // Generate routes after plugins are loaded
-  const routes = getRoutes();
+  // Memoize routes to avoid recreating them on every render
+  // Only regenerate when routeRegistry changes (plugins add routes)
+  const routes = useMemo(() => getRoutes(), [routeRegistry.length]);
   return useRoutes(routes as any);
 }
 

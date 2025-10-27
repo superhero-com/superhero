@@ -6,11 +6,10 @@ import { composerRegistry, itemActionRegistry, routeRegistry, modalRegistry, att
 // Example: import nftMarketplace from '@/plugins/nft-marketplace';
 import tokenCreated from '@/plugins/social/token-created';
 import pollCreated from '@/plugins/social/poll-created';
-import nftMarketplace from '@/plugins/nft-marketplace';
 
 const localPlugins: Array<any> = [
-  // Ensure only one instance per plugin id gets registered
-  nftMarketplace,
+  // Tutorial-only example: nft-marketplace is intentionally NOT auto-registered
+  // to avoid exposing unfinished features in production.
   tokenCreated,
   pollCreated,
 ];

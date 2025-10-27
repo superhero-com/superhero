@@ -6,6 +6,7 @@ import { useAeSdk } from '@/hooks/useAeSdk';
 import { GovernanceApi } from '@/api/governance';
 import { CONFIG } from '@/config';
 import PollCreatedCard from '@/features/social/feed-plugins/poll-created/PollCreatedCard';
+import { pollAttachmentSpec } from '@/features/social/feed-plugins/poll-attachment';
 
 export type PollCreatedEntryData = {
   pollAddress: Encoded.ContractAddress;
@@ -38,7 +39,7 @@ export default definePlugin({
     name: 'Poll Created Feed',
     version: '0.1.0',
     apiVersion: '1.x',
-    capabilities: ['feed'],
+    capabilities: ['feed', 'composer'],
   },
   setup({ register }) {
     register({
@@ -277,6 +278,7 @@ export default definePlugin({
           );
         },
       },
+      attachments: () => [pollAttachmentSpec],
     });
   },
 });

@@ -44,6 +44,8 @@ function PluginBootstrap({ children }: { children: React.ReactNode }) {
   
   useEffect(() => {
     if (loadedRef.current) return;
+    loadedRef.current = true;
+    
     const urls = CONFIG.PLUGINS || [];
     const allow = CONFIG.PLUGIN_CAPABILITIES_ALLOWLIST || [];
     try { loadLocalPlugins(hostCtx, allow); } catch {}
@@ -54,8 +56,8 @@ function PluginBootstrap({ children }: { children: React.ReactNode }) {
     } else {
       setPluginsLoaded(true);
     }
-    loadedRef.current = true;
-  }, [hostCtx]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps: only load plugins once on mount, hostCtx is stable
   
   // Wait for plugins to load before rendering children with routes
   if (!pluginsLoaded) {

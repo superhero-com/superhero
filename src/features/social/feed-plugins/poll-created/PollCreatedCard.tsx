@@ -42,7 +42,24 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
     const blocksLeft = closeHeight - currentHeight;
     
     // Check if poll is closed
-    if (blocksLeft <= 0) return 'Closed';
+    if (blocksLeft <= 0) {
+      const blocksPast = Math.abs(blocksLeft);
+      const ms = blocksPast * 3 * 60 * 1000; // ~3 minutes per block
+      const seconds = Math.floor(ms / 1000);
+      if (seconds < 60) return `Closed ${seconds}s ago`;
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `Closed ${minutes}m ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `Closed ${hours}h ago`;
+      const days = Math.floor(hours / 24);
+      if (days < 7) return `Closed ${days}d ago`;
+      const weeks = Math.floor(days / 7);
+      if (weeks < 5) return `Closed ${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+      const months = Math.floor(days / 30.4375); // average days/month
+      if (months < 12) return `Closed ${months} ${months === 1 ? 'month' : 'months'} ago`;
+      const years = Math.floor(days / 365.25);
+      return `Closed ${years} ${years === 1 ? 'year' : 'years'} ago`;
+    }
     
     const ms = blocksLeft * 3 * 60 * 1000; // ~3 minutes per block
     const seconds = Math.floor(ms / 1000);

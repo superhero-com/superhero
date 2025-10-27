@@ -41,12 +41,17 @@ export function registerPollCreatedPlugin() {
       if (page && page > 1) {
         return { entries: [], nextPage: undefined } as FeedPage<PollCreatedEntryData>;
       }
-      const ordering = await GovernanceApi.getPollOrdering(false);
-      const top = (ordering?.data || []).slice(0, 10);
+      // Fetch both open and closed polls
+      const [openPolls, closedPolls] = await Promise.all([
+        GovernanceApi.getPollOrdering(false),
+        GovernanceApi.getPollOrdering(true),
+      ]);
+      // Combine all polls
+      const allPolls = [...(openPolls?.data || []), ...(closedPolls?.data || [])];
       const entries: FeedEntry<PollCreatedEntryData>[] = [];
       // First pass to collect create heights
       const overviews = await Promise.all(
-        top.map(async (p) => {
+        allPolls.map(async (p) => {
           try {
             const ov = await GovernanceApi.getPollOverview(p.poll);
             return { p, ov };
@@ -143,6 +148,12 @@ export function registerPollCreatedPlugin() {
         (entry as any).data.txHash = ctInfo.hash || undefined;
         entries.push(entry);
       }
+      // Sort by creation time, newest first
+      entries.sort((a, b) => {
+        const aTime = new Date(a.createdAt).getTime();
+        const bTime = new Date(b.createdAt).getTime();
+        return bTime - aTime;
+      });
       return { entries, nextPage: undefined } as FeedPage<PollCreatedEntryData>;
     },
     Render: ({ entry, onOpen }: { entry: FeedEntry<PollCreatedEntryData>; onOpen?: (id: string) => void }) => {

@@ -48,8 +48,13 @@ export default definePlugin({
           if (page && page > 1) {
             return { entries: [], nextPage: undefined } as FeedPage<PollCreatedEntryData>;
           }
-          const ordering = await GovernanceApi.getPollOrdering(false);
-          const top = (ordering?.data || []).slice(0, 10);
+          // Fetch both open and closed polls
+          const [openPolls, closedPolls] = await Promise.all([
+            GovernanceApi.getPollOrdering(false),
+            GovernanceApi.getPollOrdering(true),
+          ]);
+          // Combine all polls
+          const allPolls = [...(openPolls?.data || []), ...(closedPolls?.data || [])];
           const entries: FeedEntry<PollCreatedEntryData>[] = [];
           const mdwBase = CONFIG.MIDDLEWARE_URL.replace(/\/$/, '');
           async function fetchCreationInfo(ct: string): Promise<{ time: string | null; hash?: string | null }> {
@@ -84,7 +89,7 @@ export default definePlugin({
           }
 
           const overviews = await Promise.all(
-            top.map(async (p: any) => {
+            allPolls.map(async (p: any) => {
               try { return { p, ov: await GovernanceApi.getPollOverview(p.poll) }; } catch { return undefined as any; }
             })
           );
@@ -127,6 +132,12 @@ export default definePlugin({
             (entry as any).data.txHash = ctInfo.hash || undefined;
             entries.push(entry);
           }
+          // Sort by creation time, newest first
+          entries.sort((a, b) => {
+            const aTime = new Date(a.createdAt).getTime();
+            const bTime = new Date(b.createdAt).getTime();
+            return bTime - aTime;
+          });
           return { entries, nextPage: undefined } as FeedPage<PollCreatedEntryData>;
         },
         Render: ({ entry, onOpen }: { entry: FeedEntry<PollCreatedEntryData>; onOpen?: (id: string) => void }) => {

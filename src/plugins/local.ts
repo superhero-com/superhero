@@ -27,9 +27,17 @@ export function loadLocalPlugins(hostCtx: any, allow: string[] = []) {
       if (exports.feed && caps.includes('feed')) registerFeed(exports.feed);
       if (exports.composer && caps.includes('composer')) composerRegistry.push(exports.composer);
       if (exports.itemActions && caps.includes('item-actions')) itemActionRegistry.push(exports.itemActions);
-      if (exports.routes && caps.includes('routes')) routeRegistry.push(...exports.routes);
+      if (exports.routes && caps.includes('routes')) {
+        const existing = new Set(routeRegistry.map((r) => r.path));
+        const unique = exports.routes.filter((r) => !existing.has(r.path));
+        routeRegistry.push(...unique);
+      }
       if (exports.modals && caps.includes('modals')) Object.assign(modalRegistry, exports.modals);
-      if (exports.menu && caps.includes('routes')) navRegistry.push(...exports.menu);
+      if (exports.menu && caps.includes('routes')) {
+        const existing = new Set(navRegistry.map((m) => m.id));
+        const unique = exports.menu.filter((m) => !existing.has(m.id));
+        navRegistry.push(...unique);
+      }
       if ((exports as any).attachments && caps.includes('composer')) attachmentRegistry.push(...((exports as any).attachments() || []));
     };
     try {

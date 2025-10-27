@@ -31,6 +31,12 @@ export type PollCreatedCardProps = {
 
 export default function PollCreatedCard({ title, description, author, closeHeight, currentHeight, options, totalVotes = 0, onOpen, createdAtIso, myVote = null, onVoteOption, onRevoke, voting = false, txHash, contractAddress, pendingOption = null }: PollCreatedCardProps) {
   const { chainName } = useChainName(author || '');
+  
+  const isClosed = useMemo(() => {
+    if (!closeHeight || !currentHeight) return false;
+    return closeHeight - currentHeight <= 0;
+  }, [closeHeight, currentHeight]);
+  
   const timeLeft = useMemo(() => {
     if (!closeHeight || !currentHeight) return undefined;
     const blocksLeft = closeHeight - currentHeight;
@@ -135,13 +141,18 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
         {options.map((o) => {
           const pct = totalVotes > 0 ? Math.round(((o.votes || 0) / totalVotes) * 100) : 0;
           const widthPct = maxVotes > 0 ? Math.max(14, Math.round(((o.votes || 0) / maxVotes) * 100)) : 14;
+          const canVote = !isClosed && onVoteOption;
           return (
             <div
               key={o.id}
-              className={cn(styles.option, myVote === o.id && styles.optionSelected)}
+              className={cn(
+                styles.option, 
+                myVote === o.id && styles.optionSelected,
+                isClosed && 'opacity-75 cursor-default'
+              )}
               aria-label={`${o.label} ${pct}%`}
-              onClick={(e) => { e.stopPropagation(); onVoteOption?.(o.id); }}
-              role={onVoteOption ? 'button' : undefined}
+              onClick={(e) => { e.stopPropagation(); if (canVote) onVoteOption(o.id); }}
+              role={canVote ? 'button' : undefined}
             >
               <div className={styles.bar} style={{ transform: `scaleX(${widthPct / 100})` }} />
               <div className={styles.labelRow}>
@@ -165,7 +176,7 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
       <div className={cn(styles.footer, 'px-0 md:px-0')}>
         <span className="flex items-center gap-3">
           <span>{totalVotes} votes</span>
-          {onRevoke && myVote != null && (
+          {onRevoke && myVote != null && !isClosed && (
             <button
               type="button"
               className="text-xs text-white/70 hover:underline underline-offset-2 bg-transparent hover:bg-transparent focus:bg-transparent active:bg-transparent border-0 p-0 m-0 h-auto min-h-0 min-w-0 shadow-none hover:shadow-none active:shadow-none ring-0 focus:ring-0 outline-none rounded-none"

@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect } from "react";
+import React, { Suspense, useEffect, useRef } from "react";
 import { useRoutes } from "react-router-dom";
 import GlobalNewAccountEducation from "./components/GlobalNewAccountEducation";
 import { CollectInvitationLinkCard } from "./features/trending/components/Invitation";
@@ -39,13 +39,16 @@ const TipModal = React.lazy(
 
 function PluginBootstrap({ children }: { children: React.ReactNode }) {
   const hostCtx = usePluginHostCtx();
+  const loadedRef = useRef(false);
   useEffect(() => {
+    if (loadedRef.current) return;
     const urls = CONFIG.PLUGINS || [];
     const allow = CONFIG.PLUGIN_CAPABILITIES_ALLOWLIST || [];
-    // Load first-party plugins first
     try { loadLocalPlugins(hostCtx, allow); } catch {}
-    if (urls.length === 0) return;
-    loadExternalPlugins(urls, hostCtx, allow).catch(() => {});
+    if (urls.length > 0) {
+      loadExternalPlugins(urls, hostCtx, allow).catch(() => {});
+    }
+    loadedRef.current = true;
   }, [hostCtx]);
   return <>{children}</>;
 }

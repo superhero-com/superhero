@@ -70,3 +70,13 @@ In `src/plugins/governance-polls/index.tsx`:
 - Extension compiles and passes `pnpm run ext:check`
 - Polls render; voting flows work
 - Composer poll attachment shows and works
+
+## 12) Submit your extension (Fork + PR)
+To contribute your extension to Superhero:
+1. Fork the repository to your GitHub account.
+2. Create a feature branch (e.g., `feat/polls-extension`).
+3. Add your plugin module under `src/plugins/<your-id>/` and any supporting files.
+4. Ensure local testing is done via `src/plugins/local.ts` (do not auto-register in production by default).
+5. Run `pnpm run ext:check` and fix any validation issues.
+6. Open a Pull Request from your fork/branch to this repository with a brief description and screenshots.
+7. Our CI will run the extension checks; address any feedback from reviewers.

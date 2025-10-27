@@ -1,5 +1,7 @@
 # Superhero App Extensions
 
+> Info: For a step-by-step walkthrough, see "How to build a Superhero App Extension (Polls example)": `docs/tutorials/build-governance-poll-extension.md`.
+
 Extensions are first-class modules that can add routes, menu items, feed entries, composer actions, item actions, modals, and composer attachments. They are authored with the existing plugin SDK and loaded at runtime.
 
 ## Capabilities

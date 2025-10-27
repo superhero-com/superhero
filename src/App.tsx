@@ -50,10 +50,8 @@ function PluginBootstrap({ children }: { children: React.ReactNode }) {
     const allow = CONFIG.PLUGIN_CAPABILITIES_ALLOWLIST || [];
     
     // Load local plugins first (synchronous)
-    let localSuccess = false;
     try {
       loadLocalPlugins(hostCtx, allow);
-      localSuccess = true;
     } catch (error) {
       console.error('Local plugins failed to load:', error);
     }
@@ -69,7 +67,8 @@ function PluginBootstrap({ children }: { children: React.ReactNode }) {
           setPluginsLoaded(true);
         });
     } else {
-      // No external plugins, mark as loaded after local plugins
+      // No external plugins, mark as loaded after local plugins attempt
+      // App continues even if local plugins fail (error is logged above)
       setPluginsLoaded(true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

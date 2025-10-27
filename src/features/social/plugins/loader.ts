@@ -1,6 +1,6 @@
 import { type SuperheroPlugin, type PluginExports } from '@/plugin-sdk';
 import { registerPlugin as registerFeed } from '@/features/social/feed-plugins/registry';
-import { composerRegistry, itemActionRegistry, routeRegistry, modalRegistry, attachmentRegistry } from './registries';
+import { composerRegistry, itemActionRegistry, routeRegistry, modalRegistry, attachmentRegistry, navRegistry } from './registries';
 
 export async function loadExternalPlugins(urls: string[], hostCtx: any, allow: string[] = []) {
   for (const url of urls || []) {
@@ -16,8 +16,17 @@ export async function loadExternalPlugins(urls: string[], hostCtx: any, allow: s
         if (exports.feed && allowed.includes('feed')) registerFeed(exports.feed);
         if (exports.composer && allowed.includes('composer')) composerRegistry.push(exports.composer);
         if (exports.itemActions && allowed.includes('item-actions')) itemActionRegistry.push(exports.itemActions);
-        if (exports.routes && allowed.includes('routes')) routeRegistry.push(...exports.routes);
+        if (exports.routes && allowed.includes('routes')) {
+          const existing = new Set(routeRegistry.map((r) => r.path));
+          const unique = exports.routes.filter((r) => !existing.has(r.path));
+          routeRegistry.push(...unique);
+        }
         if (exports.modals && allowed.includes('modals')) Object.assign(modalRegistry, exports.modals);
+        if (exports.menu && allowed.includes('routes')) {
+          const existing = new Set(navRegistry.map((m) => m.id));
+          const unique = exports.menu.filter((m) => !existing.has(m.id));
+          navRegistry.push(...unique);
+        }
         if ((exports as any).attachments && allowed.includes('composer')) attachmentRegistry.push(...((exports as any).attachments() || []));
       };
       plugin.setup({ ctx: hostCtx, register });

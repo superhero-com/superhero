@@ -1,4 +1,5 @@
 import React, { lazy } from "react";
+import { routeRegistry } from "@/features/social/plugins/registries";
 import { RouteObject, Navigate, useParams } from "react-router-dom";
 import SocialLayout from "./components/layout/SocialLayout";
 
@@ -89,7 +90,8 @@ function NavigateVotingPoll() {
   return <Navigate to={`/voting/poll/${encodeURIComponent(id || "")}`} replace />;
 }
 
-export const routes: RouteObject[] = [
+// Export a function that builds routes dynamically, including plugin routes
+export const getRoutes = (): RouteObject[] => [
   {
     path: "/",
     element: <SocialLayout />,
@@ -245,6 +247,8 @@ export const routes: RouteObject[] = [
   { path: "/terms", element: <Terms /> },
   { path: "/privacy", element: <Privacy /> },
   { path: "/faq", element: <FAQ /> },
+  // Plugin-provided routes appended at the end (top-level)
+  ...routeRegistry,
   {
     path: "*",
     element: <SocialLayout />,

@@ -147,13 +147,12 @@ const PollPanel: React.FC<AttachmentPanelProps> = ({ ctx, onRemove }) => {
   );
 };
 
-export function registerPollAttachment() {
-  const spec: ComposerAttachmentSpec = {
-    id: 'poll',
-    label: 'Poll',
-    Icon: ChartColumn,
-    Panel: PollPanel,
-    validate: (ctx) => {
+export const pollAttachmentSpec: ComposerAttachmentSpec = {
+  id: 'poll',
+  label: 'Poll',
+  Icon: ChartColumn,
+  Panel: PollPanel,
+  validate: (ctx) => {
       const opts = (ctx.getValue<string[]>('poll.options') || []).map((o) => o.trim()).filter(Boolean);
       const uniq = new Set(opts.map((o) => o.toLowerCase()));
       const errs: { field?: string; message: string }[] = [];
@@ -214,8 +213,10 @@ export function registerPollAttachment() {
         ctx.cacheLink?.(String(post.id), 'poll:failed', { error: String(e) });
       }
     },
-  };
-  if (!attachmentRegistry.find((a) => a.id === spec.id)) attachmentRegistry.push(spec);
+};
+
+export function registerPollAttachment() {
+  if (!attachmentRegistry.find((a) => a.id === pollAttachmentSpec.id)) attachmentRegistry.push(pollAttachmentSpec);
 }
 
 // Inline helper to render a pending/ready poll given a postId

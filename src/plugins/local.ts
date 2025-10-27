@@ -6,9 +6,10 @@ import { composerRegistry, itemActionRegistry, routeRegistry, modalRegistry, att
 // Example: import nftMarketplace from '@/plugins/nft-marketplace';
 import tokenCreated from '@/plugins/social/token-created';
 import pollCreated from '@/plugins/social/poll-created';
+import nftMarketplace from '@/plugins/nft-marketplace';
 
 const localPlugins: Array<any> = [
-  // nftMarketplace,
+  nftMarketplace,
   tokenCreated,
   pollCreated,
 ];

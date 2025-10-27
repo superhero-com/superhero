@@ -21,14 +21,12 @@ import FeedRenderer from "../feed-plugins/FeedRenderer";
 import { adaptPostToEntry } from "../feed-plugins/post";
 import type { FeedEntry } from "../feed-plugins/types";
 import { adaptTokenCreatedToEntry } from "../feed-plugins/token-created";
-import { registerPollAttachment } from "../feed-plugins/poll-created";
 import { getAllPlugins } from "../feed-plugins/registry";
 import { usePluginEntries } from "../feed-plugins/FeedOrchestrator";
 import { useAeSdk } from "@/hooks/useAeSdk";
 import { GovernanceApi } from "@/api/governance";
 
 // Built-in plugins are now registered via the plugin host (local/external loaders)
-registerPollAttachment();
 
 // Custom hook
 function useUrlQuery() {

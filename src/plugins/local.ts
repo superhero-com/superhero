@@ -9,6 +9,7 @@ import pollCreated from '@/plugins/social/poll-created';
 import nftMarketplace from '@/plugins/nft-marketplace';
 
 const localPlugins: Array<any> = [
+  // Ensure only one instance per plugin id gets registered
   nftMarketplace,
   tokenCreated,
   pollCreated,

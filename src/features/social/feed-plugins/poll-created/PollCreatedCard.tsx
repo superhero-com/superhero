@@ -33,9 +33,13 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
   const { chainName } = useChainName(author || '');
   const timeLeft = useMemo(() => {
     if (!closeHeight || !currentHeight) return undefined;
-    const blocksLeft = Math.max(0, closeHeight - currentHeight);
+    const blocksLeft = closeHeight - currentHeight;
+    
+    // Check if poll is closed
+    if (blocksLeft <= 0) return 'Closed';
+    
     const ms = blocksLeft * 3 * 60 * 1000; // ~3 minutes per block
-    const seconds = Math.max(1, Math.floor(ms / 1000));
+    const seconds = Math.floor(ms / 1000);
     if (seconds < 60) return `${seconds}s left`;
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m left`;

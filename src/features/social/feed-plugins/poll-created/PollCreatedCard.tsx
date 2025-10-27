@@ -148,7 +148,7 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
               className={cn(
                 styles.option, 
                 myVote === o.id && styles.optionSelected,
-                isClosed && 'opacity-75 cursor-default'
+                isClosed && styles.optionClosed
               )}
               aria-label={`${o.label} ${pct}%`}
               onClick={(e) => { e.stopPropagation(); if (canVote) onVoteOption(o.id); }}

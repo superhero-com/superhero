@@ -1,10 +1,10 @@
-import React, { Suspense, useEffect, useRef } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useRoutes } from "react-router-dom";
 import GlobalNewAccountEducation from "./components/GlobalNewAccountEducation";
 import { CollectInvitationLinkCard } from "./features/trending/components/Invitation";
 import ModalProvider from "./components/ModalProvider";
 import { useAeSdk, useAccount, useWalletConnect } from "./hooks";
-import { routes } from "./routes";
+import { getRoutes } from "./routes";
 import { PluginHostProvider, usePluginHostCtx } from "./features/social/plugins/PluginHostProvider";
 import { loadExternalPlugins } from "./features/social/plugins/loader";
 import { loadLocalPlugins } from "@/plugins/local";
@@ -40,17 +40,35 @@ const TipModal = React.lazy(
 function PluginBootstrap({ children }: { children: React.ReactNode }) {
   const hostCtx = usePluginHostCtx();
   const loadedRef = useRef(false);
+  const [pluginsLoaded, setPluginsLoaded] = useState(false);
+  
   useEffect(() => {
     if (loadedRef.current) return;
     const urls = CONFIG.PLUGINS || [];
     const allow = CONFIG.PLUGIN_CAPABILITIES_ALLOWLIST || [];
     try { loadLocalPlugins(hostCtx, allow); } catch {}
     if (urls.length > 0) {
-      loadExternalPlugins(urls, hostCtx, allow).catch(() => {});
+      loadExternalPlugins(urls, hostCtx, allow).catch(() => {}).finally(() => {
+        setPluginsLoaded(true);
+      });
+    } else {
+      setPluginsLoaded(true);
     }
     loadedRef.current = true;
   }, [hostCtx]);
+  
+  // Wait for plugins to load before rendering children with routes
+  if (!pluginsLoaded) {
+    return <div className="loading-fallback" />;
+  }
+  
   return <>{children}</>;
+}
+
+function DynamicRouter() {
+  // Generate routes after plugins are loaded
+  const routes = getRoutes();
+  return useRoutes(routes as any);
 }
 
 export default function App() {
@@ -104,7 +122,7 @@ export default function App() {
       <PluginHostProvider>
         <PluginBootstrap>
           <Suspense fallback={<div className="loading-fallback" />}>
-            <div className="app-routes-container">{useRoutes(routes as any)}</div>
+            <div className="app-routes-container"><DynamicRouter /></div>
           </Suspense>
         </PluginBootstrap>
       </PluginHostProvider>

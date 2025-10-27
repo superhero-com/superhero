@@ -90,7 +90,8 @@ function NavigateVotingPoll() {
   return <Navigate to={`/voting/poll/${encodeURIComponent(id || "")}`} replace />;
 }
 
-export const routes: RouteObject[] = [
+// Export a function that builds routes dynamically, including plugin routes
+export const getRoutes = (): RouteObject[] => [
   {
     path: "/",
     element: <SocialLayout />,

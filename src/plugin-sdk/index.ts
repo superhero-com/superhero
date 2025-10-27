@@ -56,6 +56,8 @@ export type PluginExports = {
   itemActions?: (ctx: ComposerActionCtx) => ItemAction[];
   routes?: Array<{ path: string; element: React.ReactNode }>;
   modals?: Record<string, React.FC<any>>;
+  // App navigation entries contributed by the plugin
+  menu?: NavItem[];
   // Optional: composer attachments surface
   attachments?: () => ComposerAttachmentSpec[];
 };
@@ -97,5 +99,8 @@ export type ComposerAttachmentSpec = {
   // Called after the post is mined; may enqueue work, push feed, update cache
   onAfterPost: (ctx: ComposerAttachmentCtx, post: { id: string; text: string }) => Promise<void>;
 };
+
+// Navigation contributions from plugins
+export type NavItem = { id: string; label: string; path: string; icon?: string; section?: string };
 
 

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { HeaderLogo } from '../../../icons';
 import HeaderWalletButton from './HeaderWalletButton';
-import { navigationItems } from './navigationItems';
+import { getNavigationItems } from './navigationItems';
 
 
 export default function WebAppHeader() {
@@ -49,7 +49,7 @@ export default function WebAppHeader() {
         </Link>
 
         <nav className="flex items-center gap-6 flex-grow md:gap-5 relative">
-          {navigationItems
+          {getNavigationItems()
             .filter((item: any) => !!item && !!item.id)
             .map((item: any) => {
               const commonClass = `no-underline font-medium px-3 py-2 rounded-lg transition-all duration-200 relative`;

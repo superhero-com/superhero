@@ -1,6 +1,6 @@
 import { type SuperheroPlugin, type PluginExports } from '@/plugin-sdk';
 import { registerPlugin as registerFeed } from '@/features/social/feed-plugins/registry';
-import { composerRegistry, itemActionRegistry, routeRegistry, modalRegistry, attachmentRegistry } from './registries';
+import { composerRegistry, itemActionRegistry, routeRegistry, modalRegistry, attachmentRegistry, navRegistry } from './registries';
 
 export async function loadExternalPlugins(urls: string[], hostCtx: any, allow: string[] = []) {
   for (const url of urls || []) {
@@ -18,6 +18,7 @@ export async function loadExternalPlugins(urls: string[], hostCtx: any, allow: s
         if (exports.itemActions && allowed.includes('item-actions')) itemActionRegistry.push(exports.itemActions);
         if (exports.routes && allowed.includes('routes')) routeRegistry.push(...exports.routes);
         if (exports.modals && allowed.includes('modals')) Object.assign(modalRegistry, exports.modals);
+        if (exports.menu && allowed.includes('routes')) navRegistry.push(...exports.menu);
         if ((exports as any).attachments && allowed.includes('composer')) attachmentRegistry.push(...((exports as any).attachments() || []));
       };
       plugin.setup({ ctx: hostCtx, register });

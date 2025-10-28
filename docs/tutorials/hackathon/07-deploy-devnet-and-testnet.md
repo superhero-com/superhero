@@ -1,4 +1,4 @@
-# 07 — Deploy: devnet and testnet
+# Deploy: Devnet and Testnet
 
 Run your tests and deployments against a local devnet or the public testnet.
 

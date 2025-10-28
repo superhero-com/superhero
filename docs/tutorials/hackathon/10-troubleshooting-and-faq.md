@@ -1,4 +1,4 @@
-# 10 — Troubleshooting & FAQ
+# Troubleshooting & FAQ
 
 ## Compiler fails with version error
 - Adjust the pragma to a version supported by your `aesophia_http` image

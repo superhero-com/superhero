@@ -1,4 +1,4 @@
-# 01 — Setup environment
+# Setup Environment
 
 This page gets you ready to build and test Sophia contracts and Superhero extensions with Cursor.
 

@@ -1,4 +1,4 @@
-# 05 — Contract walkthrough: Poll
+# Contract Walkthrough: Poll
 
 Design a simple, gas‑aware poll contract newcomers can extend.
 

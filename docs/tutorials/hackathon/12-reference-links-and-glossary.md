@@ -1,4 +1,4 @@
-# 12 — Reference links & glossary
+# Reference Links & Glossary
 
 ## Official links
 - Docs hub: https://docs.aeternity.com

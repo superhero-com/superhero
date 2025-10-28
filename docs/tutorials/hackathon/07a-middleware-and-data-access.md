@@ -1,4 +1,4 @@
-# 07a — Middleware and data access
+# Middleware and Data Access
 
 !!! note
     Your extension will often need to read blockchain data (txs, contracts, events). The æternity middleware provides indexed APIs so you don't have to parse blocks manually.

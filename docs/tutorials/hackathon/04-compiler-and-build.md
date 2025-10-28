@@ -1,4 +1,4 @@
-# 04 — Compiler and build
+# Compiler and Build
 
 Set up the Sophia HTTP compiler and connect your tests to it.
 

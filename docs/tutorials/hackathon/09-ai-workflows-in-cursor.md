@@ -1,4 +1,4 @@
-# 09 — AI workflows in Cursor
+# AI Workflows in Cursor
 
 Use AI effectively while keeping control of correctness and gas.
 

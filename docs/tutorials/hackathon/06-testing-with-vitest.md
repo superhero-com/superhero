@@ -1,4 +1,4 @@
-# 06 — Testing with Vitest
+# Testing with Vitest
 
 Compile, deploy, and call your Sophia contract using the JS SDK in Vitest.
 

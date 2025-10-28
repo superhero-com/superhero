@@ -1,4 +1,4 @@
-# 02 — Project scaffold
+# Project Scaffold
 
 Initialize a minimal workspace that works well with Cursor and supports compiling, deploying, and testing Sophia contracts.
 

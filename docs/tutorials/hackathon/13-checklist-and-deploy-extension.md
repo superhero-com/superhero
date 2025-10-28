@@ -1,4 +1,4 @@
-# 13 — Checklist & deploy extension
+# Checklist & Deploy Extension
 
 Use this checklist before you submit or deploy your hackathon project.
 

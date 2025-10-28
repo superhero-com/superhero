@@ -1,4 +1,4 @@
-# 00a — Quickstart (fast track)
+# Quickstart (Fast Track)
 
 !!! important
     Short on time? Follow this 10–15 minute path to get an extension running end‑to‑end.

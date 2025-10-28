@@ -1,4 +1,4 @@
-# 03 — Sophia basics for builders (10‑minute skim)
+# Sophia Basics for Builders
 
 You can rely on Cursor to scaffold most code, but read this once to avoid pitfalls.
 

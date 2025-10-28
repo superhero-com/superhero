@@ -1,4 +1,4 @@
-# 08 — Integrate into Superhero extension
+# Integrate into Superhero Extension
 
 Call your contract from a Superhero extension using the JS SDK and Plugin SDK.
 

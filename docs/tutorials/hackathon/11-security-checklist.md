@@ -1,4 +1,4 @@
-# 11 — Security checklist (Poll contracts)
+# Security Checklist
 
 Use this before deploying to testnet/mainnet.
 

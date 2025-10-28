@@ -1,4 +1,4 @@
-# 01a — Superhero Wallet & account
+# Superhero Wallet & Account
 
 !!! note
     You'll use Superhero Wallet to hold your æternity account, sign transactions, and connect your mini‑æpp to the Superhero app.

@@ -1,4 +1,4 @@
-# 08a — Plugin SDK deep dive
+# Plugin SDK Deep Dive
 
 !!! note
     The Plugin SDK lets your mini‑æpp integrate into Superhero: add composer attachments, feed entries, item actions, custom routes/modals, and menu entries.

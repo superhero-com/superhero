@@ -25,7 +25,7 @@ export default async (request: Request, context: any) => {
   const html = await res.text();
 
   const meta = await buildMeta(pathname, url);
-  const injected = injectHead(html, meta);
+  const injected = injectHead(html, meta, url.origin);
 
     const newHeaders = new Headers(res.headers);
     newHeaders.set('content-length', String(new TextEncoder().encode(injected).length));
@@ -43,6 +43,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
       title: 'Superhero – Crypto Social Network: Posts, Tokens, Governance',
       description: 'Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.',
       canonical: `${fullUrl.origin}/`,
+      ogImage: `${fullUrl.origin}/og-default.png`,
       jsonLd: {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
@@ -177,7 +178,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
   };
 }
 
-function injectHead(html: string, meta: Meta): string {
+function injectHead(html: string, meta: Meta, origin: string): string {
   const parts: string[] = [];
   parts.push(`<title>${escapeHtml(meta.title)}</title>`);
   if (meta.description) parts.push(`<meta name="description" content="${escapeHtml(meta.description)}">`);
@@ -187,13 +188,13 @@ function injectHead(html: string, meta: Meta): string {
   parts.push(`<meta property="og:title" content="${escapeAttr(meta.title)}">`);
   if (meta.description) parts.push(`<meta property="og:description" content="${escapeAttr(meta.description)}">`);
   if (meta.canonical) parts.push(`<meta property="og:url" content="${escapeAttr(meta.canonical)}">`);
-  parts.push(`<meta property=\"og:image\" content=\"${escapeAttr(meta.ogImage || '')}\">`);
+  parts.push(`<meta property=\"og:image\" content=\"${escapeAttr(absolutize(meta.ogImage, origin) || `${origin}/og-default.png`)}\">`);
   parts.push(`<meta property=\"og:image:width\" content=\"1200\">`);
   parts.push(`<meta property=\"og:image:height\" content=\"630\">`);
   parts.push(`<meta name="twitter:card" content="${meta.ogImage ? 'summary_large_image' : 'summary'}">`);
   parts.push(`<meta name="twitter:title" content="${escapeAttr(meta.title)}">`);
   if (meta.description) parts.push(`<meta name="twitter:description" content="${escapeAttr(meta.description)}">`);
-  parts.push(`<meta name=\"twitter:image\" content=\"${escapeAttr(meta.ogImage || '')}\">`);
+  parts.push(`<meta name=\"twitter:image\" content=\"${escapeAttr(absolutize(meta.ogImage, origin) || `${origin}/og-default.png`)}\">`);
   const jsonLdArray = Array.isArray(meta.jsonLd) ? meta.jsonLd : meta.jsonLd ? [meta.jsonLd] : [];
   for (const schema of jsonLdArray) {
     parts.push(`<script type="application/ld+json">${JSON.stringify(schema)}</script>`);
@@ -226,5 +227,3 @@ function absolutize(url?: string, origin?: string): string | undefined {
   if (url.startsWith('/')) return `${origin || ''}${url}`;
   return `${origin || ''}/${url}`;
 }
-
-

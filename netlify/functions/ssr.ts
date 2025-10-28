@@ -50,7 +50,7 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
   if (postMatch) {
     const postId = postMatch[1];
     const id = postId.endsWith('_v3') ? postId : `${postId}_v3`;
-    const apiUrl = `${API_BASE.replace(/\/$/, '')}/posts/${encodeURIComponent(id)}`;
+    const apiUrl = `${API_BASE.replace(/\/$/, '')}/api/posts/${encodeURIComponent(id)}`;
     try {
       const r = await fetch(apiUrl, { headers: { accept: 'application/json' } });
       if (r.ok) {
@@ -83,7 +83,7 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
   const userMatch = pathname.match(/^\/users\/([^/]+)/);
   if (userMatch) {
     const address = userMatch[1];
-    const apiUrl = `${API_BASE.replace(/\/$/, '')}/accounts/${encodeURIComponent(address)}`;
+    const apiUrl = `${API_BASE.replace(/\/$/, '')}/api/accounts/${encodeURIComponent(address)}`;
     try {
       const r = await fetch(apiUrl, { headers: { accept: 'application/json' } });
       if (r.ok) {
@@ -105,7 +105,7 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
   if (tokenMatch) {
     const tokenName = tokenMatch[1];
     const address = tokenName.toUpperCase();
-    const apiUrl = `${API_BASE.replace(/\/$/, '')}/tokens/${encodeURIComponent(address)}`;
+    const apiUrl = `${API_BASE.replace(/\/$/, '')}/api/tokens/${encodeURIComponent(address)}`;
     try {
       const r = await fetch(apiUrl, { headers: { accept: 'application/json' } });
       if (r.ok) {
@@ -175,6 +175,3 @@ function escapeHtml(s: string): string {
 function escapeAttr(s: string): string {
   return escapeHtml(s).replace(/'/g, '&#39;');
 }
-
-
-

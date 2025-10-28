@@ -58,7 +58,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
   if (postMatch) {
     const postId = postMatch[1];
     const id = postId.endsWith('_v3') ? postId : `${postId}_v3`;
-    const apiUrl = `${API_BASE.replace(/\/$/, '')}/posts/${encodeURIComponent(id)}`;
+    const apiUrl = `${API_BASE.replace(/\/$/, '')}/api/posts/${encodeURIComponent(id)}`;
     try {
       const r = await fetch(apiUrl, { headers: { accept: 'application/json' } });
       if (r.ok) {
@@ -102,19 +102,18 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
   const userMatch = pathname.match(/^\/users\/([^/]+)/);
   if (userMatch) {
     const address = userMatch[1];
-    const apiUrl = `${API_BASE.replace(/\/$/, '')}/accounts/${encodeURIComponent(address)}`;
+    const apiUrl = `${API_BASE.replace(/\/$/, '')}/api/accounts/${encodeURIComponent(address)}`;
     try {
       const r = await fetch(apiUrl, { headers: { accept: 'application/json' } });
       if (r.ok) {
         const data: any = await r.json();
         const display = (data?.chain_name || address) as string;
         const bio = (data?.bio || '').toString();
-        const avatar = absolutize((data?.avatar_url || data?.avatar || data?.image_url) as string | undefined, fullUrl.origin);
         return {
           title: `${display} – Profile – Superhero`,
-          description: truncate(bio || `View ${display} on Superhero, the crypto social network.`, 200),
+          description: bio ? truncate(bio, 200) : 'View profile on Superhero, the crypto social network.',
           canonical: `${fullUrl.origin}/users/${address}`,
-          ogImage: avatar || `${fullUrl.origin}/og-default.png`,
+          ogImage: `${fullUrl.origin}/og-default.png`,
           ogType: 'profile',
           jsonLd: {
             '@context': 'https://schema.org',
@@ -122,7 +121,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
             name: display,
             identifier: address,
             description: bio || undefined,
-            image: avatar,
+            image: `${fullUrl.origin}/og-default.png`,
           },
         };
       }
@@ -140,7 +139,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
   if (tokenMatch) {
     const tokenName = tokenMatch[1];
     const address = tokenName.toUpperCase();
-    const apiUrl = `${API_BASE.replace(/\/$/, '')}/tokens/${encodeURIComponent(address)}`;
+    const apiUrl = `${API_BASE.replace(/\/$/, '')}/api/tokens/${encodeURIComponent(address)}`;
     try {
       const r = await fetch(apiUrl, { headers: { accept: 'application/json' } });
       if (r.ok) {

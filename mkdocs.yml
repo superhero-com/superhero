@@ -1,7 +1,7 @@
 site_name: Superhero Hackathon
-site_url: https://roaring-rugelach-0df7c7.netlify.app
 repo_url: https://github.com/superhero-com/superhero
 repo_name: superhero-com/superhero
+use_directory_urls: true
 
 theme:
   name: material

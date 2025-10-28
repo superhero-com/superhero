@@ -1,47 +1,42 @@
 # Build Superhero Extensions with Sophia (AI‑assisted)
 
-Hackathon‑friendly tutorial for newcomers using Cursor or other AI tools to build Superhero extensions backed by their own Sophia smart contracts.
+> [!NOTE]
+> Welcome, hackathon builders! This guide is crafted by Superhero to help you ship a mini‑æpp that integrates directly into the Superhero app (social + DeFi) using Sophia smart contracts and the Plugin SDK.
+
+This tutorial is designed for newcomers using Cursor or other AI tools to build Superhero extensions backed by their own Sophia smart contracts.
 
 ## What you’ll build
-- A minimal Poll contract (create poll, vote, close, read results)
-- A TypeScript test harness that compiles, deploys, and calls the contract
-- An extension that calls the contract via the JS SDK
+- A small æternity mini‑æpp (extension) that integrates into superhero.com
+- A TypeScript test harness that compiles, deploys, and calls your contract
+- An extension that calls the contract via the JS SDK and Plugin SDK
 
 ## Fast feedback loop
-1) Write/refine contract with Cursor → 2) Compile via `aesophia_http` → 3) Test with Vitest + JS SDK → 4) Integrate into an extension → 5) Deploy to devnet/testnet.
+1) Write/refine contract with Cursor → 2) Compile via `aesophia_http` → 3) Test with Vitest + JS SDK → 4) Integrate into a Superhero extension → 5) Deploy to devnet/testnet.
 
 ## High‑level architecture
-- Contract (Sophia) ↔ ACI ↔ JS SDK (`@aeternity/aepp-sdk`) ↔ Extension UI (Superhero)
+- Contract (Sophia) ↔ ACI ↔ JS SDK (`@aeternity/aepp-sdk`) ↔ Superhero Plugin SDK ↔ Extension UI
 
-You will:
-- Pin a compiler version and generate an ACI from source
-- Use SDK to deploy/call in tests and from the extension
-- Emit events for off‑chain indexing
-
-## Prerequisites
-- Node.js LTS, Git, Docker
-- Cursor (or VS Code)
-- An æternity account (local dev key for devnet; funded key for testnet)
-
-## Minimal concepts to skim
-- `state`, `init`, `entrypoint` vs `stateful entrypoint`
-- `Call.caller` for auth; `Chain` for time windows
-- Gas‑aware storage (prefer `Map` lookups; avoid unbounded loops)
-- Guards with `require`/`abort`; small events for indexing
+> [!TIP]
+> You can skim most language details. Focus on state + entrypoints, auth with `Call.caller`, time windows via `Chain`, and gas‑aware design.
 
 ## Pages in this tutorial
-1. [Setup environment](./01-setup-environment.md)
-2. [Project scaffold](./02-project-scaffold.md)
-3. [Sophia basics for builders (10‑minute skim)](./03-sophia-basics-for-builders.md)
-4. [Compiler and build](./04-compiler-and-build.md)
-5. [Contract walkthrough: Poll](./05-contract-poll-walkthrough.md)
-6. [Testing with Vitest](./06-testing-with-vitest.md)
-7. [Deploy: devnet and testnet](./07-deploy-devnet-and-testnet.md)
-8. [Integrate into Superhero extension](./08-integrate-into-superhero-extension.md)
-9. [AI workflows in Cursor](./09-ai-workflows-in-cursor.md)
-10. [Troubleshooting & FAQ](./10-troubleshooting-and-faq.md)
-11. [Security checklist](./11-security-checklist.md)
-12. [Reference links & glossary](./12-reference-links-and-glossary.md)
+1. [Quickstart (fast track)](./00a-quickstart.md)
+2. [Setup environment](./01-setup-environment.md)
+3. [Superhero Wallet & account](./01a-superhero-wallet-and-account.md)
+4. [Project scaffold](./02-project-scaffold.md)
+5. [Sophia basics for builders (10‑minute skim)](./03-sophia-basics-for-builders.md)
+6. [Compiler and build](./04-compiler-and-build.md)
+7. [Contract walkthrough: Poll (example)](./05-contract-poll-walkthrough.md)
+8. [Testing with Vitest](./06-testing-with-vitest.md)
+9. [Deploy: devnet and testnet](./07-deploy-devnet-and-testnet.md)
+10. [Middleware and data access](./07a-middleware-and-data-access.md)
+11. [Integrate into Superhero extension](./08-integrate-into-superhero-extension.md)
+12. [Plugin SDK deep dive](./08a-plugin-sdk-deep-dive.md)
+13. [AI workflows in Cursor](./09-ai-workflows-in-cursor.md)
+14. [Troubleshooting & FAQ](./10-troubleshooting-and-faq.md)
+15. [Security checklist](./11-security-checklist.md)
+16. [Reference links & glossary](./12-reference-links-and-glossary.md)
+17. [Checklist & deploy extension](./13-checklist-and-deploy-extension.md)
 
 ## Official references
 - Docs hub: https://docs.aeternity.com

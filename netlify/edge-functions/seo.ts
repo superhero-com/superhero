@@ -212,7 +212,7 @@ function truncate(s: string, n: number): string {
 }
 
 function escapeHtml(s: string): string {
-  return s.replace(/[&<>"]+/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' } as any)[c]);
+  return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' } as any)[c]);
 }
 
 function escapeAttr(s: string): string {

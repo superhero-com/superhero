@@ -42,6 +42,7 @@
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "ethers": "^6.13.2",
+    "express": "^4.19.2",
     "glob": "^11.0.3",
     "i18next": "^23.7.6",
     "is-fqdn": "^2.0.1",

@@ -21,5 +21,5 @@ You can rely on Cursor to scaffold most code, but read this once to avoid pitfal
 - Stdlib (Map, List, Option, Chain, Call): https://github.com/aeternity/aesophia/blob/master/docs/sophia_stdlib.md
 
 ## Next
-- 04 — Compiler and build
-- 05 — Contract walkthrough: Poll
+- [04 — Compiler and build](./04-compiler-and-build.md)
+- [05 — Contract walkthrough: Poll](./05-contract-poll-walkthrough.md)

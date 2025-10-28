@@ -25,4 +25,4 @@ In longer tests, deploy once and reuse the contract address to reduce cost/time.
 - Events are emitted where needed for indexing
 
 ## Next
-- 08 — Integrate into Superhero extension
+- [08 — Integrate into Superhero extension](./08-integrate-into-superhero-extension.md)

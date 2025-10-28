@@ -50,4 +50,4 @@ describe('Poll contract', () => {
 - Prefer height windows for deterministic tests
 
 ## Next
-- 07 — Deploy: devnet and testnet
+- [07 — Deploy: devnet and testnet](./07-deploy-devnet-and-testnet.md)

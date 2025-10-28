@@ -31,4 +31,4 @@ Keep events small. Index off‑chain when needed.
 - Keep strings reasonably short
 
 ## Next
-- 06 — Testing with Vitest
+- [06 — Testing with Vitest](./06-testing-with-vitest.md)

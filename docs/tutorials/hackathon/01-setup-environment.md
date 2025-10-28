@@ -32,4 +32,4 @@ docker --version
 If Docker is installed, you’ll be able to run the Sophia HTTP compiler locally in the next steps.
 
 ## What’s next
-- Move to 02 — Project scaffold to initialize a workspace, add dependencies, and create `.env` profiles for devnet and testnet.
+- Move to [02 — Project scaffold](./02-project-scaffold.md) to initialize a workspace, add dependencies, and create `.env` profiles for devnet and testnet.

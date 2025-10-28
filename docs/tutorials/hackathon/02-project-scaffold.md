@@ -45,5 +45,5 @@ SECRET_KEY=your_funded_testnet_private_key_hex
 Switch by exporting variables, or use a small helper script to load one profile before running tests.
 
 ## Next steps
-- 03 — Sophia basics for builders (skim)
-- 04 — Compiler and build (run local `aesophia_http` or configure a remote compiler)
+- [03 — Sophia basics for builders (skim)](./03-sophia-basics-for-builders.md)
+- [04 — Compiler and build](./04-compiler-and-build.md)

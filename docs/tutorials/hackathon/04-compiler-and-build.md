@@ -20,5 +20,5 @@ pragma solidity 6.5.0
 Adjust to a version supported by your `aesophia_http` image. Check the `aesophia` release notes if compilation fails.
 
 ## Next
-- 05 — Contract walkthrough: Poll
-- 06 — Testing with Vitest
+- [05 — Contract walkthrough: Poll](./05-contract-poll-walkthrough.md)
+- [06 — Testing with Vitest](./06-testing-with-vitest.md)

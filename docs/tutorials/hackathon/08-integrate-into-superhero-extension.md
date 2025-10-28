@@ -37,4 +37,4 @@ const results = await contract.methods.get_results(0)
 - Show tallies and event‑driven updates
 
 ## Next
-- 09 — AI workflows in Cursor
+- [09 — AI workflows in Cursor](./09-ai-workflows-in-cursor.md)

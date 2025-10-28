@@ -23,4 +23,4 @@ Use AI effectively while keeping control of correctness and gas.
 - Large loops or strings → watch gas usage
 
 ## Next
-- 10 — Troubleshooting & FAQ
+- [10 — Troubleshooting & FAQ](./10-troubleshooting-and-faq.md)

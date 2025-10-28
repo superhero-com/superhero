@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import Head from "../seo/Head";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import AeButton from "../components/AeButton";
 import RightRail from "../components/layout/RightRail";
@@ -193,6 +194,18 @@ export default function UserProfile({
 
   const content = (
     <div className="w-full">
+      <Head
+        title={`${chainName || effectiveAddress} – Profile – Superhero`}
+        description={(bioText || `View ${chainName || effectiveAddress} on Superhero, the crypto social network.`).slice(0, 160)}
+        canonicalPath={`/users/${address}`}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'Person',
+          name: chainName || effectiveAddress,
+          identifier: effectiveAddress,
+          description: bioText || undefined,
+        }}
+      />
       <div className="mb-4">
         <AeButton
           onClick={() => {

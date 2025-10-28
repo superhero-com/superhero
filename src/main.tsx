@@ -12,6 +12,7 @@ import { AeSdkProvider } from './context/AeSdkProvider';
 import './i18n';
 import './styles/base.scss';
 import './styles/tailwind.css';
+import { HelmetProvider } from 'react-helmet-async';
 
 OpenAPI.BASE = (CONFIG.SUPERHERO_API_URL || 'https://api.superhero.com').replace(/\/$/, '');
 
@@ -32,19 +33,21 @@ const queryClient = new QueryClient({
 
   root.render(
     <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <Provider>
-          <ToastProvider>
-            <BrowserRouter>
-              <ErrorBoundary>
-                <AeSdkProvider>
-                  <App />
-                </AeSdkProvider>
-              </ErrorBoundary>
-            </BrowserRouter>
-          </ToastProvider>
-        </Provider>
-      </QueryClientProvider>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <Provider>
+            <ToastProvider>
+              <BrowserRouter>
+                <ErrorBoundary>
+                  <AeSdkProvider>
+                    <App />
+                  </AeSdkProvider>
+                </ErrorBoundary>
+              </BrowserRouter>
+            </ToastProvider>
+          </Provider>
+        </QueryClientProvider>
+      </HelmetProvider>
     </React.StrictMode>,
   );
 })();

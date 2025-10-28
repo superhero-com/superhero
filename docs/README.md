@@ -4,7 +4,7 @@ Local preview:
 
 ```bash
 python -m pip install --upgrade pip
-pip install -r requirements-docs.txt
+pip install -r docs/requirements.txt
 mkdocs serve
 ```
 

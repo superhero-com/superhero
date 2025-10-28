@@ -35,7 +35,7 @@ nav:
 
 plugins:
   - search
-  - github-admonitions
+  - search
 
 markdown_extensions:
   - admonition

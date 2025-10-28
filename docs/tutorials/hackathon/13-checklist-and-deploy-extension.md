@@ -19,8 +19,8 @@ Use this checklist before you submit or deploy your hackathon project.
 - Avoid unbounded loops and large payloads
 - Never expose private keys; use Wallet for signing
 
-> [!IMPORTANT]
-> Review the [Security checklist](./11-security-checklist.md) before deploying.
+!!! important
+    Review the [Security checklist](./11-security-checklist.md) before deploying.
 
 ## Submission & deploy
 - Include README with setup and env docs

@@ -1,7 +1,7 @@
 # 08a — Plugin SDK deep dive
 
-> [!NOTE]
-> The Plugin SDK lets your mini‑æpp integrate into Superhero: add composer attachments, feed entries, item actions, custom routes/modals, and menu entries.
+!!! note
+    The Plugin SDK lets your mini‑æpp integrate into Superhero: add composer attachments, feed entries, item actions, custom routes/modals, and menu entries.
 
 ## Capabilities (v1.x)
 - `feed`: add new item kinds to the unified feed
@@ -59,8 +59,8 @@ export default definePlugin({
 });
 ```
 
-> [!TIP]
-> Use `ensureWallet()` inside attachments to request a connected wallet SDK and optional chain context (e.g., current height).
+!!! tip
+    Use `ensureWallet()` inside attachments to request a connected wallet SDK and optional chain context (e.g., current height).
 
 ## Feed plugins
 - Implement `fetchPage(page)` and `Render({ entry })`
@@ -78,8 +78,8 @@ export default definePlugin({
 - `storage.get/set` for lightweight persistence
 - `theme.colorScheme` to adapt visuals
 
-> [!WARNING]
-> Keep attachments lean: validate inputs, avoid heavy on-chain loops, and prefer emitting small events or pushing feed entries for off‑chain processing.
+!!! warning
+    Keep attachments lean: validate inputs, avoid heavy on-chain loops, and prefer emitting small events or pushing feed entries for off‑chain processing.
 
 ## Next
 - Back to [Integrate into Superhero extension](./08-integrate-into-superhero-extension.md)

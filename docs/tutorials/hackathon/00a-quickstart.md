@@ -1,7 +1,7 @@
 # 00a — Quickstart (fast track)
 
-> [!IMPORTANT]
-> Short on time? Follow this 10–15 minute path to get an extension running end‑to‑end.
+!!! important
+    Short on time? Follow this 10–15 minute path to get an extension running end‑to‑end.
 
 ## 1) Install Superhero Wallet
 - Add the Chrome extension and create/import an æternity account.
@@ -29,5 +29,5 @@ docker run --rm -p 3080:3080 aeternity/aesophia_http:latest
 ## 7) Integrate into Superhero
 - Follow: [08 — Integrate into Superhero extension](./08-integrate-into-superhero-extension.md)
 
-> [!TIP]
-> Ready for more? Explore [Plugin SDK deep dive](./08a-plugin-sdk-deep-dive.md) and [Middleware and data access](./07a-middleware-and-data-access.md).
+!!! tip
+    Ready for more? Explore [Plugin SDK deep dive](./08a-plugin-sdk-deep-dive.md) and [Middleware and data access](./07a-middleware-and-data-access.md).

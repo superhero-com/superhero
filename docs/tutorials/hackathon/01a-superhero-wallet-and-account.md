@@ -1,20 +1,20 @@
 # 01a — Superhero Wallet & account
 
-> [!NOTE]
-> You’ll use Superhero Wallet to hold your æternity account, sign transactions, and connect your mini‑æpp to the Superhero app.
+!!! note
+    You'll use Superhero Wallet to hold your æternity account, sign transactions, and connect your mini‑æpp to the Superhero app.
 
 ## Install the wallet
 - Chrome: Superhero Wallet extension — https://chromewebstore.google.com/detail/superhero-wallet/mnhmmkepfddpifjkamaligfeemcbhdne
 
-> [!TIP]
-> After installing, pin the extension for quick access.
+!!! tip
+    After installing, pin the extension for quick access.
 
 ## Create or import an account
-- Choose “Create” to generate a new seed phrase, or “Import” to restore an existing one
+- Choose "Create" to generate a new seed phrase, or "Import" to restore an existing one
 - Write down the seed phrase offline; never share it
 
-> [!IMPORTANT]
-> Back up your seed phrase. Anyone with your seed can control your account.
+!!! important
+    Back up your seed phrase. Anyone with your seed can control your account.
 
 ## Switch to testnet and fund
 - In settings, select æternity testnet

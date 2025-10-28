@@ -2,8 +2,8 @@
 
 Call your contract from a Superhero extension using the JS SDK and Plugin SDK.
 
-> [!NOTE]
-> New to the Plugin SDK? Read the [Plugin SDK deep dive](./08a-plugin-sdk-deep-dive.md) for capabilities and examples.
+!!! note
+    New to the Plugin SDK? Read the [Plugin SDK deep dive](./08a-plugin-sdk-deep-dive.md) for capabilities and examples.
 
 ## Expose contract address
 Provide a network‑specific address via env, e.g. `VITE_POLL_CONTRACT`.
@@ -37,8 +37,8 @@ const contract = await aeSdk.getContractInstance({
 const results = await contract.methods.get_results(0)
 ```
 
-> [!TIP]
-> Consider emitting small on‑chain events and handling heavy processing off‑chain, then pushing entries into the feed via `pushFeedEntry`.
+!!! tip
+    Consider emitting small on‑chain events and handling heavy processing off‑chain, then pushing entries into the feed via `pushFeedEntry`.
 
 ## UI/UX tips
 - Disable action buttons if not in open window or while pending

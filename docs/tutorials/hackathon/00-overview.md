@@ -30,18 +30,18 @@ You will:
 - Guards with `require`/`abort`; small events for indexing
 
 ## Pages in this tutorial
-- [01 — Setup environment](./01-setup-environment.md)
-- [02 — Project scaffold](./02-project-scaffold.md)
-- [03 — Sophia basics for builders (10‑minute skim)](./03-sophia-basics-for-builders.md)
-- [04 — Compiler and build](./04-compiler-and-build.md)
-- [05 — Contract walkthrough: Poll](./05-contract-poll-walkthrough.md)
-- [06 — Testing with Vitest](./06-testing-with-vitest.md)
-- [07 — Deploy: devnet and testnet](./07-deploy-devnet-and-testnet.md)
-- [08 — Integrate into Superhero extension](./08-integrate-into-superhero-extension.md)
-- [09 — AI workflows in Cursor](./09-ai-workflows-in-cursor.md)
-- [10 — Troubleshooting & FAQ](./10-troubleshooting-and-faq.md)
-- [11 — Security checklist](./11-security-checklist.md)
-- [12 — Reference links & glossary](./12-reference-links-and-glossary.md)
+1. [Setup environment](./01-setup-environment.md)
+2. [Project scaffold](./02-project-scaffold.md)
+3. [Sophia basics for builders (10‑minute skim)](./03-sophia-basics-for-builders.md)
+4. [Compiler and build](./04-compiler-and-build.md)
+5. [Contract walkthrough: Poll](./05-contract-poll-walkthrough.md)
+6. [Testing with Vitest](./06-testing-with-vitest.md)
+7. [Deploy: devnet and testnet](./07-deploy-devnet-and-testnet.md)
+8. [Integrate into Superhero extension](./08-integrate-into-superhero-extension.md)
+9. [AI workflows in Cursor](./09-ai-workflows-in-cursor.md)
+10. [Troubleshooting & FAQ](./10-troubleshooting-and-faq.md)
+11. [Security checklist](./11-security-checklist.md)
+12. [Reference links & glossary](./12-reference-links-and-glossary.md)
 
 ## Official references
 - Docs hub: https://docs.aeternity.com

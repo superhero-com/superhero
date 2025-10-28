@@ -1,8 +1,10 @@
 [build]
   command = """
-    if [ "$NETLIFY_DOCS_SITE" = "1" ]; then
+    if [ -n "$NETLIFY_DOCS_SITE" ]; then
+      echo "Building docs site..."
       python -m pip install --upgrade pip && python -m pip install -r docs/requirements.txt && python -m mkdocs build
     else
+      echo "Building app site..."
       npm run build
     fi
   """

@@ -6,6 +6,7 @@ type Meta = {
   canonical?: string;
   ogImage?: string;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  ogType?: string;
 };
 
 const ORIGIN = 'https://superhero.com';
@@ -21,10 +22,10 @@ export default async (request: Request, context: any) => {
     const contentType = res.headers.get('content-type') || '';
     if (!contentType.includes('text/html')) return res;
 
-    const html = await res.text();
+  const html = await res.text();
 
-    const meta = await buildMeta(pathname, url);
-    const injected = injectHead(html, meta);
+  const meta = await buildMeta(pathname, url);
+  const injected = injectHead(html, meta);
 
     const newHeaders = new Headers(res.headers);
     newHeaders.set('content-length', String(new TextEncoder().encode(injected).length));
@@ -41,12 +42,12 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
     return {
       title: 'Superhero – Crypto Social Network: Posts, Tokens, Governance',
       description: 'Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.',
-      canonical: `${ORIGIN}/`,
+      canonical: `${fullUrl.origin}/`,
       jsonLd: {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
         name: 'Superhero',
-        url: ORIGIN,
+        url: fullUrl.origin,
       },
     };
   }
@@ -61,13 +62,15 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
       const r = await fetch(apiUrl, { headers: { accept: 'application/json' } });
       if (r.ok) {
         const data: any = await r.json();
-        const content: string = (data?.content || '').toString();
+        const raw: string = (data?.content || '').toString();
+        const content: string = raw.replace(/\s+/g, ' ').trim();
         const media: string[] = Array.isArray(data?.media) ? data.media : [];
         return {
           title: `${truncate(content, 80) || 'Post'} – Superhero`,
-          description: truncate(content, 160) || 'View post on Superhero, the crypto social network.',
-          canonical: `${ORIGIN}/post/${postId}`,
-          ogImage: media[0],
+          description: truncate(content, 200) || 'View post on Superhero, the crypto social network.',
+          canonical: `${fullUrl.origin}/post/${postId}`,
+          ogImage: absolutize(media[0], fullUrl.origin),
+          ogType: 'article',
           jsonLd: {
             '@context': 'https://schema.org',
             '@type': 'SocialMediaPosting',
@@ -89,7 +92,8 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
     } catch {}
     return {
       title: 'Post – Superhero',
-      canonical: `${ORIGIN}/post/${postId}`,
+      canonical: `${fullUrl.origin}/post/${postId}`,
+      ogType: 'article',
     };
   }
 
@@ -104,23 +108,29 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
         const data: any = await r.json();
         const display = (data?.chain_name || address) as string;
         const bio = (data?.bio || '').toString();
+        const avatar = absolutize((data?.avatar_url || data?.avatar || data?.image_url) as string | undefined, fullUrl.origin);
         return {
           title: `${display} – Profile – Superhero`,
-          description: truncate(bio || `View ${display} on Superhero, the crypto social network.`, 160),
-          canonical: `${ORIGIN}/users/${address}`,
+          description: truncate(bio || `View ${display} on Superhero, the crypto social network.`, 200),
+          canonical: `${fullUrl.origin}/users/${address}`,
+          ogImage: avatar || `${fullUrl.origin}/og-default.png`,
+          ogType: 'profile',
           jsonLd: {
             '@context': 'https://schema.org',
             '@type': 'Person',
             name: display,
             identifier: address,
             description: bio || undefined,
+            image: avatar,
           },
         };
       }
     } catch {}
     return {
       title: `${address} – Profile – Superhero`,
-      canonical: `${ORIGIN}/users/${address}`,
+      canonical: `${fullUrl.origin}/users/${address}`,
+      ogImage: `${fullUrl.origin}/og-default.png`,
+      ogType: 'profile',
     };
   }
 
@@ -136,30 +146,34 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
         const data: any = await r.json();
         const symbol = data?.symbol || data?.name || address;
         const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
+        const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo) as string | undefined, fullUrl.origin);
         return {
           title: `${symbol} – Token on Superhero`,
-          description: truncate(desc, 160),
-          canonical: `${ORIGIN}/trends/tokens/${tokenName}`,
+          description: truncate(desc, 200),
+          canonical: `${fullUrl.origin}/trends/tokens/${tokenName}`,
+          ogImage: tokenImg || `${fullUrl.origin}/og-default.png`,
           jsonLd: {
             '@context': 'https://schema.org',
             '@type': 'CryptoCurrency',
             name: data?.name || data?.symbol,
             symbol: data?.symbol,
             identifier: data?.address || data?.sale_address,
+            image: tokenImg,
           },
         };
       }
     } catch {}
     return {
       title: `${address} – Token on Superhero`,
-      canonical: `${ORIGIN}/trends/tokens/${tokenName}`,
+      canonical: `${fullUrl.origin}/trends/tokens/${tokenName}`,
+      ogImage: `${fullUrl.origin}/og-default.png`,
     };
   }
 
   // Default: pass-through title with canonical
   return {
     title: 'Superhero',
-    canonical: `${ORIGIN}${pathname}`,
+    canonical: `${fullUrl.origin}${pathname}`,
   };
 }
 
@@ -169,15 +183,17 @@ function injectHead(html: string, meta: Meta): string {
   if (meta.description) parts.push(`<meta name="description" content="${escapeHtml(meta.description)}">`);
   if (meta.canonical) parts.push(`<link rel="canonical" href="${escapeAttr(meta.canonical)}">`);
   parts.push(`<meta property="og:site_name" content="Superhero">`);
-  parts.push(`<meta property="og:type" content="website">`);
+  parts.push(`<meta property="og:type" content="${escapeAttr(meta.ogType || 'website')}">`);
   parts.push(`<meta property="og:title" content="${escapeAttr(meta.title)}">`);
   if (meta.description) parts.push(`<meta property="og:description" content="${escapeAttr(meta.description)}">`);
   if (meta.canonical) parts.push(`<meta property="og:url" content="${escapeAttr(meta.canonical)}">`);
-  parts.push(`<meta property=\"og:image\" content=\"${escapeAttr(meta.ogImage || '/og-default.png')}\">`);
+  parts.push(`<meta property=\"og:image\" content=\"${escapeAttr(meta.ogImage || '')}\">`);
+  parts.push(`<meta property=\"og:image:width\" content=\"1200\">`);
+  parts.push(`<meta property=\"og:image:height\" content=\"630\">`);
   parts.push(`<meta name="twitter:card" content="${meta.ogImage ? 'summary_large_image' : 'summary'}">`);
   parts.push(`<meta name="twitter:title" content="${escapeAttr(meta.title)}">`);
   if (meta.description) parts.push(`<meta name="twitter:description" content="${escapeAttr(meta.description)}">`);
-  parts.push(`<meta name=\"twitter:image\" content=\"${escapeAttr(meta.ogImage || '/og-default.png')}\">`);
+  parts.push(`<meta name=\"twitter:image\" content=\"${escapeAttr(meta.ogImage || '')}\">`);
   const jsonLdArray = Array.isArray(meta.jsonLd) ? meta.jsonLd : meta.jsonLd ? [meta.jsonLd] : [];
   for (const schema of jsonLdArray) {
     parts.push(`<script type="application/ld+json">${JSON.stringify(schema)}</script>`);
@@ -201,6 +217,14 @@ function escapeHtml(s: string): string {
 
 function escapeAttr(s: string): string {
   return escapeHtml(s).replace(/'/g, '&#39;');
+}
+
+function absolutize(url?: string, origin?: string): string | undefined {
+  if (!url) return undefined;
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith('//')) return `https:${url}`;
+  if (url.startsWith('/')) return `${origin || ''}${url}`;
+  return `${origin || ''}/${url}`;
 }
 
 

@@ -12,26 +12,26 @@ theme:
     - content.tabs.link
 
 nav:
-  - Overview: docs/tutorials/hackathon/00-overview.md
-  - Quickstart: docs/tutorials/hackathon/00a-quickstart.md
+  - Overview: tutorials/hackathon/00-overview.md
+  - Quickstart: tutorials/hackathon/00a-quickstart.md
   - Setup:
-      - Environment: docs/tutorials/hackathon/01-setup-environment.md
-      - Wallet & Account: docs/tutorials/hackathon/01a-superhero-wallet-and-account.md
+      - Environment: tutorials/hackathon/01-setup-environment.md
+      - Wallet & Account: tutorials/hackathon/01a-superhero-wallet-and-account.md
   - Build:
-      - Project scaffold: docs/tutorials/hackathon/02-project-scaffold.md
-      - Sophia basics: docs/tutorials/hackathon/03-sophia-basics-for-builders.md
-      - Compiler & build: docs/tutorials/hackathon/04-compiler-and-build.md
-      - Contract walkthrough: docs/tutorials/hackathon/05-contract-poll-walkthrough.md
-      - Testing: docs/tutorials/hackathon/06-testing-with-vitest.md
-      - Deploy: docs/tutorials/hackathon/07-deploy-devnet-and-testnet.md
-      - Middleware & data: docs/tutorials/hackathon/07a-middleware-and-data-access.md
-      - Integrate extension: docs/tutorials/hackathon/08-integrate-into-superhero-extension.md
-      - Plugin SDK deep dive: docs/tutorials/hackathon/08a-plugin-sdk-deep-dive.md
-  - AI workflows: docs/tutorials/hackathon/09-ai-workflows-in-cursor.md
-  - Troubleshooting: docs/tutorials/hackathon/10-troubleshooting-and-faq.md
-  - Security: docs/tutorials/hackathon/11-security-checklist.md
-  - References: docs/tutorials/hackathon/12-reference-links-and-glossary.md
-  - Checklist: docs/tutorials/hackathon/13-checklist-and-deploy-extension.md
+      - Project scaffold: tutorials/hackathon/02-project-scaffold.md
+      - Sophia basics: tutorials/hackathon/03-sophia-basics-for-builders.md
+      - Compiler & build: tutorials/hackathon/04-compiler-and-build.md
+      - Contract walkthrough: tutorials/hackathon/05-contract-poll-walkthrough.md
+      - Testing: tutorials/hackathon/06-testing-with-vitest.md
+      - Deploy: tutorials/hackathon/07-deploy-devnet-and-testnet.md
+      - Middleware & data: tutorials/hackathon/07a-middleware-and-data-access.md
+      - Integrate extension: tutorials/hackathon/08-integrate-into-superhero-extension.md
+      - Plugin SDK deep dive: tutorials/hackathon/08a-plugin-sdk-deep-dive.md
+  - AI workflows: tutorials/hackathon/09-ai-workflows-in-cursor.md
+  - Troubleshooting: tutorials/hackathon/10-troubleshooting-and-faq.md
+  - Security: tutorials/hackathon/11-security-checklist.md
+  - References: tutorials/hackathon/12-reference-links-and-glossary.md
+  - Checklist: tutorials/hackathon/13-checklist-and-deploy-extension.md
 
 plugins:
   - search

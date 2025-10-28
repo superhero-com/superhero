@@ -2,6 +2,7 @@ site_name: Superhero Hackathon
 site_url: https://superhero.com/hackathon
 repo_url: https://github.com/superhero-com/superhero
 repo_name: superhero-com/superhero
+docs_dir: .
 
 theme:
   name: material
@@ -34,7 +35,6 @@ nav:
   - Checklist: tutorials/hackathon/13-checklist-and-deploy-extension.md
 
 plugins:
-  - search
   - search
 
 markdown_extensions:

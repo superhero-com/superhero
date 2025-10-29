@@ -13,7 +13,7 @@ theme:
     - content.tabs.link
 
 nav:
-  - Home: tutorials/hackathon/00-overview.md
+  - Home: index.md
   - Quickstart: tutorials/hackathon/00a-quickstart.md
   - Setup:
       - Environment: tutorials/hackathon/01-setup-environment.md

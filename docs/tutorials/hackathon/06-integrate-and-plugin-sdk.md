@@ -1,7 +1,26 @@
 # Integrate and Plugin SDK
 
-## Integrate into Superhero Extension
-Call your contract from a Superhero extension using the JS SDK and Plugin SDK.
+## Integrate into Superhero (where code goes)
+Call your contract from a Superhero plugin using the JS SDK and Plugin SDK.
+
+Folder layout in this repo:
+```
+src/plugins/your-plugin/
+  index.tsx                # exports `definePlugin({...})` (entry)
+  contract-artifacts/      # optional: copied ACI JSON, addresses
+  components/...           # your UI
+```
+
+Register your plugin in `src/plugins/local.ts` (static import + add to the `localPlugins` array):
+```ts
+// src/plugins/local.ts
+import yourPlugin from '@/plugins/your-plugin';
+
+const localPlugins = [
+  // ...other plugins
+  yourPlugin,
+];
+```
 
 !!! note
     New to the Plugin SDK? See below for capabilities and examples.
@@ -12,17 +31,40 @@ Call your contract from a Superhero extension using the JS SDK and Plugin SDK.
 
 Options:
 
-- Publish artifacts from the contracts repo (package, URL, or raw files) and import them in your extension.
-- For hackathons, you can copy them into `src/extensions/your-plugin/contract-artifacts/` and reference locally.
+- Publish artifacts from the contracts repo (package, URL, or raw files) and import them in your plugin.
+- For hackathons, you can copy them into `src/plugins/your-plugin/contract-artifacts/` and reference locally.
 
 ### Expose contract address
-Provide a network‑specific address via env, e.g. `VITE_POLL_CONTRACT`.
+Provide a network‑specific address via env, e.g. `VITE_POLL_CONTRACT` in `.env.local`.
 
 ### Obtain ACI
-Load from source in tests, or keep a built ACI JSON alongside your extension.
+Load from source in tests, or keep a built ACI JSON alongside your plugin.
 
 ### Wallet connect
 Use `ensureWallet()` in attachments (or initialize via your app shell) to obtain a connected SDK before sending transactions.
+
+### Plugin entry skeleton
+```ts
+// src/plugins/your-plugin/index.tsx
+import { definePlugin, type ComposerAttachmentSpec } from '@/plugin-sdk';
+
+export default definePlugin({
+  meta: { id: 'your-plugin', name: 'Your Plugin', version: '0.1.0', apiVersion: '1.x', capabilities: ['composer'] },
+  setup({ register }) {
+    const attachment: ComposerAttachmentSpec = {
+      id: 'your-attachment',
+      label: 'Your Action',
+      Panel: () => null,
+      validate: () => [],
+      onAfterPost: async (ctx) => {
+        const { sdk } = await ctx.ensureWallet();
+        // use sdk + your ACI/address here
+      },
+    };
+    register({ attachments: () => [attachment] });
+  },
+});
+```
 
 ### Example
 ```ts

@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Sitemap: https://superhero.com/sitemap.xml
+
+

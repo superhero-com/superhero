@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import Head from '../../../seo/Head';
 import { useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PostsService, PostDto } from '../../../api/generated';
@@ -164,6 +165,34 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
 
   const content = (
     <div className="w-full p-0">
+      {postData ? (
+        <Head
+          title={`${(postData as any)?.content?.slice(0, 80) || 'Post'} – Superhero`}
+          description={(postData as any)?.content?.slice(0, 160) || 'View post on Superhero, the crypto social network.'}
+          canonicalPath={`/post/${String(postId).replace(/_v3$/,'')}`}
+          ogImage={(Array.isArray((postData as any)?.media) && (postData as any).media[0]) || undefined}
+          jsonLd={{
+            '@context': 'https://schema.org',
+            '@type': 'SocialMediaPosting',
+            headline: (postData as any)?.content?.slice(0, 120) || 'Post',
+            datePublished: (postData as any)?.created_at,
+            dateModified: (postData as any)?.updated_at || (postData as any)?.created_at,
+            author: {
+              '@type': 'Person',
+              name: (postData as any)?.sender_address,
+              identifier: (postData as any)?.sender_address,
+            },
+            image: Array.isArray((postData as any)?.media) ? (postData as any).media : undefined,
+            interactionStatistic: [
+              {
+                '@type': 'InteractionCounter',
+                interactionType: 'CommentAction',
+                userInteractionCount: (postData as any)?.total_comments || 0,
+              },
+            ],
+          }}
+        />
+      ) : null}
       <div className="mb-4">
         <AeButton onClick={() => { navigate('/'); }} variant="ghost" size="sm" outlined className="!border !border-solid !border-white/15 hover:!border-white/35">
           ← Back

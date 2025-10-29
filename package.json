@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "vite build",
+    "build": "node ./scripts/generate-sitemap.cjs && vite build",
     "preview": "vite preview --port 5174",
     "test": "vitest",
-    "generate:api": "openapi --input http://localhost:3000/api-json --output ./src/api/generated --useOptions"
+    "generate:api": "openapi --input http://localhost:3000/api-json --output ./src/api/generated --useOptions",
+    "generate:sitemap": "ts-node ./scripts/generate-sitemap.ts"
   },
   "dependencies": {
     "@aeternity/aepp-sdk": "^13.3.2",
@@ -52,6 +53,7 @@
     "moment": "^2.30.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-helmet-async": "^2.0.4",
     "react-i18next": "^13.5.0",
     "react-router-dom": "^6.22.1",
     "socket.io-client": "^4.8.1",
@@ -63,6 +65,7 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "sharp": "^0.33.5",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.4.6",
     "@testing-library/react": "^16.0.0",

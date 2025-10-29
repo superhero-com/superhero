@@ -1,6 +1,7 @@
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import Head from "../../../seo/Head";
 import { useNavigate, useParams } from "react-router-dom";
 import { TokensService } from "../../../api/generated/services/TokensService";
 import { useAeSdk } from "../../../hooks/useAeSdk";
@@ -209,6 +210,18 @@ export default function TokenSaleDetails() {
 
   return (
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
+      <Head
+        title={`${token.symbol || token.name} – Token on Superhero`}
+        description={(token.metaInfo?.description || `Explore ${token.symbol || token.name} token, trades, holders and posts.`).slice(0,160)}
+        canonicalPath={`/trends/tokens/${tokenName}`}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'CryptoCurrency',
+          name: token.name || token.symbol,
+          symbol: token.symbol,
+          identifier: token.address || token.sale_address,
+        }}
+      />
       <LatestTransactionsCarousel />
 
       {/* Deploy Success Message */}

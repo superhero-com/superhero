@@ -62,5 +62,4 @@ export function ConnectWalletButton({ label = 'Connect Wallet', block, style, cl
   );
 }
 
-
 export default ConnectWalletButton;

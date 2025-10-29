@@ -62,6 +62,7 @@ describe('Poll contract', () => {
     expect(res.decodedResult).toBeDefined()
   })
 })
+```
 
 Negative tests to add:
 - Duplicate vote should fail

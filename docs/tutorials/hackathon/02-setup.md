@@ -45,7 +45,7 @@ aeproject --version
 
 ## Switch to testnet and fund
 - In settings, select æternity testnet
-- Use the testnet faucet to fund your account (see the References page)
+- Use the testnet faucet to fund your account: [æternity Testnet Faucet](https://faucet.aepps.com/)
 
 ## Project directories
 - `contracts/` — Sophia source files (`.aes`)

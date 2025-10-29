@@ -16,9 +16,9 @@ You can rely on Cursor to scaffold most code, but read this once to avoid pitfal
 - Keep return types simple for SDK decoding
 
 ## Where to skim in the docs
-- Syntax: https://github.com/aeternity/aesophia/blob/master/docs/sophia_syntax.md
-- Features (state, entrypoints, exceptions, events): https://github.com/aeternity/aesophia/blob/master/docs/sophia_features.md
-- Stdlib (Map, List, Option, Chain, Call): https://github.com/aeternity/aesophia/blob/master/docs/sophia_stdlib.md
+- [Syntax](https://github.com/aeternity/aesophia/blob/master/docs/sophia_syntax.md)
+- [Features (state, entrypoints, exceptions, events)](https://github.com/aeternity/aesophia/blob/master/docs/sophia_features.md)
+- [Stdlib (Map, List, Option, Chain, Call)](https://github.com/aeternity/aesophia/blob/master/docs/sophia_stdlib.md)
 
 ## Next
 - [04 — Compiler and build](./04-compiler-and-build.md)

@@ -39,10 +39,10 @@ This tutorial is designed for newcomers using Cursor or other AI tools to build 
 17. [Checklist & deploy extension](./13-checklist-and-deploy-extension.md)
 
 ## Official references
-- Docs hub: https://docs.aeternity.com
-- Syntax: https://github.com/aeternity/aesophia/blob/master/docs/sophia_syntax.md
-- Features: https://github.com/aeternity/aesophia/blob/master/docs/sophia_features.md
-- Stdlib: https://github.com/aeternity/aesophia/blob/master/docs/sophia_stdlib.md
-- Compiler HTTP: https://github.com/aeternity/aesophia_http
-- JS SDK: https://github.com/aeternity/aepp-sdk-js
-- Community Q&A: https://forum.aeternity.com/c/sophia-smart-contracts/38
+- [Docs hub](https://docs.aeternity.com)
+- [Syntax](https://github.com/aeternity/aesophia/blob/master/docs/sophia_syntax.md)
+- [Features](https://github.com/aeternity/aesophia/blob/master/docs/sophia_features.md)
+- [Stdlib](https://github.com/aeternity/aesophia/blob/master/docs/sophia_stdlib.md)
+- [Compiler HTTP](https://github.com/aeternity/aesophia_http)
+- [JS SDK](https://github.com/aeternity/aepp-sdk-js)
+- [Community Q&A](https://forum.aeternity.com/c/sophia-smart-contracts/38)

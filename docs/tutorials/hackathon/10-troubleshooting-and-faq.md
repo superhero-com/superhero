@@ -28,4 +28,4 @@
 - Add temporary view entrypoints that expose internal state (remove before deploy)
 
 ## Where to ask for help?
-- Community Q&A: https://forum.aeternity.com/c/sophia-smart-contracts/38
+- [Community Q&A](https://forum.aeternity.com/c/sophia-smart-contracts/38)

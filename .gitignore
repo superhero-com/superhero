@@ -12,6 +12,10 @@ pnpm-debug.log*
 # (package-lock.json, yarn.lock, pnpm-lock.yaml)
 
 
+# --- Python / Virtual environments ---
+.venv-docs/
+
+
 # --- Logs & PIDs ---
 logs/
 *.log

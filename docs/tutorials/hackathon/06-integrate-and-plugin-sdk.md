@@ -6,6 +6,14 @@ Call your contract from a Superhero extension using the JS SDK and Plugin SDK.
 !!! note
     New to the Plugin SDK? See below for capabilities and examples.
 
+## Bring in your contract artifacts
+- Address: read from your contracts repo (e.g., `deployments/testnet/Poll.address`).
+- ACI: use the compiled JSON (e.g., `aci/Poll.json`) to instantiate the contract via the JS SDK.
+
+Options:
+- Publish artifacts from the contracts repo (package, URL, or raw files) and import them in your extension.
+- For hackathons, you can copy them into `src/extensions/your-plugin/contract-artifacts/` and reference locally.
+
 ### Expose contract address
 Provide a network‑specific address via env, e.g. `VITE_POLL_CONTRACT`.
 

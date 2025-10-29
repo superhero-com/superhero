@@ -2,6 +2,9 @@
 
 ## Recommended: aeproject
 
+!!! important
+    Keep deployment outputs (addresses per network) and ACIs in your contracts repo (e.g., `deployments/` and `aci/`). You’ll import them in the Superhero UI extension later.
+
 ### Run tests
 ```bash
 # If your project has tests scaffolded by aeproject

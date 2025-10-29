@@ -3,6 +3,15 @@
 !!! note
     You’ll set up your dev environment and Superhero Wallet to create and test contracts.
 
+!!! note
+    Do these steps in your own contracts repository (separate from the Superhero UI repo).
+
+## Create your contracts repo
+```bash
+mkdir my-ae-contracts && cd my-ae-contracts
+git init
+```
+
 ## Install prerequisites
 - Node.js LTS (e.g., 20.x)
 - Git

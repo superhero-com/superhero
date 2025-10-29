@@ -3,6 +3,9 @@
 ## Recommended: aeproject
 Initialize a project and run local services with one CLI.
 
+!!! tip
+    Run all commands in your contracts repo (created in Setup). This repo holds contracts, tests, and aeproject config.
+
 ### Init a new project
 ```bash
 mkdir my-aepp && cd my-aepp

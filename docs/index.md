@@ -20,23 +20,13 @@ This tutorial is designed for newcomers using Cursor or other AI tools to build 
     You can skim most language details. Focus on state + entrypoints, auth with `Call.caller`, time windows via `Chain`, and gas‑aware design.
 
 ## Pages in this tutorial
-1. [Quickstart (fast track)](./tutorials/hackathon/00a-quickstart.md)
-2. [Setup environment](./tutorials/hackathon/01-setup-environment.md)
-3. [Superhero Wallet & account](./tutorials/hackathon/01a-superhero-wallet-and-account.md)
-4. [Project scaffold](./tutorials/hackathon/02-project-scaffold.md)
-5. [Sophia basics for builders (10‑minute skim)](./tutorials/hackathon/03-sophia-basics-for-builders.md)
-6. [Compiler and build](./tutorials/hackathon/04-compiler-and-build.md)
-7. [Contract walkthrough: Poll](./tutorials/hackathon/05-contract-poll-walkthrough.md)
-8. [Testing with Vitest](./tutorials/hackathon/06-testing-with-vitest.md)
-9. [Deploy: devnet and testnet](./tutorials/hackathon/07-deploy-devnet-and-testnet.md)
-10. [Middleware and data access](./tutorials/hackathon/07a-middleware-and-data-access.md)
-11. [Integrate into Superhero extension](./tutorials/hackathon/08-integrate-into-superhero-extension.md)
-12. [Plugin SDK deep dive](./tutorials/hackathon/08a-plugin-sdk-deep-dive.md)
-13. [AI workflows in Cursor](./tutorials/hackathon/09-ai-workflows-in-cursor.md)
-14. [Troubleshooting & FAQ](./tutorials/hackathon/10-troubleshooting-and-faq.md)
-15. [Security checklist](./tutorials/hackathon/11-security-checklist.md)
-16. [Reference links & glossary](./tutorials/hackathon/12-reference-links-and-glossary.md)
-17. [Checklist & deploy extension](./tutorials/hackathon/13-checklist-and-deploy-extension.md)
+1. [Quickstart](./tutorials/hackathon/00a-quickstart.md)
+2. [Setup](./tutorials/hackathon/02-setup.md)
+3. [Scaffold and Compiler](./tutorials/hackathon/03-scaffold-and-compiler.md)
+4. [Contracts](./tutorials/hackathon/04-contracts.md)
+5. [Test and Deploy](./tutorials/hackathon/05-test-and-deploy.md)
+6. [Integrate and Plugin SDK](./tutorials/hackathon/06-integrate-and-plugin-sdk.md)
+7. [Operations and Support](./tutorials/hackathon/08-ops-and-support.md)
 
 ## Official references
 - [Docs hub](https://docs.aeternity.com)

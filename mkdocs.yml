@@ -16,24 +16,13 @@ theme:
 nav:
   - Home: index.md
   - Quickstart: tutorials/hackathon/00a-quickstart.md
-  - Setup:
-      - Environment: tutorials/hackathon/01-setup-environment.md
-      - Wallet & Account: tutorials/hackathon/01a-superhero-wallet-and-account.md
+  - Setup: tutorials/hackathon/02-setup.md
   - Build:
-      - Project Scaffold: tutorials/hackathon/02-project-scaffold.md
-      - Sophia Basics: tutorials/hackathon/03-sophia-basics-for-builders.md
-      - Compiler & Build: tutorials/hackathon/04-compiler-and-build.md
-      - Contract Walkthrough: tutorials/hackathon/05-contract-poll-walkthrough.md
-      - Testing: tutorials/hackathon/06-testing-with-vitest.md
-      - Deploy: tutorials/hackathon/07-deploy-devnet-and-testnet.md
-      - Middleware & Data: tutorials/hackathon/07a-middleware-and-data-access.md
-      - Integrate Extension: tutorials/hackathon/08-integrate-into-superhero-extension.md
-      - Plugin SDK Deep Dive: tutorials/hackathon/08a-plugin-sdk-deep-dive.md
-  - AI Workflows: tutorials/hackathon/09-ai-workflows-in-cursor.md
-  - Troubleshooting: tutorials/hackathon/10-troubleshooting-and-faq.md
-  - Security: tutorials/hackathon/11-security-checklist.md
-  - References: tutorials/hackathon/12-reference-links-and-glossary.md
-  - Checklist: tutorials/hackathon/13-checklist-and-deploy-extension.md
+      - Scaffold & Compiler: tutorials/hackathon/03-scaffold-and-compiler.md
+      - Contracts: tutorials/hackathon/04-contracts.md
+      - Test & Deploy: tutorials/hackathon/05-test-and-deploy.md
+      - Integrate & Plugin SDK: tutorials/hackathon/06-integrate-and-plugin-sdk.md
+  - Operations: tutorials/hackathon/08-ops-and-support.md
 
 plugins:
   - search

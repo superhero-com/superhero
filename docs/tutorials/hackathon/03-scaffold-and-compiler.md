@@ -1,0 +1,56 @@
+# Scaffold and Compiler
+
+## Create folders
+```bash
+mkdir -p contracts tests scripts
+```
+
+## Initialize project and install deps
+```bash
+npm init -y
+npm i @aeternity/aepp-sdk dotenv
+npm i -D vitest ts-node typescript @types/node
+npx tsc --init
+```
+
+Add scripts to `package.json`:
+```json
+{
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  }
+}
+```
+
+## Environment profiles
+Create in project root (do not commit real keys):
+
+`.env.local` (devnet/local)
+```
+NODE_URL=http://localhost:3013
+COMPILER_URL=http://localhost:3080
+SECRET_KEY=your_local_dev_private_key_hex
+```
+
+`.env.testnet`
+```
+NODE_URL=https://testnet.aeternity.io
+COMPILER_URL=http://localhost:3080
+SECRET_KEY=your_funded_testnet_private_key_hex
+```
+
+## Start the compiler (Docker)
+```bash
+docker run --rm -p 3080:3080 aeternity/aesophia_http:latest
+```
+
+!!! tip
+    This exposes the compiler at `http://localhost:3080`.
+
+## Pinning versions
+Use the compiler pragma in your Sophia source (example):
+```
+pragma solidity 6.5.0
+```
+Adjust to a version supported by your `aesophia_http` image.

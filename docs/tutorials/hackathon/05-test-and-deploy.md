@@ -65,6 +65,7 @@ describe('Poll contract', () => {
 ```
 
 Negative tests to add:
+
 - Duplicate vote should fail
 - Voting outside open/close window should fail
 - Invalid option index should fail

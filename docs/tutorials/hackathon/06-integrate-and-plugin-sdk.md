@@ -11,6 +11,7 @@ Call your contract from a Superhero extension using the JS SDK and Plugin SDK.
 - ACI: use the compiled JSON (e.g., `aci/Poll.json`) to instantiate the contract via the JS SDK.
 
 Options:
+
 - Publish artifacts from the contracts repo (package, URL, or raw files) and import them in your extension.
 - For hackathons, you can copy them into `src/extensions/your-plugin/contract-artifacts/` and reference locally.
 

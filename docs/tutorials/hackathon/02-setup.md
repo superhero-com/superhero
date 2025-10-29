@@ -9,6 +9,13 @@
 - Docker
 - Cursor (or VS Code)
 
+## Install aeproject (recommended)
+```bash
+npm i -g @aeternity/aeproject@latest
+# quick check
+aeproject --version
+```
+
 ## Create an æternity account
 - Generate a dev key locally for development tests
 - For testnet, use a funded key (get AE from the faucet via docs hub)
@@ -33,7 +40,7 @@
 
 ## Project directories
 - `contracts/` — Sophia source files (`.aes`)
-- `tests/` — TypeScript tests
+- `tests/` — TypeScript tests (if you use the SDK/ Vitest path)
 - `scripts/` — utility scripts (optional)
 
 ## Verify tools
@@ -41,4 +48,5 @@
 node -v
 npm -v
 docker --version
+aeproject --version
 ```

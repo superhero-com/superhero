@@ -1,6 +1,29 @@
 # Test and Deploy
 
-## Testing with Vitest
+## Recommended: aeproject
+
+### Run tests
+```bash
+# If your project has tests scaffolded by aeproject
+aeproject test
+```
+This command compiles contracts and runs the test suite using the project’s configuration.
+
+### Deploy
+```bash
+# Local devnet (node started via `aeproject node`)
+aeproject deploy
+
+# Example: deploy to testnet (ensure a funded key is configured)
+aeproject deploy --network testnet
+```
+
+!!! tip
+    See `aeproject --help` for supported networks and config options.
+
+## Optional: SDK + Vitest path
+If you prefer a custom SDK test harness, use the example below.
+
 Ensure `.env.local` or `.env.testnet` is set.
 
 Example test:
@@ -42,11 +65,7 @@ Negative tests to add:
 - Voting outside open/close window should fail
 - Invalid option index should fail
 
-## Deploy: Devnet and Testnet
-- Devnet/local: start a node and point `NODE_URL` to it; use compiler at `http://localhost:3080`
-- Testnet: set `.env.testnet` with a funded key; deploy for live testing
-
-Sanity checks before testnet:
+## Deploy sanity checks
 - All negative tests pass locally
 - Compiler version pinned and consistent
 - Events emitted where needed for indexing

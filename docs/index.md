@@ -11,20 +11,20 @@ This tutorial is designed for newcomers using Cursor or other AI tools to build 
 - An extension that calls the contract via the JS SDK and Plugin SDK
 
 ## Fast feedback loop
-1) Write/refine contract with Cursor → 2) Compile via `aesophia_http` → 3) Test with Vitest + JS SDK → 4) Integrate into a Superhero extension → 5) Deploy to devnet/testnet.
+1) Write/refine contract with Cursor → 2) Compile via `aeproject compile` → 3) Test with `aeproject test` → 4) Integrate into a Superhero extension → 5) `aeproject deploy` to devnet/testnet.
 
 ## High‑level architecture
 - Contract (Sophia) ↔ ACI ↔ JS SDK (`@aeternity/aepp-sdk`) ↔ Superhero Plugin SDK ↔ Extension UI
 
 !!! tip
-    You can skim most language details. Focus on state + entrypoints, auth with `Call.caller`, time windows via `Chain`, and gas‑aware design.
+    Prefer the aeproject path for the fastest setup; a minimal “manual path” is provided as an optional alternative.
 
 ## Pages in this tutorial
 1. [Quickstart](./tutorials/hackathon/00a-quickstart.md)
 2. [Setup](./tutorials/hackathon/02-setup.md)
-3. [Scaffold and Compiler](./tutorials/hackathon/03-scaffold-and-compiler.md)
+3. [Scaffold and Compiler (aeproject)](./tutorials/hackathon/03-scaffold-and-compiler.md)
 4. [Contracts](./tutorials/hackathon/04-contracts.md)
-5. [Test and Deploy](./tutorials/hackathon/05-test-and-deploy.md)
+5. [Test and Deploy (aeproject)](./tutorials/hackathon/05-test-and-deploy.md)
 6. [Integrate and Plugin SDK](./tutorials/hackathon/06-integrate-and-plugin-sdk.md)
 7. [Operations and Support](./tutorials/hackathon/08-ops-and-support.md)
 

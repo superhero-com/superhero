@@ -18,9 +18,9 @@ nav:
   - Quickstart: tutorials/hackathon/00a-quickstart.md
   - Setup: tutorials/hackathon/02-setup.md
   - Build:
-      - Scaffold & Compiler: tutorials/hackathon/03-scaffold-and-compiler.md
+      - Scaffold & Compiler (aeproject): tutorials/hackathon/03-scaffold-and-compiler.md
       - Contracts: tutorials/hackathon/04-contracts.md
-      - Test & Deploy: tutorials/hackathon/05-test-and-deploy.md
+      - Test & Deploy (aeproject): tutorials/hackathon/05-test-and-deploy.md
       - Integrate & Plugin SDK: tutorials/hackathon/06-integrate-and-plugin-sdk.md
   - Operations: tutorials/hackathon/08-ops-and-support.md
 

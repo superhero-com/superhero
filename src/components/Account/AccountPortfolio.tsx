@@ -410,10 +410,13 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       // Ensure we don't restore a range that goes past current time
       const currentTime = moment().unix();
       const restoredTo = Math.min(visibleRange.to, currentTime);
-      timeScale?.setVisibleRange({
-        from: visibleRange.from,
-        to: restoredTo,
-      });
+      // Only set range if from is valid (not null)
+      if (visibleRange.from != null && typeof visibleRange.from === 'number') {
+        timeScale?.setVisibleRange({
+          from: visibleRange.from,
+          to: restoredTo,
+        });
+      }
       // Use requestAnimationFrame to ensure the range is set before updating tracking
       requestAnimationFrame(() => {
         const logicalRange = timeScale?.getVisibleLogicalRange();

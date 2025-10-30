@@ -542,9 +542,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                       : (() => {
                           // If convertTo is fiat, currentValue is already in that currency
                           // Format it directly without conversion
-                          const fiatValue = Decimal.from(currentValue);
+                          const fiatValue = typeof currentValue === 'number' ? currentValue : Number(currentValue);
                           const currencyCode = currentCurrencyInfo.code.toUpperCase();
-                          return fiatValue.toNumber().toLocaleString('en-US', {
+                          return fiatValue.toLocaleString('en-US', {
                             style: 'currency',
                             currency: currencyCode,
                             minimumFractionDigits: 2,

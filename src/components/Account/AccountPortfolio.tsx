@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { createChart, IChartApi, ISeriesApi, LineData, ColorType, LineSeries } from 'lightweight-charts';
 import moment from 'moment';
 import { TrendminerApi } from '@/api/backend';
@@ -33,6 +33,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const seriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('30d');
   const [useCurrentCurrency, setUseCurrentCurrency] = useState(true); // Default to USD
+  const isFetchingMoreRef = useRef(false);
+  const loadedStartDateRef = useRef<string | null>(null);
 
   const { currentCurrencyInfo, getFormattedFiat } = useCurrencies();
   const convertTo = useMemo(
@@ -62,21 +64,103 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     };
   }, [selectedTimeRange]);
 
-  // Fetch portfolio history (backend now calculates with historical AE prices)
-  const { data: portfolioData, isLoading, error } = useQuery({
-    queryKey: ['portfolio-history', address, dateRange.startDate, dateRange.endDate, dateRange.interval, convertTo],
-    queryFn: async () => {
+  // Track the earliest loaded date for infinite scrolling
+  const minStartDate = moment('2025-01-01T00:00:00Z');
+  
+  // Fetch portfolio history with infinite query for pagination
+  const {
+    data,
+    isLoading,
+    error,
+    fetchPreviousPage,
+    hasPreviousPage,
+    isFetchingPreviousPage,
+  } = useInfiniteQuery({
+    queryKey: ['portfolio-history', address, dateRange.startDate, dateRange.endDate, dateRange.interval, convertTo, selectedTimeRange],
+    queryFn: async ({ pageParam }) => {
+      // pageParam is the endDate for this page (undefined means use the current dateRange.endDate)
+      const endDate = pageParam ? moment(pageParam) : moment(dateRange.endDate);
+      const range = TIME_RANGES[selectedTimeRange];
+      
+      // Calculate start date for this page
+      // For initial load, use dateRange.startDate if available
+      // For subsequent loads (scroll left), go back 90 days from endDate
+      let startDate: moment.Moment;
+      if (!pageParam && dateRange.startDate) {
+        // Initial load: use the calculated dateRange.startDate
+        startDate = moment(dateRange.startDate);
+      } else if (range.days === Infinity) {
+        // For 'all', load 90 days at a time going backwards
+        startDate = moment(endDate).subtract(90, 'days');
+        if (startDate.isBefore(minStartDate)) {
+          startDate = minStartDate;
+        }
+      } else {
+        // For specific ranges when loading more, go back the same number of days
+        startDate = moment(endDate).subtract(range.days, 'days');
+        if (startDate.isBefore(minStartDate)) {
+          startDate = minStartDate;
+        }
+      }
+      
       const response = await TrendminerApi.getAccountPortfolioHistory(address, {
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
         interval: dateRange.interval,
         convertTo: convertTo as any,
       });
-      return (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
+      
+      const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
+      
+      // Track the earliest loaded date
+      if (snapshots.length > 0) {
+        const earliest = moment(snapshots[0].timestamp);
+        if (!loadedStartDateRef.current || earliest.isBefore(loadedStartDateRef.current)) {
+          loadedStartDateRef.current = earliest.toISOString();
+        }
+      }
+      
+      return {
+        snapshots,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      };
     },
+    getNextPageParam: () => undefined, // No forward pagination needed
+    getPreviousPageParam: (firstPage) => {
+      // If we've reached the minimum start date, stop loading more
+      if (firstPage.startDate === minStartDate.toISOString()) {
+        return undefined;
+      }
+      // Return the start date of this page as the end date for the next page (going backwards)
+      return firstPage.startDate;
+    },
+    initialPageParam: undefined,
     enabled: !!address,
     staleTime: 60_000, // 1 minute
   });
+
+  // Flatten all pages into a single array, sorted by timestamp
+  const portfolioData = useMemo(() => {
+    if (!data?.pages) return [];
+    
+    // Combine all snapshots from all pages
+    const allSnapshots = data.pages.flatMap(page => page.snapshots);
+    
+    // Remove duplicates based on timestamp
+    const uniqueSnapshots = new Map<string, PortfolioSnapshot>();
+    for (const snapshot of allSnapshots) {
+      const timestamp = moment(snapshot.timestamp).toISOString();
+      if (!uniqueSnapshots.has(timestamp)) {
+        uniqueSnapshots.set(timestamp, snapshot);
+      }
+    }
+    
+    // Sort by timestamp ascending
+    return Array.from(uniqueSnapshots.values()).sort((a, b) => 
+      moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf()
+    );
+  }, [data]);
 
 
   // Current portfolio value (latest snapshot)
@@ -97,11 +181,12 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     // Ensure container has a width
     if (container.clientWidth === 0) {
       // Container might not be sized yet, try again on next frame
-      requestAnimationFrame(() => {
+      const retryInit = () => {
         if (chartContainerRef.current && !chartRef.current && portfolioData && portfolioData.length > 0) {
-          // Retry initialization
+          // Will be handled by the next useEffect run
         }
-      });
+      };
+      requestAnimationFrame(retryInit);
       return;
     }
 
@@ -173,10 +258,32 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     lineSeries.setData(chartData);
     
-    // Fit content to show all data
+    // Fit content to show all data (only on initial load)
     if (chartData.length > 0) {
       chart.timeScale().fitContent();
     }
+
+    // Handle scroll to load previous data
+    const handleVisibleRangeChange = () => {
+      if (isFetchingMoreRef.current || !hasPreviousPage || isFetchingPreviousPage) return;
+      
+      const logicalRange = chart.timeScale().getVisibleLogicalRange();
+      if (!logicalRange) return;
+      
+      const barsInfo = lineSeries.barsInLogicalRange(logicalRange);
+      if (!barsInfo) return;
+      
+      // If we're near the start of the data (within 20 bars), load more
+      if (barsInfo.barsBefore < 20 && portfolioData.length > 0) {
+        isFetchingMoreRef.current = true;
+        fetchPreviousPage().finally(() => {
+          isFetchingMoreRef.current = false;
+        });
+      }
+    };
+
+    // Subscribe to visible range changes for infinite scrolling
+    chart.timeScale().subscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
 
     // Handle resize
     const handleResize = () => {
@@ -192,6 +299,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      chart.timeScale().unsubscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
       if (seriesRef.current) {
         seriesRef.current = null;
       }
@@ -200,7 +308,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       }
       chartRef.current = null;
     };
-  }, [portfolioData, convertTo]);
+  }, [portfolioData, convertTo, hasPreviousPage, isFetchingPreviousPage, fetchPreviousPage]);
 
   // Update chart data when portfolio data or currency changes
   useEffect(() => {
@@ -218,11 +326,19 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       };
     });
 
+    // Get current visible range to preserve scroll position
+    const chart = chartRef.current;
+    const timeScale = chart?.timeScale();
+    const visibleRange = timeScale?.getVisibleRange();
+    
     seriesRef.current.setData(chartData);
     
-    // Fit content to show all data
-    if (chartRef.current && chartData.length > 0) {
-      chartRef.current.timeScale().fitContent();
+    // Restore visible range if we had one (to preserve scroll position when loading more data)
+    if (chart && visibleRange && chartData.length > 0) {
+      timeScale?.setVisibleRange(visibleRange);
+    } else if (chart && chartData.length > 0) {
+      // Only fit content if we don't have a visible range (initial load)
+      chart.timeScale().fitContent();
     }
   }, [portfolioData, convertTo]);
 
@@ -295,7 +411,14 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               <div className="text-white/60">Loading portfolio data...</div>
             </div>
           ) : portfolioData && portfolioData.length > 0 ? (
-            <div ref={chartContainerRef} className="w-full h-[300px] min-w-0" />
+            <>
+              <div ref={chartContainerRef} className="w-full h-[300px] min-w-0" />
+              {isFetchingPreviousPage && (
+                <div className="mt-2 text-center">
+                  <div className="text-white/60 text-xs">Loading previous data...</div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="h-[300px] flex items-center justify-center">
               <div className="text-white/60">No portfolio data available</div>

@@ -131,12 +131,12 @@ export function GifSelectorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-gray-900 border-white/12 text-white">
+      <DialogContent className="max-h-[60vh] sm:max-h-[90vh] overflow-hidden sm:max-w-[600px] bg-gray-900 border-white/12 text-white flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-white">Add a GIF</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto flex-1 pb-20">
           <input
             type="text"
             placeholder="Search for a GIF"
@@ -235,6 +235,16 @@ export function GifSelectorDialog({
               )}
             </div>
           )}
+        </div>
+
+        {/* Fixed Confirm Button */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-gray-900 via-gray-900 to-transparent border-t border-white/10">
+          <button
+            onClick={() => onOpenChange(false)}
+            className="w-full px-6 py-3 rounded-full bg-[#1161FE] text-white font-semibold text-sm uppercase tracking-wide transition-all duration-300 hover:bg-[#0d4fd8] hover:shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0"
+          >
+            Confirm {mediaUrls.length > 0 && `(${mediaUrls.length})`}
+          </button>
         </div>
       </DialogContent>
     </Dialog>

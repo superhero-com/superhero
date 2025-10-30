@@ -394,12 +394,13 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      chart.timeScale().unsubscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
+      if (chart) {
+        chart.timeScale().unsubscribeVisibleTimeRangeChange(handleTimeScaleChange);
+        chart.timeScale().unsubscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
+        chart.remove();
+      }
       if (seriesRef.current) {
         seriesRef.current = null;
-      }
-      if (chart) {
-        chart.remove();
       }
       chartRef.current = null;
       // Reset initial load flag when chart is destroyed

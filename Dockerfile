@@ -16,6 +16,7 @@ WORKDIR /srv
 COPY --from=builder /app/dist /usr/share/nginx/html
 RUN cp /usr/share/nginx/html/index.html /usr/share/nginx/html/index.template.html
 COPY docker/override-env.sh /docker-entrypoint.d/99-override-env.sh
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 RUN apk add --no-cache gettext && chmod +x /docker-entrypoint.d/99-override-env.sh
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

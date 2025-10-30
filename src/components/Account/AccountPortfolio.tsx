@@ -32,7 +32,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('30d');
-  const [useCurrentCurrency, setUseCurrentCurrency] = useState(false);
+  const [useCurrentCurrency, setUseCurrentCurrency] = useState(true); // Default to USD
 
   const { currentCurrencyInfo, getFormattedFiat } = useCurrencies();
   const convertTo = useMemo(
@@ -55,7 +55,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     };
   }, [selectedTimeRange]);
 
-  // Fetch portfolio history
+  // Fetch portfolio history (backend now calculates with historical AE prices)
   const { data: portfolioData, isLoading, error } = useQuery({
     queryKey: ['portfolio-history', address, dateRange.startDate, dateRange.endDate, dateRange.interval, convertTo],
     queryFn: async () => {
@@ -70,6 +70,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     enabled: !!address,
     staleTime: 60_000, // 1 minute
   });
+
 
   // Current portfolio value (latest snapshot)
   const currentValue = useMemo(() => {
@@ -131,7 +132,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     chartRef.current = chart;
 
-    // Add line series with formatter that uses current convertTo
+    // Add portfolio value series (includes AE price conversion for USD/fiat)
     const currentConvertTo = convertTo;
     const lineSeries = chart.addSeries(LineSeries, {
       color: '#1161FE',
@@ -150,7 +151,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     seriesRef.current = lineSeries as ISeriesApi<'Line'>;
 
-    // Set initial data immediately after creating series
+    // Set initial portfolio data (backend calculates USD using historical AE prices)
     const chartData: LineData[] = portfolioData.map((snapshot) => {
       const timestamp = moment(snapshot.timestamp).unix();
       const value = convertTo === 'ae' 
@@ -192,7 +193,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       }
       chartRef.current = null;
     };
-  }, [portfolioData, convertTo]); // Removed getFormattedFiat from deps to avoid constant recreation
+  }, [portfolioData, convertTo]);
 
   // Update chart data when portfolio data or currency changes
   useEffect(() => {

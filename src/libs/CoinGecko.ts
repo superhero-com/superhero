@@ -78,4 +78,33 @@ export class CoinGecko {
       return null;
     }
   }
+
+  /**
+   * Fetch historical price data for a coin
+   * @param coinId - The CoinGecko coin ID (e.g., 'aeternity')
+   * @param vsCurrency - The target currency (e.g., 'usd')
+   * @param days - Number of days of history to fetch (1, 7, 14, 30, 90, 180, 365, max)
+   * @param interval - Interval for data points ('daily' or 'hourly'), defaults to 'daily'
+   * @returns Array of [timestamp_ms, price] pairs
+   */
+  static async fetchHistoricalPrice(
+    coinId: string,
+    vsCurrency: string,
+    days: number = 365,
+    interval: 'daily' | 'hourly' = 'daily',
+  ): Promise<Array<[number, number]> | null> {
+    try {
+      const response = await CoinGecko.fetchFromApi<{ prices: [number, number][] }>(
+        `/coins/${coinId}/market_chart`,
+        {
+          vs_currency: vsCurrency,
+          days: String(days),
+          interval: interval,
+        }
+      );
+      return response?.prices || null;
+    } catch {
+      return null;
+    }
+  }
 }

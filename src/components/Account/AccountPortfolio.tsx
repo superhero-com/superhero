@@ -40,16 +40,23 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     [useCurrentCurrency, currentCurrencyInfo]
   );
 
-  // Calculate date range
+  // Calculate date range - minimum start date is January 1, 2025
   const dateRange = useMemo(() => {
     const range = TIME_RANGES[selectedTimeRange];
     const endDate = moment();
-    const startDate = range.days === Infinity 
-      ? undefined 
-      : moment().subtract(range.days, 'days');
+    const minStartDate = moment('2025-01-01T00:00:00Z');
+    
+    let startDate: moment.Moment | undefined;
+    if (range.days === Infinity) {
+      startDate = minStartDate;
+    } else {
+      const calculatedStart = moment().subtract(range.days, 'days');
+      // Use the later of: calculated start date or minimum start date (Jan 1, 2025)
+      startDate = calculatedStart.isBefore(minStartDate) ? minStartDate : calculatedStart;
+    }
     
     return {
-      startDate: startDate?.toISOString(),
+      startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       interval: range.interval,
     };

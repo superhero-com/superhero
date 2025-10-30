@@ -170,9 +170,17 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const currentValue = useMemo(() => {
     if (!portfolioData || portfolioData.length === 0) return null;
     const latest = portfolioData[portfolioData.length - 1];
-    return convertTo === 'ae' 
-      ? latest.total_value_ae 
-      : (latest.total_value_usd || latest.total_value_ae);
+    if (convertTo === 'ae') {
+      return latest.total_value_ae;
+    } else {
+      // For fiat currencies, use total_value_usd if available, otherwise fallback to AE
+      if (latest.total_value_usd != null && latest.total_value_usd > 0) {
+        return latest.total_value_usd;
+      }
+      // Fallback: log warning and return AE value
+      console.warn('Missing total_value_usd in latest snapshot:', latest);
+      return latest.total_value_ae;
+    }
   }, [portfolioData, convertTo]);
 
   // Initialize chart when container and data are available

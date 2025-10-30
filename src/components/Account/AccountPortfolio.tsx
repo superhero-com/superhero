@@ -211,6 +211,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         borderColor: 'rgba(255, 255, 255, 0.2)',
         timeVisible: true,
         secondsVisible: false,
+        rightBarStaysOnScroll: true,
+        lockVisibleTimeRangeOnResize: true,
       },
       crosshair: {
         mode: 1,
@@ -261,6 +263,13 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     lineSeries.setData(chartData);
     
+    // Set maximum visible range to prevent scrolling past current time
+    const currentTime = moment().unix();
+    chart.timeScale().setVisibleRange({
+      from: null as any, // Allow scrolling left as far as data goes
+      to: currentTime as any, // Prevent scrolling right past current time
+    }, true); // true = prevent user from scrolling past this range
+    
     // Fit content to show all data (only on initial load)
     if (chartData.length > 0) {
       chart.timeScale().fitContent();
@@ -280,6 +289,22 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       
       const logicalRange = chart.timeScale().getVisibleLogicalRange();
       if (!logicalRange) return;
+      
+      // Prevent scrolling past current time
+      const currentTime = moment().unix();
+      const visibleRange = chart.timeScale().getVisibleRange();
+      if (visibleRange && visibleRange.to > currentTime) {
+        chart.timeScale().setVisibleRange({
+          from: visibleRange.from,
+          to: currentTime,
+        });
+        // Update tracking with corrected range
+        const correctedLogicalRange = chart.timeScale().getVisibleLogicalRange();
+        if (correctedLogicalRange) {
+          lastVisibleRangeRef.current = { from: correctedLogicalRange.from, to: correctedLogicalRange.to };
+        }
+        return;
+      }
       
       // On initial load, just store the range and skip loading
       if (initialLoadRef.current) {
@@ -374,10 +399,25 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     
     seriesRef.current.setData(chartData);
     
+    // Set maximum visible range to prevent scrolling past current time
+    const currentTime = moment().unix();
+    if (chart) {
+      // Apply options to prevent scrolling past current time
+      chart.timeScale().applyOptions({
+        rightBarStaysOnScroll: true,
+      });
+    }
+    
     // Restore visible range if we had one (to preserve scroll position when loading more data)
     if (chart && visibleRange && chartData.length > 0) {
       // Temporarily disable the handler, restore range, then update tracking
-      timeScale?.setVisibleRange(visibleRange);
+      // Ensure we don't restore a range that goes past current time
+      const currentTime = moment().unix();
+      const restoredTo = Math.min(visibleRange.to, currentTime);
+      timeScale?.setVisibleRange({
+        from: visibleRange.from,
+        to: restoredTo,
+      });
       // Use requestAnimationFrame to ensure the range is set before updating tracking
       requestAnimationFrame(() => {
         const logicalRange = timeScale?.getVisibleLogicalRange();

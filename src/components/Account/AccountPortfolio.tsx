@@ -539,7 +539,18 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                   <span className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                     {convertTo === 'ae' 
                       ? `${Decimal.from(currentValue).prettify()} AE`
-                      : getFormattedFiat(Decimal.from(currentValue))
+                      : (() => {
+                          // If convertTo is fiat, currentValue is already in that currency
+                          // Format it directly without conversion
+                          const fiatValue = Decimal.from(currentValue);
+                          const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                          return fiatValue.toNumber().toLocaleString('en-US', {
+                            style: 'currency',
+                            currency: currencyCode,
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          });
+                        })()
                     }
                   </span>
                 </div>

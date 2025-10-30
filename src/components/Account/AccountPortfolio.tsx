@@ -257,7 +257,15 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           if (currentConvertTo === 'ae') {
             return `${price.toFixed(4)} AE`;
           }
-          return getFormattedFiat(Decimal.from(price));
+          // For fiat currencies, price is already in that currency (e.g., USD)
+          // Format it directly without conversion
+          const currencyCode = currentCurrencyInfo.code.toUpperCase();
+          return Number(price).toLocaleString('en-US', {
+            style: 'currency',
+            currency: currencyCode,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
         },
       },
     });

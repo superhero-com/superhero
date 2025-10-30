@@ -37,6 +37,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const loadedStartDateRef = useRef<string | null>(null);
   const initialLoadRef = useRef(true);
   const lastVisibleRangeRef = useRef<{ from: number; to: number } | null>(null);
+  const isUpdatingDataRef = useRef(false);
 
   const { currentCurrencyInfo, getFormattedFiat } = useCurrencies();
   const convertTo = useMemo(
@@ -267,7 +268,10 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     // Handle scroll to load previous data
     const handleVisibleRangeChange = () => {
-      if (isFetchingMoreRef.current || !hasPreviousPage || isFetchingPreviousPage) return;
+      // Don't trigger during data updates or if already fetching
+      if (isUpdatingDataRef.current || isFetchingMoreRef.current || !hasPreviousPage || isFetchingPreviousPage) {
+        return;
+      }
       
       const logicalRange = chart.timeScale().getVisibleLogicalRange();
       if (!logicalRange) return;
@@ -279,12 +283,13 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         return;
       }
       
-      // Only load if user has scrolled left (from value decreased)
+      // Only load if user has scrolled left (from value decreased significantly)
       const currentFrom = logicalRange.from;
       const lastFrom = lastVisibleRangeRef.current?.from;
       
-      // If user hasn't scrolled left, don't load
-      if (lastFrom !== null && currentFrom >= lastFrom) {
+      // If user hasn't scrolled left significantly (at least 5 logical units), don't load
+      // This prevents triggering on tiny movements or programmatic updates
+      if (lastFrom !== null && currentFrom >= (lastFrom - 5)) {
         lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
         return;
       }
@@ -342,6 +347,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   useEffect(() => {
     if (!portfolioData || !seriesRef.current || portfolioData.length === 0) return;
 
+    // Mark that we're updating data to prevent scroll handler from triggering
+    isUpdatingDataRef.current = true;
+
     const chartData: LineData[] = portfolioData.map((snapshot) => {
       const timestamp = moment(snapshot.timestamp).unix();
       const value = convertTo === 'ae' 
@@ -363,15 +371,31 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     
     // Restore visible range if we had one (to preserve scroll position when loading more data)
     if (chart && visibleRange && chartData.length > 0) {
+      // Keep the flag set during range restoration to prevent handler from triggering
       timeScale?.setVisibleRange(visibleRange);
       // Reset initial load flag after data update so we can detect future scrolls
       initialLoadRef.current = false;
+      // Update last visible range to current to prevent false scroll detection
+      const logicalRange = timeScale?.getVisibleLogicalRange();
+      if (logicalRange) {
+        lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
+      }
     } else if (chart && chartData.length > 0) {
       // Only fit content if we don't have a visible range (initial load)
       chart.timeScale().fitContent();
       // Reset initial load flag after fitting content
       initialLoadRef.current = true;
+      // Update last visible range after fitContent
+      const logicalRange = chart.timeScale().getVisibleLogicalRange();
+      if (logicalRange) {
+        lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
+      }
     }
+    
+    // Allow scroll handler to work again after a delay (enough for chart to update)
+    setTimeout(() => {
+      isUpdatingDataRef.current = false;
+    }, 300);
   }, [portfolioData, convertTo]);
 
   if (error) {

@@ -6,10 +6,18 @@ export const TrendminerApi = {
     const base = (CONFIG.SUPERHERO_API_URL || '').replace(/\/$/, '');
     if (!base) throw new Error('SUPERHERO_API_URL not configured');
     const url = `${base}${path.startsWith('/') ? '' : '/'}${path}`;
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[TrendminerApi] Base URL: ${base}`);
+      console.log(`[TrendminerApi] Fetching: ${url}`);
+    }
     const res = await fetch(url, init);
     if (!res.ok) {
       const body = await res.text().catch(() => '');
-      throw new Error(`Trendminer request failed: ${res.status} ${body || ''}`.trim());
+      const error = new Error(`Trendminer request failed: ${res.status} ${body || ''}`.trim());
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`[TrendminerApi] Error fetching ${url}:`, error);
+      }
+      throw error;
     }
     return res.json();
   },

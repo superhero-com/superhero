@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { createChart, IChartApi, ISeriesApi, LineData, ColorType } from 'lightweight-charts';
+import { createChart, IChartApi, ISeriesApi, LineData, ColorType, LineSeries } from 'lightweight-charts';
 import moment from 'moment';
 import { TrendminerApi } from '@/api/backend';
 import { useCurrencies } from '@/hooks/useCurrencies';
@@ -80,11 +80,25 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       : (latest.total_value_usd || latest.total_value_ae);
   }, [portfolioData, convertTo]);
 
-  // Initialize chart
+  // Initialize chart when container and data are available
   useEffect(() => {
-    if (!chartContainerRef.current || chartRef.current) return;
+    // Only initialize if we have data and container is rendered
+    if (!portfolioData || portfolioData.length === 0 || !chartContainerRef.current || chartRef.current) return;
 
-    const chart = createChart(chartContainerRef.current, {
+    const container = chartContainerRef.current;
+    // Ensure container has a width
+    if (container.clientWidth === 0) {
+      // Container might not be sized yet, try again on next frame
+      requestAnimationFrame(() => {
+        if (chartContainerRef.current && !chartRef.current && portfolioData && portfolioData.length > 0) {
+          // Retry initialization
+        }
+      });
+      return;
+    }
+
+    const chart = createChart(container, {
+      width: container.clientWidth,
       height: 300,
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
@@ -117,15 +131,16 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     chartRef.current = chart;
 
-    // Add line series
-    const lineSeries = chart.addLineSeries({
+    // Add line series with formatter that uses current convertTo
+    const currentConvertTo = convertTo;
+    const lineSeries = chart.addSeries(LineSeries, {
       color: '#1161FE',
       lineWidth: 2,
       priceFormat: {
         type: 'custom',
         minMove: 0.000001,
         formatter: (price: number) => {
-          if (convertTo === 'ae') {
+          if (currentConvertTo === 'ae') {
             return `${price.toFixed(4)} AE`;
           }
           return getFormattedFiat(Decimal.from(price));
@@ -133,7 +148,27 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       },
     });
 
-    seriesRef.current = lineSeries;
+    seriesRef.current = lineSeries as ISeriesApi<'Line'>;
+
+    // Set initial data immediately after creating series
+    const chartData: LineData[] = portfolioData.map((snapshot) => {
+      const timestamp = moment(snapshot.timestamp).unix();
+      const value = convertTo === 'ae' 
+        ? snapshot.total_value_ae 
+        : (snapshot.total_value_usd || snapshot.total_value_ae);
+      
+      return {
+        time: timestamp as any,
+        value,
+      };
+    });
+
+    lineSeries.setData(chartData);
+    
+    // Fit content to show all data
+    if (chartData.length > 0) {
+      chart.timeScale().fitContent();
+    }
 
     // Handle resize
     const handleResize = () => {
@@ -157,9 +192,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       }
       chartRef.current = null;
     };
-  }, []);
+  }, [portfolioData, convertTo]); // Removed getFormattedFiat from deps to avoid constant recreation
 
-  // Update chart data when portfolio data changes
+  // Update chart data when portfolio data or currency changes
   useEffect(() => {
     if (!portfolioData || !seriesRef.current || portfolioData.length === 0) return;
 
@@ -184,9 +219,13 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   }, [portfolioData, convertTo]);
 
   if (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return (
       <div className="mt-4 p-4 rounded-xl bg-white/[0.02] border border-white/10">
         <div className="text-red-400 text-sm">Failed to load portfolio data</div>
+        {process.env.NODE_ENV === 'development' && (
+          <div className="text-red-300 text-xs mt-2 opacity-75">{errorMessage}</div>
+        )}
       </div>
     );
   }
@@ -248,7 +287,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               <div className="text-white/60">Loading portfolio data...</div>
             </div>
           ) : portfolioData && portfolioData.length > 0 ? (
-            <div ref={chartContainerRef} className="w-full h-[300px]" />
+            <div ref={chartContainerRef} className="w-full h-[300px] min-w-0" />
           ) : (
             <div className="h-[300px] flex items-center justify-center">
               <div className="text-white/60">No portfolio data available</div>

@@ -431,11 +431,18 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     // Mark that we're updating data to prevent scroll handler from triggering
     isUpdatingDataRef.current = true;
 
-    const chartData: LineData[] = portfolioData.map((snapshot) => {
+    const chartData: LineData[] = portfolioData.map((snapshot, index) => {
       const timestamp = moment(snapshot.timestamp).unix();
       const value = convertTo === 'ae' 
         ? snapshot.total_value_ae 
-        : (snapshot.total_value_usd || snapshot.total_value_ae);
+        : (snapshot.total_value_usd != null && snapshot.total_value_usd > 0 
+            ? snapshot.total_value_usd 
+            : snapshot.total_value_ae);
+      
+      // Debug log for last few data points
+      if (index >= portfolioData.length - 3) {
+        console.log(`[Chart Data] ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, convertTo=${convertTo}, value=${value}`);
+      }
       
       return {
         time: timestamp as any,

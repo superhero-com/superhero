@@ -35,6 +35,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const [useCurrentCurrency, setUseCurrentCurrency] = useState(true); // Default to USD
   const isFetchingMoreRef = useRef(false);
   const loadedStartDateRef = useRef<string | null>(null);
+  const initialLoadRef = useRef(true);
+  const lastVisibleRangeRef = useRef<{ from: number; to: number } | null>(null);
 
   const { currentCurrencyInfo, getFormattedFiat } = useCurrencies();
   const convertTo = useMemo(
@@ -270,16 +272,39 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       const logicalRange = chart.timeScale().getVisibleLogicalRange();
       if (!logicalRange) return;
       
-      const barsInfo = lineSeries.barsInLogicalRange(logicalRange);
-      if (!barsInfo) return;
+      // On initial load, just store the range and skip loading
+      if (initialLoadRef.current) {
+        lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
+        initialLoadRef.current = false;
+        return;
+      }
       
-      // If we're near the start of the data (within 20 bars), load more
+      // Only load if user has scrolled left (from value decreased)
+      const currentFrom = logicalRange.from;
+      const lastFrom = lastVisibleRangeRef.current?.from;
+      
+      // If user hasn't scrolled left, don't load
+      if (lastFrom !== null && currentFrom >= lastFrom) {
+        lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
+        return;
+      }
+      
+      const barsInfo = lineSeries.barsInLogicalRange(logicalRange);
+      if (!barsInfo) {
+        lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
+        return;
+      }
+      
+      // If we're near the start of the data (within 20 bars) AND user scrolled left, load more
       if (barsInfo.barsBefore < 20 && portfolioData.length > 0) {
         isFetchingMoreRef.current = true;
         fetchPreviousPage().finally(() => {
           isFetchingMoreRef.current = false;
         });
       }
+      
+      // Update last visible range
+      lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
     };
 
     // Subscribe to visible range changes for infinite scrolling
@@ -307,6 +332,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         chart.remove();
       }
       chartRef.current = null;
+      // Reset initial load flag when chart is destroyed
+      initialLoadRef.current = true;
+      lastVisibleRangeRef.current = null;
     };
   }, [portfolioData, convertTo, hasPreviousPage, isFetchingPreviousPage, fetchPreviousPage]);
 
@@ -336,9 +364,13 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     // Restore visible range if we had one (to preserve scroll position when loading more data)
     if (chart && visibleRange && chartData.length > 0) {
       timeScale?.setVisibleRange(visibleRange);
+      // Reset initial load flag after data update so we can detect future scrolls
+      initialLoadRef.current = false;
     } else if (chart && chartData.length > 0) {
       // Only fit content if we don't have a visible range (initial load)
       chart.timeScale().fitContent();
+      // Reset initial load flag after fitting content
+      initialLoadRef.current = true;
     }
   }, [portfolioData, convertTo]);
 

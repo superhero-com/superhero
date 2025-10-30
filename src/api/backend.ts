@@ -127,6 +127,16 @@ export const TrendminerApi = {
     const query = qp.toString();
     return this.fetchJson(`/api/tokens/${encodeURIComponent(address)}/history${query ? `?${query}` : ''}`);
   },
+  // Portfolio history
+  getAccountPortfolioHistory(address: string, params: { startDate?: string; endDate?: string; interval?: number; convertTo?: 'ae'|'usd'|'eur'|'aud'|'brl'|'cad'|'chf'|'gbp'|'xau' } = {}) {
+    const qp = new URLSearchParams();
+    if (params.startDate) qp.set('startDate', params.startDate);
+    if (params.endDate) qp.set('endDate', params.endDate);
+    if (params.interval != null) qp.set('interval', String(params.interval));
+    if (params.convertTo) qp.set('convertTo', params.convertTo);
+    const query = qp.toString();
+    return this.fetchJson(`/api/accounts/${encodeURIComponent(address)}/portfolio/history${query ? `?${query}` : ''}`);
+  },
   // Accounts leaderboard and details
   listAccounts(params: { orderBy?: 'total_volume'|'total_tx_count'|'total_buy_tx_count'|'total_sell_tx_count'|'total_created_tokens'|'total_invitation_count'|'total_claimed_invitation_count'|'total_revoked_invitation_count'|'created_at'; orderDirection?: 'ASC'|'DESC'; limit?: number; page?: number } = {}) {
     const qp = new URLSearchParams();

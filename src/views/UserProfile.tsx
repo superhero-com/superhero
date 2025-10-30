@@ -18,6 +18,7 @@ import AccountCreatedToken from "@/components/Account/AccountCreatedToken";
 import AccountFeed from "@/components/Account/AccountFeed";
 import AccountOwnedTokens from "@/components/Account/AccountOwnedTokens";
 import AccountTrades from "@/components/Account/AccountTrades";
+import AccountPortfolio from "@/components/Account/AccountPortfolio";
 import ProfileEditModal from "../components/modals/ProfileEditModal";
 import { CONFIG } from "../config";
 import { useModal } from "../hooks";
@@ -320,6 +321,9 @@ export default function UserProfile({
           </div>
         </div>
       </div>
+
+      {/* Portfolio Chart */}
+      <AccountPortfolio address={effectiveAddress} />
 
       {/* Tabs - reuse main feed filter styles (mobile underline, desktop pills) */}
       <div className="w-full mb-2">

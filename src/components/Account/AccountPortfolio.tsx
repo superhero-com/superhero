@@ -213,6 +213,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         secondsVisible: false,
         rightBarStaysOnScroll: true,
         lockVisibleTimeRangeOnResize: true,
+        rightOffset: 0,
       },
       crosshair: {
         mode: 1,
@@ -263,9 +264,22 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     lineSeries.setData(chartData);
     
-    // Fit content to show all data (only on initial load)
+    // Set maximum time to prevent scrolling past current time
+    const currentTime = moment().unix();
     if (chartData.length > 0) {
+      // Fit content first, then constrain to current time
       chart.timeScale().fitContent();
+      
+      // After fitting, ensure we don't show future data
+      const visibleRange = chart.timeScale().getVisibleRange();
+      if (visibleRange && visibleRange.to > currentTime) {
+        if (visibleRange.from != null && typeof visibleRange.from === 'number') {
+          chart.timeScale().setVisibleRange({
+            from: visibleRange.from,
+            to: currentTime,
+          });
+        }
+      }
     }
 
     // Handle scroll to load previous data
@@ -283,23 +297,30 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       const logicalRange = chart.timeScale().getVisibleLogicalRange();
       if (!logicalRange) return;
       
-      // Prevent scrolling past current time
+      // Prevent scrolling past current time - always enforce this constraint
       const currentTime = moment().unix();
       const visibleRange = chart.timeScale().getVisibleRange();
-      if (visibleRange && visibleRange.to > currentTime) {
-        // Only update if we have a valid from value (not null)
-        if (visibleRange.from != null && typeof visibleRange.from === 'number') {
-          chart.timeScale().setVisibleRange({
-            from: visibleRange.from,
-            to: currentTime,
-          });
-          // Update tracking with corrected range
-          const correctedLogicalRange = chart.timeScale().getVisibleLogicalRange();
-          if (correctedLogicalRange) {
-            lastVisibleRangeRef.current = { from: correctedLogicalRange.from, to: correctedLogicalRange.to };
+      if (visibleRange) {
+        // If the visible range extends past current time, clamp it
+        if (visibleRange.to > currentTime) {
+          // Only update if we have a valid from value (not null)
+          if (visibleRange.from != null && typeof visibleRange.from === 'number') {
+            // Calculate the duration to maintain the same visible range duration
+            const rangeDuration = visibleRange.to - visibleRange.from;
+            const newFrom = Math.max(visibleRange.from, currentTime - rangeDuration);
+            
+            chart.timeScale().setVisibleRange({
+              from: newFrom,
+              to: currentTime,
+            });
+            // Update tracking with corrected range
+            const correctedLogicalRange = chart.timeScale().getVisibleLogicalRange();
+            if (correctedLogicalRange) {
+              lastVisibleRangeRef.current = { from: correctedLogicalRange.from, to: correctedLogicalRange.to };
+            }
           }
+          return; // Exit early to prevent loading more data when correcting scroll
         }
-        return;
       }
       
       // On initial load, just store the range and skip loading
@@ -340,6 +361,24 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     // Subscribe to visible range changes for infinite scrolling
     chart.timeScale().subscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
+    
+    // Also subscribe to time scale changes to prevent scrolling past current time
+    const handleTimeScaleChange = () => {
+      const currentTime = moment().unix();
+      const visibleRange = chart.timeScale().getVisibleRange();
+      if (visibleRange && visibleRange.to > currentTime) {
+        if (visibleRange.from != null && typeof visibleRange.from === 'number') {
+          const rangeDuration = visibleRange.to - visibleRange.from;
+          const newFrom = Math.max(visibleRange.from, currentTime - rangeDuration);
+          chart.timeScale().setVisibleRange({
+            from: newFrom,
+            to: currentTime,
+          });
+        }
+      }
+    };
+    
+    chart.timeScale().subscribeVisibleTimeRangeChange(handleTimeScaleChange);
 
     // Handle resize
     const handleResize = () => {

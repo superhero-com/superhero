@@ -433,15 +433,26 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     const chartData: LineData[] = portfolioData.map((snapshot, index) => {
       const timestamp = moment(snapshot.timestamp).unix();
-      const value = convertTo === 'ae' 
-        ? snapshot.total_value_ae 
-        : (snapshot.total_value_usd != null && snapshot.total_value_usd > 0 
-            ? snapshot.total_value_usd 
-            : snapshot.total_value_ae);
+      let value: number;
       
-      // Debug log for last few data points
-      if (index >= portfolioData.length - 3) {
-        console.log(`[Chart Data] ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, convertTo=${convertTo}, value=${value}`);
+      if (convertTo === 'ae') {
+        value = snapshot.total_value_ae;
+      } else {
+        // For fiat currencies, MUST use total_value_usd, never fallback to total_value_ae
+        if (snapshot.total_value_usd != null && snapshot.total_value_usd > 0) {
+          value = snapshot.total_value_usd;
+        } else {
+          // Log warning if USD value is missing when USD is requested
+          console.warn(`[Chart Data] Missing total_value_usd for ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, ae_balance=${snapshot.ae_balance}`);
+          // Fallback: calculate USD from AE using current rate (not ideal, but better than showing wrong value)
+          // But actually, if backend didn't provide USD, something is wrong - skip this data point or use 0
+          value = 0; // Better to show gap than wrong value
+        }
+      }
+      
+      // Debug log for first few and last few data points
+      if (index < 3 || index >= portfolioData.length - 3) {
+        console.log(`[Chart Data] ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, ae_balance=${snapshot.ae_balance}, convertTo=${convertTo}, value=${value}`);
       }
       
       return {

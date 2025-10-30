@@ -263,13 +263,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     lineSeries.setData(chartData);
     
-    // Set maximum visible range to prevent scrolling past current time
-    const currentTime = moment().unix();
-    chart.timeScale().setVisibleRange({
-      from: null as any, // Allow scrolling left as far as data goes
-      to: currentTime as any, // Prevent scrolling right past current time
-    }, true); // true = prevent user from scrolling past this range
-    
     // Fit content to show all data (only on initial load)
     if (chartData.length > 0) {
       chart.timeScale().fitContent();
@@ -294,14 +287,17 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       const currentTime = moment().unix();
       const visibleRange = chart.timeScale().getVisibleRange();
       if (visibleRange && visibleRange.to > currentTime) {
-        chart.timeScale().setVisibleRange({
-          from: visibleRange.from,
-          to: currentTime,
-        });
-        // Update tracking with corrected range
-        const correctedLogicalRange = chart.timeScale().getVisibleLogicalRange();
-        if (correctedLogicalRange) {
-          lastVisibleRangeRef.current = { from: correctedLogicalRange.from, to: correctedLogicalRange.to };
+        // Only update if we have a valid from value (not null)
+        if (visibleRange.from != null && typeof visibleRange.from === 'number') {
+          chart.timeScale().setVisibleRange({
+            from: visibleRange.from,
+            to: currentTime,
+          });
+          // Update tracking with corrected range
+          const correctedLogicalRange = chart.timeScale().getVisibleLogicalRange();
+          if (correctedLogicalRange) {
+            lastVisibleRangeRef.current = { from: correctedLogicalRange.from, to: correctedLogicalRange.to };
+          }
         }
         return;
       }

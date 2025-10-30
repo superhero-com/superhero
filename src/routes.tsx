@@ -82,6 +82,11 @@ function NavigateTrendingAccount() {
   return <Navigate to={`/trends/accounts/${encodeURIComponent(address || "")}`} replace />;
 }
 
+function NavigateUserProfile() {
+  const { address } = useParams();
+  return <Navigate to={`/users/${encodeURIComponent(address || "")}`} replace />;
+}
+
 export const routes: RouteObject[] = [
   {
     path: "/",

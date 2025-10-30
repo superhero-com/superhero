@@ -32,7 +32,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('30d');
-  const [useCurrentCurrency, setUseCurrentCurrency] = useState(true); // Default to USD
+  const [useCurrentCurrency, setUseCurrentCurrency] = useState(false); // Default to AE
   const isFetchingMoreRef = useRef(false);
   const loadedStartDateRef = useRef<string | null>(null);
   const initialLoadRef = useRef(true);

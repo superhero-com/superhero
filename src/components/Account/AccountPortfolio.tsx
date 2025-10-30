@@ -268,8 +268,13 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     // Handle scroll to load previous data
     const handleVisibleRangeChange = () => {
-      // Don't trigger during data updates or if already fetching
-      if (isUpdatingDataRef.current || isFetchingMoreRef.current || !hasPreviousPage || isFetchingPreviousPage) {
+      // Don't trigger if already fetching or no more pages
+      if (isFetchingMoreRef.current || !hasPreviousPage || isFetchingPreviousPage) {
+        return;
+      }
+      
+      // Skip if we're currently updating data (but allow user scrolls after update completes)
+      if (isUpdatingDataRef.current) {
         return;
       }
       
@@ -283,13 +288,13 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         return;
       }
       
-      // Only load if user has scrolled left (from value decreased significantly)
+      // Only load if user has scrolled left (from value decreased)
       const currentFrom = logicalRange.from;
       const lastFrom = lastVisibleRangeRef.current?.from;
       
-      // If user hasn't scrolled left significantly (at least 5 logical units), don't load
-      // This prevents triggering on tiny movements or programmatic updates
-      if (lastFrom !== null && currentFrom >= (lastFrom - 5)) {
+      // If user hasn't scrolled left (from value increased or stayed same), don't load
+      // Allow small tolerance (1 logical unit) for rounding/rendering differences
+      if (lastFrom !== null && currentFrom >= (lastFrom - 1)) {
         lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
         return;
       }
@@ -371,31 +376,41 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     
     // Restore visible range if we had one (to preserve scroll position when loading more data)
     if (chart && visibleRange && chartData.length > 0) {
-      // Keep the flag set during range restoration to prevent handler from triggering
+      // Temporarily disable the handler, restore range, then update tracking
       timeScale?.setVisibleRange(visibleRange);
-      // Reset initial load flag after data update so we can detect future scrolls
-      initialLoadRef.current = false;
-      // Update last visible range to current to prevent false scroll detection
-      const logicalRange = timeScale?.getVisibleLogicalRange();
-      if (logicalRange) {
-        lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
-      }
+      // Use requestAnimationFrame to ensure the range is set before updating tracking
+      requestAnimationFrame(() => {
+        const logicalRange = timeScale?.getVisibleLogicalRange();
+        if (logicalRange) {
+          lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
+        }
+        // Reset initial load flag after data update so we can detect future scrolls
+        initialLoadRef.current = false;
+        // Re-enable handler after range is restored
+        setTimeout(() => {
+          isUpdatingDataRef.current = false;
+        }, 100);
+      });
     } else if (chart && chartData.length > 0) {
       // Only fit content if we don't have a visible range (initial load)
       chart.timeScale().fitContent();
-      // Reset initial load flag after fitting content
-      initialLoadRef.current = true;
-      // Update last visible range after fitContent
-      const logicalRange = chart.timeScale().getVisibleLogicalRange();
-      if (logicalRange) {
-        lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
-      }
-    }
-    
-    // Allow scroll handler to work again after a delay (enough for chart to update)
-    setTimeout(() => {
+      // Use requestAnimationFrame to ensure content is fitted before updating tracking
+      requestAnimationFrame(() => {
+        const logicalRange = chart.timeScale().getVisibleLogicalRange();
+        if (logicalRange) {
+          lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
+        }
+        // Reset initial load flag after fitting content
+        initialLoadRef.current = true;
+        // Re-enable handler after content is fitted
+        setTimeout(() => {
+          isUpdatingDataRef.current = false;
+        }, 100);
+      });
+    } else {
+      // If no chart or data, re-enable handler immediately
       isUpdatingDataRef.current = false;
-    }, 300);
+    }
   }, [portfolioData, convertTo]);
 
   if (error) {

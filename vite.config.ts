@@ -22,8 +22,8 @@ export default defineConfig(({ mode }) => {
     // Vite will automatically expose VITE_* vars to import.meta.env
     envDir: envDir,
     define: {
-      // Only define process.env for compatibility, let Vite handle import.meta.env automatically
-      'process.env': JSON.stringify(env),
+      // Define process.env for compatibility - use object mapping to allow runtime access
+      'process.env': env,
     },
     build: {
       sourcemap: false,

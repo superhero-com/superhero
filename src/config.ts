@@ -65,8 +65,17 @@ const defaultConfig: AppConfig = {
 
 // Allow local development overrides via Vite env vars set at build time
 // e.g. VITE_SUPERHERO_API_URL, VITE_SUPERHERO_WS_URL
-const envApiUrl = (import.meta as any)?.env?.VITE_SUPERHERO_API_URL as string | undefined;
-const envWsUrl = (import.meta as any)?.env?.VITE_SUPERHERO_WS_URL as string | undefined;
+// Try import.meta.env first, then fallback to process.env (for Vite compatibility)
+const envApiUrl = ((import.meta as any)?.env?.VITE_SUPERHERO_API_URL || 
+  (typeof process !== 'undefined' && (process as any).env?.VITE_SUPERHERO_API_URL)) as string | undefined;
+const envWsUrl = ((import.meta as any)?.env?.VITE_SUPERHERO_WS_URL || 
+  (typeof process !== 'undefined' && (process as any).env?.VITE_SUPERHERO_WS_URL)) as string | undefined;
+
+// Debug logging in development
+if (typeof window !== 'undefined' && (import.meta as any)?.env?.MODE === 'development') {
+  console.log('[Config] VITE_SUPERHERO_API_URL from import.meta.env:', envApiUrl);
+  console.log('[Config] All VITE_ env vars:', Object.keys((import.meta as any)?.env || {}).filter(k => k.startsWith('VITE_')));
+}
 
 declare global {
   interface Window {
@@ -102,7 +111,17 @@ const runtimeConfig: Partial<AppConfig> = runtimeRaw
 export const CONFIG: AppConfig = {
   ...defaultConfig,
   ...runtimeConfig,
-  // Vite env overrides for local builds
+  // Vite env overrides for local builds - MUST come after runtimeConfig to override it
   ...(envApiUrl ? { SUPERHERO_API_URL: envApiUrl } : {}),
   ...(envWsUrl ? { SUPERHERO_WS_URL: envWsUrl } : {}),
 };
+
+// Debug logging in development - always log to help debug
+if (typeof window !== 'undefined') {
+  const mode = (import.meta as any)?.env?.MODE;
+  console.log('[Config Debug] MODE:', mode);
+  console.log('[Config Debug] envApiUrl:', envApiUrl);
+  console.log('[Config Debug] runtimeConfig.SUPERHERO_API_URL:', runtimeConfig.SUPERHERO_API_URL);
+  console.log('[Config Debug] Final CONFIG.SUPERHERO_API_URL:', CONFIG.SUPERHERO_API_URL);
+  console.log('[Config Debug] import.meta.env keys:', Object.keys((import.meta as any)?.env || {}));
+}

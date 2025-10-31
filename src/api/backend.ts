@@ -6,10 +6,18 @@ export const TrendminerApi = {
     const base = (CONFIG.SUPERHERO_API_URL || '').replace(/\/$/, '');
     if (!base) throw new Error('SUPERHERO_API_URL not configured');
     const url = `${base}${path.startsWith('/') ? '' : '/'}${path}`;
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[TrendminerApi] Base URL: ${base}`);
+      console.log(`[TrendminerApi] Fetching: ${url}`);
+    }
     const res = await fetch(url, init);
     if (!res.ok) {
       const body = await res.text().catch(() => '');
-      throw new Error(`Trendminer request failed: ${res.status} ${body || ''}`.trim());
+      const error = new Error(`Trendminer request failed: ${res.status} ${body || ''}`.trim());
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`[TrendminerApi] Error fetching ${url}:`, error);
+      }
+      throw error;
     }
     return res.json();
   },
@@ -126,6 +134,16 @@ export const TrendminerApi = {
     if (params.page != null) qp.set('page', String(params.page));
     const query = qp.toString();
     return this.fetchJson(`/api/tokens/${encodeURIComponent(address)}/history${query ? `?${query}` : ''}`);
+  },
+  // Portfolio history
+  getAccountPortfolioHistory(address: string, params: { startDate?: string; endDate?: string; interval?: number; convertTo?: 'ae'|'usd'|'eur'|'aud'|'brl'|'cad'|'chf'|'gbp'|'xau' } = {}) {
+    const qp = new URLSearchParams();
+    if (params.startDate) qp.set('startDate', params.startDate);
+    if (params.endDate) qp.set('endDate', params.endDate);
+    if (params.interval != null) qp.set('interval', String(params.interval));
+    if (params.convertTo) qp.set('convertTo', params.convertTo);
+    const query = qp.toString();
+    return this.fetchJson(`/api/accounts/${encodeURIComponent(address)}/portfolio/history${query ? `?${query}` : ''}`);
   },
   // Accounts leaderboard and details
   listAccounts(params: { orderBy?: 'total_volume'|'total_tx_count'|'total_buy_tx_count'|'total_sell_tx_count'|'total_created_tokens'|'total_invitation_count'|'total_claimed_invitation_count'|'total_revoked_invitation_count'|'created_at'; orderDirection?: 'ASC'|'DESC'; limit?: number; page?: number } = {}) {
@@ -326,6 +344,10 @@ export const Backend = {
     body: JSON.stringify({ ...postParam, author: address }),
     headers: { 'Content-Type': 'application/json' },
   }),
+  // Portfolio history - delegate to TrendminerApi to avoid duplication
+  getAccountPortfolioHistory(address: string, params: { startDate?: string; endDate?: string; interval?: number; convertTo?: 'ae'|'usd'|'eur'|'aud'|'brl'|'cad'|'chf'|'gbp'|'xau' } = {}) {
+    return TrendminerApi.getAccountPortfolioHistory(address, params);
+  },
 };
 
 

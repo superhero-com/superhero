@@ -82,6 +82,11 @@ function NavigateTrendingAccount() {
   return <Navigate to={`/trends/accounts/${encodeURIComponent(address || "")}`} replace />;
 }
 
+function NavigateUserProfile() {
+  const { address } = useParams();
+  return <Navigate to={`/users/${encodeURIComponent(address || "")}`} replace />;
+}
+
 export const routes: RouteObject[] = [
   {
     path: "/",
@@ -122,6 +127,11 @@ export const routes: RouteObject[] = [
   { path: "/trending/dao/:saleAddress", element: <NavigateTrendingDao /> },
   { path: "/trending/dao/:saleAddress/vote/:voteId/:voteAddress", element: <NavigateTrendingVote /> },
   { path: "/trending/accounts/:address", element: <NavigateTrendingAccount /> },
+  // Redirect /user/* to /users/* for consistency
+  {
+    path: "/user/:address",
+    element: <NavigateUserProfile />,
+  },
   // Kept for backward compatibility; redirecting into SocialLayout version
   { path: "/users/:address", element: <UserProfile /> },
   { path: "/landing", element: <Landing /> },

@@ -120,7 +120,10 @@ export const AddressAvatarWithChainName = memo(({
                     (() => {
                         const displayName = chainName || (!hideFallbackName ? 'Legend' : '');
                         return displayName ? (
-                            <span className="chain-name text-[14px] md:text-[15px] font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
+                            <span 
+                                className="chain-name text-[14px] md:text-[15px] font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent block truncate w-full"
+                                title={displayName}
+                            >
                                 {displayName}
                             </span>
                         ) : (

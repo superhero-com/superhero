@@ -215,7 +215,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     const chart = createChart(container, {
       width: container.clientWidth,
-      height: 300,
+      height: 180,
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: '#ffffff',
@@ -584,7 +584,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     <div className="mt-4 mb-6">
       <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="px-4 md:px-6 py-4">
+        <div className="px-4 md:px-6 pt-4 pb-0">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-bold text-white">Portfolio Value</h3>
             {/* Currency toggle */}
@@ -595,7 +595,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               {convertTo.toUpperCase()}
             </button>
           </div>
-          <div className="mb-4">
+          <div className="mb-2">
             <span className={`text-3xl md:text-4xl font-extrabold ${hoveredPrice ? 'text-green-400' : 'text-white'}`}>
               {hoveredPrice ? (
                 convertTo === 'ae' 
@@ -637,14 +637,14 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         {/* Chart */}
         <div className="px-4 md:px-6 pb-4">
           {isLoading ? (
-            <div className="h-[300px] flex items-center justify-center">
+            <div className="h-[180px] flex items-center justify-center">
               <div className="text-white/60">Loading portfolio data...</div>
             </div>
           ) : portfolioData && portfolioData.length > 0 ? (
             <>
               <div 
                 ref={chartContainerRef} 
-                className="w-full h-[300px] min-w-0 touch-none"
+                className="w-full h-[180px] min-w-0 touch-none"
                 style={{ touchAction: 'none' }}
               />
               {isFetchingPreviousPage && (
@@ -654,7 +654,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               )}
             </>
           ) : (
-            <div className="h-[300px] flex items-center justify-center">
+            <div className="h-[180px] flex items-center justify-center">
               <div className="text-white/60">No portfolio data available</div>
             </div>
           )}

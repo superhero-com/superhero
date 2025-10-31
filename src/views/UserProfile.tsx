@@ -194,7 +194,8 @@ export default function UserProfile({
 
   const content = (
     <div className="w-full">
-      <div className="mb-4">
+      {/* Back button */}
+      <div className="mb-4 md:mb-6">
         <AeButton
           onClick={() => {
             const state = (window.history?.state as any) || {};
@@ -210,120 +211,123 @@ export default function UserProfile({
           ← Back
         </AeButton>
       </div>
-      {/* Profile header (banner + avatar + stats) */}
-      <div className="mb-5 md:mb-6 rounded-2xl overflow-visible md:overflow-hidden relative md:border md:border-white/10 md:bg-gradient-to-b md:from-white/10 md:to-white/5 md:backdrop-blur-xl">
-        {/* Banner (desktop only) */}
-        <div className="hidden md:block h-28 w-full bg-[radial-gradient(100%_60%_at_0%_0%,rgba(17,97,254,0.35),transparent_60%),radial-gradient(100%_60%_at_100%_0%,rgba(78,205,196,0.35),transparent_60%)]" />
 
-        {/* Avatar and main info */}
-        <div className="px-0 md:px-6 pb-0 md:pb-6 mt-0 md:-mt-12 relative z-10">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-start md:gap-4">
-            <div className="flex flex-col gap-2 min-w-0 md:flex-1">
-              {/* Row 1: avatar + identity */}
-              <div className="flex items-center gap-3 md:gap-4">
-                {/* Avatar */}
-                <div className="md:hidden shrink-0">
-                  <AddressAvatarWithChainName
-                    address={effectiveAddress}
-                    size={64}
-                    overlaySize={22}
-                    showAddressAndChainName={false}
-                    isHoverEnabled={true}
-                  />
-                </div>
-                <div className="hidden md:block shrink-0">
-                  <AddressAvatarWithChainName
-                    address={effectiveAddress}
-                    size={72}
-                    overlaySize={24}
-                    showAddressAndChainName={false}
-                    isHoverEnabled={true}
-                  />
-                </div>
-                {/* Identity */}
-                <div className="min-w-0 md:self-center">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent tracking-tight">{chainName || "Legend"}</span>
-                  </div>
-                  <div className="font-mono text-xs text-white/70 break-all mt-0 md:mt-2">{effectiveAddress}</div>
-                </div>
+      {/* Compact Profile Header */}
+      <div className="mb-4 md:mb-4">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+          {/* Avatar and Identity */}
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            <div className="relative shrink-0">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/30 to-teal-500/30 blur-lg opacity-50" />
+              <AddressAvatarWithChainName
+                address={effectiveAddress}
+                size={64}
+                overlaySize={22}
+                showAddressAndChainName={false}
+                isHoverEnabled={true}
+                className="relative"
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-[var(--neon-teal)] via-teal-400 to-cyan-300 bg-clip-text text-transparent tracking-tight">
+                {chainName || "Legend"}
+              </h1>
+              <div className="font-mono text-xs text-white/60 mt-0.5 break-all">
+                {effectiveAddress}
               </div>
-              {/* Row 2: bio on its own line */}
               {bioText && (
-                <div className="mt-1 text-sm text-white whitespace-pre-wrap inline-flex items-center gap-2">
+                <div className="mt-2 text-sm text-white/80 leading-relaxed line-clamp-2">
                   <span>{bioText}</span>
-                  <span id="bio-loading-indicator" className="hidden w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span id="bio-loading-indicator" className="hidden ml-2 w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 </div>
               )}
             </div>
-            <div className="flex flex-row flex-wrap items-start gap-2 md:flex-col md:items-end md:gap-2 md:ml-auto md:self-start">
-              {canEdit ? (
-                <AeButton
-                  size="sm"
-                  variant="ghost"
-                  className="!border !border-solid !border-white/20 hover:!border-white/35"
-                  onClick={() => setEditOpen(true)}
-                >
-                  Edit Profile
-                </AeButton>
-              ) : null}
-              {!canEdit ? (
-                <AeButton
-                  onClick={() => openModal({ name: "tip", props: { toAddress: effectiveAddress } })}
-                  variant="ghost"
-                  size="sm"
-                  className="!border !border-solid !border-white/15 hover:!border-white/35 inline-flex items-center gap-2"
-                  title="Send a tip"
-                >
-                  <IconDiamond className="w-4 h-4 text-[#1161FE]" />
-                  Tip
-                </AeButton>
-              ) : null}
-
-              {/* Explorer link */}
-              <AeButton
-                variant="ghost"
-                size="sm"
-                className="!border !border-solid !border-white/15 hover:!border-white/35 [&_svg]:!size-[0.9em]"
-                onClick={() => {
-                  const base = (CONFIG.EXPLORER_URL || "https://aescan.io").replace(/\/$/, "");
-                  const url = `${base}/accounts/${effectiveAddress}`;
-                  window.open(url, "_blank", "noopener,noreferrer");
-                }}
-                title="Open on æScan"
-              >
-                <span className="inline-flex items-center gap-2">
-                  <span>View on æScan</span>
-                  <IconLink className="w-[0.65em] h-[0.65em] opacity-80 align-middle" />
-                </span>
-              </AeButton>
-            </div>
           </div>
 
-          {/* Stats */}
-          <div className="mt-3 md:mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-            <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
-              <div className="text-[11px] uppercase tracking-wider text-white/60">AE Balance</div>
-              <div className="text-white font-bold mt-1">{decimalBalance ? `${decimalBalance.prettify()} AE` : "Loading..."}</div>
-            </div>
-            <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
-              <div className="text-[11px] uppercase tracking-wider text-white/60">Owned Trends</div>
-              <div className="text-white font-bold mt-1">{(ownedTokensResp as any)?.meta?.totalItems ?? (Array.isArray(aex9Balances) ? aex9Balances.length : 0)}</div>
-            </div>
-            <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
-              <div className="text-[11px] uppercase tracking-wider text-white/60">Created Trends</div>
-              <div className="text-white font-bold mt-1">{accountInfo?.total_created_tokens ?? 0}</div>
-            </div>
-            <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
-              <div className="text-[11px] uppercase tracking-wider text-white/60">Posts</div>
-              <div className="text-white font-bold mt-1">{posts.length}</div>
-            </div>
+          {/* Action buttons */}
+          <div className="flex flex-row gap-2 shrink-0">
+            {canEdit ? (
+              <AeButton
+                size="sm"
+                variant="ghost"
+                className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all"
+                onClick={() => setEditOpen(true)}
+              >
+                Edit
+              </AeButton>
+            ) : null}
+            {!canEdit ? (
+              <AeButton
+                onClick={() => openModal({ name: "tip", props: { toAddress: effectiveAddress } })}
+                variant="ghost"
+                size="sm"
+                className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all inline-flex items-center gap-2"
+                title="Send a tip"
+              >
+                <IconDiamond className="w-4 h-4 text-[#1161FE]" />
+                Tip
+              </AeButton>
+            ) : null}
+            <AeButton
+              variant="ghost"
+              size="sm"
+              className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all [&_svg]:!size-[0.9em]"
+              onClick={() => {
+                const base = (CONFIG.EXPLORER_URL || "https://aescan.io").replace(/\/$/, "");
+                const url = `${base}/accounts/${effectiveAddress}`;
+                window.open(url, "_blank", "noopener,noreferrer");
+              }}
+              title="Open on æScan"
+            >
+              <IconLink className="w-[0.65em] h-[0.65em] opacity-80 align-middle" />
+            </AeButton>
           </div>
         </div>
       </div>
 
-      {/* Portfolio Chart */}
-      <AccountPortfolio address={effectiveAddress} />
+      {/* Portfolio Chart and Stats - Side by side on md+ */}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-4 md:gap-6 mb-4 md:mb-4">
+        {/* Portfolio Chart - Smaller on md+ */}
+        <div className="w-full -mt-4 -mb-6">
+          <AccountPortfolio address={effectiveAddress} />
+        </div>
+
+        {/* Stats Grid - Right column on md+, full width on mobile */}
+        <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5 md:gap-2.5">
+          <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all">
+            <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
+              AE Balance
+            </div>
+            <div className="text-base md:text-lg font-bold text-white">
+              {decimalBalance ? `${decimalBalance.prettify()} AE` : "Loading..."}
+            </div>
+          </div>
+          <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all">
+            <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
+              Owned Trends
+            </div>
+            <div className="text-base md:text-lg font-bold text-white">
+              {(ownedTokensResp as any)?.meta?.totalItems ?? (Array.isArray(aex9Balances) ? aex9Balances.length : 0)}
+            </div>
+          </div>
+          <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all">
+            <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
+              Created Trends
+            </div>
+            <div className="text-base md:text-lg font-bold text-white">
+              {accountInfo?.total_created_tokens ?? 0}
+            </div>
+          </div>
+          <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all">
+            <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
+              Posts
+            </div>
+            <div className="text-base md:text-lg font-bold text-white">
+              {posts.length}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Tabs - reuse main feed filter styles (mobile underline, desktop pills) */}
       <div className="w-full mb-2">

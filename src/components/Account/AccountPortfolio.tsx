@@ -289,18 +289,36 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     const areaSeries = chart.addSeries(AreaSeries, seriesOptions);
     seriesRef.current = areaSeries;
 
-    // Set initial portfolio data (backend calculates USD using historical AE prices)
-    const chartData: LineData[] = portfolioData.map((snapshot) => {
-      const timestamp = moment(snapshot.timestamp).unix();
-      const value = convertTo === 'ae' 
-        ? snapshot.total_value_ae 
-        : (snapshot.total_value_usd || snapshot.total_value_ae);
-      
-      return {
-        time: timestamp as any,
-        value,
-      };
-    });
+    const chartData: LineData[] = portfolioData
+      .map((snapshot, index) => {
+        const timestamp = moment(snapshot.timestamp).unix();
+        let value: number | null = null;
+        
+        if (convertTo === 'ae') {
+          value = snapshot.total_value_ae;
+        } else {
+          // For fiat currencies, MUST use total_value_usd, never fallback to total_value_ae
+          if (snapshot.total_value_usd != null && snapshot.total_value_usd > 0) {
+            value = snapshot.total_value_usd;
+          } else {
+            // Log warning if USD value is missing when USD is requested
+            console.warn(`[Chart Data] Missing total_value_usd for ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, ae_balance=${snapshot.ae_balance}`);
+            // Skip this data point to show a gap rather than misleading zero value
+            return null;
+          }
+        }
+        
+        // Debug log for first few and last few data points
+        if (index < 3 || index >= portfolioData.length - 3) {
+          console.log(`[Chart Data] ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, ae_balance=${snapshot.ae_balance}, convertTo=${convertTo}, value=${value}`);
+        }
+        
+        return {
+          time: timestamp as any,
+          value: value as number,
+        };
+      })
+      .filter((item): item is LineData => item !== null);
 
     areaSeries.setData(chartData);
     
@@ -474,35 +492,36 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     // Mark that we're updating data to prevent scroll handler from triggering
     isUpdatingDataRef.current = true;
 
-    const chartData: LineData[] = portfolioData.map((snapshot, index) => {
-      const timestamp = moment(snapshot.timestamp).unix();
-      let value: number;
-      
-      if (convertTo === 'ae') {
-        value = snapshot.total_value_ae;
-      } else {
-        // For fiat currencies, MUST use total_value_usd, never fallback to total_value_ae
-        if (snapshot.total_value_usd != null && snapshot.total_value_usd > 0) {
-          value = snapshot.total_value_usd;
+    const chartData: LineData[] = portfolioData
+      .map((snapshot, index) => {
+        const timestamp = moment(snapshot.timestamp).unix();
+        let value: number | null = null;
+        
+        if (convertTo === 'ae') {
+          value = snapshot.total_value_ae;
         } else {
-          // Log warning if USD value is missing when USD is requested
-          console.warn(`[Chart Data] Missing total_value_usd for ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, ae_balance=${snapshot.ae_balance}`);
-          // Fallback: calculate USD from AE using current rate (not ideal, but better than showing wrong value)
-          // But actually, if backend didn't provide USD, something is wrong - skip this data point or use 0
-          value = 0; // Better to show gap than wrong value
+          // For fiat currencies, MUST use total_value_usd, never fallback to total_value_ae
+          if (snapshot.total_value_usd != null && snapshot.total_value_usd > 0) {
+            value = snapshot.total_value_usd;
+          } else {
+            // Log warning if USD value is missing when USD is requested
+            console.warn(`[Chart Data] Missing total_value_usd for ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, ae_balance=${snapshot.ae_balance}`);
+            // Skip this data point to show a gap rather than misleading zero value
+            return null;
+          }
         }
-      }
-      
-      // Debug log for first few and last few data points
-      if (index < 3 || index >= portfolioData.length - 3) {
-        console.log(`[Chart Data] ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, ae_balance=${snapshot.ae_balance}, convertTo=${convertTo}, value=${value}`);
-      }
-      
-      return {
-        time: timestamp as any,
-        value,
-      };
-    });
+        
+        // Debug log for first few and last few data points
+        if (index < 3 || index >= portfolioData.length - 3) {
+          console.log(`[Chart Data] ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, ae_balance=${snapshot.ae_balance}, convertTo=${convertTo}, value=${value}`);
+        }
+        
+        return {
+          time: timestamp as any,
+          value: value as number,
+        };
+      })
+      .filter((item): item is LineData => item !== null);
 
     // Get current visible range to preserve scroll position
     const chart = chartRef.current;

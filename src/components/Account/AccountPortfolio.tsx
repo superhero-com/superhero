@@ -184,8 +184,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     if (convertTo === 'ae') {
       return latest.total_value_ae;
     } else {
-      // For fiat currencies, use total_value_usd if available, otherwise fallback to AE
-      if (latest.total_value_usd != null && latest.total_value_usd > 0) {
+      // For fiat currencies, use total_value_usd if available (including zero values)
+      if (latest.total_value_usd != null) {
         console.log(`[Current Value] Using total_value_usd: ${latest.total_value_usd}`);
         return latest.total_value_usd;
       }
@@ -297,8 +297,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         if (convertTo === 'ae') {
           value = snapshot.total_value_ae;
         } else {
-          // For fiat currencies, MUST use total_value_usd, never fallback to total_value_ae
-          if (snapshot.total_value_usd != null && snapshot.total_value_usd > 0) {
+          // For fiat currencies, MUST use total_value_usd if available (including zero values)
+          if (snapshot.total_value_usd != null) {
             value = snapshot.total_value_usd;
           } else {
             // Log warning if USD value is missing when USD is requested
@@ -500,8 +500,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         if (convertTo === 'ae') {
           value = snapshot.total_value_ae;
         } else {
-          // For fiat currencies, MUST use total_value_usd, never fallback to total_value_ae
-          if (snapshot.total_value_usd != null && snapshot.total_value_usd > 0) {
+          // For fiat currencies, MUST use total_value_usd if available (including zero values)
+          if (snapshot.total_value_usd != null) {
             value = snapshot.total_value_usd;
           } else {
             // Log warning if USD value is missing when USD is requested

@@ -595,8 +595,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               {convertTo.toUpperCase()}
             </button>
           </div>
-          <div className="mb-2">
-            <span className={`text-3xl md:text-4xl font-extrabold ${hoveredPrice ? 'text-green-400' : 'text-white'}`}>
+          <div className="mb-2 min-h-[3.5rem]">
+            <span className={`text-3xl md:text-4xl font-extrabold ${hoveredPrice ? 'text-green-400' : 'text-white'} block min-h-[2.5rem] leading-tight`}>
               {hoveredPrice ? (
                 convertTo === 'ae' 
                   ? `${Decimal.from(hoveredPrice.price).prettify()} AE`
@@ -623,12 +623,16 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                         maximumFractionDigits: 2,
                       });
                     })()
-              ) : null}
+              ) : (
+                <span className="opacity-0">0.00 AE</span>
+              )}
             </span>
             {/* Reserve space for timestamp to prevent height jump */}
             <div className="text-sm text-white/60 mt-1 h-5">
-              {hoveredPrice && (
+              {hoveredPrice ? (
                 <span>{moment.unix(hoveredPrice.time).format('MMM D, YYYY HH:mm')}</span>
+              ) : (
+                <span className="opacity-0">&#8203;</span>
               )}
             </div>
           </div>

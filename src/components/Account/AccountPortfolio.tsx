@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { createChart, IChartApi, ISeriesApi, LineData, ColorType, LineSeries } from 'lightweight-charts';
+import { createChart, IChartApi, ISeriesApi, LineData, ColorType, AreaSeries, AreaSeriesPartialOptions } from 'lightweight-charts';
 import moment from 'moment';
 import { TrendminerApi } from '@/api/backend';
 import { useCurrencies } from '@/hooks/useCurrencies';
@@ -19,9 +19,10 @@ interface PortfolioSnapshot {
 }
 
 const TIME_RANGES = {
-  '7d': { days: 7, interval: 3600 }, // Hourly for 7 days
-  '30d': { days: 30, interval: 86400 }, // Daily for 30 days
-  '90d': { days: 90, interval: 86400 }, // Daily for 90 days
+  '6h': { days: 1, interval: 3600 }, // Hourly for 1 day (showing 6h)
+  '1d': { days: 1, interval: 3600 }, // Hourly for 1 day
+  '1w': { days: 7, interval: 86400 }, // Daily for 7 days
+  '1m': { days: 30, interval: 86400 }, // Daily for 30 days
   'all': { days: Infinity, interval: 86400 }, // Daily for all time
 } as const;
 
@@ -30,9 +31,10 @@ type TimeRange = keyof typeof TIME_RANGES;
 export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const seriesRef = useRef<ISeriesApi<'Line'> | null>(null);
-  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('30d');
+  const seriesRef = useRef<ISeriesApi<'Area'> | null>(null);
+  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('1m');
   const [useCurrentCurrency, setUseCurrentCurrency] = useState(false); // Default to AE
+  const [hoveredPrice, setHoveredPrice] = useState<{ price: number; time: number } | null>(null);
   const isFetchingMoreRef = useRef(false);
   const loadedStartDateRef = useRef<string | null>(null);
   const initialLoadRef = useRef(true);
@@ -54,6 +56,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     let startDate: moment.Moment | undefined;
     if (range.days === Infinity) {
       startDate = minStartDate;
+    } else if (selectedTimeRange === '6h') {
+      // Special case: show last 6 hours
+      startDate = moment().subtract(6, 'hours');
     } else {
       const calculatedStart = moment().subtract(range.days, 'days');
       // Use the later of: calculated start date or minimum start date (Jan 1, 2025)
@@ -216,40 +221,52 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         textColor: '#ffffff',
       },
       grid: {
-        vertLines: { color: 'rgba(255, 255, 255, 0.1)' },
-        horzLines: { color: 'rgba(255, 255, 255, 0.1)' },
+        vertLines: { visible: false },
+        horzLines: { visible: false },
       },
       rightPriceScale: {
-        borderColor: 'rgba(255, 255, 255, 0.2)',
+        visible: false,
+        borderVisible: false,
+      },
+      leftPriceScale: {
+        visible: false,
+        borderVisible: false,
       },
       timeScale: {
-        borderColor: 'rgba(255, 255, 255, 0.2)',
-        timeVisible: true,
-        secondsVisible: false,
-        rightBarStaysOnScroll: true,
-        lockVisibleTimeRangeOnResize: true,
-        rightOffset: 0,
+        visible: false,
+        borderVisible: false,
       },
       crosshair: {
-        mode: 1,
+        mode: 1, // Normal crosshair mode (shows on hover/touch)
         vertLine: {
-          color: 'rgba(17, 97, 254, 0.5)',
+          visible: true,
+          color: 'rgba(34, 197, 94, 0.5)', // Green vertical line
           width: 1,
+          style: 0, // Solid line
         },
         horzLine: {
-          color: 'rgba(17, 97, 254, 0.5)',
-          width: 1,
+          visible: false, // Hide horizontal line
         },
       },
+      handleScale: false,
+      handleScroll: false,
     });
 
     chartRef.current = chart;
 
-    // Add portfolio value series (includes AE price conversion for USD/fiat)
+    // Add portfolio value series with green area fill (mobile-style)
     const currentConvertTo = convertTo;
-    const lineSeries = chart.addSeries(LineSeries, {
-      color: '#1161FE',
+    const seriesOptions: AreaSeriesPartialOptions = {
+      priceLineVisible: false,
+      lineColor: '#22c55e', // Green color
+      topColor: 'rgba(34, 197, 94, 0.3)', // Lighter green for area fill
+      bottomColor: 'rgba(34, 197, 94, 0.01)', // Very light green gradient
       lineWidth: 2,
+      crosshairMarkerVisible: true, // Show green dot on hover
+      crosshairMarkerRadius: 6, // Size of the dot
+      crosshairMarkerBorderColor: '#22c55e', // Green border
+      crosshairMarkerBackgroundColor: '#22c55e', // Green fill
+      baseLineVisible: false,
       priceFormat: {
         type: 'custom',
         minMove: 0.000001,
@@ -258,7 +275,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             return `${price.toFixed(4)} AE`;
           }
           // For fiat currencies, price is already in that currency (e.g., USD)
-          // Format it directly without conversion
           const currencyCode = currentCurrencyInfo.code.toUpperCase();
           return Number(price).toLocaleString('en-US', {
             style: 'currency',
@@ -268,9 +284,10 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           });
         },
       },
-    });
+    };
 
-    seriesRef.current = lineSeries as ISeriesApi<'Line'>;
+    const areaSeries = chart.addSeries(AreaSeries, seriesOptions);
+    seriesRef.current = areaSeries;
 
     // Set initial portfolio data (backend calculates USD using historical AE prices)
     const chartData: LineData[] = portfolioData.map((snapshot) => {
@@ -285,7 +302,24 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       };
     });
 
-    lineSeries.setData(chartData);
+    areaSeries.setData(chartData);
+    
+    // Subscribe to crosshair moves to show price on hover/drag
+    chart.subscribeCrosshairMove((param) => {
+      if (param.time && param.seriesData) {
+        const priceData = param.seriesData.get(areaSeries) as LineData | undefined;
+        if (priceData && typeof priceData.value === 'number') {
+          setHoveredPrice({
+            price: priceData.value,
+            time: param.time as number,
+          });
+        } else {
+          setHoveredPrice(null);
+        }
+      } else {
+        setHoveredPrice(null);
+      }
+    });
     
     // Set maximum time to prevent scrolling past current time
     const currentTime = moment().unix();
@@ -364,7 +398,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         return;
       }
       
-      const barsInfo = lineSeries.barsInLogicalRange(logicalRange);
+      const barsInfo = seriesRef.current?.barsInLogicalRange(logicalRange);
       if (!barsInfo) {
         lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
         return;
@@ -420,7 +454,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       if (chart) {
         chart.timeScale().unsubscribeVisibleTimeRangeChange(handleTimeScaleChange);
         chart.timeScale().unsubscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
-        chart.remove();
+        chart.remove(); // Removing chart automatically cleans up all subscriptions
       }
       if (seriesRef.current) {
         seriesRef.current = null;
@@ -429,6 +463,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       // Reset initial load flag when chart is destroyed
       initialLoadRef.current = true;
       lastVisibleRangeRef.current = null;
+      setHoveredPrice(null);
     };
   }, [portfolioData, convertTo, hasPreviousPage, isFetchingPreviousPage, fetchPreviousPage]);
 
@@ -549,72 +584,69 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     <div className="mt-4 mb-6">
       <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="px-4 md:px-6 py-4 border-b border-white/10">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-bold text-white mb-1">Portfolio Value</h3>
-              {currentValue !== null && (
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                    {convertTo === 'ae' 
-                      ? `${Decimal.from(currentValue).prettify()} AE`
-                      : (() => {
-                          // If convertTo is fiat, currentValue is already in that currency
-                          // Format it directly without conversion
-                          const fiatValue = typeof currentValue === 'number' ? currentValue : Number(currentValue);
-                          const currencyCode = currentCurrencyInfo.code.toUpperCase();
-                          return fiatValue.toLocaleString('en-US', {
-                            style: 'currency',
-                            currency: currencyCode,
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          });
-                        })()
-                    }
-                  </span>
-                </div>
+        <div className="px-4 md:px-6 py-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-bold text-white">Portfolio Value</h3>
+            {/* Currency toggle */}
+            <button
+              onClick={() => setUseCurrentCurrency(!useCurrentCurrency)}
+              className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-white/20 hover:border-white/40 transition-colors bg-white/[0.05] hover:bg-white/[0.08] text-white/80 hover:text-white"
+            >
+              {convertTo.toUpperCase()}
+            </button>
+          </div>
+          <div className="mb-4">
+            <span className={`text-3xl md:text-4xl font-extrabold ${hoveredPrice ? 'text-green-400' : 'text-white'}`}>
+              {hoveredPrice ? (
+                convertTo === 'ae' 
+                  ? `${Decimal.from(hoveredPrice.price).prettify()} AE`
+                  : (() => {
+                      const fiatValue = typeof hoveredPrice.price === 'number' ? hoveredPrice.price : Number(hoveredPrice.price);
+                      const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                      return fiatValue.toLocaleString('en-US', {
+                        style: 'currency',
+                        currency: currencyCode,
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      });
+                    })()
+              ) : currentValue !== null ? (
+                convertTo === 'ae' 
+                  ? `${Decimal.from(currentValue).prettify()} AE`
+                  : (() => {
+                      const fiatValue = typeof currentValue === 'number' ? currentValue : Number(currentValue);
+                      const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                      return fiatValue.toLocaleString('en-US', {
+                        style: 'currency',
+                        currency: currencyCode,
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      });
+                    })()
+              ) : null}
+            </span>
+            {/* Reserve space for timestamp to prevent height jump */}
+            <div className="text-sm text-white/60 mt-1 h-5">
+              {hoveredPrice && (
+                <span>{moment.unix(hoveredPrice.time).format('MMM D, YYYY HH:mm')}</span>
               )}
-            </div>
-
-            {/* Controls */}
-            <div className="flex items-center gap-3">
-              {/* Currency toggle */}
-              <button
-                onClick={() => setUseCurrentCurrency(!useCurrentCurrency)}
-                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-white/20 hover:border-white/40 transition-colors bg-white/[0.05] hover:bg-white/[0.08] text-white/80 hover:text-white"
-              >
-                {convertTo.toUpperCase()}
-              </button>
-
-              {/* Time range buttons */}
-              <div className="flex gap-1 rounded-lg bg-white/[0.05] p-1 border border-white/10">
-                {(Object.keys(TIME_RANGES) as TimeRange[]).map((range) => (
-                  <button
-                    key={range}
-                    onClick={() => setSelectedTimeRange(range)}
-                    className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
-                      selectedTimeRange === range
-                        ? 'bg-white/20 text-white'
-                        : 'text-white/60 hover:text-white/80 hover:bg-white/[0.08]'
-                    }`}
-                  >
-                    {range.toUpperCase()}
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
         </div>
 
         {/* Chart */}
-        <div className="p-4 md:p-6">
+        <div className="px-4 md:px-6 pb-4">
           {isLoading ? (
             <div className="h-[300px] flex items-center justify-center">
               <div className="text-white/60">Loading portfolio data...</div>
             </div>
           ) : portfolioData && portfolioData.length > 0 ? (
             <>
-              <div ref={chartContainerRef} className="w-full h-[300px] min-w-0" />
+              <div 
+                ref={chartContainerRef} 
+                className="w-full h-[300px] min-w-0 touch-none"
+                style={{ touchAction: 'none' }}
+              />
               {isFetchingPreviousPage && (
                 <div className="mt-2 text-center">
                   <div className="text-white/60 text-xs">Loading previous data...</div>
@@ -626,6 +658,25 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               <div className="text-white/60">No portfolio data available</div>
             </div>
           )}
+        </div>
+
+        {/* Time range buttons - below chart */}
+        <div className="px-4 md:px-6 pb-4">
+          <div className="flex gap-2 justify-center">
+            {(Object.keys(TIME_RANGES) as TimeRange[]).map((range) => (
+              <button
+                key={range}
+                onClick={() => setSelectedTimeRange(range)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  selectedTimeRange === range
+                    ? 'bg-white/20 text-white'
+                    : 'text-white/60 hover:text-white/80 hover:bg-white/[0.08]'
+                }`}
+              >
+                {range.toUpperCase()}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

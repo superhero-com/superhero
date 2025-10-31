@@ -76,10 +76,14 @@ export function usePortfolioValue({
       return Decimal.from(data.total_value_ae);
     } else {
       // For fiat currencies, use total_value_usd if available (including zero values)
+      // Note: total_value_usd contains the value converted to the requested currency (EUR, GBP, etc.), not just USD
       if (data.total_value_usd != null) {
         return Decimal.from(data.total_value_usd);
       }
       // Fallback to AE value (shouldn't happen if backend is working correctly)
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[usePortfolioValue] Missing converted value, falling back to AE:', data);
+      }
       return Decimal.from(data.total_value_ae);
     }
   }, [data, currency]);

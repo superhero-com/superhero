@@ -175,22 +175,31 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const currentValue = useMemo(() => {
     if (!portfolioData || portfolioData.length === 0) return null;
     const latest = portfolioData[portfolioData.length - 1];
-    console.log('[Current Value] Latest snapshot:', {
-      timestamp: latest.timestamp,
-      total_value_ae: latest.total_value_ae,
-      total_value_usd: latest.total_value_usd,
-      convertTo,
-    });
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Current Value] Latest snapshot:', {
+        timestamp: latest.timestamp,
+        total_value_ae: latest.total_value_ae,
+        total_value_usd: latest.total_value_usd,
+        convertTo,
+      });
+    }
+    
     if (convertTo === 'ae') {
       return latest.total_value_ae;
     } else {
       // For fiat currencies, use total_value_usd if available (including zero values)
+      // Note: total_value_usd contains the value converted to the requested currency (EUR, GBP, etc.), not just USD
       if (latest.total_value_usd != null) {
-        console.log(`[Current Value] Using total_value_usd: ${latest.total_value_usd}`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[Current Value] Using converted value: ${latest.total_value_usd} (currency: ${convertTo})`);
+        }
         return latest.total_value_usd;
       }
       // Fallback: log warning and return AE value
-      console.warn('[Current Value] Missing total_value_usd in latest snapshot:', latest);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[Current Value] Missing converted value in latest snapshot:', latest);
+      }
       return latest.total_value_ae;
     }
   }, [portfolioData, convertTo]);
@@ -297,19 +306,22 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         if (convertTo === 'ae') {
           value = snapshot.total_value_ae;
         } else {
-          // For fiat currencies, MUST use total_value_usd if available (including zero values)
+          // For fiat currencies, use total_value_usd if available (including zero values)
+          // Note: total_value_usd contains the value converted to the requested currency (EUR, GBP, etc.), not just USD
           if (snapshot.total_value_usd != null) {
             value = snapshot.total_value_usd;
           } else {
-            // Log warning if USD value is missing when USD is requested
-            console.warn(`[Chart Data] Missing total_value_usd for ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, ae_balance=${snapshot.ae_balance}`);
+            // Log warning if converted value is missing
+            if (process.env.NODE_ENV === 'development') {
+              console.warn(`[Chart Data] Missing converted value for ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, ae_balance=${snapshot.ae_balance}, convertTo=${convertTo}`);
+            }
             // Skip this data point to show a gap rather than misleading zero value
             return null;
           }
         }
         
-        // Debug log for first few and last few data points
-        if (index < 3 || index >= portfolioData.length - 3) {
+        // Debug log for first few and last few data points (development only)
+        if (process.env.NODE_ENV === 'development' && (index < 3 || index >= portfolioData.length - 3)) {
           console.log(`[Chart Data] ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, ae_balance=${snapshot.ae_balance}, convertTo=${convertTo}, value=${value}`);
         }
         
@@ -500,19 +512,22 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         if (convertTo === 'ae') {
           value = snapshot.total_value_ae;
         } else {
-          // For fiat currencies, MUST use total_value_usd if available (including zero values)
+          // For fiat currencies, use total_value_usd if available (including zero values)
+          // Note: total_value_usd contains the value converted to the requested currency (EUR, GBP, etc.), not just USD
           if (snapshot.total_value_usd != null) {
             value = snapshot.total_value_usd;
           } else {
-            // Log warning if USD value is missing when USD is requested
-            console.warn(`[Chart Data] Missing total_value_usd for ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, ae_balance=${snapshot.ae_balance}`);
+            // Log warning if converted value is missing
+            if (process.env.NODE_ENV === 'development') {
+              console.warn(`[Chart Data] Missing converted value for ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, ae_balance=${snapshot.ae_balance}, convertTo=${convertTo}`);
+            }
             // Skip this data point to show a gap rather than misleading zero value
             return null;
           }
         }
         
-        // Debug log for first few and last few data points
-        if (index < 3 || index >= portfolioData.length - 3) {
+        // Debug log for first few and last few data points (development only)
+        if (process.env.NODE_ENV === 'development' && (index < 3 || index >= portfolioData.length - 3)) {
           console.log(`[Chart Data] ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, ae_balance=${snapshot.ae_balance}, convertTo=${convertTo}, value=${value}`);
         }
         

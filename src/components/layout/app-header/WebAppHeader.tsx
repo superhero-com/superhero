@@ -1,33 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { HeaderLogo } from '../../../icons';
 import HeaderWalletButton from './HeaderWalletButton';
 import { navigationItems } from './navigationItems';
-import { usePortfolioValue } from '@/hooks/usePortfolioValue';
-import { useAddressByChainName } from '@/hooks/useChainName';
 
 
 export default function WebAppHeader() {
   const { pathname } = useLocation();
-  const { address } = useParams();
   const isDaoPath = pathname.startsWith('/trends/dao') || pathname.startsWith('/trends/daos');
-  const isProfilePage = pathname.startsWith('/users/');
-  
-  // Support AENS chain name route: /users/<name.chain>
-  const isChainName = address?.endsWith(".chain");
-  const { address: resolvedAddress } = useAddressByChainName(
-    isChainName && isProfilePage ? address : undefined
-  );
-  const effectiveAddress =
-    isProfilePage && isChainName && resolvedAddress 
-      ? resolvedAddress 
-      : (isProfilePage ? (address as string | undefined) : null);
-  
-  // Fetch portfolio value for profile pages
-  const { formattedValue, isLoading: isLoadingPortfolio } = usePortfolioValue({
-    address: effectiveAddress || null,
-    enabled: isProfilePage && !!effectiveAddress,
-  });
   
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const t = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
@@ -180,25 +160,6 @@ export default function WebAppHeader() {
 
         {/* Right area lives inside the boxed header container */}
         <div className="ml-auto flex items-center gap-4 justify-end">
-          {/* Portfolio value display on profile pages */}
-          {isProfilePage && (
-            <div className="hidden lg:flex items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-white/[0.08] to-white/[0.04] border border-white/10 backdrop-blur-sm">
-              <div className="flex flex-col">
-                <div className="text-[10px] uppercase tracking-wider text-white/60 font-medium">
-                  Portfolio Value
-                </div>
-                <div className="text-lg font-bold text-white leading-tight">
-                  {isLoadingPortfolio ? (
-                    <span className="text-white/40">Loading...</span>
-                  ) : formattedValue ? (
-                    formattedValue
-                  ) : (
-                    <span className="text-white/40">—</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
           <HeaderWalletButton />
         </div>
       </div>

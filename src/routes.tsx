@@ -50,7 +50,6 @@ const DexExploreTransactions = lazy(
 const Bridge = lazy(() => import("./features/ae-eth-bridge/views/Bridge"));
 
 // Legacy DEX components (for backward compatibility)
-const Swap = lazy(() => import("./views/Swap"));
 const Explore = lazy(() => import("./views/Explore"));
 const TokenDetail = lazy(() => import("./views/TokenDetail"));
 const PoolDetail = lazy(() => import("./features/dex/views/PoolDetail"));
@@ -226,7 +225,7 @@ export const routes: RouteObject[] = [
   },
 
   // Legacy DEX Routes (for backward compatibility)
-  { path: "/swap", element: <Swap /> },
+  { path: "/swap", element: <Navigate to="/defi/swap" replace /> },
   { path: "/pool", element: <Pool /> },
   { path: "/explore", element: <Explore /> },
   { path: "/explore/tokens/:id", element: <TokenDetail /> },

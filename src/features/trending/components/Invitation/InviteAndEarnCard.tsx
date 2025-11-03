@@ -237,13 +237,13 @@ export default function InviteAndEarnCard({
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-center text-xl font-bold">
-              Copy Invite Links
+              {t('copyInviteLinks')}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6">
             <p className="text-center text-muted-foreground">
-              Your invitation links have been generated successfully!
+              {t('inviteLinksGeneratedSuccessfully')}
             </p>
 
             {/* Links */}
@@ -264,7 +264,7 @@ export default function InviteAndEarnCard({
               <AlertDescription className="flex items-center gap-2">
                 <span>⚠️</span>
                 <span>
-                  Make sure to save these links before closing this dialog!
+                  {t('saveLinksBeforeClosing')}
                 </span>
               </AlertDescription>
             </Alert>
@@ -277,7 +277,7 @@ export default function InviteAndEarnCard({
                 onCheckedChange={(checked) => setLinkHasBeenCopied(!!checked)}
               />
               <Label htmlFor="copied" className="text-sm">
-                I have copied the invitation links
+                {t('iHaveCopiedInvitationLinks')}
               </Label>
             </div>
 
@@ -289,7 +289,7 @@ export default function InviteAndEarnCard({
               disabled={!linkHasBeenCopied}
               onClick={closeCopyInviteLinkDialog}
             >
-              Close
+              {t('close', { ns: 'common' })}
             </AeButton>
           </div>
         </DialogContent>

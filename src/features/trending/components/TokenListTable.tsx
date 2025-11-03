@@ -104,7 +104,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
               currentDirection={orderDirection}
               onSort={onSort}
               className="cell cell-rank text-xs opacity-50 text-left pr-2 pr-md-4"
-              title={t('titles.clickToReverseRankingOrder', { ns: 'common' })}
+              title={t('titles.clickToReverseRankingOrder')}
             >
               Rank
             </SortableColumnHeader>
@@ -119,7 +119,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
             </SortableColumnHeader>
             {showCollectionColumn && (
               <th className="cell cell-collection text-xs opacity-50 text-left text-md-right py-1 px-1 px-lg-3">
-                <div title={t('titles.tokenCollectionCategory', { ns: 'common' })}>
+                <div title={t('titles.tokenCollectionCategory')}>
                   Collection
                 </div>
               </th>

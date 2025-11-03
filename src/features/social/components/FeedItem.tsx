@@ -1,6 +1,7 @@
 import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarWithChainNameFeed";
 import { cn } from "@/lib/utils";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { PostDto } from "../../../api/generated";
 import { PostsService } from "../../../api/generated";
 // Using shared glass card styles via `genz-card` to match wallet/AE price cards

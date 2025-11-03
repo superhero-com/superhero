@@ -127,11 +127,11 @@ export default function ProfileEditModal({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-md mx-auto bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] shadow-[var(--glass-shadow)]">
         <DialogHeader>
-          <DialogTitle className="text-white">Edit Profile</DialogTitle>
+          <DialogTitle className="text-white">{t('titles.editProfile')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label className="text-white/80">Bio</Label>
+            <Label className="text-white/80">{t('labels.bio')}</Label>
             <Textarea
               ref={textareaRef as any}
               value={bio}
@@ -148,7 +148,7 @@ export default function ProfileEditModal({
                   try { ta.setSelectionRange(pos, pos); } catch {}
                 });
               }}
-              placeholder="Tell the world about you"
+              placeholder={t('placeholders.bio')}
               className="mt-1 bg-white/7 border border-white/14 text-white rounded-xl focus:border-[#4ecdc4] focus:outline-none"
               maxLength={BIO_CHAR_LIMIT}
             />
@@ -157,10 +157,10 @@ export default function ProfileEditModal({
           {/* Avatar editing temporarily disabled; keep existing avatar on save */}
           <div className="flex gap-2 justify-end">
             <Button variant="ghost" onClick={onClose} disabled={loading}>
-              Cancel
+              {t('buttons.cancel')}
             </Button>
             <Button onClick={onSave} disabled={loading || !canEdit}>
-              {loading ? "Posting…" : "Post on-chain"}
+              {loading ? t('messages.posting') : t('buttons.postOnChain')}
             </Button>
           </div>
         </div>

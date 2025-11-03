@@ -13,7 +13,9 @@
     "creatingInvites": "Creating invites...",
     "close": "Close",
     "disconnect": "Disconnect",
-    "logout": "Logout"
+    "logout": "Logout",
+    "cancel": "Cancel",
+    "postOnChain": "Post on-chain"
   },
   "labels": {
     "numberOfInvites": "Number of invites",
@@ -24,7 +26,8 @@
     "openMenu": "Open Menu",
     "closeMenu": "Close menu",
     "buyAe": "Buy AE",
-    "balance": "Balance"
+    "balance": "Balance",
+    "bio": "Bio"
   },
   "actions": {
     "copy": "Copy",
@@ -34,7 +37,14 @@
     "notEnoughBalance": "Not enough balance. You need {{amount}} AE.",
     "insufficientBalance": "Insufficient {{symbol}} balance. You need {{needed}} but only have {{have}}",
     "somethingWentWrong": "Something went wrong",
-    "success": "Success"
+    "success": "Success",
+    "posting": "Posting…"
+  },
+  "placeholders": {
+    "bio": "Tell the world about you"
+  },
+  "titles": {
+    "editProfile": "Edit Profile"
   }
 }
 

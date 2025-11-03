@@ -83,7 +83,7 @@ interface TokenListTableProps {
 }
 
 export default function TokenListTable({ pages, loading, showCollectionColumn, orderBy, orderDirection, onSort, rankOffset = 0 }: TokenListTableProps) {
-
+  const { t } = useTranslation('common');
 
   const allItems = useMemo(() => 
     pages?.length ? pages.map((page) => page.items).flat() : [],

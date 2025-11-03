@@ -736,7 +736,7 @@ export function TokenListTable({
                   }}
                 >
                   <PriceDataFormatter
-                    priceData={token.summary.change[timeBase].volume}
+                    priceData={token.summary?.change?.[timeBase]?.volume}
                     bignumber
                   />
                 </td>
@@ -752,7 +752,7 @@ export function TokenListTable({
                   }}
                 >
                   <PriceDataFormatter
-                    priceData={token.summary.total_volume}
+                    priceData={token.summary?.total_volume}
                     bignumber
                   />
                 </td>

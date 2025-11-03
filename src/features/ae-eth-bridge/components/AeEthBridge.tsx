@@ -307,7 +307,7 @@ export function AeEthBridge() {
             const expectedChainId = BridgeConstants.ethereum.ethChainId;
             if (network.chainId.toString() !== parseInt(expectedChainId, 16).toString()) {
                 return showSnackMessage(
-                    `Please switch to ${BridgeConstants.isMainnet ? 'Ethereum Mainnet' : 'Sepolia Testnet'}`
+                    t('bridge.switchNetwork', { network: BridgeConstants.isMainnet ? t('bridge.networks.ethereum') + ' Mainnet' : t('bridge.networks.ethereumSepoliaTestnet') })
                 );
             }
 
@@ -323,10 +323,10 @@ export function AeEthBridge() {
             );
 
             if (!isValidDestination || !destination?.startsWith('ak_')) {
-                return showSnackMessage('Invalid destination!');
+                return showSnackMessage(t('bridge.invalidDestination'));
             }
             if (!normalizedAmount || normalizedAmount.isLessThanOrEqualTo(0)) {
-                return showSnackMessage('Invalid amount!');
+                return showSnackMessage(t('bridge.invalidAmount'));
             }
 
             Logger.log('Bridge params:', {
@@ -913,7 +913,7 @@ export function AeEthBridge() {
                         <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-5 backdrop-blur-[10px]">
                             <div className="flex justify-between items-center mb-2">
                                 <label className="text-xs text-white/60 font-medium uppercase tracking-wider block mb-2">
-                                    Destination {direction === Direction.EthereumToAeternity ? 'æternity' : 'Ethereum'} Address
+                                    {t('bridge.destinationAddressLabel', { network: direction === Direction.EthereumToAeternity ? t('bridge.networks.aeternity') : t('bridge.networks.ethereum') })}
                                 </label>
                                 {(activeAccount && direction === Direction.EthereumToAeternity) && (
                                     <button
@@ -930,7 +930,7 @@ export function AeEthBridge() {
                                         }}
                                         className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa] bg-[#4ecdc4]/10 hover:bg-[#4ecdc4]/20 border border-[#4ecdc4]/30 hover:border-[#4ecdc4]/50 rounded-lg px-2 py-1 transition-all duration-200 font-medium"
                                     >
-                                        use connected account
+                                        {t('bridge.useConnectedAccount')}
                                     </button>
                                 )}
                             </div>
@@ -943,7 +943,7 @@ export function AeEthBridge() {
                                     }`}
                             />
                             {!isValidDestination && destination && (
-                                <div className="text-red-400 text-xs mt-1">Invalid address format</div>
+                                <div className="text-red-400 text-xs mt-1">{t('bridge.invalidAddressFormat')}</div>
                             )}
                         </div>
 
@@ -1013,9 +1013,9 @@ export function AeEthBridge() {
                                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                                 {confirming
                                                     ? (confirmingMsg === 'Approving allowance' || confirmingMsg === 'Creating allowance' || confirmingMsg === 'Updating allowance'
-                                                        ? 'Approving...'
-                                                        : 'Bridging...')
-                                                    : 'Processing...'}
+                                                        ? t('bridge.approving')
+                                                        : t('bridge.bridging'))
+                                                    : t('bridge.processing')}
                                             </div>
                                         ) : t('bridge.bridgeTo', { network: direction === Direction.AeternityToEthereum ? t('bridge.networks.ethereum') : t('bridge.networks.aeternity') })}
                                     </button>

@@ -367,7 +367,7 @@ function BuyAeWidgetContent({
       {/* Ethereum Wallet Connection */}
       {!activeAccount ? (
         <ConnectWalletButton
-          label={embedded ? "CONNECT WALLET" : "CONNECT WALLET TO BUY AE"}
+          label={embedded ? t('buttons.connectWalletDex', { ns: 'common' }) : t('buttons.connectWalletToBuyAe', { ns: 'common' })}
           block
           className="text-sm"
           variant="dex"

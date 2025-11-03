@@ -15,7 +15,8 @@
     "disconnect": "Disconnect",
     "logout": "Logout",
     "cancel": "Cancel",
-    "postOnChain": "Post on-chain"
+    "postOnChain": "Post on-chain",
+    "connectWalletToBuyAe": "CONNECT WALLET TO BUY AE"
   },
   "labels": {
     "numberOfInvites": "Number of invites",

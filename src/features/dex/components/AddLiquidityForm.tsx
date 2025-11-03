@@ -587,7 +587,7 @@ export default function AddLiquidityForm() {
         </button>
       ) : (
         <ConnectWalletButton
-          label="CONNECT WALLET"
+          label={t('buttons.connectWalletDex', { ns: 'common' })}
           variant="dex"
           className="text-sm"
           block

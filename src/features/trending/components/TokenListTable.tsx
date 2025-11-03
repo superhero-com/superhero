@@ -78,9 +78,10 @@ interface TokenListTableProps {
   orderBy: OrderByOption;
   orderDirection: OrderDirection;
   onSort: (sortKey: OrderByOption) => void;
+  rankOffset?: number;
 }
 
-export default function TokenListTable({ pages, loading, showCollectionColumn, orderBy, orderDirection, onSort }: TokenListTableProps) {
+export default function TokenListTable({ pages, loading, showCollectionColumn, orderBy, orderDirection, onSort, rankOffset = 0 }: TokenListTableProps) {
 
 
   const allItems = useMemo(() => 
@@ -169,7 +170,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
                 key={token.address}
                 token={token}
                 showCollectionColumn={showCollectionColumn}
-                rank={index + 1}
+                rank={rankOffset + index + 1}
               />
             ))}
           </tbody>

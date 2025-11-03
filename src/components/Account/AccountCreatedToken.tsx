@@ -1,6 +1,7 @@
 import { TokensService } from "@/api/generated/services/TokensService";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import TokenListTable from "@/features/trending/components/TokenListTable";
 import { DataTablePagination } from "@/features/shared/components/DataTable/DataTablePagination";
 
@@ -13,6 +14,7 @@ export default function AccountCreatedToken({
   address,
   tab,
 }: AccountCreatedTokenProps) {
+  const { t } = useTranslation('trending');
   // Token list sorting state shared by Owned/Created
   const [orderBy, setOrderBy] = useState<
     "market_cap" | "name" | "price" | "created_at" | "holders_count"
@@ -48,9 +50,9 @@ export default function AccountCreatedToken({
       {!loadingCreated && ((createdResp?.items?.length ?? 0) === 0) && (
         <div className="text-center py-12 px-6 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl">
           <div className="text-4xl mb-3 opacity-30">✨</div>
-          <div className="text-white font-semibold mb-1">No created tokens</div>
+          <div className="text-white font-semibold mb-1">{t('noCreatedTokens')}</div>
           <div className="text-white/60 text-sm">
-            This user hasn't created any Trendminer tokens yet.
+            {t('noCreatedTokensDescription')}
           </div>
         </div>
       )}

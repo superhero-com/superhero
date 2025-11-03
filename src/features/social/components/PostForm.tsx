@@ -577,7 +577,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                   <div className="flex items-center gap-3">
                     {requiredHashtag && requiredMissing && (
                       <div className="flex items-center gap-2 text-[11px] text-white/70">
-                        <span>Post needs to include {(requiredHashtag || '').toUpperCase()}</span>
+                        <span>{tSocial('postNeedsToInclude', { hashtag: (requiredHashtag || '').toUpperCase() })}</span>
                         <button
                           type="button"
                           className="px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-colors"

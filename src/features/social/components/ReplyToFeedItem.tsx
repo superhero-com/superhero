@@ -72,6 +72,7 @@ function useParentId(item: PostDto): string | null {
 
 // X-like post item with optional parent context header
 const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentContext = false, allowInlineRepliesToggle = true, isActive = false }: ReplyToFeedItemProps) => {
+  const { t } = useTranslation('social');
   const postId = item.id;
   const authorAddress = item.sender_address;
   const { chainNames } = useWallet();

@@ -1,7 +1,7 @@
 import { useAppKitProvider } from '@reown/appkit/react';
 import BigNumber from 'bignumber.js';
 import { BrowserProvider, Eip1193Provider } from 'ethers';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useToast } from '@/components/ToastProvider';
 import { Button } from '@/components/ui/button';
@@ -137,6 +137,7 @@ const getTokenDisplayName = (asset: any, direction: Direction) => {
 };
 
 export function AeEthBridge() {
+    const { t } = useTranslation('dex');
     const { push: showToast } = useToast();
     const { asset, assets, direction, updateAsset, updateDirection, isMainnet } = useBridge();
     const { sdk, activeAccount } = useAeSdk();
@@ -732,12 +733,12 @@ export function AeEthBridge() {
         try {
             if (destinationTokenAddress) {
                 await navigator.clipboard?.writeText(destinationTokenAddress);
-                showSnackMessage('Token address copied');
+                showSnackMessage(t('bridge.tokenAddressCopied'));
             }
         } catch (err) {
-            showSnackMessage('Failed to copy');
+            showSnackMessage(t('bridge.failedToCopy'));
         }
-    }, [destinationTokenAddress]);
+    }, [destinationTokenAddress, t]);
 
     return (
         <AppKitProvider>
@@ -747,12 +748,11 @@ export function AeEthBridge() {
                         {/* Header */}
                         <div className="flex justify-between items-center mb-2 sm:mb-3 min-w-0">
                             <h2 className="text-lg sm:text-xl font-bold m-0 sh-dex-title min-w-0 flex-shrink">
-                                Bridge ETH ⇆ AE
-
+                                {t('bridge.title')}
                             </h2>
 
                             <div className="text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-[10px] transition-all duration-300 ease-out font-medium flex-shrink-0">
-                                {direction === Direction.AeternityToEthereum ? 'AE → ETH' : 'ETH → AE'}
+                                {direction === Direction.AeternityToEthereum ? t('bridge.direction.aeToEth') : t('bridge.direction.ethToAe')}
                             </div>
                         </div>
 

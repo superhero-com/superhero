@@ -48,7 +48,14 @@
     "removeLiquidityAe": {
       "label": "Remove Liquidity (AE)",
       "description": "Remove liquidity from AE pair"
-    }
+    },
+    "swapDetails": "Swap Details",
+    "input": "Input",
+    "output": "Output",
+    "pairMint": "Pair Mint",
+    "type": "Type",
+    "amount": "Amount",
+    "openInExplorer": "Open in Explorer"
   }
 }
 

@@ -70,7 +70,7 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
   if (embedded) return cloud;
 
   return (
-    <div className="max-w-6xl mx-auto p-4">
+    <div className="max-w-[min(1200px,100%)] mx-auto p-4">
       <div className="flex items-center justify-between mb-4">
         <div>
           <div className="text-3xl font-extrabold text-white">TrendCloud (visx)</div>

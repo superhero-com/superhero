@@ -479,7 +479,7 @@ export default function FeedList({
   );
 
   return standalone ? (
-    <Shell right={<RightRail hideTrends />} containerClassName="max-w-[1080px] mx-auto">
+    <Shell right={<RightRail hideTrends />} containerClassName="max-w-[min(1200px,100%)] mx-auto">
       {content}
     </Shell>
   ) : (

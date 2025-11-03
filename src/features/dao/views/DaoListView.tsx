@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import Shell from "@/components/layout/Shell";
 
 import { TokensService } from "@/api/generated";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -125,7 +126,8 @@ export default function Daos() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-4 text-white">
+    <Shell containerClassName="max-w-[min(1200px,100%)] mx-auto">
+      <div className="p-4 text-white">
       <div className="flex justify-between items-center gap-3 flex-wrap mb-4">
         <div className="text-3xl font-extrabold text-white">DAOs</div>
         <div className="flex gap-2">
@@ -306,29 +308,30 @@ export default function Daos() {
         )}
       </div>
 
-      {hasNextPage && (
-        <div className="text-center pt-2 pb-4">
-          <button
-            ref={loadMoreBtn}
-            onClick={() => fetchNextPage()}
-            disabled={isFetching}
-            className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-              isFetching
-                ? "bg-white/10 cursor-not-allowed opacity-60"
-                : "bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
-            }`}
-          >
-            {isFetching ? (
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                Loading...
-              </div>
-            ) : (
-              "Load More"
-            )}
-          </button>
-        </div>
-      )}
-    </div>
+        {hasNextPage && (
+          <div className="text-center pt-2 pb-4">
+            <button
+              ref={loadMoreBtn}
+              onClick={() => fetchNextPage()}
+              disabled={isFetching}
+              className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                isFetching
+                  ? "bg-white/10 cursor-not-allowed opacity-60"
+                  : "bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
+              }`}
+            >
+              {isFetching ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Loading...
+                </div>
+              ) : (
+                "Load More"
+              )}
+            </button>
+          </div>
+        )}
+      </div>
+    </Shell>
   );
 }

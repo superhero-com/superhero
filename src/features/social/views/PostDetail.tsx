@@ -191,7 +191,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   );
 
   return standalone ? (
-    <Shell left={<LeftRail />} right={<RightRail />} containerClassName="max-w-[1080px] mx-auto">
+    <Shell left={<LeftRail />} right={<RightRail />} containerClassName="max-w-[min(1200px,100%)] mx-auto">
       {content}
     </Shell>
   ) : (

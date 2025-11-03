@@ -1,4 +1,5 @@
 import { TokensService } from "@/api/generated";
+import Shell from "@/components/layout/Shell";
 import { useDaoVote } from "@/features/dao/hooks/useDaoVote";
 import { useAeSdk } from "@/hooks";
 import { ensureAddress, ensureString } from "@/utils/common";
@@ -131,22 +132,19 @@ export default function DaoVoteDetailsView() {
     return <div className="text-slate-400 p-4">Token not found</div>;
   }
 
+  const rightRail = (
+    <div className="space-y-4">
+      <TokenTradeCard token={token} />
+      <TokenSummary token={token} />
+      <TokenRanking token={token} />
+    </div>
+  );
+
   return (
-    <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left sidebar - Token info (hidden on mobile) */}
-        <div className="hidden lg:block lg:col-span-1 space-y-4">
-          {/* TokenTradeCard placeholder */}
-
-          <TokenTradeCard token={token} />
-
-          <TokenSummary token={token} />
-
-          <TokenRanking token={token} />
-        </div>
-
+    <Shell right={rightRail} containerClassName="max-w-[min(1200px,100%)] mx-auto">
+      <div className="min-h-screen text-white px-4">
         {/* Main content */}
-        <div className="lg:col-span-3">
+        <div className="w-full">
           {voteState && (
             <>
               {/* Back button */}
@@ -379,6 +377,6 @@ export default function DaoVoteDetailsView() {
           )}
         </div>
       </div>
-    </div>
+    </Shell>
   );
 }

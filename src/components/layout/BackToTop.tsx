@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 type BackToTopProps = {
-  threshold?: number;     // optional override; defaults to .right-rail-bleed height
+  threshold?: number;     // optional override; defaults to 400
   bottomOffset?: number;  // px from viewport bottom when fixed
 };
 
@@ -11,17 +11,15 @@ export default function BackToTop({ threshold, bottomOffset = 32 }: BackToTopPro
   const [computedThreshold, setComputedThreshold] = useState<number>(threshold ?? 400);
   const [isMdUp, setIsMdUp] = useState<boolean>(() => window.matchMedia('(min-width: 768px)').matches);
 
-  // Compute threshold from .right-rail-bleed height if not provided
+  // Compute threshold dynamically if not provided
   useEffect(() => {
     if (threshold != null) {
       setComputedThreshold(threshold);
       return;
     }
     const compute = () => {
-      const el = document.querySelector('.right-rail-bleed') as HTMLElement | null;
-      const h = el?.getBoundingClientRect().height ?? 400;
-      const EXTRA_OFFSET = 300; // increased: show 300px later than the rail height
-      setComputedThreshold(h + EXTRA_OFFSET);
+      const DEFAULT = 700;
+      setComputedThreshold(DEFAULT);
     };
     compute();
     // Recompute after a tick and on resize to catch layout shifts

@@ -6,6 +6,13 @@
   "shareComment": "Share comment",
   "copyLink": "Copy link",
   "shareVia": "Share {{label}} via …",
-  "superheroPost": "Superhero Post"
+  "superheroPost": "Superhero Post",
+  "gif": "GIF",
+  "emoji": "Emoji",
+  "addRequiredHashtag": "Add required hashtag",
+  "posting": "Posting…",
+  "post": "Post",
+  "postReply": "Post Reply",
+  "moreSoon": "More soon…"
 }
 

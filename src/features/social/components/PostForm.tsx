@@ -476,7 +476,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                     <button
                       type="button"
                       className="md:hidden  inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
-                      title="GIF"
+                      title={tSocial('gif')}
                       ref={gifBtnRef}
                       onClick={(e) => {
                         e.preventDefault();
@@ -495,7 +495,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                         setShowEmoji(false);
                       }}
                     >
-                      <span className="uppercase tracking-wide">GIF</span>
+                      <span className="uppercase tracking-wide">{tSocial('gif')}</span>
                     </button>
                   )}
                 </div>
@@ -516,7 +516,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                       <button
                         type="button"
                         className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
-                        title="Emoji"
+                        title={tSocial('emoji')}
                         ref={emojiBtnRef}
                         onClick={() => {
                           setShowEmoji((s) => !s);
@@ -524,7 +524,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                         }}
                       >
                         <IconSmile className="w-4 h-4" />
-                        <span>Emoji</span>
+                        <span>{tSocial('emoji')}</span>
                       </button>
                     )}
 
@@ -532,7 +532,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                       <button
                         type="button"
                         className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
-                        title="GIF"
+                        title={tSocial('gif')}
                         ref={gifBtnRef}
                         onClick={() => {
                           setShowGif((s) => !s);
@@ -540,7 +540,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                         }}
                       >
                         <IconGif className="w-4 h-4" />
-                        <span>GIF</span>
+                        <span>{tSocial('gif')}</span>
                       </button>
                     )}
 
@@ -559,7 +559,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                           ))}
                         </div>
                         <div className="mt-1.5 text-center text-sm text-white/90">
-                          More soon…
+                          {tSocial('moreSoon')}
                         </div>
                       </div>
                     )}
@@ -694,11 +694,11 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                 >
                   {isSubmitting
                     ? isPost
-                      ? "Posting…"
-                      : "Posting..."
+                      ? tSocial('posting')
+                      : tSocial('posting')
                     : isPost
-                      ? "Post"
-                      : "Post Reply"}
+                      ? tSocial('post')
+                      : tSocial('postReply')}
                 </AeButton>
               ) : (
                 <ConnectWalletButton block className="w-full rounded-xl md:rounded-full" />

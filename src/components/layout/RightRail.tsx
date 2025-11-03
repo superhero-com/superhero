@@ -762,7 +762,7 @@ export default function RightRail({
           <button
             className="bg-none border-none text-[var(--neon-teal)] text-base cursor-pointer p-1 rounded transition-all duration-200 hover:bg-[rgba(0,255,157,0.1)] hover:scale-110"
             onClick={() => window.location.href = '/trends'}
-            title="Explore all trends"
+            title={t('titles.exploreAllTrends')}
           >
             🔍
           </button>
@@ -898,7 +898,7 @@ export default function RightRail({
             cursor: "pointer",
           }}
           onClick={() => setShowLiveFeed(!showLiveFeed)}
-          title="Click to toggle live feed"
+          title={t('titles.clickToToggleLiveFeed')}
         >
           <span style={{ fontSize: "18px" }}>📡</span>
           <h4
@@ -1087,7 +1087,7 @@ export default function RightRail({
           <button
             className="bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(236,72,153,0.35)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/trends/tokens')}
-            title="Explore trends"
+            title={t('titles.exploreTrends')}
           >
             🔍 Explore Trends
           </button>
@@ -1131,7 +1131,7 @@ export default function RightRail({
             target="_blank"
             rel="noopener noreferrer"
             className="col-span-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(147,51,234,0.35)] no-underline text-center flex items-center justify-center gap-1.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            title="Open Chat"
+            title={t('titles.openChat')}
           >
             💬 Chat
           </a>

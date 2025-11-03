@@ -53,7 +53,11 @@
     "wrapOrUnwrapAe": "Wrap or unwrap AE",
     "buyAeWithEth": "Buy AE with ETH",
     "provideLiquidityToPools": "Provide liquidity to pools",
-    "tokenizeATrend": "Tokenize a trend"
+    "tokenizeATrend": "Tokenize a trend",
+    "exploreAllTrends": "Explore all trends",
+    "exploreTrends": "Explore trends",
+    "clickToToggleLiveFeed": "Click to toggle live feed",
+    "openChat": "Open Chat"
   }
 }
 

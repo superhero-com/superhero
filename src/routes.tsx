@@ -53,7 +53,7 @@ const Bridge = lazy(() => import("./features/ae-eth-bridge/views/Bridge"));
 const Swap = lazy(() => import("./views/Swap"));
 const Explore = lazy(() => import("./views/Explore"));
 const TokenDetail = lazy(() => import("./views/TokenDetail"));
-const PoolDetail = lazy(() => import("./views/PoolDetail"));
+const PoolDetail = lazy(() => import("./features/dex/views/PoolDetail"));
 const AddTokens = lazy(() => import("./views/AddTokens"));
 
 // Redirect helpers for legacy /trending/* paths

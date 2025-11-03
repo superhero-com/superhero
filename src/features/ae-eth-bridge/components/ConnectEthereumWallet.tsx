@@ -18,6 +18,7 @@ export default function ConnectEthereumWallet({
     disabled = false,
     className = ''
 }: ConnectEthereumWalletProps) {
+    const { t } = useTranslation('common');
     const { open } = useAppKit();
     const { address: ethereumAddress } = useAppKitAccount();
     const { disconnect } = useDisconnect();
@@ -65,7 +66,7 @@ export default function ConnectEthereumWallet({
                     disabled ? 'opacity-50 cursor-not-allowed' : ''
                 } ${className}`}
             >
-                Disconnect
+                {t('buttons.disconnect')}
             </button>
         );
     }

@@ -146,7 +146,7 @@ export default function MobileAppHeader() {
             className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-transparent shadow-none active:shadow-none focus:shadow-none outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0"
             onClick={(e) => { handleMenuToggle(); try { (e.currentTarget as HTMLButtonElement).blur(); } catch {} }}
             onTouchEnd={(e) => { try { (e.currentTarget as HTMLButtonElement).blur(); } catch {} }}
-            aria-label="Open Menu"
+            aria-label={t('labels.openMenu')}
             style={{ WebkitTapHighlightColor: 'transparent' }}
             tabIndex={-1}
           >
@@ -185,12 +185,12 @@ export default function MobileAppHeader() {
                   WebkitBackgroundClip: 'initial' as any,
                 }}
               >
-                Menu
+                {t('labels.menu')}
               </h2>
               <button
                 className="bg-white/10 border-none text-[var(--standard-font-color)] w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center leading-none cursor-pointer transition-all duration-200 hover:bg-white/20 focus:bg-white/20 active:scale-95 sm:w-10 sm:h-10 outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 shadow-none focus:shadow-none active:shadow-none"
                 onClick={(e) => { setShowOverlay(false); try { (e.currentTarget as HTMLButtonElement).blur(); } catch {} }}
-                aria-label="Close menu"
+                aria-label={t('labels.closeMenu')}
                 tabIndex={-1}
               >
                 <svg
@@ -227,13 +227,13 @@ export default function MobileAppHeader() {
                       className="w-full justify-center bg-white/5 border border-white/10 rounded-xl"
                       variant="ghost"
                     >
-                      Disconnect
+                      {t('buttons.disconnect')}
                     </AeButton>
                   </div>
                 </div>
               ) : (
                 <AeButton onClick={handleConnect} className="w-full justify-center gap-2 bg-[#1161FE] hover:bg-[#1161FE] text-white border-none rounded-xl sm:rounded-full text-sm">
-                  CONNECT WALLET
+                  {t('buttons.connectWalletDex')}
                 </AeButton>
               )}
             </div>
@@ -295,7 +295,7 @@ export default function MobileAppHeader() {
                           className={`${commonClasses} bg-transparent`}
                           style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}
                         >
-                          <span className="text-lg sm:text-base">Buy AE</span>
+                          <span className="text-lg sm:text-base">{t('labels.buyAe')}</span>
                         </Link>
                       </div>
                     )}

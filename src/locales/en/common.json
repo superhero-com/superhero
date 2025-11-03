@@ -11,13 +11,19 @@
     "connectWalletToGenerate": "CONNECT WALLET TO GENERATE",
     "generateInviteLinks": "Generate invite links",
     "creatingInvites": "Creating invites...",
-    "close": "Close"
+    "close": "Close",
+    "disconnect": "Disconnect",
+    "logout": "Logout"
   },
   "labels": {
     "numberOfInvites": "Number of invites",
     "superheroHome": "Superhero Home",
     "back": "Back",
-    "openSettings": "open-settings"
+    "openSettings": "open-settings",
+    "menu": "Menu",
+    "openMenu": "Open Menu",
+    "closeMenu": "Close menu",
+    "buyAe": "Buy AE"
   },
   "actions": {
     "copy": "Copy",

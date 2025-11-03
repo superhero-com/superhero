@@ -2,6 +2,7 @@ import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithC
 import { AeButton } from '@/components/ui/ae-button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/ae-dropdown-menu';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAccount } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
@@ -9,6 +10,7 @@ import { useModal } from '../../../hooks';
 import Favicon from '../../../svg/favicon.svg?react';
 
 export default function HeaderWalletButton() {
+  const { t } = useTranslation('common');
   const { activeAccount } = useAeSdk();
   const { disconnectWallet, walletInfo } = useWalletConnect();
   const { openModal } = useModal();
@@ -31,7 +33,7 @@ export default function HeaderWalletButton() {
         className="gap-2 rounded-xl sm:rounded-full text-sm"
       >
         <Favicon className="w-4 h-4" />
-        CONNECT WALLET
+        {t('buttons.connectWalletDex')}
       </AeButton>
     );
   }

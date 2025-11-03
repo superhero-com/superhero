@@ -76,7 +76,22 @@
     "insufficientBalanceBridge": "Insufficient {{symbol}} balance to complete this transaction.",
     "bridgeContractInsufficientBalance": "Ethereum bridge contract has insufficient balance to complete this transaction.",
     "smartContractDisabled": "⚠️ Smart contract has been disabled for this network.",
-    "bridgeOperatorInsufficientFunds": "⚠️ Bridge operator has insufficient funds. Please try again later."
+    "bridgeOperatorInsufficientFunds": "⚠️ Bridge operator has insufficient funds. Please try again later.",
+    "connectEthereumWallet": "Connect Ethereum Wallet",
+    "bridgeUsageLimit": "Only 1 transaction allowed in every {{hours}} hours. Please try again later.",
+    "checkingTokenAllowance": "Checking token allowance...",
+    "confirmTokenAllowance": "Please confirm the token allowance in your wallet...",
+    "confirmTokenAllowanceUpdate": "Please confirm the token allowance update in your wallet...",
+    "confirmBridgeTransaction": "Please confirm the bridge transaction in your wallet...",
+    "waitingForBridgeConfirmation": "Waiting for bridge confirmation...",
+    "waitingLongerThanExpected": "It is taking longer than expected. Do not close the page.",
+    "bridgeTransactionConfirmed": "Bridge transaction confirmed!",
+    "allowanceTransactionSubmitted": "Allowance transaction submitted.",
+    "approvalTransactionSubmitted": "Approval transaction submitted.",
+    "confirmTokenApproval": "Please confirm the token approval in your wallet...",
+    "waitingForApprovalConfirmation": "Waiting for approval confirmation...",
+    "approvalConfirmed": "Approval confirmed!",
+    "allowanceCheckFailed": "Allowance check failed, proceeding with approval..."
   },
   "transactions": {
     "swapExactTokensForTokens": {

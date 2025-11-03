@@ -286,7 +286,7 @@ export function AeEthBridge() {
     const bridgeToAeternity = useCallback(async () => {
         try {
             if (!walletProvider) {
-                return showSnackMessage('Please connect your Ethereum wallet first');
+                return showSnackMessage(t('bridge.connectEthereumWalletFirst'));
             }
 
             const ethersProvider = new BrowserProvider(walletProvider, {
@@ -357,7 +357,7 @@ export function AeEthBridge() {
             } else {
                 try {
                     setConfirming(true);
-                    setConfirmingMsg('Checking token allowance...');
+                    setConfirmingMsg(t('bridge.checkingTokenAllowance'));
                     Logger.log('Checking allowance for asset:', asset.ethAddress);
                     Logger.log('Signer address:', signerAddress);
                     Logger.log('Bridge address:', BridgeConstants.ethereum.bridge_address);
@@ -417,7 +417,7 @@ export function AeEthBridge() {
                     const requiredAmount = BigInt(normalizedAmount.toString());
 
                     if (allowanceBigInt < requiredAmount) {
-                        setConfirmingMsg('Please confirm the token approval in your wallet...');
+                        setConfirmingMsg(t('bridge.confirmTokenApproval'));
                         Logger.log('Approving allowance:', normalizedAmount.toString());
 
                         const approveResult = await assetContract.approve(
@@ -426,12 +426,12 @@ export function AeEthBridge() {
                         );
 
                         allowanceTxHash = approveResult.hash;
-                        showTransactionSubmittedMessage('Allowance transaction submitted.', approveResult.hash);
+                        showTransactionSubmittedMessage(t('bridge.allowanceTransactionSubmitted'), approveResult.hash);
 
-                        setConfirmingMsg('Waiting for approval confirmation...');
+                        setConfirmingMsg(t('bridge.waitingForApprovalConfirmation'));
                         Logger.log('Waiting for approval confirmation...');
                         await approveResult.wait(1);
-                        setConfirmingMsg('Approval confirmed!');
+                        setConfirmingMsg(t('bridge.approvalConfirmed'));
                         Logger.log('Approval confirmed');
                     }
                 } catch (e: any) {
@@ -441,7 +441,7 @@ export function AeEthBridge() {
                     // Check if it's a timeout or network error - offer fallback
                     if (e.message?.includes('timeout') || e.message?.includes('network') || e.code === 'NETWORK_ERROR') {
                         Logger.warn('Allowance check failed, proceeding with approval as fallback');
-                        setConfirmingMsg('Allowance check failed, proceeding with approval...');
+                        setConfirmingMsg(t('bridge.allowanceCheckFailed'));
 
                         try {
                             // Skip allowance check and go directly to approval
@@ -451,12 +451,12 @@ export function AeEthBridge() {
                             );
 
                             allowanceTxHash = approveResult.hash;
-                            showTransactionSubmittedMessage('Approval transaction submitted.', approveResult.hash);
+                            showTransactionSubmittedMessage(t('bridge.approvalTransactionSubmitted'), approveResult.hash);
 
-                            setConfirmingMsg('Waiting for approval confirmation...');
+                            setConfirmingMsg(t('bridge.waitingForApprovalConfirmation'));
                             Logger.log('Waiting for approval confirmation...');
                             await approveResult.wait(1);
-                            setConfirmingMsg('Approval confirmed!');
+                            setConfirmingMsg(t('bridge.approvalConfirmed'));
                             Logger.log('Approval confirmed');
 
                         } catch (approvalError: any) {
@@ -495,7 +495,7 @@ export function AeEthBridge() {
             let timeout: NodeJS.Timeout;
             try {
                 setConfirming(true);
-                setConfirmingMsg('Please confirm the bridge transaction in your wallet...');
+                setConfirmingMsg(t('bridge.confirmBridgeTransaction'));
 
                 Logger.log('Calling bridge_out with:', {
                     assetAddress: asset.ethAddress,
@@ -526,14 +526,14 @@ export function AeEthBridge() {
                     bridgeTxHash: bridgeOutResult.hash,
                 });
 
-                setConfirmingMsg('Waiting for bridge confirmation...');
+                setConfirmingMsg(t('bridge.waitingForBridgeConfirmation'));
                 timeout = setTimeout(() => {
-                    setConfirmingMsg('It is taking longer than expected. Do not close the page.');
+                    setConfirmingMsg(t('bridge.waitingLongerThanExpected'));
                 }, 30000);
                 Logger.log('Waiting for bridge confirmation...');
                 await bridgeOutResult.wait(1);
                 clearTimeout(timeout);
-                setConfirmingMsg('Bridge transaction confirmed!');
+                setConfirmingMsg(t('bridge.bridgeTransactionConfirmed'));
                 Logger.log('Bridge transaction confirmed');
                 console.log('==== bridgeOutResult==', bridgeOutResult);
 
@@ -609,7 +609,7 @@ export function AeEthBridge() {
         if (!hasEligibleBridgeUse) {
             setButtonBusy(false);
             return showSnackMessage(
-                `Only 1 transaction allowed in every ${BRIDGE_USAGE_INTERVAL_IN_HOURS} hours. Please try again later.`,
+                t('bridge.bridgeUsageLimit', { hours: BRIDGE_USAGE_INTERVAL_IN_HOURS }),
             );
         }
 
@@ -633,7 +633,7 @@ export function AeEthBridge() {
 
                 // Check and handle allowance
                 setConfirming(true);
-                setConfirmingMsg('Checking token allowance...');
+                setConfirmingMsg(t('bridge.checkingTokenAllowance'));
                 let allowance;
                 try {
                     const result = await asset_contract.allowance({
@@ -648,21 +648,21 @@ export function AeEthBridge() {
                 }
 
                 if (allowance === undefined) {
-                    setConfirmingMsg('Please confirm the token allowance in your wallet...');
+                    setConfirmingMsg(t('bridge.confirmTokenAllowance'));
                     const allowanceCall = await asset_contract.create_allowance(
                         BridgeConstants.aeternity.bridge_address.replace('ct_', 'ak_'),
                         normalizedAmount.toString(),
                     );
                     allowanceTxHash = allowanceCall.hash;
-                    showTransactionSubmittedMessage('Allowance transaction submitted.', allowanceCall.hash);
+                    showTransactionSubmittedMessage(t('bridge.allowanceTransactionSubmitted'), allowanceCall.hash);
                 } else if (normalizedAmount.isGreaterThan(allowance)) {
-                    setConfirmingMsg('Please confirm the token allowance update in your wallet...');
+                    setConfirmingMsg(t('bridge.confirmTokenAllowanceUpdate'));
                     const allowanceCall = await asset_contract.change_allowance(
                         BridgeConstants.aeternity.bridge_address.replace('ct_', 'ak_'),
                         normalizedAmount.toString(),
                     );
                     allowanceTxHash = allowanceCall.hash;
-                    showTransactionSubmittedMessage('Allowance transaction submitted.', allowanceCall.hash);
+                    showTransactionSubmittedMessage(t('bridge.allowanceTransactionSubmitted'), allowanceCall.hash);
                 }
                 setConfirming(false);
                 setConfirmingMsg('');
@@ -674,13 +674,13 @@ export function AeEthBridge() {
                 omitUnknown: true,
             });
 
-            setConfirmingMsg('Please confirm the bridge transaction in your wallet...');
+            setConfirmingMsg(t('bridge.confirmBridgeTransaction'));
             setConfirming(true);
             const bridge_out_call = await bridge_contract.bridge_out(
                 [asset.ethAddress, destination, normalizedAmount.toString(), action_type],
                 { amount: ae_amount },
             );
-            setConfirmingMsg('Bridge transaction confirmed!');
+            setConfirmingMsg(t('bridge.bridgeTransactionConfirmed'));
             setBridgeActionSummary({
                 direction,
                 asset,

@@ -14,12 +14,24 @@
   },
   "bridge": {
     "title": "Bridge ETH ⇆ AE",
+    "description": "The Bridge enables secure transfers of tokens and native assets between Ethereum and æternity. It supports popular ERC‑20/AEX‑9 tokens as well as native ETH and AE. Choose a direction below, connect your wallets, and bridge in minutes.",
     "direction": {
       "aeToEth": "AE → ETH",
       "ethToAe": "ETH → AE"
     },
     "tokenAddressCopied": "Token address copied",
-    "failedToCopy": "Failed to copy"
+    "failedToCopy": "Failed to copy",
+    "mainnetWarning": "⚠️ Configured for Ethereum Mainnet. Make sure your wallet is on Mainnet.",
+    "fromNetwork": "From Network",
+    "ethereumAccount": "Ethereum Account",
+    "refresh": "Refresh",
+    "noEthereumAccount": "No Ethereum account connected",
+    "networks": {
+      "aeternity": "æternity",
+      "aeternityTestnet": "æternity Testnet",
+      "ethereum": "Ethereum",
+      "ethereumSepoliaTestnet": "Ethereum Sepolia Testnet"
+    }
   },
   "transactions": {
     "swapExactTokensForTokens": {

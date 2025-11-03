@@ -759,23 +759,21 @@ export function AeEthBridge() {
                         {/* Description */}
                         <div className="mb-4 sm:mb-5">
                             <p className="m-0 text-sm text-white/60 leading-relaxed">
-                                The Bridge enables secure transfers of tokens and native assets between Ethereum
-                                and æternity. It supports popular ERC‑20/AEX‑9 tokens as well as native ETH and AE.
-                                Choose a direction below, connect your wallets, and bridge in minutes.
+                                {t('bridge.description')}
                             </p>
                         </div>
 
                         {/* Mainnet Warning */}
                         {!isMainnet && (
                             <div className="mb-4 text-xs text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-xl px-3 py-2.5">
-                                ⚠️ Configured for Ethereum Mainnet. Make sure your wallet is on Mainnet.
+                                {t('bridge.mainnetWarning')}
                             </div>
                         )}
 
                         {/* Network & Token Selection */}
                         <div className='mb-4'>
                             <label className="text-xs text-white/60 font-medium uppercase tracking-wider block mb-2">
-                                From Network
+                                {t('bridge.fromNetwork')}
                             </label>
                             <Select value={direction} onValueChange={handleDirectionChange}>
                                 <SelectTrigger className="bg-white/[0.05] border-white/10 rounded-xl h-10">
@@ -783,10 +781,10 @@ export function AeEthBridge() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value={Direction.AeternityToEthereum}>
-                                        æternity {!isMainnet && 'Testnet'}
+                                        {t('bridge.networks.aeternity')} {!isMainnet && t('bridge.networks.aeternityTestnet')}
                                     </SelectItem>
                                     <SelectItem value={Direction.EthereumToAeternity}>
-                                        Ethereum {!isMainnet && 'Sepolia Testnet'}
+                                        {t('bridge.networks.ethereum')} {!isMainnet && t('bridge.networks.ethereumSepoliaTestnet')}
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
@@ -797,7 +795,7 @@ export function AeEthBridge() {
                             <div className="mb-4">
                                 <div className="flex justify-between items-center mb-2">
                                     <label className="text-xs text-white/60 font-medium uppercase tracking-wider">
-                                        Ethereum Account
+                                        {t('bridge.ethereumAccount')}
                                     </label>
                                     {ethereumAccounts.length > 0 && (
                                         <div className="flex items-center gap-2">
@@ -805,7 +803,7 @@ export function AeEthBridge() {
                                                 onClick={fetchEthereumAccounts}
                                                 className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa] transition-colors"
                                             >
-                                                Refresh
+                                                {t('bridge.refresh')}
                                             </button>
                                             <ConnectEthereumWallet
                                                 onConnected={handleEthereumWalletConnected}

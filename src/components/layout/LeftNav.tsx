@@ -6,8 +6,9 @@ import HeaderWalletButton from './app-header/HeaderWalletButton';
 import { getNavigationItems } from './app-header/navigationItems';
 
 export default function LeftNav() {
+  const { t: tNav } = useTranslation('navigation');
   const { t } = useTranslation('common');
-  const navigationItems = getNavigationItems((key: string) => t(key, { ns: 'navigation' }));
+  const navigationItems = getNavigationItems(tNav);
   const { pathname } = useLocation();
   const isActive = (path: string) => (path === '/' ? pathname === '/' : pathname.startsWith(path));
 

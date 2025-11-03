@@ -1,0 +1,24 @@
+{
+  "buttons": {
+    "connectWallet": "Connect Wallet",
+    "connecting": "Connecting…",
+    "copy": "Copy",
+    "copied": "Copied",
+    "getStarted": "Get started",
+    "swapTokens": "Swap Tokens",
+    "confirmInWallet": "Confirm in wallet…",
+    "connectWalletDex": "CONNECT WALLET"
+  },
+  "labels": {
+    "numberOfInvites": "Number of invites"
+  },
+  "actions": {
+    "copy": "Copy",
+    "share": "Share"
+  },
+  "messages": {
+    "notEnoughBalance": "Not enough balance. You need {{amount}} AE.",
+    "insufficientBalance": "Insufficient {{symbol}} balance. You need {{needed}} but only have {{have}}"
+  }
+}
+

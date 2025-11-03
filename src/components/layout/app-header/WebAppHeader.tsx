@@ -1,16 +1,19 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { HeaderLogo } from '../../../icons';
 import HeaderWalletButton from './HeaderWalletButton';
-import { navigationItems } from './navigationItems';
+import { getNavigationItems } from './navigationItems';
 
 
 export default function WebAppHeader() {
+  const { t } = useTranslation('navigation');
   const { pathname } = useLocation();
+  const navigationItems = getNavigationItems(t);
   const isDaoPath = pathname.startsWith('/trends/dao') || pathname.startsWith('/trends/daos');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const t = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
-    return t;
+    const themeValue = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
+    return themeValue;
   });
 
   const toggleTheme = useCallback(() => {

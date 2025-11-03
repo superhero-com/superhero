@@ -1,0 +1,47 @@
+{
+  "bridge": {
+    "title": "Bridge ETH ⇆ AE",
+    "direction": {
+      "aeToEth": "AE → ETH",
+      "ethToAe": "ETH → AE"
+    },
+    "tokenAddressCopied": "Token address copied",
+    "failedToCopy": "Failed to copy"
+  },
+  "swap": {
+    "title": "Swap Tokens",
+    "confirmInWallet": "Confirm in wallet…",
+    "insufficientBalance": "Insufficient {{symbol}} balance. You need {{needed}} but only have {{have}}"
+  },
+  "transactions": {
+    "swapExactTokensForTokens": {
+      "label": "Swap Tokens",
+      "description": "Swap tokens via DEX"
+    },
+    "swapExactTokensForAe": {
+      "label": "Swap Tokens → AE",
+      "description": "Swap tokens for AE"
+    },
+    "swapExactAeForTokens": {
+      "label": "Swap AE → Tokens",
+      "description": "Swap AE for tokens"
+    },
+    "addLiquidity": {
+      "label": "Add Liquidity (Tokens)",
+      "description": "Add liquidity to token pair"
+    },
+    "addLiquidityAe": {
+      "label": "Add Liquidity (AE)",
+      "description": "Add liquidity to AE pair"
+    },
+    "removeLiquidity": {
+      "label": "Remove Liquidity (Tokens)",
+      "description": "Remove liquidity from token pair"
+    },
+    "removeLiquidityAe": {
+      "label": "Remove Liquidity (AE)",
+      "description": "Remove liquidity from AE pair"
+    }
+  }
+}
+

@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import SearchInput from '../../SearchInput';
 import { HeaderLogo, IconSearch } from '../../../icons';
 // import HeaderWalletButton from './HeaderWalletButton';
-import { navigationItems } from './navigationItems';
+import { getNavigationItems } from './navigationItems';
 import AddressAvatar from '../../AddressAvatar';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
@@ -15,11 +16,13 @@ import FooterSection from '../FooterSection';
 
 
 export default function MobileAppHeader() {
+  const { t } = useTranslation('navigation');
+  const navigationItems = getNavigationItems(t);
   const [showOverlay, setShowOverlay] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const t = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
-    return t;
+    const themeValue = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
+    return themeValue;
   });
 
   const { pathname } = useLocation();

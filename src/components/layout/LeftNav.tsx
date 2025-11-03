@@ -1,10 +1,13 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { HeaderLogo } from '../../icons';
 import HeaderWalletButton from './app-header/HeaderWalletButton';
-import { navigationItems } from './app-header/navigationItems';
+import { getNavigationItems } from './app-header/navigationItems';
 
 export default function LeftNav() {
+  const { t } = useTranslation('navigation');
+  const navigationItems = getNavigationItems(t);
   const { pathname } = useLocation();
   const isActive = (path: string) => (path === '/' ? pathname === '/' : pathname.startsWith(path));
 

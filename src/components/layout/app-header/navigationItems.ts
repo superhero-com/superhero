@@ -1,4 +1,5 @@
 import configs from "@/configs";
+import { TFunction } from 'i18next';
 
 export interface NavigationItem {
   id: string;
@@ -9,53 +10,53 @@ export interface NavigationItem {
   children?: Array<Pick<NavigationItem, "id" | "label" | "path" | "icon">>;
 }
 
-export const navigationItems: NavigationItem[] = [
+export const getNavigationItems = (t: TFunction): NavigationItem[] => [
   {
     id: "home",
-    label: "Social",
+    label: t('navigation.home'),
     path: "/",
     icon: "🏠",
   },
   configs.features.trending && {
     id: "trending",
-    label: "Trends",
+    label: t('navigation.trending'),
     path: "/trends/tokens",
     icon: "📈",
     children: [
-      { id: "invite", label: "Invite & Earn", path: "/trends/invite", icon: "🎁" },
+      { id: "invite", label: t('navigation.trendingChildren.invite'), path: "/trends/invite", icon: "🎁" },
     ],
   },
   {
     id: "dex",
-    label: "DeFi",
+    label: t('navigation.defi'),
     path: "/defi",
     icon: "💱",
     children: [
-      { id: "dex-swap", label: "SWAP", path: "/defi/swap", icon: "🔄" },
-      { id: "dex-wrap", label: "WRAP", path: "/defi/wrap", icon: "📦" },
-      { id: "dex-bridge", label: "BRIDGE", path: "/defi/bridge", icon: "🌉" },
+      { id: "dex-swap", label: t('navigation.defiChildren.swap'), path: "/defi/swap", icon: "🔄" },
+      { id: "dex-wrap", label: t('navigation.defiChildren.wrap'), path: "/defi/wrap", icon: "📦" },
+      { id: "dex-bridge", label: t('navigation.defiChildren.bridge'), path: "/defi/bridge", icon: "🌉" },
       {
         id: "dex-buy-ae",
-        label: "BUY AE",
+        label: t('navigation.defiChildren.buyAe'),
         path: "/defi/buy-ae-with-eth",
         icon: "💎",
       },
-      { id: "dex-pool", label: "POOL", path: "/defi/pool", icon: "💧" },
+      { id: "dex-pool", label: t('navigation.defiChildren.pool'), path: "/defi/pool", icon: "💧" },
       {
         id: "dex-explore-tokens",
-        label: "Explore Tokens",
+        label: t('navigation.defiChildren.exploreTokens'),
         path: "/defi/explore/tokens",
         icon: "🪙",
       },
       {
         id: "dex-explore-pools",
-        label: "Explore Pools",
+        label: t('navigation.defiChildren.explorePools'),
         path: "/defi/explore/pools",
         icon: "🏊",
       },
       {
         id: "dex-explore-transactions",
-        label: "Transactions",
+        label: t('navigation.defiChildren.transactions'),
         path: "/defi/explore/transactions",
         icon: "📋",
       },
@@ -74,4 +75,4 @@ export const navigationItems: NavigationItem[] = [
   //     icon: '🐙',
   //     isExternal: true,
   // },
-];
+].filter(Boolean) as NavigationItem[];

@@ -91,7 +91,16 @@
     "confirmTokenApproval": "Please confirm the token approval in your wallet...",
     "waitingForApprovalConfirmation": "Waiting for approval confirmation...",
     "approvalConfirmed": "Approval confirmed!",
-    "allowanceCheckFailed": "Allowance check failed, proceeding with approval..."
+    "allowanceCheckFailed": "Allowance check failed, proceeding with approval...",
+    "failedToApproveToken": "Failed to approve token. Please check your network connection and try again.",
+    "insufficientEthForGas": "Insufficient ETH for gas fees",
+    "failedToConnectTokenContract": "Failed to connect to token contract. Please check the network and try again.",
+    "transactionRejectedByUser": "Transaction was rejected by user",
+    "transactionFailedTokenRestrictions": "Transaction failed. The token contract may have restrictions.",
+    "insufficientFundsForTransaction": "Insufficient funds for transaction",
+    "transactionWouldFail": "Transaction would fail. Check token balance and network.",
+    "failedToCheckOrApproveAllowance": "Failed to check or approve token allowance",
+    "genericBridgeError": "Bridge transaction failed"
   },
   "transactions": {
     "swapExactTokensForTokens": {

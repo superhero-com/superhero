@@ -47,7 +47,12 @@
     "bio": "Tell the world about you"
   },
   "titles": {
-    "editProfile": "Edit Profile"
+    "editProfile": "Edit Profile",
+    "swapTokensOnDex": "Swap tokens on the DEX",
+    "wrapOrUnwrapAe": "Wrap or unwrap AE",
+    "buyAeWithEth": "Buy AE with ETH",
+    "provideLiquidityToPools": "Provide liquidity to pools",
+    "tokenizeATrend": "Tokenize a trend"
   }
 }
 

@@ -436,7 +436,7 @@ export function AeEthBridge() {
                     }
                 } catch (e: any) {
                     Logger.error('Allowance/Approval error:', e);
-                    let errorMsg = e.message || 'Failed to check or approve token allowance';
+                    let errorMsg = e.message || t('bridge.failedToCheckOrApproveAllowance');
 
                     // Check if it's a timeout or network error - offer fallback
                     if (e.message?.includes('timeout') || e.message?.includes('network') || e.code === 'NETWORK_ERROR') {
@@ -461,7 +461,15 @@ export function AeEthBridge() {
 
                         } catch (approvalError: any) {
                             Logger.error('Approval also failed:', approvalError);
-                            errorMsg = 'Failed to approve token. Please check your network connection and try again.';
+                            if (approvalError.message?.includes('insufficient funds') || approvalError.message?.includes('gas')) {
+                                errorMsg = t('bridge.insufficientEthForGas');
+                            } else if (approvalError.message?.includes('network') || approvalError.code === 'NETWORK_ERROR') {
+                                errorMsg = t('bridge.failedToConnectTokenContract');
+                            } else if (approvalError.message?.includes('user rejected') || approvalError.message?.includes('rejected by user')) {
+                                errorMsg = t('bridge.transactionRejectedByUser');
+                            } else {
+                                errorMsg = t('bridge.transactionFailedTokenRestrictions');
+                            }
                             showSnackMessage(errorMsg);
                             setButtonBusy(false);
                             setConfirming(false);
@@ -471,13 +479,13 @@ export function AeEthBridge() {
                     } else {
                         // Other errors - show specific message
                         if (e.message?.includes('insufficient funds')) {
-                            errorMsg = 'Insufficient ETH for gas fees';
+                            errorMsg = t('bridge.insufficientEthForGas');
                         } else if (e.code === 'UNPREDICTABLE_GAS_LIMIT' || e.code === 'CALL_EXCEPTION') {
-                            errorMsg = 'Failed to connect to token contract. Please check the network and try again.';
+                            errorMsg = t('bridge.failedToConnectTokenContract');
                         } else if (e.message?.includes('user rejected') || e.code === 'ACTION_REJECTED') {
-                            errorMsg = 'Transaction was rejected by user';
+                            errorMsg = t('bridge.transactionRejectedByUser');
                         } else if (e.message?.includes('execution reverted')) {
-                            errorMsg = 'Transaction failed. The token contract may have restrictions.';
+                            errorMsg = t('bridge.transactionFailedTokenRestrictions');
                         }
 
                         showSnackMessage(errorMsg);
@@ -554,14 +562,14 @@ export function AeEthBridge() {
             } catch (e: any) {
                 clearTimeout(timeout);
                 Logger.error('Bridge transaction error:', e);
-                let errorMsg = e.message || 'Bridge transaction failed';
+                let errorMsg = e.message || t('bridge.genericBridgeError');
 
                 if (e.message?.includes('insufficient funds')) {
-                    errorMsg = 'Insufficient funds for transaction';
+                    errorMsg = t('bridge.insufficientFundsForTransaction');
                 } else if (e.message?.includes('user rejected')) {
-                    errorMsg = 'Transaction rejected by user';
+                    errorMsg = t('bridge.transactionRejectedByUser');
                 } else if (e.code === 'UNPREDICTABLE_GAS_LIMIT' || e.code === 'CALL_EXCEPTION') {
-                    errorMsg = 'Transaction would fail. Check token balance and network.';
+                    errorMsg = t('bridge.transactionWouldFail');
                 }
 
                 showSnackMessage(errorMsg);

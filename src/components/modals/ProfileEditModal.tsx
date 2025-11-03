@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
@@ -23,6 +24,7 @@ export default function ProfileEditModal({
   address?: string;
   initialBio?: string;
 }) {
+  const { t } = useTranslation('common');
   const { getProfile, canEdit } = useProfile(address);
   const { push } = useToast();
   const { sdk, activeAccount } = useAeSdk();

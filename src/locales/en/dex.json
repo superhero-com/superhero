@@ -28,9 +28,21 @@
     "noEthereumAccount": "No Ethereum account connected",
     "networks": {
       "aeternity": "æternity",
-      "aeternityTestnet": "æternity Testnet",
+      "aeternityTestnet": "Testnet",
       "ethereum": "Ethereum",
-      "ethereumSepoliaTestnet": "Ethereum Sepolia Testnet"
+      "ethereumSepoliaTestnet": "Sepolia Testnet"
+    },
+    "from": "From",
+    "to": "To",
+    "destination": "Destination",
+    "destinationAddress": "Destination {{network}} Address",
+    "loadingBalance": "Loading balance...",
+    "balance": "Balance: {{balance}}",
+    "bridgeTo": "Bridge to {{network}}",
+    "connectEthereumWalletFirst": "Please connect your Ethereum wallet first",
+    "bridgeDirection": {
+      "aeternityToEthereum": "æternity → Ethereum",
+      "ethereumToAeternity": "Ethereum → æternity"
     }
   },
   "transactions": {

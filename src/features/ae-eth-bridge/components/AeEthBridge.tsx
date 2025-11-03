@@ -853,17 +853,17 @@ export function AeEthBridge() {
 
                         {/* From/To Amount (visuals only) */}
                         <FromTo
-                            fromLabel="From"
-                            toLabel="To"
+                            fromLabel={t('bridge.from')}
+                            toLabel={t('bridge.to')}
                             inputType="number"
                             inputStep="0.000001"
                             fromAmount={amount}
                             onChangeFromAmount={setAmount}
                             fromBalanceText={
                                 loadingBalance
-                                    ? 'Loading balance...'
+                                    ? t('bridge.loadingBalance')
                                     : selectedEthAccount
-                                        ? `Balance: ${Decimal.from(tokenBalance).prettify()}`
+                                        ? t('bridge.balance', { balance: Decimal.from(tokenBalance).prettify() })
                                         : null
                             }
                             onMaxClick={tokenBalance ? () => setAmount(tokenBalance) : undefined}
@@ -1017,7 +1017,7 @@ export function AeEthBridge() {
                                                         : 'Bridging...')
                                                     : 'Processing...'}
                                             </div>
-                                        ) : `Bridge to ${direction === Direction.AeternityToEthereum ? 'Ethereum' : 'æternity'}`}
+                                        ) : t('bridge.bridgeTo', { network: direction === Direction.AeternityToEthereum ? t('bridge.networks.ethereum') : t('bridge.networks.aeternity') })}
                                     </button>
                                 )
                             }
@@ -1051,7 +1051,7 @@ export function AeEthBridge() {
                                 <div className="flex justify-between items-center text-sm">
                                     <span className="text-white/60">Direction:</span>
                                     <span className="text-white font-semibold">
-                                        {isBridgeActionFromAeternity ? 'æternity → Ethereum' : 'Ethereum → æternity'}
+                                        {isBridgeActionFromAeternity ? t('bridge.bridgeDirection.aeternityToEthereum') : t('bridge.bridgeDirection.ethereumToAeternity')}
                                     </span>
                                 </div>
 

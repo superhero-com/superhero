@@ -85,9 +85,11 @@ export default function FeedList({
   const sortBy = urlQuery.get("sortBy") || "latest";
   const search = urlQuery.get("search") || "";
   const filterBy = urlQuery.get("filterBy") || "all";
+  const initialWindow = (urlQuery.get("window") as '24h'|'7d'|'all' | null) || 'all';
   const shouldAutoFocusPost = urlQuery.get("post") === "new";
 
   const [localSearch, setLocalSearch] = useState(search);
+  const [popularWindow, setPopularWindow] = useState<'24h'|'7d'|'all'>(initialWindow);
 
   // Helper to map a token object or websocket payload into a Post-like item
   const mapTokenCreatedToPost = useCallback((payload: any): PostDto => {
@@ -193,20 +195,24 @@ export default function FeedList({
     isFetchingNextPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ["posts", { limit: 10, sortBy, search, filterBy }],
-    queryFn: ({ pageParam = 1 }) =>
-      PostsService.listAll({
+    queryKey: ["posts", { limit: 10, sortBy, search, filterBy, window: sortBy === 'hot' ? popularWindow : undefined }],
+    queryFn: async ({ pageParam = 1 }) => {
+      if (sortBy === 'hot') {
+        // New popular posts endpoint with window
+        return (await TrendminerApi.listPopularPosts({
+          window: popularWindow,
+          page: pageParam as number,
+          limit: 10,
+        })) as unknown as PostApiResponse;
+      }
+      return (await PostsService.listAll({
         limit: 10,
-        page: pageParam,
-        orderBy:
-          sortBy === "latest"
-            ? "created_at"
-            : sortBy === "hot"
-            ? "total_comments"
-            : "created_at",
-        orderDirection: "DESC",
+        page: pageParam as number,
+        orderBy: 'created_at',
+        orderDirection: 'DESC',
         search: localSearch,
-      }) as unknown as Promise<PostApiResponse>,
+      })) as unknown as PostApiResponse;
+    },
     getNextPageParam: (lastPage) => {
       if (
         lastPage?.meta?.currentPage &&
@@ -280,10 +286,23 @@ export default function FeedList({
       // Clear cached pages to avoid showing stale lists during rapid tab switches
       queryClient.removeQueries({ queryKey: ["posts"], exact: false });
       queryClient.removeQueries({ queryKey: ["home-activities"], exact: false });
-      navigate(`/?sortBy=${newSortBy}`);
+      if (newSortBy === 'hot') {
+        navigate(`/?sortBy=hot&window=${popularWindow}`);
+      } else {
+        navigate(`/?sortBy=${newSortBy}`);
+      }
     },
-    [navigate, queryClient]
+    [navigate, queryClient, popularWindow]
   );
+
+  const handlePopularWindowChange = useCallback((w: '24h'|'7d'|'all') => {
+    setPopularWindow(w);
+    if (sortBy === 'hot') {
+      navigate(`/?sortBy=hot&window=${w}`);
+      // Reset pages for new window
+      queryClient.removeQueries({ queryKey: ["posts"], exact: false });
+    }
+  }, [navigate, sortBy, queryClient]);
 
   const handleItemClick = useCallback(
     (idOrSlug: string) => {
@@ -497,10 +516,17 @@ export default function FeedList({
             sortBy={sortBy}
             onSortChange={handleSortChange}
             className="sticky top-0 z-10 w-full"
+            popularWindow={popularWindow}
+            onPopularWindowChange={handlePopularWindowChange}
           />
         </div>
         <div className="hidden md:block">
-          <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
+          <SortControls
+            sortBy={sortBy}
+            onSortChange={handleSortChange}
+            popularWindow={popularWindow}
+            onPopularWindowChange={handlePopularWindowChange}
+          />
         </div>
       </div>
 

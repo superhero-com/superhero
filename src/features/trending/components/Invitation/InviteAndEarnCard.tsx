@@ -63,18 +63,16 @@ export default function InviteAndEarnCard({
 
       if (!amountValue || amountValue <= 0) {
         amountInputRef.current?.focus();
-        throw new Error("Please enter an amount");
+        throw new Error(t('pleaseEnterAmount'));
       }
 
       if (!invitesNumber || invitesNumber < 1) {
         invitesInputRef.current?.focus();
-        throw new Error("Please create at least one invite");
+        throw new Error(t('pleaseCreateAtLeastOneInvite'));
       }
 
       if (!activeAccount) {
-        throw new Error(
-          "No active account. Please connect your wallet and try again."
-        );
+        throw new Error(t('noActiveAccount'));
       }
 
       // Use the shared hook to generate invite keys
@@ -199,11 +197,7 @@ export default function InviteAndEarnCard({
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Not enough balance. You need{" "}
-                  {Decimal.from(amount || 0)
-                    .mul(invitesNumber)
-                    .toString()}{" "}
-                  AE.
+                  {t('notEnoughBalance', { amount: Decimal.from(amount || 0).mul(invitesNumber).toString() })}
                 </AlertDescription>
               </Alert>
             )}
@@ -222,14 +216,14 @@ export default function InviteAndEarnCard({
                 {generatingInviteLink ? (
                   <>
                     <div className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 border-2 border-transparent border-t-current rounded-full animate-spin"></div>
-                    Creating invites...
+                    {t('creatingInvites', { ns: 'common' })}
                   </>
                 ) : (
-                  "Generate invite links"
+                  t('generateInviteLinks', { ns: 'common' })
                 )}
               </button>
             ) : (
-              <WalletConnectBtn label="CONNECT WALLET TO GENERATE" className="text-sm" />
+              <WalletConnectBtn label={t('connectWalletToGenerate', { ns: 'common' })} className="text-sm" />
             )}
           </form>
         </div>

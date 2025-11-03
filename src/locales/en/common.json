@@ -7,7 +7,10 @@
     "getStarted": "Get started",
     "swapTokens": "Swap Tokens",
     "confirmInWallet": "Confirm in wallet…",
-    "connectWalletDex": "CONNECT WALLET"
+    "connectWalletDex": "CONNECT WALLET",
+    "connectWalletToGenerate": "CONNECT WALLET TO GENERATE",
+    "generateInviteLinks": "Generate invite links",
+    "creatingInvites": "Creating invites..."
   },
   "labels": {
     "numberOfInvites": "Number of invites"

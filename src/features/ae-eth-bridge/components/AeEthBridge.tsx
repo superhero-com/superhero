@@ -342,7 +342,7 @@ export function AeEthBridge() {
             const hasUserBalance = checkUserHasEnoughBalance(asset, normalizedAmount, direction, aeBalances, ethBalances);
             if (!hasUserBalance) {
                 setButtonBusy(false);
-                return showSnackMessage(`Insufficient ${asset.symbol} balance to complete this transaction.`);
+                return showSnackMessage(t('bridge.insufficientBalanceBridge', { symbol: asset.symbol }));
             }
 
             let action_type = BRIDGE_TOKEN_ACTION_TYPE;
@@ -580,13 +580,13 @@ export function AeEthBridge() {
 
     const bridgeToEvm = useCallback(async () => {
         if (!isValidDestination || !destination?.startsWith('0x')) {
-            return showSnackMessage('Invalid destination!');
+            return showSnackMessage(t('bridge.invalidDestination'));
         }
         if (!normalizedAmount || normalizedAmount.isLessThanOrEqualTo(0)) {
-            return showSnackMessage('Invalid amount!');
+            return showSnackMessage(t('bridge.invalidAmount'));
         }
         if (!aeternityAddress) {
-            return showSnackMessage('Aeternity wallet not connected!');
+            return showSnackMessage(t('bridge.aeternityWalletNotConnected'));
         }
 
         setButtonBusy(true);
@@ -595,14 +595,14 @@ export function AeEthBridge() {
         const hasUserBalance = checkUserHasEnoughBalance(asset, normalizedAmount, direction, aeBalances, ethBalances);
         if (!hasUserBalance) {
             setButtonBusy(false);
-            return showSnackMessage(`Insufficient ${asset.symbol} balance to complete this transaction.`);
+            return showSnackMessage(t('bridge.insufficientBalanceBridge', { symbol: asset.symbol }));
         }
 
         // Also check if bridge contract has enough balance (for liquidity)
         const hasBridgeBalance = await checkEvmNetworkHasEnoughBalance(asset, normalizedAmount, walletProvider);
         if (!hasBridgeBalance) {
             setButtonBusy(false);
-            return showSnackMessage('Ethereum bridge contract has insufficient balance to complete this transaction.');
+            return showSnackMessage(t('bridge.bridgeContractInsufficientBalance'));
         }
 
         const hasEligibleBridgeUse = await checkAeAccountHasEligibleBridgeUse(aeternityAddress);
@@ -901,7 +901,7 @@ export function AeEthBridge() {
                                                 onClick={handleCopyTokenAddress}
                                                 className="text-[10px] text-[#4ecdc4] hover:text-[#3ab3aa]"
                                             >
-                                                Copy
+                                                {t('copy', { ns: 'common' })}
                                             </button>
                                         </div>
                                     )}

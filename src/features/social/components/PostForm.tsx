@@ -1,5 +1,6 @@
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import AeButton from "../../../components/AeButton";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
 import { IconClose, IconGif, IconSmile } from "../../../icons";
@@ -78,6 +79,7 @@ const PROMPTS: string[] = [
 
 const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => void }, PostFormProps>((props, ref) => {
   const { t } = useTranslation('forms');
+  const { t: tSocial } = useTranslation('social');
   const {
     onClose,
     onSuccess,

@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from 'react-i18next';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,8 +38,8 @@ export default function SharePopover({ postId, className, urlOverride, label = "
             "inline-flex items-center justify-center gap-1.5 h-auto min-h-0 min-w-0 md:h-[28px] md:min-h-[28px] px-2 rounded-lg bg-transparent border-0 md:px-2.5 md:bg-white/[0.04] md:border md:border-white/10 md:hover:border-white/20 md:ring-1 md:ring-white/15 md:hover:ring-white/25 md:transition-colors",
             className
           )}
-          aria-label={`Share ${label}`}
-          title={`Share ${label}`}
+          aria-label={`${t('share')} ${shareLabel}`}
+          title={`${t('share')} ${shareLabel}`}
           onClick={(e) => e.stopPropagation()}
         >
           <Share className="w-[14px] h-[14px] opacity-80" strokeWidth={2.25} />
@@ -53,7 +54,7 @@ export default function SharePopover({ postId, className, urlOverride, label = "
           }}
         >
           <LinkIcon className="w-4 h-4 opacity-85" />
-          <span>Copy link</span>
+          <span>{t('copyLink')}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator className="bg-white/10" />
         <DropdownMenuItem
@@ -62,14 +63,14 @@ export default function SharePopover({ postId, className, urlOverride, label = "
             e.stopPropagation();
             const nav: any = navigator;
             if (nav?.share) {
-              nav.share({ url, title: "Superhero Post" }).catch(() => {});
+              nav.share({ url, title: t('superheroPost') }).catch(() => {});
             } else {
               try { navigator.clipboard.writeText(url); } catch {}
             }
           }}
         >
           <Share className="w-4 h-4 opacity-85" strokeWidth={2.25} />
-          <span>{`Share ${label} via …`}</span>
+          <span>{t('shareVia', { label: shareLabel })}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

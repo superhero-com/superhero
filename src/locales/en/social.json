@@ -3,6 +3,9 @@
   "commentsCount": "Comments count",
   "share": "Share",
   "sharePost": "Share post",
-  "shareComment": "Share comment"
+  "shareComment": "Share comment",
+  "copyLink": "Copy link",
+  "shareVia": "Share {{label}} via …",
+  "superheroPost": "Superhero Post"
 }
 

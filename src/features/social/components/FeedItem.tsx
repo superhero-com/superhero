@@ -140,7 +140,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
                   onItemClick(parentId);
                 }}
                 className="w-full text-left bg-white/[0.04] border border-white/10 rounded-xl p-2.5 md:p-3 -mb-1 hover:bg-white/[0.06] transition-colors"
-                title="Show full thread"
+                title={t('showFullThread')}
               >
                 <div className="flex items-start gap-2">
                   <div className="flex-shrink-0">

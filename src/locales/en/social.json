@@ -13,6 +13,9 @@
   "posting": "Posting…",
   "post": "Post",
   "postReply": "Post Reply",
-  "moreSoon": "More soon…"
+  "moreSoon": "More soon…",
+  "add": "+Add",
+  "postNeedsToInclude": "Post needs to include {{hashtag}}",
+  "openParent": "Open parent"
 }
 

@@ -57,7 +57,12 @@
     "exploreAllTrends": "Explore all trends",
     "exploreTrends": "Explore trends",
     "clickToToggleLiveFeed": "Click to toggle live feed",
-    "openChat": "Open Chat"
+    "openChat": "Open Chat",
+    "liquiditySettings": "Liquidity Settings",
+    "sendATip": "Send a tip",
+    "openOnAescan": "Open on æScan",
+    "clickToReverseRankingOrder": "Click to reverse current ranking order",
+    "tokenCollectionCategory": "Token collection category"
   }
 }
 

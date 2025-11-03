@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import TokenListTableRow from "./TokenListTableRow";
 import TokenRowSkeleton from "./TokenRowSkeleton";
@@ -103,7 +104,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
               currentDirection={orderDirection}
               onSort={onSort}
               className="cell cell-rank text-xs opacity-50 text-left pr-2 pr-md-4"
-              title="Click to reverse current ranking order"
+              title={t('titles.clickToReverseRankingOrder', { ns: 'common' })}
             >
               Rank
             </SortableColumnHeader>
@@ -118,7 +119,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
             </SortableColumnHeader>
             {showCollectionColumn && (
               <th className="cell cell-collection text-xs opacity-50 text-left text-md-right py-1 px-1 px-lg-3">
-                <div title="Token collection category">
+                <div title={t('titles.tokenCollectionCategory', { ns: 'common' })}>
                   Collection
                 </div>
               </th>

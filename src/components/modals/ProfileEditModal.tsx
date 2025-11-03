@@ -92,7 +92,7 @@ export default function ProfileEditModal({
       const text = (bio || "").slice(0, BIO_CHAR_LIMIT).trim();
       if (!text) {
         // Do not enable loading state if validation fails
-        push(<div style={{ color: "#ffb3b3" }}>Bio cannot be empty</div>);
+        push(<div style={{ color: "#ffb3b3" }}>{t('messages.bioCannotBeEmpty')}</div>);
         return;
       }
       setLoading(true);
@@ -112,12 +112,12 @@ export default function ProfileEditModal({
         });
         window.dispatchEvent(evt);
       } catch {}
-      push(<div>Bio update submitted. Waiting for on-chain confirmation…</div>);
+      push(<div>{t('messages.bioUpdateSubmitted')}</div>);
       onClose();
     } catch (e: any) {
       push(
         <div style={{ color: "#ffb3b3" }}>
-          {e?.message || "Failed to update profile"}
+          {e?.message || t('messages.failedToUpdateProfile')}
         </div>
       );
     } finally {

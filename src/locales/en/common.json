@@ -38,7 +38,10 @@
     "insufficientBalance": "Insufficient {{symbol}} balance. You need {{needed}} but only have {{have}}",
     "somethingWentWrong": "Something went wrong",
     "success": "Success",
-    "posting": "Posting…"
+    "posting": "Posting…",
+    "bioCannotBeEmpty": "Bio cannot be empty",
+    "bioUpdateSubmitted": "Bio update submitted. Waiting for on-chain confirmation…",
+    "failedToUpdateProfile": "Failed to update profile"
   },
   "placeholders": {
     "bio": "Tell the world about you"

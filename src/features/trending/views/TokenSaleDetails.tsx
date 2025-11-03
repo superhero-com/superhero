@@ -237,7 +237,6 @@ export default function TokenSaleDetails() {
       </div>
 
       <Shell right={rightRail} containerClassName="max-w-[min(1200px,100%)] mx-auto">
-        <div className="min-h-screen text-white px-4">
           {/* Deploy Success Message */}
       {showDeployedMessage && (
         <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-4 mb-6 flex items-center justify-between">

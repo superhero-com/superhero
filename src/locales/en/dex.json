@@ -9,6 +9,7 @@
     "confirmInWallet": "Confirm in wallet…",
     "connectWallet": "CONNECT WALLET",
     "settings": "Settings",
+    "swapSettings": "Swap Settings",
     "insufficientBalance": "Insufficient {{symbol}} balance. You need {{needed}} but only have {{have}}"
   },
   "bridge": {

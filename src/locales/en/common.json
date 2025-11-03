@@ -10,10 +10,14 @@
     "connectWalletDex": "CONNECT WALLET",
     "connectWalletToGenerate": "CONNECT WALLET TO GENERATE",
     "generateInviteLinks": "Generate invite links",
-    "creatingInvites": "Creating invites..."
+    "creatingInvites": "Creating invites...",
+    "close": "Close"
   },
   "labels": {
-    "numberOfInvites": "Number of invites"
+    "numberOfInvites": "Number of invites",
+    "superheroHome": "Superhero Home",
+    "back": "Back",
+    "openSettings": "open-settings"
   },
   "actions": {
     "copy": "Copy",
@@ -21,7 +25,9 @@
   },
   "messages": {
     "notEnoughBalance": "Not enough balance. You need {{amount}} AE.",
-    "insufficientBalance": "Insufficient {{symbol}} balance. You need {{needed}} but only have {{have}}"
+    "insufficientBalance": "Insufficient {{symbol}} balance. You need {{needed}} but only have {{have}}",
+    "somethingWentWrong": "Something went wrong",
+    "success": "Success"
   }
 }
 

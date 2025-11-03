@@ -16,8 +16,9 @@ import FooterSection from '../FooterSection';
 
 
 export default function MobileAppHeader() {
-  const { t } = useTranslation('navigation');
-  const navigationItems = getNavigationItems(t);
+  const { t: tNav } = useTranslation('navigation');
+  const { t } = useTranslation('common');
+  const navigationItems = getNavigationItems(tNav);
   const [showOverlay, setShowOverlay] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -104,7 +105,7 @@ export default function MobileAppHeader() {
           <button
             className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 cursor-pointer text-xl font-bold hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
             onClick={() => setShowSearch(false)}
-            aria-label="Back"
+            aria-label={t('labels.back')}
           >
             ←
           </button>
@@ -115,7 +116,7 @@ export default function MobileAppHeader() {
       ) : (
         /* Normal Navigation Mode */
         <div className="px-3 flex items-center gap-2 w-full pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] sm:px-2 sm:gap-1.5">
-          <Link to="/" className="text-[var(--standard-font-color)] flex items-center min-h-[44px] min-w-[44px] no-underline hover:no-underline no-gradient-text" style={{ textDecoration: 'none' }} aria-label="Superhero Home">
+          <Link to="/" className="text-[var(--standard-font-color)] flex items-center min-h-[44px] min-w-[44px] no-underline hover:no-underline no-gradient-text" style={{ textDecoration: 'none' }} aria-label={t('labels.superheroHome')}>
             <HeaderLogo className="h-7 w-auto" />
           </Link>
           <div className="flex-grow hidden md:block" />

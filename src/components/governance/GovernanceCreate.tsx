@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import AeButton from '@/components/AeButton';
 import MobileInput from '@/components/MobileInput';
@@ -13,6 +14,7 @@ import { Contract, Encoded } from '@aeternity/aepp-sdk';
 type FormErrors = Partial<Record<'title' | 'description' | 'link' | 'options' | 'closeHeight', string>>;
 
 export default function GovernanceCreate() {
+  const { t } = useTranslation('governance');
   const navigate = useNavigate();
   const { sdk, currentBlockHeight, sdkInitialized, activeAccount } = useAeSdk();
 
@@ -84,21 +86,21 @@ export default function GovernanceCreate() {
 
   const validate = (): boolean => {
     const e: FormErrors = {};
-    const t = title.trim();
+    const t_val = title.trim();
     const d = description.trim();
     const l = link.trim();
     const filledOptions = options.map((o) => o.trim()).filter(Boolean);
 
-    if (t.length === 0) e.title = 'Please provide a title.';
-    if (t.length > 50) e.title = 'Your title is too long (50 chars max).';
-    if (d.length === 0) e.description = 'Please provide a description.';
-    if (l.length === 0) e.link = 'Please provide a link.';
-    if (!/^https?:\/\//i.test(l)) e.link = 'Your link must include http:// or https://.';
-    if (filledOptions.length < 2) e.options = 'Please provide at least two options.';
+    if (t_val.length === 0) e.title = t('errors.titleRequired');
+    if (t_val.length > 50) e.title = t('errors.titleTooLong');
+    if (d.length === 0) e.description = t('errors.descriptionRequired');
+    if (l.length === 0) e.link = t('errors.linkRequired');
+    if (!/^https?:\/\//i.test(l)) e.link = t('errors.linkInvalid');
+    if (filledOptions.length < 2) e.options = t('errors.optionsRequired');
 
-    if (closeHeight === '') e.closeHeight = 'Please provide a closing height.';
-    else if (!/^\d+$/.test(closeHeight)) e.closeHeight = 'The closing height is not a whole number.';
-    else if (Number(closeHeight) <= height && closeHeight !== '0') e.closeHeight = 'The closing height lies in the past.';
+    if (closeHeight === '') e.closeHeight = t('errors.closeHeightRequired');
+    else if (!/^\d+$/.test(closeHeight)) e.closeHeight = t('errors.closeHeightInvalid');
+    else if (Number(closeHeight) <= height && closeHeight !== '0') e.closeHeight = t('errors.closeHeightPast');
 
     setErrors(e);
     return Object.values(e).every((v) => !v);
@@ -107,7 +109,7 @@ export default function GovernanceCreate() {
   async function onSubmit() {
     if (!sdkInitialized || !sdk) return;
     if (!activeAccount) {
-      setErrors({ ...errors, title: 'Connect wallet to create a poll.' });
+      setErrors({ ...errors, title: t('errors.connectWallet') });
       return;
     }
     if (!validate()) return;
@@ -156,7 +158,7 @@ export default function GovernanceCreate() {
       navigate(`/voting/p/${createdAddress}`);
     } catch (e) {
       console.error(e);
-      setErrors((prev) => ({ ...prev, title: 'Could not create your poll. Please try again.' }));
+      setErrors((prev) => ({ ...prev, title: t('errors.createFailed') }));
     } finally {
       setSubmitting(false);
     }
@@ -168,14 +170,14 @@ export default function GovernanceCreate() {
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl blur-xl"></div>
           <div className="relative bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl p-6 md:p-8">
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent m-0">Create Poll</h1>
-            <p className="text-slate-300 mt-2">Use the form below to create a new governance poll.</p>
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent m-0">{t('createPoll')}</h1>
+            <p className="text-slate-300 mt-2">{t('description')}</p>
           </div>
         </div>
 
         {(Object.values(errors).some(Boolean)) && (
           <MobileCard variant="outlined" padding="small" className="bg-red-500/10 border-red-500/30">
-            <div className="text-red-300 font-medium mb-1">There are issues with your input:</div>
+            <div className="text-red-300 font-medium mb-1">{t('messages.issuesWithInput')}</div>
             <ul className="m-0 ps-5 text-red-200 text-sm">
               {Object.values(errors).filter(Boolean).map((e, i) => (
                 <li key={i} className="list-disc">{e}</li>
@@ -184,26 +186,26 @@ export default function GovernanceCreate() {
           </MobileCard>
         )}
 
-        <MobileInput label="Title" value={title} onChange={(e) => setTitle(e.target.value)} error={errors.title || undefined} />
-        <MobileInput label="Description" value={description} onChange={(e) => setDescription(e.target.value)} error={errors.description || undefined} />
+        <MobileInput label={t('form.title')} value={title} onChange={(e) => setTitle(e.target.value)} error={errors.title || undefined} />
+        <MobileInput label={t('form.description')} value={description} onChange={(e) => setDescription(e.target.value)} error={errors.description || undefined} />
 
         {showForumHint && (
           <MobileCard variant="outlined" padding="small" className="bg-[var(--glass-bg)] border-[var(--glass-border)] text-slate-200 backdrop-blur-2xl">
-            For easier discussions we suggest creating a thread in the æternity forum and linking it here (https://forum.aeternity.com).
+            {t('messages.forumHint')}
           </MobileCard>
         )}
 
-        <MobileInput label="Link" value={link} onChange={(e) => setLink(e.target.value)} onBlur={handleLinkBlur} error={errors.link || undefined} />
+        <MobileInput label={t('form.link')} value={link} onChange={(e) => setLink(e.target.value)} onBlur={handleLinkBlur} error={errors.link || undefined} />
 
         <div className="flex gap-2">
-          <AeButton onClick={() => setIsListed(true)} className={isListed ? 'bg-pink-600 text-white' : 'bg-white/10'}>Publicly Listed</AeButton>
-          <AeButton onClick={() => setIsListed(false)} className={!isListed ? 'bg-pink-600 text-white' : 'bg-white/10'}>Not Listed</AeButton>
+          <AeButton onClick={() => setIsListed(true)} className={isListed ? 'bg-pink-600 text-white' : 'bg-white/10'}>{t('buttons.publiclyListed')}</AeButton>
+          <AeButton onClick={() => setIsListed(false)} className={!isListed ? 'bg-pink-600 text-white' : 'bg-white/10'}>{t('buttons.notListed')}</AeButton>
         </div>
 
         <div className="space-y-2">
           {options.map((opt, idx) => (
             <div key={idx} className="flex items-center gap-2">
-              <MobileInput label={idx === 0 ? 'Options' : undefined} placeholder="Add Option"
+              <MobileInput label={idx === 0 ? t('form.options') : undefined} placeholder={t('form.addOption')}
                 value={opt} onChange={(e) => addOptionRow(idx, e.target.value)} error={errors.options || undefined} />
               {opt && (
                 <AeButton onClick={() => removeOption(idx)} className="bg-white/10">✕</AeButton>
@@ -213,27 +215,27 @@ export default function GovernanceCreate() {
         </div>
 
         <div>
-          <MobileInput label="Close at height" type="number" value={closeHeight} onChange={(e) => setCloseHeight(e.target.value)} error={errors.closeHeight || undefined} />
+          <MobileInput label={t('form.closeAtHeight')} type="number" value={closeHeight} onChange={(e) => setCloseHeight(e.target.value)} error={errors.closeHeight || undefined} />
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <MobileInput label="Est. close date" type="date" value={dateString} onChange={(e) => setDateString(e.target.value)} onBlur={updateCloseHeightFromDate} />
-            <MobileInput label="Est. close time" type="time" value={timeString} onChange={(e) => setTimeString(e.target.value)} onBlur={updateCloseHeightFromDate} />
+            <MobileInput label={t('form.estCloseDate')} type="date" value={dateString} onChange={(e) => setDateString(e.target.value)} onBlur={updateCloseHeightFromDate} />
+            <MobileInput label={t('form.estCloseTime')} type="time" value={timeString} onChange={(e) => setTimeString(e.target.value)} onBlur={updateCloseHeightFromDate} />
           </div>
           <div className="text-slate-400 text-sm p-2">
             {closeHeight && Number(closeHeight) > height && (
-              <span>To create a never closing poll, set close height to 0.</span>
+              <span>{t('messages.neverClosingHint')}</span>
             )}
             {closeHeight && Number(closeHeight) < height && closeHeight !== '0' && (
-              <span> Current height is {height} and closing height {closeHeight} lies in the past.</span>
+              <span> {t('messages.closeHeightPast', { current: height, close: closeHeight })}</span>
             )}
             {closeHeight === '0' && (
-              <span> This poll will never close.</span>
+              <span> {t('messages.neverClosing')}</span>
             )}
           </div>
         </div>
 
         <div className="sticky bottom-4">
           <AeButton onClick={onSubmit} disabled={submitting} className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white">
-            {submitting ? 'Creating...' : 'Create Poll'}
+            {submitting ? t('buttons.creating') : t('buttons.createPoll')}
           </AeButton>
         </div>
       </div>

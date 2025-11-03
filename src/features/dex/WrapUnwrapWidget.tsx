@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -16,6 +17,7 @@ interface WrapUnwrapWidgetProps {
 }
 
 export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
+  const { t } = useTranslation('common');
   const { activeAccount, loadAccountData } = useAccount();
   const { wrapBalances } = useTokenBalances(null, null);
   const { executeSwap, loading } = useSwapExecution();

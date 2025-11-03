@@ -1,6 +1,7 @@
 import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import { Eip1193Provider, formatEther } from 'ethers';
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { ConnectWalletButton } from "../../../components/ConnectWalletButton";
 import { useToast } from "../../../components/ToastProvider";
 import { CONFIG } from "../../../config";
@@ -22,6 +23,7 @@ interface BuyAeWidgetProps {
 function BuyAeWidgetContent({
   embedded = false,
 }: BuyAeWidgetProps) {
+  const { t } = useTranslation('common');
   const { activeAccount, sdk } = useAeSdk();
   const slippagePct = useDex().slippagePct;
   const deadlineMins = useDex().deadlineMins;

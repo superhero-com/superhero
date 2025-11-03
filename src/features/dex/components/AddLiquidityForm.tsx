@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { DEX_ADDRESSES } from "../../../libs/dex";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
 import { useAddLiquidity } from "../hooks";
@@ -19,6 +20,7 @@ import { usePool } from "../context/PoolProvider";
 import { TokenChip } from "@/components/TokenChip";
 
 export default function AddLiquidityForm() {
+  const { t } = useTranslation('common');
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
   const { activeNetwork } = useAeSdk();

@@ -1,4 +1,16 @@
 {
+  "swap": {
+    "title": "Swap Tokens",
+    "description": "Swap AEX-9 tokens on the æternity blockchain securely and efficiently.",
+    "from": "From",
+    "to": "To",
+    "quoting": "Quoting…",
+    "swapTokens": "Swap Tokens",
+    "confirmInWallet": "Confirm in wallet…",
+    "connectWallet": "CONNECT WALLET",
+    "settings": "Settings",
+    "insufficientBalance": "Insufficient {{symbol}} balance. You need {{needed}} but only have {{have}}"
+  },
   "bridge": {
     "title": "Bridge ETH ⇆ AE",
     "direction": {
@@ -7,11 +19,6 @@
     },
     "tokenAddressCopied": "Token address copied",
     "failedToCopy": "Failed to copy"
-  },
-  "swap": {
-    "title": "Swap Tokens",
-    "confirmInWallet": "Confirm in wallet…",
-    "insufficientBalance": "Insufficient {{symbol}} balance. You need {{needed}} but only have {{have}}"
   },
   "transactions": {
     "swapExactTokensForTokens": {

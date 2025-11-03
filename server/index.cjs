@@ -118,6 +118,68 @@ async function buildMeta(pathname, origin){
     return { title: `${address} – Token on Superhero`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };
   }
 
+  // Trends accounts
+  const ta = pathname.match(/^\/trends\/accounts\/([^/]+)/);
+  if (ta) {
+    const address = ta[1];
+    return {
+      title: `Account Activity – ${address} – Superhero`,
+      description: 'View account activity, holders, and posts on Superhero.',
+      canonical: `${origin}/trends/accounts/${address}`,
+      ogImage: `${origin}/og-default.png`,
+    };
+  }
+
+  // DAO routes (basic metadata)
+  const dao = pathname.match(/^\/trends\/dao\/([^/]+)$/);
+  if (dao) {
+    const sale = dao[1];
+    return {
+      title: `DAO – ${sale} – Superhero`,
+      description: 'View DAO details, proposals, and votes on Superhero.',
+      canonical: `${origin}/trends/dao/${sale}`,
+      ogImage: `${origin}/og-default.png`,
+    };
+  }
+  const daov = pathname.match(/^\/trends\/dao\/([^/]+)\/vote\/([^/]+)\/([^/]+)$/);
+  if (daov) {
+    const sale = daov[1];
+    const voteId = daov[2];
+    return {
+      title: `DAO Vote ${voteId} – ${sale} – Superhero`,
+      description: 'Vote details on Superhero.',
+      canonical: `${origin}/trends/dao/${sale}/vote/${voteId}/${daov[3]}`,
+      ogImage: `${origin}/og-default.png`,
+      ogType: 'article',
+    };
+  }
+
+  // Tx queue
+  const txq = pathname.match(/^\/tx-queue\/([^/]+)/);
+  if (txq) {
+    const id = txq[1];
+    return {
+      title: `Transaction ${id} – Superhero`,
+      description: 'Track pending transaction status on Superhero.',
+      canonical: `${origin}/tx-queue/${id}`,
+      ogImage: `${origin}/og-default.png`,
+    };
+  }
+
+  // Static pages
+  if (pathname === '/terms') {
+    return { title: 'Terms of Service – Superhero', description: 'Superhero terms of service.', canonical: `${origin}/terms`, ogImage: `${origin}/og-default.png` };
+  }
+  if (pathname === '/privacy') {
+    return { title: 'Privacy Policy – Superhero', description: 'How Superhero handles your data.', canonical: `${origin}/privacy`, ogImage: `${origin}/og-default.png` };
+  }
+  if (pathname === '/faq') {
+    return { title: 'FAQ – Superhero', description: 'Frequently asked questions.', canonical: `${origin}/faq`, ogImage: `${origin}/og-default.png` };
+  }
+  if (pathname.startsWith('/meet')) {
+    return { title: 'Meet – Superhero', description: 'Join a Superhero meeting.', canonical: `${origin}${pathname}`, ogImage: `${origin}/og-default.png` };
+  }
+
   return { title: 'Superhero', canonical: `${origin}${pathname}`, ogImage: `${origin}/og-default.png` };
 }
 
@@ -149,6 +211,19 @@ app.use('/og-default.png', express.static(path.join(DIST_DIR, 'og-default.png'))
 app.use(express.static(DIST_DIR, { maxAge: '1d' }));
 
 app.get(['/', '/post/:id', '/users/:address', '/trends/tokens/:name', '/trends', '/trends/*', '/trending', '/trending/*', '/defi/*', '/voting*', '/explore*', '/swap*', '/pool*', '/users/*'], async (req, res) => {
+  try {
+    const origin = `${req.protocol}://${req.get('host')}`;
+    const meta = await buildMeta(req.path, origin);
+    const html = injectHead(envInject(indexHtml), meta);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
+  } catch (e) {
+    res.sendFile(INDEX_HTML);
+  }
+});
+
+// Catch-all: serve SPA with basic SEO
+app.get('*', async (req, res) => {
   try {
     const origin = `${req.protocol}://${req.get('host')}`;
     const meta = await buildMeta(req.path, origin);

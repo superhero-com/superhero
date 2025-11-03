@@ -23,6 +23,7 @@ interface FeedItemProps {
 
 // Component: Individual Feed Item
 const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: FeedItemProps) => {
+  const { t } = useTranslation('social');
   const postId = item.id;
   const authorAddress = item.sender_address;
   const { chainNames } = useWallet();
@@ -266,7 +267,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
                 <Badge
                   variant="outline"
                   className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 bg-transparent border-white/10 hover:border-white/20 transition-colors"
-                  aria-label="Comments count"
+                  aria-label={t('commentsCount')}
                 >
                   <IconComment className="w-[14px] h-[14px]" />
                   {commentCount}
@@ -277,7 +278,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
                     className="text-[12px] font-semibold text-white/80 hover:text-white transition-colors underline underline-offset-2"
                     onClick={(e) => { e.stopPropagation(); onItemClick(parentId); }}
                   >
-                    Show full thread
+                    {t('showFullThread')}
                   </button>
                 )}
               </div>

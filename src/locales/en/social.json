@@ -1,4 +1,8 @@
 {
-  "placeholder": "placeholder"
+  "showFullThread": "Show full thread",
+  "commentsCount": "Comments count",
+  "share": "Share",
+  "sharePost": "Share post",
+  "shareComment": "Share comment"
 }
 

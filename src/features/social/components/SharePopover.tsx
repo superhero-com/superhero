@@ -17,6 +17,8 @@ type SharePopoverProps = {
 };
 
 export default function SharePopover({ postId, className, urlOverride, label = "post" }: SharePopoverProps) {
+  const { t } = useTranslation('social');
+  const shareLabel = label === 'post' ? t('sharePost') : t('shareComment');
   const url = useMemo(() => {
     if (urlOverride) {
       const isAbsolute = /^https?:\/\//i.test(urlOverride);

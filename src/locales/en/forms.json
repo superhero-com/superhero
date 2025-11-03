@@ -1,4 +1,13 @@
 {
-  "placeholder": "placeholder"
+  "numberOfInvites": "Number of invites",
+  "pleaseEnterAmount": "Please enter an amount",
+  "pleaseCreateAtLeastOneInvite": "Please create at least one invite",
+  "noActiveAccount": "No active account. Please connect your wallet and try again.",
+  "failedToCreateInvitation": "Failed to create invitation",
+  "notEnoughBalance": "Not enough balance. You need {{amount}} AE.",
+  "connectWalletToReply": "Connect your wallet to reply",
+  "pleaseConnectWalletToReply": "Please connect your wallet to reply",
+  "writeReply": "Write a reply...",
+  "connectWalletToPost": "Connect your Superhero Wallet to start posting on-chain ✍️"
 }
 

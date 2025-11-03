@@ -1,5 +1,6 @@
 import { AlertCircle } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAccount } from "../../../../hooks/useAccount";
 import { useAeSdk } from "../../../../hooks/useAeSdk";
 import { Decimal } from "../../../../libs/decimal";
@@ -20,6 +21,7 @@ interface InviteAndEarnCardProps {
 export default function InviteAndEarnCard({
   className,
 }: InviteAndEarnCardProps) {
+  const { t } = useTranslation('forms');
   const { activeAccount } = useAeSdk();
   const { decimalBalance } = useAccount();
   const { generateInviteKeys, prepareInviteLink } = useInvitations();
@@ -87,7 +89,7 @@ export default function InviteAndEarnCard({
       setCopyInviteLinkDialog(true);
     } catch (error: any) {
       console.error("generateInviteLink error:", error);
-      setErrorMessage(error?.message || "Failed to create invitation");
+      setErrorMessage(error?.message || t('failedToCreateInvitation'));
     } finally {
       setGeneratingInviteLink(false);
     }
@@ -167,7 +169,7 @@ export default function InviteAndEarnCard({
                   htmlFor="invites"
                   className="text-xs md:text-sm font-semibold text-slate-400 tracking-wider break-words"
                 >
-                  Number of invites
+                  {t('numberOfInvites')}
                 </Label>
                 <Input
                   id="invites"

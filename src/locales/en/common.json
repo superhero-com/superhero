@@ -23,7 +23,8 @@
     "menu": "Menu",
     "openMenu": "Open Menu",
     "closeMenu": "Close menu",
-    "buyAe": "Buy AE"
+    "buyAe": "Buy AE",
+    "balance": "Balance"
   },
   "actions": {
     "copy": "Copy",

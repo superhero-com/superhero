@@ -16,14 +16,24 @@ interface PaginatedResponse<T> {
 }
 
 export default function DexExploreTokens() {
-  const tokenList = useTokenList();
-  const [sort, setSort] = useState<"pairs_count" | "created_at" | "name">(
+  const [sort, setSort] = useState<"pairs_count" | "name" | "symbol" | "created_at" | "price" | "tvl" | "24hchange" | "24hvolume" | "7dchange" | "7dvolume">(
     "pairs_count"
   );
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
+
+  const handleSortChange = (key: typeof sort) => {
+    if (key === sort) {
+      // Toggle direction if same key
+      setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+    } else {
+      // New key, reset to DESC
+      setSort(key);
+      setSortDirection("DESC");
+    }
+  };
 
   const { data, isLoading } = useQuery({
     queryFn: async () => {
@@ -58,8 +68,8 @@ export default function DexExploreTokens() {
         <div className="md:hidden">
           <TokenListCards
             tokens={data?.items ?? []}
-            sort={tokenList.sort}
-            onSortChange={tokenList.toggleSort}
+            sort={{ key: sort, asc: sortDirection === "ASC" }}
+            onSortChange={handleSortChange}
             search={search}
             onSearchChange={setSearch}
             loading={isLoading}
@@ -68,8 +78,8 @@ export default function DexExploreTokens() {
         <div className="hidden md:block">
           <TokenListTable
             tokens={data?.items ?? []}
-            sort={tokenList.sort}
-            onSortChange={tokenList.toggleSort}
+            sort={{ key: sort, asc: sortDirection === "ASC" }}
+            onSortChange={handleSortChange}
             search={search}
             onSearchChange={setSearch}
             loading={isLoading}

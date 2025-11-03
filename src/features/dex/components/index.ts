@@ -5,5 +5,8 @@ export { default as DexSettings } from './DexSettings';
 export { default as LiquidityConfirmation } from './LiquidityConfirmation';
 export { default as LiquidityPositionCard } from './LiquidityPositionCard';
 
+// Pool Detail Components
+export * from './PoolDetail';
+
 // Charts
 export * from './charts';

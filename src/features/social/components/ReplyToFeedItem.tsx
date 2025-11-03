@@ -13,6 +13,7 @@ import PostTipButton from "./PostTipButton";
 import { MessageCircle } from "lucide-react";
 import { useWallet } from "../../../hooks";
 import { relativeTime, compactTime, fullTimestamp } from "../../../utils/time";
+import AspectMedia from "@/components/AspectMedia";
 import { CONFIG } from "../../../config";
 
 interface ReplyToFeedItemProps {
@@ -121,6 +122,39 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
     ? item.media.filter((m) => (typeof m === "string" ? !m.startsWith("comment:") : true))
     : [];
 
+  // Compute total descendant comments (all levels) for this item
+  const { data: descendantCount } = useQuery<number>({
+    queryKey: ["post-desc-count", postId],
+    enabled: !!postId,
+    refetchInterval: 120 * 1000,
+    queryFn: async () => {
+      const normalize = (id: string) => (String(id).endsWith("_v3") ? String(id) : `${String(id)}_v3`);
+      const root = normalize(String(postId));
+      const queue: string[] = [root];
+      let total = 0;
+      let requestBudget = 150; // safety cap per item
+      while (queue.length > 0 && requestBudget > 0) {
+        const current = queue.shift()!;
+        let page = 1;
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          if (requestBudget <= 0) break;
+          requestBudget -= 1;
+          const res: any = await PostsService.getComments({ id: current, orderDirection: "ASC", page, limit: 50 });
+          const items: PostDto[] = res?.items || [];
+          total += items.length;
+          for (const child of items) {
+            if ((child.total_comments ?? 0) > 0) queue.push(normalize(String(child.id)));
+          }
+          const meta = res?.meta;
+          if (!meta?.currentPage || !meta?.totalPages || meta.currentPage >= meta.totalPages) break;
+          page = meta.currentPage + 1;
+        }
+      }
+      return total;
+    },
+  });
+
   // Inline mined badge helper
   function MinedBadge({ txHash }: { txHash: string }) {
     const { status } = useTransactionStatus(txHash, { enabled: !!txHash, refetchInterval: 8000 });
@@ -136,13 +170,14 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
   return (
     <article
       className={cn(
-        "relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 pt-4 pb-5 md:w-full md:mx-0 md:p-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:rounded-2xl md:backdrop-blur-xl transition-colors hover:border-white/25 hover:shadow-none",
+        "relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 pt-4 pb-5 md:w-full md:mx-0 md:p-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:rounded-2xl md:backdrop-blur-xl transition-colors",
+        !isActive && "cursor-pointer hover:border-white/25 hover:shadow-none",
         isActive && "bg-white/[0.06] md:bg-white/[0.08] md:border-white/40",
         isContextMuted && "md:bg-white/[0.03] md:border-white/10"
       )}
-      onClick={handleOpen}
-      role="button"
-      aria-label="Open post"
+      onClick={isActive ? undefined : handleOpen}
+      role={isActive ? undefined : "button"}
+      aria-label={isActive ? undefined : "Open post"}
     >
       {/* Top-right on-chain button */}
       {item.tx_hash && (
@@ -253,14 +288,11 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
               )}
             >
               {media.slice(0, 4).map((m: string, index: number) => (
-                <img
-                  key={`${postId}-${index}`}
-                  src={m}
-                  alt="media"
-                  className={cn("w-full object-cover rounded transition-transform hover:scale-[1.02]", media.length === 1 ? "h-60" : "h-36")}
-                  loading="lazy"
-                  decoding="async"
-                />
+                media.length === 1 ? (
+                  <AspectMedia key={`${postId}-${index}`} src={m} alt="media" />
+                ) : (
+                  <AspectMedia key={`${postId}-${index}`} src={m} alt="media" maxHeight={200} />
+                )
               ))}
             </div>
           )}
@@ -287,7 +319,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
               aria-controls={`replies-${postId}`}
             >
               <MessageCircle className="w-[14px] h-[14px]" strokeWidth={2.25} />
-              {commentCount}
+            {typeof descendantCount === 'number' ? descendantCount : commentCount}
             </button>
             </div>
             <SharePopover postId={item.id} />

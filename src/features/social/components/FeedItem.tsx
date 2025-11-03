@@ -12,6 +12,7 @@ import { useWallet } from "../../../hooks";
 import { relativeTime, compactTime, fullTimestamp } from "../../../utils/time";
 import { CONFIG } from "../../../config";
 import BlockchainInfoPopover from "./BlockchainInfoPopover";
+import AspectMedia from "@/components/AspectMedia";
 
 interface FeedItemProps {
   item: PostDto;
@@ -228,32 +229,38 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
               {linkify(item.content, { knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}
             </div>
 
-            {item.media &&
-              Array.isArray(item.media) &&
-              item.media.filter((m) => typeof m === 'string' ? !m.startsWith('comment:') : true).length > 0 && (
+{(() => {
+              const filteredMedia = item.media && Array.isArray(item.media) 
+                ? item.media.filter((m) => typeof m === 'string' ? !m.startsWith('comment:') : true)
+                : [];
+              
+              if (filteredMedia.length === 0) return null;
+              
+              // For single media, try to parse intrinsic width/height embedded in URL hash (w,h)
+              // Example: https://...gif#w=480&h=270
+              const renderSingle = (url: string) => (
+                <AspectMedia src={url} alt="media" />
+              );
+
+              return (
                 <div
                   className={cn(
                     "grid gap-2 rounded-lg overflow-hidden",
-                    item.media.length === 1 && "grid-cols-1",
-                    item.media.length === 2 && "grid-cols-2",
-                    item.media.length >= 3 && "grid-cols-2"
+                    filteredMedia.length === 1 && "grid-cols-1",
+                    filteredMedia.length === 2 && "grid-cols-2",
+                    filteredMedia.length >= 3 && "grid-cols-2"
                   )}
                 >
-                  {item.media.filter((m) => typeof m === 'string' ? !m.startsWith('comment:') : true).slice(0, 4).map((m: string, index: number) => (
-                    <img
-                      key={`${postId}-${index}`}
-                      src={m}
-                      alt="media"
-                      className={cn(
-                        "w-full object-cover rounded transition-transform hover:scale-105",
-                        item.media.length === 1 ? "h-60" : "h-36"
-                      )}
-                      loading="lazy"
-                      decoding="async"
-                    />
+                  {filteredMedia.slice(0, 4).map((m: string, index: number) => (
+                    filteredMedia.length === 1 ? (
+                      <div key={`${postId}-${index}`}>{renderSingle(m)}</div>
+                    ) : (
+                      <AspectMedia key={`${postId}-${index}`} src={m} alt="media" maxHeight={200} />
+                    )
                   ))}
                 </div>
-              )}
+              );
+            })()}
 
               <div className="flex items-center justify-between mt-3 pt-2">
                 <Badge

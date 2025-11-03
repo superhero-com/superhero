@@ -15,6 +15,7 @@ import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTra
 import Token24hChange from "../../../components/Trendminer/Token24hChange";
 import TokenHolders from "../../../components/Trendminer/TokenHolders";
 import TokenTrades from "../../../components/Trendminer/TokenTrades";
+import TokenChat from "../../../components/Trendminer/TokenChat";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import {
@@ -89,11 +90,16 @@ export default function TokenSaleDetails() {
     queryKey: ["TokensService.findByAddress", tokenName],
     queryFn: async () => {
       if (!tokenName) throw new Error("Token name is required");
-      const result = await TokensService.findByAddress({ address: tokenName });
-      if (!result) {
+      try {
+      const result = await TokensService.findByAddress({ address: tokenName.toUpperCase() });
+        if (!result) {
+          throw new Error("Token not found");
+        }
+        return result;
+      } catch (error) {
+        console.error("Error fetching token:", error);
         throw new Error("Token not found");
       }
-      return result;
     },
     retry: (failureCount) => {
       if (failureCount > 3) {
@@ -160,7 +166,7 @@ export default function TokenSaleDetails() {
             </Button>
             <Button
               size="lg"
-              onClick={() => navigate(`/trends/create?name=${tokenName}`)}
+              onClick={() => navigate(`/trends/create?tokenName=${tokenName}`)}
               className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] hover:shadow-lg"
             >
               Claim It
@@ -259,8 +265,37 @@ export default function TokenSaleDetails() {
         </div>
       )}
 
-        {/* Main Content */}
-        <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Desktop Sidebar (Left Column) */}
+        {!isMobile && (
+          <div className="lg:col-span-1 flex flex-col gap-6">
+            {!token?.sale_address ? (
+              <TokenSaleSidebarSkeleton boilerplate={isTokenPending} />
+            ) : (
+              <>
+                <TokenTradeCard token={token} />
+                <TokenSummary
+                  token={token}
+                />
+                <TokenRanking token={token} />
+                {/* Quali.chat CTA - old design cards */}
+                <TokenChat
+                  token={{
+                    name: String(token.name || token.symbol || ''),
+                    address: String((token as any).sale_address || (token as any).address || (token as any).token_address || ''),
+                  }}
+                  mode="ctaOnly"
+                />
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Main Content (Right Column on Desktop, Full Width on Mobile) */}
+        <div
+          className={`${isMobile ? "col-span-1 mb-8" : "lg:col-span-2"
+            } flex flex-col gap-6`}
+        >
           {/* Token Header */}
           <Card className="bg-white/[0.02] border-white/10">
             <div className="p-2">
@@ -399,11 +434,19 @@ export default function TokenSaleDetails() {
           </div>
 
           {/* Tab Content */}
-          <div className="p-0 md:p-1">
+          <div className={`p-0 md:p-1 ${isMobile ? 'mb-24 pb-4' : ''}`}>
             {isMobile && activeTab === TAB_DETAILS && (
               <div className="space-y-4">
                 <TokenSummary
                   token={{ ...token, decimals: String(token.decimals ?? '') as any }}
+                />
+                {/* Quali.chat CTA visible on mobile Info tab */}
+                <TokenChat
+                  token={{
+                    name: String(token.name || token.symbol || ''),
+                    address: String((token as any).sale_address || (token as any).address || (token as any).token_address || ''),
+                  }}
+                  mode="ctaOnly"
                 />
               </div>
             )}
@@ -414,7 +457,11 @@ export default function TokenSaleDetails() {
                   <h3 className="m-0 text-white/90 font-semibold">Posts for #{String(token.name || token.symbol || '').toUpperCase()}</h3>
                 </div>
                 <TokenTopicComposer tokenName={(token.name || token.symbol || '').toString()} />
-                <TokenTopicFeed topicName={`#${String(token.name || token.symbol || '').toLowerCase()}`} />
+                <TokenTopicFeed
+                  topicName={`#${String(token.name || token.symbol || '').toLowerCase()}`}
+                  displayTokenName={(token.name || token.symbol || '').toString()}
+                  showEmptyMessage={false}
+                />
               </div>
             )}
 

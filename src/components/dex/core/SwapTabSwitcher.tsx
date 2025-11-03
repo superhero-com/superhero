@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import SwapForm from './SwapForm';
 import { WrapUnwrapWidget } from '../../../features/dex';
-import { BuyAeWidget } from '../../../features/bridge';
+import { BuyAeWidget } from '../../../features/ae-eth-buy';
 import { AeButton } from '../../ui/ae-button';
 import { AeCard, AeCardContent } from '../../ui/ae-card';
 import { Badge } from '../../ui/badge';

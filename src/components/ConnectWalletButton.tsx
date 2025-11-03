@@ -13,7 +13,7 @@ type Props = {
   muted?: boolean; // greyed-out appearance while still clickable
 };
 
-export default function ConnectWalletButton({ label = 'Connect Wallet', block, style, className, variant = 'default', muted = false }: Props) {
+export function ConnectWalletButton({ label = 'Connect Wallet', block, style, className, variant = 'default', muted = false }: Props) {
   const { activeAccount } = useAeSdk()
   const { connectWallet, connectingWallet } = useWalletConnect()
   const { openModal } = useModal();
@@ -63,3 +63,4 @@ export default function ConnectWalletButton({ label = 'Connect Wallet', block, s
 }
 
 
+export default ConnectWalletButton;

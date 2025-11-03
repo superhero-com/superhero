@@ -1,10 +1,20 @@
-import { BrowserProvider, Contract, parseEther } from 'ethers';
+import { BrowserProvider, Contract, parseEther, Eip1193Provider } from 'ethers';
 import { BRIDGE_CONSTANTS, BRIDGE_ABI } from './constants';
 
 /**
  * Ensure Ethereum provider is available and connected
+ * @param walletProvider - Optional WalletConnect/AppKit provider
  */
-export async function ensureEthProvider(): Promise<BrowserProvider> {
+export async function ensureEthProvider(walletProvider?: Eip1193Provider): Promise<BrowserProvider> {
+  // If walletProvider is provided (from AppKit/WalletConnect), use it
+  if (walletProvider) {
+    return new BrowserProvider(walletProvider, {
+      name: 'Ethereum Bridge',
+      chainId: parseInt(BRIDGE_CONSTANTS.CHAIN_ID_HEX, 16),
+    });
+  }
+  
+  // Otherwise fall back to window.ethereum
   const anyWindow = window as any;
   
   if (!anyWindow.ethereum) {
@@ -48,23 +58,35 @@ export async function ensureCorrectNetwork(provider: BrowserProvider): Promise<v
 
 /**
  * Get ETH balance for connected account
+ * @param provider - Ethereum provider
+ * @param accountAddress - Optional specific account address to check balance for
  */
-export async function getEthBalance(provider: BrowserProvider): Promise<string> {
-  const signer = await provider.getSigner();
-  const address = await signer.getAddress();
+export async function getEthBalance(provider: BrowserProvider, accountAddress?: string): Promise<string> {
+  let address: string;
+  
+  if (accountAddress) {
+    address = accountAddress;
+  } else {
+    const signer = await provider.getSigner();
+    address = await signer.getAddress();
+  }
+  
   const balance = await provider.getBalance(address);
   return balance.toString();
 }
 
 /**
  * Bridge ETH to æternity network as æETH
+ * @param walletProvider - Optional WalletConnect/AppKit provider
  */
 export async function bridgeEthToAe({
   amountEth,
   aeAccount,
+  walletProvider,
 }: {
   amountEth: string;
   aeAccount: string;
+  walletProvider?: Eip1193Provider;
 }): Promise<{ txHash: string; receipt?: any }> {
   if (!amountEth || !aeAccount) {
     throw new Error('Amount and AE account are required');
@@ -79,7 +101,7 @@ export async function bridgeEthToAe({
     throw new Error('Invalid æternity account format. Must start with "ak_"');
   }
 
-  const provider = await ensureEthProvider();
+  const provider = await ensureEthProvider(walletProvider);
   await ensureCorrectNetwork(provider);
   
   const signer = await provider.getSigner();

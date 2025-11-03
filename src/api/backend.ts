@@ -33,9 +33,11 @@ export const TrendminerApi = {
     return this.fetchJson(`/api/trending-tags${query ? `?${query}` : ''}`);
   },
   // Topics API helpers
-  // GET /api/topics/name/{name} where name should include leading '#', pass lowercase and URL-encoded (e.g., '#nancy' => '%23nancy')
+  // GET /api/topics/name/{name} — expects raw topic (no leading '#')
+  // We accept either form and normalize by stripping a leading '#'.
   getTopicByName(name: string) {
-    const encoded = encodeURIComponent(name);
+    const topic = String(name || '').replace(/^#/, '');
+    const encoded = encodeURIComponent(topic);
     return this.fetchJson(`/api/topics/name/${encoded}`);
   },
   // GET /api/tokens?order_by=market_cap&order_direction=DESC

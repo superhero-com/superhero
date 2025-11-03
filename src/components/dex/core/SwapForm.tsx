@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { DexService, DexTokenDto, PairDto } from '../../../api/generated';
+import { DexPairService, DexService, DexTokenDto, PairDto } from '../../../api/generated';
 import DexSettings from '../../../features/dex/components/DexSettings';
 import { DEX_ADDRESSES } from '../../../libs/dex';
 import ConnectWalletButton from '../../ConnectWalletButton';
@@ -39,12 +39,12 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   const { balances } = useTokenBalances(tokenIn, tokenOut);
 
   const { data: pair } = useQuery({
-    queryKey: ['DexService.getPairByFromTokenAndToToken', tokenIn?.address, tokenOut?.address],
+    queryKey: ['DexPairService.getPairByFromTokenAndToToken', tokenIn?.address, tokenOut?.address],
     queryFn: () => {
       if (!tokenIn || !tokenOut) return null;
-      return DexService.getPairByFromTokenAndToToken({
-        fromToken: tokenIn.address == 'ae' ? DEX_ADDRESSES.wae : tokenIn.address,
-        toToken: tokenOut.address == 'ae' ? DEX_ADDRESSES.wae : tokenOut.address
+      return DexPairService.getPairByFromTokenAndToToken({
+        fromToken: tokenIn.address == 'AE' ? DEX_ADDRESSES.wae : tokenIn.address,
+        toToken: tokenOut.address == 'AE' ? DEX_ADDRESSES.wae : tokenOut.address
       });
     },
     enabled: !!tokenIn?.address && !!tokenOut?.address,

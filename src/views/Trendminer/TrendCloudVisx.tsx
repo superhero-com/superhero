@@ -56,7 +56,7 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
                 textAnchor="middle"
                 fill={['#3b82f6', '#f59e0b', '#10b981', '#ef4444'][i % 4]}
                 className="cursor-pointer font-extrabold hover:opacity-80 transition-opacity duration-200"
-                onClick={() => window.location.assign(`/trends/create?new=${encodeURIComponent(w.text)}`)}
+                onClick={() => window.location.assign(`/trends/create?tokenName=${encodeURIComponent(w.text)}`)}
               >
                 {w.text}
               </text>

@@ -20,8 +20,8 @@ export function useSwapQuote() {
   const quoteTimerRef = useRef<number | null>(null);
 
   function isAeToWae(tokenIn: any, tokenOut: any): boolean {
-    const isAetoWae = tokenIn.address == 'ae' && tokenOut.address == DEX_ADDRESSES.wae;
-    const isWaeToAe = tokenIn.address == DEX_ADDRESSES.wae && tokenOut.address == 'ae';
+    const isAetoWae = tokenIn.address == 'AE' && tokenOut.address == DEX_ADDRESSES.wae;
+    const isWaeToAe = tokenIn.address == DEX_ADDRESSES.wae && tokenOut.address == 'AE';
     return isAetoWae || isWaeToAe;
   }
   async function buildBestPath(tokenIn: any, tokenOut: any): Promise<string[] | null> {
@@ -136,7 +136,7 @@ export function useSwapQuote() {
     try {
       // Handle AE to WAE conversion with 1:1 ratio
       if (isAeToWae(params.tokenIn, params.tokenOut)) {
-        const path = [params.tokenIn.address === 'ae' ? 'ae' : DEX_ADDRESSES.wae, params.tokenOut.address === 'ae' ? 'ae' : DEX_ADDRESSES.wae];
+        const path = [params.tokenIn.address === 'AE' ? 'AE' : DEX_ADDRESSES.wae, params.tokenOut.address === 'AE' ? 'AE' : DEX_ADDRESSES.wae];
         let amountOut: string | undefined;
         let amountIn: string | undefined;
 

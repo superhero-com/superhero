@@ -1,5 +1,5 @@
 import React from "react";
-import { BuyAeWidget } from "../../bridge";
+import { BuyAeWidget } from "../../ae-eth-buy";
 import RecentActivity from "../../../components/dex/supporting/RecentActivity";
 import Shell from "@/components/layout/Shell";
 

@@ -3,143 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { DexTokenDto } from '../models/DexTokenDto';
+import type { DexTokenSummaryDto } from '../models/DexTokenSummaryDto';
 import type { Pagination } from '../models/Pagination';
-import type { PairDto } from '../models/PairDto';
 import type { PairTransactionDto } from '../models/PairTransactionDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class DexService {
-    /**
-     * Get all pairs
-     * Retrieve a paginated list of all DEX pairs with optional sorting and search by token name or symbol
-     * @returns any
-     * @throws ApiError
-     */
-    public static listAllPairs({
-        orderBy,
-        orderDirection,
-        limit,
-        page,
-        tokenAddress,
-        search,
-    }: {
-        orderBy?: 'transactions_count' | 'created_at',
-        orderDirection?: 'ASC' | 'DESC',
-        limit?: number,
-        page?: number,
-        /**
-         * Search by token address
-         */
-        tokenAddress?: string,
-        /**
-         * Search pairs by token name or symbol
-         */
-        search?: string,
-    }): CancelablePromise<Pagination> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/dex/pairs',
-            query: {
-                'order_by': orderBy,
-                'order_direction': orderDirection,
-                'limit': limit,
-                'page': page,
-                'token_address': tokenAddress,
-                'search': search,
-            },
-        });
-    }
-    /**
-     * Get pair by address
-     * Retrieve a specific pair by its contract address
-     * @returns PairDto
-     * @throws ApiError
-     */
-    public static getPairByAddress({
-        address,
-    }: {
-        /**
-         * Pair contract address
-         */
-        address: string,
-    }): CancelablePromise<PairDto> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/dex/pairs/{address}',
-            path: {
-                'address': address,
-            },
-        });
-    }
-    /**
-     * Get pair by from token and to token
-     * Retrieve a specific pair by its contract address
-     * @returns PairDto
-     * @throws ApiError
-     */
-    public static getPairByFromTokenAndToToken({
-        fromToken,
-        toToken,
-    }: {
-        /**
-         * Token address
-         */
-        fromToken: string,
-        /**
-         * Token address
-         */
-        toToken: string,
-    }): CancelablePromise<PairDto> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/dex/pairs/from/{from_token}/to/{to_token}',
-            path: {
-                'from_token': fromToken,
-                'to_token': toToken,
-            },
-        });
-    }
-    /**
-     * @returns any
-     * @throws ApiError
-     */
-    public static getPaginatedHistory({
-        address,
-        interval,
-        fromToken,
-        convertTo,
-        limit,
-        page,
-    }: {
-        /**
-         * Token address or name
-         */
-        address: string,
-        /**
-         * Interval type in seconds, default is 3600 (1 hour)
-         */
-        interval?: number,
-        fromToken?: 'token0' | 'token1',
-        convertTo?: 'ae' | 'usd' | 'eur' | 'aud' | 'brl' | 'cad' | 'chf' | 'gbp' | 'xau',
-        limit?: number,
-        page?: number,
-    }): CancelablePromise<any> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/dex/pairs/{address}/history',
-            path: {
-                'address': address,
-            },
-            query: {
-                'interval': interval,
-                'from_token': fromToken,
-                'convertTo': convertTo,
-                'limit': limit,
-                'page': page,
-            },
-        });
-    }
     /**
      * Get all DEX tokens
      * Retrieve a paginated list of all DEX tokens with optional sorting
@@ -153,7 +23,7 @@ export class DexService {
         limit,
         page,
     }: {
-        orderBy?: 'pairs_count' | 'name' | 'symbol' | 'created_at',
+        orderBy?: 'pairs_count' | 'name' | 'symbol' | 'created_at' | 'price' | 'tvl' | '24hchange' | '24hvolume' | '7dchange' | '7dvolume',
         orderDirection?: 'ASC' | 'DESC',
         search?: string,
         limit?: number,
@@ -216,6 +86,28 @@ export class DexService {
         });
     }
     /**
+     * Get DEX token summary
+     * Get comprehensive summary data for a token including aggregated volume and price changes across all pools where the token appears.
+     * @returns DexTokenSummaryDto
+     * @throws ApiError
+     */
+    public static getDexTokenSummary({
+        address,
+    }: {
+        /**
+         * Token contract address
+         */
+        address: string,
+    }): CancelablePromise<DexTokenSummaryDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/dex/tokens/{address}/summary',
+            path: {
+                'address': address,
+            },
+        });
+    }
+    /**
      * Get all pair transactions
      * Retrieve a paginated list of all DEX pair transactions with optional filtering and sorting
      * @returns any
@@ -225,6 +117,7 @@ export class DexService {
         orderBy,
         orderDirection,
         pairAddress,
+        tokenAddress,
         txType,
         accountAddress,
         limit,
@@ -236,6 +129,10 @@ export class DexService {
          * Filter by specific pair address
          */
         pairAddress?: string,
+        /**
+         * Filter by account address
+         */
+        tokenAddress?: string,
         /**
          * Filter by transaction type
          */
@@ -254,6 +151,7 @@ export class DexService {
                 'order_by': orderBy,
                 'order_direction': orderDirection,
                 'pair_address': pairAddress,
+                'token_address': tokenAddress,
                 'tx_type': txType,
                 'account_address': accountAddress,
                 'limit': limit,

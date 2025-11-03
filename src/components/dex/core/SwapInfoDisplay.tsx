@@ -55,7 +55,7 @@ export default function SwapInfoDisplay({
 
     // Get token label for display
     const getTokenLabel = (address: string): string => {
-        if (address === 'ae') return 'AE';
+        if (address === 'AE') return 'AE';
         if (address === DEX_ADDRESSES.wae) return 'WAE';
 
         const token = tokens.find(t => t.address === address);

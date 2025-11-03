@@ -6,11 +6,11 @@ import type { PostDto } from "../../../api/generated";
 import { TrendminerApi } from "../../../api/backend";
 import WebSocketClient from "../../../libs/WebSocketClient";
 import AeButton from "../../../components/AeButton";
-import WelcomeBanner from "../../../components/WelcomeBanner";
+import HeroBannerCarousel from "../../../components/hero-banner/HeroBannerCarousel";
 import Shell from "../../../components/layout/Shell";
 import RightRail from "../../../components/layout/RightRail";
 import { useWallet } from "../../../hooks";
-import CreatePost from "../components/CreatePost";
+import CreatePost, { CreatePostRef } from "../components/CreatePost";
 import SortControls from "../components/SortControls";
 import EmptyState from "../components/EmptyState";
 import ReplyToFeedItem from "../components/ReplyToFeedItem";
@@ -31,6 +31,7 @@ export default function FeedList({
   const { chainNames } = useWallet();
   const queryClient = useQueryClient();
   const ACTIVITY_PAGE_SIZE = 50;
+  const createPostRef = useRef<CreatePostRef>(null);
 
   // Comment counts are now provided directly by the API in post.total_comments
 
@@ -38,6 +39,7 @@ export default function FeedList({
   const sortBy = urlQuery.get("sortBy") || "latest";
   const search = urlQuery.get("search") || "";
   const filterBy = urlQuery.get("filterBy") || "all";
+  const shouldAutoFocusPost = urlQuery.get("post") === "new";
 
   const [localSearch, setLocalSearch] = useState(search);
 
@@ -429,23 +431,25 @@ export default function FeedList({
     <div className="w-full">
       {!standalone && (
         <div className="mb-3 md:mb-4">
-          <WelcomeBanner />
+          <HeroBannerCarousel 
+            onStartPosting={() => createPostRef.current?.focus()} 
+          />
         </div>
       )}
-      {/* Mobile: CreatePost first, then SortControls */}
-      <div className="md:hidden">
-        <CreatePost onSuccess={refetch} />
-        <SortControls
-          sortBy={sortBy}
-          onSortChange={handleSortChange}
-          className="sticky top-0 z-10 w-full"
-        />
-      </div>
-
-      {/* Desktop: CreatePost first, then SortControls */}
-      <div className="hidden md:block">
-        <CreatePost onSuccess={refetch} />
-        <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
+      {/* Single CreatePost instance for consistent focus/scroll across viewports */}
+      <div>
+        <CreatePost ref={createPostRef} onSuccess={refetch} autoFocus={shouldAutoFocusPost} />
+        {/* Sort controls rendered once; styles adapt per breakpoint */}
+        <div className="md:hidden">
+          <SortControls
+            sortBy={sortBy}
+            onSortChange={handleSortChange}
+            className="sticky top-0 z-10 w-full"
+          />
+        </div>
+        <div className="hidden md:block">
+          <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
+        </div>
       </div>
 
       <div className="w-full flex flex-col gap-0 md:gap-2 md:mx-0">

@@ -7,12 +7,12 @@ import { Decimal } from '../../../libs/decimal';
 import { fromAettos } from '../../../libs/dex';
 import { usePool } from '../context/PoolProvider';
 import { useAddLiquidity } from '../hooks/useAddLiquidity';
+import { BridgeConstants } from '@/features/ae-eth-bridge/constants';
 
 export default function RemoveLiquidityForm() {
   const { selectedPosition, clearSelection, onPositionUpdated } = usePool();
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
-  const { tokens } = useTokenList();
   const { executeRemoveLiquidity } = useAddLiquidity();
   
   const [percentage, setPercentage] = useState<number>(25);
@@ -29,18 +29,6 @@ export default function RemoveLiquidityForm() {
     setUseCustomAmount(false);
   }, [selectedPosition]);
 
-  // Find token info for display
-  const findToken = (identifier: string) => {
-    if (!identifier || !tokens.length) return null;
-    return tokens.find(t => 
-      t.symbol.toLowerCase() === identifier.toLowerCase() ||
-      t.address === identifier ||
-      (identifier.toLowerCase() === 'ae' && t.is_ae)
-    );
-  };
-
-  const tokenA = findToken(selectedPosition?.token0 || '');
-  const tokenB = findToken(selectedPosition?.token1 || '');
 
   if (!selectedPosition) {
     return (
@@ -85,7 +73,7 @@ export default function RemoveLiquidityForm() {
       console.log('=====================================');
       
       // Determine if this is an AE pair
-      const isAePair = selectedPosition.token0 === 'AE' || selectedPosition.token1 === 'AE';
+      const isAePair = selectedPosition.token0 === BridgeConstants.aeternity.default_ae || selectedPosition.token1 === BridgeConstants.aeternity.default_ae;
       
       // Execute remove liquidity
       const txHash = await executeRemoveLiquidity({

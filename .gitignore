@@ -12,6 +12,10 @@ pnpm-debug.log*
 # (package-lock.json, yarn.lock, pnpm-lock.yaml)
 
 
+# --- Python / Virtual environments ---
+.venv-docs/
+
+
 # --- Logs & PIDs ---
 logs/
 *.log
@@ -98,5 +102,8 @@ external/superhero-social-backend/traces/
 # Vue reference project transient artifacts
 external/superhero-ui-vue-for-reference/dist/
 external/superhero-ui-vue-for-reference/node_modules/
+
+# Banner suggestions (design mockups)
+banner-suggestions/
 
 

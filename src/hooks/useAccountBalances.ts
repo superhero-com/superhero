@@ -5,10 +5,11 @@ import { useEffect, useMemo } from "react";
 import { Decimal } from "../libs/decimal";
 import { toAe } from "@aeternity/aepp-sdk";
 import { DEX_ADDRESSES, getTokenBalance } from "../libs/dex";
+import { BridgeConstants } from "@/features/ae-eth-bridge";
 
 export const useAccountBalances = (selectedAccount: string) => {
-    const { sdk, activeNetwork } = useAeSdk();
-    const [chainNames, setChainNames] = useAtom(chainNamesAtom);
+    const { sdk } = useAeSdk();
+    const [chainNames] = useAtom(chainNamesAtom);
     const [_balance, setBalance] = useAtom(balanceAtom);
     const [_aex9Balances, setAex9Balances] = useAtom(aex9BalancesAtom);
 
@@ -24,7 +25,7 @@ export const useAccountBalances = (selectedAccount: string) => {
     }
 
     const _loadAex9DataFromMdw = async (url, items = []) => {
-        const fetchUrl = `${activeNetwork.middlewareUrl}${url}`
+        const fetchUrl = `${BridgeConstants.aeAPI}${url}`
         const response = await fetch(fetchUrl);
         const data = await response.json();
 
@@ -34,7 +35,7 @@ export const useAccountBalances = (selectedAccount: string) => {
         return items.concat(data.data);
     }
     async function loadAccountAex9Balances() {
-        const url = `/v3/accounts/${selectedAccount}/aex9/balances?limit=100`;
+        const url = `/v2/aex9/account-balances/${selectedAccount}?limit=100`;
 
         const balances = await _loadAex9DataFromMdw(url, []);
         const waeBalances = await getTokenBalance(sdk, DEX_ADDRESSES.wae, selectedAccount);

@@ -7,6 +7,7 @@ import { GovernanceApi } from '@/api/governance';
 import { CONFIG } from '@/config';
 import PollCreatedCard from '@/features/social/feed-plugins/poll-created/PollCreatedCard';
 import { pollAttachmentSpec } from '@/features/social/feed-plugins/poll-attachment';
+import { translations } from './locales';
 
 export type PollCreatedEntryData = {
   pollAddress: Encoded.ContractAddress;
@@ -33,7 +34,7 @@ export function adaptPollToEntry(
   };
 }
 
-export default definePlugin({
+const plugin = definePlugin({
   meta: {
     id: 'poll-created',
     name: 'Poll Created Feed',
@@ -41,6 +42,7 @@ export default definePlugin({
     apiVersion: '1.x',
     capabilities: ['feed', 'composer'],
   },
+  translations, // Export translations for the loader
   setup({ register }) {
     register({
       feed: {
@@ -283,4 +285,5 @@ export default definePlugin({
   },
 });
 
+export default plugin;
 

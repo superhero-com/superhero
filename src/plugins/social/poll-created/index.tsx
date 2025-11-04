@@ -56,8 +56,16 @@ const plugin = definePlugin({
             GovernanceApi.getPollOrdering(false),
             GovernanceApi.getPollOrdering(true),
           ]);
-          // Combine all polls
-          const allPolls = [...(openPolls?.data || []), ...(closedPolls?.data || [])];
+          // Combine all polls and deduplicate by poll address
+          const allPollsRaw = [...(openPolls?.data || []), ...(closedPolls?.data || [])];
+          const pollMap = new Map<string, any>();
+          for (const poll of allPollsRaw) {
+            const address = poll.poll || poll.address || poll.contract;
+            if (address && !pollMap.has(address)) {
+              pollMap.set(address, poll);
+            }
+          }
+          const allPolls = Array.from(pollMap.values());
           const entries: FeedEntry<PollCreatedEntryData>[] = [];
           const mdwBase = CONFIG.MIDDLEWARE_URL.replace(/\/$/, '');
           async function fetchCreationInfo(ct: string): Promise<{ time: string | null; hash?: string | null }> {

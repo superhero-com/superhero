@@ -15,7 +15,7 @@ If a public compiler is provided in official docs, set `COMPILER_URL` to that. O
 ## Pinning versions
 In your Sophia sources, use the compiler pragma (example):
 ```
-pragma solidity 6.5.0
+@compiler >= 6.5.0
 ```
 Adjust to a version supported by your `aesophia_http` image. Check the `aesophia` release notes if compilation fails.
 

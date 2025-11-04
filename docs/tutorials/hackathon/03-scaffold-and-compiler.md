@@ -79,6 +79,6 @@ docker run --rm -p 3080:3080 aeternity/aesophia_http:latest
 ### Pinning versions
 Use the compiler pragma in your Sophia source (example):
 ```
-pragma solidity 6.5.0
+@compiler >= 6.5.0
 ```
 Adjust to a version supported by your `aesophia_http` image.

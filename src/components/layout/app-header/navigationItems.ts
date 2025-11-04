@@ -62,6 +62,12 @@ export const getNavigationItems = (t: TFunction): NavigationItem[] => [
       },
     ],
   },
+  {
+    id: "voting",
+    label: "Voting",
+    path: "/voting",
+    icon: "🗳️",
+  },
   // {
   //     id: 'landing',
   //     label: 'Info',

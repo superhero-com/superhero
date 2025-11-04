@@ -1,0 +1,19 @@
+{
+  "home": "Social",
+  "trending": "Trends",
+  "trendingChildren": {
+    "invite": "Invite & Earn"
+  },
+  "defi": "DeFi",
+  "defiChildren": {
+    "swap": "SWAP",
+    "wrap": "WRAP",
+    "bridge": "BRIDGE",
+    "buyAe": "BUY AE",
+    "pool": "POOL",
+    "exploreTokens": "Explore Tokens",
+    "explorePools": "Explore Pools",
+    "transactions": "Transactions"
+  }
+}
+

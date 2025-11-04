@@ -4,4 +4,5 @@ export { default as DexBridge } from './DexBridge';
 export { default as DexExploreTokens } from './DexExploreTokens';
 export { default as DexExplorePools } from './DexExplorePools';
 export { default as DexExploreTransactions } from './DexExploreTransactions';
-export { default as Pool } from './Pool'; // Re-export existing Pool component
+export { default as Pool } from './Pool';
+export { default as PoolDetail } from './PoolDetail';

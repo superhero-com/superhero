@@ -48,6 +48,52 @@ In `src/plugins/governance-polls/index.tsx`:
 - Import `pollAttachmentSpec` from `features/social/feed-plugins/poll-attachment` and register via `attachments: () => [pollAttachmentSpec]`.
 - This surfaces a poll creation UI in the composer toolbar; after posting, it runs its `onAfterPost` hook.
 
+## 6.5) Add translations (optional)
+Plugins can include their own translation files for internationalization:
+
+1. Create `locales/` directory in your plugin:
+   ```bash
+   mkdir -p src/plugins/governance-polls/locales
+   ```
+
+2. Create `locales/en.json` with your translation keys:
+   ```json
+   {
+     "createdAPoll": "created a poll",
+     "pending": "Pending…",
+     "yourVote": "Your vote",
+     "retractVote": "Retract vote",
+     "votes": "votes"
+   }
+   ```
+
+3. Create `locales/index.ts` to export translations:
+   ```typescript
+   import en from './en.json';
+   export const translations = { en };
+   ```
+
+4. Import and export translations in your plugin definition:
+   ```typescript
+   import { translations } from './locales';
+   
+   export default definePlugin({
+     meta: { id: 'governance-polls', ... },
+     translations,  // Export translations
+     setup({ register }) { ... }
+   });
+   ```
+
+5. Use translations in your components:
+   ```typescript
+   import { useTranslation } from 'react-i18next';
+   
+   const { t } = useTranslation('governance-polls');  // Use plugin ID as namespace
+   return <span>{t('createdAPoll')}</span>;
+   ```
+
+See [Plugin SDK docs](../plugin-sdk.md#translations) for more details.
+
 ## 7) Local registration (dev only)
 - Temporarily import your new plugin in `src/plugins/local.ts` and add to the `localPlugins` array for local testing.
 - Do not commit this if you don’t want it enabled by default; guard with an env flag if needed.

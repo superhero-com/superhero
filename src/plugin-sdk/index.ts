@@ -5,7 +5,7 @@ export type PluginMeta = {
   name: string;
   version: string;
   apiVersion: "1.x";
-  capabilities: Array<"feed" | "composer" | "item-actions" | "routes" | "modals">;
+  capabilities: Array<"feed" | "composer" | "item-actions" | "routes" | "modals" | "menu">;
   description?: string;
   author?: string;
   homepage?: string;

@@ -26,7 +26,7 @@ export default definePlugin({
     name: 'My Extension',
     version: '0.1.0',
     apiVersion: '1.x',
-    capabilities: ['routes', 'composer'],
+    capabilities: ['routes', 'menu', 'composer'],
   },
   setup({ register }) {
     register({

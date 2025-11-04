@@ -32,7 +32,7 @@ export async function loadExternalPlugins(urls: string[], hostCtx: any, allow: s
           routeRegistry.push(...unique);
         }
         if (exports.modals && allowed.includes('modals')) Object.assign(modalRegistry, exports.modals);
-        if (exports.menu && allowed.includes('routes')) {
+        if (exports.menu && allowed.includes('menu')) {
           const existing = new Set(navRegistry.map((m) => m.id));
           const unique = exports.menu.filter((m) => !existing.has(m.id));
           navRegistry.push(...unique);

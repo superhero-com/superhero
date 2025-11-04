@@ -51,7 +51,7 @@ export function loadLocalPlugins(hostCtx: any, allow: string[] = []) {
         routeRegistry.push(...unique);
       }
       if (exports.modals && caps.includes('modals')) Object.assign(modalRegistry, exports.modals);
-      if (exports.menu && caps.includes('routes')) {
+      if (exports.menu && caps.includes('menu')) {
         const existing = new Set(navRegistry.map((m) => m.id));
         const unique = exports.menu.filter((m) => !existing.has(m.id));
         navRegistry.push(...unique);

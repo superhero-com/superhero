@@ -5,12 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "vite build",
+    "build": "node ./scripts/generate-sitemap.cjs && vite build",
     "preview": "vite preview --port 5174",
     "test": "vitest",
     "generate:api": "openapi --input http://localhost:3000/api-json --output ./src/api/generated --useOptions",
     "ext:scaffold": "node scripts/ext-scaffold.mjs",
-    "ext:check": "node scripts/ext-check.mjs"
+    "ext:check": "node scripts/ext-check.mjs",
+    "generate:sitemap": "ts-node ./scripts/generate-sitemap.ts"
   },
   "dependencies": {
     "@aeternity/aepp-sdk": "^13.3.2",
@@ -43,6 +44,7 @@
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "ethers": "^6.13.2",
+    "express": "^4.19.2",
     "glob": "^11.0.3",
     "i18next": "^23.7.6",
     "is-fqdn": "^2.0.1",
@@ -54,6 +56,7 @@
     "moment": "^2.30.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-helmet-async": "^2.0.5",
     "react-i18next": "^13.5.0",
     "react-router-dom": "^6.22.1",
     "socket.io-client": "^4.8.1",
@@ -78,6 +81,7 @@
     "openapi-typescript-codegen": "^0.29.0",
     "postcss": "^8.5.6",
     "sass": "^1.77.6",
+    "sharp": "^0.33.5",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.8.3",

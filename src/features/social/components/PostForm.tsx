@@ -1,9 +1,9 @@
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, useCallback } from "react";
+import { useTranslation } from 'react-i18next';
 import AeButton from "../../../components/AeButton";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
 import { IconClose, IconGif, IconSmile } from "../../../icons";
-import { Smile, ChartColumn, SquarePlay } from "lucide-react";
 // @ts-ignore
 import { useQueryClient } from "@tanstack/react-query";
 import TIPPING_V3_ACI from "tipping-contract/generated/Tipping_v3.aci.json";
@@ -86,6 +86,8 @@ const PROMPTS: string[] = [
 ];
 
 const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => void }, PostFormProps>((props, ref) => {
+  const { t } = useTranslation('forms');
+  const { t: tSocial } = useTranslation('social');
   const {
     onClose,
     onSuccess,
@@ -569,15 +571,15 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   if (placeholder) {
     currentPlaceholder = placeholder;
   } else if (activeAttachmentId === 'poll') {
-    currentPlaceholder = "Ask a question";
+    currentPlaceholder = t('askAQuestion');
   } else if (isPost) {
     currentPlaceholder = activeAccount
       ? PROMPTS[promptIndex]
-      : "Connect your Superhero Wallet to start posting on-chain ✍️";
+      : t('connectWalletToPost');
   } else {
     currentPlaceholder = activeAccount
-      ? "Write a reply..."
-      : "Connect your wallet to reply";
+      ? t('writeReply')
+      : t('connectWalletToReply');
   }
 
   // Compute if submit is disabled
@@ -595,7 +597,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       >
         <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl">
           <div className="text-center text-white/70">
-            <p className="text-sm">Please connect your wallet to reply</p>
+            <p className="text-sm">{t('pleaseConnectWalletToReply')}</p>
           </div>
           <div className="mt-3 flex justify-center">
             <ConnectWalletButton block className="w-full md:w-auto" />
@@ -742,7 +744,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                     <button
                       type="button"
                       className="md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
-                      title="GIF"
+                      title={tSocial('gif')}
                       ref={gifBtnRef}
                       onClick={(e) => {
                         e.preventDefault();
@@ -761,7 +763,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                         setShowEmoji(false);
                       }}
                     >
-                      <span className="uppercase tracking-wide">GIF</span>
+                      <span className="uppercase tracking-wide">{tSocial('gif')}</span>
                     </button>
                   )}
                   {/* Mobile Poll toggle next to GIF (hidden when poll is open) */}
@@ -769,7 +771,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                     <button
                       type="button"
                       className="md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
-                      title="Poll"
+                      title={tSocial('poll')}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -778,7 +780,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                         setShowGif(false);
                       }}
                     >
-                      <span>Poll</span>
+                      <span>{tSocial('poll')}</span>
                     </button>
                   )}
                 </div>
@@ -809,32 +811,32 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                     {showEmojiPicker && (
                       <button
                         type="button"
-                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-1.5 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
-                        title="Emoji"
+                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+                        title={tSocial('emoji')}
                         ref={emojiBtnRef}
                         onClick={() => {
                           setShowEmoji((s) => !s);
                           setShowGif(false);
                         }}
                       >
-                        <Smile className="w-[18px] h-[18px]" />
-                        <span>Emoji</span>
+                        <IconSmile className="w-4 h-4" />
+                        <span>{tSocial('emoji')}</span>
                       </button>
                     )}
 
                     {showGifInput && !pollActive && (
                       <button
                         type="button"
-                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-1.5 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
-                        title="GIF"
+                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+                        title={tSocial('gif')}
                         ref={gifBtnRef}
                         onClick={() => {
                           setShowGif((s) => !s);
                           setShowEmoji(false);
                         }}
                       >
-                        <SquarePlay className="w-[18px] h-[18px]" />
-                        <span>GIF</span>
+                        <IconGif className="w-4 h-4" />
+                        <span>{tSocial('gif')}</span>
                       </button>
                     )}
 
@@ -853,7 +855,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                           ))}
                         </div>
                         <div className="mt-1.5 text-center text-sm text-white/90">
-                          More soon…
+                          {tSocial('moreSoon')}
                         </div>
                       </div>
                     )}
@@ -887,7 +889,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                             title={spec.label}
                           >
                             {(activeAttachmentId !== spec.id && spec.Icon) ? <spec.Icon className="w-4 h-4" /> : null}
-                            <span>{activeAttachmentId === spec.id ? 'Remove poll' : spec.label}</span>
+                            <span>{activeAttachmentId === spec.id ? tSocial('removePoll') : spec.label}</span>
                           </button>
                         ))}
                       </div>
@@ -908,7 +910,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                     ))}
                     {requiredHashtag && requiredMissing && (
                       <div className="flex items-center gap-2 text-[11px] text-white/70">
-                        <span>Post needs to include {(requiredHashtag || '').toUpperCase()}</span>
+                        <span>{tSocial('postNeedsToInclude', { hashtag: (requiredHashtag || '').toUpperCase() })}</span>
                         <button
                           type="button"
                           className="px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-colors"
@@ -925,9 +927,9 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                               }
                             });
                           }}
-                          title="Add required hashtag"
+                            title={tSocial('addRequiredHashtag')}
                         >
-                          +Add
+                          {tSocial('add')}
                         </button>
                       </div>
                     )}
@@ -941,11 +943,11 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                         {''}
                         {isSubmitting
                           ? isPost
-                            ? (activeAttachmentId === 'poll' ? `Posting… ${submitStep}/2` : "Posting…")
-                            : "Posting..."
+                            ? (activeAttachmentId === 'poll' ? `${tSocial('posting')} ${submitStep}/2` : tSocial('posting'))
+                            : tSocial('posting')
                           : isPost
-                            ? "Post"
-                            : "Post Reply"}
+                            ? tSocial('post')
+                            : tSocial('postReply')}
                       </AeButton>
                     ) : (
                       <ConnectWalletButton className="rounded-full" />
@@ -994,7 +996,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
             <div className="flex flex-col items-center justify-center w-full">
             {requiredHashtag && requiredMissing && (
               <div className="w-full mb-2 flex items-center justify-center gap-2 text-[12px] text-white/70">
-                <span>Post needs to include {(requiredHashtag || '').toUpperCase()}</span>
+                <span>{tSocial('postNeedsToInclude', { hashtag: (requiredHashtag || '').toUpperCase() })}</span>
                 <button
                   type="button"
                   className="px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-colors"
@@ -1011,9 +1013,9 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                       }
                     });
                   }}
-                  title="Add required hashtag"
+                  title={tSocial('addRequiredHashtag')}
                 >
-                  +Add
+                  {tSocial('add')}
                 </button>
               </div>
             )}
@@ -1026,11 +1028,11 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                 >
                   {isSubmitting
                     ? isPost
-                      ? (activeAttachmentId === 'poll' ? `Posting… ${submitStep}/2` : "Posting…")
-                      : "Posting..."
+                      ? (activeAttachmentId === 'poll' ? `${tSocial('posting')} ${submitStep}/2` : tSocial('posting'))
+                      : tSocial('posting')
                     : isPost
-                      ? "Post"
-                      : "Post Reply"}
+                      ? tSocial('post')
+                      : tSocial('postReply')}
                 </AeButton>
               ) : (
                 <ConnectWalletButton block className="w-full rounded-xl md:rounded-full" />

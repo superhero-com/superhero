@@ -23,11 +23,35 @@ createAppKit({
     networks,
     metadata,
     projectId,
+    // Theme the WalletConnect/AppKit modal to match Superhero UI
+    // Reference: https://docs.reown.com/appkit/ui/customization
     themeVariables: {
-        '--w3m-color-mix': '#f5274e',
-        '--w3m-color-mix-strength': 10,
-        '--w3m-font-family': 'ClashDisplay-Variable',
-        '--w3m-border-radius-master': '.5px',
+        // Typography
+        '--w3m-font-family': "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif",
+        '--w3m-font-size-master': '14px',
+        '--w3m-border-radius-master': '12px',
+
+        // Brand colors aligned with app accents
+        '--w3m-color-mix': '#1161FE',
+        '--w3m-color-mix-strength': 15,
+        '--w3m-accent': '#1161FE',
+        '--w3m-accent-fill-color': '#0a0a0f',
+
+        // Surfaces to match dark glassy background
+        '--w3m-background-color': '#0a0a0f',
+        '--w3m-background-image-url': 'none',
+        '--w3m-color-bg-1': '#12121a',
+        '--w3m-color-bg-2': '#0f0f18',
+        '--w3m-color-overlay': 'rgba(0,0,0,0.6)',
+
+        // Text
+        '--w3m-color-fg-1': '#f8fafc',
+        '--w3m-color-fg-2': '#94a3b8',
+
+        // Borders and shadows
+        '--w3m-color-border': 'rgba(255,255,255,0.08)',
+        '--w3m-color-overlay-lighter': 'rgba(255,255,255,0.06)',
+        '--w3m-shadow': '0 16px 48px rgba(0,0,0,0.45)',
     },
     features: {
         analytics: false,

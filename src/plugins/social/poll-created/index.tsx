@@ -7,6 +7,7 @@ import { GovernanceApi } from '@/api/governance';
 import { CONFIG } from '@/config';
 import PollCreatedCard from '@/features/social/feed-plugins/poll-created/PollCreatedCard';
 import { pollAttachmentSpec } from '@/features/social/feed-plugins/poll-attachment';
+import { translations } from './locales';
 
 export type PollCreatedEntryData = {
   pollAddress: Encoded.ContractAddress;
@@ -33,7 +34,7 @@ export function adaptPollToEntry(
   };
 }
 
-export default definePlugin({
+const plugin = definePlugin({
   meta: {
     id: 'poll-created',
     name: 'Poll Created Feed',
@@ -41,6 +42,7 @@ export default definePlugin({
     apiVersion: '1.x',
     capabilities: ['feed', 'composer'],
   },
+  translations, // Export translations for the loader
   setup({ register }) {
     register({
       feed: {
@@ -54,8 +56,16 @@ export default definePlugin({
             GovernanceApi.getPollOrdering(false),
             GovernanceApi.getPollOrdering(true),
           ]);
-          // Combine all polls
-          const allPolls = [...(openPolls?.data || []), ...(closedPolls?.data || [])];
+          // Combine all polls and deduplicate by poll address
+          const allPollsRaw = [...(openPolls?.data || []), ...(closedPolls?.data || [])];
+          const pollMap = new Map<string, any>();
+          for (const poll of allPollsRaw) {
+            const address = poll.poll || poll.address || poll.contract;
+            if (address && !pollMap.has(address)) {
+              pollMap.set(address, poll);
+            }
+          }
+          const allPolls = Array.from(pollMap.values());
           const entries: FeedEntry<PollCreatedEntryData>[] = [];
           const mdwBase = CONFIG.MIDDLEWARE_URL.replace(/\/$/, '');
           async function fetchCreationInfo(ct: string): Promise<{ time: string | null; hash?: string | null }> {
@@ -283,4 +293,5 @@ export default definePlugin({
   },
 });
 
+export default plugin;
 

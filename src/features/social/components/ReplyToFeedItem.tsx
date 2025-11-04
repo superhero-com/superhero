@@ -1,6 +1,7 @@
 import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarWithChainNameFeed";
 import { cn } from "@/lib/utils";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
 import { PostDto, PostsService } from "../../../api/generated";
 import { IconComment } from "../../../icons";
@@ -72,6 +73,7 @@ function useParentId(item: PostDto): string | null {
 
 // X-like post item with optional parent context header
 const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentContext = false, allowInlineRepliesToggle = true, isActive = false }: ReplyToFeedItemProps) => {
+  const { t } = useTranslation('social');
   const postId = item.id;
   const authorAddress = item.sender_address;
   const { chainNames } = useWallet();
@@ -240,7 +242,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
                 onOpenPost(parentId);
               }}
               className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/15 rounded-xl p-3 transition-none shadow-none hover:bg-white/[0.04] hover:border-white/40 hover:shadow-none"
-              title="Open parent"
+              title={t('openParent')}
             >
               <div className="flex items-end mb-1 min-w-0">
                 <span className="text-[11px] text-white/65 shrink-0 mr-1">Replying to</span>

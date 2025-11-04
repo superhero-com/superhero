@@ -1,6 +1,7 @@
 import type { PluginExports } from "@/plugin-sdk";
 import { registerPlugin as registerFeed } from "@/features/social/feed-plugins/registry";
 import { composerRegistry, itemActionRegistry, routeRegistry, modalRegistry, attachmentRegistry, navRegistry, resetAllRegistries } from "@/features/social/plugins/registries";
+import i18n from "@/i18n";
 
 // Local, first-party plugins can be imported statically here
 // Example: import nftMarketplace from '@/plugins/nft-marketplace';
@@ -22,6 +23,23 @@ export function loadLocalPlugins(hostCtx: any, allow: string[] = []) {
   const allowedCaps = (caps: string[]) => (allow && allow.length ? caps.filter((c) => allow.includes(c)) : caps);
   for (const plugin of localPlugins) {
     if (!plugin?.meta?.apiVersion?.startsWith('1.')) continue;
+    
+    // Register plugin translations if provided
+    if (plugin.translations && plugin.meta?.id) {
+      const pluginId = plugin.meta.id;
+      const resources: Record<string, any> = {};
+      
+      // Add translations for each language
+      for (const [lang, translations] of Object.entries(plugin.translations)) {
+        if (!resources[lang]) resources[lang] = {};
+        resources[lang][pluginId] = translations;
+      }
+      
+      // Add namespace to i18n if not already present
+      if (!i18n.hasResourceBundle('en', pluginId)) {
+        i18n.addResourceBundle('en', pluginId, plugin.translations.en || {}, true, true);
+      }
+    }
     const register = (exports: PluginExports) => {
       const caps = allowedCaps(plugin.meta.capabilities || []);
       if (exports.feed && caps.includes('feed')) registerFeed(exports.feed);

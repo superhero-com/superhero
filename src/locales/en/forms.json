@@ -1,0 +1,19 @@
+{
+  "numberOfInvites": "Number of invites",
+  "pleaseEnterAmount": "Please enter an amount",
+  "pleaseCreateAtLeastOneInvite": "Please create at least one invite",
+  "noActiveAccount": "No active account. Please connect your wallet and try again.",
+  "failedToCreateInvitation": "Failed to create invitation",
+  "notEnoughBalance": "Not enough balance. You need {{amount}} AE.",
+  "connectWalletToReply": "Connect your wallet to reply",
+  "pleaseConnectWalletToReply": "Please connect your wallet to reply",
+  "writeReply": "Write a reply...",
+  "connectWalletToPost": "Connect your Superhero Wallet to start posting on-chain ✍️",
+  "copyInviteLinks": "Copy Invite Links",
+  "inviteLinksGeneratedSuccessfully": "Your invitation links have been generated successfully!",
+  "saveLinksBeforeClosing": "Make sure to save these links before closing this dialog!",
+  "iHaveCopiedInvitationLinks": "I have copied the invitation links",
+  "beFirstToSpeak": "Be the first to speak about {{hashtag}}.",
+  "askAQuestion": "Ask a question"
+}
+

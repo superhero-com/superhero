@@ -1,6 +1,7 @@
 import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarWithChainNameFeed";
 import { cn } from "@/lib/utils";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { PostDto } from "../../../api/generated";
 import { PostsService } from "../../../api/generated";
 // Using shared glass card styles via `genz-card` to match wallet/AE price cards
@@ -23,6 +24,7 @@ interface FeedItemProps {
 
 // Component: Individual Feed Item
 const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: FeedItemProps) => {
+  const { t } = useTranslation('social');
   const postId = item.id;
   const authorAddress = item.sender_address;
   const { chainNames } = useWallet();
@@ -139,7 +141,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
                   onItemClick(parentId);
                 }}
                 className="w-full text-left bg-white/[0.04] border border-white/10 rounded-xl p-2.5 md:p-3 -mb-1 hover:bg-white/[0.06] transition-colors"
-                title="Show full thread"
+                title={t('showFullThread')}
               >
                 <div className="flex items-start gap-2">
                   <div className="flex-shrink-0">
@@ -266,7 +268,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
                 <Badge
                   variant="outline"
                   className="flex items-center gap-1.5 text-[13px] px-2.5 py-1 bg-transparent border-white/10 hover:border-white/20 transition-colors"
-                  aria-label="Comments count"
+                  aria-label={t('commentsCount')}
                 >
                   <IconComment className="w-[14px] h-[14px]" />
                   {commentCount}
@@ -277,7 +279,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
                     className="text-[12px] font-semibold text-white/80 hover:text-white transition-colors underline underline-offset-2"
                     onClick={(e) => { e.stopPropagation(); onItemClick(parentId); }}
                   >
-                    Show full thread
+                    {t('showFullThread')}
                   </button>
                 )}
               </div>

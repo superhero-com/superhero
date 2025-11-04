@@ -107,7 +107,7 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
             href={href}
             key={`${href}-${idx}-${off}`}
             target="_blank"
-            rel="noopener noreferrer"
+            rel="ugc nofollow noopener noreferrer"
             className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words no-underline"
             style={{
               display: 'inline',

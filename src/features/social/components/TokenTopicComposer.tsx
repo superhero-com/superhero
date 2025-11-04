@@ -1,9 +1,11 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { TrendminerApi } from "../../../api/backend";
 import PostForm from "./PostForm";
 
 export default function TokenTopicComposer({ tokenName, isReply = false, postId, onSuccess }: { tokenName: string; isReply?: boolean; postId?: string; onSuccess?: () => void; }) {
+  const { t } = useTranslation('forms');
   const canonical = useMemo(() => `#${String(tokenName || '').toLowerCase()}`, [tokenName]);
   const uppercaseTag = useMemo(() => `#${String(tokenName || '').toUpperCase()}`, [tokenName]);
 
@@ -16,8 +18,8 @@ export default function TokenTopicComposer({ tokenName, isReply = false, postId,
   const noPosts = !(Array.isArray((data as any)?.posts) && (data as any).posts.length > 0);
 
   const placeholder = useMemo(() => {
-    return noPosts ? `Be the first to speak about ${uppercaseTag}.` : undefined;
-  }, [noPosts, uppercaseTag]);
+    return noPosts ? t('beFirstToSpeak', { hashtag: uppercaseTag }) : undefined;
+  }, [noPosts, uppercaseTag, t]);
 
   return (
     <PostForm

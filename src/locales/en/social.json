@@ -1,0 +1,23 @@
+{
+  "showFullThread": "Show full thread",
+  "commentsCount": "Comments count",
+  "share": "Share",
+  "sharePost": "Share post",
+  "shareComment": "Share comment",
+  "copyLink": "Copy link",
+  "shareVia": "Share {{label}} via …",
+  "superheroPost": "Superhero Post",
+  "gif": "GIF",
+  "emoji": "Emoji",
+  "addRequiredHashtag": "Add required hashtag",
+  "posting": "Posting…",
+  "post": "Post",
+  "postReply": "Post Reply",
+  "moreSoon": "More soon…",
+  "add": "+Add",
+  "postNeedsToInclude": "Post needs to include {{hashtag}}",
+  "openParent": "Open parent",
+  "poll": "Poll",
+  "removePoll": "Remove poll"
+}
+

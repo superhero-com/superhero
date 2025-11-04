@@ -1,6 +1,7 @@
 import { type SuperheroPlugin, type PluginExports } from '@/plugin-sdk';
 import { registerPlugin as registerFeed } from '@/features/social/feed-plugins/registry';
 import { composerRegistry, itemActionRegistry, routeRegistry, modalRegistry, attachmentRegistry, navRegistry } from './registries';
+import i18n from '@/i18n';
 
 export async function loadExternalPlugins(urls: string[], hostCtx: any, allow: string[] = []) {
   for (const url of urls || []) {
@@ -10,6 +11,15 @@ export async function loadExternalPlugins(urls: string[], hostCtx: any, allow: s
       const mod = await import(/* @vite-ignore */ url);
       const plugin: SuperheroPlugin = mod?.default || mod;
       if (!plugin?.meta?.apiVersion?.startsWith('1.')) continue;
+      
+      // Register plugin translations if provided
+      if (plugin.translations && plugin.meta?.id) {
+        const pluginId = plugin.meta.id;
+        if (!i18n.hasResourceBundle('en', pluginId)) {
+          i18n.addResourceBundle('en', pluginId, plugin.translations.en || {}, true, true);
+        }
+      }
+      
       const caps = plugin.meta.capabilities || [];
       const allowed = allow && allow.length ? caps.filter((c) => allow.includes(c)) : caps;
       const register = (exports: PluginExports) => {

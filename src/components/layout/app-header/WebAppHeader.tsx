@@ -1,16 +1,20 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { HeaderLogo } from '../../../icons';
 import HeaderWalletButton from './HeaderWalletButton';
 import { getNavigationItems } from './navigationItems';
 
 
 export default function WebAppHeader() {
+  const { t: tNav } = useTranslation('navigation');
+  const { t } = useTranslation('common');
   const { pathname } = useLocation();
+  const navigationItems = getNavigationItems(tNav);
   const isDaoPath = pathname.startsWith('/trends/dao') || pathname.startsWith('/trends/daos');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const t = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
-    return t;
+    const themeValue = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
+    return themeValue;
   });
 
   const toggleTheme = useCallback(() => {
@@ -44,12 +48,12 @@ export default function WebAppHeader() {
       boxShadow: '0 6px 28px rgba(0,0,0,0.35)'
     }}>
       <div className="flex items-center gap-6 px-6 h-16 max-w-[min(1400px,100%)] mx-auto md:px-5 md:gap-5">
-        <Link to="/" className="flex items-center no-underline hover:no-underline no-gradient-text" style={{ color: 'var(--standard-font-color)', textDecoration: 'none' }} aria-label="Superhero Home">
+        <Link to="/" className="flex items-center no-underline hover:no-underline no-gradient-text" style={{ color: 'var(--standard-font-color)', textDecoration: 'none' }} aria-label={t('labels.superheroHome')}>
           <HeaderLogo className="h-8 w-auto" />
         </Link>
 
         <nav className="flex items-center gap-6 flex-grow md:gap-5 relative">
-          {getNavigationItems()
+          {getNavigationItems(tNav)
             .filter((item: any) => !!item && !!item.id)
             .map((item: any) => {
               const commonClass = `no-underline font-medium px-3 py-2 rounded-lg transition-all duration-200 relative`;

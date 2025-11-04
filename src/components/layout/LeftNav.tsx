@@ -1,16 +1,20 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { HeaderLogo } from '../../icons';
 import HeaderWalletButton from './app-header/HeaderWalletButton';
-import { navigationItems } from './app-header/navigationItems';
+import { getNavigationItems } from './app-header/navigationItems';
 
 export default function LeftNav() {
+  const { t: tNav } = useTranslation('navigation');
+  const { t } = useTranslation('common');
+  const navigationItems = getNavigationItems(tNav);
   const { pathname } = useLocation();
   const isActive = (path: string) => (path === '/' ? pathname === '/' : pathname.startsWith(path));
 
   return (
   <nav className="flex flex-col gap-2 pr-2 min-h-screen">
-      <Link to="/" className="no-underline hover:no-underline no-gradient-text px-3 py-2 rounded-xl text-[var(--standard-font-color)] w-fit" style={{ textDecoration: 'none' }} aria-label="Superhero Home">
+      <Link to="/" className="no-underline hover:no-underline no-gradient-text px-3 py-2 rounded-xl text-[var(--standard-font-color)] w-fit" style={{ textDecoration: 'none' }} aria-label={t('labels.superheroHome')}>
         <HeaderLogo className="h-8 w-auto" />
       </Link>
       <div className="grid gap-1">

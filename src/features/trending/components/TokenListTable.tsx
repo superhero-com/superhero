@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import TokenListTableRow from "./TokenListTableRow";
 import TokenRowSkeleton from "./TokenRowSkeleton";
@@ -78,10 +79,11 @@ interface TokenListTableProps {
   orderBy: OrderByOption;
   orderDirection: OrderDirection;
   onSort: (sortKey: OrderByOption) => void;
+  rankOffset?: number;
 }
 
-export default function TokenListTable({ pages, loading, showCollectionColumn, orderBy, orderDirection, onSort }: TokenListTableProps) {
-
+export default function TokenListTable({ pages, loading, showCollectionColumn, orderBy, orderDirection, onSort, rankOffset = 0 }: TokenListTableProps) {
+  const { t } = useTranslation('common');
 
   const allItems = useMemo(() => 
     pages?.length ? pages.map((page) => page.items).flat() : [],
@@ -102,7 +104,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
               currentDirection={orderDirection}
               onSort={onSort}
               className="cell cell-rank text-xs opacity-50 text-left pr-2 pr-md-4"
-              title="Click to reverse current ranking order"
+              title={t('titles.clickToReverseRankingOrder')}
             >
               Rank
             </SortableColumnHeader>
@@ -117,7 +119,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
             </SortableColumnHeader>
             {showCollectionColumn && (
               <th className="cell cell-collection text-xs opacity-50 text-left text-md-right py-1 px-1 px-lg-3">
-                <div title="Token collection category">
+                <div title={t('titles.tokenCollectionCategory')}>
                   Collection
                 </div>
               </th>
@@ -169,7 +171,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
                 key={token.address}
                 token={token}
                 showCollectionColumn={showCollectionColumn}
-                rank={index + 1}
+                rank={rankOffset + index + 1}
               />
             ))}
           </tbody>

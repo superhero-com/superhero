@@ -66,6 +66,81 @@ export default definePlugin({
 });
 ```
 
+### Add translations (optional)
+
+Plugins can include their own translation files for internationalization. Each plugin's translations are automatically registered using the plugin ID as the i18n namespace.
+
+**1. Create `locales/` directory structure:**
+```
+src/plugins/your-plugin/
+├── index.tsx
+├── locales/
+│   ├── en.json
+│   └── index.ts
+└── components/
+    └── YourComponent.tsx
+```
+
+**2. Create `locales/en.json` with your translation keys:**
+```json
+{
+  "createdItem": "created an item",
+  "pending": "Pending…",
+  "actions": {
+    "like": "Like",
+    "share": "Share"
+  }
+}
+```
+
+**3. Create `locales/index.ts` to export translations:**
+```ts
+import en from './en.json';
+
+export const translations = {
+  en,
+  // Add more languages:
+  // de: require('./de.json'),
+  // fr: require('./fr.json'),
+};
+```
+
+**4. Import and export translations in your plugin definition:**
+```ts
+// src/plugins/your-plugin/index.tsx
+import { definePlugin, type ComposerAttachmentSpec } from '@/plugin-sdk';
+import { translations } from './locales';
+
+export default definePlugin({
+  meta: { id: 'your-plugin', name: 'Your Plugin', version: '0.1.0', apiVersion: '1.x', capabilities: ['composer'] },
+  translations,  // Export translations
+  setup({ register }) {
+    // ...
+  },
+});
+```
+
+**5. Use translations in your components:**
+```ts
+import { useTranslation } from 'react-i18next';
+
+export default function YourComponent() {
+  // Use plugin ID as namespace
+  const { t } = useTranslation('your-plugin');
+  
+  return (
+    <div>
+      <span>{t('createdItem')}</span>
+      <span>{t('pending')}</span>
+      <span>{t('actions.like')}</span>
+    </div>
+  );
+}
+```
+
+!!! tip
+    See the [Plugin SDK docs](../plugin-sdk.md#translations) for more details on translations and multi-language support.
+
 ### Example
 ```ts
 import { AeSdk, Node } from '@aeternity/aepp-sdk'

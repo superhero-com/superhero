@@ -16,6 +16,8 @@
   "moreSoon": "More soon…",
   "add": "+Add",
   "postNeedsToInclude": "Post needs to include {{hashtag}}",
-  "openParent": "Open parent"
+  "openParent": "Open parent",
+  "poll": "Poll",
+  "removePoll": "Remove poll"
 }
 

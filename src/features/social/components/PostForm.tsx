@@ -571,7 +571,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   if (placeholder) {
     currentPlaceholder = placeholder;
   } else if (activeAttachmentId === 'poll') {
-    currentPlaceholder = "Ask a question";
+    currentPlaceholder = t('askAQuestion');
   } else if (isPost) {
     currentPlaceholder = activeAccount
       ? PROMPTS[promptIndex]
@@ -771,7 +771,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                     <button
                       type="button"
                       className="md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
-                      title="Poll"
+                      title={tSocial('poll')}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -780,7 +780,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                         setShowGif(false);
                       }}
                     >
-                      <span>Poll</span>
+                      <span>{tSocial('poll')}</span>
                     </button>
                   )}
                 </div>
@@ -889,7 +889,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                             title={spec.label}
                           >
                             {(activeAttachmentId !== spec.id && spec.Icon) ? <spec.Icon className="w-4 h-4" /> : null}
-                            <span>{activeAttachmentId === spec.id ? 'Remove poll' : spec.label}</span>
+                            <span>{activeAttachmentId === spec.id ? tSocial('removePoll') : spec.label}</span>
                           </button>
                         ))}
                       </div>

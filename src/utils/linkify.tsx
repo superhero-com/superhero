@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import HashtagWithChange from '../features/social/components/HashtagWithChange';
 import { formatAddress } from './address';
+import { PostDto } from '../api/generated';
 
 // URL matcher (external links)
 const URL_REGEX = /((https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/[\w\-._~:\/?#[\]@!$&'()*+,;=%]*)?)/gi;
@@ -12,7 +13,10 @@ const ACCOUNT_TAG_REGEX = /@?(ak_[A-Za-z0-9]+)/gi;
 // Hashtags like #TOKEN, #TREND-123, #ROCK-N-ROLL; allow letters, numbers, and dashes only
 const HASHTAG_REGEX = /#([A-Za-z0-9-]{1,50})/g;
 
-export function linkify(text: string, options?: { knownChainNames?: Set<string> }): React.ReactNode[] {
+export function linkify(text: string, options?: {
+  knownChainNames?: Set<string>,
+  post?: PostDto
+}): React.ReactNode[] {
   if (!text) return [];
   const raw = String(text);
 
@@ -137,7 +141,7 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
       if (off > last) finalParts.push(segment.slice(last, off));
       finalParts.push(
         <span key={`hashtag-${tag}-${idx}-${off}`}>
-          <HashtagWithChange tag={`#${tag}`} />
+          <HashtagWithChange tag={`#${tag}`} post={options?.post} />
         </span>
       );
       last = off + m.length;

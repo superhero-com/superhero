@@ -67,8 +67,13 @@ export type PluginHostContext = {
   register: (exports: PluginExports) => void;
 };
 
+export type PluginTranslations = {
+  [lang: string]: Record<string, any>;
+};
+
 export type SuperheroPlugin = {
   meta: PluginMeta;
+  translations?: PluginTranslations; // Optional: plugin-specific translations
   setup: (host: PluginHostContext) => void;
 };
 

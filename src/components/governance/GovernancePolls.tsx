@@ -23,7 +23,7 @@ export default function GovernancePolls() {
           {/* Enhanced Header Section */}
           <div className="relative flex-1">
             <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-3xl blur-2xl -z-10" />
-            <div className="flex items-center justify-between py-5 px-5 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl">
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between py-5 px-5 bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] rounded-3xl">
               <div className="flex flex-col md:flex-row items-center gap-6">
                 <div className="relative">
                   <div className="w-16 h-16 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
@@ -41,7 +41,7 @@ export default function GovernancePolls() {
                   </p>
                 </div>
               </div>
-              <div className="hidden md:flex flex-col items-end gap-2">
+              <div className="flex flex-row md:flex-col items-end gap-2">
                 <div
                   className={`px-4 py-2 rounded-2xl  ${
                     status === "open"

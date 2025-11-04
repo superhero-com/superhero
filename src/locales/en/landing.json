@@ -1,0 +1,30 @@
+{
+  "hero": {
+    "tagline": "OWN YOUR ONLINE IDENTITY",
+    "title": "Your social, your wallet, your rules — a <b>decentralized</b> network for everyone",
+    "description": "Sign in with your wallet and keep one portable identity across apps. Post on-chain when you want verifiable, timestamped ideas — and tip creators instantly. It's simple, friendly, and powered by the æternity blockchain.",
+    "getStarted": "Get started",
+    "appPreview": "Superhero App Preview"
+  },
+  "privacy": {
+    "badge": "Privacy First",
+    "title": "Share your story —",
+    "title2": "and keep your identity",
+    "description": "With wallet-based identity you decide what to share and what to keep. Your handle and reputation are portable across the æternity ecosystem, and your posts can live on-chain when you want proof of authorship and permanence — or off-chain when you prefer speed and lightness. You're in control either way."
+  },
+  "features": {
+    "decentralized": {
+      "title": "Fully decentralized",
+      "description": "Peer-to-peer by design. Nothing stands between you and the people you follow. Your identity and posts can be on-chain, so value flows directly to creators."
+    },
+    "posting": {
+      "title": "Decentralized Posting"
+    }
+  },
+  "stats": {
+    "tipsAggregated": "Tips aggregated",
+    "totalTipsValue": "Total Tips Value",
+    "uniqueTipSenders": "Unique Tip Senders"
+  }
+}
+

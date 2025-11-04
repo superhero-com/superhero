@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 type Props = { block?: boolean } & React.HTMLAttributes<HTMLDivElement>;
 
 export default function MiniWalletInfo({ block, style, ...rest }: Props) {
+  const { t } = useTranslation('common');
   const { disconnectWallet } = useWalletConnect()
   const { address, balance } = useWallet();
 
@@ -40,7 +41,7 @@ export default function MiniWalletInfo({ block, style, ...rest }: Props) {
           size="xs"
           className="h-8 px-2 border border-border/20 hover:bg-accent"
         >
-          Logout
+          {t('buttons.logout')}
         </AeButton>
       </div>
     </div>

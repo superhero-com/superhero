@@ -29,6 +29,7 @@ type TabType = "feed" | "owned" | "created" | "transactions";
 export default function UserProfile({
   standalone = true,
 }: { standalone?: boolean } = {}) {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { address } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -285,7 +286,7 @@ export default function UserProfile({
                   variant="ghost"
                   size="sm"
                   className="!border !border-solid !border-white/15 hover:!border-white/35 inline-flex items-center gap-2"
-                  title="Send a tip"
+                  title={t('titles.sendATip')}
                 >
                   <IconDiamond className="w-4 h-4 text-[#1161FE]" />
                   Tip
@@ -302,7 +303,7 @@ export default function UserProfile({
                   const url = `${base}/accounts/${effectiveAddress}`;
                   window.open(url, "_blank", "noopener,noreferrer");
                 }}
-                title="Open on æScan"
+                title={t('titles.openOnAescan')}
               >
                 <span className="inline-flex items-center gap-2">
                   <span>View on æScan</span>

@@ -17,7 +17,7 @@ const PostContent = memo(({ post }: PostContentProps) => {
   <div className="space-y-3">
     {post.title && (
       <div className="text-[15px] text-foreground leading-snug">
-        {linkify(post.title, { knownChainNames: known })}
+        {linkify(post.title, { post, knownChainNames: known })}
       </div>
     )}
     

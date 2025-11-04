@@ -165,7 +165,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
                     <div className="text-[12px] text-white/80 line-clamp-2">
                       {parentError || !parent
                         ? 'Parent unavailable/not visible'
-                        : linkify(parent.content, { knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}
+                        : linkify(parent.content, { post: parent, knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}
                     </div>
                   </div>
                 </div>
@@ -228,7 +228,7 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
             {/* Right-side block above handles on-chain link; remove duplicate area */}
             <div className="ml-0 md:ml-0 md:pl-0 md:mt-2 relative">
               <div className="text-[14px] md:text-[15px] text-foreground leading-snug">
-              {linkify(item.content, { knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}
+              {linkify(item.content, { post: item, knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}
             </div>
 
 {(() => {

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import { TrendminerApi } from '../../api/backend';
 
 export default function Accounts() {
@@ -41,29 +42,30 @@ export default function Accounts() {
     <div className="max-w-4xl mx-auto p-4">
       <h2 className="text-3xl font-bold text-white mb-4">Top Accounts</h2>
       <div className="flex gap-2 items-center my-2">
-        <select 
-          className="px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50" 
-          value={orderBy} 
-          onChange={(e) => setOrderBy(e.target.value as any)}
+        <AppSelect
+          value={orderBy as string}
+          onValueChange={(v) => setOrderBy(v as any)}
+          triggerClassName="px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white focus:outline-none"
+          contentClassName="bg-black border-white/20"
         >
-          <option value="total_volume">Total Volume</option>
-          <option value="total_tx_count">Total TX</option>
-          <option value="total_buy_tx_count">Buy TX</option>
-          <option value="total_sell_tx_count">Sell TX</option>
-          <option value="total_created_tokens">Created Tokens</option>
-          <option value="total_invitation_count">Invitations</option>
-          {/* Claimed invites metric removed */}
-          <option value="total_revoked_invitation_count">Revoked Invites</option>
-          <option value="created_at">Newest</option>
-        </select>
-        <select 
-          className="px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50" 
-          value={orderDirection} 
-          onChange={(e) => setOrderDirection(e.target.value as any)}
+          <AppSelectItem value="total_volume">Total Volume</AppSelectItem>
+          <AppSelectItem value="total_tx_count">Total TX</AppSelectItem>
+          <AppSelectItem value="total_buy_tx_count">Buy TX</AppSelectItem>
+          <AppSelectItem value="total_sell_tx_count">Sell TX</AppSelectItem>
+          <AppSelectItem value="total_created_tokens">Created Tokens</AppSelectItem>
+          <AppSelectItem value="total_invitation_count">Invitations</AppSelectItem>
+          <AppSelectItem value="total_revoked_invitation_count">Revoked Invites</AppSelectItem>
+          <AppSelectItem value="created_at">Newest</AppSelectItem>
+        </AppSelect>
+        <AppSelect
+          value={orderDirection as string}
+          onValueChange={(v) => setOrderDirection(v as any)}
+          triggerClassName="px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white focus:outline-none"
+          contentClassName="bg-black border-white/20"
         >
-          <option value="DESC">Desc</option>
-          <option value="ASC">Asc</option>
-        </select>
+          <AppSelectItem value="DESC">Desc</AppSelectItem>
+          <AppSelectItem value="ASC">Asc</AppSelectItem>
+        </AppSelect>
       </div>
       {error && <div className="text-red-400 mb-4">{error}</div>}
       <div className="grid gap-2">

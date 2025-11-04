@@ -21,6 +21,7 @@ import type {
   IAllowedNameChars,
   ICollectionData,
 } from '../../../utils/types';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 
 // Debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -520,17 +521,18 @@ export default function CreateTokenView() {
                         <label className="block text-sm font-medium text-white/80 mb-2">
                           Collection
                         </label>
-                        <select
+                        <AppSelect
                           value={collectionModel || ''}
-                          onChange={(e) => setCollectionModel(e.target.value as CollectionId)}
-                          className="w-full px-3 py-2 bg-transparent text-white border border-gray-600/50 rounded-lg focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all duration-200 autofill:bg-transparent"
+                          onValueChange={(v) => setCollectionModel(v as CollectionId)}
+                          triggerClassName="w-full px-3 py-2 bg-transparent text-white border border-gray-600/50 rounded-lg focus:outline-none transition-all duration-200 autofill:bg-transparent"
+                          contentClassName="bg-gray-900 border-gray-600/50"
                         >
                           {activeFactoryCollectionsArr.map((collection: any) => (
-                            <option key={collection.id} value={collection.id}>
+                            <AppSelectItem key={collection.id} value={collection.id}>
                               {collection.name}
-                            </option>
+                            </AppSelectItem>
                           ))}
-                        </select>
+                        </AppSelect>
                       </div>
                     )}
 

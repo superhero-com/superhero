@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAeSdk, useWalletConnect, useModal } from '../hooks';
 import Favicon from '../svg/favicon.svg?react';
 import { AeButton } from './ui/ae-button';
@@ -13,10 +14,14 @@ type Props = {
   muted?: boolean; // greyed-out appearance while still clickable
 };
 
-export default function ConnectWalletButton({ label = 'Connect Wallet', block, style, className, variant = 'default', muted = false }: Props) {
+export function ConnectWalletButton({ label, block, style, className, variant = 'default', muted = false }: Props) {
+  const { t } = useTranslation('common');
   const { activeAccount } = useAeSdk()
   const { connectWallet, connectingWallet } = useWalletConnect()
   const { openModal } = useModal();
+  
+  const displayLabel = label || t('buttons.connectWallet');
+  const connectingText = t('buttons.connecting');
 
   if (activeAccount) return null;
   
@@ -53,13 +58,13 @@ export default function ConnectWalletButton({ label = 'Connect Wallet', block, s
     >
       <span className="hidden sm:inline-flex items-center gap-2">
         <Favicon className="w-4 h-4" />
-        {(connectingWallet ? 'Connecting…' : label).toUpperCase()}
+        {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
       </span>
       <span className="sm:hidden">
-        {(connectingWallet ? 'Connecting…' : label).toUpperCase()}
+        {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
       </span>
     </AeButton>
   );
 }
 
-
+export default ConnectWalletButton;

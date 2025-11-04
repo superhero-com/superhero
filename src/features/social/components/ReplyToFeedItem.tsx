@@ -1,6 +1,7 @@
 import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarWithChainNameFeed";
 import { cn } from "@/lib/utils";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
 import { PostDto, PostsService } from "../../../api/generated";
 import { IconComment } from "../../../icons";
@@ -71,6 +72,7 @@ function useParentId(item: PostDto): string | null {
 
 // X-like post item with optional parent context header
 const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentContext = false, allowInlineRepliesToggle = true, isActive = false }: ReplyToFeedItemProps) => {
+  const { t } = useTranslation('social');
   const postId = item.id;
   const authorAddress = item.sender_address;
   const { chainNames } = useWallet();
@@ -121,6 +123,39 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
   const media = Array.isArray(item.media)
     ? item.media.filter((m) => (typeof m === "string" ? !m.startsWith("comment:") : true))
     : [];
+
+  // Compute total descendant comments (all levels) for this item
+  const { data: descendantCount } = useQuery<number>({
+    queryKey: ["post-desc-count", postId],
+    enabled: !!postId,
+    refetchInterval: 120 * 1000,
+    queryFn: async () => {
+      const normalize = (id: string) => (String(id).endsWith("_v3") ? String(id) : `${String(id)}_v3`);
+      const root = normalize(String(postId));
+      const queue: string[] = [root];
+      let total = 0;
+      let requestBudget = 150; // safety cap per item
+      while (queue.length > 0 && requestBudget > 0) {
+        const current = queue.shift()!;
+        let page = 1;
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          if (requestBudget <= 0) break;
+          requestBudget -= 1;
+          const res: any = await PostsService.getComments({ id: current, orderDirection: "ASC", page, limit: 50 });
+          const items: PostDto[] = res?.items || [];
+          total += items.length;
+          for (const child of items) {
+            if ((child.total_comments ?? 0) > 0) queue.push(normalize(String(child.id)));
+          }
+          const meta = res?.meta;
+          if (!meta?.currentPage || !meta?.totalPages || meta.currentPage >= meta.totalPages) break;
+          page = meta.currentPage + 1;
+        }
+      }
+      return total;
+    },
+  });
 
   // Inline mined badge helper
   function MinedBadge({ txHash }: { txHash: string }) {
@@ -206,7 +241,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
                 onOpenPost(parentId);
               }}
               className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/15 rounded-xl p-3 transition-none shadow-none hover:bg-white/[0.04] hover:border-white/40 hover:shadow-none"
-              title="Open parent"
+              title={t('openParent')}
             >
               <div className="flex items-end mb-1 min-w-0">
                 <span className="text-[11px] text-white/65 shrink-0 mr-1">Replying to</span>
@@ -286,7 +321,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
               aria-controls={`replies-${postId}`}
             >
               <MessageCircle className="w-[14px] h-[14px]" strokeWidth={2.25} />
-              {commentCount}
+            {typeof descendantCount === 'number' ? descendantCount : commentCount}
             </button>
             </div>
             <SharePopover postId={item.id} />

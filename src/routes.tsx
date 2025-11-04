@@ -4,7 +4,6 @@ import SocialLayout from "./components/layout/SocialLayout";
 
 const FeedList = lazy(() => import("./features/social/views/FeedList"));
 const TokenList = lazy(() => import("./features/trending/views/TokenList"));
-const TrendCloud = lazy(() => import("./views/Trendminer/TrendCloud"));
 const TrendCloudVisx = lazy(() => import("./views/Trendminer/TrendCloudVisx"));
 const TrendInvite = lazy(() => import("./views/Trendminer/Invite"));
 
@@ -51,10 +50,9 @@ const DexExploreTransactions = lazy(
 const Bridge = lazy(() => import("./features/ae-eth-bridge/views/Bridge"));
 
 // Legacy DEX components (for backward compatibility)
-const Swap = lazy(() => import("./views/Swap"));
 const Explore = lazy(() => import("./views/Explore"));
 const TokenDetail = lazy(() => import("./views/TokenDetail"));
-const PoolDetail = lazy(() => import("./views/PoolDetail"));
+const PoolDetail = lazy(() => import("./features/dex/views/PoolDetail"));
 const AddTokens = lazy(() => import("./views/AddTokens"));
 
 // Redirect helpers for legacy /trending/* paths
@@ -83,6 +81,12 @@ function NavigateTrendingAccount() {
   return <Navigate to={`/trends/accounts/${encodeURIComponent(address || "")}`} replace />;
 }
 
+// Redirect helper for legacy /voting/p/:id -> /voting/poll/:id
+function NavigateVotingPoll() {
+  const { id } = useParams();
+  return <Navigate to={`/voting/poll/${encodeURIComponent(id || "")}`} replace />;
+}
+
 export const routes: RouteObject[] = [
   {
     path: "/",
@@ -99,7 +103,7 @@ export const routes: RouteObject[] = [
   },
   // New trends routes
   { path: "/trends/tokens", element: <TokenList /> },
-  { path: "/trends", element: <TrendCloud /> },
+  { path: "/trends", element: <Navigate to="/trends/tokens" replace /> },
   { path: "/trends/visx", element: <TrendCloudVisx /> },
   { path: "/trends/tokens/:tokenName", element: <TokenSaleDetails /> },
   { path: "/tx-queue/:id", element: <TxQueue /> },
@@ -111,7 +115,7 @@ export const routes: RouteObject[] = [
   { path: "/trends/accounts/:address", element: <TrendAccountDetails /> },
   { path: "/trends/create", element: <TrendCreate /> },
   // Legacy redirects from /trending/* -> /trends/*
-  { path: "/trending", element: <Navigate to="/trends" replace /> },
+  { path: "/trending", element: <Navigate to="/trends/tokens" replace /> },
   { path: "/trending/tokens", element: <Navigate to="/trends/tokens" replace /> },
   { path: "/trending/visx", element: <Navigate to="/trends/visx" replace /> },
   { path: "/trending/invite", element: <Navigate to="/trends/invite" replace /> },
@@ -128,8 +132,9 @@ export const routes: RouteObject[] = [
   { path: "/landing", element: <Landing /> },
   { path: "/meet/:room?", element: <Conference /> },
   { path: "/voting", element: <Governance /> },
-  { path: "/voting/p/:id", element: <Governance /> },
-  { path: "/voting/account", element: <Governance /> },
+  { path: "/voting/poll/:id", element: <Governance /> },
+  { path: "/voting/p/:id", element: <NavigateVotingPoll /> },
+  { path: "/voting/account", element: <Navigate to="/voting" replace /> },
   { path: "/voting/create", element: <Governance /> },
 
   // New DEX Routes with Layout
@@ -227,7 +232,7 @@ export const routes: RouteObject[] = [
   },
 
   // Legacy DEX Routes (for backward compatibility)
-  { path: "/swap", element: <Swap /> },
+  { path: "/swap", element: <Navigate to="/defi/swap" replace /> },
   { path: "/pool", element: <Pool /> },
   { path: "/explore", element: <Explore /> },
   { path: "/explore/tokens/:id", element: <TokenDetail /> },

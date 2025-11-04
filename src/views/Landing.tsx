@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import AeAmountFiat from '../components/AeAmountFiat';
 
 // Assets
@@ -16,6 +17,7 @@ import githubSvg from '../svg/landing/github.svg';
 // import leagueIconPng from '../../../src/assets/landing/superhero-league-icon.png';
 
 export default function Landing() {
+  const { t } = useTranslation('landing');
   const stats = null; // TODO: Replace with useBackend hook
 
   return (
@@ -27,26 +29,22 @@ export default function Landing() {
         <div className="relative z-10 w-full">
           <div className="max-w-[1180px] mx-auto px-4 py-32">
             <h3 className="text-sm font-semibold tracking-wider uppercase mb-3 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-              OWN YOUR ONLINE IDENTITY
+              {t('hero.tagline')}
             </h3>
-            <h1 className="text-5xl md:text-6xl font-extrabold leading-tight mb-6 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent tracking-tight">
-              Your social, your wallet, your rules — a <b>decentralized</b> network for everyone
-            </h1>
+            <h1 className="text-5xl md:text-6xl font-extrabold leading-tight mb-6 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent tracking-tight" dangerouslySetInnerHTML={{ __html: t('hero.title') }} />
             <p className="text-lg md:text-xl text-slate-300 leading-relaxed mb-10 max-w-4xl">
-              Sign in with your wallet and keep one portable identity across apps. Post on-chain when
-              you want verifiable, timestamped ideas — and tip creators instantly. It's simple,
-              friendly, and powered by the æternity blockchain.
+              {t('hero.description')}
             </p>
             <Link 
               to="/" 
               className="inline-block bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-lg px-8 py-4 rounded-2xl uppercase tracking-wide transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/30 relative overflow-hidden group"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
-              Get started
+              {t('hero.getStarted')}
             </Link>
             <div className="mt-16">
               <div className="bg-gray-800 h-80 flex items-center justify-center text-white rounded-2xl shadow-2xl">
-                Superhero App Preview
+                {t('hero.appPreview')}
               </div>
             </div>
           </div>
@@ -60,22 +58,19 @@ export default function Landing() {
             <div className="w-full md:w-1/2 px-4 mb-8 md:mb-0">
               <div className="pl-0 md:pl-40">
                 <div className="mb-8">
-                  <span className="text-[var(--neon-teal)] text-base font-semibold">Privacy First</span>
+                  <span className="text-[var(--neon-teal)] text-base font-semibold">{t('privacy.badge')}</span>
                   <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
-                    Share your story — 
+                    {t('privacy.title')}
                   </h2>
                   <p className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
-                    and keep your identity
+                    {t('privacy.title2')}
                   </p>
                 </div>
               </div>
             </div>
             <div className="w-full md:w-1/2 px-4">
               <p className="text-lg text-slate-300 leading-relaxed mt-6">
-                With wallet-based identity you decide what to share and what to keep. Your handle and
-                reputation are portable across the æternity ecosystem, and your posts can live on-chain
-                when you want proof of authorship and permanence — or off-chain when you prefer speed
-                and lightness. You're in control either way.
+                {t('privacy.description')}
               </p>
             </div>
           </div>
@@ -89,18 +84,17 @@ export default function Landing() {
                   className="max-h-16 max-w-16 mb-8 drop-shadow-[0_0_10px_rgba(255,107,107,0.7)]" 
                 />
                 <h4 className="text-[var(--neon-teal)] text-xl font-bold mb-6">
-                  Fully decentralized
+                  {t('features.decentralized.title')}
                 </h4>
                 <p className="text-slate-300 text-base leading-relaxed">
-                  Peer-to-peer by design. Nothing stands between you and the people you follow. Your
-                  identity and posts can be on-chain, so value flows directly to creators.
+                  {t('features.decentralized.description')}
                 </p>
               </div>
             </div>
             <div className="w-full lg:w-3/4 px-4">
               <div className="bg-black/20 backdrop-blur-2xl border border-white/10 rounded-2xl p-5 h-full">
                 <div className="bg-gray-200 h-48 flex items-center justify-center rounded-xl text-gray-600">
-                  Decentralized Posting
+                  {t('features.posting.title')}
                 </div>
               </div>
             </div>
@@ -114,7 +108,7 @@ export default function Landing() {
                     {stats.totalTipsLength}
                   </h4>
                   <p className="text-slate-300 text-base leading-relaxed">
-                    Tips aggregated
+                    {t('stats.tipsAggregated')}
                   </p>
                 </div>
               </div>
@@ -124,7 +118,7 @@ export default function Landing() {
                     <AeAmountFiat amount={stats.totalAmount} />
                   </h4>
                   <p className="text-slate-300 text-base leading-relaxed">
-                    Total Tips Value
+                    {t('stats.totalTipsValue')}
                   </p>
                 </div>
               </div>
@@ -134,7 +128,7 @@ export default function Landing() {
                     {stats.sendersLength}
                   </h4>
                   <p className="text-slate-300 text-base leading-relaxed">
-                    Unique Tip Senders
+                    {t('stats.uniqueTipSenders')}
                   </p>
                 </div>
               </div>

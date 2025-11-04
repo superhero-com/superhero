@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { DEX_ADDRESSES } from "../../../libs/dex";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
 import { useAddLiquidity } from "../hooks";
@@ -19,6 +20,7 @@ import { usePool } from "../context/PoolProvider";
 import { TokenChip } from "@/components/TokenChip";
 
 export default function AddLiquidityForm() {
+  const { t } = useTranslation('common');
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
   const { activeNetwork } = useAeSdk();
@@ -197,6 +199,27 @@ export default function AddLiquidityForm() {
       cancelled = true;
     };
   }, [tokens, location.search, tokenA, tokenB, selectedTokenA, selectedTokenB, findTokenByAddressOrSymbol, findToken]);
+
+  // Sync tokens from Pool context when a position is selected for adding liquidity
+  useEffect(() => {
+    if (!tokens.length) return;
+    if (currentAction !== "add") return;
+
+    const nextA = selectedTokenA ? findToken(selectedTokenA) : null;
+    const nextB = selectedTokenB ? findToken(selectedTokenB) : null;
+
+    const currentAId = tokenA?.is_ae ? "AE" : tokenA?.address;
+    const currentBId = tokenB?.is_ae ? "AE" : tokenB?.address;
+    const nextAId = nextA?.is_ae ? "AE" : nextA?.address;
+    const nextBId = nextB?.is_ae ? "AE" : nextB?.address;
+
+    if (nextA && nextAId !== currentAId) {
+      setTokenA(nextA);
+    }
+    if (nextB && nextBId !== currentBId) {
+      setTokenB(nextB);
+    }
+  }, [tokens, currentAction, selectedTokenA, selectedTokenB]);
 
   // Update URL parameters when tokens change (after initial load)
   useEffect(() => {
@@ -430,7 +453,7 @@ export default function AddLiquidityForm() {
             </button>
           )}
 
-          <DexSettings title="Liquidity Settings">
+          <DexSettings title={t('titles.liquiditySettings')}>
             <button
               aria-label="open-settings"
               className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
@@ -566,7 +589,7 @@ export default function AddLiquidityForm() {
         </button>
       ) : (
         <ConnectWalletButton
-          label="CONNECT WALLET"
+          label={t('buttons.connectWalletDex', { ns: 'common' })}
           variant="dex"
           className="text-sm"
           block

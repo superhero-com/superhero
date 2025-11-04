@@ -7,6 +7,7 @@ import { Decimal } from '@/libs/decimal';
 import { Clock, Copy, ExternalLink } from 'lucide-react';
 import moment from 'moment';
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface TransactionCardProps {
   transaction: PairTransactionDto;
@@ -93,6 +94,7 @@ const CopyPill: React.FC<{ text: string; icon?: React.ReactNode; label: string; 
   label,
   className,
 }) => {
+  const { t } = useTranslation('common');
   const [copied, setCopied] = useState(false);
   return (
     <button
@@ -111,28 +113,56 @@ const CopyPill: React.FC<{ text: string; icon?: React.ReactNode; label: string; 
         className || '',
       ].join(' ')}
       title={text}
-      aria-label={`Copy ${label}`}
+      aria-label={`${t('actions.copy')} ${label}`}
     >
       {icon ?? <Copy className="h-3.5 w-3.5" />}
       <span className="truncate">{label}</span>
-      {copied && <span className="ml-1 text-[10px] font-semibold">Copied</span>}
+      {copied && <span className="ml-1 text-[10px] font-semibold">{t('buttons.copied')}</span>}
     </button>
   );
 };
 
 export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction }) => {
+  const { t } = useTranslation('dex');
   const { activeNetwork } = useAeSdk();
 
+  // Get translated labels and descriptions
+  const getTxConfig = (txType: string) => {
+    const baseConfig = (TX_TYPE_CONFIG as any)[txType];
+    if (!baseConfig) {
+      return {
+        label: txType,
+        icon: '📄',
+        color: 'bg-gray-500/10 text-gray-600 border-gray-500/20',
+        chip: 'text-[10px] tracking-wide uppercase',
+        description: 'Transaction',
+      };
+    }
+    
+    // Map tx_type to translation keys
+    const translationKeyMap: Record<string, string> = {
+      'swap_exact_tokens_for_tokens': 'transactions.swapExactTokensForTokens',
+      'swap_exact_tokens_for_ae': 'transactions.swapExactTokensForAe',
+      'swap_exact_ae_for_tokens': 'transactions.swapExactAeForTokens',
+      'add_liquidity': 'transactions.addLiquidity',
+      'add_liquidity_ae': 'transactions.addLiquidityAe',
+      'remove_liquidity': 'transactions.removeLiquidity',
+      'remove_liquidity_ae': 'transactions.removeLiquidityAe',
+    };
+    
+    const translationKey = translationKeyMap[txType];
+    if (translationKey) {
+      return {
+        ...baseConfig,
+        label: t(`${translationKey}.label`),
+        description: t(`${translationKey}.description`),
+      };
+    }
+    
+    return baseConfig;
+  };
 
-  const txConfig =
-    (TX_TYPE_CONFIG as any)[transaction.tx_type] ??
-    ({
-      label: transaction.tx_type,
-      icon: '📄',
-      color: 'bg-gray-500/10 text-gray-600 border-gray-500/20',
-      chip: 'text-[10px] tracking-wide uppercase',
-      description: 'Transaction',
-    } as const);
+  const txConfig = getTxConfig(transaction.tx_type);
 
   const isLiquidityTransaction = transaction.tx_type.includes('liquidity');
 
@@ -221,12 +251,12 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
           <div className="mb-4 rounded-xl border border-blue-500/20 bg-blue-500/5 p-3 md:p-4">
             <div className="mb-3 flex items-center gap-2">
               <span className="text-lg">🔄</span>
-              <span className="text-sm font-semibold text-blue-600">Swap Details</span>
+              <span className="text-sm font-semibold text-blue-600">{t('transactions.swapDetails')}</span>
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-2">
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Input</div>
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{t('transactions.input')}</div>
                 {transaction.swap_info.amount0In !== '0' && (
                   <div className="flex items-center justify-between rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2">
                     <span className="font-medium text-emerald-700">
@@ -246,7 +276,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
               </div>
 
               <div className="space-y-2">
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Output</div>
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{t('transactions.output')}</div>
                 {transaction.swap_info.amount0Out !== '0' && (
                   <div className="flex items-center justify-between rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-2">
                     <span className="font-medium text-blue-700">
@@ -273,11 +303,11 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
           <div className="mb-4 rounded-xl border border-amber-500/20 bg-amber-500/5">
             <div className="flex items-center gap-2 px-4 pt-4">
               <span className="text-lg">🪙</span>
-              <span className="text-sm font-semibold text-amber-600">Pair Mint</span>
+              <span className="text-sm font-semibold text-amber-600">{t('transactions.pairMint')}</span>
             </div>
             <div className="space-y-3 p-4 pt-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Type</span>
+                <span className="text-xs text-muted-foreground">{t('transactions.type')}</span>
                 <Badge className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs text-amber-700">
                   {transaction.pair_mint_info.type}
                 </Badge>
@@ -287,13 +317,13 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
                   <div className="font-mono text-lg font-semibold text-foreground">
                     {formatTokenAmount(transaction.pair_mint_info.amount0, transaction.pair.token0.decimals)}
                   </div>
-                  <div className="text-xs text-muted-foreground">{transaction.pair.token0.symbol} Amount</div>
+                  <div className="text-xs text-muted-foreground">{transaction.pair.token0.symbol} {t('transactions.amount')}</div>
                 </div>
                 <div className="rounded-lg bg-background/40 p-3 text-center">
                   <div className="font-mono text-lg font-semibold text-foreground">
                     {formatTokenAmount(transaction.pair_mint_info.amount1, transaction.pair.token1.decimals)}
                   </div>
-                  <div className="text-xs text-muted-foreground">{transaction.pair.token1.symbol} Amount</div>
+                  <div className="text-xs text-muted-foreground">{transaction.pair.token1.symbol} {t('transactions.amount')}</div>
                 </div>
               </div>
             </div>
@@ -324,7 +354,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
                 }
               }}
               className="h-4 gap-1 px-4 text-xs transition-colors hover:border-black/40 hover:bg-black/10"
-              aria-label="Open in Explorer"
+              aria-label={t('transactions.openInExplorer')}
             >
               <ExternalLink className="h-2.5 w-3.5" />
               aescan

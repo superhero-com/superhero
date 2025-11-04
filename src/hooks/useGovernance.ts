@@ -35,14 +35,55 @@ export const useGovernance = () => {
         if (params.status === 'all') data.push(...(await GovernanceApi.getPollOrdering(true)).data);
 
         const height = await sdk.getHeight();
-        let merged = data.map(({ id, ...others }) => ({
-          id,
-          ...others,
-          title: contractPolls.get(BigInt(id)).title,
-          endDate: new Date(Date.now() + (others.closeHeight - height) * 3 * 60 * 1000),
-          status: (others.closeHeight == null || others.closeHeight > height
-            ? 'open' : 'closed') as 'open' | 'closed',
-        }));
+        // Resolve titles with robust fallbacks. Some registry entries may have empty title strings.
+        // 1) Try registry stored title
+        // 2) Fallback to Poll.title() from the poll contract
+        // 3) Finally fallback to overview.metadata.title from the backend
+        const missingTitleItems = data.filter(({ id, poll }) => {
+          const regTitle = (contractPolls as any).get?.(BigInt(id))?.title ?? (contractPolls as any).get?.(id)?.title ?? '';
+          return !regTitle || String(regTitle).trim().length === 0;
+        });
+
+        const fallbackPairs = await Promise.all(
+          missingTitleItems.map(async ({ id, poll }) => {
+            // Try poll contract title()
+            try {
+              const pollContract = await Contract.initialize<{ title: () => string }>({
+                ...sdk.getContext(),
+                aci: GOVERNANCE_POLL_ACI as any,
+                address: poll as Encoded.ContractAddress,
+              });
+              const t = (await (pollContract as any).title()).decodedResult as string;
+              if (t && t.trim().length > 0) return [id, t] as [number, string];
+            } catch {}
+
+            // Fallback to backend overview metadata
+            try {
+              const overview = await GovernanceApi.getPollOverview(poll as Encoded.ContractAddress);
+              const t = overview?.pollState?.metadata?.title ?? '';
+              return [id, t] as [number, string];
+            } catch {}
+
+            return [id, ''] as [number, string];
+          })
+        );
+
+        const fallbackTitleById = new Map<number, string>(fallbackPairs);
+
+        let merged = data.map(({ id, ...others }) => {
+          const regTitle = (contractPolls as any).get?.(BigInt(id))?.title ?? (contractPolls as any).get?.(id)?.title ?? '';
+          const title = (regTitle && String(regTitle).trim().length > 0)
+            ? regTitle
+            : (fallbackTitleById.get(id) || '');
+          return {
+            id,
+            ...others,
+            title,
+            endDate: new Date(Date.now() + ((others.closeHeight ?? height) - height) * 3 * 60 * 1000),
+            status: ((others.closeHeight == null || others.closeHeight > height)
+              ? 'open' : 'closed') as 'open' | 'closed',
+          };
+        });
         
         const search = params.search?.trim().toLowerCase();
         if (search) {
@@ -110,6 +151,7 @@ export const useGovernance = () => {
         });
         return (await registry.delegatee(activeAccount)).decodedResult ?? null;
       },
+      enabled: !!activeAccount,
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };
@@ -121,6 +163,7 @@ export const useGovernance = () => {
       queryFn: async () => {
         return (await GovernanceApi.getDelegatedPower(activeAccount)).flattenedDelegationTree;
       },
+      enabled: !!activeAccount,
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };

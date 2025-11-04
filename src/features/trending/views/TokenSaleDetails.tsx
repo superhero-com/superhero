@@ -1,6 +1,7 @@
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import Head from "../../../seo/Head";
 import { useNavigate, useParams } from "react-router-dom";
 import { TokensService } from "../../../api/generated/services/TokensService";
 import { useAeSdk } from "../../../hooks/useAeSdk";
@@ -89,11 +90,16 @@ export default function TokenSaleDetails() {
     queryKey: ["TokensService.findByAddress", tokenName],
     queryFn: async () => {
       if (!tokenName) throw new Error("Token name is required");
-      const result = await TokensService.findByAddress({ address: tokenName });
-      if (!result) {
+      try {
+      const result = await TokensService.findByAddress({ address: tokenName.toUpperCase() });
+        if (!result) {
+          throw new Error("Token not found");
+        }
+        return result;
+      } catch (error) {
+        console.error("Error fetching token:", error);
         throw new Error("Token not found");
       }
-      return result;
     },
     retry: (failureCount) => {
       if (failureCount > 3) {
@@ -160,7 +166,7 @@ export default function TokenSaleDetails() {
             </Button>
             <Button
               size="lg"
-              onClick={() => navigate(`/trends/create?name=${tokenName}`)}
+              onClick={() => navigate(`/trends/create?tokenName=${tokenName}`)}
               className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] hover:shadow-lg"
             >
               Claim It
@@ -204,6 +210,18 @@ export default function TokenSaleDetails() {
 
   return (
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
+      <Head
+        title={`${token.symbol || token.name} – Token on Superhero`}
+        description={(token.metaInfo?.description || `Explore ${token.symbol || token.name} token, trades, holders and posts.`).slice(0,160)}
+        canonicalPath={`/trends/tokens/${tokenName}`}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'CryptoCurrency',
+          name: token.name || token.symbol,
+          symbol: token.symbol,
+          identifier: token.address || token.sale_address,
+        }}
+      />
       <LatestTransactionsCarousel />
 
       {/* Deploy Success Message */}

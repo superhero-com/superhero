@@ -4,6 +4,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { OpenAPI } from './api/generated';
+import { CONFIG } from './config';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import ToastProvider from './components/ToastProvider';
@@ -11,10 +12,9 @@ import { AeSdkProvider } from './context/AeSdkProvider';
 import './i18n';
 import './styles/base.scss';
 import './styles/tailwind.css';
+import { HelmetProvider } from 'react-helmet-async';
 
-// TODO: should be based on the active network
-// OpenAPI.BASE = `http://localhost:3000`;
-OpenAPI.BASE = `https://api.superhero.com`;
+OpenAPI.BASE = (CONFIG.SUPERHERO_API_URL || 'https://api.superhero.com').replace(/\/$/, '');
 
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 
@@ -33,19 +33,21 @@ const queryClient = new QueryClient({
 
   root.render(
     <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <Provider>
-          <ToastProvider>
-            <BrowserRouter>
-              <ErrorBoundary>
-                <AeSdkProvider>
-                  <App />
-                </AeSdkProvider>
-              </ErrorBoundary>
-            </BrowserRouter>
-          </ToastProvider>
-        </Provider>
-      </QueryClientProvider>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <Provider>
+            <ToastProvider>
+              <BrowserRouter>
+                <ErrorBoundary>
+                  <AeSdkProvider>
+                    <App />
+                  </AeSdkProvider>
+                </ErrorBoundary>
+              </BrowserRouter>
+            </ToastProvider>
+          </Provider>
+        </QueryClientProvider>
+      </HelmetProvider>
     </React.StrictMode>,
   );
 })();

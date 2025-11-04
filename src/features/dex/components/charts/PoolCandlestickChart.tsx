@@ -1,19 +1,19 @@
-import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import {
-  ISeriesApi,
-  CandlestickSeries,
-  HistogramSeries,
-  ColorType,
-} from 'lightweight-charts';
-import { useChart } from '../../../../hooks/useChart';
-import AeButton from '../../../../components/AeButton';
-import { DexService } from '../../../../api/generated/services/DexService';
-import WebSocketClient from '../../../../libs/WebSocketClient';
-import moment from 'moment';
-import { useQuery } from '@tanstack/react-query';
-import { Decimal } from '../../../../libs/decimal';
-import { TokenChip } from '../../../../components/TokenChip';
+import { DexPairService } from '@/api/generated';
 import { DEX_ADDRESSES } from '@/libs/dex';
+import { useQuery } from '@tanstack/react-query';
+import {
+  CandlestickSeries,
+  ColorType,
+  HistogramSeries,
+  ISeriesApi,
+} from 'lightweight-charts';
+import moment from 'moment';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import AeButton from '../../../../components/AeButton';
+import { TokenChip } from '../../../../components/TokenChip';
+import { useChart } from '../../../../hooks/useChart';
+import { Decimal } from '../../../../libs/decimal';
+import WebSocketClient from '../../../../libs/WebSocketClient';
 
 interface PoolCandlestickChartProps {
   pairAddress: string;
@@ -53,7 +53,7 @@ export function PoolCandlestickChart({
 }: PoolCandlestickChartProps) {
   const { data: pair } = useQuery({
     queryKey: ['pair', pairAddress],
-    queryFn: () => DexService.getPairByAddress({ address: pairAddress }),
+    queryFn: () => DexPairService.getPairByAddress({ address: pairAddress }),
     enabled: !!pairAddress,
   })
   const [intervalBy, setIntervalBy] = useState<Interval>(intervals[3]); // Default to 1h
@@ -111,7 +111,7 @@ export function PoolCandlestickChart({
     setHasError(false);
 
     try {
-      const result = await DexService.getPaginatedHistory({
+      const result = await DexPairService.getPaginatedHistory({
         address: pairAddress,
         interval: intervalBy.value,
         convertTo: convertTo as any,

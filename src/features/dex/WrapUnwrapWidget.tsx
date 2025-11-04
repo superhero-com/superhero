@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader } from '../../components/ui/card';
+import { Card, CardContent } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import ConnectWalletButton from '../../components/ConnectWalletButton';
 import { useSwapExecution } from '../../components/dex/hooks/useSwapExecution';
 import { useTokenBalances } from '../../components/dex/hooks/useTokenBalances';
-import { useAccount, useAeSdk } from '../../hooks';
+import { useAccount } from '../../hooks';
 import { Decimal } from '../../libs/decimal';
 import { DEX_ADDRESSES } from '../../libs/dex';
 import { cn } from '../../lib/utils';
@@ -16,6 +17,7 @@ interface WrapUnwrapWidgetProps {
 }
 
 export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
+  const { t } = useTranslation('common');
   const { activeAccount, loadAccountData } = useAccount();
   const { wrapBalances } = useTokenBalances(null, null);
   const { executeSwap, loading } = useSwapExecution();
@@ -34,6 +36,21 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
   useEffect(() => {
     setError(null);
   }, [mode, currentAmount]);
+
+  // Check for insufficient balance
+  useEffect(() => {
+    if (currentAmount && currentBalance) {
+      try {
+        const amount = Decimal.from(currentAmount);
+        const balance = Decimal.from(currentBalance);
+        if (amount.gt(balance)) {
+          setError(`Insufficient ${mode === 'wrap' ? 'AE' : 'WAE'} balance. You need ${amount.prettify()} but only have ${balance.prettify()}`);
+        }
+      } catch (e) {
+        // Invalid amount format, ignore
+      }
+    }
+  }, [currentAmount, currentBalance]);
 
   const handleAmountChange = (value: string) => {
     const raw = value.replace(/,/g, '.');
@@ -109,7 +126,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
     }
   };
 
-  const isExecuteDisabled = isLoading || !currentAmount || Number(currentAmount) <= 0;
+  const isExecuteDisabled = isLoading || !currentAmount || Number(currentAmount) <= 0 || !!error;
 
   return (
     <div
@@ -287,7 +304,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
         </Button>
       ) : (
         <ConnectWalletButton
-          label="CONNECT WALLET"
+          label={t('buttons.connectWalletDex', { ns: 'common' })}
           variant="dex"
           className="text-sm"
           block

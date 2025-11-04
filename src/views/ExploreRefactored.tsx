@@ -231,7 +231,7 @@ export default function ExploreRefactored() {
                     <td style={{ textAlign: 'center', padding: '12px 8px' }}>
                       <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
                         <button 
-                          onClick={() => window.location.href = `/swap?from=${pair.token0 || pair.token0Address}&to=${pair.token1 || pair.token1Address}`}
+                          onClick={() => window.location.href = `/defi/swap?from=${pair.token0 || pair.token0Address}&to=${pair.token1 || pair.token1Address}`}
                           style={{ 
                             padding: '4px 8px', 
                             borderRadius: 6, 

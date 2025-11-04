@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { Backend, TrendminerApi } from "../../api/backend";
 import { useAccountBalances } from "../../hooks/useAccountBalances";
 import WalletOverviewCard from "@/components/wallet/WalletOverviewCard";
 import { useAeSdk } from "../../hooks/useAeSdk";
 import { useToast } from "../ToastProvider";
 import Sparkline from "../Trendminer/Sparkline";
-import { BuyAeWidget } from "../../features/bridge";
+import { BuyAeWidget } from "../../features/ae-eth-buy";
 
 import { useWallet } from "../../hooks";
 interface SearchSuggestion {
@@ -36,6 +37,7 @@ export default function RightRail({
   hideTrends?: boolean;
   hidePriceSection?: boolean;
 }) {
+  const { t } = useTranslation('common');
   const toast = useToast();
   const navigate = useNavigate();
   const { currentBlockHeight, activeAccount } = useAeSdk();
@@ -760,7 +762,7 @@ export default function RightRail({
           <button
             className="bg-none border-none text-[var(--neon-teal)] text-base cursor-pointer p-1 rounded transition-all duration-200 hover:bg-[rgba(0,255,157,0.1)] hover:scale-110"
             onClick={() => window.location.href = '/trends'}
-            title="Explore all trends"
+            title={t('titles.exploreAllTrends')}
           >
             🔍
           </button>
@@ -896,7 +898,7 @@ export default function RightRail({
             cursor: "pointer",
           }}
           onClick={() => setShowLiveFeed(!showLiveFeed)}
-          title="Click to toggle live feed"
+          title={t('titles.clickToToggleLiveFeed')}
         >
           <span style={{ fontSize: "18px" }}>📡</span>
           <h4
@@ -1085,51 +1087,58 @@ export default function RightRail({
           <button
             className="bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(236,72,153,0.35)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/trends/tokens')}
-            title="Explore trends"
+            title={t('titles.exploreTrends')}
           >
             🔍 Explore Trends
           </button>
           <button
             className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(244,63,94,0.35)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/trends/create')}
-            title="Tokenize a trend"
+            title={t('titles.tokenizeATrend')}
           >
             🚀 Tokenize a Trend
           </button>
           <button
             className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(16,185,129,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/defi/swap')}
-            title="Swap tokens on the DEX"
+            title={t('titles.swapTokensOnDex')}
           >
             🔄 Swap Tokens
           </button>
           <button
             className="bg-gradient-to-r from-sky-500 to-blue-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(59,130,246,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/defi/wrap')}
-            title="Wrap or unwrap AE"
+            title={t('titles.wrapOrUnwrapAe')}
           >
             📦 Wrap AE
           </button>
           <button
             className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(59,130,246,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/defi/buy-ae-with-eth')}
-            title="Buy AE with ETH"
+            title={t('titles.buyAeWithEth')}
           >
             🌉 Buy AE with ETH
           </button>
           <button
             className="bg-gradient-to-r from-amber-500 to-orange-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(245,158,11,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/defi/pool')}
-            title="Provide liquidity to pools"
+            title={t('titles.provideLiquidityToPools')}
           >
             💧 Provide Liquidity
+          </button>
+          <button
+            className="bg-gradient-to-r from-violet-500 to-indigo-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(139,92,246,0.35)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            onClick={() => navigate('/voting')}
+            title="Participate in governance"
+          >
+            🗳️ Voting
           </button>
           <a
             href="https://quali.chat"
             target="_blank"
             rel="noopener noreferrer"
             className="col-span-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(147,51,234,0.35)] no-underline text-center flex items-center justify-center gap-1.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
-            title="Open Chat"
+            title={t('titles.openChat')}
           >
             💬 Chat
           </a>

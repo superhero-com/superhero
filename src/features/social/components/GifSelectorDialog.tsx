@@ -27,6 +27,7 @@ export function GifSelectorDialog({
   const [query, setQuery] = useState("");
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const isFetchingRef = useRef(false);
   
   const { 
     data, 
@@ -49,13 +50,19 @@ export function GifSelectorDialog({
       }
       const { data, pagination } = await fetchJson(url.toString());
       return {
-        results: data.map(({ images }: any) => ({
-          still: images.fixed_width_still.url,
-          animated: images.fixed_width.url,
-          original: images.original.url,
+        results: data.map(({ images, id }: any) => ({
+          id: id, // Use Giphy's unique ID
+          still: images?.fixed_width_still?.url,
+          animated: images?.fixed_width?.url,
+          // Prefer lightweight mp4 for smooth autoplay where available
+          mp4:
+            images?.fixed_width?.mp4 ||
+            images?.downsized_small?.mp4 ||
+            images?.original_mp4?.mp4,
+          original: images?.original?.url,
           // capture intrinsic dimensions to preserve aspect ratio downstream
-          width: Number(images.original.width),
-          height: Number(images.original.height),
+          width: Number(images?.original?.width),
+          height: Number(images?.original?.height),
         })),
         totalCount: pagination.total_count,
         nextOffset: pagination.offset + pagination.count,
@@ -77,17 +84,27 @@ export function GifSelectorDialog({
   useEffect(() => {
     if (!('IntersectionObserver' in window)) return;
     const sentinel = sentinelRef.current;
-    const scrollContainer = scrollContainerRef.current;
-    if (!sentinel || !scrollContainer) return;
+    if (!sentinel) return;
     
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
+        // Prevent multiple simultaneous fetches
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage && !isFetchingRef.current) {
+          isFetchingRef.current = true;
+          fetchNextPage().finally(() => {
+            // Add a small delay to prevent rapid re-triggering on iOS
+            setTimeout(() => {
+              isFetchingRef.current = false;
+            }, 300);
+          });
         }
       },
-      { root: scrollContainer, rootMargin: '100px', threshold: 0 }
+      { 
+        // Don't specify root for better iOS compatibility
+        rootMargin: '200px', 
+        threshold: 0 
+      }
     );
     
     observer.observe(sentinel);
@@ -165,38 +182,48 @@ export function GifSelectorDialog({
             </div>
           )}
           {isLoading && (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center h-[400px]">
               <div className="animate-spin h-8 w-8 border-4 border-primary-400 border-t-transparent rounded-full" />
             </div>
           )}
 
           {error && (
-            <div className="text-red-500 text-center py-4">Error: {error.message}</div>
+            <div className="text-red-500 text-center h-[400px] flex items-center justify-center">Error: {error.message}</div>
           )}
 
           {!isLoading && !error && (
-            <div 
+          <div 
               ref={scrollContainerRef}
-              className="grid grid-cols-3 gap-3 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+              className="grid grid-cols-3 gap-3 h-[400px] overflow-y-auto overflow-x-visible scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent p-2 -m-2"
             >
-              {results.map((result, index) => (
+              {results.map((result) => (
                 <div
-                  key={index}
+                  key={result.id}
                   onClick={() => handleGifClick(result)}
-                  className="group relative aspect-square overflow-hidden rounded-lg cursor-pointer bg-white/5 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary-400/20 hover:ring-2 hover:ring-primary-400/50"
+                  className="relative w-full cursor-pointer bg-white/5 rounded-lg transition-all duration-200 active:scale-95 sm:hover:scale-105 sm:hover:shadow-lg sm:hover:shadow-primary-400/20 sm:hover:ring-2 sm:hover:ring-primary-400/50 hover:z-20 overflow-visible"
+                  style={{ paddingBottom: '100%' }}
                 >
-                  <img
-                    src={result.still}
-                    alt="GIF preview"
-                    className="w-full h-full object-cover group-hover:hidden"
-                    loading="lazy"
-                  />
-                  <img
-                    src={result.animated}
-                    alt="GIF animated"
-                    className="w-full h-full object-contain hidden group-hover:block"
-                    loading="lazy"
-                  />
+                  <div className="absolute inset-0 rounded-lg overflow-hidden">
+                    {result?.mp4 ? (
+                      <video
+                        src={result.mp4}
+                        poster={result.still}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+                      />
+                    ) : (
+                      <img
+                        src={result.animated || result.still}
+                        alt="GIF preview"
+                        className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
+                        loading="lazy"
+                      />
+                    )}
+                  </div>
                 </div>
               ))}
               {/* Sentinel for infinite scroll */}

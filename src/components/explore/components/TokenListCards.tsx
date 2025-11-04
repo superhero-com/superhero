@@ -1,29 +1,40 @@
 import { useNavigate } from "react-router-dom";
 import { Token } from "../types/explore";
 import { DexTokenDto } from "../../../api/generated";
+import { PriceDataFormatter } from "@/features/shared/components";
+import { useMemo } from 'react';
+import { useAtomValue } from "jotai";
+import { performanceChartTimeframeAtom } from "@/features/trending/atoms";
+import PerformanceTimeframeSelector from "@/features/trending/components/PerformanceTimeframeSelector";
 
 interface TokenListCardsProps {
   tokens: DexTokenDto[];
   sort: {
     key:
+      | "pairs_count"
       | "name"
-      | "pairs"
-      | "priceUsd"
-      | "tvlUsd"
-      | "priceChangeDay"
-      | "volumeUsdDay"
-      | "volumeUsdAll";
+      | "symbol"
+      | "created_at"
+      | "price"
+      | "tvl"
+      | "24hchange"
+      | "24hvolume"
+      | "7dchange"
+      | "7dvolume";
     asc: boolean;
   };
   onSortChange: (
     key:
+      | "pairs_count"
       | "name"
-      | "pairs"
-      | "priceUsd"
-      | "tvlUsd"
-      | "priceChangeDay"
-      | "volumeUsdDay"
-      | "volumeUsdAll"
+      | "symbol"
+      | "created_at"
+      | "price"
+      | "tvl"
+      | "24hchange"
+      | "24hvolume"
+      | "7dchange"
+      | "7dvolume"
   ) => void;
   search: string;
   onSearchChange: (value: string) => void;
@@ -39,15 +50,28 @@ export function TokenListCards({
 }: TokenListCardsProps) {
   const navigate = useNavigate();
 
+  const performanceChartTimeframe = useAtomValue(performanceChartTimeframeAtom);
+
+  const timeBase = useMemo(() => {
+    if (performanceChartTimeframe === "1d") {
+      return "24h";
+    }
+
+    return performanceChartTimeframe;
+  }, [performanceChartTimeframe]);
+
   const handleSort = (
     key:
+      | "pairs_count"
       | "name"
-      | "pairs"
-      | "priceUsd"
-      | "tvlUsd"
-      | "priceChangeDay"
-      | "volumeUsdDay"
-      | "volumeUsdAll"
+      | "symbol"
+      | "created_at"
+      | "price"
+      | "tvl"
+      | "24hchange"
+      | "24hvolume"
+      | "7dchange"
+      | "7dvolume"
   ) => {
     onSortChange(key);
   };
@@ -92,13 +116,16 @@ export function TokenListCards({
                   onChange={(e) => handleSort(e.target.value as any)}
                   className="appearance-none py-[6px] pr-7 pl-3 rounded-lg bg-white/10 text-white border border-white/10 backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[100px] focus:border-green-500 focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
                 >
+                  <option value="pairs_count">Pools</option>
                   <option value="name">Name</option>
-                  <option value="pairs">Pools</option>
-                  <option value="priceUsd">Price</option>
-                  <option value="tvlUsd">TVL</option>
-                  <option value="priceChangeDay">24h Change</option>
-                  <option value="volumeUsdDay">24h Volume</option>
-                  <option value="volumeUsdAll">Total Volume</option>
+                  <option value="symbol">Symbol</option>
+                  <option value="created_at">Created At</option>
+                  <option value="price">Price</option>
+                  <option value="tvl">TVL</option>
+                  <option value="24hchange">24h Change</option>
+                  <option value="24hvolume">24h Volume</option>
+                  <option value="7dchange">7d Change</option>
+                  <option value="7dvolume">7d Volume</option>
                 </select>
 
                 {/* Custom Dropdown Arrow */}
@@ -118,6 +145,9 @@ export function TokenListCards({
               >
                 {sort.asc ? "↑" : "↓"}
               </button>
+            </div>
+            <div className="flex items-center justify-center w-auto flex-shrink-0">
+            <PerformanceTimeframeSelector />
             </div>
           </div>
 
@@ -200,7 +230,7 @@ export function TokenListCards({
                     Price
                   </div>
                   <div className="text-sm text-white font-semibold">
-                    -
+                  <PriceDataFormatter priceData={token.price} bignumber />
                   </div>
                 </div>
 
@@ -210,27 +240,27 @@ export function TokenListCards({
                     TVL
                   </div>
                   <div className="text-sm text-white font-semibold">
-                    -
+                  <PriceDataFormatter priceData={token.summary.total_volume} bignumber />
                   </div>
                 </div>
 
                 {/* 24h Change */}
                 <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
-                    24h Change
+                    {timeBase} Change
                   </div>
                   <div className="text-sm font-semibold">
-                    -
+                  <PriceDataFormatter priceData={token.summary.change[timeBase].volume} bignumber />
                   </div>
                 </div>
 
                 {/* 24h Volume */}
                 <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
-                    24h Volume
+                  {timeBase} Volume
                   </div>
                   <div className="text-sm text-white font-semibold">
-                    -
+                  <PriceDataFormatter priceData={token.summary.change[timeBase].volume} bignumber />
                   </div>
                 </div>
               </div>

@@ -209,7 +209,7 @@ export default function TrendingPillsCarousel() {
                 onClick={() => {
                   const url = hasToken 
                     ? `/trends/tokens/${encodeURIComponent(tag.tag)}` 
-                    : `/trends/create?new=${encodeURIComponent(tag.tag)}`;
+                    : `/trends/create?tokenName=${encodeURIComponent(tag.tag)}`;
                   window.location.href = url;
                 }}
               >

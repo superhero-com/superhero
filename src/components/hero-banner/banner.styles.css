@@ -45,6 +45,19 @@
   }
 }
 
+/* Apply right padding only to the lede paragraph to avoid planet overlap */
+@media (min-width: 769px) {
+  .banner-lede {
+    padding-right: clamp(120px, 14vmax, 320px);
+  }
+}
+
+@media (max-width: 768px) {
+  .banner-lede {
+    padding-right: clamp(72px, 26vw, 160px);
+  }
+}
+
 /* Brand */
 .banner-brand {
   display: flex;

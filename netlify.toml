@@ -1,14 +1,23 @@
 [build]
-  publish = "dist"
-  command = "npm run build"
+  command = """
+    if [ -n "$NETLIFY_DOCS_SITE" ]; then
+      echo "Building docs site..."
+      python -m pip install --upgrade pip && python -m pip install -r docs/requirements.txt && python -m mkdocs build
+    else
+      echo "Building app site..."
+      npm run build
+    fi
+  """
 
 [build.environment]
   NODE_VERSION = "18"
 
+# SPA redirect - catch-all for app routes
+# Note: More specific paths (like docs) should be served directly if files exist
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+from = "/*"
+to = "/index.html"
+status = 200
 
 [dev]
   command = "npm run dev"
@@ -37,7 +46,7 @@ for = "/*"
     Referrer-Policy = "strict-origin-when-cross-origin"
     X-Content-Type-Options = "nosniff"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    Permissions-Policy = "interest-cohort=()"
+    Permissions-Policy = "interest-cohort=(), clipboard-write=(self)"
 
 [[headers]]
 for = "/assets/*"

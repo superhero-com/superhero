@@ -1,0 +1,1998 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://superhero.com/hackathon/_archive/MOBILE_OPTIMIZATIONS/">
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.22">
+    
+    
+      
+        <title>Mobile Optimizations for Superhero React App - Superhero Hackathon</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.84d31ad4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#mobile-optimizations-for-superhero-react-app" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Superhero Hackathon" class="md-header__button md-logo" aria-label="Superhero Hackathon" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Superhero Hackathon
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Mobile Optimizations for Superhero React App
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/superhero-com/superhero" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    superhero-com/superhero
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Superhero Hackathon" class="md-nav__button md-logo" aria-label="Superhero Hackathon" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Superhero Hackathon
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/superhero-com/superhero" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    superhero-com/superhero
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/00-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/00a-quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quickstart
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Setup
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Setup
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/01-setup-environment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Environment
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/01a-superhero-wallet-and-account/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Wallet & Account
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Build
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Build
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/02-project-scaffold/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Project scaffold
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/03-sophia-basics-for-builders/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Sophia basics
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/04-compiler-and-build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Compiler & build
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/05-contract-poll-walkthrough/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contract walkthrough
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/06-testing-with-vitest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Testing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/07-deploy-devnet-and-testnet/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Deploy
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/07a-middleware-and-data-access/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Middleware & data
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/08-integrate-into-superhero-extension/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Integrate extension
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/08a-plugin-sdk-deep-dive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plugin SDK deep dive
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/09-ai-workflows-in-cursor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AI workflows
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/10-troubleshooting-and-faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/11-security-checklist/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Security
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/12-reference-links-and-glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    References
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/13-checklist-and-deploy-extension/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Checklist
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latest-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      🚀 Latest Updates
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🚀 Latest Updates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#eth-ae-component-replacement" class="md-nav__link">
+    <span class="md-ellipsis">
+      ETH -&gt; AE Component Replacement
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benefits-of-native-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      Benefits of Native Component
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scss-compilation-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      SCSS Compilation Fixes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mobile-navigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      �� Mobile Navigation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="�� Mobile Navigation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enhanced-mobile-navigation-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enhanced Mobile Navigation Component
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mobile-navigation-styles" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile Navigation Styles
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mobile-optimized-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎨 Mobile-Optimized Components
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎨 Mobile-Optimized Components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-mobileinput-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. MobileInput Component
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-mobilecard-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. MobileCard Component
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-enhanced-aebutton-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Enhanced AeButton Component
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layout-optimizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      🏗️ Layout Optimizations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🏗️ Layout Optimizations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shell-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      Shell Layout
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#app-container" class="md-nav__link">
+    <span class="md-ellipsis">
+      App Container
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#base-styles-mixins" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎨 Base Styles &amp; Mixins
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎨 Base Styles &amp; Mixins">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enhanced-base-styles" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enhanced Base Styles
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comprehensive-mixins" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comprehensive Mixins
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mobile-specific-optimizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      📱 Mobile-Specific Optimizations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📱 Mobile-Specific Optimizations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#app-level-mobile-styles" class="md-nav__link">
+    <span class="md-ellipsis">
+      App-Level Mobile Styles
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#top-navigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Top Navigation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-optimizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      🚀 Performance Optimizations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🚀 Performance Optimizations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mobile-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile Performance
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-optimizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build Optimizations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#touch-friendly-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 Touch-Friendly Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎯 Touch-Friendly Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#minimum-touch-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Minimum Touch Targets
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#touch-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      Touch Feedback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#responsive-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      📐 Responsive Design
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📐 Responsive Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#breakpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      Breakpoints
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mobile-first-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile-First Approach
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visual-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎨 Visual Improvements
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎨 Visual Improvements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mobile-typography" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile Typography
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mobile-spacing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile Spacing
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mobile-colors-themes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile Colors &amp; Themes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔧 Usage Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔧 Usage Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-mobile-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using Mobile Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-mobile-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using Mobile Classes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      🧪 Testing
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🧪 Testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mobile-testing-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile Testing Checklist
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#browser-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Browser Testing
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      📈 Performance Metrics
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📈 Performance Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mobile-performance-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile Performance Targets
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bundle-size-optimizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bundle Size Optimizations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trendminer-mobile-optimizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      🚀 Trendminer Mobile Optimizations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🚀 Trendminer Mobile Optimizations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#optimized-trendminer-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimized Trendminer Components
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Optimized Trendminer Components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-exploretrendssidebar-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. ExploreTrendsSidebar Component
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-latesttransactionscarousel-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. LatestTransactionsCarousel Component
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-tokendetails-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. TokenDetails Component
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-trendcloud-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. TrendCloud Component
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mobile-specific-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile-Specific Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mobile-Specific Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#touch-friendly-interactions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Touch-Friendly Interactions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mobile-performance-optimizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile Performance Optimizations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mobile-navigation-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile Navigation Improvements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mobile-specific-styling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile-Specific Styling
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mobile-testing-checklist-for-trendminer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile Testing Checklist for Trendminer
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dex-mobile-optimizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      🚀 DEX Mobile Optimizations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🚀 DEX Mobile Optimizations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enhanced-dex-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enhanced DEX Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dex-mobile-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      DEX Mobile Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dex-mobile-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      DEX Mobile Features
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#future-enhancements" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔄 Future Enhancements
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔄 Future Enhancements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#planned-mobile-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Planned Mobile Improvements
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      📚 Resources
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📚 Resources">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mobile-development-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile Development Best Practices
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#testing-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Testing Tools
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="mobile-optimizations-for-superhero-react-app">Mobile Optimizations for Superhero React App<a class="headerlink" href="#mobile-optimizations-for-superhero-react-app" title="Permanent link">&para;</a></h1>
+<p>This document outlines all the mobile optimizations implemented to enhance the user experience on mobile devices.</p>
+<h2 id="overview">🎯 Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>The application has been comprehensively optimized for mobile devices with a focus on:
+- <strong>Touch-friendly interactions</strong> - Larger touch targets and better feedback
+- <strong>Mobile-first responsive design</strong> - Progressive enhancement from mobile to desktop
+- <strong>Performance optimizations</strong> - Faster loading and smoother interactions
+- <strong>Enhanced mobile navigation</strong> - Intuitive mobile-specific navigation
+- <strong>Mobile-specific components</strong> - Optimized forms, buttons, and layouts
+- <strong>Native ETH -&gt; AE swap interface</strong> - Replaced iframe with mobile-optimized component</p>
+<h2 id="latest-updates">🚀 Latest Updates<a class="headerlink" href="#latest-updates" title="Permanent link">&para;</a></h2>
+<h3 id="eth-ae-component-replacement">ETH -&gt; AE Component Replacement<a class="headerlink" href="#eth-ae-component-replacement" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Location</strong>: <code>src/components/SwapCard.tsx</code></li>
+<li><strong>Change</strong>: Removed iframe-based Superhero Swap integration and replaced with native mobile-optimized ETH -&gt; AE swap component</li>
+<li><strong>Features</strong>:</li>
+<li>Native mobile-optimized interface using <code>MobileInput</code>, <code>AeButton</code>, and <code>MobileCard</code> components</li>
+<li>Direct integration with æternity DEX for aeETH → AE swaps</li>
+<li>Wallet connection and address display</li>
+<li>Real-time quote fetching and swap execution</li>
+<li>Configurable slippage settings</li>
+<li>Error handling and user feedback</li>
+<li>Touch-friendly input fields and buttons</li>
+<li>Responsive design that works on all screen sizes</li>
+<li>Link to external Superhero Swap for ETH → aeETH bridging</li>
+</ul>
+<h3 id="benefits-of-native-component">Benefits of Native Component<a class="headerlink" href="#benefits-of-native-component" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Better Performance</strong>: No iframe loading delays or cross-origin restrictions</li>
+<li><strong>Improved UX</strong>: Seamless integration with app's design system and navigation</li>
+<li><strong>Mobile Optimization</strong>: Touch-friendly interface with proper spacing and sizing</li>
+<li><strong>Offline Capability</strong>: Works without external dependencies (except for bridging)</li>
+<li><strong>Better Error Handling</strong>: Native error messages and retry mechanisms</li>
+<li><strong>Accessibility</strong>: Proper ARIA labels and keyboard navigation</li>
+</ul>
+<h3 id="scss-compilation-fixes">SCSS Compilation Fixes<a class="headerlink" href="#scss-compilation-fixes" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Issue</strong>: SCSS compilation errors due to <code>$accent_color</code> variable conflicts with CSS custom properties</li>
+<li><strong>Solution</strong>: Replaced <code>$accent_color</code> with direct color values (<code>#007bff</code>) in affected files:</li>
+<li><code>src/components/Trendminer/ExploreTrendsSidebar.scss</code></li>
+<li><code>src/components/Trendminer/LatestTransactionsCarousel.scss</code></li>
+<li><code>src/views/Trendminer/TokenDetails.scss</code></li>
+<li><strong>Result</strong>: Eliminated SCSS compilation errors and improved build stability</li>
+</ul>
+<h2 id="mobile-navigation">�� Mobile Navigation<a class="headerlink" href="#mobile-navigation" title="Permanent link">&para;</a></h2>
+<h3 id="enhanced-mobile-navigation-component">Enhanced Mobile Navigation Component<a class="headerlink" href="#enhanced-mobile-navigation-component" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Location</strong>: <code>src/components/layout/MobileNavigation.tsx</code></li>
+<li><strong>Features</strong>:</li>
+<li>Full-screen overlay navigation menu</li>
+<li>Touch-friendly navigation items (56px minimum height)</li>
+<li>Smooth animations and transitions</li>
+<li>Theme toggle integration</li>
+<li>Search functionality integration</li>
+<li>Better visual feedback on touch</li>
+</ul>
+<h3 id="mobile-navigation-styles">Mobile Navigation Styles<a class="headerlink" href="#mobile-navigation-styles" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Location</strong>: <code>src/components/layout/MobileNavigation.scss</code></li>
+<li><strong>Improvements</strong>:</li>
+<li>Better touch targets (44px minimum)</li>
+<li>Improved visual hierarchy</li>
+<li>Smooth transitions and animations</li>
+<li>Better contrast and readability</li>
+<li>Responsive design for different screen sizes</li>
+</ul>
+<h2 id="mobile-optimized-components">🎨 Mobile-Optimized Components<a class="headerlink" href="#mobile-optimized-components" title="Permanent link">&para;</a></h2>
+<h3 id="1-mobileinput-component">1. MobileInput Component<a class="headerlink" href="#1-mobileinput-component" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Location</strong>: <code>src/components/MobileInput.tsx</code> &amp; <code>src/components/MobileInput.scss</code></li>
+<li><strong>Features</strong>:</li>
+<li>Touch-friendly input fields (48px minimum height)</li>
+<li>Prevents zoom on iOS (16px font size)</li>
+<li>Better focus states and visual feedback</li>
+<li>Icon support (left/right icons)</li>
+<li>Error and helper text display</li>
+<li>Multiple variants (default, filled, outlined)</li>
+<li>Multiple sizes (small, medium, large)</li>
+</ul>
+<h3 id="2-mobilecard-component">2. MobileCard Component<a class="headerlink" href="#2-mobilecard-component" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Location</strong>: <code>src/components/MobileCard.tsx</code> &amp; <code>src/components/MobileCard.scss</code></li>
+<li><strong>Features</strong>:</li>
+<li>Touch-friendly clickable cards</li>
+<li>Loading states with skeleton animations</li>
+<li>Multiple variants (default, elevated, outlined, filled)</li>
+<li>Responsive padding options</li>
+<li>Smooth hover and active states</li>
+<li>Better visual hierarchy</li>
+</ul>
+<h3 id="3-enhanced-aebutton-component">3. Enhanced AeButton Component<a class="headerlink" href="#3-enhanced-aebutton-component" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Location</strong>: <code>src/components/AeButton.scss</code></li>
+<li><strong>Improvements</strong>:</li>
+<li>Larger touch targets (48px minimum)</li>
+<li>Better visual feedback on touch</li>
+<li>Multiple size variants (small, medium, large)</li>
+<li>Block variant for full-width buttons</li>
+<li>Icon-only variant</li>
+<li>Improved hover and active states</li>
+</ul>
+<h2 id="layout-optimizations">🏗️ Layout Optimizations<a class="headerlink" href="#layout-optimizations" title="Permanent link">&para;</a></h2>
+<h3 id="shell-layout">Shell Layout<a class="headerlink" href="#shell-layout" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Location</strong>: <code>src/components/layout/Shell.scss</code></li>
+<li><strong>Improvements</strong>:</li>
+<li>Mobile-first responsive grid</li>
+<li>Better spacing for mobile devices</li>
+<li>Improved sidebar handling on mobile</li>
+<li>Account for mobile navigation height</li>
+</ul>
+<h3 id="app-container">App Container<a class="headerlink" href="#app-container" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Location</strong>: <code>src/App.tsx</code> &amp; <code>src/styles/mobile-optimizations.scss</code></li>
+<li><strong>Improvements</strong>:</li>
+<li>Mobile-optimized container structure</li>
+<li>Better responsive breakpoints</li>
+<li>Improved loading states</li>
+</ul>
+<h2 id="base-styles-mixins">🎨 Base Styles &amp; Mixins<a class="headerlink" href="#base-styles-mixins" title="Permanent link">&para;</a></h2>
+<h3 id="enhanced-base-styles">Enhanced Base Styles<a class="headerlink" href="#enhanced-base-styles" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Location</strong>: <code>src/styles/base.scss</code></li>
+<li><strong>Improvements</strong>:</li>
+<li>Touch-friendly minimum sizes (44px)</li>
+<li>Better viewport handling</li>
+<li>Improved typography for mobile</li>
+<li>Better form controls</li>
+<li>Performance optimizations</li>
+</ul>
+<h3 id="comprehensive-mixins">Comprehensive Mixins<a class="headerlink" href="#comprehensive-mixins" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Location</strong>: <code>src/styles/mixins.scss</code></li>
+<li><strong>New Mixins</strong>:</li>
+<li><code>mobile-small</code> (≤480px)</li>
+<li><code>mobile-large</code> (≤1024px)</li>
+<li><code>tablet</code> (769px-1024px)</li>
+<li><code>desktop</code> (≥1025px)</li>
+<li><code>mobile-first</code> - Mobile-first responsive approach</li>
+<li><code>touch-spacing</code> - Touch-friendly spacing</li>
+<li><code>mobile-grid</code> - Mobile-optimized grid layouts</li>
+<li><code>mobile-flex</code> - Mobile-optimized flex layouts</li>
+</ul>
+<h2 id="mobile-specific-optimizations">📱 Mobile-Specific Optimizations<a class="headerlink" href="#mobile-specific-optimizations" title="Permanent link">&para;</a></h2>
+<h3 id="app-level-mobile-styles">App-Level Mobile Styles<a class="headerlink" href="#app-level-mobile-styles" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Location</strong>: <code>src/styles/mobile-optimizations.scss</code></li>
+<li><strong>Features</strong>:</li>
+<li>Mobile-optimized containers and grids</li>
+<li>Touch-friendly forms and buttons</li>
+<li>Mobile-specific navigation styles</li>
+<li>Optimized modals and overlays</li>
+<li>Better loading and empty states</li>
+<li>Performance optimizations</li>
+<li>Accessibility improvements</li>
+</ul>
+<h3 id="top-navigation">Top Navigation<a class="headerlink" href="#top-navigation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Location</strong>: <code>src/components/layout/TopNav.scss</code></li>
+<li><strong>Improvements</strong>:</li>
+<li>Hidden on mobile (uses mobile navigation instead)</li>
+<li>Better responsive design for tablet/desktop</li>
+<li>Improved visual hierarchy</li>
+</ul>
+<h2 id="performance-optimizations">🚀 Performance Optimizations<a class="headerlink" href="#performance-optimizations" title="Permanent link">&para;</a></h2>
+<h3 id="mobile-performance">Mobile Performance<a class="headerlink" href="#mobile-performance" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Reduced animation durations for better performance</li>
+<li>Optimized scrolling with <code>-webkit-overflow-scrolling: touch</code></li>
+<li>Respect for <code>prefers-reduced-motion</code> user preference</li>
+<li>Better touch feedback with <code>touch-action: manipulation</code></li>
+<li>Optimized loading states and skeleton animations</li>
+</ul>
+<h3 id="build-optimizations">Build Optimizations<a class="headerlink" href="#build-optimizations" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Mobile-first CSS architecture</li>
+<li>Efficient responsive breakpoints</li>
+<li>Optimized bundle sizes for mobile</li>
+</ul>
+<h2 id="touch-friendly-features">🎯 Touch-Friendly Features<a class="headerlink" href="#touch-friendly-features" title="Permanent link">&para;</a></h2>
+<h3 id="minimum-touch-targets">Minimum Touch Targets<a class="headerlink" href="#minimum-touch-targets" title="Permanent link">&para;</a></h3>
+<ul>
+<li>All interactive elements: 44px minimum (48px on mobile)</li>
+<li>Buttons and links: 48px minimum height/width</li>
+<li>Form inputs: 48px minimum height</li>
+<li>Navigation items: 56px minimum height</li>
+</ul>
+<h3 id="touch-feedback">Touch Feedback<a class="headerlink" href="#touch-feedback" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Visual feedback on touch/active states</li>
+<li>Smooth transitions and animations</li>
+<li>Better hover states for touch devices</li>
+<li>Improved focus indicators</li>
+</ul>
+<h2 id="responsive-design">📐 Responsive Design<a class="headerlink" href="#responsive-design" title="Permanent link">&para;</a></h2>
+<h3 id="breakpoints">Breakpoints<a class="headerlink" href="#breakpoints" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Mobile Small</strong>: ≤480px</li>
+<li><strong>Mobile</strong>: ≤768px</li>
+<li><strong>Tablet</strong>: 769px-1024px</li>
+<li><strong>Desktop</strong>: ≥1025px</li>
+</ul>
+<h3 id="mobile-first-approach">Mobile-First Approach<a class="headerlink" href="#mobile-first-approach" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Styles start with mobile as the base</li>
+<li>Progressive enhancement for larger screens</li>
+<li>Efficient CSS with minimal overrides</li>
+</ul>
+<h2 id="visual-improvements">🎨 Visual Improvements<a class="headerlink" href="#visual-improvements" title="Permanent link">&para;</a></h2>
+<h3 id="mobile-typography">Mobile Typography<a class="headerlink" href="#mobile-typography" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Optimized font sizes for mobile readability</li>
+<li>Better line heights and spacing</li>
+<li>Improved contrast ratios</li>
+</ul>
+<h3 id="mobile-spacing">Mobile Spacing<a class="headerlink" href="#mobile-spacing" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Consistent 16px base spacing</li>
+<li>Reduced to 12px on small mobile devices</li>
+<li>Better visual hierarchy</li>
+</ul>
+<h3 id="mobile-colors-themes">Mobile Colors &amp; Themes<a class="headerlink" href="#mobile-colors-themes" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Optimized for both light and dark themes</li>
+<li>Better contrast for mobile viewing</li>
+<li>Improved accessibility</li>
+</ul>
+<h2 id="usage-examples">🔧 Usage Examples<a class="headerlink" href="#usage-examples" title="Permanent link">&para;</a></h2>
+<h3 id="using-mobile-components">Using Mobile Components<a class="headerlink" href="#using-mobile-components" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// Mobile-optimized input</span>
+<span class="p">&lt;</span><span class="nt">MobileInput</span>
+<span class="w">  </span><span class="na">label</span><span class="o">=</span><span class="s">&quot;Amount&quot;</span>
+<span class="w">  </span><span class="na">placeholder</span><span class="o">=</span><span class="s">&quot;Enter amount&quot;</span>
+<span class="w">  </span><span class="na">variant</span><span class="o">=</span><span class="s">&quot;filled&quot;</span>
+<span class="w">  </span><span class="na">size</span><span class="o">=</span><span class="s">&quot;large&quot;</span>
+<span class="w">  </span><span class="na">leftIcon</span><span class="o">=</span><span class="p">{&lt;</span><span class="nt">IconWallet</span><span class="w"> </span><span class="p">/&gt;}</span>
+<span class="p">/&gt;</span>
+
+<span class="c1">// Mobile-optimized card</span>
+<span class="p">&lt;</span><span class="nt">MobileCard</span>
+<span class="w">  </span><span class="na">variant</span><span class="o">=</span><span class="s">&quot;elevated&quot;</span>
+<span class="w">  </span><span class="na">padding</span><span class="o">=</span><span class="s">&quot;medium&quot;</span>
+<span class="w">  </span><span class="na">clickable</span>
+<span class="w">  </span><span class="na">onClick</span><span class="o">=</span><span class="p">{</span><span class="nx">handleClick</span><span class="p">}</span>
+<span class="p">&gt;</span>
+<span class="w">  </span><span class="p">&lt;</span><span class="nt">h3</span><span class="p">&gt;</span><span class="nx">Card</span><span class="w"> </span><span class="nx">Title</span><span class="p">&lt;/</span><span class="nt">h3</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span><span class="nx">Card</span><span class="w"> </span><span class="nx">content</span><span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">MobileCard</span><span class="p">&gt;</span>
+
+<span class="c1">// Mobile-optimized button</span>
+<span class="p">&lt;</span><span class="nt">AeButton</span>
+<span class="w">  </span><span class="na">className</span><span class="o">=</span><span class="s">&quot;large block&quot;</span>
+<span class="w">  </span><span class="na">green</span>
+<span class="w">  </span><span class="na">onClick</span><span class="o">=</span><span class="p">{</span><span class="nx">handleAction</span><span class="p">}</span>
+<span class="p">&gt;</span>
+<span class="w">  </span><span class="nx">Connect</span><span class="w"> </span><span class="nx">Wallet</span>
+<span class="p">&lt;/</span><span class="nt">AeButton</span><span class="p">&gt;</span>
+</code></pre></div>
+<h3 id="using-mobile-classes">Using Mobile Classes<a class="headerlink" href="#using-mobile-classes" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// Mobile-optimized layout</span>
+<span class="p">&lt;</span><span class="nt">div</span><span class="w"> </span><span class="na">className</span><span class="o">=</span><span class="s">&quot;mobile-container&quot;</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="p">&lt;</span><span class="nt">div</span><span class="w"> </span><span class="na">className</span><span class="o">=</span><span class="s">&quot;mobile-grid&quot;</span><span class="p">&gt;</span>
+<span class="w">    </span><span class="p">&lt;</span><span class="nt">div</span><span class="w"> </span><span class="na">className</span><span class="o">=</span><span class="s">&quot;mobile-card&quot;</span><span class="p">&gt;</span><span class="nx">Content</span><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+
+<span class="w">  </span><span class="p">&lt;</span><span class="nt">form</span><span class="w"> </span><span class="na">className</span><span class="o">=</span><span class="s">&quot;mobile-form&quot;</span><span class="p">&gt;</span>
+<span class="w">    </span><span class="p">&lt;</span><span class="nt">div</span><span class="w"> </span><span class="na">className</span><span class="o">=</span><span class="s">&quot;form-group&quot;</span><span class="p">&gt;</span>
+<span class="w">      </span><span class="p">&lt;</span><span class="nt">MobileInput</span><span class="w"> </span><span class="na">label</span><span class="o">=</span><span class="s">&quot;Field&quot;</span><span class="w"> </span><span class="p">/&gt;</span>
+<span class="w">    </span><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+
+<span class="w">    </span><span class="p">&lt;</span><span class="nt">div</span><span class="w"> </span><span class="na">className</span><span class="o">=</span><span class="s">&quot;mobile-button-group&quot;</span><span class="p">&gt;</span>
+<span class="w">      </span><span class="p">&lt;</span><span class="nt">AeButton</span><span class="p">&gt;</span><span class="nx">Cancel</span><span class="p">&lt;/</span><span class="nt">AeButton</span><span class="p">&gt;</span>
+<span class="w">      </span><span class="p">&lt;</span><span class="nt">AeButton</span><span class="w"> </span><span class="na">green</span><span class="p">&gt;</span><span class="nx">Submit</span><span class="p">&lt;/</span><span class="nt">AeButton</span><span class="p">&gt;</span>
+<span class="w">    </span><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</code></pre></div>
+<h2 id="testing">🧪 Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h2>
+<h3 id="mobile-testing-checklist">Mobile Testing Checklist<a class="headerlink" href="#mobile-testing-checklist" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Touch targets are at least 44px (48px preferred)</li>
+<li>[ ] No horizontal scrolling on mobile</li>
+<li>[ ] Forms work well on mobile keyboards</li>
+<li>[ ] Navigation is intuitive on mobile</li>
+<li>[ ] Loading states are smooth</li>
+<li>[ ] Animations are performant</li>
+<li>[ ] Text is readable on small screens</li>
+<li>[ ] Buttons are easy to tap</li>
+<li>[ ] Modals work well on mobile</li>
+<li>[ ] Search functionality is mobile-friendly</li>
+</ul>
+<h3 id="browser-testing">Browser Testing<a class="headerlink" href="#browser-testing" title="Permanent link">&para;</a></h3>
+<ul>
+<li>iOS Safari</li>
+<li>Android Chrome</li>
+<li>Mobile Firefox</li>
+<li>Mobile Edge</li>
+</ul>
+<h2 id="performance-metrics">📈 Performance Metrics<a class="headerlink" href="#performance-metrics" title="Permanent link">&para;</a></h2>
+<h3 id="mobile-performance-targets">Mobile Performance Targets<a class="headerlink" href="#mobile-performance-targets" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>First Contentful Paint</strong>: &lt; 1.5s</li>
+<li><strong>Largest Contentful Paint</strong>: &lt; 2.5s</li>
+<li><strong>Cumulative Layout Shift</strong>: &lt; 0.1</li>
+<li><strong>First Input Delay</strong>: &lt; 100ms</li>
+</ul>
+<h3 id="bundle-size-optimizations">Bundle Size Optimizations<a class="headerlink" href="#bundle-size-optimizations" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Mobile-first CSS architecture</li>
+<li>Efficient responsive breakpoints</li>
+<li>Optimized component imports</li>
+<li>Lazy loading for non-critical components</li>
+</ul>
+<h2 id="trendminer-mobile-optimizations">🚀 Trendminer Mobile Optimizations<a class="headerlink" href="#trendminer-mobile-optimizations" title="Permanent link">&para;</a></h2>
+<h3 id="optimized-trendminer-components">Optimized Trendminer Components<a class="headerlink" href="#optimized-trendminer-components" title="Permanent link">&para;</a></h3>
+<h4 id="1-exploretrendssidebar-component">1. ExploreTrendsSidebar Component<a class="headerlink" href="#1-exploretrendssidebar-component" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Location</strong>: <code>src/components/Trendminer/ExploreTrendsSidebar.tsx</code> &amp; <code>src/components/Trendminer/ExploreTrendsSidebar.scss</code></li>
+<li><strong>Mobile Improvements</strong>:</li>
+<li>Responsive layout with mobile-first design</li>
+<li>Touch-friendly trend item cards with 44px minimum touch targets</li>
+<li>Mobile-optimized search input with 16px font size (prevents iOS zoom)</li>
+<li>Collapsible configuration panel for better mobile UX</li>
+<li>Improved visual hierarchy and spacing for mobile screens</li>
+<li>Smooth animations and transitions optimized for mobile performance</li>
+</ul>
+<h4 id="2-latesttransactionscarousel-component">2. LatestTransactionsCarousel Component<a class="headerlink" href="#2-latesttransactionscarousel-component" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Location</strong>: <code>src/components/Trendminer/LatestTransactionsCarousel.tsx</code> &amp; <code>src/components/Trendminer/LatestTransactionsCarousel.scss</code></li>
+<li><strong>Mobile Improvements</strong>:</li>
+<li>Responsive carousel with mobile-optimized card sizes</li>
+<li>Touch-friendly transaction cards with proper spacing</li>
+<li>Smooth scrolling animations with reduced motion support</li>
+<li>Mobile-specific gradient overlays for better visual feedback</li>
+<li>Optimized typography and spacing for small screens</li>
+<li>Pause animation on hover for better mobile interaction</li>
+</ul>
+<h4 id="3-tokendetails-component">3. TokenDetails Component<a class="headerlink" href="#3-tokendetails-component" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Location</strong>: <code>src/views/Trendminer/TokenDetails.tsx</code> &amp; <code>src/views/Trendminer/TokenDetails.scss</code></li>
+<li><strong>Mobile Improvements</strong>:</li>
+<li>Mobile-first responsive layout with stacked sections</li>
+<li>Touch-friendly action buttons with 44px minimum height</li>
+<li>Mobile-optimized chart controls with larger touch targets</li>
+<li>Responsive tab navigation with improved mobile UX</li>
+<li>Mobile-specific loading and error states</li>
+<li>Optimized typography and spacing for mobile readability</li>
+<li>Collapsible configuration sections for better mobile organization</li>
+</ul>
+<h4 id="4-trendcloud-component">4. TrendCloud Component<a class="headerlink" href="#4-trendcloud-component" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Location</strong>: <code>src/views/Trendminer/TrendCloud.tsx</code> &amp; <code>src/views/Trendminer/TrendCloud.scss</code></li>
+<li><strong>Mobile Improvements</strong>:</li>
+<li>Responsive word cloud with mobile-optimized sizing</li>
+<li>Touch-friendly configuration controls with proper spacing</li>
+<li>Mobile-specific grid layout for trend items</li>
+<li>Collapsible configuration panel to save mobile screen space</li>
+<li>Optimized hover tooltips for touch devices</li>
+<li>Mobile-optimized search and filter controls</li>
+<li>Responsive chart containers with proper mobile scaling</li>
+</ul>
+<h3 id="mobile-specific-features">Mobile-Specific Features<a class="headerlink" href="#mobile-specific-features" title="Permanent link">&para;</a></h3>
+<h4 id="touch-friendly-interactions">Touch-Friendly Interactions<a class="headerlink" href="#touch-friendly-interactions" title="Permanent link">&para;</a></h4>
+<ul>
+<li>All interactive elements have minimum 44px touch targets</li>
+<li>Improved touch feedback with visual state changes</li>
+<li>Optimized button sizes and spacing for mobile fingers</li>
+<li>Better hover states that work well on touch devices</li>
+</ul>
+<h4 id="mobile-performance-optimizations">Mobile Performance Optimizations<a class="headerlink" href="#mobile-performance-optimizations" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Reduced animation durations for better mobile performance</li>
+<li>Optimized loading states with mobile-specific spinners</li>
+<li>Efficient responsive breakpoints to minimize CSS overhead</li>
+<li>Touch-optimized scrolling with <code>-webkit-overflow-scrolling: touch</code></li>
+</ul>
+<h4 id="mobile-navigation-improvements">Mobile Navigation Improvements<a class="headerlink" href="#mobile-navigation-improvements" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Mobile-optimized tab navigation with larger touch targets</li>
+<li>Responsive grid layouts that adapt to mobile screen sizes</li>
+<li>Collapsible sections to maximize mobile screen real estate</li>
+<li>Better visual hierarchy for mobile scanning</li>
+</ul>
+<h4 id="mobile-specific-styling">Mobile-Specific Styling<a class="headerlink" href="#mobile-specific-styling" title="Permanent link">&para;</a></h4>
+<ul>
+<li>16px font sizes on inputs to prevent iOS zoom</li>
+<li>Mobile-optimized spacing and padding throughout</li>
+<li>Better contrast ratios for mobile viewing conditions</li>
+<li>Responsive typography that scales appropriately</li>
+</ul>
+<h3 id="mobile-testing-checklist-for-trendminer">Mobile Testing Checklist for Trendminer<a class="headerlink" href="#mobile-testing-checklist-for-trendminer" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] All trend items are easily tappable on mobile</li>
+<li>[ ] Carousel animations are smooth on mobile devices</li>
+<li>[ ] Token details page is fully responsive</li>
+<li>[ ] Word cloud is usable on touch devices</li>
+<li>[ ] Configuration panels work well on mobile</li>
+<li>[ ] Search and filter controls are mobile-friendly</li>
+<li>[ ] Loading states are optimized for mobile</li>
+<li>[ ] Error handling works well on mobile devices</li>
+<li>[ ] Charts and visualizations are mobile-responsive</li>
+<li>[ ] Navigation between sections is intuitive on mobile</li>
+</ul>
+<h2 id="dex-mobile-optimizations">🚀 DEX Mobile Optimizations<a class="headerlink" href="#dex-mobile-optimizations" title="Permanent link">&para;</a></h2>
+<h3 id="enhanced-dex-components">Enhanced DEX Components<a class="headerlink" href="#enhanced-dex-components" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Location</strong>: <code>src/views/Dex.tsx</code> &amp; <code>src/views/Dex.scss</code></li>
+<li><strong>Features</strong>:</li>
+<li>Mobile-optimized layout with responsive design</li>
+<li>Touch-friendly form inputs (48px minimum height)</li>
+<li>Mobile-specific token selector with modal interface</li>
+<li>Responsive DEX tabs with proper touch targets</li>
+<li>Mobile-optimized buttons and interactive elements</li>
+<li>Better spacing and typography for mobile devices</li>
+</ul>
+<h3 id="dex-mobile-components">DEX Mobile Components<a class="headerlink" href="#dex-mobile-components" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>MobileDexCard</strong>: <code>src/components/dex/MobileDexCard.tsx</code></li>
+<li>Touch-friendly card component with loading states</li>
+<li>Multiple variants and responsive padding</li>
+<li>
+<p>Skeleton loading animations</p>
+</li>
+<li>
+<p><strong>MobileTokenSelector</strong>: <code>src/components/dex/MobileTokenSelector.tsx</code></p>
+</li>
+<li>Mobile-optimized token selection modal</li>
+<li>Touch-friendly search interface</li>
+<li>
+<p>Proper keyboard handling and accessibility</p>
+</li>
+<li>
+<p><strong>MobileDexInput</strong>: <code>src/components/dex/MobileDexInput.tsx</code></p>
+</li>
+<li>Mobile-optimized input fields</li>
+<li>Prevents zoom on iOS (16px font size)</li>
+<li>
+<p>Better focus states and validation</p>
+</li>
+<li>
+<p><strong>MobileDexButton</strong>: <code>src/components/dex/MobileDexButton.tsx</code></p>
+</li>
+<li>Touch-friendly buttons with loading states</li>
+<li>Multiple variants and sizes</li>
+<li>Proper touch feedback</li>
+</ul>
+<h3 id="dex-mobile-features">DEX Mobile Features<a class="headerlink" href="#dex-mobile-features" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Responsive Layout</strong>: Adapts to different screen sizes</li>
+<li><strong>Touch-Friendly</strong>: All interactive elements meet 44px minimum</li>
+<li><strong>Mobile Navigation</strong>: Optimized tabs and navigation</li>
+<li><strong>Form Optimization</strong>: Better mobile keyboard handling</li>
+<li><strong>Loading States</strong>: Smooth loading indicators</li>
+<li><strong>Error Handling</strong>: Mobile-friendly error messages</li>
+</ul>
+<h2 id="future-enhancements">🔄 Future Enhancements<a class="headerlink" href="#future-enhancements" title="Permanent link">&para;</a></h2>
+<h3 id="planned-mobile-improvements">Planned Mobile Improvements<a class="headerlink" href="#planned-mobile-improvements" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] PWA (Progressive Web App) features</li>
+<li>[ ] Offline functionality</li>
+<li>[ ] Mobile-specific gestures</li>
+<li>[ ] Enhanced mobile animations</li>
+<li>[ ] Mobile-specific error handling</li>
+<li>[ ] Better mobile keyboard handling</li>
+<li>[ ] Mobile-specific accessibility features</li>
+<li>[ ] DEX-specific mobile optimizations</li>
+<li>[ ] Swipe gestures for token switching</li>
+<li>[ ] Mobile-optimized price charts</li>
+<li>[ ] Touch-friendly slippage adjustment</li>
+<li>[ ] Mobile-specific transaction confirmations</li>
+</ul>
+<h2 id="resources">📚 Resources<a class="headerlink" href="#resources" title="Permanent link">&para;</a></h2>
+<h3 id="mobile-development-best-practices">Mobile Development Best Practices<a class="headerlink" href="#mobile-development-best-practices" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="https://developers.google.com/web/fundamentals/design-and-ux/principles">Google Mobile Guidelines</a></li>
+<li><a href="https://developer.apple.com/design/human-interface-guidelines/">Apple Human Interface Guidelines</a></li>
+<li><a href="https://material.io/design/platform-guidance/platform-adaptation.html">Material Design Mobile</a></li>
+</ul>
+<h3 id="testing-tools">Testing Tools<a class="headerlink" href="#testing-tools" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Chrome DevTools Mobile Emulation</li>
+<li>BrowserStack Mobile Testing</li>
+<li>Lighthouse Mobile Audits</li>
+<li>WebPageTest Mobile Testing</li>
+</ul>
+<hr />
+<p><strong>Note</strong>: All mobile optimizations are designed to work seamlessly with the existing desktop experience while providing an enhanced mobile experience. The mobile-first approach ensures that the application performs well across all device sizes.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.sections", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>

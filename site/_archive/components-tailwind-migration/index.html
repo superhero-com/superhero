@@ -1,0 +1,1288 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://superhero.com/hackathon/_archive/components-tailwind-migration/">
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.22">
+    
+    
+      
+        <title>Components Tailwind/Shadcn Migration Status - Superhero Hackathon</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.84d31ad4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#components-tailwindshadcn-migration-status" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Superhero Hackathon" class="md-header__button md-logo" aria-label="Superhero Hackathon" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Superhero Hackathon
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Components Tailwind/Shadcn Migration Status
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/superhero-com/superhero" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    superhero-com/superhero
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Superhero Hackathon" class="md-nav__button md-logo" aria-label="Superhero Hackathon" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Superhero Hackathon
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/superhero-com/superhero" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    superhero-com/superhero
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/00-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/00a-quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quickstart
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Setup
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Setup
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/01-setup-environment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Environment
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/01a-superhero-wallet-and-account/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Wallet & Account
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Build
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Build
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/02-project-scaffold/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Project scaffold
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/03-sophia-basics-for-builders/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Sophia basics
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/04-compiler-and-build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Compiler & build
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/05-contract-poll-walkthrough/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contract walkthrough
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/06-testing-with-vitest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Testing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/07-deploy-devnet-and-testnet/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Deploy
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/07a-middleware-and-data-access/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Middleware & data
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/08-integrate-into-superhero-extension/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Integrate extension
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/08a-plugin-sdk-deep-dive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plugin SDK deep dive
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/09-ai-workflows-in-cursor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AI workflows
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/10-troubleshooting-and-faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/11-security-checklist/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Security
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/12-reference-links-and-glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    References
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/hackathon/13-checklist-and-deploy-extension/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Checklist
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#layout-components-migration-complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      ✅ Layout Components Migration Complete!
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-status-legend" class="md-nav__link">
+    <span class="md-ellipsis">
+      Migration Status Legend
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#components-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      Components List
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Components List">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-ui-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Core UI Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layout-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Layout Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#button-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Button Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#form-input-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Form &amp; Input Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#card-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Card Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modal-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Modal Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#display-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Display Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dex-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      DEX Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#social-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Social Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trendminer-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Trendminer Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#feature-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feature Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#utility-components-skip-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Utility Components (Skip Migration)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#view-components-lower-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      View Components (Lower Priority)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trendminer-views" class="md-nav__link">
+    <span class="md-ellipsis">
+      Trendminer Views
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#feature-views" class="md-nav__link">
+    <span class="md-ellipsis">
+      Feature Views
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#root-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Root Components
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      Migration Priority
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Migration Priority">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-core-components-high-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 1: Core Components (High Priority)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-layout-navigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 2: Layout &amp; Navigation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3-feature-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 3: Feature Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-4-views-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      Phase 4: Views &amp; Pages
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Migration Notes
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="components-tailwindshadcn-migration-status">Components Tailwind/Shadcn Migration Status<a class="headerlink" href="#components-tailwindshadcn-migration-status" title="Permanent link">&para;</a></h1>
+<h2 id="layout-components-migration-complete">✅ Layout Components Migration Complete!<a class="headerlink" href="#layout-components-migration-complete" title="Permanent link">&para;</a></h2>
+<p><strong>Status</strong>: All layout components have been successfully migrated to Tailwind CSS v3.4.17 (ShadCN compatible)</p>
+<p><strong>Key Changes Made</strong>:
+- Downgraded from Tailwind CSS v4.1.12 (beta) to v3.4.17 (stable) for better ShadCN compatibility
+- Updated Tailwind config to use ES module syntax with proper plugin imports<br />
+- Fixed PostCSS config to use CommonJS (.cjs extension) for ES module compatibility
+- Resolved all conflicting Tailwind class warnings
+- Maintained original styling using CSS variables and hybrid approach where needed
+- All components now build and run successfully with proper Tailwind styles loading</p>
+<h2 id="migration-status-legend">Migration Status Legend<a class="headerlink" href="#migration-status-legend" title="Permanent link">&para;</a></h2>
+<ul>
+<li>✅ <strong>Migrated</strong>: Component fully converted to Tailwind/Shadcn</li>
+<li>🔄 <strong>In Progress</strong>: Currently being migrated</li>
+<li>⏳ <strong>Pending</strong>: Not yet started</li>
+<li>🚫 <strong>Skip</strong>: Component doesn't need migration (utilities, contexts, etc.)</li>
+</ul>
+<h2 id="components-list">Components List<a class="headerlink" href="#components-list" title="Permanent link">&para;</a></h2>
+<h3 id="core-ui-components">Core UI Components<a class="headerlink" href="#core-ui-components" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <code>components/ui/ae-button.tsx</code> - Custom shadcn button</li>
+<li>✅ <code>components/ui/ae-card.tsx</code> - Custom shadcn card</li>
+<li>✅ <code>components/ui/ae-dropdown-menu.tsx</code> - Custom shadcn dropdown</li>
+<li>✅ <code>components/ui/button.tsx</code> - Base shadcn button</li>
+<li>✅ <code>components/ui/card.tsx</code> - Base shadcn card</li>
+<li>✅ <code>components/ui/dropdown-menu.tsx</code> - Base shadcn dropdown</li>
+<li>✅ <code>components/ui/input.tsx</code> - Base shadcn input</li>
+<li>✅ <code>components/ui/label.tsx</code> - Base shadcn label</li>
+<li>✅ <code>components/ui/textarea.tsx</code> - Base shadcn textarea</li>
+<li>✅ <code>components/ui/select.tsx</code> - Base shadcn select</li>
+<li>✅ <code>components/ui/separator.tsx</code> - Base shadcn separator</li>
+<li>✅ <code>components/ui/avatar.tsx</code> - Base shadcn avatar</li>
+<li>✅ <code>components/ui/badge.tsx</code> - Base shadcn badge</li>
+</ul>
+<h3 id="layout-components">Layout Components<a class="headerlink" href="#layout-components" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <code>components/layout/app-header/HeaderWalletButton.tsx</code> - Migrated to shadcn</li>
+<li>✅ <code>components/layout/app-header/WebAppHeader.tsx</code> - Migrated to Tailwind CSS</li>
+<li>✅ <code>components/layout/app-header/MobileAppHeader.tsx</code> - Migrated to Tailwind CSS</li>
+<li>✅ <code>components/layout/app-header/AppHeader.tsx</code> - Migrated to Tailwind CSS</li>
+<li>✅ <code>components/layout/app-header/MobileNavigation.tsx</code> - Migrated to Tailwind CSS</li>
+<li>✅ <code>components/layout/RightRail.tsx</code> - Migrated to Tailwind CSS</li>
+<li>✅ <code>components/layout/LeftRail.tsx</code> - Migrated to Tailwind CSS</li>
+<li>✅ <code>components/layout/FooterSection.tsx</code> - Migrated to Tailwind CSS</li>
+<li>✅ <code>components/layout/Shell.tsx</code> - Migrated to Tailwind CSS</li>
+</ul>
+<h3 id="button-components">Button Components<a class="headerlink" href="#button-components" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <code>components/AeButton.tsx</code> - Wrapper for backward compatibility</li>
+<li>✅ <code>components/WalletConnectBtn.tsx</code> - Uses MiniWalletInfo and ConnectWalletButton</li>
+<li>✅ <code>components/ConnectWalletButton.tsx</code> - Migrated to AeButton</li>
+</ul>
+<h3 id="form-input-components">Form &amp; Input Components<a class="headerlink" href="#form-input-components" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <code>components/SearchInput.tsx</code> - Migrated to Input component with Tailwind</li>
+<li>✅ <code>components/MobileInput.tsx</code> - Migrated to Tailwind with responsive design and mobile optimizations</li>
+</ul>
+<h3 id="card-components">Card Components<a class="headerlink" href="#card-components" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <code>components/SwapCard.tsx</code> - Migrated to Tailwind with modern tab interface and glassmorphism styling</li>
+<li>✅ <code>components/TransactionCard.tsx</code> - Migrated to AeCard with Badge components</li>
+<li>✅ <code>components/MobileCard.tsx</code> - Migrated to Tailwind with variant support and loading states</li>
+</ul>
+<h3 id="modal-components">Modal Components<a class="headerlink" href="#modal-components" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <code>components/modals/UserPopup.tsx</code> - Migrated to shadcn Dialog with Avatar component and profile display</li>
+<li>✅ <code>components/modals/TransactionConfirmModal.tsx</code> - Migrated to shadcn Dialog with modern wallet confirmation UI</li>
+<li>✅ <code>components/modals/PostModal.tsx</code> - Migrated to shadcn Dialog with Input and Label components</li>
+<li>✅ <code>components/modals/TokenSelect.tsx</code> - Migrated to shadcn Dialog with token list and gradient avatars</li>
+<li>✅ <code>components/modals/FeedItemMenu.tsx</code> - Migrated to shadcn DropdownMenu with nested report dialog</li>
+<li>✅ <code>components/modals/CookiesDialog.tsx</code> - Migrated simple modal with modern styling</li>
+<li>✅ <code>components/ModalProvider.tsx</code> - Migrated with glassmorphism modal styling and backdrop blur</li>
+</ul>
+<h3 id="display-components">Display Components<a class="headerlink" href="#display-components" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <code>components/AddressAvatar.tsx</code> - Migrated with glassmorphism avatar styling and fallback states</li>
+<li>✅ <code>components/AddressChip.tsx</code> - Migrated to Badge with glassmorphism</li>
+<li>✅ <code>components/UserBadge.tsx</code> - Migrated to AeCard with hover popover</li>
+<li>✅ <code>components/TokenChip.tsx</code> - Migrated to Badge with loading states</li>
+<li>✅ <code>components/AeAmount.tsx</code> - Migrated to Tailwind with font-mono styling</li>
+<li>✅ <code>components/FiatValue.tsx</code> - Migrated to Tailwind with muted foreground</li>
+<li>✅ <code>components/MiniWalletInfo.tsx</code> - Migrated to Tailwind classes</li>
+<li>✅ <code>components/Spinner.tsx</code> - Migrated to Tailwind with purple accent animation</li>
+<li>✅ <code>components/CommentList.tsx</code> - Migrated with modern card layout and avatar styling</li>
+</ul>
+<h3 id="dex-components">DEX Components<a class="headerlink" href="#dex-components" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <code>components/dex/core/SwapForm.tsx</code> - Migrated with glassmorphism card, gradient buttons, and modern styling</li>
+<li>✅ <code>components/dex/core/TokenInput.tsx</code> - Migrated with AeCard, glassmorphism, and AeButton controls</li>
+<li>✅ <code>components/dex/core/TokenSelector.tsx</code> - Migrated with modern dialog styling and glassmorphism effects</li>
+<li>✅ <code>components/dex/core/SwapConfirmation.tsx</code> - Migrated with modern dialog styling and gradient effects</li>
+<li>✅ <code>components/dex/core/SwapRouteInfo.tsx</code> - Migrated to AeCard with Badge components for route display</li>
+<li>✅ <code>components/dex/core/SwapTabSwitcher.tsx</code> - Migrated to modern tab interface with glassmorphism</li>
+<li>✅ <code>components/dex/core/LiquiditySuccessNotification.tsx</code> - Migrated with animated success states and progress indicators</li>
+<li>✅ <code>components/dex/DexSettings.tsx</code> - Migrated to clean form styling with focus states</li>
+<li>✅ <code>components/dex/widgets/NewAccountEducation.tsx</code> - Migrated with vibrant gradients and animated elements</li>
+<li>✅ <code>components/dex/supporting/RecentActivity.tsx</code> - Migrated with glassmorphism cards and removed SCSS dependency</li>
+</ul>
+<h3 id="social-components">Social Components<a class="headerlink" href="#social-components" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <code>features/social/components/PostContent.tsx</code> - Migrated with responsive media grids</li>
+<li>✅ <code>features/social/components/FeedItem.tsx</code> - Migrated to AeCard with glassmorphism</li>
+<li>✅ <code>features/social/components/CreatePost.tsx</code> - Migrated with glassmorphism design, responsive layout, and modern form styling</li>
+<li>✅ <code>features/social/components/SortControls.tsx</code> - Migrated to modern pill-style buttons</li>
+<li>✅ <code>features/social/components/PostCommentsList.tsx</code> - Migrated with loading/error states</li>
+<li>✅ <code>features/social/components/EmptyState.tsx</code> - Migrated to AeCard with icons</li>
+<li>✅ <code>features/social/components/CommentItem.tsx</code> - Migrated with nested reply structure</li>
+<li>✅ <code>features/social/components/CommentForm.tsx</code> - Migrated to AeCard with Textarea</li>
+</ul>
+<h3 id="trendminer-components">Trendminer Components<a class="headerlink" href="#trendminer-components" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <code>components/Trendminer/TokenChat.tsx</code> - Migrated with modern chat interface and loading states</li>
+<li>✅ <code>components/Trendminer/MobileTest.tsx</code> - Migrated debug component with conditional styling</li>
+<li>✅ <code>components/Trendminer/TvCandles.tsx</code> - Migrated with Tailwind styling</li>
+<li>✅ <code>components/Trendminer/MobileTrendingTagCard.tsx</code> - Migrated with glassmorphism card styling and responsive design</li>
+<li>✅ <code>components/Trendminer/TokenMiniChart.tsx</code> - Migrated with loading state styling</li>
+<li>✅ <code>components/Trendminer/LatestTransactionsCarousel.tsx</code> - Migrated with infinite scroll animation and hover effects</li>
+<li>✅ <code>components/Trendminer/Sparkline.tsx</code> - Pure SVG component, no migration needed</li>
+<li>✅ <code>components/Trendminer/ExploreTrendsSidebar.tsx</code> - Migrated with responsive layout and modern card design</li>
+<li>✅ <code>components/Trendminer/MobileTrendingBanner.tsx</code> - Migrated with gradient backgrounds and responsive button layout</li>
+<li>✅ <code>components/Trendminer/TrendingSidebar.tsx</code> - Migrated with glassmorphism styling and gradient text effects</li>
+<li>✅ <code>components/Trendminer/MobileTrendingControls.tsx</code> - Migrated with modern form controls and filter interface</li>
+</ul>
+<h3 id="feature-components">Feature Components<a class="headerlink" href="#feature-components" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <code>features/dex/components/AddLiquidityForm.tsx</code></li>
+<li>✅ <code>features/dex/components/RemoveLiquidityForm.tsx</code></li>
+<li>✅ <code>features/dex/components/LiquidityPreview.tsx</code></li>
+<li>✅ <code>features/dex/components/LiquidityConfirmation.tsx</code></li>
+<li>✅ <code>features/dex/components/LiquidityPositionCard.tsx</code></li>
+<li>✅ <code>features/dex/components/DexSettings.tsx</code></li>
+<li>✅ <code>features/dex/components/charts/PoolCandlestickChart.tsx</code> - Migrated to AeCard with Tailwind classes</li>
+<li>✅ <code>features/dex/components/charts/TokenPricePerformance.tsx</code> - Migrated to AeCard with proper Tailwind utilities</li>
+<li>✅ <code>features/dex/components/charts/TokenPricePerformanceExample.tsx</code> - Updated styling to use Tailwind classes</li>
+<li>✅ <code>features/bridge/components/EthBridgeWidget.tsx</code> - Migrated to AeCard with comprehensive Tailwind styling</li>
+</ul>
+<h3 id="utility-components-skip-migration">Utility Components (Skip Migration)<a class="headerlink" href="#utility-components-skip-migration" title="Permanent link">&para;</a></h3>
+<ul>
+<li>🚫 <code>components/ErrorBoundary.tsx</code> - Error boundary utility</li>
+<li>🚫 <code>components/ShadcnDemo.tsx</code> - Demo component</li>
+<li>🚫 <code>context/AeSdkProvider.tsx</code> - Context provider</li>
+<li>🚫 <code>features/dex/context/PoolProvider.tsx</code> - Context provider</li>
+</ul>
+<h3 id="view-components-lower-priority">View Components (Lower Priority)<a class="headerlink" href="#view-components-lower-priority" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <code>views/UserProfile.tsx</code> - Migrated with glassmorphism profile card and responsive design</li>
+<li>✅ <code>views/PoolDetail.tsx</code> - Migrated with glassmorphism cards and responsive grid layouts</li>
+<li>✅ <code>views/TokenDetail.tsx</code> - Migrated with glassmorphism cards and responsive stats grid</li>
+<li>✅ <code>views/TxQueue.tsx</code> - Simple component migrated to Tailwind classes</li>
+<li>✅ <code>views/Swap.tsx</code> - Migrated with glassmorphism input cards and enhanced form styling</li>
+<li>✅ <code>views/Governance.tsx</code> - Migrated with comprehensive Tailwind styling and modern glassmorphism design</li>
+<li>✅ <code>views/ExploreRefactored.tsx</code> - Migrated with modern tab navigation and responsive layouts  </li>
+<li>✅ <code>views/Dex.tsx</code> - Migrated with gradient headers and clean spacing</li>
+<li>✅ <code>views/AddTokens.tsx</code> - Migrated with enhanced table styling and status badges</li>
+<li>✅ <code>views/Explore.tsx</code> - Migrated with modern tab navigation and table styling (duplicate of ExploreRefactored)</li>
+<li>✅ <code>views/TipDetail.tsx</code> - Migrated with modern comment system and responsive layout</li>
+<li>✅ <code>views/Landing.tsx</code> - Migrated with modern hero sections, glassmorphism cards and responsive design</li>
+<li>✅ <code>views/Trending.tsx</code> - Migrated with glassmorphism cards, modern table design and responsive layout</li>
+<li>✅ <code>views/FAQ.tsx</code> - Migrated with modern card layouts and interactive accordion</li>
+<li>✅ <code>views/Privacy.tsx</code> - Simple page migrated to Tailwind typography</li>
+<li>✅ <code>views/Tracing.tsx</code> - Debug page migrated with terminal-style code display</li>
+<li>✅ <code>views/Conference.tsx</code> - Video conference iframe migrated with enhanced styling</li>
+<li>✅ <code>views/Terms.tsx</code> - Legal page migrated to Tailwind typography</li>
+</ul>
+<h3 id="trendminer-views">Trendminer Views<a class="headerlink" href="#trendminer-views" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <code>views/Trendminer/TradeCard.tsx</code> - Migrated with glassmorphism styling and modern form controls</li>
+<li>✅ <code>views/Trendminer/Invite.tsx</code> - Migrated with comprehensive Tailwind styling, glassmorphism cards and responsive design</li>
+<li>✅ <code>views/Trendminer/Daos.tsx</code> - Migrated with glassmorphism cards, responsive grid layout and modern controls</li>
+<li>✅ <code>views/Trendminer/Dao.tsx</code> - Migrated with glassmorphism styling and modern form controls</li>
+<li>✅ <code>views/Trendminer/CreateToken.tsx</code> - Migrated with modern input styling and responsive layout</li>
+<li>✅ <code>views/Trendminer/TokenDetails.tsx</code> - Migrated with comprehensive mobile-optimized layout and glassmorphism design</li>
+<li>✅ <code>views/Trendminer/Accounts.tsx</code> - Migrated with modern table styling and responsive layout</li>
+<li>✅ <code>views/Trendminer/TrendCloud.tsx</code> - Migrated with modern header controls and responsive design</li>
+<li>✅ <code>views/Trendminer/TrendCloudVisx.tsx</code> - Migrated with glassmorphism styling and modern color palette</li>
+<li>✅ <code>views/Trendminer/AccountDetails.tsx</code> - Migrated with responsive grid layout and glassmorphism cards</li>
+</ul>
+<h3 id="feature-views">Feature Views<a class="headerlink" href="#feature-views" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <code>features/social/views/FeedList.tsx</code></li>
+<li>✅ <code>features/social/views/PostDetail.tsx</code></li>
+<li>✅ <code>features/dex/views/DexSwap.tsx</code></li>
+<li>✅ <code>features/dex/views/Pool.tsx</code></li>
+<li>✅ <code>features/dex/views/DexExploreTokens.tsx</code></li>
+<li>✅ <code>features/dex/views/DexExplorePools.tsx</code></li>
+<li>✅ <code>features/dex/views/DexExploreTransactions.tsx</code></li>
+<li>✅ <code>features/dex/views/DexWrap.tsx</code></li>
+<li>✅ <code>features/dex/views/DexBridge.tsx</code></li>
+<li>✅ <code>features/dex/layouts/DexLayout.tsx</code></li>
+</ul>
+<h3 id="root-components">Root Components<a class="headerlink" href="#root-components" title="Permanent link">&para;</a></h3>
+<ul>
+<li>🚫 <code>App.tsx</code> - Root app component</li>
+<li>🚫 <code>main.tsx</code> - App entry point</li>
+<li>🚫 <code>routes.tsx</code> - Routing configuration</li>
+</ul>
+<h2 id="migration-priority">Migration Priority<a class="headerlink" href="#migration-priority" title="Permanent link">&para;</a></h2>
+<h3 id="phase-1-core-components-high-priority">Phase 1: Core Components (High Priority)<a class="headerlink" href="#phase-1-core-components-high-priority" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Button components (WalletConnectBtn, ConnectWalletButton)</li>
+<li>Input components (SearchInput)</li>
+<li>Display components (AddressChip, TokenChip, UserBadge)</li>
+<li>Card components (SwapCard, TransactionCard)</li>
+</ol>
+<h3 id="phase-2-layout-navigation">Phase 2: Layout &amp; Navigation<a class="headerlink" href="#phase-2-layout-navigation" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Header components</li>
+<li>Navigation components</li>
+<li>Layout shells</li>
+</ol>
+<h3 id="phase-3-feature-components">Phase 3: Feature Components<a class="headerlink" href="#phase-3-feature-components" title="Permanent link">&para;</a></h3>
+<ol>
+<li>DEX components</li>
+<li>Social components</li>
+<li>Modal components</li>
+</ol>
+<h3 id="phase-4-views-pages">Phase 4: Views &amp; Pages<a class="headerlink" href="#phase-4-views-pages" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Core views</li>
+<li>Feature views</li>
+<li>Trendminer views</li>
+</ol>
+<h2 id="migration-notes">Migration Notes<a class="headerlink" href="#migration-notes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Focus on components with SCSS files first</li>
+<li>Maintain backward compatibility during migration</li>
+<li>Test each component after migration</li>
+<li>Update imports gradually</li>
+<li>Remove old SCSS files after successful migration</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.sections", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -157,7 +157,7 @@ export default function PollCreatedCard({ title, description, author, closeHeigh
       <div className={cn(styles.options, 'px-0 md:px-0')}>
         {options.map((o) => {
           const pct = totalVotes > 0 ? Math.round(((o.votes || 0) / totalVotes) * 100) : 0;
-          const widthPct = maxVotes > 0 ? Math.max(14, Math.round(((o.votes || 0) / maxVotes) * 100)) : 14;
+          const widthPct = maxVotes > 0 ? Math.max(14, Math.round(((o.votes || 0) / maxVotes) * 100)) : 0;
           const canVote = !isClosed && onVoteOption;
           return (
             <div

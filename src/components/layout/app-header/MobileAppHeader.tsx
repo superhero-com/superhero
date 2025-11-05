@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SearchInput from '../../SearchInput';
@@ -18,7 +18,7 @@ import FooterSection from '../FooterSection';
 export default function MobileAppHeader() {
   const { t: tNav } = useTranslation('navigation');
   const { t } = useTranslation('common');
-  const navigationItems = getNavigationItems(tNav);
+  const navigationItems = useMemo(() => getNavigationItems(tNav), [tNav]);
   const [showOverlay, setShowOverlay] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {

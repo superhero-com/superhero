@@ -115,17 +115,34 @@ export function usePortfolioValue({
   const formattedValue = useMemo(() => {
     if (!currentValue) return null;
     
-    if (currency === 'ae') {
-      return `${currentValue.prettify()} AE`;
-    } else {
-      const currencyCode = currentCurrencyInfo.code.toUpperCase();
-      const valueNumber = currentValue.toNumber();
-      return valueNumber.toLocaleString('en-US', {
-        style: 'currency',
-        currency: currencyCode,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
+    try {
+      if (currency === 'ae') {
+        // Check if currentValue has prettify method (Decimal object)
+        if (typeof currentValue.prettify === 'function') {
+          return `${currentValue.prettify()} AE`;
+        }
+        // Fallback for plain numbers
+        return `${Number(currentValue).toFixed(4)} AE`;
+      } else {
+        const currencyCode = currentCurrencyInfo.code.toUpperCase();
+        // Safely convert to number
+        const valueNumber = typeof currentValue.toNumber === 'function' 
+          ? currentValue.toNumber()
+          : typeof currentValue === 'number'
+          ? currentValue
+          : Number(currentValue);
+        return valueNumber.toLocaleString('en-US', {
+          style: 'currency',
+          currency: currencyCode,
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[usePortfolioValue] Error formatting value:', error, { currentValue, currency });
+      }
+      return null;
     }
   }, [currentValue, currency, currentCurrencyInfo]);
 

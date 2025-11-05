@@ -792,13 +792,16 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           </div>
         </div>
 
+        {/* Loading indicator - above chart */}
+        {isLoading && (
+          <div className="px-4 md:px-6 pt-2 pb-2">
+            <div className="text-white/60 text-sm text-center">Loading portfolio data...</div>
+          </div>
+        )}
+
         {/* Chart */}
         <div className="px-4 md:px-6 pb-4">
-          {isLoading ? (
-            <div className="h-[180px] flex items-center justify-center">
-              <div className="text-white/60">Loading portfolio data...</div>
-            </div>
-          ) : portfolioData && portfolioData.length > 0 ? (
+          {portfolioData && portfolioData.length > 0 ? (
             <>
               <div 
                 ref={chartContainerRef} 
@@ -811,10 +814,12 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                 </div>
               )}
             </>
-          ) : (
+          ) : !isLoading ? (
             <div className="h-[180px] flex items-center justify-center">
               <div className="text-white/60">No portfolio data available</div>
             </div>
+          ) : (
+            <div className="h-[180px]" />
           )}
         </div>
 

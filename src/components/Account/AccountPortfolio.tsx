@@ -287,7 +287,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     }, 50);
     
     return () => clearInterval(intervalId);
-  }, [containerReady]);
+  }, [containerReady, selectedTimeRange]); // Also check when time range changes
 
   // Initialize chart once when container is available
   // Chart should persist across time range changes

@@ -25,14 +25,25 @@ export const useAccountBalances = (selectedAccount: string) => {
     }
 
     const _loadAex9DataFromMdw = async (url, items = []) => {
-        const fetchUrl = `${BridgeConstants.aeAPI}${url}`
-        const response = await fetch(fetchUrl);
-        const data = await response.json();
+        try {
+            const fetchUrl = `${BridgeConstants.aeAPI}${url}`
+            const response = await fetch(fetchUrl);
+            
+            if (!response.ok) {
+                console.warn(`Failed to fetch AEX9 balances: ${response.status} ${response.statusText}`);
+                return items;
+            }
+            
+            const data = await response.json();
 
-        if (data.next) {
-            return _loadAex9DataFromMdw(items.concat(data.data));
+            if (data.next) {
+                return _loadAex9DataFromMdw(data.next, items.concat(data.data || []));
+            }
+            return items.concat(data.data || []);
+        } catch (error) {
+            console.error('Error loading AEX9 balances:', error);
+            return items;
         }
-        return items.concat(data.data);
     }
     async function loadAccountAex9Balances() {
         const url = `/v2/aex9/account-balances/${selectedAccount}?limit=100`;

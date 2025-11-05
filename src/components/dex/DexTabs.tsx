@@ -17,10 +17,8 @@ function Tab({ label, active, onClick }: { label: string; active: boolean; onCli
         boxShadow: active ? 'var(--button-shadow)' : 'inset 0 2px 4px rgba(0, 0, 0, 0.1)',
       }}
       onMouseEnter={(e) => {
-        if (active) {
-          e.currentTarget.style.boxShadow = 'var(--glow-shadow), var(--button-shadow)';
-        } else {
-          e.currentTarget.style.boxShadow = 'var(--glow-shadow), inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+        if (!active) {
+          e.currentTarget.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.1)';
         }
       }}
       onMouseLeave={(e) => {
@@ -58,7 +56,7 @@ export default function DexTabs() {
           boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = 'var(--glow-shadow), inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+          e.currentTarget.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.1)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.1)';

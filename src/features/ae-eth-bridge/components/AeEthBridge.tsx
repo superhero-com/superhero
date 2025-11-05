@@ -1134,7 +1134,7 @@ export function AeEthBridge() {
                         <DialogFooter>
                             <button
                                 onClick={() => setBridgeActionSummary(null)}
-                                className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white font-bold uppercase tracking-wider transition-all duration-300 hover:shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5"
+                                className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white font-bold uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5"
                             >
                                 Close
                             </button>

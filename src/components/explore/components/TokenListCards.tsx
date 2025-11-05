@@ -136,7 +136,7 @@ export function TokenListCards({
 
               <button
                 onClick={() => handleSort(sort.key)}
-                className={`px-2 py-[6px] rounded-md border border-white/10 cursor-pointer backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-7 h-7 flex items-center justify-center outline-none hover:-translate-y-px hover:scale-105 hover:shadow-[0_3px_8px_rgba(76,175,80,0.3)] ${
+                className={`px-2 py-[6px] rounded-md border border-white/10 cursor-pointer backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-7 h-7 flex items-center justify-center outline-none hover:-translate-y-px hover:scale-105 ${
                   sort.asc 
                     ? "bg-green-500 text-white" 
                     : "bg-white/10 text-white hover:bg-green-500 hover:text-white"

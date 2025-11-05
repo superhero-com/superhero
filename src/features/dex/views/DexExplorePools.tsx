@@ -115,7 +115,7 @@ export default function DexExplorePools() {
                     onClick={() =>
                       setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC")
                     }
-                    className={`py-1.5 px-2 rounded-md border border-[var(--glass-border)] backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-[28px] h-7 flex items-center justify-center outline-none hover:scale-105 hover:shadow-[0_3px_8px_rgba(76,175,80,0.3)] active:scale-95 ${sortDirection === "ASC"
+                    className={`py-1.5 px-2 rounded-md border border-[var(--glass-border)] backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-[28px] h-7 flex items-center justify-center outline-none hover:scale-105 active:scale-95 ${sortDirection === "ASC"
                       ? "bg-[var(--accent-color)] text-white"
                       : "bg-[var(--glass-bg)] text-[var(--standard-font-color)] hover:bg-[var(--accent-color)] hover:text-white"
                       }`}

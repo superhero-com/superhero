@@ -114,7 +114,7 @@ export default function TokenSelector({
               className={`min-w-[120px] py-2.5 px-4 rounded-xl border border-white/10 text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 ease-out flex items-center justify-center gap-2 normal-case ${
                 disabled || loading
                   ? 'cursor-not-allowed opacity-50'
-                  : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(255,107,107,0.3)]'
+                  : 'cursor-pointer hover:-translate-y-0.5
               } ${
                 selected
                   ? 'bg-[#1161FE] text-white'

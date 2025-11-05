@@ -227,21 +227,29 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     }
   }, [portfolioData, convertTo]);
 
-  // Check if container is ready
+  // Check if container is ready - continuously check until ready
   useEffect(() => {
     if (containerReady || chartRef.current) return;
     
-    if (chartContainerRef.current && chartContainerRef.current.clientWidth > 0) {
-      setContainerReady(true);
-    } else {
-      // Check again after a short delay
-      const timeoutId = setTimeout(() => {
-        if (chartContainerRef.current && chartContainerRef.current.clientWidth > 0) {
-          setContainerReady(true);
-        }
-      }, 100);
-      return () => clearTimeout(timeoutId);
-    }
+    const checkContainer = () => {
+      if (chartContainerRef.current && chartContainerRef.current.clientWidth > 0) {
+        setContainerReady(true);
+        return true;
+      }
+      return false;
+    };
+    
+    // Check immediately
+    if (checkContainer()) return;
+    
+    // If not ready, set up interval to check periodically
+    const intervalId = setInterval(() => {
+      if (checkContainer() || chartRef.current) {
+        clearInterval(intervalId);
+      }
+    }, 50);
+    
+    return () => clearInterval(intervalId);
   }, [containerReady]);
 
   // Initialize chart once when container is available

@@ -770,16 +770,32 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             <span className={`text-3xl md:text-4xl font-extrabold ${hoveredPrice ? 'text-green-400' : 'text-white'} block min-h-[2.5rem] leading-tight`}>
               {displayValue !== null ? (
                 convertTo === 'ae' 
-                  ? `${Decimal.from(displayValue).prettify()} AE`
+                  ? (() => {
+                      try {
+                        return `${Decimal.from(displayValue).prettify()} AE`;
+                      } catch (error) {
+                        if (process.env.NODE_ENV === 'development') {
+                          console.error('[AccountPortfolio] Error formatting AE value:', error, { displayValue });
+                        }
+                        return `${Number(displayValue).toFixed(4)} AE`;
+                      }
+                    })()
                   : (() => {
-                      const fiatValue = typeof displayValue === 'number' ? displayValue : Number(displayValue);
-                      const currencyCode = currentCurrencyInfo.code.toUpperCase();
-                      return fiatValue.toLocaleString('en-US', {
-                        style: 'currency',
-                        currency: currencyCode,
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      });
+                      try {
+                        const fiatValue = typeof displayValue === 'number' ? displayValue : Number(displayValue);
+                        const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                        return fiatValue.toLocaleString('en-US', {
+                          style: 'currency',
+                          currency: currencyCode,
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        });
+                      } catch (error) {
+                        if (process.env.NODE_ENV === 'development') {
+                          console.error('[AccountPortfolio] Error formatting fiat value:', error, { displayValue, convertTo, currentCurrencyInfo });
+                        }
+                        return `$${Number(displayValue).toFixed(2)}`;
+                      }
                     })()
               ) : (
                 <span className="opacity-0">0.00 AE</span>

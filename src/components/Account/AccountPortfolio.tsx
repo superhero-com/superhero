@@ -659,9 +659,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       });
     }
     
-    // Update the series data
-    seriesRef.current.setData(chartData);
-    
     // Set maximum visible range to prevent scrolling past current time
     const currentTime = moment().unix();
     if (chart) {
@@ -676,29 +673,53 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     if (isTimeRangeChange) {
       // Time range changed - fit content to show the full new range
       if (chart && chartData.length > 0) {
-        chart.timeScale().fitContent();
-        // Ensure we don't show future data
-        const visibleRange = chart.timeScale().getVisibleRange();
-        if (visibleRange && visibleRange.to > currentTime) {
-          if (visibleRange.from != null && typeof visibleRange.from === 'number') {
-            chart.timeScale().setVisibleRange({
-              from: visibleRange.from,
-              to: currentTime,
-            });
-          }
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AccountPortfolio] Time range changed, fitting content', {
+            timeRange: selectedTimeRange,
+            dataPoints: chartData.length,
+            previousRange: previousTimeRangeRef.current,
+          });
         }
-        // Update tracking after fitting
+        
+        // Update the series data first
+        seriesRef.current.setData(chartData);
+        
+        // Use requestAnimationFrame to ensure data is set before fitting
         requestAnimationFrame(() => {
-          const logicalRange = chart.timeScale().getVisibleLogicalRange();
-          if (logicalRange) {
-            lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
+          if (!chart || !chartRef.current) return;
+          
+          chart.timeScale().fitContent();
+          
+          // Ensure we don't show future data
+          const visibleRange = chart.timeScale().getVisibleRange();
+          if (visibleRange && visibleRange.to > currentTime) {
+            if (visibleRange.from != null && typeof visibleRange.from === 'number') {
+              chart.timeScale().setVisibleRange({
+                from: visibleRange.from,
+                to: currentTime,
+              });
+            }
           }
-          initialLoadRef.current = true;
-          setTimeout(() => {
-            isUpdatingDataRef.current = false;
-          }, 100);
+          
+          // Update tracking after fitting
+          requestAnimationFrame(() => {
+            const logicalRange = chart.timeScale().getVisibleLogicalRange();
+            if (logicalRange) {
+              lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
+            }
+            initialLoadRef.current = true;
+            setTimeout(() => {
+              isUpdatingDataRef.current = false;
+            }, 100);
+          });
         });
       } else {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[AccountPortfolio] Time range changed but no chart data', {
+            chartExists: !!chart,
+            chartDataLength: chartData.length,
+          });
+        }
         isUpdatingDataRef.current = false;
       }
       // Update the previous time range reference

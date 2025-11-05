@@ -712,6 +712,26 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       });
     }
     
+    // Update the series data BEFORE handling time range changes or initial load
+    if (!seriesRef.current) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[AccountPortfolio] Cannot update chart data: series not initialized');
+      }
+      isUpdatingDataRef.current = false;
+      return;
+    }
+    
+    seriesRef.current.setData(chartData);
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[AccountPortfolio] Chart data set', {
+        dataPoints: chartData.length,
+        isTimeRangeChange,
+        chartExists: !!chart,
+        seriesExists: !!seriesRef.current,
+      });
+    }
+    
     // When time range changes, always fit content to show the new range
     // When currency changes or loading more data, preserve scroll position
     if (isTimeRangeChange) {
@@ -725,9 +745,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           });
         }
         
-        // Update the series data first
-        seriesRef.current.setData(chartData);
-        
+        // Data is already set above, just fit content
         // Use requestAnimationFrame to ensure data is set before fitting
         requestAnimationFrame(() => {
           if (!chart || !chartRef.current) return;

@@ -83,6 +83,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     fetchPreviousPage,
     hasPreviousPage,
     isFetchingPreviousPage,
+    isError,
+    refetch,
   } = useInfiniteQuery({
     queryKey: ['portfolio-history', address, dateRange.startDate, dateRange.endDate, dateRange.interval, convertTo, selectedTimeRange],
     queryFn: async ({ pageParam }) => {
@@ -111,28 +113,43 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         }
       }
       
-      const response = await TrendminerApi.getAccountPortfolioHistory(address, {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        interval: dateRange.interval,
-        convertTo: convertTo as any,
-      });
-      
-      const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
-      
-      // Track the earliest loaded date
-      if (snapshots.length > 0) {
-        const earliest = moment(snapshots[0].timestamp);
-        if (!loadedStartDateRef.current || earliest.isBefore(loadedStartDateRef.current)) {
-          loadedStartDateRef.current = earliest.toISOString();
+      try {
+        const response = await TrendminerApi.getAccountPortfolioHistory(address, {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          interval: dateRange.interval,
+          convertTo: convertTo as any,
+        });
+        
+        const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
+        
+        // Track the earliest loaded date
+        if (snapshots.length > 0) {
+          const earliest = moment(snapshots[0].timestamp);
+          if (!loadedStartDateRef.current || earliest.isBefore(loadedStartDateRef.current)) {
+            loadedStartDateRef.current = earliest.toISOString();
+          }
         }
+        
+        return {
+          snapshots,
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+        };
+      } catch (err) {
+        // Enhanced error handling with better logging
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[AccountPortfolio] Failed to fetch portfolio history:', {
+            address,
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+            interval: dateRange.interval,
+            convertTo,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+        throw err;
       }
-      
-      return {
-        snapshots,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      };
     },
     getNextPageParam: () => undefined, // No forward pagination needed
     getPreviousPageParam: (firstPage) => {
@@ -146,6 +163,11 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     initialPageParam: undefined,
     enabled: !!address,
     staleTime: 60_000, // 1 minute
+    retry: 2, // Retry failed requests up to 2 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    gcTime: 10 * 60 * 1000, // Keep cached data for 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch on window focus (user might be scrolling)
+    refetchOnReconnect: true, // Refetch when network reconnects
   });
 
   // Flatten all pages into a single array, sorted by timestamp
@@ -602,14 +624,27 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     }
   }, [portfolioData, convertTo]);
 
-  if (error) {
+  if (isError) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return (
-      <div className="mt-4 p-4 rounded-xl bg-white/[0.02] border border-white/10">
-        <div className="text-red-400 text-sm">Failed to load portfolio data</div>
-        {process.env.NODE_ENV === 'development' && (
-          <div className="text-red-300 text-xs mt-2 opacity-75">{errorMessage}</div>
-        )}
+      <div className="mt-4 mb-6">
+        <div className="bg-white/[0.02] border border-red-500/30 rounded-2xl overflow-hidden">
+          <div className="px-4 md:px-6 pt-4 pb-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-bold text-white">Portfolio Value</h3>
+            </div>
+            <div className="text-red-400 text-sm mb-3">Failed to load portfolio data</div>
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-red-300 text-xs mb-3 opacity-75">{errorMessage}</div>
+            )}
+            <button
+              onClick={() => refetch()}
+              className="px-4 py-2 text-sm font-semibold rounded-lg border border-white/20 hover:border-white/40 transition-colors bg-white/[0.05] hover:bg-white/[0.08] text-white/80 hover:text-white"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

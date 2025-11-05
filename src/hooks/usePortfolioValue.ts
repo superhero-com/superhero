@@ -17,15 +17,22 @@ interface UsePortfolioValueOptions {
   address: string | null | undefined;
   convertTo?: 'ae' | 'usd' | 'eur' | 'aud' | 'brl' | 'cad' | 'chf' | 'gbp' | 'xau';
   enabled?: boolean;
+  staleTime?: number;
+  refetchInterval?: number | false;
+  retry?: number | boolean;
 }
 
 /**
  * Hook to fetch the latest portfolio value for an account
+ * Optimized to fetch only the current snapshot when no date range is provided
  */
 export function usePortfolioValue({ 
   address, 
   convertTo,
-  enabled = true 
+  enabled = true,
+  staleTime = 30_000, // 30 seconds default
+  refetchInterval = 60_000, // 1 minute default
+  retry = 2, // Retry failed requests up to 2 times
 }: UsePortfolioValueOptions) {
   const { currentCurrencyInfo } = useCurrencies();
   
@@ -35,37 +42,53 @@ export function usePortfolioValue({
     [convertTo, currentCurrencyInfo]
   );
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch, isError, isFetching } = useQuery({
     queryKey: ['portfolio-value', address, currency],
     queryFn: async () => {
       if (!address) return null;
       
-      // Fetch just the latest snapshot by requesting a small date range
-      const endDate = moment();
-      const startDate = moment().subtract(1, 'day'); // Just need latest snapshot
-      
-      const response = await TrendminerApi.getAccountPortfolioHistory(address, {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        interval: 86400, // Daily interval
-        convertTo: currency,
-      });
-      
-      const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
-      
-      // Return the latest snapshot (should be the last one)
-      if (snapshots.length === 0) return null;
-      
-      // Sort by timestamp descending and get the latest
-      const latest = [...snapshots].sort((a, b) => 
-        moment(b.timestamp).valueOf() - moment(a.timestamp).valueOf()
-      )[0];
-      
-      return latest;
+      try {
+        // Optimized: Fetch current snapshot only (no date range = current snapshot)
+        // This is more efficient than fetching a day's worth of data
+        const response = await TrendminerApi.getAccountPortfolioHistory(address, {
+          // No startDate/endDate = current snapshot only
+          convertTo: currency,
+        });
+        
+        const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
+        
+        // Return the first (and only) snapshot, or null if empty
+        if (snapshots.length === 0) return null;
+        
+        // If multiple snapshots (shouldn't happen without date range, but handle gracefully)
+        // Sort by timestamp descending and get the latest
+        const latest = snapshots.length === 1 
+          ? snapshots[0]
+          : [...snapshots].sort((a, b) => 
+              moment(b.timestamp).valueOf() - moment(a.timestamp).valueOf()
+            )[0];
+        
+        return latest;
+      } catch (err) {
+        // Enhanced error logging
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[usePortfolioValue] Failed to fetch portfolio value:', {
+            address,
+            currency,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+        throw err;
+      }
     },
     enabled: enabled && !!address,
-    staleTime: 30_000, // 30 seconds
-    refetchInterval: 60_000, // Refetch every minute
+    staleTime,
+    refetchInterval,
+    retry,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    gcTime: 5 * 60 * 1000, // Keep cached data for 5 minutes
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnReconnect: true, // Refetch when network reconnects
   });
 
   // Calculate the current value based on currency
@@ -110,6 +133,8 @@ export function usePortfolioValue({
     value: currentValue,
     formattedValue,
     isLoading,
+    isFetching,
+    isError,
     error,
     refetch,
     data, // Raw snapshot data

@@ -187,10 +187,10 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     },
     initialPageParam: undefined,
     enabled: !!address,
-    staleTime: 60_000, // 1 minute
+    staleTime: 5 * 60 * 1000, // 5 minutes - data is considered fresh for 5 minutes
     retry: 2, // Retry failed requests up to 2 times
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-    gcTime: 10 * 60 * 1000, // Keep cached data for 10 minutes
+    gcTime: 30 * 60 * 1000, // Keep cached data for 30 minutes
     refetchOnWindowFocus: false, // Don't refetch on window focus (user might be scrolling)
     refetchOnReconnect: true, // Refetch when network reconnects
   });

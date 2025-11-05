@@ -571,12 +571,27 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           chartExists: !!chartRef.current,
           seriesExists: !!seriesRef.current,
           portfolioDataLength: portfolioData?.length || 0,
+          selectedTimeRange,
         });
       }
       return;
     }
     
+    // Detect if time range changed BEFORE checking for data
+    // This way we can handle the case where data is loading when switching ranges
+    const isTimeRangeChange = previousTimeRangeRef.current !== selectedTimeRange;
+    
     if (!portfolioData || portfolioData.length === 0) {
+      // If time range changed but no data yet, update the ref and wait for data
+      if (isTimeRangeChange) {
+        previousTimeRangeRef.current = selectedTimeRange;
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AccountPortfolio] Time range changed, waiting for data...', {
+            timeRange: selectedTimeRange,
+            previousRange: previousTimeRangeRef.current,
+          });
+        }
+      }
       // Reset the flag if no data
       isUpdatingDataRef.current = false;
       if (process.env.NODE_ENV === 'development') {
@@ -590,10 +605,11 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         dataPoints: portfolioData.length,
         convertTo,
         selectedTimeRange,
+        isTimeRangeChange: previousTimeRangeRef.current !== selectedTimeRange,
       });
     }
 
-    // Detect if time range changed
+    // Detect if time range changed (already checked above, but check again for safety)
     const isTimeRangeChange = previousTimeRangeRef.current !== selectedTimeRange;
 
     // Mark that we're updating data to prevent scroll handler from triggering

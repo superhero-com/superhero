@@ -279,7 +279,7 @@ export default function UserProfile({
                 className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all inline-flex items-center gap-2"
                 title={t('titles.sendATip')}
               >
-                <IconDiamond className="w-4 h-4 text-[#1161FE]" />
+                <IconDiamond className="w-4 h-4 text-white" />
                 Tip
               </AeButton>
             ) : null}

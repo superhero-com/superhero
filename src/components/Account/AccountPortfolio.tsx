@@ -519,7 +519,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         setContainerReady(false);
       }
     };
-  }, [containerReady, portfolioData, convertTo, currentCurrencyInfo]); // Include data/currency to set initial data if available
+  }, [containerReady]); // Only run when container becomes ready, data updates handled by separate effect
 
   // Track previous time range to detect changes
   const previousTimeRangeRef = useRef<TimeRange>(selectedTimeRange);

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HeaderLogo } from '../../../icons';
@@ -10,7 +10,7 @@ export default function WebAppHeader() {
   const { t: tNav } = useTranslation('navigation');
   const { t } = useTranslation('common');
   const { pathname } = useLocation();
-  const navigationItems = getNavigationItems(tNav);
+  const navigationItems = useMemo(() => getNavigationItems(tNav), [tNav]);
   const isDaoPath = pathname.startsWith('/trends/dao') || pathname.startsWith('/trends/daos');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const themeValue = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
@@ -53,7 +53,7 @@ export default function WebAppHeader() {
         </Link>
 
         <nav className="flex items-center gap-6 flex-grow md:gap-5 relative">
-          {getNavigationItems(tNav)
+          {navigationItems
             .filter((item: any) => !!item && !!item.id)
             .map((item: any) => {
               const commonClass = `no-underline font-medium px-3 py-2 rounded-lg transition-all duration-200 relative`;

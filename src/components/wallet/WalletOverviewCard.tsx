@@ -157,7 +157,7 @@ export default function WalletOverviewCard({
             showAddressAndChainName={false}
             showPrimaryOnly={true}
             hideFallbackName={true}
-            contentClassName="px-2 pb-0"
+            contentClassName="px-3 pb-0"
             secondary={(
               <div className="text-[11px] text-[var(--light-font-color)]">
                 {balanceAe.toLocaleString(undefined, { maximumFractionDigits: 6 })} AE

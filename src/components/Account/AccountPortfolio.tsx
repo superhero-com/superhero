@@ -795,7 +795,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           
           {/* Loading indicator - overlay on top of chart */}
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm rounded-lg">
+            <div className="absolute inset-0 flex items-center justify-center rounded-lg">
               <div className="text-white/60 text-sm">Loading portfolio data...</div>
             </div>
           )}

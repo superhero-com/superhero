@@ -69,7 +69,7 @@ export default function HeaderWalletButton() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            className="p-2 rounded-lg border border-solid border-white/30 hover:bg-white/10 hover:border-white/40 active:bg-white/15 transition-colors cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px]"
+            className="p-1.5 rounded-lg border border-solid border-white/30 hover:bg-white/10 hover:border-white/40 active:bg-white/15 transition-colors cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px]"
             style={{ borderWidth: '1px' }}
             aria-label="Account menu"
           >

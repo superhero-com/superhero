@@ -96,6 +96,14 @@ export default function UserProfile({
       newSearchParams.set("tab", newTab);
     }
     setSearchParams(newSearchParams, { replace: true });
+    
+    // Scroll to tabs section after a brief delay to allow DOM update
+    setTimeout(() => {
+      const tabsSection = document.getElementById('profile-tabs-section');
+      if (tabsSection) {
+        tabsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   // Sync tab state when URL changes (e.g., browser back/forward)
@@ -317,35 +325,44 @@ export default function UserProfile({
               {decimalBalance ? `${decimalBalance.prettify()} AE` : "Loading..."}
             </div>
           </div>
-          <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all">
+          <button
+            onClick={() => handleTabChange("owned")}
+            className="rounded-2xl bg-white/[0.02] border border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all cursor-pointer text-left w-full"
+          >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
               Owned Trends
             </div>
             <div className="text-base md:text-lg font-bold text-white">
               {(ownedTokensResp as any)?.meta?.totalItems ?? (Array.isArray(aex9Balances) ? aex9Balances.length : 0)}
             </div>
-          </div>
-          <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all">
+          </button>
+          <button
+            onClick={() => handleTabChange("created")}
+            className="rounded-2xl bg-white/[0.02] border border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all cursor-pointer text-left w-full"
+          >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
               Created Trends
             </div>
             <div className="text-base md:text-lg font-bold text-white">
               {accountInfo?.total_created_tokens ?? 0}
             </div>
-          </div>
-          <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all">
+          </button>
+          <button
+            onClick={() => handleTabChange("feed")}
+            className="rounded-2xl bg-white/[0.02] border border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all cursor-pointer text-left w-full"
+          >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
               Posts
             </div>
             <div className="text-base md:text-lg font-bold text-white">
               {posts.length}
             </div>
-          </div>
+          </button>
         </div>
       </div>
 
       {/* Tabs - reuse main feed filter styles (mobile underline, desktop pills) */}
-      <div className="w-full mb-2">
+      <div id="profile-tabs-section" className="w-full mb-2">
         {/* Underline tabs with divider. Full-bleed on mobile; constrained on md+. */}
         <div>
           <div className="flex items-center justify-start gap-4 border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] overflow-x-auto whitespace-nowrap md:w-full md:mx-0 md:overflow-visible md:gap-10">

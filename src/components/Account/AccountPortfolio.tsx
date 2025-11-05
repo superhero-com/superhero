@@ -50,11 +50,24 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   );
 
   // Fetch current portfolio value separately (not dependent on time range)
-  const { value: currentPortfolioValue } = usePortfolioValue({
+  const { value: currentPortfolioValue, isLoading: isLoadingCurrentValue, error: currentValueError } = usePortfolioValue({
     address,
     convertTo: convertTo as any,
     enabled: !!address,
   });
+
+  // Debug logging
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[AccountPortfolio] Current Portfolio Value State:', {
+        currentPortfolioValue: currentPortfolioValue?.toString(),
+        isLoadingCurrentValue,
+        currentValueError: currentValueError?.message,
+        convertTo,
+        address,
+      });
+    }
+  }, [currentPortfolioValue, isLoadingCurrentValue, currentValueError, convertTo, address]);
 
   // Calculate date range - minimum start date is January 1, 2025
   const dateRange = useMemo(() => {
@@ -207,14 +220,27 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const displayValue = useMemo(() => {
     // If hovering over a past date, show that value
     if (hoveredPrice) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AccountPortfolio] Using hovered price:', hoveredPrice.price);
+      }
       return hoveredPrice.price;
     }
     
     // Otherwise, show the current portfolio value
     if (currentPortfolioValue) {
-      return currentPortfolioValue.toNumber();
+      const value = currentPortfolioValue.toNumber();
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AccountPortfolio] Using current portfolio value:', value);
+      }
+      return value;
     }
     
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[AccountPortfolio] No display value available', {
+        hoveredPrice,
+        currentPortfolioValue: currentPortfolioValue?.toString(),
+      });
+    }
     return null;
   }, [hoveredPrice, currentPortfolioValue]);
 

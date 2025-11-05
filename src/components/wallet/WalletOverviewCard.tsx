@@ -147,7 +147,7 @@ export default function WalletOverviewCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 px-4">
+        <div className="flex items-center gap-3">
           <AddressAvatarWithChainName
             isHoverEnabled={false}
             address={activeAccount}
@@ -157,7 +157,7 @@ export default function WalletOverviewCard({
             showAddressAndChainName={false}
             showPrimaryOnly={true}
             hideFallbackName={true}
-            contentClassName="!px-8 pb-0"
+            contentClassName="px-2 pb-0"
             secondary={(
               <div className="text-[11px] text-[var(--light-font-color)]">
                 {balanceAe.toLocaleString(undefined, { maximumFractionDigits: 6 })} AE

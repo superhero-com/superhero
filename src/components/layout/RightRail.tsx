@@ -57,7 +57,8 @@ export default function RightRail({
   // Check if we're on the user's own profile page
   const isOwnProfile = useMemo(() => {
     const isProfilePage = location.pathname.startsWith('/users/');
-    if (!isProfilePage || !activeAccount || !effectiveProfileAddress) return false;
+    if (!isProfilePage) return false;
+    if (!activeAccount || !effectiveProfileAddress) return false;
     return effectiveProfileAddress === activeAccount;
   }, [location.pathname, effectiveProfileAddress, activeAccount]);
   const [trending, setTrending] = useState<Array<[string, any]>>([] as any);

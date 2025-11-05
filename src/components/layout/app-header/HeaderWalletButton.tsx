@@ -51,7 +51,7 @@ export default function HeaderWalletButton() {
     <div className="inline-flex items-center gap-3">
       <button
         onClick={handleProfileClick}
-        className="cursor-pointer hover:opacity-80 transition-opacity rounded-lg p-0.5 hover:bg-white/5"
+        className="cursor-pointer hover:opacity-80 transition-opacity rounded-lg px-1 py-0.5 hover:bg-white/5"
         aria-label="View profile"
       >
         <AddressAvatarWithChainName

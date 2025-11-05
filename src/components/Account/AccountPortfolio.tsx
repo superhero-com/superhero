@@ -296,12 +296,35 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     if (chartRef.current) return;
     
     // Don't initialize if container isn't ready
-    if (!containerReady || !chartContainerRef.current) return;
+    if (!containerReady || !chartContainerRef.current) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AccountPortfolio] Chart initialization waiting for container', {
+          containerReady,
+          containerExists: !!chartContainerRef.current,
+          containerWidth: chartContainerRef.current?.clientWidth || 0,
+        });
+      }
+      return;
+    }
     
     const container = chartContainerRef.current;
     
     // Double-check container has width
-    if (container.clientWidth === 0) return;
+    if (container.clientWidth === 0) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AccountPortfolio] Container has no width, waiting...', {
+          containerWidth: container.clientWidth,
+        });
+      }
+      return;
+    }
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[AccountPortfolio] Initializing chart', {
+        containerWidth: container.clientWidth,
+        containerHeight: container.clientHeight,
+      });
+    }
     
     // Container is ready, initialize chart
 

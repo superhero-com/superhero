@@ -101,7 +101,18 @@ export default function UserProfile({
     setTimeout(() => {
       const tabsSection = document.getElementById('profile-tabs-section');
       if (tabsSection) {
-        tabsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Get navbar height dynamically (header is sticky)
+        const header = document.querySelector('header') || document.querySelector('[class*="mobile-navigation"]');
+        const headerHeight = header ? header.getBoundingClientRect().height : 64; // Default to 64px (h-16)
+        
+        // Calculate scroll position accounting for navbar
+        const elementPosition = tabsSection.getBoundingClientRect().top + window.pageYOffset;
+        const offsetPosition = elementPosition - headerHeight - 8; // 8px extra spacing
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
       }
     }, 100);
   };

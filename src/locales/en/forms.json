@@ -13,6 +13,7 @@
   "inviteLinksGeneratedSuccessfully": "Your invitation links have been generated successfully!",
   "saveLinksBeforeClosing": "Make sure to save these links before closing this dialog!",
   "iHaveCopiedInvitationLinks": "I have copied the invitation links",
-  "beFirstToSpeak": "Be the first to speak about {{hashtag}}."
+  "beFirstToSpeak": "Be the first to speak about {{hashtag}}.",
+  "askAQuestion": "Ask a question"
 }
 

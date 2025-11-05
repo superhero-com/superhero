@@ -32,6 +32,7 @@ i18n
     fallbackLng: 'en',
     defaultNS: 'common',
     ns: ['common', 'navigation', 'dex', 'social', 'governance', 'trending', 'errors', 'landing', 'forms', 'transactions'],
+    // Plugin namespaces will be added dynamically when plugins load
     interpolation: { escapeValue: false },
   });
 

@@ -1,0 +1,28 @@
+{
+  "createdAPoll": "created a poll",
+  "pending": "Pending…",
+  "yourVote": "Your vote",
+  "retractVote": "Retract vote",
+  "votes": "votes",
+  "onChain": "on-chain",
+  "poll": "Poll",
+  "timeLeft": {
+    "seconds": "{{count}}s left",
+    "minutes": "{{count}}m left",
+    "hours": "{{count}}h left",
+    "days": "{{count}}d left",
+    "weeks": "{{count}} {{count, plural, one {week} other {weeks}}} left",
+    "months": "{{count}} {{count, plural, one {month} other {months}}} left",
+    "years": "{{count}} {{count, plural, one {year} other {years}}} left"
+  },
+  "closedAgo": {
+    "seconds": "Closed {{count}}s ago",
+    "minutes": "Closed {{count}}m ago",
+    "hours": "Closed {{count}}h ago",
+    "days": "Closed {{count}}d ago",
+    "weeks": "Closed {{count}} {{count, plural, one {week} other {weeks}}} ago",
+    "months": "Closed {{count}} {{count, plural, one {month} other {months}}} ago",
+    "years": "Closed {{count}} {{count, plural, one {year} other {years}}} ago"
+  }
+}
+

@@ -594,9 +594,6 @@ export default function RightRail({
       case "trending":
         navigate("/trends");
         break;
-      case "governance":
-        navigate("/voting");
-        break;
       case "meet":
         navigate("/meet");
         break;

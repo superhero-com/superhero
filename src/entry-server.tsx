@@ -2,11 +2,11 @@ import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom/server';
 import { HelmetProvider } from 'react-helmet-async';
-import { routes } from './routes';
+import { getRoutes } from './routes';
 import { useRoutes } from 'react-router-dom';
 
 function ServerRoutes({ url }: { url: string }) {
-  return <StaticRouter location={url}>{useRoutes(routes as any)}</StaticRouter>;
+  return <StaticRouter location={url}>{useRoutes(getRoutes() as any)}</StaticRouter>;
 }
 
 export async function render(url: string) {

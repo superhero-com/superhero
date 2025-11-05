@@ -108,28 +108,31 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     isError,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['portfolio-history', address, dateRange.startDate, dateRange.endDate, dateRange.interval, convertTo, selectedTimeRange],
+    // Use selectedTimeRange as primary key for caching - same range = same cache
+    // Include dateRange for actual API calls, but use stable time range for cache key
+    queryKey: ['portfolio-history', address, selectedTimeRange, convertTo, dateRange.interval],
     queryFn: async ({ pageParam }) => {
-      // pageParam is the endDate for this page (undefined means use the current dateRange.endDate)
-      const endDate = pageParam ? moment(pageParam) : moment(dateRange.endDate);
+      // Always use current time for API calls (not cached time) to get latest data
+      // But use stable query key based on time range for caching
       const range = TIME_RANGES[selectedTimeRange];
+      const currentEndDate = pageParam ? moment(pageParam) : moment(); // Use current time for API
       
       // Calculate start date for this page
       // For initial load, use dateRange.startDate if available
       // For subsequent loads (scroll left), go back 90 days from endDate
       let startDate: moment.Moment;
       if (!pageParam && dateRange.startDate) {
-        // Initial load: use the calculated dateRange.startDate
+        // Initial load: use the calculated dateRange.startDate (but use current time as end)
         startDate = moment(dateRange.startDate);
       } else if (range.days === Infinity) {
         // For 'all', load 90 days at a time going backwards
-        startDate = moment(endDate).subtract(90, 'days');
+        startDate = moment(currentEndDate).subtract(90, 'days');
         if (startDate.isBefore(minStartDate)) {
           startDate = minStartDate;
         }
       } else {
         // For specific ranges when loading more, go back the same number of days
-        startDate = moment(endDate).subtract(range.days, 'days');
+        startDate = moment(currentEndDate).subtract(range.days, 'days');
         if (startDate.isBefore(minStartDate)) {
           startDate = minStartDate;
         }
@@ -138,7 +141,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       try {
         const response = await TrendminerApi.getAccountPortfolioHistory(address, {
           startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
+          endDate: currentEndDate.toISOString(),
           interval: dateRange.interval,
           convertTo: convertTo as any,
         });

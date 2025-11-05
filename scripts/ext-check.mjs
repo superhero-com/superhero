@@ -17,7 +17,9 @@ function walk(dir) {
 
 function check() {
   if (!fs.existsSync(pluginsDir)) return 0;
-  const files = walk(pluginsDir).filter((p) => /index\.tsx?$/.test(p));
+  const files = walk(pluginsDir).filter((p) => 
+    /index\.tsx?$/.test(p) && !p.includes('/locales/')
+  );
   let errors = 0;
   for (const f of files) {
     const src = fs.readFileSync(f, 'utf8');

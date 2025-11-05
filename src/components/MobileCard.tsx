@@ -37,7 +37,7 @@ const MobileCard: React.FC<MobileCardProps> = ({
         // Clickable styles
         clickable && [
           'cursor-pointer select-none',
-          'hover:-translate-y-0.5
+          'hover:-translate-y-0.5',
           'active:translate-y-0 active:shadow-[0_4px_15px_rgba(0,0,0,0.15)]',
           'focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(17,97,254,0.35)]',
           'min-h-12' // Better touch target

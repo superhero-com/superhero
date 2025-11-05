@@ -410,7 +410,7 @@ export default function LeftRail() {
 
           {marketStats && (
             <div className="grid grid-cols-2 gap-2 mt-2">
-              <div className="py-2 px-3 bg-teal-500/10 rounded-lg border border-teal-500/20 text-center transition-all duration-300 hover:-translate-y-0.5
+              <div className="py-2 px-3 bg-teal-500/10 rounded-lg border border-teal-500/20 text-center transition-all duration-300 hover:-translate-y-0.5">
                 <div className="text-[10px] text-[var(--neon-teal)] font-semibold">
                   Market Cap
                 </div>
@@ -418,7 +418,7 @@ export default function LeftRail() {
                   {formatMarketCap(marketStats.total_market_cap_sum || 0)}
                 </div>
               </div>
-              <div className="py-2 px-3 bg-pink-500/10 rounded-lg border border-pink-500/20 text-center transition-all duration-300 hover:-translate-y-0.5
+              <div className="py-2 px-3 bg-pink-500/10 rounded-lg border border-pink-500/20 text-center transition-all duration-300 hover:-translate-y-0.5">
                 <div className="text-[10px] text-[var(--neon-pink)] font-semibold">
                   Total Tokens
                 </div>

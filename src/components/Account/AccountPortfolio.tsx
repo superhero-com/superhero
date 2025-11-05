@@ -35,6 +35,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('1m');
   const [useCurrentCurrency, setUseCurrentCurrency] = useState(false); // Default to AE
   const [hoveredPrice, setHoveredPrice] = useState<{ price: number; time: number } | null>(null);
+  const [containerReady, setContainerReady] = useState(false);
   const isFetchingMoreRef = useRef(false);
   const loadedStartDateRef = useRef<string | null>(null);
   const initialLoadRef = useRef(true);
@@ -226,24 +227,38 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     }
   }, [portfolioData, convertTo]);
 
+  // Check if container is ready
+  useEffect(() => {
+    if (containerReady || chartRef.current) return;
+    
+    if (chartContainerRef.current && chartContainerRef.current.clientWidth > 0) {
+      setContainerReady(true);
+    } else {
+      // Check again after a short delay
+      const timeoutId = setTimeout(() => {
+        if (chartContainerRef.current && chartContainerRef.current.clientWidth > 0) {
+          setContainerReady(true);
+        }
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [containerReady]);
+
   // Initialize chart once when container is available
   // Chart should persist across time range changes
   useEffect(() => {
-    // Only initialize if container is rendered and chart doesn't exist yet
-    if (!chartContainerRef.current || chartRef.current) return;
-
+    // Don't initialize if chart already exists
+    if (chartRef.current) return;
+    
+    // Don't initialize if container isn't ready
+    if (!containerReady || !chartContainerRef.current) return;
+    
     const container = chartContainerRef.current;
-    // Ensure container has a width
-    if (container.clientWidth === 0) {
-      // Container might not be sized yet, try again on next frame
-      const retryInit = () => {
-        if (chartContainerRef.current && !chartRef.current) {
-          // Will be handled by the next useEffect run
-        }
-      };
-      requestAnimationFrame(retryInit);
-      return;
-    }
+    
+    // Double-check container has width
+    if (container.clientWidth === 0) return;
+    
+    // Container is ready, initialize chart
 
     const chart = createChart(container, {
       width: container.clientWidth,
@@ -465,16 +480,23 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         initialLoadRef.current = true;
         lastVisibleRangeRef.current = null;
         setHoveredPrice(null);
+        setContainerReady(false);
       }
     };
-  }, []); // Only run once on mount, chart persists across data changes
+  }, [containerReady]); // Only run when container becomes ready, chart persists across currency/data changes
 
   // Track previous time range to detect changes
   const previousTimeRangeRef = useRef<TimeRange>(selectedTimeRange);
 
   // Update chart data when portfolio data, currency, or time range changes
   useEffect(() => {
-    if (!portfolioData || !seriesRef.current || portfolioData.length === 0) {
+    // Wait for chart to be initialized
+    if (!chartRef.current || !seriesRef.current) {
+      // Chart not initialized yet, wait for it
+      return;
+    }
+    
+    if (!portfolioData || portfolioData.length === 0) {
       // Reset the flag if no data
       isUpdatingDataRef.current = false;
       return;

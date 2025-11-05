@@ -582,21 +582,20 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     const isTimeRangeChange = previousTimeRangeRef.current !== selectedTimeRange;
     
     if (!portfolioData || portfolioData.length === 0) {
-      // If time range changed but no data yet, update the ref and wait for data
-      if (isTimeRangeChange) {
-        previousTimeRangeRef.current = selectedTimeRange;
-        if (process.env.NODE_ENV === 'development') {
+      // If time range changed but no data yet, don't update the ref yet - wait for data
+      // This ensures that when data arrives, isTimeRangeChange will still be true
+      if (process.env.NODE_ENV === 'development') {
+        if (isTimeRangeChange) {
           console.log('[AccountPortfolio] Time range changed, waiting for data...', {
             timeRange: selectedTimeRange,
             previousRange: previousTimeRangeRef.current,
           });
+        } else {
+          console.log('[AccountPortfolio] No portfolio data available');
         }
       }
       // Reset the flag if no data
       isUpdatingDataRef.current = false;
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[AccountPortfolio] No portfolio data available');
-      }
       return;
     }
     

@@ -46,10 +46,10 @@ export default function HeaderWalletButton() {
 
   // If connected, show user info with clickable avatar and separate menu button
   return (
-    <div className="inline-flex items-center gap-2">
+    <div className="inline-flex items-center gap-3">
       <button
         onClick={handleProfileClick}
-        className="cursor-pointer hover:opacity-80 transition-opacity"
+        className="cursor-pointer hover:opacity-80 transition-opacity rounded-lg p-0.5 hover:bg-white/5"
         aria-label="View profile"
       >
         <AddressAvatarWithChainName
@@ -69,10 +69,10 @@ export default function HeaderWalletButton() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer flex items-center justify-center"
+            className="p-2 rounded-lg hover:bg-white/10 active:bg-white/15 transition-colors cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px]"
             aria-label="Account menu"
           >
-            <IconThreeDots className="w-4 h-4 text-[var(--standard-font-color)]" />
+            <IconThreeDots className="w-5 h-5 text-[var(--standard-font-color)]" />
           </button>
         </DropdownMenuTrigger>
 

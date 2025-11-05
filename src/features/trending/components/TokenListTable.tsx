@@ -26,13 +26,14 @@ function SortableColumnHeader({
   className = "",
   title 
 }: SortableColumnHeaderProps) {
-  const isActive = children === 'Rank' || // Rank is always active since it shows current sort direction
+  const isRankHeader = typeof children === 'string' && (children === 'Rank' || children === '#');
+  const isActive = isRankHeader || // Rank is always active since it shows current sort direction
     currentSort === sortKey || 
     (sortKey === 'newest' && currentSort === 'oldest') ||
     (sortKey === 'oldest' && currentSort === 'newest');
   
   const getDisplayDirection = () => {
-    if (children === 'Rank') {
+    if (isRankHeader) {
       // For rank, show the opposite direction (since rank 1 is highest value)
       return currentDirection === 'DESC' ? '↓' : '↑';
     }
@@ -45,7 +46,7 @@ function SortableColumnHeader({
 
   const handleClick = () => {
     // Special handling for rank - it should reverse the current sort direction
-    if (children === 'Rank') {
+    if (isRankHeader) {
       // For rank, we want to reverse whatever the current sort is
       // This will toggle the direction of the current sort field
       onSort(currentSort);
@@ -54,17 +55,19 @@ function SortableColumnHeader({
     }
   };
 
+  const alignRight = className.includes('text-right');
+
   return (
     <th 
       className={`${className} cursor-pointer hover:opacity-75 transition-opacity select-none`}
       onClick={handleClick}
       title={title}
     >
-      <div className="flex items-center gap-1">
+      <div className={`flex items-center gap-1 ${alignRight ? 'justify-end w-full' : ''}`}>
         {children}
         {isActive && (
           <span className="text-[#1161FE] text-xs">
-            {children === 'Rank' ? getDisplayDirection() : (getDisplayDirection() === 'DESC' ? '↓' : '↑')}
+            {isRankHeader ? getDisplayDirection() : (getDisplayDirection() === 'DESC' ? '↓' : '↑')}
           </span>
         )}
       </div>
@@ -92,6 +95,56 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
 
   return (
     <div className="">
+      {/* Mobile-only sortable header (not sticky) that mirrors desktop headers */}
+      <div className="md:hidden sticky top-[70px] z-30 bg-black/60 backdrop-blur border-b border-white/10 bctsl-mobile-header">
+        <table className="w-full">
+          <thead>
+            <tr>
+              <th className="cell-fake"></th>
+              <SortableColumnHeader
+                sortKey={orderBy}
+                currentSort={orderBy}
+                currentDirection={orderDirection}
+                onSort={onSort}
+                className="cell cell-rank text-[10px] opacity-60 text-left pr-1"
+              >
+                #
+              </SortableColumnHeader>
+              <SortableColumnHeader
+                sortKey="name"
+                currentSort={orderBy}
+                currentDirection={orderDirection}
+                onSort={onSort}
+                className="cell cell-name text-[10px] opacity-60 text-left py-1 px-1"
+              >
+                Token Name
+              </SortableColumnHeader>
+              {showCollectionColumn && (
+                <th className="hidden"></th>
+              )}
+              <SortableColumnHeader
+                sortKey="price"
+                currentSort={orderBy}
+                currentDirection={orderDirection}
+                onSort={onSort}
+                className="cell cell-price text-[10px] opacity-60 text-right py-1 pr-2"
+              >
+                Price
+              </SortableColumnHeader>
+              <SortableColumnHeader
+                sortKey="market_cap"
+                currentSort={orderBy}
+                currentDirection={orderDirection}
+                onSort={onSort}
+                className="cell cell-market-cap text-[10px] opacity-60 text-right py-1 pr-1"
+              >
+                Market Cap
+              </SortableColumnHeader>
+              <th className="cell cell-chart text-[10px] text-right opacity-60 py-1 pr-3">24h %</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
       <table className="w-full bctsl-token-list-table">
         <thead>
           <tr>
@@ -239,6 +292,29 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
           .cell-price,
           .cell-market-cap {
             font-size: 0.814em;
+          }
+        }
+
+        /* Ensure uniform font-size in the mobile header */
+        @media screen and (max-width: 1100px) {
+          .bctsl-mobile-header {
+            margin-inline: -16px;
+          }
+
+          .bctsl-mobile-header .cell-name,
+          .bctsl-mobile-header .cell-price,
+          .bctsl-mobile-header .cell-market-cap,
+          .bctsl-mobile-header .cell-rank,
+          .bctsl-mobile-header .cell-chart {
+            font-size: 14px;
+            line-height: 1.25rem;
+          }
+        }
+
+        /* Mobile row typography */
+        @media screen and (max-width: 960px) {
+          .bctsl-token-list-table > tbody > tr.mobile-only-card td {
+            font-size: 14px;
           }
         }
 

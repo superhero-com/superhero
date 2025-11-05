@@ -1,8 +1,10 @@
 import { PriceDataFormatter } from "@/features/shared/components";
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { TokenDto } from "@/api/generated/models/TokenDto";
+import { TransactionHistoricalService } from "@/api/generated";
+import Token24hChange from "@/components/Trendminer/Token24hChange";
 import { TokenLineChart } from "./TokenLineChart";
-import TokenMobileCard from "./TokenMobileCard";
 
 
 interface TokenListTableRowProps {
@@ -41,17 +43,79 @@ export default function TokenListTableRow({
 
   const collectionRank = useCollectionRank ? (token as any).collection_rank : rank;
 
+  // For mobile 24h change
+  const saleAddress = useMemo(() => token.sale_address || tokenAddress, [token.sale_address, tokenAddress]);
+  const { data: previewData } = useQuery({
+    queryFn: () =>
+      TransactionHistoricalService.getForPreview({ address: saleAddress, interval: '1d' }),
+    enabled: !!saleAddress,
+    queryKey: ['TransactionHistoricalService.getForPreview:1d', saleAddress],
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const performance24h = useMemo(() => {
+    try {
+      const result = (previewData as any)?.result as Array<{ last_price: number }>;
+      if (!result || result.length === 0) return null;
+      const first = Number(result[0].last_price || 0);
+      const last = Number(result[result.length - 1].last_price || 0);
+      if (!first) return null;
+      return { current_change_percent: ((last - first) / first) * 100 } as any;
+    } catch {
+      return null;
+    }
+  }, [previewData]);
+
   // Show mobile card on screens smaller than 960px
   return (
     <>
-      {/* Mobile card for small screens */}
-      <tr className="mobile-only-card md:hidden">
-        <td colSpan={8} className="p-0">
-          <TokenMobileCard
-            token={token}
-            useCollectionRank={useCollectionRank}
-            showCollectionColumn={showCollectionColumn}
-            rank={rank}
+      {/* Mobile compact single-row representation */}
+      <tr className="mobile-only-card md:hidden relative">
+        <td className="cell-fake" />
+        {/* Rank */}
+        <td className="pl-2 pr-1 py-2 align-middle text-white/60 text-xs font-semibold">{collectionRank}</td>
+        {/* Name */}
+        <td className="py-2 pr-2 align-middle">
+          <div className="text-sm font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent truncate max-w-[140px]">{token.symbol || token.name}</div>
+        </td>
+        {/* Optional collection cell to keep structure (hidden) */}
+        {showCollectionColumn && (
+          <td className="hidden" />
+        )}
+        {/* Price (AE only) */}
+        <td className="py-2 pr-2 align-middle text-right">
+          <PriceDataFormatter
+            hideFiatPrice
+            watchPrice={false}
+            className="bg-gradient-to-r from-yellow-400 to-cyan-500 bg-clip-text text-transparent"
+            priceData={token.price_data}
+          />
+        </td>
+        {/* Market Cap (fiat only) */}
+        <td className="py-2 pr-2 align-middle text-right">
+          <div className="only-fiat inline-flex">
+            <PriceDataFormatter
+              bignumber
+              watchPrice={false}
+              className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent"
+              priceData={token.market_cap_data}
+            />
+          </div>
+        </td>
+        {/* 24h % */}
+        <td className="py-2 pr-3 align-middle text-right">
+          <div className="inline-block mr-1">
+            <Token24hChange tokenAddress={saleAddress} createdAt={token.created_at} performance24h={performance24h} />
+          </div>
+        </td>
+        {/* Holders (hidden on mobile) */}
+        <td className="hidden" />
+        {/* Link overlay */}
+        <td className="cell-link">
+          <a
+            href={`/trending/tokens/${encodeURIComponent(token.name || token.address)}`}
+            className="link absolute inset-0 z-10"
+            aria-label={`View details for ${token.name || token.symbol}`}
           />
         </td>
       </tr>
@@ -194,6 +258,7 @@ export default function TokenListTableRow({
 
         /* Mobile responsive styles */
         @media screen and (max-width: 960px) {
+          .only-fiat .price { display: none; }
           .bctsl-token-list-table-row {
             display: grid;
             grid-template-columns: 42px 5fr 2fr;
@@ -210,7 +275,7 @@ export default function TokenListTableRow({
           .cell-rank {
             grid-area: rank;
             padding-top: 4px;
-            font-size: 10px;
+            font-size: 16px;
             font-weight: normal;
             letter-spacing: -0.1em;
           }

@@ -529,13 +529,31 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     // Wait for chart to be initialized
     if (!chartRef.current || !seriesRef.current) {
       // Chart not initialized yet, wait for it
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AccountPortfolio] Chart not ready yet, waiting...', {
+          chartExists: !!chartRef.current,
+          seriesExists: !!seriesRef.current,
+          portfolioDataLength: portfolioData?.length || 0,
+        });
+      }
       return;
     }
     
     if (!portfolioData || portfolioData.length === 0) {
       // Reset the flag if no data
       isUpdatingDataRef.current = false;
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AccountPortfolio] No portfolio data available');
+      }
       return;
+    }
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[AccountPortfolio] Updating chart data', {
+        dataPoints: portfolioData.length,
+        convertTo,
+        selectedTimeRange,
+      });
     }
 
     // Detect if time range changed

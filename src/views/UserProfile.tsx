@@ -317,7 +317,7 @@ export default function UserProfile({
 
         {/* Stats Grid - Right column on md+, full width on mobile */}
         <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5 md:gap-2.5">
-          <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all">
+          <div className="rounded-2xl bg-white/[0.02] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all">
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
               AE Balance
             </div>
@@ -327,7 +327,7 @@ export default function UserProfile({
           </div>
           <button
             onClick={() => handleTabChange("owned")}
-            className="rounded-2xl bg-white/[0.02] border border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all cursor-pointer text-left w-full"
+            className="rounded-2xl bg-white/[0.02] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all cursor-pointer text-left w-full focus:outline-none"
           >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
               Owned Trends
@@ -338,7 +338,7 @@ export default function UserProfile({
           </button>
           <button
             onClick={() => handleTabChange("created")}
-            className="rounded-2xl bg-white/[0.02] border border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all cursor-pointer text-left w-full"
+            className="rounded-2xl bg-white/[0.02] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all cursor-pointer text-left w-full focus:outline-none"
           >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
               Created Trends
@@ -349,7 +349,7 @@ export default function UserProfile({
           </button>
           <button
             onClick={() => handleTabChange("feed")}
-            className="rounded-2xl bg-white/[0.02] border border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all cursor-pointer text-left w-full"
+            className="rounded-2xl bg-white/[0.02] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all cursor-pointer text-left w-full focus:outline-none"
           >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
               Posts

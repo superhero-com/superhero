@@ -16,7 +16,7 @@ export default function Governance() {
       {isCreate ? (
         <GovernanceCreate />
       ) : isDetail ? (
-        <GovernanceVote pollId={pollId!} setActiveTab={() => {}} />
+        <GovernanceVote pollId={pollId!} />
       ) : (
         <GovernancePolls />
       )}

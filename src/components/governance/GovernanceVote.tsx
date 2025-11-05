@@ -8,11 +8,9 @@ import { useNavigate } from "react-router-dom";
 
 interface GovernanceVoteProps {
   pollId: string;
-  setActiveTab: (tab: string) => void;
 }
 export default function GovernanceVote({
   pollId,
-  setActiveTab,
 }: GovernanceVoteProps) {
   const navigate = useNavigate();
   const { activeAccount } = useAeSdk();

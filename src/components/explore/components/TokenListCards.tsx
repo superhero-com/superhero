@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 import { useAtomValue } from "jotai";
 import { performanceChartTimeframeAtom } from "@/features/trending/atoms";
 import PerformanceTimeframeSelector from "@/features/trending/components/PerformanceTimeframeSelector";
+import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
 
 interface TokenListCardsProps {
   tokens: DexTokenDto[];
@@ -111,27 +112,22 @@ export function TokenListCards({
             {/* Enhanced Dropdown Container */}
             <div className="relative flex items-center gap-[6px]">
               <div className="relative inline-block">
-                <select
-                  value={sort.key}
-                  onChange={(e) => handleSort(e.target.value as any)}
-                  className="appearance-none py-[6px] pr-7 pl-3 rounded-lg bg-white/10 text-white border border-white/10 backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[100px] focus:border-green-500 focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
+                <AppSelect
+                  value={sort.key as string}
+                  onValueChange={(v) => handleSort(v as any)}
+                  triggerClassName="appearance-none py-[6px] pr-7 pl-3 rounded-lg bg-white/10 text-white border border-white/10 backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[100px] focus:border-green-500 focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
                 >
-                  <option value="pairs_count">Pools</option>
-                  <option value="name">Name</option>
-                  <option value="symbol">Symbol</option>
-                  <option value="created_at">Created At</option>
-                  <option value="price">Price</option>
-                  <option value="tvl">TVL</option>
-                  <option value="24hchange">24h Change</option>
-                  <option value="24hvolume">24h Volume</option>
-                  <option value="7dchange">7d Change</option>
-                  <option value="7dvolume">7d Volume</option>
-                </select>
-
-                {/* Custom Dropdown Arrow */}
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300 text-xs font-semibold flex items-center justify-center w-4 h-4 bg-white/10 rounded transition-all duration-300">
-                  ▼
-                </div>
+                  <AppSelectItem value="pairs_count">Pools</AppSelectItem>
+                  <AppSelectItem value="name">Name</AppSelectItem>
+                  <AppSelectItem value="symbol">Symbol</AppSelectItem>
+                  <AppSelectItem value="created_at">Created At</AppSelectItem>
+                  <AppSelectItem value="price">Price</AppSelectItem>
+                  <AppSelectItem value="tvl">TVL</AppSelectItem>
+                  <AppSelectItem value="24hchange">24h Change</AppSelectItem>
+                  <AppSelectItem value="24hvolume">24h Volume</AppSelectItem>
+                  <AppSelectItem value="7dchange">7d Change</AppSelectItem>
+                  <AppSelectItem value="7dvolume">7d Volume</AppSelectItem>
+                </AppSelect>
               </div>
 
               <button

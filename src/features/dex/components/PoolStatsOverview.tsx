@@ -1,6 +1,7 @@
 import { PriceDataFormatter } from "@/features/shared/components";
 import { PairSummaryDto } from "@/api/generated";
 import { useState } from "react";
+import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
 
 interface PoolStatsOverviewProps {
   pairSummary?: PairSummaryDto;
@@ -37,22 +38,16 @@ export function PoolStatsOverview({ pairSummary }: PoolStatsOverviewProps) {
       <div className="p-5 rounded-2xl bg-gradient-to-br from-purple-600/10 to-white/5 border border-purple-600/20 backdrop-blur-xl relative overflow-hidden">
         <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center justify-between gap-1.5">
           <span className="flex items-center gap-1.5">📊 Volume</span>
-          <select
+          <AppSelect
             value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value as Period)}
-            className="text-[10px] bg-white/10 border border-white/20 rounded px-2 py-1 text-white outline-none cursor-pointer hover:bg-white/20 transition-colors"
-            style={{ colorScheme: "dark" }}
+            onValueChange={(v) => setSelectedPeriod(v as Period)}
+            triggerClassName="text-[10px] bg-white/10 border border-white/20 rounded px-2 py-1 text-white outline-none cursor-pointer hover:bg-white/20 transition-colors"
+            contentClassName="bg-[#1a1a1a] border-white/20"
           >
-            <option value="24h" style={{ backgroundColor: "#1a1a1a" }}>
-              24h
-            </option>
-            <option value="7d" style={{ backgroundColor: "#1a1a1a" }}>
-              7d
-            </option>
-            <option value="30d" style={{ backgroundColor: "#1a1a1a" }}>
-              30d
-            </option>
-          </select>
+            <AppSelectItem value="24h">24h</AppSelectItem>
+            <AppSelectItem value="7d">7d</AppSelectItem>
+            <AppSelectItem value="30d">30d</AppSelectItem>
+          </AppSelect>
         </div>
         <div className="text-2xl font-extrabold text-purple-400 mb-1 font-mono">
           <PriceDataFormatter
@@ -79,22 +74,16 @@ export function PoolStatsOverview({ pairSummary }: PoolStatsOverviewProps) {
       >
         <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center justify-between gap-1.5">
           <span className="flex items-center gap-1.5">📊 Price Change</span>
-          <select
+          <AppSelect
             value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value as Period)}
-            className="text-[10px] bg-white/10 border border-white/20 rounded px-2 py-1 text-white outline-none cursor-pointer hover:bg-white/20 transition-colors"
-            style={{ colorScheme: "dark" }}
+            onValueChange={(v) => setSelectedPeriod(v as Period)}
+            triggerClassName="text-[10px] bg-white/10 border border-white/20 rounded px-2 py-1 text-white outline-none cursor-pointer hover:bg-white/20 transition-colors"
+            contentClassName="bg-[#1a1a1a] border-white/20"
           >
-            <option value="24h" style={{ backgroundColor: "#1a1a1a" }}>
-              24h
-            </option>
-            <option value="7d" style={{ backgroundColor: "#1a1a1a" }}>
-              7d
-            </option>
-            <option value="30d" style={{ backgroundColor: "#1a1a1a" }}>
-              30d
-            </option>
-          </select>
+            <AppSelectItem value="24h">24h</AppSelectItem>
+            <AppSelectItem value="7d">7d</AppSelectItem>
+            <AppSelectItem value="30d">30d</AppSelectItem>
+          </AppSelect>
         </div>
         <div
           className={`text-2xl font-extrabold mb-1 font-mono ${

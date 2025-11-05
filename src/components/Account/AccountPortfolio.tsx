@@ -361,7 +361,35 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       }
     });
     
-    // Data will be set by the update effect
+    // If data is already available, set it immediately
+    if (portfolioData && portfolioData.length > 0) {
+      const chartData: LineData[] = portfolioData
+        .map((snapshot) => {
+          const timestamp = moment(snapshot.timestamp).unix();
+          let value: number | null = null;
+          
+          if (convertTo === 'ae') {
+            value = snapshot.total_value_ae;
+          } else {
+            if (snapshot.total_value_usd != null) {
+              value = snapshot.total_value_usd;
+            } else {
+              return null;
+            }
+          }
+          
+          return {
+            time: timestamp as any,
+            value: value as number,
+          };
+        })
+        .filter((item): item is LineData => item !== null);
+      
+      if (chartData.length > 0) {
+        areaSeries.setData(chartData);
+        chart.timeScale().fitContent();
+      }
+    }
 
     // Handle scroll to load previous data
     const handleVisibleRangeChange = () => {
@@ -491,7 +519,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         setContainerReady(false);
       }
     };
-  }, [containerReady]); // Only run when container becomes ready, chart persists across currency/data changes
+  }, [containerReady, portfolioData, convertTo, currentCurrencyInfo]); // Include data/currency to set initial data if available
 
   // Track previous time range to detect changes
   const previousTimeRangeRef = useRef<TimeRange>(selectedTimeRange);

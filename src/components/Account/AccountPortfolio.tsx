@@ -118,12 +118,19 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       const currentEndDate = pageParam ? moment(pageParam) : moment(); // Use current time for API
       
       // Calculate start date for this page
-      // For initial load, use dateRange.startDate if available
-      // For subsequent loads (scroll left), go back 90 days from endDate
+      // For initial load, calculate based on time range
+      // For subsequent loads (scroll left), go back from endDate
       let startDate: moment.Moment;
-      if (!pageParam && dateRange.startDate) {
-        // Initial load: use the calculated dateRange.startDate (but use current time as end)
-        startDate = moment(dateRange.startDate);
+      if (!pageParam) {
+        // Initial load: calculate start date based on time range
+        if (range.days === Infinity) {
+          startDate = minStartDate;
+        } else if (selectedTimeRange === '6h') {
+          startDate = moment(currentEndDate).subtract(6, 'hours');
+        } else {
+          const calculatedStart = moment(currentEndDate).subtract(range.days, 'days');
+          startDate = calculatedStart.isBefore(minStartDate) ? minStartDate : calculatedStart;
+        }
       } else if (range.days === Infinity) {
         // For 'all', load 90 days at a time going backwards
         startDate = moment(currentEndDate).subtract(90, 'days');

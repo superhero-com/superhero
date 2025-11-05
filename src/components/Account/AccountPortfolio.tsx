@@ -228,17 +228,37 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     
     // Otherwise, show the current portfolio value
     if (currentPortfolioValue) {
-      const value = currentPortfolioValue.toNumber();
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[AccountPortfolio] Using current portfolio value:', value);
+      try {
+        // Check if it's a Decimal object with toNumber method
+        const value = typeof currentPortfolioValue.toNumber === 'function' 
+          ? currentPortfolioValue.toNumber()
+          : typeof currentPortfolioValue === 'number'
+          ? currentPortfolioValue
+          : Number(currentPortfolioValue);
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AccountPortfolio] Using current portfolio value:', value, {
+            type: typeof currentPortfolioValue,
+            hasToNumber: typeof currentPortfolioValue.toNumber === 'function',
+          });
+        }
+        return value;
+      } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[AccountPortfolio] Error converting portfolio value:', error, {
+            currentPortfolioValue,
+            type: typeof currentPortfolioValue,
+          });
+        }
+        return null;
       }
-      return value;
     }
     
     if (process.env.NODE_ENV === 'development') {
       console.warn('[AccountPortfolio] No display value available', {
         hoveredPrice,
-        currentPortfolioValue: currentPortfolioValue?.toString(),
+        currentPortfolioValue,
+        currentPortfolioValueType: typeof currentPortfolioValue,
       });
     }
     return null;

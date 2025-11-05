@@ -12,6 +12,7 @@ interface TokenListTableRowProps {
   useCollectionRank?: boolean;
   showCollectionColumn?: boolean;
   rank: number;
+  changePercentMap?: Record<string, number>;
 }
 
 // Helper function to parse collection name
@@ -36,6 +37,7 @@ export default function TokenListTableRow({
   useCollectionRank = false,
   showCollectionColumn = false,
   rank,
+  changePercentMap,
 }: TokenListTableRowProps) {
   const tokenAddress = useMemo(() => {
     return token.address;
@@ -45,16 +47,21 @@ export default function TokenListTableRow({
 
   // For mobile 24h change
   const saleAddress = useMemo(() => token.sale_address || tokenAddress, [token.sale_address, tokenAddress]);
+  const externalChange = changePercentMap?.[saleAddress as string];
+
   const { data: previewData } = useQuery({
     queryFn: () =>
       TransactionHistoricalService.getForPreview({ address: saleAddress, interval: '1d' }),
-    enabled: !!saleAddress,
+    enabled: !!saleAddress && externalChange === undefined,
     queryKey: ['TransactionHistoricalService.getForPreview:1d', saleAddress],
     staleTime: 1000 * 60 * 5,
   });
 
   const performance24h = useMemo(() => {
     try {
+      if (externalChange !== undefined) {
+        return { current_change_percent: externalChange } as any;
+      }
       const result = (previewData as any)?.result as Array<{ last_price: number }>;
       if (!result || result.length === 0) return null;
       const first = Number(result[0].last_price || 0);
@@ -64,7 +71,7 @@ export default function TokenListTableRow({
     } catch {
       return null;
     }
-  }, [previewData]);
+  }, [previewData, externalChange]);
 
   // Show mobile card on screens smaller than 960px
   return (

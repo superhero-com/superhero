@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import TokenListTableRow from "./TokenListTableRow";
@@ -95,6 +95,42 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
     pages?.length ? pages.map((page) => page.items).flat() : [],
     [pages]
   );
+
+  // Fetch preview 24h change for items in current pages (visible tokens)
+  const [changeMap, setChangeMap] = useState<Record<string, number>>({});
+  useEffect(() => {
+    if (!allItems?.length) return;
+    let aborted = false;
+    const toFetch = allItems
+      .map((it) => it.sale_address || it.address)
+      .filter((addr) => addr && changeMap[addr] == null) as string[];
+    if (!toFetch.length) return;
+    (async () => {
+      const { TransactionHistoricalService } = await import('@/api/generated/services/TransactionHistoricalService');
+      const entries = await Promise.all(
+        toFetch.map(async (addr) => {
+          try {
+            const preview = await TransactionHistoricalService.getForPreview({ address: addr, interval: '1d' });
+            const result = (preview?.result || []) as Array<{ last_price: number }>;
+            if (!result.length) return [addr, 0] as const;
+            const first = Number(result[0].last_price || 0);
+            const last = Number(result[result.length - 1].last_price || 0);
+            const pct = first ? ((last - first) / first) * 100 : 0;
+            return [addr, pct] as const;
+          } catch {
+            return [addr, 0] as const;
+          }
+        })
+      );
+      if (aborted) return;
+      setChangeMap((prev) => {
+        const next = { ...prev } as Record<string, number>;
+        for (const [addr, val] of entries) next[addr] = val;
+        return next;
+      });
+    })();
+    return () => { aborted = true; };
+  }, [allItems]);
 
   return (
     <div className="">
@@ -228,6 +264,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
                 token={token}
                 showCollectionColumn={showCollectionColumn}
                 rank={rankOffset + index + 1}
+                changePercentMap={changeMap}
               />
             ))}
           </tbody>

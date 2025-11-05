@@ -604,12 +604,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         dataPoints: portfolioData.length,
         convertTo,
         selectedTimeRange,
-        isTimeRangeChange: previousTimeRangeRef.current !== selectedTimeRange,
+        isTimeRangeChange,
       });
     }
-
-    // Detect if time range changed (already checked above, but check again for safety)
-    const isTimeRangeChange = previousTimeRangeRef.current !== selectedTimeRange;
 
     // Mark that we're updating data to prevent scroll handler from triggering
     isUpdatingDataRef.current = true;

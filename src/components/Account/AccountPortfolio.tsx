@@ -4,6 +4,7 @@ import { createChart, IChartApi, ISeriesApi, LineData, ColorType, AreaSeries, Ar
 import moment from 'moment';
 import { TrendminerApi } from '@/api/backend';
 import { useCurrencies } from '@/hooks/useCurrencies';
+import { usePortfolioValue } from '@/hooks/usePortfolioValue';
 import { Decimal } from '@/libs/decimal';
 
 interface AccountPortfolioProps {
@@ -47,6 +48,13 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     () => (useCurrentCurrency ? currentCurrencyInfo.code.toLowerCase() : 'ae'),
     [useCurrentCurrency, currentCurrencyInfo]
   );
+
+  // Fetch current portfolio value separately (not dependent on time range)
+  const { value: currentPortfolioValue } = usePortfolioValue({
+    address,
+    convertTo: convertTo as any,
+    enabled: !!address,
+  });
 
   // Calculate date range - minimum start date is January 1, 2025
   const dateRange = useMemo(() => {
@@ -194,38 +202,21 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   }, [data]);
 
 
-  // Current portfolio value (latest snapshot)
-  const currentValue = useMemo(() => {
-    if (!portfolioData || portfolioData.length === 0) return null;
-    const latest = portfolioData[portfolioData.length - 1];
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Current Value] Latest snapshot:', {
-        timestamp: latest.timestamp,
-        total_value_ae: latest.total_value_ae,
-        total_value_usd: latest.total_value_usd,
-        convertTo,
-      });
+  // Use the current portfolio value from the hook (always shows latest, regardless of time range)
+  // Only changes when hovering over a past date (via hoveredPrice)
+  const displayValue = useMemo(() => {
+    // If hovering over a past date, show that value
+    if (hoveredPrice) {
+      return hoveredPrice.price;
     }
     
-    if (convertTo === 'ae') {
-      return latest.total_value_ae;
-    } else {
-      // For fiat currencies, use total_value_usd if available (including zero values)
-      // Note: total_value_usd contains the value converted to the requested currency (EUR, GBP, etc.), not just USD
-      if (latest.total_value_usd != null) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`[Current Value] Using converted value: ${latest.total_value_usd} (currency: ${convertTo})`);
-        }
-        return latest.total_value_usd;
-      }
-      // Fallback: log warning and return AE value
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('[Current Value] Missing converted value in latest snapshot:', latest);
-      }
-      return latest.total_value_ae;
+    // Otherwise, show the current portfolio value
+    if (currentPortfolioValue) {
+      return currentPortfolioValue.toNumber();
     }
-  }, [portfolioData, convertTo]);
+    
+    return null;
+  }, [hoveredPrice, currentPortfolioValue]);
 
   // Check if container is ready - continuously check until ready
   useEffect(() => {
@@ -751,24 +742,11 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           </div>
           <div className="mb-2 min-h-[3.5rem]">
             <span className={`text-3xl md:text-4xl font-extrabold ${hoveredPrice ? 'text-green-400' : 'text-white'} block min-h-[2.5rem] leading-tight`}>
-              {hoveredPrice ? (
+              {displayValue !== null ? (
                 convertTo === 'ae' 
-                  ? `${Decimal.from(hoveredPrice.price).prettify()} AE`
+                  ? `${Decimal.from(displayValue).prettify()} AE`
                   : (() => {
-                      const fiatValue = typeof hoveredPrice.price === 'number' ? hoveredPrice.price : Number(hoveredPrice.price);
-                      const currencyCode = currentCurrencyInfo.code.toUpperCase();
-                      return fiatValue.toLocaleString('en-US', {
-                        style: 'currency',
-                        currency: currencyCode,
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      });
-                    })()
-              ) : currentValue !== null ? (
-                convertTo === 'ae' 
-                  ? `${Decimal.from(currentValue).prettify()} AE`
-                  : (() => {
-                      const fiatValue = typeof currentValue === 'number' ? currentValue : Number(currentValue);
+                      const fiatValue = typeof displayValue === 'number' ? displayValue : Number(displayValue);
                       const currencyCode = currentCurrencyInfo.code.toUpperCase();
                       return fiatValue.toLocaleString('en-US', {
                         style: 'currency',

@@ -10,16 +10,79 @@ export const TrendminerApi = {
       console.log(`[TrendminerApi] Base URL: ${base}`);
       console.log(`[TrendminerApi] Fetching: ${url}`);
     }
-    const res = await fetch(url, init);
-    if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      const error = new Error(`Trendminer request failed: ${res.status} ${body || ''}`.trim());
-      if (process.env.NODE_ENV === 'development') {
-        console.error(`[TrendminerApi] Error fetching ${url}:`, error);
-      }
-      throw error;
+    
+    // Create timeout controller if no signal provided
+    let timeoutController: AbortController | null = null;
+    let timeoutId: NodeJS.Timeout | null = null;
+    
+    if (!init?.signal && typeof AbortController !== 'undefined') {
+      timeoutController = new AbortController();
+      timeoutId = setTimeout(() => timeoutController!.abort(), 30000); // 30 second timeout
     }
-    return res.json();
+    
+    try {
+      const res = await fetch(url, {
+        ...init,
+        signal: init?.signal || timeoutController?.signal,
+      });
+      
+      // Clear timeout if request succeeded
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
+      if (!res.ok) {
+        let errorMessage = `Request failed with status ${res.status}`;
+        try {
+          const body = await res.text();
+          if (body) {
+            // Try to parse as JSON for better error messages
+            try {
+              const json = JSON.parse(body);
+              errorMessage = json.message || json.error || errorMessage;
+            } catch {
+              errorMessage = body.length > 200 ? `${body.substring(0, 200)}...` : body;
+            }
+          }
+        } catch {
+          // If we can't read the body, use the status text
+          errorMessage = res.statusText || errorMessage;
+        }
+        
+        const error = new Error(`Trendminer API error (${res.status}): ${errorMessage}`);
+        if (process.env.NODE_ENV === 'development') {
+          console.error(`[TrendminerApi] Error fetching ${url}:`, error);
+        }
+        throw error;
+      }
+      
+      return res.json();
+    } catch (err) {
+      // Clear timeout on error
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
+      // Enhanced error handling for network errors and timeouts
+      if (err instanceof Error) {
+        if (err.name === 'AbortError' || err.message.includes('aborted')) {
+          const timeoutError = new Error('Request timeout: The API request took too long. Please try again.');
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`[TrendminerApi] Request timeout for ${url}`);
+          }
+          throw timeoutError;
+        }
+        if (err instanceof TypeError && err.message.includes('fetch')) {
+          const networkError = new Error('Network error: Unable to connect to API. Please check your internet connection.');
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`[TrendminerApi] Network error fetching ${url}:`, err);
+          }
+          throw networkError;
+        }
+      }
+      // Re-throw if it's already our custom error or other errors
+      throw err;
+    }
   },
   // GET /api/tips/posts/{postId}/summary
   getPostTipSummary(postId: string) {

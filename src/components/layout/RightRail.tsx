@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { Backend, TrendminerApi } from "../../api/backend";
 import { useAccountBalances } from "../../hooks/useAccountBalances";
@@ -10,6 +10,7 @@ import Sparkline from "../Trendminer/Sparkline";
 import { BuyAeWidget } from "../../features/ae-eth-buy";
 
 import { useWallet } from "../../hooks";
+import { useAddressByChainName } from "../../hooks/useChainName";
 interface SearchSuggestion {
   type: "user" | "token" | "topic" | "post" | "dao" | "pool" | "transaction";
   id: string;
@@ -40,7 +41,25 @@ export default function RightRail({
   const { t } = useTranslation('common');
   const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const params = useParams();
   const { currentBlockHeight, activeAccount } = useAeSdk();
+  
+  // Resolve chain name if present
+  const isChainName = params.address?.endsWith(".chain");
+  const { address: resolvedAddress } = useAddressByChainName(
+    isChainName ? params.address : undefined
+  );
+  const effectiveProfileAddress = isChainName && resolvedAddress 
+    ? resolvedAddress 
+    : (params.address as string | undefined);
+  
+  // Check if we're on the user's own profile page
+  const isOwnProfile = useMemo(() => {
+    const isProfilePage = location.pathname.startsWith('/users/');
+    if (!isProfilePage || !activeAccount || !effectiveProfileAddress) return false;
+    return effectiveProfileAddress === activeAccount;
+  }, [location.pathname, effectiveProfileAddress, activeAccount]);
   const [trending, setTrending] = useState<Array<[string, any]>>([] as any);
   const [prices, setPrices] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -671,10 +690,12 @@ export default function RightRail({
 
   return (
     <div id="right-rail-root" className="grid gap-4 h-fit min-w-0 scrollbar-thin scrollbar-track-white/[0.02] scrollbar-thumb-gradient-to-r scrollbar-thumb-from-pink-500/60 scrollbar-thumb-via-[rgba(0,255,157,0.6)] scrollbar-thumb-to-pink-500/60 scrollbar-thumb-rounded-[10px] scrollbar-thumb-border scrollbar-thumb-border-white/10 hover:scrollbar-thumb-from-pink-500/80 hover:scrollbar-thumb-via-[rgba(0,255,157,0.8)] hover:scrollbar-thumb-to-pink-500/80">
-      {/* Network & Wallet Overview */}
-      <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] px-5 py-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-[var(--border-gradient)] before:opacity-0 before:transition-opacity before:duration-300">
-        <WalletOverviewCard selectedCurrency={selectedCurrency} prices={prices} />
-      </div>
+      {/* Network & Wallet Overview - Hidden on own profile */}
+      {!isOwnProfile && (
+        <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] px-5 py-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-[var(--border-gradient)] before:opacity-0 before:transition-opacity before:duration-300">
+          <WalletOverviewCard selectedCurrency={selectedCurrency} prices={prices} />
+        </div>
+      )}
 
       {/* Enhanced Price Section (hidden by default via hidePriceSection) */}
       {!hidePriceSection && (

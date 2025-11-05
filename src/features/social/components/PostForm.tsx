@@ -181,8 +181,8 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     ...composerCtx,
     getValue: getAttachmentValue,
     setValue: setAttachmentValue,
-    currentBlockHeight,
-    ensureWallet: async () => ({ sdk, currentBlockHeight }),
+    currentBlockHeight: currentBlockHeight ?? undefined,
+    ensureWallet: async () => ({ sdk, currentBlockHeight: currentBlockHeight ?? undefined }),
     cacheLink: (postId: string, kind: string, payload: any) => {
       try {
         const key = 'sh:plugin:post-links';
@@ -196,7 +196,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     pushFeedEntry: (kind: string, entry: any) => {
       try { window.dispatchEvent(new CustomEvent('sh:plugin:feed:push', { detail: { kind, entry } })); } catch {}
     },
-  }), [composerCtx, getAttachmentValue, setAttachmentValue, sdk]);
+  }), [composerCtx, getAttachmentValue, setAttachmentValue, sdk, currentBlockHeight]);
 
   // Helper: inject an entry to feeds (global + profile) for immediate visibility
   const injectIntoFeeds = useCallback((entry: any) => {

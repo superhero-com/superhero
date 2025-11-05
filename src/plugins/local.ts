@@ -4,13 +4,10 @@ import { composerRegistry, itemActionRegistry, routeRegistry, modalRegistry, att
 import i18n from "@/i18n";
 
 // Local, first-party plugins can be imported statically here
-// Example: import nftMarketplace from '@/plugins/nft-marketplace';
 import tokenCreated from '@/plugins/social/token-created';
 import pollCreated from '@/plugins/social/poll-created';
 
 const localPlugins: Array<any> = [
-  // Tutorial-only example: nft-marketplace is intentionally NOT auto-registered
-  // to avoid exposing unfinished features in production.
   tokenCreated,
   pollCreated,
 ];

@@ -792,15 +792,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           </div>
         </div>
 
-        {/* Loading indicator - above chart */}
-        {isLoading && (
-          <div className="px-4 md:px-6 pt-2 pb-2">
-            <div className="text-white/60 text-sm text-center">Loading portfolio data...</div>
-          </div>
-        )}
-
         {/* Chart */}
-        <div className="px-4 md:px-6 pb-4">
+        <div className="px-4 md:px-6 pb-4 relative">
           {portfolioData && portfolioData.length > 0 ? (
             <>
               <div 
@@ -820,6 +813,13 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             </div>
           ) : (
             <div className="h-[180px]" />
+          )}
+          
+          {/* Loading indicator - overlay on top of chart */}
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm rounded-lg">
+              <div className="text-white/60 text-sm">Loading portfolio data...</div>
+            </div>
           )}
         </div>
 

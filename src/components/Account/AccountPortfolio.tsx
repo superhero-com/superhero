@@ -226,17 +226,18 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     }
   }, [portfolioData, convertTo]);
 
-  // Initialize chart when container and data are available
+  // Initialize chart once when container is available
+  // Chart should persist across time range changes
   useEffect(() => {
-    // Only initialize if we have data and container is rendered
-    if (!portfolioData || portfolioData.length === 0 || !chartContainerRef.current || chartRef.current) return;
+    // Only initialize if container is rendered and chart doesn't exist yet
+    if (!chartContainerRef.current || chartRef.current) return;
 
     const container = chartContainerRef.current;
     // Ensure container has a width
     if (container.clientWidth === 0) {
       // Container might not be sized yet, try again on next frame
       const retryInit = () => {
-        if (chartContainerRef.current && !chartRef.current && portfolioData && portfolioData.length > 0) {
+        if (chartContainerRef.current && !chartRef.current) {
           // Will be handled by the next useEffect run
         }
       };
@@ -320,42 +321,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     const areaSeries = chart.addSeries(AreaSeries, seriesOptions);
     seriesRef.current = areaSeries;
 
-    const chartData: LineData[] = portfolioData
-      .map((snapshot, index) => {
-        const timestamp = moment(snapshot.timestamp).unix();
-        let value: number | null = null;
-        
-        if (convertTo === 'ae') {
-          value = snapshot.total_value_ae;
-        } else {
-          // For fiat currencies, use total_value_usd if available (including zero values)
-          // Note: total_value_usd contains the value converted to the requested currency (EUR, GBP, etc.), not just USD
-          if (snapshot.total_value_usd != null) {
-            value = snapshot.total_value_usd;
-          } else {
-            // Log warning if converted value is missing
-            if (process.env.NODE_ENV === 'development') {
-              console.warn(`[Chart Data] Missing converted value for ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, ae_balance=${snapshot.ae_balance}, convertTo=${convertTo}`);
-            }
-            // Skip this data point to show a gap rather than misleading zero value
-            return null;
-          }
-        }
-        
-        // Debug log for first few and last few data points (development only)
-        if (process.env.NODE_ENV === 'development' && (index < 3 || index >= portfolioData.length - 3)) {
-          console.log(`[Chart Data] ${moment(snapshot.timestamp).format('YYYY-MM-DD HH:mm')}: total_value_ae=${snapshot.total_value_ae}, total_value_usd=${snapshot.total_value_usd}, ae_balance=${snapshot.ae_balance}, convertTo=${convertTo}, value=${value}`);
-        }
-        
-        return {
-          time: timestamp as any,
-          value: value as number,
-        };
-      })
-      .filter((item): item is LineData => item !== null);
-
-    areaSeries.setData(chartData);
-    
     // Subscribe to crosshair moves to show price on hover/drag
     chart.subscribeCrosshairMove((param) => {
       if (param.time && param.seriesData) {
@@ -373,23 +338,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       }
     });
     
-    // Set maximum time to prevent scrolling past current time
-    const currentTime = moment().unix();
-    if (chartData.length > 0) {
-      // Fit content first, then constrain to current time
-      chart.timeScale().fitContent();
-      
-      // After fitting, ensure we don't show future data
-      const visibleRange = chart.timeScale().getVisibleRange();
-      if (visibleRange && visibleRange.to > currentTime) {
-        if (visibleRange.from != null && typeof visibleRange.from === 'number') {
-          chart.timeScale().setVisibleRange({
-            from: visibleRange.from,
-            to: currentTime,
-          });
-        }
-      }
-    }
+    // Data will be set by the update effect
 
     // Handle scroll to load previous data
     const handleVisibleRangeChange = () => {
@@ -503,25 +452,36 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (chart) {
+      // Only cleanup on unmount, not when data changes
+      if (chart && !chartContainerRef.current) {
         chart.timeScale().unsubscribeVisibleTimeRangeChange(handleTimeScaleChange);
         chart.timeScale().unsubscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
         chart.remove(); // Removing chart automatically cleans up all subscriptions
+        chartRef.current = null;
+        if (seriesRef.current) {
+          seriesRef.current = null;
+        }
+        // Reset initial load flag when chart is destroyed
+        initialLoadRef.current = true;
+        lastVisibleRangeRef.current = null;
+        setHoveredPrice(null);
       }
-      if (seriesRef.current) {
-        seriesRef.current = null;
-      }
-      chartRef.current = null;
-      // Reset initial load flag when chart is destroyed
-      initialLoadRef.current = true;
-      lastVisibleRangeRef.current = null;
-      setHoveredPrice(null);
     };
-  }, [portfolioData, convertTo, hasPreviousPage, isFetchingPreviousPage, fetchPreviousPage]);
+  }, []); // Only run once on mount, chart persists across data changes
 
-  // Update chart data when portfolio data or currency changes
+  // Track previous time range to detect changes
+  const previousTimeRangeRef = useRef<TimeRange>(selectedTimeRange);
+
+  // Update chart data when portfolio data, currency, or time range changes
   useEffect(() => {
-    if (!portfolioData || !seriesRef.current || portfolioData.length === 0) return;
+    if (!portfolioData || !seriesRef.current || portfolioData.length === 0) {
+      // Reset the flag if no data
+      isUpdatingDataRef.current = false;
+      return;
+    }
+
+    // Detect if time range changed
+    const isTimeRangeChange = previousTimeRangeRef.current !== selectedTimeRange;
 
     // Mark that we're updating data to prevent scroll handler from triggering
     isUpdatingDataRef.current = true;
@@ -560,11 +520,33 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       })
       .filter((item): item is LineData => item !== null);
 
-    // Get current visible range to preserve scroll position
     const chart = chartRef.current;
     const timeScale = chart?.timeScale();
-    const visibleRange = timeScale?.getVisibleRange();
     
+    // Update series price formatter when currency changes
+    if (seriesRef.current) {
+      seriesRef.current.applyOptions({
+        priceFormat: {
+          type: 'custom',
+          minMove: 0.000001,
+          formatter: (price: number) => {
+            if (convertTo === 'ae') {
+              return `${price.toFixed(4)} AE`;
+            }
+            // For fiat currencies, price is already in that currency (e.g., USD)
+            const currencyCode = currentCurrencyInfo.code.toUpperCase();
+            return Number(price).toLocaleString('en-US', {
+              style: 'currency',
+              currency: currencyCode,
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            });
+          },
+        },
+      });
+    }
+    
+    // Update the series data
     seriesRef.current.setData(chartData);
     
     // Set maximum visible range to prevent scrolling past current time
@@ -576,53 +558,80 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       });
     }
     
-    // Restore visible range if we had one (to preserve scroll position when loading more data)
-    if (chart && visibleRange && chartData.length > 0) {
-      // Temporarily disable the handler, restore range, then update tracking
-      // Ensure we don't restore a range that goes past current time
-      const currentTime = moment().unix();
-      const restoredTo = Math.min(visibleRange.to, currentTime);
-      // Only set range if from is valid (not null)
-      if (visibleRange.from != null && typeof visibleRange.from === 'number') {
-        timeScale?.setVisibleRange({
-          from: visibleRange.from,
-          to: restoredTo,
+    // When time range changes, always fit content to show the new range
+    // When currency changes or loading more data, preserve scroll position
+    if (isTimeRangeChange) {
+      // Time range changed - fit content to show the full new range
+      if (chart && chartData.length > 0) {
+        chart.timeScale().fitContent();
+        // Ensure we don't show future data
+        const visibleRange = chart.timeScale().getVisibleRange();
+        if (visibleRange && visibleRange.to > currentTime) {
+          if (visibleRange.from != null && typeof visibleRange.from === 'number') {
+            chart.timeScale().setVisibleRange({
+              from: visibleRange.from,
+              to: currentTime,
+            });
+          }
+        }
+        // Update tracking after fitting
+        requestAnimationFrame(() => {
+          const logicalRange = chart.timeScale().getVisibleLogicalRange();
+          if (logicalRange) {
+            lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
+          }
+          initialLoadRef.current = true;
+          setTimeout(() => {
+            isUpdatingDataRef.current = false;
+          }, 100);
         });
+      } else {
+        isUpdatingDataRef.current = false;
       }
-      // Use requestAnimationFrame to ensure the range is set before updating tracking
-      requestAnimationFrame(() => {
-        const logicalRange = timeScale?.getVisibleLogicalRange();
-        if (logicalRange) {
-          lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
-        }
-        // Reset initial load flag after data update so we can detect future scrolls
-        initialLoadRef.current = false;
-        // Re-enable handler after range is restored
-        setTimeout(() => {
-          isUpdatingDataRef.current = false;
-        }, 100);
-      });
-    } else if (chart && chartData.length > 0) {
-      // Only fit content if we don't have a visible range (initial load)
-      chart.timeScale().fitContent();
-      // Use requestAnimationFrame to ensure content is fitted before updating tracking
-      requestAnimationFrame(() => {
-        const logicalRange = chart.timeScale().getVisibleLogicalRange();
-        if (logicalRange) {
-          lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
-        }
-        // Reset initial load flag after fitting content
-        initialLoadRef.current = true;
-        // Re-enable handler after content is fitted
-        setTimeout(() => {
-          isUpdatingDataRef.current = false;
-        }, 100);
-      });
+      // Update the previous time range reference
+      previousTimeRangeRef.current = selectedTimeRange;
     } else {
-      // If no chart or data, re-enable handler immediately
-      isUpdatingDataRef.current = false;
+      // Currency changed or loading more data - preserve scroll position
+      const visibleRange = timeScale?.getVisibleRange();
+      
+      if (chart && visibleRange && chartData.length > 0) {
+        // Restore visible range to preserve scroll position
+        const restoredTo = Math.min(visibleRange.to, currentTime);
+        if (visibleRange.from != null && typeof visibleRange.from === 'number') {
+          timeScale.setVisibleRange({
+            from: visibleRange.from,
+            to: restoredTo,
+          });
+        }
+        // Use requestAnimationFrame to ensure the range is set before updating tracking
+        requestAnimationFrame(() => {
+          const logicalRange = timeScale.getVisibleLogicalRange();
+          if (logicalRange) {
+            lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
+          }
+          initialLoadRef.current = false;
+          setTimeout(() => {
+            isUpdatingDataRef.current = false;
+          }, 100);
+        });
+      } else if (chart && chartData.length > 0) {
+        // No visible range yet (initial load) - fit content
+        chart.timeScale().fitContent();
+        requestAnimationFrame(() => {
+          const logicalRange = chart.timeScale().getVisibleLogicalRange();
+          if (logicalRange) {
+            lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
+          }
+          initialLoadRef.current = true;
+          setTimeout(() => {
+            isUpdatingDataRef.current = false;
+          }, 100);
+        });
+      } else {
+        isUpdatingDataRef.current = false;
+      }
     }
-  }, [portfolioData, convertTo]);
+  }, [portfolioData, convertTo, selectedTimeRange, currentCurrencyInfo]);
 
   if (isError) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

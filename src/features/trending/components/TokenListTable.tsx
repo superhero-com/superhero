@@ -83,9 +83,12 @@ interface TokenListTableProps {
   orderDirection: OrderDirection;
   onSort: (sortKey: OrderByOption) => void;
   rankOffset?: number;
+  hasNextPage?: boolean;
+  isFetching?: boolean;
+  onLoadMore?: () => void;
 }
 
-export default function TokenListTable({ pages, loading, showCollectionColumn, orderBy, orderDirection, onSort, rankOffset = 0 }: TokenListTableProps) {
+export default function TokenListTable({ pages, loading, showCollectionColumn, orderBy, orderDirection, onSort, rankOffset = 0, hasNextPage, isFetching, onLoadMore }: TokenListTableProps) {
   const { t } = useTranslation('common');
 
   const allItems = useMemo(() => 
@@ -230,6 +233,21 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
           </tbody>
         )}
       </table>
+
+      {/* Mobile-only Load More inside the list */}
+      {hasNextPage && (
+        <div className="md:hidden text-center pt-2 pb-3">
+          <button
+            onClick={() => onLoadMore?.()}
+            disabled={isFetching}
+            className={`${isFetching
+              ? 'bg-white/10 cursor-not-allowed opacity-60'
+              : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'} px-6 py-2 rounded-full border-none text-white cursor-pointer text-sm font-semibold tracking-wide`}
+          >
+            {isFetching ? 'Loading...' : 'Load More'}
+          </button>
+        </div>
+      )}
 
       <style>{`
         .bctsl-token-list-table {

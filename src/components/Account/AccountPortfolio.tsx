@@ -794,16 +794,40 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         });
       } else if (chart && chartData.length > 0) {
         // No visible range yet (initial load) - fit content
-        chart.timeScale().fitContent();
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AccountPortfolio] Initial load - fitting content', {
+            dataPoints: chartData.length,
+            hasVisibleRange: !!visibleRange,
+          });
+        }
+        
+        // Ensure data is set before fitting
         requestAnimationFrame(() => {
-          const logicalRange = chart.timeScale().getVisibleLogicalRange();
-          if (logicalRange) {
-            lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
+          if (!chart || !chartRef.current) return;
+          
+          chart.timeScale().fitContent();
+          
+          // Ensure we don't show future data
+          const fitVisibleRange = chart.timeScale().getVisibleRange();
+          if (fitVisibleRange && fitVisibleRange.to > currentTime) {
+            if (fitVisibleRange.from != null && typeof fitVisibleRange.from === 'number') {
+              chart.timeScale().setVisibleRange({
+                from: fitVisibleRange.from,
+                to: currentTime,
+              });
+            }
           }
-          initialLoadRef.current = true;
-          setTimeout(() => {
-            isUpdatingDataRef.current = false;
-          }, 100);
+          
+          requestAnimationFrame(() => {
+            const logicalRange = chart.timeScale().getVisibleLogicalRange();
+            if (logicalRange) {
+              lastVisibleRangeRef.current = { from: logicalRange.from, to: logicalRange.to };
+            }
+            initialLoadRef.current = true;
+            setTimeout(() => {
+              isUpdatingDataRef.current = false;
+            }, 100);
+          });
         });
       } else {
         isUpdatingDataRef.current = false;

@@ -890,25 +890,24 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
         {/* Chart */}
         <div className="px-4 md:px-6 pb-4 relative">
-          {portfolioData && portfolioData.length > 0 ? (
-            <>
-              <div 
-                ref={chartContainerRef} 
-                className="w-full h-[180px] min-w-0 touch-none"
-                style={{ touchAction: 'none' }}
-              />
-              {isFetchingPreviousPage && (
-                <div className="mt-2 text-center">
-                  <div className="text-white/60 text-xs">Loading previous data...</div>
-                </div>
-              )}
-            </>
-          ) : !isLoading ? (
-            <div className="h-[180px] flex items-center justify-center">
+          {/* Always render chart container to prevent unmounting when switching time ranges */}
+          <div 
+            ref={chartContainerRef} 
+            className="w-full h-[180px] min-w-0 touch-none"
+            style={{ touchAction: 'none' }}
+          />
+          
+          {isFetchingPreviousPage && (
+            <div className="mt-2 text-center">
+              <div className="text-white/60 text-xs">Loading previous data...</div>
+            </div>
+          )}
+          
+          {/* Show message if no data and not loading */}
+          {!isLoading && (!portfolioData || portfolioData.length === 0) && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none">
               <div className="text-white/60">No portfolio data available</div>
             </div>
-          ) : (
-            <div className="h-[180px]" />
           )}
           
           {/* Loading indicator - overlay on top of chart */}

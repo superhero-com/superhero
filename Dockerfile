@@ -6,17 +6,20 @@ WORKDIR /app
 RUN apk add --no-cache python3 make g++
 
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 COPY . .
 RUN npm run build
 
-# Serve stage
-FROM nginx:1.25-alpine
-WORKDIR /srv
-COPY --from=builder /app/dist /usr/share/nginx/html
-RUN cp /usr/share/nginx/html/index.html /usr/share/nginx/html/index.template.html
-COPY docker/override-env.sh /docker-entrypoint.d/99-override-env.sh
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
-RUN apk add --no-cache gettext && chmod +x /docker-entrypoint.d/99-override-env.sh
+# Production dependencies stage
+# Serve stage (Node SEO injector)
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json /app/package-lock.json ./
+COPY --from=builder /app/node_modules ./node_modules
+# Convert dev install to production without reinstalling
+RUN npm prune --omit=dev
+COPY server ./server
+ENV NODE_ENV=production
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["node", "server/index.cjs"]

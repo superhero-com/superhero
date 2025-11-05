@@ -1,3 +1,5 @@
+import i18n from '../i18n';
+
 export type ErrorContext = {
   action?: 'quote' | 'swap' | 'add-liquidity' | 'remove-liquidity' | 'wrap' | 'unwrap' | 'generic';
   tokenInSymbol?: string;
@@ -10,6 +12,7 @@ export type ErrorContext = {
  * Convert low-level SDK/contract errors into concise, user-friendly messages.
  */
 export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string {
+  const t = (key: string, options?: any) => i18n.t(key, { ns: 'errors', ...options });
   const raw = String((err as any)?.message || String(err || ''));
   const lc = raw.toLowerCase();
 
@@ -28,48 +31,48 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
 
   // User cancelled in wallet
   if (lc.includes('rejected by user') || lc.includes('user rejected')) {
-    return 'Transaction was rejected in your wallet.';
+    return t('userRejected');
   }
 
   // No route / pair
   if (lc.includes('no route') || lc.includes('pair not found') || lc.includes('no pair')) {
-    return 'No swap route found between the selected tokens. Try a smaller amount or a different pair.';
+    return t('noRoute');
   }
 
   // Liquidity / reserves
   if (lc.includes('insufficient liquidity') || lc.includes('not enough liquidity') || lc.includes('no liquidity')) {
-    return 'Not enough liquidity in the pool for this trade. Try a smaller amount or another route.';
+    return t('insufficientLiquidity');
   }
 
   // Amount too low/high
   if (lc.includes('insufficient_a_amount') || lc.includes('insufficient_b_amount') || lc.includes('insufficient input amount')) {
-    return 'Amount too low for this pool. Increase the input amount.';
+    return t('amountTooLow');
   }
   if (lc.includes('insufficient_output_amount')) {
-    const hint = ctx.slippagePct != null ? ` Increase slippage (currently ${ctx.slippagePct}%) or reduce the trade size.` : ' Increase slippage or reduce the trade size.';
-    return `Minimum output not met due to price movement.${hint}`;
+    const hint = ctx.slippagePct != null ? t('slippageHint', { slippagePct: ctx.slippagePct }) : t('slippageHintGeneric');
+    return t('insufficientOutputAmount', { hint });
   }
 
   // Deadline
   if (lc.includes('expired') || lc.includes('deadline')) {
-    const hint = ctx.deadlineMins != null ? ` Increase the deadline (currently ${ctx.deadlineMins} min) and try again.` : ' Increase the deadline and try again.';
-    return `The transaction deadline was reached.${hint}`;
+    const hint = ctx.deadlineMins != null ? t('deadlineHint', { deadlineMins: ctx.deadlineMins }) : t('deadlineHintGeneric');
+    return t('deadlineReached', { hint });
   }
 
   // Router specific reasons
   if (lc.includes('invalid_path') || lc.includes('invalid path')) {
-    return 'Invalid route. Please reselect tokens or try a different pair.';
+    return t('invalidRoute');
   }
   if (lc.includes('invalid_to') || lc.includes('invalid to')) {
-    return 'Invalid recipient for this transaction.';
+    return t('invalidRecipient');
   }
   if (lc.includes('pair_exists') || lc.includes('pair exists')) {
-    return 'The pool already exists.';
+    return t('pairExists');
   }
 
   // Allowance / approval
   if (lc.includes('allowance') || lc.includes('transfer_from_failed') || lc.includes('approval') || lc.includes('approve')) {
-    return 'Token is not approved for spending. Please approve the token and try again.';
+    return t('tokenNotApproved');
   }
 
   // Balance / funds
@@ -77,33 +80,33 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
   if (lc.includes('insufficient eth balance')) {
     const ethMatch = raw.match(/required:\s*([\d.]+)\s*eth/i);
     if (ethMatch && ethMatch[1]) {
-      return `Insufficient ETH balance. You need at least ${ethMatch[1]} ETH to complete this bridge operation.`;
+      return t('insufficientEthBalance', { amount: ethMatch[1] });
     }
-    return 'Insufficient ETH balance to complete this bridge operation.';
+    return t('insufficientEthBalanceGeneric');
   }
   
   if (lc.includes('insufficient balance') || lc.includes('insufficient funds') || lc.includes('balance too low')) {
-    return 'Not enough balance to complete this operation.';
+    return t('insufficientBalance');
   }
 
   // Network/connection issues
   if (lc.includes('network error') || lc.includes('connection failed') || lc.includes('timeout')) {
-    return 'Network connection issue. Please check your connection and try again.';
+    return t('networkError');
   }
 
   // Contract/SDK issues
   if (lc.includes('contract not found') || lc.includes('invalid contract') || lc.includes('contract error')) {
-    return 'Contract interaction failed. Please try again or contact support if the issue persists.';
+    return t('contractError');
   }
 
   // Gas/fee issues
   if (lc.includes('out of gas') || lc.includes('gas limit') || lc.includes('insufficient fee')) {
-    return 'Transaction failed due to insufficient gas. Please try again with higher gas settings.';
+    return t('gasError');
   }
 
   // Invalid amounts
   if (lc.includes('invalid amount') || lc.includes('amount cannot be zero') || lc.includes('negative amount')) {
-    return 'Invalid amount entered. Please enter a valid positive amount.';
+    return t('invalidAmount');
   }
 
   // Generic invocation failure with reason
@@ -118,18 +121,18 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
       case 'insufficient a amount':
       case 'insufficient b amount':
       case 'insufficient input amount':
-        return 'Amount too low for this pool. Increase the input amount.';
+        return t('amountTooLow');
       case 'insufficient output amount':
-        return 'Minimum output not met due to price movement. Increase slippage or reduce the trade size.';
+        return t('insufficientOutputAmount', { hint: t('slippageHintGeneric') });
       case 'expired':
       case 'deadline':
-        return 'The transaction deadline was reached. Increase the deadline and try again.';
+        return t('deadlineReached', { hint: t('deadlineHintGeneric') });
       case 'invalid path':
-        return 'Invalid route. Please reselect tokens or try a different pair.';
+        return t('invalidRoute');
       case 'invalid to':
-        return 'Invalid recipient for this transaction.';
+        return t('invalidRecipient');
       case 'pair exists':
-        return 'The pool already exists.';
+        return t('pairExists');
       default:
         break;
     }
@@ -138,21 +141,21 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
   // Fallbacks by action
   switch (ctx.action) {
     case 'quote':
-      return 'Unable to get a price quote. Try again in a moment.';
+      return t('quoteFailed');
     case 'swap':
       // In development, include the raw error for debugging
       const debugInfo = process.env.NODE_ENV === 'development' && raw ? ` (Debug: ${raw.slice(0, 100)})` : '';
-      return `Swap failed. Please review your amounts and settings and try again.${debugInfo}`;
+      return t('swapFailed', { debugInfo });
     case 'add-liquidity':
-      return 'Adding liquidity failed. Check amounts and try again.';
+      return t('addLiquidityFailed');
     case 'remove-liquidity':
-      return 'Removing liquidity failed. Check amounts and try again.';
+      return t('removeLiquidityFailed');
     case 'wrap':
-      return 'Wrapping failed. Try again.';
+      return t('wrapFailed');
     case 'unwrap':
-      return 'Unwrapping failed. Try again.';
+      return t('unwrapFailed');
     default:
-      return 'Something went wrong. Please try again.';
+      return t('genericError');
   }
 }
 

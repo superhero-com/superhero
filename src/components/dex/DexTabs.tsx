@@ -35,7 +35,7 @@ export default function DexTabs() {
   const navigate = useNavigate();
   const path = location.pathname;
 
-  const isDex = path.startsWith('/defi') || path.startsWith('/swap');
+  const isDex = path.startsWith('/defi');
   const isPool = path.startsWith('/pool');
   const isExplore = path.startsWith('/explore');
 

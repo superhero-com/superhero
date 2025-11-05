@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DexTokenDto } from '../../../api/generated';
 import { Token } from '../types/explore';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 
 interface TokenListTableProps {
   tokens: DexTokenDto[];
@@ -192,76 +193,21 @@ export function TokenListTable({
                 gap: 6,
               }}
             >
-              <div
-                style={{
-                  position: "relative",
-                  display: "inline-block",
-                }}
-              >
-                <select
-                  value={sort.key}
-                  onChange={(e) => handleSort(e.target.value as any)}
-                  style={{
-                    appearance: "none",
-                    WebkitAppearance: "none",
-                    MozAppearance: "none",
-                    padding: "6px 28px 6px 12px",
-                    borderRadius: 8,
-                    background: "var(--glass-bg)",
-                    color: "var(--standard-font-color)",
-                    border: "1px solid var(--glass-border)",
-                    backdropFilter: "blur(10px)",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    cursor: "pointer",
-                    transition: "all 0.3s ease",
-                    outline: "none",
-                    minWidth: 100,
-                    backgroundImage: "none",
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "var(--accent-color)";
-                    e.currentTarget.style.boxShadow =
-                      "0 0 0 2px rgba(76, 175, 80, 0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = "var(--glass-border)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
+              <div>
+                <AppSelect
+                  value={sort.key as string}
+                  onValueChange={(v) => handleSort(v as any)}
+                  triggerClassName="py-1.5 pl-3 pr-7 rounded-lg bg-[var(--glass-bg)] text-[var(--standard-font-color)] border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[100px]"
                 >
-                  <option value="pairs_count">Pools</option>
-                  <option value="price">Price</option>
-                  <option value="tvl">TVL</option>
-                  <option value="24hchange">24h Change</option>
-                  <option value="24hvolume">24h Volume</option>
-                  <option value="7dchange">7d Change</option>
-                  <option value="7dvolume">7d Volume</option>
-                  <option value="created_at">Created At</option>
-
-                </select>
-                {/* Custom Dropdown Arrow */}
-                <div
-                  style={{
-                    position: "absolute",
-                    right: 8,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    pointerEvents: "none",
-                    color: "var(--light-font-color)",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: 16,
-                    height: 16,
-                    background: "rgba(255, 255, 255, 0.1)",
-                    borderRadius: 4,
-                    transition: "all 0.3s ease",
-                  }}
-                >
-                  ▼
-                </div>
+                  <AppSelectItem value="pairs_count">Pools</AppSelectItem>
+                  <AppSelectItem value="price">Price</AppSelectItem>
+                  <AppSelectItem value="tvl">TVL</AppSelectItem>
+                  <AppSelectItem value="24hchange">24h Change</AppSelectItem>
+                  <AppSelectItem value="24hvolume">24h Volume</AppSelectItem>
+                  <AppSelectItem value="7dchange">7d Change</AppSelectItem>
+                  <AppSelectItem value="7dvolume">7d Volume</AppSelectItem>
+                  <AppSelectItem value="created_at">Created At</AppSelectItem>
+                </AppSelect>
               </div>
 
               <button

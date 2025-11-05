@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from 'react-i18next';
+import Head from "../seo/Head";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import AeButton from "../components/AeButton";
 import RightRail from "../components/layout/RightRail";
@@ -29,6 +31,7 @@ type TabType = "feed" | "owned" | "created" | "transactions";
 export default function UserProfile({
   standalone = true,
 }: { standalone?: boolean } = {}) {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { address } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -194,6 +197,18 @@ export default function UserProfile({
 
   const content = (
     <div className="w-full">
+      <Head
+        title={`${chainName || effectiveAddress} – Profile – Superhero`}
+        description={(bioText || `View ${chainName || effectiveAddress} on Superhero, the crypto social network.`).slice(0, 160)}
+        canonicalPath={`/users/${address}`}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'Person',
+          name: chainName || effectiveAddress,
+          identifier: effectiveAddress,
+          description: bioText || undefined,
+        }}
+      />
       {/* Back button */}
       <div className="mb-4 md:mb-6">
         <AeButton
@@ -262,7 +277,7 @@ export default function UserProfile({
                 variant="ghost"
                 size="sm"
                 className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all inline-flex items-center gap-2"
-                title="Send a tip"
+                title={t('titles.sendATip')}
               >
                 <IconDiamond className="w-4 h-4 text-[#1161FE]" />
                 Tip
@@ -277,7 +292,7 @@ export default function UserProfile({
                 const url = `${base}/accounts/${effectiveAddress}`;
                 window.open(url, "_blank", "noopener,noreferrer");
               }}
-              title="Open on æScan"
+              title={t('titles.openOnAescan')}
             >
               <IconLink className="w-[0.65em] h-[0.65em] opacity-80 align-middle" />
             </AeButton>

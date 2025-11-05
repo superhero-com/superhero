@@ -1,5 +1,6 @@
 import { AlertCircle } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAccount } from "../../../../hooks/useAccount";
 import { useAeSdk } from "../../../../hooks/useAeSdk";
 import { Decimal } from "../../../../libs/decimal";
@@ -20,6 +21,7 @@ interface InviteAndEarnCardProps {
 export default function InviteAndEarnCard({
   className,
 }: InviteAndEarnCardProps) {
+  const { t } = useTranslation('forms');
   const { activeAccount } = useAeSdk();
   const { decimalBalance } = useAccount();
   const { generateInviteKeys, prepareInviteLink } = useInvitations();
@@ -61,18 +63,16 @@ export default function InviteAndEarnCard({
 
       if (!amountValue || amountValue <= 0) {
         amountInputRef.current?.focus();
-        throw new Error("Please enter an amount");
+        throw new Error(t('pleaseEnterAmount'));
       }
 
       if (!invitesNumber || invitesNumber < 1) {
         invitesInputRef.current?.focus();
-        throw new Error("Please create at least one invite");
+        throw new Error(t('pleaseCreateAtLeastOneInvite'));
       }
 
       if (!activeAccount) {
-        throw new Error(
-          "No active account. Please connect your wallet and try again."
-        );
+        throw new Error(t('noActiveAccount'));
       }
 
       // Use the shared hook to generate invite keys
@@ -87,7 +87,7 @@ export default function InviteAndEarnCard({
       setCopyInviteLinkDialog(true);
     } catch (error: any) {
       console.error("generateInviteLink error:", error);
-      setErrorMessage(error?.message || "Failed to create invitation");
+      setErrorMessage(error?.message || t('failedToCreateInvitation'));
     } finally {
       setGeneratingInviteLink(false);
     }
@@ -167,7 +167,7 @@ export default function InviteAndEarnCard({
                   htmlFor="invites"
                   className="text-xs md:text-sm font-semibold text-slate-400 tracking-wider break-words"
                 >
-                  Number of invites
+                  {t('numberOfInvites')}
                 </Label>
                 <Input
                   id="invites"
@@ -197,11 +197,7 @@ export default function InviteAndEarnCard({
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Not enough balance. You need{" "}
-                  {Decimal.from(amount || 0)
-                    .mul(invitesNumber)
-                    .toString()}{" "}
-                  AE.
+                  {t('notEnoughBalance', { amount: Decimal.from(amount || 0).mul(invitesNumber).toString() })}
                 </AlertDescription>
               </Alert>
             )}
@@ -220,14 +216,14 @@ export default function InviteAndEarnCard({
                 {generatingInviteLink ? (
                   <>
                     <div className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 border-2 border-transparent border-t-current rounded-full animate-spin"></div>
-                    Creating invites...
+                    {t('creatingInvites', { ns: 'common' })}
                   </>
                 ) : (
-                  "Generate invite links"
+                  t('generateInviteLinks', { ns: 'common' })
                 )}
               </button>
             ) : (
-              <WalletConnectBtn label="CONNECT WALLET TO GENERATE" className="text-sm" />
+              <WalletConnectBtn label={t('connectWalletToGenerate', { ns: 'common' })} className="text-sm" />
             )}
           </form>
         </div>
@@ -241,13 +237,13 @@ export default function InviteAndEarnCard({
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-center text-xl font-bold">
-              Copy Invite Links
+              {t('copyInviteLinks')}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6">
             <p className="text-center text-muted-foreground">
-              Your invitation links have been generated successfully!
+              {t('inviteLinksGeneratedSuccessfully')}
             </p>
 
             {/* Links */}
@@ -268,7 +264,7 @@ export default function InviteAndEarnCard({
               <AlertDescription className="flex items-center gap-2">
                 <span>⚠️</span>
                 <span>
-                  Make sure to save these links before closing this dialog!
+                  {t('saveLinksBeforeClosing')}
                 </span>
               </AlertDescription>
             </Alert>
@@ -281,7 +277,7 @@ export default function InviteAndEarnCard({
                 onCheckedChange={(checked) => setLinkHasBeenCopied(!!checked)}
               />
               <Label htmlFor="copied" className="text-sm">
-                I have copied the invitation links
+                {t('iHaveCopiedInvitationLinks')}
               </Label>
             </div>
 
@@ -293,7 +289,7 @@ export default function InviteAndEarnCard({
               disabled={!linkHasBeenCopied}
               onClick={closeCopyInviteLinkDialog}
             >
-              Close
+              {t('close', { ns: 'common' })}
             </AeButton>
           </div>
         </DialogContent>

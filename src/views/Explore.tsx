@@ -5,6 +5,7 @@ import { useTokenList } from '../components/explore/hooks/useTokenList';
 import { usePairList } from '../components/explore/hooks/usePairList';
 import { useTransactionList } from '../components/explore/hooks/useTransactionList';
 import { CONFIG } from '../config';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 
 export default function ExploreRefactored() {
   const [active, setActive] = useState<'Tokens' | 'Pairs' | 'Transactions'>('Tokens');
@@ -100,15 +101,16 @@ export default function ExploreRefactored() {
             {/* Controls */}
             <div className="flex gap-2 items-center mb-4">
               <label className="text-xs opacity-85 text-white/80">Sort by</label>
-              <select 
-                value={pairList.sort.key} 
-                onChange={(e) => pairList.toggleSort(e.target.value as any)}
-                className="px-2 py-1.5 rounded-md bg-[#1a1a23] text-white border border-gray-600 text-sm focus:outline-none focus:border-green-500"
+              <AppSelect
+                value={pairList.sort.key as string}
+                onValueChange={(v) => pairList.toggleSort(v as any)}
+                triggerClassName="px-2 py-1.5 rounded-md bg-[#1a1a23] text-white border border-gray-600 text-sm focus:outline-none focus:border-green-500"
+                contentClassName="bg-[#1a1a23] border-gray-600"
               >
-                <option value="transactions">Tx count</option>
-                <option value="pair">Pair</option>
-                <option value="address">Address</option>
-              </select>
+                <AppSelectItem value="transactions">Tx count</AppSelectItem>
+                <AppSelectItem value="pair">Pair</AppSelectItem>
+                <AppSelectItem value="address">Address</AppSelectItem>
+              </AppSelect>
               <button 
                 onClick={() => pairList.toggleSort(pairList.sort.key)}
                 className="px-2 py-1.5 rounded-md border border-gray-600 bg-gray-800 text-white text-sm hover:bg-gray-700 transition-colors"
@@ -206,7 +208,7 @@ export default function ExploreRefactored() {
                     <td style={{ textAlign: 'center', padding: '12px 8px' }}>
                       <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
                         <button 
-                          onClick={() => window.location.href = `/swap?from=${pair.token0 || pair.token0Address}&to=${pair.token1 || pair.token1Address}`}
+                          onClick={() => window.location.href = `/defi/swap?from=${pair.token0 || pair.token0Address}&to=${pair.token1 || pair.token1Address}`}
                           style={{ 
                             padding: '4px 8px', 
                             borderRadius: 6, 
@@ -278,37 +280,27 @@ export default function ExploreRefactored() {
               marginBottom: 16 
             }}>
               <label style={{ fontSize: 12, opacity: 0.85 }}>Type</label>
-              <select 
-                value={transactionList.type} 
-                onChange={(e) => transactionList.setType(e.target.value as any)}
-                style={{ 
-                  padding: '6px 8px', 
-                  borderRadius: 6, 
-                  background: '#1a1a23', 
-                  color: 'white', 
-                  border: '1px solid #3a3a4a' 
-                }}
+              <AppSelect
+                value={transactionList.type as string}
+                onValueChange={(v) => transactionList.setType(v as any)}
+                triggerClassName="px-2 py-1.5 rounded-md bg-[#1a1a23] text-white border border-gray-600 text-sm focus:outline-none"
+                contentClassName="bg-[#1a1a23] border-gray-600"
               >
-                <option value="all">All</option>
-                <option value="swap">Swaps</option>
-                <option value="add">Adds</option>
-                <option value="remove">Removes</option>
-              </select>
+                <AppSelectItem value="all">All</AppSelectItem>
+                <AppSelectItem value="swap">Swaps</AppSelectItem>
+                <AppSelectItem value="add">Adds</AppSelectItem>
+                <AppSelectItem value="remove">Removes</AppSelectItem>
+              </AppSelect>
               <label style={{ fontSize: 12, opacity: 0.85, marginLeft: 8 }}>Window</label>
-              <select 
-                value={transactionList.window} 
-                onChange={(e) => transactionList.setWindow(e.target.value as any)}
-                style={{ 
-                  padding: '6px 8px', 
-                  borderRadius: 6, 
-                  background: '#1a1a23', 
-                  color: 'white', 
-                  border: '1px solid #3a3a4a' 
-                }}
+              <AppSelect
+                value={transactionList.window as string}
+                onValueChange={(v) => transactionList.setWindow(v as any)}
+                triggerClassName="px-2 py-1.5 rounded-md bg-[#1a1a23] text-white border border-gray-600 text-sm focus:outline-none"
+                contentClassName="bg-[#1a1a23] border-gray-600"
               >
-                <option value="24h">24h</option>
-                <option value="7d">7d</option>
-              </select>
+                <AppSelectItem value="24h">24h</AppSelectItem>
+                <AppSelectItem value="7d">7d</AppSelectItem>
+              </AppSelect>
             </div>
 
             {/* Transactions Table */}

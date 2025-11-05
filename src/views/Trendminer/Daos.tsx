@@ -9,6 +9,7 @@ import { toAe } from "@/utils/bondingCurve";
 import { LivePriceFormatter } from "@/features/shared/components";
 import AddressChip from "@/components/AddressChip";
 import { TokenLineChart } from "@/features/trending/components/TokenLineChart";
+import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
 
 type SelectOptions<T> = Array<{
   title: string;
@@ -135,21 +136,18 @@ export default function Daos() {
             onChange={(e) => setSearch(e.target.value)}
             className="px-4 py-2.5 rounded-2xl border border-white/20 bg-gradient-to-b from-white/8 to-white/4 text-white backdrop-blur-lg shadow-lg placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
           />
-          <select
-            className="px-3 py-2 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05]"
+          <AppSelect
             value={orderBy}
-            onChange={(e) => updateOrderBy(e.target.value as OrderByOption)}
+            onValueChange={(v) => updateOrderBy(v as OrderByOption)}
+            triggerClassName="px-3 py-2 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none transition-all duration-300 hover:bg-white/[0.05]"
+            contentClassName="bg-gray-900 border-white/10"
           >
             {orderByOptions.map((option) => (
-              <option
-                key={option.value}
-                value={option.value}
-                className="bg-gray-900"
-              >
+              <AppSelectItem key={option.value} value={option.value}>
                 {option.title}
-              </option>
+              </AppSelectItem>
             ))}
-          </select>
+          </AppSelect>
         </div>
       </div>
 

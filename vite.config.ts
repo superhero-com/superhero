@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from 'vite';
 import path from 'path';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
+import { resolve } from 'path';
 
 export default defineConfig(({ mode }) => {
   // Load all envs from the app directory (where .env is located)
@@ -13,6 +14,9 @@ export default defineConfig(({ mode }) => {
   
   return {
     plugins: [react(), svgr()],
+    ssr: {
+      noExternal: ['react-helmet-async'],
+    },
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
@@ -28,6 +32,11 @@ export default defineConfig(({ mode }) => {
     build: {
       sourcemap: false,
       chunkSizeWarningLimit: 900,
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'index.html'),
+        },
+      },
     },
     css: {
       preprocessorOptions: {
@@ -44,6 +53,7 @@ export default defineConfig(({ mode }) => {
       setupFiles: './vitest.setup.ts',
       testTimeout: 30000,
     },
+    
   };
 });
 

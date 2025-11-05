@@ -253,7 +253,7 @@ export default function AddTokens() {
                       </AeButton>
                     )}
                     <AeButton 
-                      onClick={() => navigate(`/swap?from=AE&to=${t.address}`)} 
+                      onClick={() => navigate(`/defi/swap?from=AE&to=${t.address}`)} 
                       variant="secondary-dark" 
                       size="small"
                     >

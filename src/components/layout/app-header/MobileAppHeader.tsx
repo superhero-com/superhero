@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import SearchInput from '../../SearchInput';
 import { HeaderLogo, IconSearch } from '../../../icons';
 // import HeaderWalletButton from './HeaderWalletButton';
-import { navigationItems } from './navigationItems';
+import { getNavigationItems } from './navigationItems';
 import AddressAvatar from '../../AddressAvatar';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
@@ -15,11 +16,14 @@ import FooterSection from '../FooterSection';
 
 
 export default function MobileAppHeader() {
+  const { t: tNav } = useTranslation('navigation');
+  const { t } = useTranslation('common');
+  const navigationItems = getNavigationItems(tNav);
   const [showOverlay, setShowOverlay] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const t = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
-    return t;
+    const themeValue = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
+    return themeValue;
   });
 
   const { pathname } = useLocation();
@@ -108,7 +112,7 @@ export default function MobileAppHeader() {
           <button
             className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 cursor-pointer text-xl font-bold hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
             onClick={() => setShowSearch(false)}
-            aria-label="Back"
+            aria-label={t('labels.back')}
           >
             ←
           </button>
@@ -119,7 +123,7 @@ export default function MobileAppHeader() {
       ) : (
         /* Normal Navigation Mode */
         <div className="px-3 flex items-center gap-2 w-full pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] sm:px-2 sm:gap-1.5">
-          <Link to="/" className="text-[var(--standard-font-color)] flex items-center min-h-[44px] min-w-[44px] no-underline hover:no-underline no-gradient-text" style={{ textDecoration: 'none' }} aria-label="Superhero Home">
+          <Link to="/" className="text-[var(--standard-font-color)] flex items-center min-h-[44px] min-w-[44px] no-underline hover:no-underline no-gradient-text" style={{ textDecoration: 'none' }} aria-label={t('labels.superheroHome')}>
             <HeaderLogo className="h-7 w-auto" />
           </Link>
           <div className="flex-grow hidden md:block" />
@@ -149,7 +153,7 @@ export default function MobileAppHeader() {
             className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-transparent shadow-none active:shadow-none focus:shadow-none outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0"
             onClick={(e) => { handleMenuToggle(); try { (e.currentTarget as HTMLButtonElement).blur(); } catch {} }}
             onTouchEnd={(e) => { try { (e.currentTarget as HTMLButtonElement).blur(); } catch {} }}
-            aria-label="Open Menu"
+            aria-label={t('labels.openMenu')}
             style={{ WebkitTapHighlightColor: 'transparent' }}
             tabIndex={-1}
           >
@@ -188,12 +192,12 @@ export default function MobileAppHeader() {
                   WebkitBackgroundClip: 'initial' as any,
                 }}
               >
-                Menu
+                {t('labels.menu')}
               </h2>
               <button
                 className="bg-white/10 border-none text-[var(--standard-font-color)] w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center leading-none cursor-pointer transition-all duration-200 hover:bg-white/20 focus:bg-white/20 active:scale-95 sm:w-10 sm:h-10 outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 shadow-none focus:shadow-none active:shadow-none"
                 onClick={(e) => { setShowOverlay(false); try { (e.currentTarget as HTMLButtonElement).blur(); } catch {} }}
-                aria-label="Close menu"
+                aria-label={t('labels.closeMenu')}
                 tabIndex={-1}
               >
                 <svg
@@ -233,13 +237,13 @@ export default function MobileAppHeader() {
                       className="w-full justify-center bg-white/5 border border-white/10 rounded-xl"
                       variant="ghost"
                     >
-                      Disconnect
+                      {t('buttons.disconnect')}
                     </AeButton>
                   </div>
                 </div>
               ) : (
                 <AeButton onClick={handleConnect} className="w-full justify-center gap-2 bg-[#1161FE] hover:bg-[#1161FE] text-white border-none rounded-xl sm:rounded-full text-sm">
-                  CONNECT WALLET
+                  {t('buttons.connectWalletDex')}
                 </AeButton>
               )}
             </div>
@@ -301,7 +305,7 @@ export default function MobileAppHeader() {
                           className={`${commonClasses} bg-transparent`}
                           style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}
                         >
-                          <span className="text-lg sm:text-base">Buy AE</span>
+                          <span className="text-lg sm:text-base">{t('labels.buyAe')}</span>
                         </Link>
                       </div>
                     )}

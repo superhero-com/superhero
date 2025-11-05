@@ -266,12 +266,19 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
   // Check if container is ready - continuously check until ready
   useEffect(() => {
-    if (containerReady || chartRef.current) return;
+    // If chart already exists, no need to check container
+    if (chartRef.current) return;
     
     const checkContainer = () => {
       if (chartContainerRef.current && chartContainerRef.current.clientWidth > 0) {
-        setContainerReady(true);
+        if (!containerReady) {
+          setContainerReady(true);
+        }
         return true;
+      }
+      // If container exists but has no width, keep checking
+      if (chartContainerRef.current && chartContainerRef.current.clientWidth === 0 && containerReady) {
+        setContainerReady(false);
       }
       return false;
     };
@@ -309,13 +316,15 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     
     const container = chartContainerRef.current;
     
-    // Double-check container has width
+    // Double-check container has width - if not, trigger container check again
     if (container.clientWidth === 0) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[AccountPortfolio] Container has no width, waiting...', {
+        console.log('[AccountPortfolio] Container has no width, resetting containerReady and waiting...', {
           containerWidth: container.clientWidth,
         });
       }
+      // Reset containerReady to trigger check again
+      setContainerReady(false);
       return;
     }
     

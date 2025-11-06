@@ -414,10 +414,10 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     // Ensure chart width matches container after data update
     if (chartContainerRef.current) {
       const containerWidth = chartContainerRef.current.clientWidth;
-      if (containerWidth > 0) {
-        chartRef.current.applyOptions({
-          width: containerWidth,
-        });
+      const containerHeight = chartContainerRef.current.clientHeight;
+      if (containerWidth > 0 && containerHeight > 0) {
+        // Use resize method for more reliable resizing
+        chartRef.current.resize(containerWidth, containerHeight);
       }
     }
     

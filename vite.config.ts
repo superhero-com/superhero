@@ -17,6 +17,9 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
+    optimizeDeps: {
+      include: ['bctsl-sdk'],
+    },
     // Ensure env is loaded from the monorepo root so .env.* at repo root are picked up
     // Load envs from app directory only to avoid invalid envDir array issue
     envDir: __dirname,

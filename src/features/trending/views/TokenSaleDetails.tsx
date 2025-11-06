@@ -115,6 +115,7 @@ export default function TokenSaleDetails() {
   const { tokenData } = useLiveTokenData({ token: _token });
 
   const token = useMemo(() => {
+    if (!_token) return null;
     return {
       ..._token,
       ...(tokenData || {}),

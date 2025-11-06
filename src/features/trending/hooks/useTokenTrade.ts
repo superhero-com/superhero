@@ -27,7 +27,7 @@ const PROTOCOL_DAO_AFFILIATION_FEE = 0.05;
 const PROTOCOL_DAO_TOKEN_AE_RATIO = 1000;
 
 interface UseTokenTradeProps {
-  token: TokenDto;
+  token: TokenDto | null | undefined;
 }
 
 export function useTokenTrade({ token }: UseTokenTradeProps) {
@@ -37,8 +37,39 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
   // Use the new token trade store
   const store = useTokenTradeStore();
 
-  const tokenRef = useRef<TokenDto>(token);
+  const tokenRef = useRef<TokenDto | null>(token || null);
   const errorMessage = useRef<string | undefined>();
+
+  // Update tokenRef when token changes
+  useEffect(() => {
+    tokenRef.current = token || null;
+  }, [token]);
+
+  if (!token || !token.sale_address) {
+    return {
+      tokenA: '',
+      tokenB: '',
+      tokenAFocused: true,
+      isBuying: true,
+      loadingTransaction: false,
+      errorMessage: undefined,
+      successTxData: undefined,
+      isInsufficientBalance: false,
+      averageTokenPrice: Decimal.ZERO,
+      priceImpactDiff: Decimal.ZERO,
+      priceImpactPercent: Decimal.ZERO,
+      protocolTokenReward: Decimal.ZERO,
+      userBalance: Decimal.ZERO,
+      spendableAeBalance: Decimal.ZERO,
+      estimatedNextTokenPriceImpactDifferenceFormattedPercentage: '',
+      slippage: 0.01,
+      switchTradeView: () => {},
+      setTokenAmount: () => {},
+      setSlippage: () => {},
+      placeTokenTradeOrder: async () => {},
+      resetFormState: () => {},
+    };
+  }
 
   // Calculate next price using bonding curve
   const calculateNextPrice = useCallback((currentSupply: Decimal) => {
@@ -60,6 +91,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
 
   // Calculate token cost based on bonding curve
   const calculateTokenCost = useCallback((amount?: number, _isBuying = false, _isUsingToken = false): number => {
+    if (!tokenRef.current) return 0;
     const tokenDecimals = tokenRef.current.decimals ?? 18;
     const tokenSupply = new BigNumber(tokenRef.current.total_supply ?? 0);
     let currentSupply = Decimal.from(toAe(tokenSupply.toString()));

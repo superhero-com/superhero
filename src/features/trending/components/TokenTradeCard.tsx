@@ -15,7 +15,7 @@ import TradeTokenInput from "./TradeTokenInput";
 import TransactionConfirmDetailRow from "./TransactionConfirmDetailRow";
 
 interface TokenTradeCardProps {
-  token: TokenDto;
+  token: TokenDto | null | undefined;
   onClose?: () => void;
 }
 
@@ -26,6 +26,10 @@ export default function TokenTradeCard({
   const { activeAccount } = useAeSdk();
   const [settingsDialogVisible, setSettingsDialogVisible] = useState(false);
   const [detailsShown, setDetailsShown] = useState(false);
+
+  if (!token?.sale_address) {
+    return null;
+  }
 
   const {
     tokenA,
@@ -52,10 +56,6 @@ export default function TokenTradeCard({
   } = useTokenTrade({ token });
 
   const currentStepText = isBuying ? "" : "1/2";
-
-  if (!token?.sale_address) {
-    return null;
-  }
 
   return (
     <div className="w-full mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">

@@ -5,8 +5,13 @@ import svgr from 'vite-plugin-svgr';
 import { resolve } from 'path';
 
 export default defineConfig(({ mode }) => {
-  // Load all envs so we can forward both VITE_ and VUE_APP_
-  const env = loadEnv(mode, process.cwd(), '');
+  // Load all envs from the app directory (where .env is located)
+  const envDir = __dirname;
+  const env = loadEnv(mode, envDir, '');
+  console.log('[Vite Config] Loading env from:', envDir);
+  console.log('[Vite Config] Mode:', mode);
+  console.log('[Vite Config] VITE_SUPERHERO_API_URL:', env.VITE_SUPERHERO_API_URL);
+  
   return {
     plugins: [react(), svgr()],
     ssr: {
@@ -17,11 +22,11 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
-    // Ensure env is loaded from the monorepo root so .env.* at repo root are picked up
-    // Load envs from app directory only to avoid invalid envDir array issue
-    envDir: __dirname,
+    // Ensure env is loaded from the app directory
+    // Vite will automatically expose VITE_* vars to import.meta.env
+    envDir: envDir,
     define: {
-      // Expose all envs to process.env for broad compatibility
+      // Define process.env for compatibility - use object mapping to allow runtime access
       'process.env': env,
     },
     build: {

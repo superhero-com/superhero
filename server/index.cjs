@@ -40,6 +40,16 @@ async function buildMeta(pathname, origin){
     };
   }
 
+  // Trends page
+  if (pathname === '/trends' || pathname === '/trends/tokens') {
+    return {
+      title: 'Superhero.com – Tokenize Trends. Own the Hype. Build Communities.',
+      description: 'Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero.',
+      canonical: `${origin}/trends/tokens`,
+      ogImage: `${origin}/og-default.png`,
+    };
+  }
+
   // Post
   const pm = pathname.match(/^\/post\/([^/]+)/);
   if (pm) {

@@ -46,6 +46,21 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
     };
   }
 
+  // Trends page
+  if (pathname === '/trends' || pathname === '/trends/tokens') {
+    return {
+      title: 'Superhero.com – Tokenize Trends. Own the Hype. Build Communities.',
+      description: 'Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero.',
+      canonical: `${ORIGIN}/trends/tokens`,
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Superhero',
+        url: `${ORIGIN}/trends/tokens`,
+      },
+    };
+  }
+
   const postMatch = pathname.match(/^\/post\/([^/]+)/);
   if (postMatch) {
     const postId = postMatch[1];

@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import AeButton from "@/components/AeButton";
+import Head from "../../../seo/Head";
 
 
 type SelectOptions<T> = Array<{
@@ -184,6 +185,11 @@ export default function TokenList() {
 
   return (
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
+      <Head
+        title="Superhero.com – Tokenize Trends. Own the Hype. Build Communities."
+        description="Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero."
+        canonicalPath="/trends/tokens"
+      />
       <TrendminerBanner />
 
       <LatestTransactionsCarousel />

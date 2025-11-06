@@ -76,52 +76,43 @@ export default function TokenListTableRow({
   // Show mobile card on screens smaller than 960px
   return (
     <>
-      {/* Mobile compact single-row representation */}
+      {/* Mobile compact two-row layout */}
       <tr className="mobile-only-card md:hidden relative">
         <td className="cell-fake" />
         {/* Rank */}
-        <td className="pl-2 pr-1 py-2 align-middle text-white/60 text-xs font-semibold">{collectionRank}</td>
-        {/* Name */}
-        <td className="py-2 pr-2 align-middle">
-          <div className="text-sm font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent truncate max-w-[140px]">{token.symbol || token.name}</div>
-        </td>
-        {/* Optional collection cell to keep structure (hidden) */}
-        {showCollectionColumn && (
-          <td className="hidden" />
-        )}
-        {/* Price (AE only) */}
-        <td className="py-2 pr-2 align-middle text-right">
-          <PriceDataFormatter
-            hideFiatPrice
-            watchPrice={false}
-            className="bg-gradient-to-r from-yellow-400 to-cyan-500 bg-clip-text text-transparent"
-            priceData={token.price_data}
-          />
-        </td>
-        {/* Market Cap (fiat only) */}
-        <td className="py-2 pr-2 align-middle text-right">
-          <div className="only-fiat inline-flex">
-            <PriceDataFormatter
-              bignumber
-              watchPrice={false}
-              className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent"
-              priceData={token.market_cap_data}
-            />
+        <td className="pl-3 pr-3 py-1.5 align-middle text-white/60 text-xs font-semibold">{collectionRank}</td>
+        {/* Content cell spans remaining columns: Row 1 name, Row 2 mc/price/24h */}
+        <td className="pl-2 py-1.5 pr-3 align-middle relative" colSpan={3}>
+          {/* Row 1: full name (wrap allowed) */}
+          <div className="text-[15px] font-bold text-white leading-5 whitespace-normal break-words">
+            {token.symbol || token.name}
           </div>
-        </td>
-        {/* 24h % */}
-        <td className="py-2 pr-3 align-middle text-right">
-          <div className="inline-block mr-1">
-            <Token24hChange tokenAddress={saleAddress} createdAt={token.created_at} performance24h={performance24h} />
+          {/* Row 2: left = MC, right = Price + 24h */}
+          <div className="flex items-center justify-between gap-3 pt-0.5">
+            <div className="only-fiat text-[11px] text-white/60 leading-4 font-medium">
+              <PriceDataFormatter
+                bignumber
+                watchPrice={false}
+                className=""
+                priceData={token.market_cap_data}
+              />
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="only-fiat text-sm text-white font-semibold text-right tabular-nums min-w-[80px]">
+                <PriceDataFormatter
+                  watchPrice={false}
+                  className="text-white"
+                  priceData={token.price_data}
+                />
+              </div>
+              <div className="w-[70px] flex justify-end">
+              <Token24hChange tokenAddress={saleAddress} createdAt={token.created_at} performance24h={performance24h} />
+              </div>
+            </div>
           </div>
-        </td>
-        {/* Holders (hidden on mobile) */}
-        <td className="hidden" />
-        {/* Link overlay */}
-        <td className="cell-link">
           <a
             href={`/trending/tokens/${encodeURIComponent(token.name || token.address)}`}
-            className="link absolute inset-0 z-10"
+            className="absolute inset-0 z-10"
             aria-label={`View details for ${token.name || token.symbol}`}
           />
         </td>
@@ -268,15 +259,14 @@ export default function TokenListTableRow({
           .only-fiat .price { display: none; }
           .bctsl-token-list-table-row {
             display: grid;
-            grid-template-columns: 42px 5fr 2fr;
-            grid-template-rows: 1fr 10px 10px;
+            grid-template-columns: 42px 1fr 1fr 1fr; /* rank + 3 cols */
+            grid-template-rows: auto auto; /* row1: name, row2: mc/price/24h */
             grid-template-areas:
-              'rank name       chart'
-              'rank price      chart'
-              'rank market-cap chart';
-            margin-top: 4px;
-            padding-block: 8px;
-            margin: 0.5rem 0;
+              'rank name       name      name'
+              'rank market-cap price     chart';
+            margin-top: 0;
+            padding-block: 6px;
+            margin: 0;
           }
 
           .cell-rank {
@@ -287,21 +277,10 @@ export default function TokenListTableRow({
             letter-spacing: -0.1em;
           }
 
-          .cell-name {
-            grid-area: name;
-          }
-
-          .cell-price {
-            grid-area: price;
-          }
-
-          .cell-market-cap {
-            grid-area: market-cap;
-          }
-
-          .cell-chart {
-            grid-area: chart;
-          }
+          .cell-name { grid-area: name; }
+          .cell-market-cap { grid-area: market-cap; }
+          .cell-price { grid-area: price; align-self: start; }
+          .cell-chart { grid-area: chart; align-self: start; }
 
           .cell-collection,
           .cell-holders {

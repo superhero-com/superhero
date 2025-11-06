@@ -12,7 +12,7 @@ export default function HashtagWithChange({ tag, post }: { tag: string, post?: P
   const changePercentFromTopic = topic?.token?.performance?.past_30d?.current_change_percent;
 
   // Fallback: if topic doesn't have token data, try to fetch token by symbol
-  const shouldFetchToken = !changePercentFromTopic && normalized;
+  const shouldFetchToken = !changePercentFromTopic && !!normalized;
   const { data: tokenData } = useQuery({
     queryKey: ['token-by-symbol', upper],
     queryFn: () => TokensService.findByAddress({ address: upper }),

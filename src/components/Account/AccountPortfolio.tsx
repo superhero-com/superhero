@@ -254,7 +254,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       // This handles the case where data loads before chart initializes
       const currentData = portfolioDataRef.current;
       if (currentData && currentData.length > 0) {
-        const chartData: LineData[] = portfolioData
+        const chartData: LineData[] = currentData
           .map((snapshot) => {
             const timestamp = moment(snapshot.timestamp).unix();
             let value: number | null = null;

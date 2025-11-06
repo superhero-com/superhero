@@ -171,12 +171,12 @@ body::before {
 }
 
 a { 
-  color: $custom_links_color; 
+  color: #00ff9d; 
   text-decoration: none;
-  background: $accent_gradient;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  background: none;
+  -webkit-background-clip: initial;
+  -webkit-text-fill-color: #00ff9d;
+  background-clip: initial;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }

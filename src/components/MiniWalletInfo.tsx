@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useWallet, useWalletConnect } from '../hooks';
 import Identicon from './Identicon';
 import { AeButton } from './ui/ae-button';

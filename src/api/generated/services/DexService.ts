@@ -86,6 +86,42 @@ export class DexService {
         });
     }
     /**
+     * Get comprehensive token price analysis
+     * Get detailed price analysis including liquidity-weighted pricing, confidence metrics, and all possible paths
+     * @returns any Comprehensive price analysis with liquidity weighting
+     * @throws ApiError
+     */
+    public static getTokenPriceWithLiquidityAnalysis({
+        address,
+        baseToken,
+        debug,
+    }: {
+        /**
+         * Token contract address
+         */
+        address: string,
+        /**
+         * Base token for price calculation (default: WAE)
+         */
+        baseToken?: string,
+        /**
+         * Include detailed path analysis
+         */
+        debug?: boolean,
+    }): CancelablePromise<Record<string, any>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/dex/tokens/{address}/price/analysis',
+            path: {
+                'address': address,
+            },
+            query: {
+                'base_token': baseToken,
+                'debug': debug,
+            },
+        });
+    }
+    /**
      * Get DEX token summary
      * Get comprehensive summary data for a token including aggregated volume and price changes across all pools where the token appears.
      * @returns DexTokenSummaryDto

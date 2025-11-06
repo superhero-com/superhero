@@ -89,7 +89,7 @@ export default function TokenDetail() {
       setError(null);
 
       try {
-        const [t, metaData] = await Promise.all([
+        const [t, pairs, metaData] = await Promise.all([
           getTokenWithUsd(tokenAddress),
           getPairsByTokenUsd(tokenAddress),
           getTokenMetaData(tokenAddress),
@@ -440,7 +440,9 @@ export default function TokenDetail() {
                   }}
                 >
                   {
-                    Decimal.from(aex9Data?.event_supply).div(10 ** aex9Data?.decimals).prettify()
+                    aex9Data?.event_supply && aex9Data?.decimals
+                      ? Decimal.from(aex9Data.event_supply).div(10 ** aex9Data.decimals).prettify()
+                      : "N/A"
                   }
                 </div>
                 <div
@@ -488,11 +490,13 @@ export default function TokenDetail() {
                   }}
                 >
                   {
-                    Decimal
-                      .from(aex9Data?.event_supply)
-                      .div(10 ** aex9Data?.decimals)
-                      .mul(Decimal.from(tokenDetails?.price?.ae || 0))
-                      .shorten()
+                    aex9Data?.event_supply && aex9Data?.decimals
+                      ? Decimal
+                          .from(aex9Data.event_supply)
+                          .div(10 ** aex9Data.decimals)
+                          .mul(Decimal.from(tokenDetails?.price?.ae || 0))
+                          .shorten()
+                      : "N/A"
                   } AE
                 </div>
                 <div

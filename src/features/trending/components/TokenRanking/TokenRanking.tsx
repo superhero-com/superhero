@@ -11,7 +11,7 @@ interface TokenRankingProps {
     symbol?: string;
     total_supply?: string;
     rank?: number;
-  };
+  } | null | undefined;
 }
 
 interface RankingToken {
@@ -36,20 +36,24 @@ export default function TokenRanking({ token }: TokenRankingProps) {
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [loading, setLoading] = useState(false);
 
+  if (!token) {
+    return null;
+  }
+
   // Calculate ranking limit based on token rank (similar to Vue computed)
   const tokenRankingLimit = useMemo(() => {
-    const rank = token.rank || 1;
+    const rank = token?.rank || 1;
     if (rank === 1) return LIST_SIZE + 3;
     if (rank === 2) return LIST_SIZE + 1;
     return LIST_SIZE;
-  }, [token.rank]);
+  }, [token?.rank]);
 
   // Fetch ranking data
   useEffect(() => {
     let cancelled = false;
 
     async function fetchRankings() {
-      if (!token.sale_address) return;
+      if (!token?.sale_address) return;
       
       setLoading(true);
       try {
@@ -83,8 +87,9 @@ export default function TokenRanking({ token }: TokenRankingProps) {
 
   // Find current token rank from ranking data or use prop
   const tokenRank = useMemo(() => {
+    if (!token?.sale_address) return token?.rank || 1;
     return rankingTokens.find(item => item.sale_address === token.sale_address)?.rank || token.rank || 1;
-  }, [rankingTokens, token.sale_address, token.rank]);
+  }, [rankingTokens, token?.sale_address, token?.rank]);
 
   // Calculate tokens ahead to level up
   const tokensAhead = useMemo(() => {
@@ -166,7 +171,7 @@ export default function TokenRanking({ token }: TokenRankingProps) {
         {tokenRank > 1 ? (
           <div>
             Buy <strong className="text-[#4ecdc4]">{tokensAhead === '0' ? 'any amount' : tokensAhead}</strong> more{' '}
-            <span className="font-bold text-white">{token.name}</span> to level up!
+            <span className="font-bold text-white">{token.name || token.symbol || 'token'}</span> to level up!
           </div>
         ) : (
           <div>

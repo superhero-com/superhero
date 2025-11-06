@@ -55,6 +55,37 @@ export class PostsService {
         });
     }
     /**
+     * Popular posts
+     * Returns popular posts for selected time window. Views are ignored in v1.
+     * @returns any
+     * @throws ApiError
+     */
+    public static popular({
+        window,
+        debug,
+        limit,
+        page,
+    }: {
+        window?: '24h' | '7d' | 'all',
+        /**
+         * Return feature breakdown when set to 1
+         */
+        debug?: number,
+        limit?: number,
+        page?: number,
+    }): CancelablePromise<Pagination> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/posts/popular',
+            query: {
+                'window': window,
+                'debug': debug,
+                'limit': limit,
+                'page': page,
+            },
+        });
+    }
+    /**
      * Get post by ID
      * Retrieve a specific post by its unique identifier
      * @returns PostDto Post retrieved successfully

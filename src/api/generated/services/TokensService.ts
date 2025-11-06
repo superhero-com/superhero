@@ -166,4 +166,26 @@ export class TokensService {
             },
         });
     }
+    /**
+     * Get token performance (alias for /performance)
+     * Returns performance data using database view. This endpoint is kept for backward compatibility.
+     * @returns TokenPriceMovementDto
+     * @throws ApiError
+     */
+    public static performanceRaw({
+        address,
+    }: {
+        /**
+         * Token address or name
+         */
+        address: string,
+    }): CancelablePromise<TokenPriceMovementDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/tokens/{address}/performance-raw',
+            path: {
+                'address': address,
+            },
+        });
+    }
 }

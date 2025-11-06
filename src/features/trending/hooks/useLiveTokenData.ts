@@ -4,7 +4,7 @@ import { TokenDto } from '@/api/generated';
 import WebSocketClient from '@/libs/WebSocketClient';
 
 export interface ILiveTokenData {
-  token: TokenDto;
+  token: TokenDto | null | undefined;
   onUpdate?: (token: TokenDto) => void;
 }
 
@@ -14,21 +14,22 @@ export interface ILiveTokenData {
  * @returns An object containing the reactive token data.
  */
 export function useLiveTokenData({ token, onUpdate }: ILiveTokenData) {
-  const [tokenData, setTokenData] = useState<TokenDto>({
-    ...token,
-  });
+  const [tokenData, setTokenData] = useState<TokenDto | null>(token || null);
 
   const subscriptionRef = useRef<(() => void) | null>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!token?.sale_address) return;
+    if (!token || !token.sale_address) {
+      setTokenData(token || null);
+      return;
+    }
     subscriptionRef.current = WebSocketClient.subscribeForTokenUpdates(
       token.sale_address,
       (newComingTokenData: any) => {
         setTokenData(currentTokenData => {
           const newTokenData = {
-            ...currentTokenData,
+            ...(currentTokenData || token),
             ...newComingTokenData.data,
           };
 
@@ -60,7 +61,12 @@ export function useLiveTokenData({ token, onUpdate }: ILiveTokenData) {
     };
   }, [token?.sale_address, token?.symbol, queryClient, onUpdate]);
 
+  // Update tokenData when token changes
+  useEffect(() => {
+    setTokenData(token || null);
+  }, [token]);
+
   return {
-    tokenData,
+    tokenData: tokenData || null,
   };
 }

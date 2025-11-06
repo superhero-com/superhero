@@ -16,6 +16,7 @@ import SwapInfoDisplay from './SwapInfoDisplay';
 import NoLiquidityWarning from './NoLiquidityWarning';
 import TokenInput from './TokenInput';
 import { Decimal } from '../../../libs/decimal';
+import { emitTrade } from '../../../libs/events';
 
 import { useAccount, useDex } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
@@ -270,6 +271,11 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         setAmountIn('');
         setAmountOut('');
         setShowConfirm(false);
+        try {
+          const inAddr = tokenIn?.address || '';
+          const outAddr = tokenOut?.address || '';
+          emitTrade([inAddr, outAddr].filter(Boolean));
+        } catch {}
       }
     } catch (error) {
       console.error('Swap failed:', error);

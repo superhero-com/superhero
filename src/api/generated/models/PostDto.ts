@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { TopicDto } from './TopicDto';
 export type PostDto = {
     /**
      * Unique identifier for the post
@@ -34,7 +35,7 @@ export type PostDto = {
     /**
      * Array of topics/hashtags associated with the post
      */
-    topics: Array<string>;
+    topics: Array<TopicDto>;
     /**
      * Array of media URLs associated with the post
      */

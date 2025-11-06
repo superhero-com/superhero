@@ -489,7 +489,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           
           {/* Loading indicator */}
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center rounded-lg">
+            <div className="absolute inset-0 flex items-start justify-center rounded-lg pt-[30%]">
               <div className="text-white/60 text-sm">Loading portfolio data...</div>
             </div>
           )}

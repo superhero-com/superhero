@@ -411,6 +411,16 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     // Set data and fit content
     seriesRef.current.setData(chartData);
     
+    // Ensure chart width matches container after data update
+    if (chartContainerRef.current) {
+      const containerWidth = chartContainerRef.current.clientWidth;
+      if (containerWidth > 0) {
+        chartRef.current.applyOptions({
+          width: containerWidth,
+        });
+      }
+    }
+    
     const currentTime = moment().unix();
     chartRef.current.timeScale().fitContent();
     

@@ -16,19 +16,6 @@ export function errorToUserMessage(err: unknown, ctx: ErrorContext = {}): string
   const raw = String((err as any)?.message || String(err || ''));
   const lc = raw.toLowerCase();
 
-  // Enhanced logging for debugging
-  console.log('===============================================')
-  console.log('errorToUserMessage->err::', err)
-  console.debug('[errorToUserMessage] Processing error:', {
-    raw,
-    lc,
-    context: ctx,
-    errorType: typeof err,
-    errorName: (err as any)?.name,
-    errorCode: (err as any)?.code
-  });
-  console.log('===============================================')
-
   // User cancelled in wallet
   if (lc.includes('rejected by user') || lc.includes('user rejected')) {
     return t('userRejected');

@@ -40,7 +40,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
   // Root
   if (pathname === '/' || pathname === '') {
     return {
-      title: 'Superhero – Crypto Social Network: Posts, Tokens, Governance',
+      title: 'Superhero.com – The All‑in‑One Social + Crypto App',
       description: 'Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.',
       canonical: `${fullUrl.origin}/`,
       ogImage: `${fullUrl.origin}/og-default.png`,
@@ -49,6 +49,22 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
         '@type': 'WebSite',
         name: 'Superhero',
         url: fullUrl.origin,
+      },
+    };
+  }
+
+  // Trends page
+  if (pathname === '/trends' || pathname === '/trends/tokens') {
+    return {
+      title: 'Superhero.com – Tokenize Trends. Own the Hype. Build Communities.',
+      description: 'Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero.',
+      canonical: `${fullUrl.origin}/trends/tokens`,
+      ogImage: `${fullUrl.origin}/og-default.png`,
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Superhero',
+        url: `${fullUrl.origin}/trends/tokens`,
       },
     };
   }
@@ -148,7 +164,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
         const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
         const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo) as string | undefined, fullUrl.origin);
         return {
-          title: `${symbol} – Token on Superhero`,
+          title: `Buy #${symbol} on Superhero.com`,
           description: truncate(desc, 200),
           canonical: `${fullUrl.origin}/trends/tokens/${tokenName}`,
           ogImage: tokenImg || `${fullUrl.origin}/og-default.png`,
@@ -164,7 +180,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
       }
     } catch {}
     return {
-      title: `${address} – Token on Superhero`,
+      title: `Buy #${address} on Superhero.com`,
       canonical: `${fullUrl.origin}/trends/tokens/${tokenName}`,
       ogImage: `${fullUrl.origin}/og-default.png`,
     };

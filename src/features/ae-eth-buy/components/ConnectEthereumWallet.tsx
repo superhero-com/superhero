@@ -92,7 +92,7 @@ export function ConnectEthereumWallet({
             className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                 disabled
                     ? 'bg-white/10 cursor-not-allowed opacity-60'
-                    : 'bg-gradient-to-r from-[#627eea] to-[#8a92b2] shadow-[0_8px_25px_rgba(98,126,234,0.4)] hover:shadow-[0_12px_35px_rgba(98,126,234,0.5)] hover:-translate-y-0.5 active:translate-y-0'
+                    : 'bg-gradient-to-r from-[#627eea] to-[#8a92b2] shadow-[0_8px_25px_rgba(98,126,234,0.4)] hover:-translate-y-0.5 active:translate-y-0'
             } ${className}`}
         >
             {label}

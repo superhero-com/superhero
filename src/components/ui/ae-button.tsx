@@ -8,16 +8,16 @@ const aeButtonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary-gradient text-white shadow-button hover:shadow-glow hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-100",
+        default: "bg-primary-gradient text-white shadow-button hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-100",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary-gradient text-white shadow-button hover:shadow-glow hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-100",
+        secondary: "bg-secondary-gradient text-white shadow-button hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-100",
         ghost: "bg-glass-bg backdrop-blur-glass border border-glass-border text-foreground hover:bg-accent hover:text-accent-foreground hover:-translate-y-1",
         link: "text-primary underline-offset-4 hover:underline",
-        accent: "bg-accent-gradient text-white shadow-button hover:shadow-glow hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-100",
-        success: "bg-gradient-to-r from-neon-teal to-neon-green text-white shadow-button hover:shadow-glow hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-100",
-        warning: "bg-gradient-to-r from-neon-yellow to-orange-500 text-white shadow-button hover:shadow-glow hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-100",
-        error: "bg-gradient-to-r from-neon-pink to-red-500 text-white shadow-button hover:shadow-glow hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-100",
+        accent: "bg-accent-gradient text-white shadow-button hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-100",
+        success: "bg-gradient-to-r from-neon-teal to-neon-green text-white shadow-button hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-100",
+        warning: "bg-gradient-to-r from-neon-yellow to-orange-500 text-white shadow-button hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-100",
+        error: "bg-gradient-to-r from-neon-pink to-red-500 text-white shadow-button hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-100",
         tab: "bg-transparent border-none text-foreground font-normal rounded-none border-b-2 border-transparent hover:bg-accent/10 hover:translate-y-0 hover:scale-100 data-[active=true]:font-bold data-[active=true]:border-primary data-[active=true]:text-primary",
         utility: "bg-transparent border-none text-foreground text-xs rounded-md hover:bg-accent/10 hover:translate-y-0 hover:scale-100",
       },

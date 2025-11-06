@@ -68,9 +68,9 @@ export default function SwapTabSwitcher({
             key={tab.id}
             variant="glass"
             className={cn(
-              "cursor-pointer transition-all duration-300 hover:shadow-glow",
+              "cursor-pointer transition-all duration-300",
               activeTab === tab.id 
-                ? "border-accent shadow-glow" 
+                ? "border-accent" 
                 : "border-glass-border hover:border-accent/50"
             )}
             onClick={() => setActiveTab(tab.id)}

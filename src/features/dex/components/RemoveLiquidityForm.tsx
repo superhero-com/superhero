@@ -219,7 +219,7 @@ export default function RemoveLiquidityForm() {
             className={`flex-[2] px-6 py-4 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
               loading 
                 ? 'bg-white/10 cursor-not-allowed opacity-60' 
-                : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0'
+                : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
             }`}
           >
             {loading ? (
@@ -442,7 +442,7 @@ export default function RemoveLiquidityForm() {
         className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
           removeAmount.lte(0) || (useCustomAmount && (!customAmount || Number(customAmount) <= 0))
             ? 'bg-white/10 text-white/60 cursor-not-allowed opacity-60'
-            : 'bg-[#1161FE] text-white cursor-pointer shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0'
+            : 'bg-[#1161FE] text-white cursor-pointer shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
         }`}
       >
         💧 Remove {useCustomAmount 

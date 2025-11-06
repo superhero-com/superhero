@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SearchInput from '../../SearchInput';
 import { HeaderLogo, IconSearch } from '../../../icons';
@@ -27,6 +27,7 @@ export default function MobileAppHeader() {
   });
 
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const isOnFeed = pathname === '/';
   const { activeAccount } = useAeSdk();
   const { disconnectWallet, walletInfo } = useWalletConnect();
@@ -36,6 +37,12 @@ export default function MobileAppHeader() {
   const handleLogout = () => {
     disconnectWallet();
     try { window.location.reload(); } catch {}
+  };
+  const handleProfileClick = () => {
+    if (activeAccount) {
+      navigate(`/users/${activeAccount}`);
+      setShowOverlay(false);
+    }
   };
 
   const toggleTheme = useCallback(() => {
@@ -208,7 +215,10 @@ export default function MobileAppHeader() {
             <div className="py-4 px-6 border-b border-white/10 sm:py-3 sm:px-5">
               {activeAccount ? (
                 <div>
-                  <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleProfileClick}
+                    className="w-full flex items-center gap-3 hover:opacity-80 transition-opacity"
+                  >
                     <AddressAvatarWithChainName
                       isHoverEnabled={false}
                       address={activeAccount}
@@ -220,7 +230,7 @@ export default function MobileAppHeader() {
                       hideFallbackName={true}
                       contentClassName="px-2 pb-0"
                     />
-                  </div>
+                  </button>
                   <div className="mt-3">
                     <AeButton
                       onClick={handleLogout}

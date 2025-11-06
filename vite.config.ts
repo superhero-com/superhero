@@ -68,11 +68,11 @@ export default defineConfig(({ mode }) => {
     build: {
       sourcemap: false,
       chunkSizeWarningLimit: 900,
-      rollupOptions: {
-        input: {
-          main: resolve(__dirname, 'index.html'),
-        },
-      },
+      // rollupOptions: {
+      //   input: {
+      //     main: resolve(__dirname, 'index.html'),
+      //   },
+      // },
       // Ensure JSON files are included in the build
       assetsInclude: ['**/*.json'],
     },

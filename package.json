@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "node ./scripts/generate-sitemap.cjs && vite build",
+    "build": "node ./scripts/update-package-type.cjs && node ./scripts/generate-sitemap.cjs && vite build",
     "preview": "vite preview --port 5174",
     "test": "vitest",
     "generate:api": "openapi --input http://localhost:3000/api-json --output ./src/api/generated --useOptions",

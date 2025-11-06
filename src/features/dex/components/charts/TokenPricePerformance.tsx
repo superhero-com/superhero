@@ -201,14 +201,6 @@ export default function TokenPricePerformance({
     }
 
     if (formattedData.length > 0) {
-      console.log('[TokenPricePerformance] Setting chart data:', {
-        originalLength: rawData.length,
-        filteredLength: formattedData.length,
-        firstTime: formattedData[0]?.time,
-        lastTime: formattedData[formattedData.length - 1]?.time,
-        sampleData: formattedData.slice(0, 3)
-      });
-      
       seriesRef.current.setData(formattedData);
       
       // Fit content
@@ -234,13 +226,6 @@ export default function TokenPricePerformance({
       }
 
       const result = await getGraph(options);
-
-      console.log("[TokenPricePerformance] getGraph result", JSON.stringify({
-        result,
-        options,
-        pairId,
-        tokenId,
-      }, null, 2));
       
       if (result) {
         setChartData({

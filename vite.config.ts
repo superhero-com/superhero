@@ -3,7 +3,7 @@ import path from 'path';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
 import { resolve } from 'path';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -38,6 +38,48 @@ const jsonPlugin = (): Plugin => {
   };
 };
 
+// Plugin to help resolve bctsl-sdk package entry point
+// This is needed because the package.json may have incorrect main/module/exports
+const bctslSdkResolver = (): Plugin => {
+  return {
+    name: 'bctsl-sdk-resolver',
+    enforce: 'pre',
+    resolveId(id: string) {
+      // Only handle bctsl-sdk package resolution
+      if (id === 'bctsl-sdk') {
+        try {
+          // Try to resolve the package using Node's resolution
+          const packageJsonPath = resolve(process.cwd(), 'node_modules/bctsl-sdk/package.json');
+          if (existsSync(packageJsonPath)) {
+            const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+            // Try to resolve the main entry point
+            const mainEntry = packageJson.main || packageJson.exports?.['.']?.default || './.build/cjs/index.js';
+            const resolvedPath = resolve(process.cwd(), 'node_modules/bctsl-sdk', mainEntry);
+            if (existsSync(resolvedPath)) {
+              return resolvedPath;
+            }
+            // Fallback: try common paths
+            const fallbackPaths = [
+              resolve(process.cwd(), 'node_modules/bctsl-sdk/.build/cjs/index.js'),
+              resolve(process.cwd(), 'node_modules/bctsl-sdk/.build/esm/index.js'),
+              resolve(process.cwd(), 'node_modules/bctsl-sdk/index.js'),
+            ];
+            for (const fallbackPath of fallbackPaths) {
+              if (existsSync(fallbackPath)) {
+                return fallbackPath;
+              }
+            }
+          }
+        } catch (e) {
+          // If resolution fails, let Vite handle it normally
+          console.warn('[bctsl-sdk-resolver] Failed to resolve bctsl-sdk:', e);
+        }
+      }
+      return null; // Let Vite handle other packages
+    },
+  };
+};
+
 export default defineConfig(({ mode }) => {
   // Load all envs from the app directory (where .env is located)
   const envDir = __dirname;
@@ -47,7 +89,7 @@ export default defineConfig(({ mode }) => {
   console.log('[Vite Config] VITE_SUPERHERO_API_URL:', env.VITE_SUPERHERO_API_URL);
   
   return {
-    plugins: [react(), svgr(), jsonPlugin()],
+    plugins: [react(), svgr(), jsonPlugin(), bctslSdkResolver()],
     ssr: {
       noExternal: ['react-helmet-async'],
     },
@@ -68,11 +110,11 @@ export default defineConfig(({ mode }) => {
     build: {
       sourcemap: false,
       chunkSizeWarningLimit: 900,
-      // rollupOptions: {
-      //   input: {
-      //     main: resolve(__dirname, 'index.html'),
-      //   },
-      // },
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'index.html'),
+        },
+      },
       // Ensure JSON files are included in the build
       assetsInclude: ['**/*.json'],
     },

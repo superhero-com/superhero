@@ -3,6 +3,7 @@ import { useWallet, useWalletConnect } from '../hooks';
 import Identicon from './Identicon';
 import { AeButton } from './ui/ae-button';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 type Props = { block?: boolean } & React.HTMLAttributes<HTMLDivElement>;
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import Head from "../seo/Head";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import AeButton from "../components/AeButton";

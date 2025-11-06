@@ -489,7 +489,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           }
         }
         
-        // Final resize after fitContent and visible range adjustment
+        // Final resize after visible range adjustment
         // Use another requestAnimationFrame to ensure chart has fully rendered
         requestAnimationFrame(() => {
           if (!chartRef.current || !chartContainerRef.current) return;
@@ -508,12 +508,13 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               },
             });
             
-            // Re-apply the visible logical range to ensure graph fills full width
-            const finalLogicalRange = chartRef.current.timeScale().getVisibleLogicalRange();
-            if (finalLogicalRange) {
-              chartRef.current.timeScale().setVisibleLogicalRange({
-                from: finalLogicalRange.from,
-                to: finalLogicalRange.to,
+            // Re-apply visible range to ensure graph fills full width after resize
+            if (chartData.length > 0) {
+              const firstTime = chartData[0].time as number;
+              const lastTime = Math.min(chartData[chartData.length - 1].time as number, currentTime);
+              chartRef.current.timeScale().setVisibleRange({
+                from: firstTime,
+                to: lastTime,
               });
             }
           }

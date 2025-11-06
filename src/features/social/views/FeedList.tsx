@@ -17,6 +17,7 @@ import ReplyToFeedItem from "../components/ReplyToFeedItem";
 import TokenCreatedFeedItem from "../components/TokenCreatedFeedItem";
 import TokenCreatedActivityItem from "../components/TokenCreatedActivityItem";
 import { PostApiResponse } from "../types";
+import Head from "../../../seo/Head";
 
 // Custom hook
 function useUrlQuery() {
@@ -429,6 +430,11 @@ export default function FeedList({
 
   const content = (
     <div className="w-full">
+      <Head
+        title="Superhero – Crypto Social Network: Posts, Tokens, Governance"
+        description="Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network."
+        canonicalPath="/"
+      />
       {!standalone && (
         <div className="mb-3 md:mb-4">
           <HeroBannerCarousel 

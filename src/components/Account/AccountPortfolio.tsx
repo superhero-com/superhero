@@ -44,7 +44,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const { currentCurrencyInfo } = useCurrencies();
   const convertTo = useMemo(
     () => (useCurrentCurrency ? currentCurrencyInfo.code.toLowerCase() : 'ae'),
-    [useCurrentCurrency, currentCurrencyInfo]
+    [useCurrentCurrency, currentCurrencyInfo.code]
   );
 
   // Keep convertTo ref up to date

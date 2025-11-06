@@ -1,12 +1,27 @@
 import { Link } from 'react-router-dom';
-import { PostDto } from '../../../api/generated';
+import { PostDto, TokensService } from '../../../api/generated';
+import { useQuery } from '@tanstack/react-query';
 
 export default function HashtagWithChange({ tag, post }: { tag: string, post?: PostDto }) {
   const clean = String(tag || '').replace(/^#/, '');
   const upper = clean.toUpperCase();
+  const normalized = clean.toLowerCase();
 
-  const topic = post?.topics?.find((t) => t.name === clean?.toLowerCase());
-  const changePercent = topic?.token?.performance?.past_30d?.current_change_percent;
+  // Try to find topic in post topics (case-insensitive)
+  const topic = post?.topics?.find((t) => t.name?.toLowerCase() === normalized);
+  const changePercentFromTopic = topic?.token?.performance?.past_30d?.current_change_percent;
+
+  // Fallback: if topic doesn't have token data, try to fetch token by symbol
+  const shouldFetchToken = !changePercentFromTopic && normalized;
+  const { data: tokenData } = useQuery({
+    queryKey: ['token-by-symbol', upper],
+    queryFn: () => TokensService.findByAddress({ address: upper }),
+    enabled: shouldFetchToken,
+    retry: false,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  const changePercent = changePercentFromTopic ?? tokenData?.performance?.past_30d?.current_change_percent;
   const isUp = changePercent != null && changePercent > 0;
   const isDown = changePercent != null && changePercent < 0;
 

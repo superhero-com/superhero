@@ -461,16 +461,31 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         }
         
         const currentTime = moment().unix();
-        chartRef.current.timeScale().fitContent();
         
-        // Ensure we don't show future data
-        const visibleRange = chartRef.current.timeScale().getVisibleRange();
-        if (visibleRange && visibleRange.to > currentTime) {
-          if (visibleRange.from != null && typeof visibleRange.from === 'number') {
-            chartRef.current.timeScale().setVisibleRange({
-              from: visibleRange.from,
-              to: currentTime,
-            });
+        // Calculate the actual data range from chartData
+        if (chartData.length > 0) {
+          const firstTime = chartData[0].time as number;
+          const lastTime = Math.min(chartData[chartData.length - 1].time as number, currentTime);
+          
+          // Set visible range directly to ensure full width without padding
+          // This ensures the graph line always fills the entire plot area width
+          chartRef.current.timeScale().setVisibleRange({
+            from: firstTime,
+            to: lastTime,
+          });
+        } else {
+          // Fallback to fitContent if no data
+          chartRef.current.timeScale().fitContent();
+          
+          // Ensure we don't show future data
+          const visibleRange = chartRef.current.timeScale().getVisibleRange();
+          if (visibleRange && visibleRange.to > currentTime) {
+            if (visibleRange.from != null && typeof visibleRange.from === 'number') {
+              chartRef.current.timeScale().setVisibleRange({
+                from: visibleRange.from,
+                to: currentTime,
+              });
+            }
           }
         }
         
@@ -487,11 +502,20 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             chartRef.current.applyOptions({
               width: finalWidth,
               height: finalHeight,
+              timeScale: {
+                rightOffset: 0,
+                leftOffset: 0,
+              },
             });
             
-            // Force a repaint by getting the visible range again
-            // This ensures the chart library recalculates the plot area
-            chartRef.current.timeScale().getVisibleRange();
+            // Re-apply the visible logical range to ensure graph fills full width
+            const finalLogicalRange = chartRef.current.timeScale().getVisibleLogicalRange();
+            if (finalLogicalRange) {
+              chartRef.current.timeScale().setVisibleLogicalRange({
+                from: finalLogicalRange.from,
+                to: finalLogicalRange.to,
+              });
+            }
           }
         });
       });

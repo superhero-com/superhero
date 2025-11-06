@@ -131,119 +131,144 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     return null;
   }, [hoveredPrice, currentPortfolioValue]);
 
-  // Initialize chart once
+  // Check container readiness and initialize chart
   useEffect(() => {
-    if (chartRef.current || !chartContainerRef.current) return;
+    if (chartRef.current) return; // Already initialized
     
-    const container = chartContainerRef.current;
-    if (container.clientWidth === 0) return;
-    
-    const chart = createChart(container, {
-      width: container.clientWidth,
-      height: 180,
-      layout: {
-        background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: '#ffffff',
-      },
-      grid: {
-        vertLines: { visible: false },
-        horzLines: { visible: false },
-      },
-      rightPriceScale: {
-        visible: false,
-        borderVisible: false,
-      },
-      leftPriceScale: {
-        visible: false,
-        borderVisible: false,
-      },
-      timeScale: {
-        visible: false,
-        borderVisible: false,
-      },
-      crosshair: {
-        mode: 1,
-        vertLine: {
-          visible: true,
-          color: 'rgba(34, 197, 94, 0.5)',
-          width: 1,
-          style: 0,
+    const checkAndInit = () => {
+      if (!chartContainerRef.current) return false;
+      
+      const container = chartContainerRef.current;
+      if (container.clientWidth === 0) return false; // Not ready yet
+      
+      // Container is ready, initialize chart
+      const chart = createChart(container, {
+        width: container.clientWidth,
+        height: 180,
+        layout: {
+          background: { type: ColorType.Solid, color: 'transparent' },
+          textColor: '#ffffff',
         },
-        horzLine: {
+        grid: {
+          vertLines: { visible: false },
+          horzLines: { visible: false },
+        },
+        rightPriceScale: {
           visible: false,
+          borderVisible: false,
         },
-      },
-      handleScale: false,
-      handleScroll: false,
-    });
+        leftPriceScale: {
+          visible: false,
+          borderVisible: false,
+        },
+        timeScale: {
+          visible: false,
+          borderVisible: false,
+        },
+        crosshair: {
+          mode: 1,
+          vertLine: {
+            visible: true,
+            color: 'rgba(34, 197, 94, 0.5)',
+            width: 1,
+            style: 0,
+          },
+          horzLine: {
+            visible: false,
+          },
+        },
+        handleScale: false,
+        handleScroll: false,
+      });
 
-    chartRef.current = chart;
+      chartRef.current = chart;
 
-    const seriesOptions: AreaSeriesPartialOptions = {
-      priceLineVisible: false,
-      lineColor: '#22c55e',
-      topColor: 'rgba(34, 197, 94, 0.3)',
-      bottomColor: 'rgba(34, 197, 94, 0.01)',
-      lineWidth: 2,
-      crosshairMarkerVisible: true,
-      crosshairMarkerRadius: 6,
-      crosshairMarkerBorderColor: '#22c55e',
-      crosshairMarkerBackgroundColor: '#22c55e',
-      baseLineVisible: false,
-      priceFormat: {
-        type: 'custom',
-        minMove: 0.000001,
-        formatter: (price: number) => {
-          if (convertTo === 'ae') {
-            return `${price.toFixed(4)} AE`;
+      const seriesOptions: AreaSeriesPartialOptions = {
+        priceLineVisible: false,
+        lineColor: '#22c55e',
+        topColor: 'rgba(34, 197, 94, 0.3)',
+        bottomColor: 'rgba(34, 197, 94, 0.01)',
+        lineWidth: 2,
+        crosshairMarkerVisible: true,
+        crosshairMarkerRadius: 6,
+        crosshairMarkerBorderColor: '#22c55e',
+        crosshairMarkerBackgroundColor: '#22c55e',
+        baseLineVisible: false,
+        priceFormat: {
+          type: 'custom',
+          minMove: 0.000001,
+          formatter: (price: number) => {
+            if (convertTo === 'ae') {
+              return `${price.toFixed(4)} AE`;
+            }
+            const currencyCode = currentCurrencyInfo.code.toUpperCase();
+            return Number(price).toLocaleString('en-US', {
+              style: 'currency',
+              currency: currencyCode,
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            });
+          },
+        },
+      };
+
+      const areaSeries = chart.addSeries(AreaSeries, seriesOptions);
+      seriesRef.current = areaSeries;
+
+      // Subscribe to crosshair moves
+      chart.subscribeCrosshairMove((param) => {
+        if (param.time && param.seriesData) {
+          const priceData = param.seriesData.get(areaSeries) as LineData | undefined;
+          if (priceData && typeof priceData.value === 'number') {
+            setHoveredPrice({
+              price: priceData.value,
+              time: param.time as number,
+            });
+          } else {
+            setHoveredPrice(null);
           }
-          const currencyCode = currentCurrencyInfo.code.toUpperCase();
-          return Number(price).toLocaleString('en-US', {
-            style: 'currency',
-            currency: currencyCode,
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          });
-        },
-      },
-    };
-
-    const areaSeries = chart.addSeries(AreaSeries, seriesOptions);
-    seriesRef.current = areaSeries;
-
-    // Subscribe to crosshair moves
-    chart.subscribeCrosshairMove((param) => {
-      if (param.time && param.seriesData) {
-        const priceData = param.seriesData.get(areaSeries) as LineData | undefined;
-        if (priceData && typeof priceData.value === 'number') {
-          setHoveredPrice({
-            price: priceData.value,
-            time: param.time as number,
-          });
         } else {
           setHoveredPrice(null);
         }
-      } else {
-        setHoveredPrice(null);
-      }
-    });
+      });
 
-    // Handle resize
-    const handleResize = () => {
-      if (chartContainerRef.current && chart) {
-        chart.applyOptions({
-          width: chartContainerRef.current.clientWidth,
-        });
-      }
+      // Handle resize
+      const handleResize = () => {
+        if (chartContainerRef.current && chart) {
+          chart.applyOptions({
+            width: chartContainerRef.current.clientWidth,
+          });
+        }
+      };
+
+      handleResize();
+      window.addEventListener('resize', handleResize);
+
+      return true; // Successfully initialized
     };
 
-    handleResize();
-    window.addEventListener('resize', handleResize);
+    // Try immediately
+    if (checkAndInit()) return;
+
+    // If not ready, check periodically
+    const intervalId = setInterval(() => {
+      if (checkAndInit() || chartRef.current) {
+        clearInterval(intervalId);
+      }
+    }, 100); // Check every 100ms
+
+    // Also try on next frame
+    const timeoutId = setTimeout(() => {
+      if (checkAndInit() || chartRef.current) {
+        clearInterval(intervalId);
+      }
+    }, 0);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      if (chart && !chartContainerRef.current) {
-        chart.remove();
+      clearInterval(intervalId);
+      clearTimeout(timeoutId);
+      if (chartRef.current && !chartContainerRef.current) {
+        chartRef.current.remove();
         chartRef.current = null;
         seriesRef.current = null;
         setHoveredPrice(null);

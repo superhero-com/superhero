@@ -147,6 +147,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   useEffect(() => {
     if (chartRef.current) return; // Already initialized
     
+    let resizeObserver: ResizeObserver | null = null;
+    let windowResizeHandler: (() => void) | null = null;
+    
     const checkAndInit = () => {
       if (!chartContainerRef.current) return false;
       
@@ -244,17 +247,33 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         }
       });
 
-      // Handle resize
+      // Handle resize - use ResizeObserver for container size changes
       const handleResize = () => {
         if (chartContainerRef.current && chart) {
-          chart.applyOptions({
-            width: chartContainerRef.current.clientWidth,
-          });
+          const newWidth = chartContainerRef.current.clientWidth;
+          if (newWidth > 0) {
+            chart.applyOptions({
+              width: newWidth,
+            });
+          }
         }
       };
 
+      // Initial resize
       handleResize();
-      window.addEventListener('resize', handleResize);
+
+      // Use ResizeObserver to watch container size changes
+      resizeObserver = new ResizeObserver(() => {
+        handleResize();
+      });
+
+      if (chartContainerRef.current) {
+        resizeObserver.observe(chartContainerRef.current);
+      }
+
+      // Also listen to window resize as fallback
+      windowResizeHandler = () => handleResize();
+      window.addEventListener('resize', windowResizeHandler);
 
       // If data is already available, set it immediately
       // This handles the case where data loads before chart initializes
@@ -324,6 +343,12 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     return () => {
       clearInterval(intervalId);
       clearTimeout(timeoutId);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+      if (windowResizeHandler) {
+        window.removeEventListener('resize', windowResizeHandler);
+      }
       if (chartRef.current && !chartContainerRef.current) {
         chartRef.current.remove();
         chartRef.current = null;

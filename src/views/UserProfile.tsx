@@ -287,7 +287,7 @@ export default function UserProfile({
                 className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all"
                 onClick={() => setEditOpen(true)}
               >
-                Edit
+                {bioText ? t('buttons.editBio') : t('buttons.addBio')}
               </AeButton>
             ) : null}
             {!canEdit ? (

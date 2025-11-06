@@ -408,10 +408,10 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       },
     });
 
-    // Set data and fit content
+    // Set data first
     seriesRef.current.setData(chartData);
     
-    // Ensure chart width matches container after data update
+    // Ensure chart width matches container BEFORE fitContent
     if (chartContainerRef.current) {
       const containerWidth = chartContainerRef.current.clientWidth;
       const containerHeight = chartContainerRef.current.clientHeight;
@@ -421,8 +421,22 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       }
     }
     
-    const currentTime = moment().unix();
-    chartRef.current.timeScale().fitContent();
+    // Use requestAnimationFrame to ensure resize is applied before fitContent
+    requestAnimationFrame(() => {
+      if (!chartRef.current) return;
+      
+      const currentTime = moment().unix();
+      chartRef.current.timeScale().fitContent();
+      
+      // Resize again after fitContent to ensure correct rendering
+      if (chartContainerRef.current) {
+        const containerWidth = chartContainerRef.current.clientWidth;
+        const containerHeight = chartContainerRef.current.clientHeight;
+        if (containerWidth > 0 && containerHeight > 0) {
+          chartRef.current.resize(containerWidth, containerHeight);
+        }
+      }
+    });
     
     // Ensure we don't show future data
     const visibleRange = chartRef.current.timeScale().getVisibleRange();

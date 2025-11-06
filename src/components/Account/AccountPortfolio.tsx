@@ -428,7 +428,18 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       const currentTime = moment().unix();
       chartRef.current.timeScale().fitContent();
       
-      // Resize again after fitContent to ensure correct rendering
+      // Ensure we don't show future data
+      const visibleRange = chartRef.current.timeScale().getVisibleRange();
+      if (visibleRange && visibleRange.to > currentTime) {
+        if (visibleRange.from != null && typeof visibleRange.from === 'number') {
+          chartRef.current.timeScale().setVisibleRange({
+            from: visibleRange.from,
+            to: currentTime,
+          });
+        }
+      }
+      
+      // Resize again after fitContent and visible range adjustment to ensure correct rendering
       if (chartContainerRef.current) {
         const containerWidth = chartContainerRef.current.clientWidth;
         const containerHeight = chartContainerRef.current.clientHeight;
@@ -437,17 +448,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         }
       }
     });
-    
-    // Ensure we don't show future data
-    const visibleRange = chartRef.current.timeScale().getVisibleRange();
-    if (visibleRange && visibleRange.to > currentTime) {
-      if (visibleRange.from != null && typeof visibleRange.from === 'number') {
-        chartRef.current.timeScale().setVisibleRange({
-          from: visibleRange.from,
-          to: currentTime,
-        });
-      }
-    }
   }, [portfolioData, convertTo, selectedTimeRange, currentCurrencyInfo]);
 
   if (isError) {

@@ -17,6 +17,7 @@ import ReplyToFeedItem from "../components/ReplyToFeedItem";
 import TokenCreatedFeedItem from "../components/TokenCreatedFeedItem";
 import TokenCreatedActivityItem from "../components/TokenCreatedActivityItem";
 import { PostApiResponse } from "../types";
+import Head from "../../../seo/Head";
 
 // Custom hook
 function useUrlQuery() {
@@ -27,11 +28,56 @@ export default function FeedList({
   standalone = true,
 }: { standalone?: boolean } = {}) {
   const navigate = useNavigate();
+  const location = useLocation();
   const urlQuery = useUrlQuery();
   const { chainNames } = useWallet();
   const queryClient = useQueryClient();
   const ACTIVITY_PAGE_SIZE = 50;
   const createPostRef = useRef<CreatePostRef>(null);
+  
+  // Only render homepage SEO meta when actually on the homepage
+  const isHomepage = location.pathname === "/";
+
+  // Check if banner is dismissed (same logic as HeroBannerCarousel)
+  const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  useEffect(() => {
+    const DISMISS_KEY = "hero_banner_dismissed_until";
+    const checkBannerDismissed = () => {
+      try {
+        const until = localStorage.getItem(DISMISS_KEY);
+        if (!until) {
+          setIsBannerDismissed(false);
+          return;
+        }
+        const ts = Date.parse(until);
+        setIsBannerDismissed(!Number.isNaN(ts) && ts > Date.now());
+      } catch {
+        setIsBannerDismissed(false);
+      }
+    };
+
+    // Check on mount
+    checkBannerDismissed();
+
+    // Listen for custom event when banner is dismissed
+    const handleBannerDismissed = () => {
+      checkBannerDismissed();
+    };
+    window.addEventListener("heroBannerDismissed", handleBannerDismissed);
+
+    // Also listen for storage changes (for cross-tab scenarios)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === DISMISS_KEY) {
+        checkBannerDismissed();
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("heroBannerDismissed", handleBannerDismissed);
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   // Comment counts are now provided directly by the API in post.total_comments
 
@@ -429,7 +475,14 @@ export default function FeedList({
 
   const content = (
     <div className="w-full">
-      {!standalone && (
+      {isHomepage && (
+        <Head
+          title="Superhero.com – The All‑in‑One Social + Crypto App"
+          description="Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network."
+          canonicalPath="/"
+        />
+      )}
+      {!standalone && !isBannerDismissed && (
         <div className="mb-3 md:mb-4">
           <HeroBannerCarousel 
             onStartPosting={() => createPostRef.current?.focus()} 

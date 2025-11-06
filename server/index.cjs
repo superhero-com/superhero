@@ -33,9 +33,19 @@ async function buildMeta(pathname, origin){
   // Root
   if (pathname === '/' || pathname === '') {
     return {
-      title: 'Superhero – Crypto Social Network: Posts, Tokens, Governance',
+      title: 'Superhero.com – The All‑in‑One Social + Crypto App',
       description: 'Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.',
       canonical: `${origin}/`,
+      ogImage: `${origin}/og-default.png`,
+    };
+  }
+
+  // Trends page
+  if (pathname === '/trends' || pathname === '/trends/tokens') {
+    return {
+      title: 'Superhero.com – Tokenize Trends. Own the Hype. Build Communities.',
+      description: 'Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero.',
+      canonical: `${origin}/trends/tokens`,
       ogImage: `${origin}/og-default.png`,
     };
   }
@@ -94,10 +104,10 @@ async function buildMeta(pathname, origin){
         const symbol = data?.symbol || data?.name || address;
         const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
         const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo), origin);
-        return { title: `${symbol} – Token on Superhero`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
+        return { title: `Buy #${symbol} on Superhero.com`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
       }
     } catch {}
-    return { title: `${address} – Token on Superhero`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };
+    return { title: `Buy #${address} on Superhero.com`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };
   }
 
   // Legacy token route: /trending/tokens/:name → canonical to /trends/tokens/:name
@@ -112,10 +122,10 @@ async function buildMeta(pathname, origin){
         const symbol = data?.symbol || data?.name || address;
         const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
         const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo), origin);
-        return { title: `${symbol} – Token on Superhero`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
+        return { title: `Buy #${symbol} on Superhero.com`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
       }
     } catch {}
-    return { title: `${address} – Token on Superhero`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };
+    return { title: `Buy #${address} on Superhero.com`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };
   }
 
   // Trends accounts

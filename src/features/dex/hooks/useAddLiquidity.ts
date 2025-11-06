@@ -293,7 +293,7 @@ export function useAddLiquidity() {
           address,
           minimumLiquidity,
           BigInt(Date.now() + params.deadlineMins * 60 * 1000),
-          { amount: amountAeDesired.toString() }
+          { amount: amountAeDesired.toString(), omitUnknown: true }
         );
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       } else {
@@ -349,6 +349,7 @@ export function useAddLiquidity() {
           address,
           minimumLiquidity,
           BigInt(Date.now() + params.deadlineMins * 60 * 1000),
+          { omitUnknown: true }
         );
         console.log('[useAddLiquidity] add_liquidity res::', providedLiquidity);
         console.log('[useAddLiquidity] add_liquidity res::', res);
@@ -526,7 +527,8 @@ export function useAddLiquidity() {
           minTokenAmount,
           minAeAmount,
           address,
-          BigInt(Date.now() + params.deadlineMins * 60 * 1000)
+          BigInt(Date.now() + params.deadlineMins * 60 * 1000),
+          { omitUnknown: true }
         );
 
         console.log('[useAddLiquidity] remove_liquidity_ae res::', res);
@@ -574,7 +576,8 @@ export function useAddLiquidity() {
           minAmountA,
           minAmountB,
           address,
-          BigInt(Date.now() + params.deadlineMins * 60 * 1000)
+          BigInt(Date.now() + params.deadlineMins * 60 * 1000),
+          { omitUnknown: true }
         );
         
         console.log('[useAddLiquidity] remove_liquidity res::', res);

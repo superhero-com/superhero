@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Head from "../../../seo/Head";
 import { DexTokenDto, PairDto } from "../../../api/generated";
 import SwapForm from "../../../components/dex/core/SwapForm";
 import RecentActivity from "../../../components/dex/supporting/RecentActivity";
@@ -10,6 +11,11 @@ export default function DexSwap() {
   // todo get selected pool address3
   return (
     <div className="mx-auto md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
+      <Head
+        title="Swap AE and tokens – Superhero DEX"
+        description="Trustless swapping on Superhero DEX with live charts and recent activity."
+        canonicalPath="/defi/swap"
+      />
       {/* Main Content - unified layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[480px_minmax(560px,1fr)] gap-6 md:gap-8 items-start w-full">
         {/* Left card (Swap) */}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
 
 interface CopyTextProps {
@@ -8,6 +9,7 @@ interface CopyTextProps {
 }
 
 export default function CopyText({ value, className = '', bordered = false }: CopyTextProps) {
+  const { t } = useTranslation('common');
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -46,11 +48,11 @@ export default function CopyText({ value, className = '', bordered = false }: Co
       >
         {copied ? (
           <span className="flex items-center gap-1">
-            ✓ Copied
+            ✓ {t('buttons.copied')}
           </span>
         ) : (
           <span className="flex items-center gap-1">
-            📋 Copy
+            📋 {t('buttons.copy')}
           </span>
         )}
       </button>

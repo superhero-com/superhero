@@ -3,6 +3,7 @@ import { createChart, IChartApi, ISeriesApi, LineData, HistogramData, ColorType,
 import AeButton from '../../../../components/AeButton';
 import { getGraph } from '../../../../libs/dexBackend';
 import { AeCard } from '../../../../components/ui/ae-card';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 
 interface ChartType {
   type: string;
@@ -200,14 +201,6 @@ export default function TokenPricePerformance({
     }
 
     if (formattedData.length > 0) {
-      console.log('[TokenPricePerformance] Setting chart data:', {
-        originalLength: rawData.length,
-        filteredLength: formattedData.length,
-        firstTime: formattedData[0]?.time,
-        lastTime: formattedData[formattedData.length - 1]?.time,
-        sampleData: formattedData.slice(0, 3)
-      });
-      
       seriesRef.current.setData(formattedData);
       
       // Fit content
@@ -233,13 +226,6 @@ export default function TokenPricePerformance({
       }
 
       const result = await getGraph(options);
-
-      console.log("[TokenPricePerformance] getGraph result", JSON.stringify({
-        result,
-        options,
-        pairId,
-        tokenId,
-      }, null, 2));
       
       if (result) {
         setChartData({
@@ -295,25 +281,21 @@ export default function TokenPricePerformance({
             <label htmlFor="chart-select" className="sr-only">
               Select Chart Type
             </label>
-            <select
-              id="chart-select"
+            <AppSelect
               value={selectedChart.type}
-              onChange={(e) => {
-                const chartType = availableGraphTypes.find(c => c.type === e.target.value);
+              onValueChange={(v) => {
+                const chartType = availableGraphTypes.find(c => c.type === v);
                 if (chartType) handleChartTypeChange(chartType);
               }}
-              className="block bg-transparent text-foreground outline-0"
+              triggerClassName="block bg-transparent text-foreground outline-0"
+              contentClassName="bg-background border-border"
             >
               {availableGraphTypes.map((chartType) => (
-                <option 
-                  key={chartType.type} 
-                  value={chartType.type} 
-                  className="bg-background"
-                >
+                <AppSelectItem key={chartType.type} value={chartType.type}>
                   {chartType.text}
-                </option>
+                </AppSelectItem>
               ))}
-            </select>
+            </AppSelect>
           </div>
         </div>
       )}

@@ -1,7 +1,8 @@
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useAppKitProvider } from '@reown/appkit/react';
 import BigNumber from 'bignumber.js';
 import { BrowserProvider, Eip1193Provider } from 'ethers';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useToast } from '@/components/ToastProvider';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,8 @@ import { Asset, BRIDGE_AETERNITY_ACTION_TYPE, BRIDGE_ETH_ACTION_TYPE, BRIDGE_TOK
 import { addTokenToEthereumWallet } from '../utils/addTokenToEthereumWallet';
 import { getTxUrl } from '../utils/getTxUrl';
 import { Logger } from '../utils/logger';
+import { FromTo } from '@/features/shared/components';
+import { Decimal } from '@/libs/decimal';
 
 const checkEvmNetworkHasEnoughBalance = async (asset: any, normalizedAmount: BigNumber, walletProvider: Eip1193Provider) => {
     if (asset.symbol === 'WAE') return true;
@@ -135,6 +138,7 @@ const getTokenDisplayName = (asset: any, direction: Direction) => {
 };
 
 export function AeEthBridge() {
+    const { t } = useTranslation('dex');
     const { push: showToast } = useToast();
     const { asset, assets, direction, updateAsset, updateDirection, isMainnet } = useBridge();
     const { sdk, activeAccount } = useAeSdk();
@@ -174,15 +178,6 @@ export function AeEthBridge() {
             return aeBalances[asset.symbol] || '0';
         }
     }, [asset, direction, aeBalances, ethBalances]);
-
-    // Helper function to get current balance for validation
-    const getCurrentBalance = useCallback((assetSymbol: string, direction: Direction) => {
-        if (direction === Direction.EthereumToAeternity) {
-            return ethBalances[assetSymbol] || '0';
-        } else {
-            return aeBalances[assetSymbol] || '0';
-        }
-    }, [aeBalances, ethBalances]);
 
     // Fetch Ethereum accounts
     const fetchEthereumAccounts = useCallback(async () => {
@@ -292,7 +287,7 @@ export function AeEthBridge() {
     const bridgeToAeternity = useCallback(async () => {
         try {
             if (!walletProvider) {
-                return showSnackMessage('Please connect your Ethereum wallet first');
+                return showSnackMessage(t('bridge.connectEthereumWalletFirst'));
             }
 
             const ethersProvider = new BrowserProvider(walletProvider, {
@@ -313,7 +308,7 @@ export function AeEthBridge() {
             const expectedChainId = BridgeConstants.ethereum.ethChainId;
             if (network.chainId.toString() !== parseInt(expectedChainId, 16).toString()) {
                 return showSnackMessage(
-                    `Please switch to ${BridgeConstants.isMainnet ? 'Ethereum Mainnet' : 'Sepolia Testnet'}`
+                    t('bridge.switchNetwork', { network: BridgeConstants.isMainnet ? t('bridge.networks.ethereum') + ' Mainnet' : t('bridge.networks.ethereumSepoliaTestnet') })
                 );
             }
 
@@ -329,10 +324,10 @@ export function AeEthBridge() {
             );
 
             if (!isValidDestination || !destination?.startsWith('ak_')) {
-                return showSnackMessage('Invalid destination!');
+                return showSnackMessage(t('bridge.invalidDestination'));
             }
             if (!normalizedAmount || normalizedAmount.isLessThanOrEqualTo(0)) {
-                return showSnackMessage('Invalid amount!');
+                return showSnackMessage(t('bridge.invalidAmount'));
             }
 
             Logger.log('Bridge params:', {
@@ -348,7 +343,7 @@ export function AeEthBridge() {
             const hasUserBalance = checkUserHasEnoughBalance(asset, normalizedAmount, direction, aeBalances, ethBalances);
             if (!hasUserBalance) {
                 setButtonBusy(false);
-                return showSnackMessage(`Insufficient ${asset.symbol} balance to complete this transaction.`);
+                return showSnackMessage(t('bridge.insufficientBalanceBridge', { symbol: asset.symbol }));
             }
 
             let action_type = BRIDGE_TOKEN_ACTION_TYPE;
@@ -363,7 +358,7 @@ export function AeEthBridge() {
             } else {
                 try {
                     setConfirming(true);
-                    setConfirmingMsg('Checking token allowance...');
+                    setConfirmingMsg(t('bridge.checkingTokenAllowance'));
                     Logger.log('Checking allowance for asset:', asset.ethAddress);
                     Logger.log('Signer address:', signerAddress);
                     Logger.log('Bridge address:', BridgeConstants.ethereum.bridge_address);
@@ -423,7 +418,7 @@ export function AeEthBridge() {
                     const requiredAmount = BigInt(normalizedAmount.toString());
 
                     if (allowanceBigInt < requiredAmount) {
-                        setConfirmingMsg('Please confirm the token approval in your wallet...');
+                        setConfirmingMsg(t('bridge.confirmTokenApproval'));
                         Logger.log('Approving allowance:', normalizedAmount.toString());
 
                         const approveResult = await assetContract.approve(
@@ -432,22 +427,22 @@ export function AeEthBridge() {
                         );
 
                         allowanceTxHash = approveResult.hash;
-                        showTransactionSubmittedMessage('Allowance transaction submitted.', approveResult.hash);
+                        showTransactionSubmittedMessage(t('bridge.allowanceTransactionSubmitted'), approveResult.hash);
 
-                        setConfirmingMsg('Waiting for approval confirmation...');
+                        setConfirmingMsg(t('bridge.waitingForApprovalConfirmation'));
                         Logger.log('Waiting for approval confirmation...');
                         await approveResult.wait(1);
-                        setConfirmingMsg('Approval confirmed!');
+                        setConfirmingMsg(t('bridge.approvalConfirmed'));
                         Logger.log('Approval confirmed');
                     }
                 } catch (e: any) {
                     Logger.error('Allowance/Approval error:', e);
-                    let errorMsg = e.message || 'Failed to check or approve token allowance';
+                    let errorMsg = e.message || t('bridge.failedToCheckOrApproveAllowance');
 
                     // Check if it's a timeout or network error - offer fallback
                     if (e.message?.includes('timeout') || e.message?.includes('network') || e.code === 'NETWORK_ERROR') {
                         Logger.warn('Allowance check failed, proceeding with approval as fallback');
-                        setConfirmingMsg('Allowance check failed, proceeding with approval...');
+                        setConfirmingMsg(t('bridge.allowanceCheckFailed'));
 
                         try {
                             // Skip allowance check and go directly to approval
@@ -457,17 +452,25 @@ export function AeEthBridge() {
                             );
 
                             allowanceTxHash = approveResult.hash;
-                            showTransactionSubmittedMessage('Approval transaction submitted.', approveResult.hash);
+                            showTransactionSubmittedMessage(t('bridge.approvalTransactionSubmitted'), approveResult.hash);
 
-                            setConfirmingMsg('Waiting for approval confirmation...');
+                            setConfirmingMsg(t('bridge.waitingForApprovalConfirmation'));
                             Logger.log('Waiting for approval confirmation...');
                             await approveResult.wait(1);
-                            setConfirmingMsg('Approval confirmed!');
+                            setConfirmingMsg(t('bridge.approvalConfirmed'));
                             Logger.log('Approval confirmed');
 
                         } catch (approvalError: any) {
                             Logger.error('Approval also failed:', approvalError);
-                            errorMsg = 'Failed to approve token. Please check your network connection and try again.';
+                            if (approvalError.message?.includes('insufficient funds') || approvalError.message?.includes('gas')) {
+                                errorMsg = t('bridge.insufficientEthForGas');
+                            } else if (approvalError.message?.includes('network') || approvalError.code === 'NETWORK_ERROR') {
+                                errorMsg = t('bridge.failedToConnectTokenContract');
+                            } else if (approvalError.message?.includes('user rejected') || approvalError.message?.includes('rejected by user')) {
+                                errorMsg = t('bridge.transactionRejectedByUser');
+                            } else {
+                                errorMsg = t('bridge.transactionFailedTokenRestrictions');
+                            }
                             showSnackMessage(errorMsg);
                             setButtonBusy(false);
                             setConfirming(false);
@@ -477,13 +480,13 @@ export function AeEthBridge() {
                     } else {
                         // Other errors - show specific message
                         if (e.message?.includes('insufficient funds')) {
-                            errorMsg = 'Insufficient ETH for gas fees';
+                            errorMsg = t('bridge.insufficientEthForGas');
                         } else if (e.code === 'UNPREDICTABLE_GAS_LIMIT' || e.code === 'CALL_EXCEPTION') {
-                            errorMsg = 'Failed to connect to token contract. Please check the network and try again.';
+                            errorMsg = t('bridge.failedToConnectTokenContract');
                         } else if (e.message?.includes('user rejected') || e.code === 'ACTION_REJECTED') {
-                            errorMsg = 'Transaction was rejected by user';
+                            errorMsg = t('bridge.transactionRejectedByUser');
                         } else if (e.message?.includes('execution reverted')) {
-                            errorMsg = 'Transaction failed. The token contract may have restrictions.';
+                            errorMsg = t('bridge.transactionFailedTokenRestrictions');
                         }
 
                         showSnackMessage(errorMsg);
@@ -498,9 +501,10 @@ export function AeEthBridge() {
                 }
             }
 
+            let timeout: NodeJS.Timeout;
             try {
                 setConfirming(true);
-                setConfirmingMsg('Please confirm the bridge transaction in your wallet...');
+                setConfirmingMsg(t('bridge.confirmBridgeTransaction'));
 
                 Logger.log('Calling bridge_out with:', {
                     assetAddress: asset.ethAddress,
@@ -531,10 +535,14 @@ export function AeEthBridge() {
                     bridgeTxHash: bridgeOutResult.hash,
                 });
 
-                setConfirmingMsg('Waiting for bridge confirmation...');
+                setConfirmingMsg(t('bridge.waitingForBridgeConfirmation'));
+                timeout = setTimeout(() => {
+                    setConfirmingMsg(t('bridge.waitingLongerThanExpected'));
+                }, 30000);
                 Logger.log('Waiting for bridge confirmation...');
                 await bridgeOutResult.wait(1);
-                setConfirmingMsg('Bridge transaction confirmed!');
+                clearTimeout(timeout);
+                setConfirmingMsg(t('bridge.bridgeTransactionConfirmed'));
                 Logger.log('Bridge transaction confirmed');
                 console.log('==== bridgeOutResult==', bridgeOutResult);
 
@@ -553,15 +561,16 @@ export function AeEthBridge() {
                     },
                 });
             } catch (e: any) {
+                clearTimeout(timeout);
                 Logger.error('Bridge transaction error:', e);
-                let errorMsg = e.message || 'Bridge transaction failed';
+                let errorMsg = e.message || t('bridge.genericBridgeError');
 
                 if (e.message?.includes('insufficient funds')) {
-                    errorMsg = 'Insufficient funds for transaction';
+                    errorMsg = t('bridge.insufficientFundsForTransaction');
                 } else if (e.message?.includes('user rejected')) {
-                    errorMsg = 'Transaction rejected by user';
+                    errorMsg = t('bridge.transactionRejectedByUser');
                 } else if (e.code === 'UNPREDICTABLE_GAS_LIMIT' || e.code === 'CALL_EXCEPTION') {
-                    errorMsg = 'Transaction would fail. Check token balance and network.';
+                    errorMsg = t('bridge.transactionWouldFail');
                 }
 
                 showSnackMessage(errorMsg);
@@ -580,13 +589,13 @@ export function AeEthBridge() {
 
     const bridgeToEvm = useCallback(async () => {
         if (!isValidDestination || !destination?.startsWith('0x')) {
-            return showSnackMessage('Invalid destination!');
+            return showSnackMessage(t('bridge.invalidDestination'));
         }
         if (!normalizedAmount || normalizedAmount.isLessThanOrEqualTo(0)) {
-            return showSnackMessage('Invalid amount!');
+            return showSnackMessage(t('bridge.invalidAmount'));
         }
         if (!aeternityAddress) {
-            return showSnackMessage('Aeternity wallet not connected!');
+            return showSnackMessage(t('bridge.aeternityWalletNotConnected'));
         }
 
         setButtonBusy(true);
@@ -595,21 +604,21 @@ export function AeEthBridge() {
         const hasUserBalance = checkUserHasEnoughBalance(asset, normalizedAmount, direction, aeBalances, ethBalances);
         if (!hasUserBalance) {
             setButtonBusy(false);
-            return showSnackMessage(`Insufficient ${asset.symbol} balance to complete this transaction.`);
+            return showSnackMessage(t('bridge.insufficientBalanceBridge', { symbol: asset.symbol }));
         }
 
         // Also check if bridge contract has enough balance (for liquidity)
         const hasBridgeBalance = await checkEvmNetworkHasEnoughBalance(asset, normalizedAmount, walletProvider);
         if (!hasBridgeBalance) {
             setButtonBusy(false);
-            return showSnackMessage('Ethereum bridge contract has insufficient balance to complete this transaction.');
+            return showSnackMessage(t('bridge.bridgeContractInsufficientBalance'));
         }
 
         const hasEligibleBridgeUse = await checkAeAccountHasEligibleBridgeUse(aeternityAddress);
         if (!hasEligibleBridgeUse) {
             setButtonBusy(false);
             return showSnackMessage(
-                `Only 1 transaction allowed in every ${BRIDGE_USAGE_INTERVAL_IN_HOURS} hours. Please try again later.`,
+                t('bridge.bridgeUsageLimit', { hours: BRIDGE_USAGE_INTERVAL_IN_HOURS }),
             );
         }
 
@@ -633,7 +642,7 @@ export function AeEthBridge() {
 
                 // Check and handle allowance
                 setConfirming(true);
-                setConfirmingMsg('Checking token allowance...');
+                setConfirmingMsg(t('bridge.checkingTokenAllowance'));
                 let allowance;
                 try {
                     const result = await asset_contract.allowance({
@@ -648,21 +657,21 @@ export function AeEthBridge() {
                 }
 
                 if (allowance === undefined) {
-                    setConfirmingMsg('Please confirm the token allowance in your wallet...');
+                    setConfirmingMsg(t('bridge.confirmTokenAllowance'));
                     const allowanceCall = await asset_contract.create_allowance(
                         BridgeConstants.aeternity.bridge_address.replace('ct_', 'ak_'),
                         normalizedAmount.toString(),
                     );
                     allowanceTxHash = allowanceCall.hash;
-                    showTransactionSubmittedMessage('Allowance transaction submitted.', allowanceCall.hash);
+                    showTransactionSubmittedMessage(t('bridge.allowanceTransactionSubmitted'), allowanceCall.hash);
                 } else if (normalizedAmount.isGreaterThan(allowance)) {
-                    setConfirmingMsg('Please confirm the token allowance update in your wallet...');
+                    setConfirmingMsg(t('bridge.confirmTokenAllowanceUpdate'));
                     const allowanceCall = await asset_contract.change_allowance(
                         BridgeConstants.aeternity.bridge_address.replace('ct_', 'ak_'),
                         normalizedAmount.toString(),
                     );
                     allowanceTxHash = allowanceCall.hash;
-                    showTransactionSubmittedMessage('Allowance transaction submitted.', allowanceCall.hash);
+                    showTransactionSubmittedMessage(t('bridge.allowanceTransactionSubmitted'), allowanceCall.hash);
                 }
                 setConfirming(false);
                 setConfirmingMsg('');
@@ -674,13 +683,13 @@ export function AeEthBridge() {
                 omitUnknown: true,
             });
 
-            setConfirmingMsg('Please confirm the bridge transaction in your wallet...');
+            setConfirmingMsg(t('bridge.confirmBridgeTransaction'));
             setConfirming(true);
             const bridge_out_call = await bridge_contract.bridge_out(
                 [asset.ethAddress, destination, normalizedAmount.toString(), action_type],
                 { amount: ae_amount },
             );
-            setConfirmingMsg('Bridge transaction confirmed!');
+            setConfirmingMsg(t('bridge.bridgeTransactionConfirmed'));
             setBridgeActionSummary({
                 direction,
                 asset,
@@ -715,21 +724,30 @@ export function AeEthBridge() {
         setButtonBusy(false);
     }, [asset, destination, normalizedAmount, isValidDestination, aeternityAddress, direction, sdk]);
 
-    const getDestinationTokenValue = () => {
-        if (direction === Direction.EthereumToAeternity && asset.symbol === 'WAE') {
-            return 'Native AE';
-        } else if (direction === Direction.AeternityToEthereum && asset.symbol === 'ETH') {
-            return 'Native ETH';
-        }
-
-        return (
-            (direction === Direction.EthereumToAeternity ? 'æ' : '') +
-            asset.symbol +
-            ` (${direction === Direction.EthereumToAeternity ? asset.aeAddress : asset.ethAddress})`
-        );
-    };
-
     const isBridgeActionFromAeternity = bridgeActionSummary?.direction === Direction.AeternityToEthereum;
+    const destinationTokenAddress = useMemo(() => (
+        direction === Direction.EthereumToAeternity ? asset.aeAddress : asset.ethAddress
+    ), [direction, asset]);
+    const destinationTokenLabel = useMemo(() => {
+        if (!asset) return '';
+        if (direction === Direction.EthereumToAeternity) {
+            // Destination is æternity → prefix with æ (except WAE which becomes AE)
+            return asset.symbol === 'WAE' ? 'AE' : `æ${asset.symbol}`;
+        }
+        // Destination is Ethereum → use plain symbol
+        return asset.symbol;
+    }, [asset, direction]);
+
+    const handleCopyTokenAddress = useCallback(async () => {
+        try {
+            if (destinationTokenAddress) {
+                await navigator.clipboard?.writeText(destinationTokenAddress);
+                showSnackMessage(t('bridge.tokenAddressCopied'));
+            }
+        } catch (err) {
+            showSnackMessage(t('bridge.failedToCopy'));
+        }
+    }, [destinationTokenAddress, t]);
 
     return (
         <AppKitProvider>
@@ -739,35 +757,32 @@ export function AeEthBridge() {
                         {/* Header */}
                         <div className="flex justify-between items-center mb-2 sm:mb-3 min-w-0">
                             <h2 className="text-lg sm:text-xl font-bold m-0 sh-dex-title min-w-0 flex-shrink">
-                                Bridge ETH ⇆ AE
-
+                                {t('bridge.title')}
                             </h2>
 
                             <div className="text-xs text-white/60 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-[10px] transition-all duration-300 ease-out font-medium flex-shrink-0">
-                                {direction === Direction.AeternityToEthereum ? 'AE → ETH' : 'ETH → AE'}
+                                {direction === Direction.AeternityToEthereum ? t('bridge.direction.aeToEth') : t('bridge.direction.ethToAe')}
                             </div>
                         </div>
 
                         {/* Description */}
                         <div className="mb-4 sm:mb-5">
                             <p className="m-0 text-sm text-white/60 leading-relaxed">
-                                The Bridge enables secure transfers of tokens and native assets between Ethereum
-                                and æternity. It supports popular ERC‑20/AEX‑9 tokens as well as native ETH and AE.
-                                Choose a direction below, connect your wallets, and bridge in minutes.
+                                {t('bridge.description')}
                             </p>
                         </div>
 
                         {/* Mainnet Warning */}
                         {!isMainnet && (
                             <div className="mb-4 text-xs text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-xl px-3 py-2.5">
-                                ⚠️ Configured for Ethereum Mainnet. Make sure your wallet is on Mainnet.
+                                {t('bridge.mainnetWarning')}
                             </div>
                         )}
 
                         {/* Network & Token Selection */}
                         <div className='mb-4'>
                             <label className="text-xs text-white/60 font-medium uppercase tracking-wider block mb-2">
-                                From Network
+                                {t('bridge.fromNetwork')}
                             </label>
                             <Select value={direction} onValueChange={handleDirectionChange}>
                                 <SelectTrigger className="bg-white/[0.05] border-white/10 rounded-xl h-10">
@@ -775,10 +790,10 @@ export function AeEthBridge() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value={Direction.AeternityToEthereum}>
-                                        æternity {!isMainnet && 'Testnet'}
+                                        {t('bridge.networks.aeternity')} {!isMainnet && t('bridge.networks.aeternityTestnet')}
                                     </SelectItem>
                                     <SelectItem value={Direction.EthereumToAeternity}>
-                                        Ethereum {!isMainnet && 'Sepolia Testnet'}
+                                        {t('bridge.networks.ethereum')} {!isMainnet && t('bridge.networks.ethereumSepoliaTestnet')}
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
@@ -789,7 +804,7 @@ export function AeEthBridge() {
                             <div className="mb-4">
                                 <div className="flex justify-between items-center mb-2">
                                     <label className="text-xs text-white/60 font-medium uppercase tracking-wider">
-                                        Ethereum Account
+                                        {t('bridge.ethereumAccount')}
                                     </label>
                                     {ethereumAccounts.length > 0 && (
                                         <div className="flex items-center gap-2">
@@ -797,7 +812,7 @@ export function AeEthBridge() {
                                                 onClick={fetchEthereumAccounts}
                                                 className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa] transition-colors"
                                             >
-                                                Refresh
+                                                {t('bridge.refresh')}
                                             </button>
                                             <ConnectEthereumWallet
                                                 onConnected={handleEthereumWalletConnected}
@@ -845,39 +860,24 @@ export function AeEthBridge() {
                         )}
 
 
-                        {/* Amount Input */}
-                        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 backdrop-blur-[10px]">
-                            <div className="flex justify-between items-center mb-2 min-w-0">
-                                <label className="text-xs text-white/60 font-medium uppercase tracking-wider flex-shrink-0">
-                                    Amount
-                                </label>
-                                {loadingBalance ? (
-                                    <span className="text-xs text-white/40">Loading balance...</span>
-                                ) : tokenBalance && parseFloat(tokenBalance) > 0 ? (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs text-white/60">
-                                            Balance: {tokenBalance}
-                                        </span>
-                                        <button
-                                            onClick={() => setAmount(tokenBalance)}
-                                            className="text-[10px] text-[#4ecdc4] bg-transparent border border-[#4ecdc4] rounded px-1.5 py-0.5 cursor-pointer uppercase tracking-wider hover:bg-[#4ecdc4]/10 transition-all duration-300 flex-shrink-0"
-                                        >
-                                            MAX
-                                        </button>
-                                    </div>
-                                ) : null}
-                            </div>
-
-                            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                                <input
-                                    type="number"
-                                    placeholder={`0.0`}
-                                    value={amount}
-                                    onChange={(e) => setAmount(e.target.value)}
-                                    step="0.000001"
-                                    className="flex-1 bg-transparent border-none text-white text-xl sm:text-2xl font-semibold outline-none min-w-0 overflow-hidden shadow-none"
-                                />
-
+                        {/* From/To Amount (visuals only) */}
+                        <FromTo
+                            fromLabel={t('bridge.from')}
+                            toLabel={t('bridge.to')}
+                            inputType="number"
+                            inputStep="0.000001"
+                            fromAmount={amount}
+                            onChangeFromAmount={setAmount}
+                            fromBalanceText={
+                                loadingBalance
+                                    ? t('bridge.loadingBalance')
+                                    : selectedEthAccount
+                                        ? t('bridge.balance', { balance: Decimal.from(tokenBalance).prettify() })
+                                        : null
+                            }
+                            onMaxClick={tokenBalance ? () => setAmount(tokenBalance) : undefined}
+                            maxDisabled={false}
+                            fromTokenNode={(
                                 <BridgeTokenSelector
                                     selected={asset}
                                     onSelect={handleAssetChange}
@@ -887,34 +887,42 @@ export function AeEthBridge() {
                                     ethBalances={ethBalances}
                                     loadingBalances={loadingBalance}
                                 />
-                                {/* <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 rounded-xl border border-white/10 flex-shrink-0">
-                                    <img
-                                        src={asset.icon}
-                                        alt={asset.symbol}
-                                        className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover"
-                                    />
-                                    <span className="text-white text-sm sm:text-base font-semibold">
-                                        {getTokenDisplayName(asset, direction)}
-                                    </span>
-                                </div> */}
-                            </div>
-                        </div>
-
-                        {/* Destination Token Info */}
-                        <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 backdrop-blur-[10px]">
-                            <label className="text-xs text-white/60 font-medium uppercase tracking-wider block mb-2">
-                                You'll Receive
-                            </label>
-                            <div className="text-white overflow-hidden text-ellipsis" style={{ fontSize: '10px' }}>
-                                {getDestinationTokenValue()}
-                            </div>
-                        </div>
+                            )}
+                            toValue={amount || '0.0'}
+                            toLoading={false}
+                            toTokenNode={(
+                                <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                    <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/10 rounded-xl border border-white/10">
+                                        <span className="text-white text-sm sm:text-base font-semibold">
+                                            {destinationTokenLabel}
+                                        </span>
+                                    </div>
+                                    {destinationTokenAddress && (
+                                        <div className="flex items-center gap-2 max-w-[200px]">
+                                            <span
+                                                className="font-mono text-[10px] text-white/60 truncate"
+                                                title={destinationTokenAddress}
+                                            >
+                                                {destinationTokenAddress}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={handleCopyTokenAddress}
+                                                className="text-[10px] text-[#4ecdc4] hover:text-[#3ab3aa]"
+                                            >
+                                                {t('copy', { ns: 'common' })}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        />
 
                         {/* Destination Address */}
                         <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-5 backdrop-blur-[10px]">
                             <div className="flex justify-between items-center mb-2">
                                 <label className="text-xs text-white/60 font-medium uppercase tracking-wider block mb-2">
-                                    Destination {direction === Direction.EthereumToAeternity ? 'æternity' : 'Ethereum'} Address
+                                    {t('bridge.destinationAddressLabel', { network: direction === Direction.EthereumToAeternity ? t('bridge.networks.aeternity') : t('bridge.networks.ethereum') })}
                                 </label>
                                 {(activeAccount && direction === Direction.EthereumToAeternity) && (
                                     <button
@@ -931,7 +939,7 @@ export function AeEthBridge() {
                                         }}
                                         className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa] bg-[#4ecdc4]/10 hover:bg-[#4ecdc4]/20 border border-[#4ecdc4]/30 hover:border-[#4ecdc4]/50 rounded-lg px-2 py-1 transition-all duration-200 font-medium"
                                     >
-                                        use connected account
+                                        {t('bridge.useConnectedAccount')}
                                     </button>
                                 )}
                             </div>
@@ -944,7 +952,7 @@ export function AeEthBridge() {
                                     }`}
                             />
                             {!isValidDestination && destination && (
-                                <div className="text-red-400 text-xs mt-1">Invalid address format</div>
+                                <div className="text-red-400 text-xs mt-1">{t('bridge.invalidAddressFormat')}</div>
                             )}
                         </div>
 
@@ -1014,11 +1022,11 @@ export function AeEthBridge() {
                                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                                 {confirming
                                                     ? (confirmingMsg === 'Approving allowance' || confirmingMsg === 'Creating allowance' || confirmingMsg === 'Updating allowance'
-                                                        ? 'Approving...'
-                                                        : 'Bridging...')
-                                                    : 'Processing...'}
+                                                        ? t('bridge.approving')
+                                                        : t('bridge.bridging'))
+                                                    : t('bridge.processing')}
                                             </div>
-                                        ) : `Bridge to ${direction === Direction.AeternityToEthereum ? 'Ethereum' : 'æternity'}`}
+                                        ) : t('bridge.bridgeTo', { network: direction === Direction.AeternityToEthereum ? t('bridge.networks.ethereum') : t('bridge.networks.aeternity') })}
                                     </button>
                                 )
                             }
@@ -1052,7 +1060,7 @@ export function AeEthBridge() {
                                 <div className="flex justify-between items-center text-sm">
                                     <span className="text-white/60">Direction:</span>
                                     <span className="text-white font-semibold">
-                                        {isBridgeActionFromAeternity ? 'æternity → Ethereum' : 'Ethereum → æternity'}
+                                        {isBridgeActionFromAeternity ? t('bridge.bridgeDirection.aeternityToEthereum') : t('bridge.bridgeDirection.ethereumToAeternity')}
                                     </span>
                                 </div>
 

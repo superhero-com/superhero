@@ -212,7 +212,7 @@ export default function WalletOverviewCard({
             <button
               type="button"
               className="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 bg-white/10 text-white hover:bg-white/20 border border-white/20"
-              onClick={() => window.open(`https://www.aescan.io/account/${activeAccount}`, '_blank')}
+              onClick={() => window.open(`https://www.aescan.io/accounts/${activeAccount}`, '_blank')}
             >
               🔗 Open on aeScan
             </button>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
@@ -23,6 +24,7 @@ export default function ProfileEditModal({
   address?: string;
   initialBio?: string;
 }) {
+  const { t } = useTranslation('common');
   const { getProfile, canEdit } = useProfile(address);
   const { push } = useToast();
   const { sdk, activeAccount } = useAeSdk();
@@ -90,7 +92,7 @@ export default function ProfileEditModal({
       const text = (bio || "").slice(0, BIO_CHAR_LIMIT).trim();
       if (!text) {
         // Do not enable loading state if validation fails
-        push(<div style={{ color: "#ffb3b3" }}>Bio cannot be empty</div>);
+        push(<div style={{ color: "#ffb3b3" }}>{t('messages.bioCannotBeEmpty')}</div>);
         return;
       }
       setLoading(true);
@@ -110,12 +112,12 @@ export default function ProfileEditModal({
         });
         window.dispatchEvent(evt);
       } catch {}
-      push(<div>Bio update submitted. Waiting for on-chain confirmation…</div>);
+      push(<div>{t('messages.bioUpdateSubmitted')}</div>);
       onClose();
     } catch (e: any) {
       push(
         <div style={{ color: "#ffb3b3" }}>
-          {e?.message || "Failed to update profile"}
+          {e?.message || t('messages.failedToUpdateProfile')}
         </div>
       );
     } finally {
@@ -127,11 +129,11 @@ export default function ProfileEditModal({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-md mx-auto bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] shadow-[var(--glass-shadow)]">
         <DialogHeader>
-          <DialogTitle className="text-white">Edit Profile</DialogTitle>
+          <DialogTitle className="text-white">{t('titles.editProfile')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label className="text-white/80">Bio</Label>
+            <Label className="text-white/80">{t('labels.bio')}</Label>
             <Textarea
               ref={textareaRef as any}
               value={bio}
@@ -148,7 +150,7 @@ export default function ProfileEditModal({
                   try { ta.setSelectionRange(pos, pos); } catch {}
                 });
               }}
-              placeholder="Tell the world about you"
+              placeholder={t('placeholders.bio')}
               className="mt-1 bg-white/7 border border-white/14 text-white rounded-xl focus:border-[#4ecdc4] focus:outline-none"
               maxLength={BIO_CHAR_LIMIT}
             />
@@ -157,10 +159,10 @@ export default function ProfileEditModal({
           {/* Avatar editing temporarily disabled; keep existing avatar on save */}
           <div className="flex gap-2 justify-end">
             <Button variant="ghost" onClick={onClose} disabled={loading}>
-              Cancel
+              {t('buttons.cancel')}
             </Button>
             <Button onClick={onSave} disabled={loading || !canEdit}>
-              {loading ? "Posting…" : "Post on-chain"}
+              {loading ? t('messages.posting') : t('buttons.postOnChain')}
             </Button>
           </div>
         </div>

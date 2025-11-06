@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 import { Button } from '@/components/ui/button';
 import { Logger } from '../utils/logger';
@@ -18,6 +19,7 @@ export default function ConnectEthereumWallet({
     disabled = false,
     className = ''
 }: ConnectEthereumWalletProps) {
+    const { t } = useTranslation('dex');
     const { open } = useAppKit();
     const { address: ethereumAddress } = useAppKitAccount();
     const { disconnect } = useDisconnect();
@@ -65,7 +67,7 @@ export default function ConnectEthereumWallet({
                     disabled ? 'opacity-50 cursor-not-allowed' : ''
                 } ${className}`}
             >
-                Disconnect
+                {t('common:buttons.disconnect')}
             </button>
         );
     }
@@ -80,7 +82,7 @@ export default function ConnectEthereumWallet({
                     : 'bg-black hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0'
             } ${className}`}
         >
-            Connect Ethereum Wallet
+            {t('bridge.connectEthereumWallet')}
         </Button>
     );
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import AeButton from '../AeButton';
 
 interface MobileTrendingControlsProps {
@@ -69,17 +70,18 @@ export default function MobileTrendingControls({
           <label className="text-xs font-semibold text-[var(--light-font-color)] uppercase tracking-wider sm:text-[11px]">
             Sort by
           </label>
-          <select
+          <AppSelect
             value={orderBy}
-            onChange={(e) => onOrderByChange(e.target.value)}
-            className="px-3 py-2.5 border border-white/20 rounded-lg bg-white/5 text-[var(--standard-font-color)] text-sm cursor-pointer transition-all duration-200 focus:outline-none focus:border-[var(--custom-links-color)] focus:shadow-[0_0_0_2px_rgba(0,255,157,0.2)] sm:px-2.5 sm:py-2 sm:text-xs"
+            onValueChange={(v) => onOrderByChange(v)}
+            triggerClassName="px-3 py-2.5 border border-white/20 rounded-lg bg-white/5 text-[var(--standard-font-color)] text-sm cursor-pointer transition-all duration-200 focus:outline-none sm:px-2.5 sm:py-2 sm:text-xs"
+            contentClassName="bg-[var(--secondary-color)] border-white/20"
           >
-            <option value="trending_score" className="bg-[var(--secondary-color)] text-[var(--standard-font-color)]">Hot</option>
-            <option value="market_cap" className="bg-[var(--secondary-color)] text-[var(--standard-font-color)]">Market Cap</option>
-            <option value="newest" className="bg-[var(--secondary-color)] text-[var(--standard-font-color)]">Newest</option>
-            <option value="oldest" className="bg-[var(--secondary-color)] text-[var(--standard-font-color)]">Oldest</option>
-            <option value="holders_count" className="bg-[var(--secondary-color)] text-[var(--standard-font-color)]">Holders</option>
-          </select>
+            <AppSelectItem value="trending_score">Hot</AppSelectItem>
+            <AppSelectItem value="market_cap">Market Cap</AppSelectItem>
+            <AppSelectItem value="newest">Newest</AppSelectItem>
+            <AppSelectItem value="oldest">Oldest</AppSelectItem>
+            <AppSelectItem value="holders_count">Holders</AppSelectItem>
+          </AppSelect>
         </div>
 
         <div className="flex flex-col gap-2">

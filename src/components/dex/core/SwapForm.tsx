@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { DexPairService, DexService, DexTokenDto, PairDto } from '../../../api/generated';
 import DexSettings from '../../../features/dex/components/DexSettings';
 import { DEX_ADDRESSES } from '../../../libs/dex';
@@ -26,6 +27,7 @@ export interface SwapFormProps {
 }
 
 export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFormProps) {
+  const { t } = useTranslation('dex');
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
   const { activeNetwork } = useAeSdk();
@@ -356,26 +358,26 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-xl font-bold m-0 sh-dex-title">
-          Swap Tokens
+          {t('swap.title')}
         </h2>
 
-        <DexSettings title="Swap Settings">
+        <DexSettings title={t('swap.swapSettings')}>
           <button
-            aria-label="open-settings"
+            aria-label={t('labels.openSettings', { ns: 'common' })}
             className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
           >
-            ⚙️ Settings
+            ⚙️ {t('swap.settings')}
           </button>
         </DexSettings>
       </div>
       <p className="m-0 mb-4 text-sm text-white/60 leading-relaxed">
-        Swap AEX-9 tokens on the æternity blockchain securely and efficiently.
+        {t('swap.description')}
       </p>
 
       {/* Token Input From */}
       <div className="mb-2">
         <TokenInput
-          label="From"
+          label={t('swap.from')}
           token={tokenIn}
           skipToken={tokenOut}
           amount={amountIn}
@@ -406,10 +408,10 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       {/* Token Input To */}
       <div className="mb-5">
         <TokenInput
-          label="To"
+          label={t('swap.to')}
           token={tokenOut}
           skipToken={tokenIn}
-          amount={quoteLoading ? 'Quoting…' : amountOut}
+          amount={quoteLoading ? t('swap.quoting') : amountOut}
           balance={balances.out}
           onTokenChange={setTokenOut}
           onAmountChange={(amount) => {
@@ -454,7 +456,11 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       {/* Insufficient Balance Warning */}
       {hasInsufficientBalance && (
         <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
-          Insufficient {tokenIn?.symbol} balance. You need {Decimal.from(amountIn || '0').prettify()} but only have {balances.in ? Decimal.from(balances.in).prettify() : '0'}
+          {t('swap.insufficientBalance', { 
+            symbol: tokenIn?.symbol || '', 
+            needed: Decimal.from(amountIn || '0').prettify(), 
+            have: balances.in ? Decimal.from(balances.in).prettify() : '0' 
+          })}
         </div>
       )}
 
@@ -472,13 +478,13 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
           {swapLoading ? (
             <div className="flex items-center justify-center gap-2">
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              Confirm in wallet…
+              {t('swap.confirmInWallet')}
             </div>
-          ) : 'Swap Tokens'}
+          ) : t('swap.swapTokens')}
         </button>
       ) : (
         <ConnectWalletButton
-          label="CONNECT WALLET"
+          label={t('swap.connectWallet')}
           variant="dex"
           className="text-sm w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
           block

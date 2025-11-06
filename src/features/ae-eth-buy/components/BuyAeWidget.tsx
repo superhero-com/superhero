@@ -1,6 +1,7 @@
 import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import { Eip1193Provider, formatEther } from 'ethers';
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { ConnectWalletButton } from "../../../components/ConnectWalletButton";
 import { useToast } from "../../../components/ToastProvider";
 import { CONFIG } from "../../../config";
@@ -12,6 +13,7 @@ import { ConnectEthereumWallet } from "./ConnectEthereumWallet";
 
 import { Decimal } from "@/libs/decimal";
 import { useAeSdk, useDex, useRecentActivities } from "../../../hooks";
+import { FromTo } from "@/features/shared/components";
 
 interface BuyAeWidgetProps {
   embedded?: boolean; // renders without outer card/padding for sidebars
@@ -21,6 +23,7 @@ interface BuyAeWidgetProps {
 function BuyAeWidgetContent({
   embedded = false,
 }: BuyAeWidgetProps) {
+  const { t } = useTranslation('common');
   const { activeAccount, sdk } = useAeSdk();
   const slippagePct = useDex().slippagePct;
   const deadlineMins = useDex().deadlineMins;
@@ -243,14 +246,10 @@ function BuyAeWidgetContent({
   const sectionBg = embedded
     ? "bg-transparent"
     : "bg-white/[0.05] backdrop-blur-[10px]";
-  const sectionSpacingSmall = "mb-2";
   const sectionSpacingLarge = "mb-4 sm:mb-5";
   const chipBg = embedded
     ? "bg-transparent"
     : "bg-white/[0.02] backdrop-blur-[10px]";
-  const circleBg = embedded
-    ? "bg-transparent"
-    : "bg-white/[0.08] backdrop-blur-[10px]";
 
   return (
     <div
@@ -286,94 +285,42 @@ function BuyAeWidgetContent({
         swap to AE tokens.
       </p>
 
-      {/* From Input - ETH */}
-      <div
-        className={`${sectionBase} ${sectionBg} ${sectionSpacingSmall}`}
-      >
-        <div className="flex justify-between items-center mb-2 min-w-0">
-          <label className="text-xs text-white/60 font-medium uppercase tracking-wider flex-shrink-0">
-            From
-          </label>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-xs text-white/60">
-              {ethBalance && !fetchingBalance ? `Balance: ${Decimal.from(ethBalance ?? '0').prettify()} ETH` : "Ethereum"}
-            </span>
-            <button
-              onClick={handleMaxClick}
-              disabled={fetchingBalance}
-              className={`text-[10px] text-[#4ecdc4] bg-transparent border border-[#4ecdc4] rounded px-1.5 py-0.5 cursor-pointer uppercase tracking-wider hover:bg-[#4ecdc4]/10 transition-all duration-300 flex-shrink-0 ${fetchingBalance ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {fetchingBalance ? '...' : 'MAX'}
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <input
-            type="text"
-            placeholder="0.0"
-            value={ethBridgeIn}
-            onChange={(e) => setEthBridgeIn(e.target.value)}
-            style={{
-              color: 'white',
-            }}
-            className="flex-1 !bg-transparent !bg-none ![background:none] !border-none text-white text-xl sm:text-2xl font-semibold !outline-none focus:!outline-none active:!outline-none !shadow-none ![box-shadow:none] focus:!shadow-none active:!shadow-none !ring-0 focus:!ring-0 active:!ring-0 !backdrop-blur-0 ![backdrop-filter:none] !p-0 !min-h-0 !rounded-none min-w-0 overflow-hidden !appearance-none"
-          />
-
+      <FromTo
+        embedded={embedded}
+        fromLabel="From"
+        toLabel="To (Estimated)"
+        fromAmount={ethBridgeIn}
+        onChangeFromAmount={setEthBridgeIn}
+        fromBalanceText={
+          ethBalance && !fetchingBalance
+            ? `Balance: ${Decimal.from(ethBalance ?? '0').prettify()} ETH`
+            : 'Ethereum'
+        }
+        onMaxClick={handleMaxClick}
+        maxDisabled={fetchingBalance}
+        fromTokenNode={(
           <div
-            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${embedded ? "bg-transparent" : "bg-white/10"
-              } rounded-xl border border-white/10 flex-shrink-0`}
+            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${embedded ? 'bg-transparent' : 'bg-white/10'} rounded-xl border border-white/10 flex-shrink-0`}
           >
             <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-[#627eea] to-[#8a92b2] flex items-center justify-center text-white text-xs font-bold">
               Ξ
             </div>
-            <span className="text-white text-sm sm:text-base font-semibold">
-              ETH
-            </span>
+            <span className="text-white text-sm sm:text-base font-semibold">ETH</span>
           </div>
-        </div>
-      </div>
-
-      {/* Bridge Arrow (hidden when embedded) */}
-      {!embedded && (
-        <div className="flex justify-center my-3 sm:my-4 relative">
+        )}
+        toValue={ethBridgeOutAe}
+        toLoading={ethBridgeQuoting}
+        toTokenNode={(
           <div
-            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-white/10 ${circleBg} text-white flex items-center justify-center text-lg sm:text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(0,0,0,0.25)] z-[2] relative`}
-          >
-            ⬇️
-          </div>
-        </div>
-      )}
-
-      {/* To Output - AE */}
-      <div className={`${sectionBase} ${sectionBg} ${sectionSpacingLarge}`}>
-        <div className="flex justify-between items-center mb-2 min-w-0">
-          <label className="text-xs text-white/60 font-medium uppercase tracking-wider flex-shrink-0">
-            To (Estimated)
-          </label>
-          <span className="text-xs text-white/60 flex-shrink-0">æternity</span>
-        </div>
-
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div
-            className={`flex-1 text-xl sm:text-2xl font-base text-white/60 min-w-0 overflow-hidden`}
-          >
-            {ethBridgeQuoting ? "Quoting…" : ethBridgeOutAe || "0.0"}
-          </div>
-
-          <div
-            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${embedded ? "bg-transparent" : "bg-white/10"
-              } rounded-xl border border-white/10 flex-shrink-0`}
+            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${embedded ? 'bg-transparent' : 'bg-white/10'} rounded-xl border border-white/10 flex-shrink-0`}
           >
             <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-red-400 to-red-300 flex items-center justify-center text-white text-xs font-bold">
               Æ
             </div>
-            <span className="text-white text-sm sm:text-base font-semibold">
-              AE
-            </span>
+            <span className="text-white text-sm sm:text-base font-semibold">AE</span>
           </div>
-        </div>
-      </div>
+        )}
+      />
 
       {/* Bridge Process Info */}
       {ethBridgeStep !== "idle" && (
@@ -422,7 +369,7 @@ function BuyAeWidgetContent({
       {/* Ethereum Wallet Connection */}
       {!activeAccount ? (
         <ConnectWalletButton
-          label={embedded ? "CONNECT WALLET" : "CONNECT WALLET TO BUY AE"}
+          label={embedded ? t('buttons.connectWalletDex', { ns: 'common' }) : t('buttons.connectWalletToBuyAe', { ns: 'common' })}
           block
           className="text-sm"
           variant="dex"

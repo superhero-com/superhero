@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Backend, TrendminerApi } from '../../api/backend';
+import WebSocketClient from '@/libs/WebSocketClient';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import configs from '../../configs';
-import { useNavigate } from 'react-router-dom';
 
 export default function FooterSection({ compact = false }: { compact?: boolean }) {
   const navigate = useNavigate();
@@ -20,30 +19,17 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
     window.addEventListener('offline', handleOffline);
 
     const checkApiStatus = async () => {
-      try {
-        await Backend.getTopics();
-        setApiStatus((p) => ({ ...p, backend: 'online' }));
-      } catch {
-        setApiStatus((p) => ({ ...p, backend: 'offline' }));
-      }
-
-      try {
-        await TrendminerApi.listTrendingTags({ limit: 1 });
-        setApiStatus((p) => ({ ...p, trending: 'online' }));
-      } catch {
-        setApiStatus((p) => ({ ...p, trending: 'offline' }));
-      }
-
-      try {
-        await Backend.getPrice();
-        setApiStatus((p) => ({ ...p, dex: 'online' }));
-      } catch {
-        setApiStatus((p) => ({ ...p, dex: 'offline' }));
-      }
+      const isConnected = WebSocketClient.isConnected();
+      const status = isConnected ? 'online' : 'offline';
+      setIsOnline(navigator.onLine);
+      setApiStatus((p) => ({ ...p, backend: status, trending: status, dex: status }));
     };
 
-    checkApiStatus();
-    const interval = setInterval(checkApiStatus, 30000);
+    
+    const interval = setInterval(checkApiStatus, 5000);
+    setTimeout(() => {
+      checkApiStatus();
+    }, 1000);
     return () => {
       clearInterval(interval);
       window.removeEventListener('online', handleOnline);
@@ -124,16 +110,6 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
             </span>
             <span style={{ color: statusColor(apiStatus.backend) }}>
               {`${statusEmoji(apiStatus.backend)} Backend`}
-            </span>
-            {
-              configs.features.trending && (
-                <span style={{ color: statusColor(apiStatus.trending) }}>
-                  {`${statusEmoji(apiStatus.trending)} Trendminer`}
-                </span>
-              )
-            }
-            <span style={{ color: statusColor(apiStatus.dex) }}>
-              {`${statusEmoji(apiStatus.dex)} DEX`}
             </span>
           </div>
         </div>

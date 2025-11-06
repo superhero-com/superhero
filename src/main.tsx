@@ -35,7 +35,7 @@ const queryClient = new QueryClient({
     <React.StrictMode>
       <HelmetProvider>
         <Helmet>
-          <title>Superhero.com – the all‑in‑one social + crypto app</title>
+          <title>Superhero.com – The All‑in‑One Social + Crypto App</title>
         </Helmet>
         <QueryClientProvider client={queryClient}>
           <Provider>

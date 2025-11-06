@@ -34,7 +34,7 @@ type Meta = {
 async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
   if (pathname === '/' || pathname === '') {
     return {
-      title: 'Superhero.com – the all‑in‑one social + crypto app',
+      title: 'Superhero.com – The All‑in‑One Social + Crypto App',
       description: 'Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.',
       canonical: `${ORIGIN}/`,
       jsonLd: {

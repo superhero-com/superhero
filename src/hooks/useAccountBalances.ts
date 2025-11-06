@@ -26,7 +26,10 @@ export const useAccountBalances = (selectedAccount: string) => {
 
     const _loadAex9DataFromMdw = async (url, items = []) => {
         try {
-            const fetchUrl = `${BridgeConstants.aeAPI}${url}`
+            // Check if url is already a full URL (absolute) or a relative path
+            const fetchUrl = url.startsWith('http://') || url.startsWith('https://') 
+                ? url 
+                : `${BridgeConstants.aeAPI}${url}`;
             const response = await fetch(fetchUrl);
             
             if (!response.ok) {

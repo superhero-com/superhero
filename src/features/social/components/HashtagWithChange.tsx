@@ -7,8 +7,8 @@ export default function HashtagWithChange({ tag, post }: { tag: string, post?: P
 
   const topic = post?.topics?.find((t) => t.name === clean?.toLowerCase());
   const changePercent = topic?.token?.performance?.past_30d?.current_change_percent;
-  const isUp = changePercent && changePercent > 0;
-  const isDown = changePercent && changePercent < 0;
+  const isUp = changePercent != null && changePercent > 0;
+  const isDown = changePercent != null && changePercent < 0;
 
 
   const linkTo = `/trends/tokens/${upper}`;
@@ -23,7 +23,7 @@ export default function HashtagWithChange({ tag, post }: { tag: string, post?: P
       >
         #{clean}
       </Link>
-      {topic?.token?.performance?.past_30d?.current_change_percent && (
+      {changePercent != null && (
         <span
           className={`inline-flex items-center px-1 py-0.5 rounded-full text-[10px] font-mono font-semibold leading-none tracking-tighter ${isUp
               ? 'bg-green-400/10 text-green-400 border border-green-400/20'
@@ -32,9 +32,9 @@ export default function HashtagWithChange({ tag, post }: { tag: string, post?: P
                 : 'bg-white/10 text-white/60 border border-white/20'
             }`}
           title="24h change"
-          aria-label={`24h change: ${topic?.token?.performance?.past_30d?.current_change_percent?.toFixed(2)}%`}
+          aria-label={`24h change: ${changePercent.toFixed(2)}%`}
         >
-          {topic?.token?.performance?.past_30d?.current_change_percent?.toFixed(2)}%
+          {changePercent.toFixed(2)}%
         </span>
       )}
     </span>

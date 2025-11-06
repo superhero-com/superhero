@@ -164,7 +164,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
         const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
         const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo) as string | undefined, fullUrl.origin);
         return {
-          title: `${symbol} – Token on Superhero`,
+          title: `Buy #${symbol} on Superhero.com`,
           description: truncate(desc, 200),
           canonical: `${fullUrl.origin}/trends/tokens/${tokenName}`,
           ogImage: tokenImg || `${fullUrl.origin}/og-default.png`,
@@ -180,7 +180,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
       }
     } catch {}
     return {
-      title: `${address} – Token on Superhero`,
+      title: `Buy #${address} on Superhero.com`,
       canonical: `${fullUrl.origin}/trends/tokens/${tokenName}`,
       ogImage: `${fullUrl.origin}/og-default.png`,
     };

@@ -128,14 +128,14 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
         const symbol = data?.symbol || data?.name || address;
         const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
         return {
-          title: `${symbol} – Token on Superhero`,
+          title: `Buy #${symbol} on Superhero.com`,
           description: truncate(desc, 160),
           canonical: `${ORIGIN}/trends/tokens/${tokenName}`,
           jsonLd: { '@context': 'https://schema.org', '@type': 'CryptoCurrency', name: data?.name || data?.symbol, symbol: data?.symbol, identifier: data?.address || data?.sale_address },
         };
       }
     } catch {}
-    return { title: `${address} – Token on Superhero`, canonical: `${ORIGIN}/trends/tokens/${tokenName}` };
+    return { title: `Buy #${address} on Superhero.com`, canonical: `${ORIGIN}/trends/tokens/${tokenName}` };
   }
 
   return { title: 'Superhero', canonical: `${ORIGIN}${pathname}` };

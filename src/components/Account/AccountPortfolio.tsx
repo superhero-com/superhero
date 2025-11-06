@@ -611,10 +611,13 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           
           {/* Loading indicator */}
           {isLoading && (
-            <div className="absolute left-0 right-0 top-[30%] flex justify-center rounded-lg">
-              <div className="text-white/60 text-sm">Loading portfolio data...</div>
-                </div>
-              )}
+            <div className="absolute left-0 right-0 top-[30%] flex justify-center">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/40 border border-white/10 rounded-full text-white text-xs font-medium">
+                <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" aria-label="loading" />
+                <span>Loading portfolio data...</span>
+              </div>
+            </div>
+          )}
           
           {/* No data message */}
           {!isLoading && (!portfolioData || portfolioData.length === 0) && (

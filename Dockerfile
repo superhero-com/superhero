@@ -8,6 +8,9 @@ RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
 COPY . .
+# Run postinstall script manually to fix bctsl-sdk package.json
+# (npm ci --ignore-scripts skips it, but we need it for the build)
+RUN node ./scripts/update-package-type.cjs
 RUN npm run build
 
 # Production dependencies stage

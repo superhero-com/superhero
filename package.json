@@ -9,7 +9,8 @@
     "preview": "vite preview --port 5174",
     "test": "vitest",
     "generate:api": "openapi --input http://localhost:3000/api-json --output ./src/api/generated --useOptions",
-    "generate:sitemap": "ts-node ./scripts/generate-sitemap.ts"
+    "generate:sitemap": "ts-node ./scripts/generate-sitemap.ts",
+    "postinstall": "node ./scripts/update-package-type.cjs"
   },
   "dependencies": {
     "@aeternity/aepp-sdk": "^13.3.2",
@@ -33,7 +34,7 @@
     "@visx/wordcloud": "^3.10.0",
     "aeternity-fungible-token": "git+https://git@github.com/aeternity/aeternity-fungible-token#v2.2.0",
     "axios": "^1.6.5",
-    "bctsl-sdk": "github:bctsl/bctsl-sdk#v1.0.0",
+    "bctsl-sdk": "git+https://git@github.com/bctsl/bctsl-sdk#v1.0.0",
     "bignumber.js": "^9.0.1",
     "camelcase-keys-deep": "^0.1.0",
     "class-variance-authority": "^0.7.1",

@@ -9,17 +9,58 @@ export default function HashtagWithChange({ tag, post }: { tag: string, post?: P
   const normalized = clean.toLowerCase();
 
   // Try to find topic in post topics (case-insensitive)
-  const topic = post?.topics?.find((t) => t.name?.toLowerCase() === normalized);
-  const changePercentFromTopic = topic?.token?.performance?.past_30d?.current_change_percent;
+  // Handle both TopicDto objects and string arrays (for backward compatibility)
+  const topic = post?.topics?.find((t) => {
+    if (typeof t === 'string') {
+      return t.toLowerCase() === normalized;
+    }
+    return t.name?.toLowerCase() === normalized;
+  });
+  const topicPerf = typeof topic === 'object' && topic !== null && 'token' in topic 
+    ? topic.token?.performance 
+    : null;
+  const changePercentFromTopic = topicPerf?.past_30d?.current_change_percent 
+    ?? topicPerf?.past_7d?.current_change_percent
+    ?? topicPerf?.past_24h?.current_change_percent;
   const hasTopicData = changePercentFromTopic != null;
+  const topicToken = typeof topic === 'object' && topic !== null && 'token' in topic 
+    ? topic.token 
+    : null;
+  const topicTokenHasPerformance = !!(topicToken?.performance?.past_30d || topicToken?.performance?.past_7d || topicToken?.performance?.past_24h);
 
-  // Fallback: if topic doesn't have token data, try to fetch token by symbol
-  const shouldFetchToken = !hasTopicData && !!normalized;
-  const { data: tokenData } = useQuery({
+  // If topic has token but no performance, fetch performance for that token
+  const shouldFetchTopicPerformance = !!topicToken && !topicTokenHasPerformance && !!topicToken?.sale_address;
+  const { data: topicPerformanceData } = useQuery({
+    queryKey: ['topic-token-performance', topicToken?.sale_address],
+    queryFn: async () => {
+      if (!topicToken?.sale_address) return null;
+      try {
+        const result = await TrendminerApi.getTokenPerformance(topicToken.sale_address);
+        return result;
+      } catch (err) {
+        console.warn(`[HashtagWithChange] Failed to fetch performance for topic token ${upper}:`, err);
+        return null;
+      }
+    },
+    enabled: shouldFetchTopicPerformance,
+    retry: false,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  // Fallback: if we don't have change percent data, try to fetch token by symbol
+  // Fetch if: no topic data AND no topic token (if topic has token, we fetch performance instead)
+  const shouldFetchToken = !hasTopicData && !topicToken && !!normalized;
+  const { data: tokenData, isLoading: isLoadingToken } = useQuery({
     queryKey: ['token-by-symbol', upper],
     queryFn: async () => {
       try {
         const result = await TokensService.findByAddress({ address: upper });
+        if (result) {
+          console.log(`[HashtagWithChange] Fetched token for ${upper}:`, { 
+            hasPerformance: !!result.performance,
+            saleAddress: result.sale_address 
+          });
+        }
         return result;
       } catch (err) {
         console.warn(`[HashtagWithChange] Failed to fetch token for ${upper}:`, err);
@@ -33,7 +74,7 @@ export default function HashtagWithChange({ tag, post }: { tag: string, post?: P
 
   // If token exists but doesn't have performance data, fetch it separately
   const tokenExists = !!tokenData;
-  const tokenHasPerformance = !!tokenData?.performance;
+  const tokenHasPerformance = !!(tokenData?.performance?.past_30d || tokenData?.performance?.past_7d || tokenData?.performance?.past_24h);
   const shouldFetchPerformance = shouldFetchToken && tokenExists && !tokenHasPerformance && !!tokenData?.sale_address;
   const { data: performanceData } = useQuery({
     queryKey: ['token-performance', tokenData?.sale_address],
@@ -52,9 +93,18 @@ export default function HashtagWithChange({ tag, post }: { tag: string, post?: P
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
+  // Try to get change percent from various sources, checking multiple time periods
+  const getChangePercent = (perf: any) => {
+    return perf?.past_30d?.current_change_percent 
+      ?? perf?.past_7d?.current_change_percent
+      ?? perf?.past_24h?.current_change_percent
+      ?? null;
+  };
+
   const changePercent = changePercentFromTopic 
-    ?? tokenData?.performance?.past_30d?.current_change_percent
-    ?? performanceData?.past_30d?.current_change_percent;
+    ?? getChangePercent(topicPerformanceData)
+    ?? getChangePercent(tokenData?.performance)
+    ?? getChangePercent(performanceData);
   const isUp = changePercent != null && changePercent > 0;
   const isDown = changePercent != null && changePercent < 0;
 

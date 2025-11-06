@@ -152,109 +152,113 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     
     const checkAndInit = () => {
       if (!chartContainerRef.current) return false;
-      
-      const container = chartContainerRef.current;
+
+    const container = chartContainerRef.current;
       if (container.clientWidth === 0) return false; // Not ready yet
       
       // Container is ready, initialize chart
-      const chart = createChart(container, {
-        width: container.clientWidth,
-        height: 180,
-        layout: {
-          background: { type: ColorType.Solid, color: 'transparent' },
-          textColor: '#ffffff',
-        },
-        grid: {
-          vertLines: { visible: false },
-          horzLines: { visible: false },
-        },
-        rightPriceScale: {
-          visible: false,
-          borderVisible: false,
-        },
-        leftPriceScale: {
-          visible: false,
-          borderVisible: false,
-        },
-        timeScale: {
-          visible: false,
-          borderVisible: false,
-        },
-        crosshair: {
+    const chart = createChart(container, {
+      width: container.clientWidth,
+      height: 180,
+      layout: {
+        background: { type: ColorType.Solid, color: 'transparent' },
+        textColor: '#ffffff',
+      },
+      grid: {
+        vertLines: { visible: false },
+        horzLines: { visible: false },
+      },
+      rightPriceScale: {
+        visible: false,
+        borderVisible: false,
+      },
+      leftPriceScale: {
+        visible: false,
+        borderVisible: false,
+      },
+      timeScale: {
+        visible: false,
+        borderVisible: false,
+      },
+      crosshair: {
           mode: 1,
-          vertLine: {
-            visible: true,
+        vertLine: {
+          visible: true,
             color: 'rgba(34, 197, 94, 0.5)',
-            width: 1,
+          width: 1,
             style: 0,
-          },
-          horzLine: {
-            visible: false,
-          },
         },
-        handleScale: false,
-        handleScroll: false,
-      });
+        horzLine: {
+            visible: false,
+        },
+      },
+      handleScale: false,
+      handleScroll: false,
+    });
 
-      chartRef.current = chart;
+    chartRef.current = chart;
 
-      const seriesOptions: AreaSeriesPartialOptions = {
-        priceLineVisible: false,
+    const seriesOptions: AreaSeriesPartialOptions = {
+      priceLineVisible: false,
         lineColor: '#22c55e',
         topColor: 'rgba(34, 197, 94, 0.3)',
         bottomColor: 'rgba(34, 197, 94, 0.01)',
-        lineWidth: 2,
+      lineWidth: 2,
         crosshairMarkerVisible: true,
         crosshairMarkerRadius: 6,
         crosshairMarkerBorderColor: '#22c55e',
         crosshairMarkerBackgroundColor: '#22c55e',
-        baseLineVisible: false,
-        priceFormat: {
-          type: 'custom',
-          minMove: 0.000001,
-          formatter: (price: number) => {
+      baseLineVisible: false,
+      priceFormat: {
+        type: 'custom',
+        minMove: 0.000001,
+        formatter: (price: number) => {
             if (convertTo === 'ae') {
-              return `${price.toFixed(4)} AE`;
-            }
-            const currencyCode = currentCurrencyInfo.code.toUpperCase();
-            return Number(price).toLocaleString('en-US', {
-              style: 'currency',
-              currency: currencyCode,
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            });
-          },
+            return `${price.toFixed(4)} AE`;
+          }
+          const currencyCode = currentCurrencyInfo.code.toUpperCase();
+          return Number(price).toLocaleString('en-US', {
+            style: 'currency',
+            currency: currencyCode,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
         },
-      };
+      },
+    };
 
-      const areaSeries = chart.addSeries(AreaSeries, seriesOptions);
-      seriesRef.current = areaSeries;
+    const areaSeries = chart.addSeries(AreaSeries, seriesOptions);
+    seriesRef.current = areaSeries;
 
       // Subscribe to crosshair moves
-      chart.subscribeCrosshairMove((param) => {
-        if (param.time && param.seriesData) {
-          const priceData = param.seriesData.get(areaSeries) as LineData | undefined;
-          if (priceData && typeof priceData.value === 'number') {
-            setHoveredPrice({
-              price: priceData.value,
-              time: param.time as number,
-            });
-          } else {
-            setHoveredPrice(null);
-          }
+    chart.subscribeCrosshairMove((param) => {
+      if (param.time && param.seriesData) {
+        const priceData = param.seriesData.get(areaSeries) as LineData | undefined;
+        if (priceData && typeof priceData.value === 'number') {
+          setHoveredPrice({
+            price: priceData.value,
+            time: param.time as number,
+          });
         } else {
           setHoveredPrice(null);
         }
-      });
-
+      } else {
+        setHoveredPrice(null);
+      }
+    });
+    
       // Handle resize - use ResizeObserver for container size changes
       const handleResize = () => {
         if (chartContainerRef.current && chart) {
           const newWidth = chartContainerRef.current.clientWidth;
           const newHeight = chartContainerRef.current.clientHeight;
           if (newWidth > 0 && newHeight > 0) {
-            // Use resize method for more reliable resizing
+            // Use both resize and applyOptions to ensure chart internal state is correct
             chart.resize(newWidth, newHeight);
+            chart.applyOptions({
+              width: newWidth,
+              height: newHeight,
+            });
           }
         }
       };
@@ -304,20 +308,20 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
         if (chartData.length > 0) {
           areaSeries.setData(chartData);
-          const currentTime = moment().unix();
-          chart.timeScale().fitContent();
-          
+    const currentTime = moment().unix();
+      chart.timeScale().fitContent();
+      
           // Ensure we don't show future data
-          const visibleRange = chart.timeScale().getVisibleRange();
-          if (visibleRange && visibleRange.to > currentTime) {
-            if (visibleRange.from != null && typeof visibleRange.from === 'number') {
-              chart.timeScale().setVisibleRange({
-                from: visibleRange.from,
-                to: currentTime,
-              });
-            }
-          }
+      const visibleRange = chart.timeScale().getVisibleRange();
+      if (visibleRange && visibleRange.to > currentTime) {
+        if (visibleRange.from != null && typeof visibleRange.from === 'number') {
+          chart.timeScale().setVisibleRange({
+            from: visibleRange.from,
+            to: currentTime,
+          });
         }
+      }
+    }
       }
 
       return true; // Successfully initialized
@@ -408,22 +412,38 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       },
     });
 
-    // Set data first
+    // Ensure chart width matches container BEFORE setting data
+    if (!chartContainerRef.current) return;
+    
+    const containerWidth = chartContainerRef.current.clientWidth;
+    const containerHeight = chartContainerRef.current.clientHeight;
+    
+    if (containerWidth <= 0 || containerHeight <= 0) return;
+    
+    // Explicitly set width using both resize and applyOptions to ensure chart internal state is correct
+    chartRef.current.resize(containerWidth, containerHeight);
+    chartRef.current.applyOptions({
+      width: containerWidth,
+      height: containerHeight,
+    });
+    
+    // Set data after ensuring width is correct
     seriesRef.current.setData(chartData);
     
-    // Ensure chart width matches container BEFORE fitContent
-    if (chartContainerRef.current) {
-      const containerWidth = chartContainerRef.current.clientWidth;
-      const containerHeight = chartContainerRef.current.clientHeight;
-      if (containerWidth > 0 && containerHeight > 0) {
-        // Use resize method for more reliable resizing
-        chartRef.current.resize(containerWidth, containerHeight);
-      }
-    }
-    
-    // Use requestAnimationFrame to ensure resize is applied before fitContent
+    // Use requestAnimationFrame to ensure width is applied before fitContent
     requestAnimationFrame(() => {
-      if (!chartRef.current) return;
+      if (!chartRef.current || !chartContainerRef.current) return;
+      
+      // Double-check width is still correct
+      const currentWidth = chartContainerRef.current.clientWidth;
+      const currentHeight = chartContainerRef.current.clientHeight;
+      if (currentWidth > 0 && currentHeight > 0 && (currentWidth !== containerWidth || currentHeight !== containerHeight)) {
+        chartRef.current.resize(currentWidth, currentHeight);
+        chartRef.current.applyOptions({
+          width: currentWidth,
+          height: currentHeight,
+        });
+      }
       
       const currentTime = moment().unix();
       chartRef.current.timeScale().fitContent();
@@ -439,12 +459,16 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         }
       }
       
-      // Resize again after fitContent and visible range adjustment to ensure correct rendering
+      // Final resize after fitContent to ensure graph fills entire width
       if (chartContainerRef.current) {
-        const containerWidth = chartContainerRef.current.clientWidth;
-        const containerHeight = chartContainerRef.current.clientHeight;
-        if (containerWidth > 0 && containerHeight > 0) {
-          chartRef.current.resize(containerWidth, containerHeight);
+        const finalWidth = chartContainerRef.current.clientWidth;
+        const finalHeight = chartContainerRef.current.clientHeight;
+        if (finalWidth > 0 && finalHeight > 0) {
+          chartRef.current.resize(finalWidth, finalHeight);
+          chartRef.current.applyOptions({
+            width: finalWidth,
+            height: finalHeight,
+          });
         }
       }
     });
@@ -460,9 +484,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               <h3 className="text-lg font-bold text-white">Portfolio Value</h3>
             </div>
             <div className="text-red-400 text-sm mb-3">Failed to load portfolio data</div>
-            {process.env.NODE_ENV === 'development' && (
+        {process.env.NODE_ENV === 'development' && (
               <div className="text-red-300 text-xs mb-3 opacity-75">{errorMessage}</div>
-            )}
+        )}
             <button
               onClick={() => refetch()}
               className="px-4 py-2 text-sm font-semibold rounded-lg border border-white/20 hover:border-white/40 transition-colors bg-white/[0.05] hover:bg-white/[0.08] text-white/80 hover:text-white"
@@ -503,13 +527,13 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                   : (() => {
                       try {
                         const fiatValue = typeof displayValue === 'number' ? displayValue : Number(displayValue);
-                        const currencyCode = currentCurrencyInfo.code.toUpperCase();
-                        return fiatValue.toLocaleString('en-US', {
-                          style: 'currency',
-                          currency: currencyCode,
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        });
+                      const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                      return fiatValue.toLocaleString('en-US', {
+                        style: 'currency',
+                        currency: currencyCode,
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      });
                       } catch {
                         return `$${Number(displayValue).toFixed(2)}`;
                       }
@@ -530,18 +554,18 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
         {/* Chart */}
         <div className="px-4 md:px-6 pb-4 relative">
-          <div 
-            ref={chartContainerRef} 
-            className="w-full h-[180px] min-w-0 touch-none"
-            style={{ touchAction: 'none' }}
-          />
+              <div 
+                ref={chartContainerRef} 
+                className="w-full h-[180px] min-w-0 touch-none"
+                style={{ touchAction: 'none' }}
+              />
           
           {/* Loading indicator */}
           {isLoading && (
             <div className="absolute left-0 right-0 top-[30%] flex justify-center rounded-lg">
               <div className="text-white/60 text-sm">Loading portfolio data...</div>
-            </div>
-          )}
+                </div>
+              )}
           
           {/* No data message */}
           {!isLoading && (!portfolioData || portfolioData.length === 0) && (

@@ -129,7 +129,9 @@ export default function ProfileEditModal({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-md mx-auto bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] shadow-[var(--glass-shadow)]">
         <DialogHeader>
-          <DialogTitle className="text-white">{t('titles.editProfile')}</DialogTitle>
+          <DialogTitle className="text-white">
+            {bio && bio.trim() ? t('titles.editBio') : t('titles.addBio')}
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>

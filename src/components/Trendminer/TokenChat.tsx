@@ -121,7 +121,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           href={qualiPublicUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] hover:shadow-[0_10px_28px_rgba(255,255,255,0.12)] focus:outline-none focus:ring-2 focus:ring-white/30 no-gradient-text"
+          className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] focus:outline-none focus:ring-2 focus:ring-white/30 no-gradient-text"
           title="Open the public chat on Quali.chat"
         >
           <div className="flex items-center gap-2">
@@ -142,7 +142,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
           href={qualiPrivateUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] hover:shadow-[0_10px_28px_rgba(255,255,255,0.12)] focus:outline-none focus:ring-2 focus:ring-white/30 no-gradient-text"
+          className="group no-underline rounded-xl border border-white/15 bg-white/[0.05] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.09] focus:outline-none focus:ring-2 focus:ring-white/30 no-gradient-text"
           title="Open the private chat on Quali.chat (holders only)"
         >
           <div className="flex items-center gap-2">

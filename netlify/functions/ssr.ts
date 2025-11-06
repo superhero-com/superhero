@@ -34,7 +34,7 @@ type Meta = {
 async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
   if (pathname === '/' || pathname === '') {
     return {
-      title: 'Superhero – Crypto Social Network: Posts, Tokens, Governance',
+      title: 'Superhero.com – The All‑in‑One Social + Crypto App',
       description: 'Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.',
       canonical: `${ORIGIN}/`,
       jsonLd: {
@@ -42,6 +42,21 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
         '@type': 'WebSite',
         name: 'Superhero',
         url: ORIGIN,
+      },
+    };
+  }
+
+  // Trends page
+  if (pathname === '/trends' || pathname === '/trends/tokens') {
+    return {
+      title: 'Superhero.com – Tokenize Trends. Own the Hype. Build Communities.',
+      description: 'Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero.',
+      canonical: `${ORIGIN}/trends/tokens`,
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Superhero',
+        url: `${ORIGIN}/trends/tokens`,
       },
     };
   }
@@ -113,14 +128,14 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
         const symbol = data?.symbol || data?.name || address;
         const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
         return {
-          title: `${symbol} – Token on Superhero`,
+          title: `Buy #${symbol} on Superhero.com`,
           description: truncate(desc, 160),
           canonical: `${ORIGIN}/trends/tokens/${tokenName}`,
           jsonLd: { '@context': 'https://schema.org', '@type': 'CryptoCurrency', name: data?.name || data?.symbol, symbol: data?.symbol, identifier: data?.address || data?.sale_address },
         };
       }
     } catch {}
-    return { title: `${address} – Token on Superhero`, canonical: `${ORIGIN}/trends/tokens/${tokenName}` };
+    return { title: `Buy #${address} on Superhero.com`, canonical: `${ORIGIN}/trends/tokens/${tokenName}` };
   }
 
   return { title: 'Superhero', canonical: `${ORIGIN}${pathname}` };

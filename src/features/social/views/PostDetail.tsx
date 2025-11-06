@@ -167,7 +167,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     <div className="w-full p-0">
       {postData ? (
         <Head
-          title={`${(postData as any)?.content?.slice(0, 80) || 'Post'} – Superhero`}
+          title={`Post on Superhero.com: "${(postData as any)?.content?.slice(0, 100) || 'Post'}"`}
           description={(postData as any)?.content?.slice(0, 160) || 'View post on Superhero, the crypto social network.'}
           canonicalPath={`/post/${String(postId).replace(/_v3$/,'')}`}
           ogImage={(Array.isArray((postData as any)?.media) && (postData as any).media[0]) || undefined}

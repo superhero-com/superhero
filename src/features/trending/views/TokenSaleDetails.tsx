@@ -142,6 +142,11 @@ export default function TokenSaleDetails() {
   if (isError && !isTokenNewlyCreated) {
     return (
       <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
+        <Head
+          title={`Buy #${tokenName} on Superhero.com`}
+          description={`Explore ${tokenName} token, trades, holders and posts.`}
+          canonicalPath={`/trends/tokens/${tokenName}`}
+        />
         <div className="text-center relative z-10 py-16">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Token{" "}
@@ -181,6 +186,11 @@ export default function TokenSaleDetails() {
   if (isTokenPending) {
     return (
       <div className="max-w-7xl mx-auto p-4 md:p-6">
+        <Head
+          title={`Buy #${tokenName} on Superhero.com`}
+          description={`Explore ${tokenName} token, trades, holders and posts.`}
+          canonicalPath={`/trends/tokens/${tokenName}`}
+        />
         <LatestTransactionsCarousel />
 
         <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-6 mb-6">
@@ -203,6 +213,11 @@ export default function TokenSaleDetails() {
   if (!token) {
     return (
       <div className="flex flex-col items-center justify-center min-h-48 p-10 text-center text-white/80">
+        <Head
+          title={`Buy #${tokenName} on Superhero.com`}
+          description={`Explore ${tokenName} token, trades, holders and posts.`}
+          canonicalPath={`/trends/tokens/${tokenName}`}
+        />
         Token not found
       </div>
     );
@@ -211,15 +226,15 @@ export default function TokenSaleDetails() {
   return (
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
       <Head
-        title={`${token.symbol || token.name} – Token on Superhero`}
-        description={(token.metaInfo?.description || `Explore ${token.symbol || token.name} token, trades, holders and posts.`).slice(0,160)}
+        title={`Buy #${token?.symbol || token?.name || tokenName} on Superhero.com`}
+        description={(token?.metaInfo?.description || `Explore ${token?.symbol || token?.name || tokenName} token, trades, holders and posts.`).slice(0,160)}
         canonicalPath={`/trends/tokens/${tokenName}`}
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'CryptoCurrency',
-          name: token.name || token.symbol,
-          symbol: token.symbol,
-          identifier: token.address || token.sale_address,
+          name: token?.name || token?.symbol || tokenName,
+          symbol: token?.symbol,
+          identifier: token?.address || token?.sale_address,
         }}
       />
       <LatestTransactionsCarousel />

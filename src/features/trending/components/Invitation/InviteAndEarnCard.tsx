@@ -210,7 +210,7 @@ export default function InviteAndEarnCard({
                 className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold flex items-center justify-center gap-3 uppercase tracking-wider relative overflow-hidden break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${
                   !activeAccount
                     ? "opacity-50 cursor-not-allowed bg-gray-600 transform-none"
-                    : "bg-gradient-to-r from-[var(--neon-teal)] to-blue-500 text-white shadow-lg shadow-[rgba(0,255,157,0.3)] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[rgba(0,255,157,0.4)] before:content-[''] before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:transition-all before:duration-500 hover:before:left-full"
+                    : "bg-gradient-to-r from-[var(--neon-teal)] to-blue-500 text-white shadow-lg hover:-translate-y-0.5 hover:shadow-xl before:content-[''] before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:transition-all before:duration-500 hover:before:left-full"
                 }`}
               >
                 {generatingInviteLink ? (

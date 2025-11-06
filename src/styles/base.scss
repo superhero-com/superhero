@@ -36,14 +36,14 @@
   --card-gradient: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   --button-gradient: linear-gradient(135deg, #ff6b6b 0%, #00ff9d 100%);
   
-  /* Gen Z Glow Effects */
-  --glow-shadow: 0 0 30px rgba(255, 107, 107, 0.4), 0 0 60px rgba(0, 255, 157, 0.3);
-  --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(255, 107, 107, 0.15);
-  --button-shadow: 0 8px 24px rgba(255, 107, 107, 0.4), 0 4px 12px rgba(0, 255, 157, 0.3);
+  /* Gen Z Glow Effects - Neutralized */
+  --glow-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  --button-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   
   /* Gen Z Border Effects */
   --border-gradient: linear-gradient(135deg, #ff6b6b, #00ff9d, #45b7d1);
-  --border-glow: 0 0 15px rgba(255, 107, 107, 0.6);
+  --border-glow: 0 0 0 rgba(0, 0, 0, 0);
   
   /* Gen Z Additional Colors */
   --neon-pink: #ff6b6b;
@@ -92,10 +92,10 @@
   --card-gradient: linear-gradient(145deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
   --button-gradient: linear-gradient(135deg, #ff6b6b 0%, #00ff9d 100%);
   
-  /* Gen Z Glow Effects */
-  --glow-shadow: 0 0 30px rgba(255, 107, 107, 0.3), 0 0 60px rgba(0, 255, 157, 0.2);
-  --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.1), 0 8px 24px rgba(255, 107, 107, 0.1);
-  --button-shadow: 0 8px 24px rgba(255, 107, 107, 0.3), 0 4px 12px rgba(0, 255, 157, 0.2);
+  /* Gen Z Glow Effects - Neutralized */
+  --glow-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+  --button-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   
   /* Gen Z Border Effects */
   --border-gradient: linear-gradient(135deg, #ff6b6b, #00ff9d, #45b7d1);

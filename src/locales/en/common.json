@@ -16,7 +16,9 @@
     "logout": "Logout",
     "cancel": "Cancel",
     "postOnChain": "Post on-chain",
-    "connectWalletToBuyAe": "CONNECT WALLET TO BUY AE"
+    "connectWalletToBuyAe": "CONNECT WALLET TO BUY AE",
+    "editBio": "Edit bio",
+    "addBio": "Add bio"
   },
   "labels": {
     "numberOfInvites": "Number of invites",
@@ -49,6 +51,8 @@
   },
   "titles": {
     "editProfile": "Edit Profile",
+    "editBio": "Edit bio",
+    "addBio": "Add bio",
     "swapTokensOnDex": "Swap tokens on the DEX",
     "wrapOrUnwrapAe": "Wrap or unwrap AE",
     "buyAeWithEth": "Buy AE with ETH",

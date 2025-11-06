@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { PostDto, TokensService } from '../../../api/generated';
 import { useQuery } from '@tanstack/react-query';
+import { TrendminerApi } from '../../../api/backend';
 
 export default function HashtagWithChange({ tag, post }: { tag: string, post?: PostDto }) {
   const clean = String(tag || '').replace(/^#/, '');
@@ -10,18 +11,50 @@ export default function HashtagWithChange({ tag, post }: { tag: string, post?: P
   // Try to find topic in post topics (case-insensitive)
   const topic = post?.topics?.find((t) => t.name?.toLowerCase() === normalized);
   const changePercentFromTopic = topic?.token?.performance?.past_30d?.current_change_percent;
+  const hasTopicData = changePercentFromTopic != null;
 
   // Fallback: if topic doesn't have token data, try to fetch token by symbol
-  const shouldFetchToken = !changePercentFromTopic && !!normalized;
+  const shouldFetchToken = !hasTopicData && !!normalized;
   const { data: tokenData } = useQuery({
     queryKey: ['token-by-symbol', upper],
-    queryFn: () => TokensService.findByAddress({ address: upper }),
+    queryFn: async () => {
+      try {
+        const result = await TokensService.findByAddress({ address: upper });
+        return result;
+      } catch (err) {
+        console.warn(`[HashtagWithChange] Failed to fetch token for ${upper}:`, err);
+        return null;
+      }
+    },
     enabled: shouldFetchToken,
     retry: false,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  const changePercent = changePercentFromTopic ?? tokenData?.performance?.past_30d?.current_change_percent;
+  // If token exists but doesn't have performance data, fetch it separately
+  const tokenExists = !!tokenData;
+  const tokenHasPerformance = !!tokenData?.performance;
+  const shouldFetchPerformance = shouldFetchToken && tokenExists && !tokenHasPerformance && !!tokenData?.sale_address;
+  const { data: performanceData } = useQuery({
+    queryKey: ['token-performance', tokenData?.sale_address],
+    queryFn: async () => {
+      if (!tokenData?.sale_address) return null;
+      try {
+        const result = await TrendminerApi.getTokenPerformance(tokenData.sale_address);
+        return result;
+      } catch (err) {
+        console.warn(`[HashtagWithChange] Failed to fetch performance for ${upper}:`, err);
+        return null;
+      }
+    },
+    enabled: shouldFetchPerformance,
+    retry: false,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  const changePercent = changePercentFromTopic 
+    ?? tokenData?.performance?.past_30d?.current_change_percent
+    ?? performanceData?.past_30d?.current_change_percent;
   const isUp = changePercent != null && changePercent > 0;
   const isDown = changePercent != null && changePercent < 0;
 

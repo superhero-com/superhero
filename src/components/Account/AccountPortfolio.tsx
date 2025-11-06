@@ -35,6 +35,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<'Area'> | null>(null);
+  const portfolioDataRef = useRef<PortfolioSnapshot[] | undefined>(undefined);
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('1m');
   const [useCurrentCurrency, setUseCurrentCurrency] = useState(false);
   const [hoveredPrice, setHoveredPrice] = useState<{ price: number; time: number } | null>(null);
@@ -109,6 +110,11 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
+
+  // Keep portfolioData ref up to date for initialization effect
+  useEffect(() => {
+    portfolioDataRef.current = portfolioData;
+  }, [portfolioData]);
 
   // Calculate display value
   const displayValue = useMemo(() => {
@@ -244,6 +250,50 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       handleResize();
       window.addEventListener('resize', handleResize);
 
+      // If data is already available, set it immediately
+      // This handles the case where data loads before chart initializes
+      const currentData = portfolioDataRef.current;
+      if (currentData && currentData.length > 0) {
+        const chartData: LineData[] = portfolioData
+          .map((snapshot) => {
+            const timestamp = moment(snapshot.timestamp).unix();
+            let value: number | null = null;
+            
+            if (convertTo === 'ae') {
+              value = snapshot.total_value_ae;
+            } else {
+              if (snapshot.total_value_usd != null) {
+                value = snapshot.total_value_usd;
+              } else {
+                return null;
+              }
+            }
+            
+            return {
+              time: timestamp as any,
+              value: value as number,
+            };
+          })
+          .filter((item): item is LineData => item !== null);
+
+        if (chartData.length > 0) {
+          areaSeries.setData(chartData);
+          const currentTime = moment().unix();
+          chart.timeScale().fitContent();
+          
+          // Ensure we don't show future data
+          const visibleRange = chart.timeScale().getVisibleRange();
+          if (visibleRange && visibleRange.to > currentTime) {
+            if (visibleRange.from != null && typeof visibleRange.from === 'number') {
+              chart.timeScale().setVisibleRange({
+                from: visibleRange.from,
+                to: currentTime,
+              });
+            }
+          }
+        }
+      }
+
       return true; // Successfully initialized
     };
 
@@ -274,7 +324,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         setHoveredPrice(null);
       }
     };
-  }, []); // Only run once on mount
+  }, []); // Only run once on mount - use ref to access latest data
 
   // Update chart data when portfolio data, currency, or time range changes
   useEffect(() => {

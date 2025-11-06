@@ -8,35 +8,60 @@ const packageJsonPath = path.join(
   'package.json',
 );
 
-// Read the package.json file
-fs.readFile(packageJsonPath, 'utf8', (err, data) => {
-  if (err) {
-    console.error('Error reading package.json:', err);
-    return;
-  }
+// Check if package exists
+if (!fs.existsSync(packageJsonPath)) {
+  console.warn('Warning: bctsl-sdk package.json not found. Skipping package type update.');
+  process.exit(0);
+}
+
+try {
+  // Read the package.json file synchronously
+  const data = fs.readFileSync(packageJsonPath, 'utf8');
 
   // Parse the JSON data
-  let packageJson;
-  try {
-    packageJson = JSON.parse(data);
-  } catch (err) {
-    console.error('Error parsing package.json:', err);
-    return;
-  }
+  const packageJson = JSON.parse(data);
 
-  // Modify the "type" field
-  // delete packageJson.type;
-  packageJson.type = 'commonjs';
-
-  // Convert the JSON object back to a string
-  const updatedData = JSON.stringify(packageJson, null, 2);
-
-  // Write the updated data back to the package.json file
-  fs.writeFile(packageJsonPath, updatedData, 'utf8', (err) => {
-    if (err) {
-      console.error('Error writing package.json:', err);
-      return;
+  // Only update if needed
+  if (packageJson.type === 'module') {
+    // Change type to commonjs
+    packageJson.type = 'commonjs';
+    
+    // Also update main to point to CJS version for better compatibility
+    if (packageJson.main === './.build/esm/index.js') {
+      packageJson.main = './.build/cjs/index.js';
     }
-    console.log('Successfully updated package.json to use "type": "commonjs"');
-  });
-});
+
+    // Update exports.default to point to CJS version
+    if (packageJson.exports && packageJson.exports['.'] && packageJson.exports['.'].default === './.build/esm/index.js') {
+      packageJson.exports['.'].default = './.build/cjs/index.js';
+    }
+
+    // Convert the JSON object back to a string
+    const updatedData = JSON.stringify(packageJson, null, 2);
+
+    // Write the updated data back synchronously
+    fs.writeFileSync(packageJsonPath, updatedData, 'utf8');
+    console.log('Successfully updated bctsl-sdk package.json: type=commonjs, main and exports.default point to CJS');
+  } else {
+    // Even if type is already commonjs, ensure main and exports.default are correct
+    let updated = false;
+    if (packageJson.main === './.build/esm/index.js') {
+      packageJson.main = './.build/cjs/index.js';
+      updated = true;
+    }
+    if (packageJson.exports && packageJson.exports['.'] && packageJson.exports['.'].default === './.build/esm/index.js') {
+      packageJson.exports['.'].default = './.build/cjs/index.js';
+      updated = true;
+    }
+    if (updated) {
+      const updatedData = JSON.stringify(packageJson, null, 2);
+      fs.writeFileSync(packageJsonPath, updatedData, 'utf8');
+      console.log('Updated bctsl-sdk package.json: main and exports.default now point to CJS');
+    } else {
+      console.log('bctsl-sdk package.json already has correct configuration');
+    }
+  }
+} catch (err) {
+  console.error('Error updating bctsl-sdk package.json:', err.message);
+  process.exit(1);
+}

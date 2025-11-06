@@ -36,6 +36,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<'Area'> | null>(null);
   const portfolioDataRef = useRef<PortfolioSnapshot[] | undefined>(undefined);
+  const convertToRef = useRef<string>('ae');
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('1m');
   const [useCurrentCurrency, setUseCurrentCurrency] = useState(false);
   const [hoveredPrice, setHoveredPrice] = useState<{ price: number; time: number } | null>(null);
@@ -45,6 +46,11 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     () => (useCurrentCurrency ? currentCurrencyInfo.code.toLowerCase() : 'ae'),
     [useCurrentCurrency, currentCurrencyInfo]
   );
+
+  // Keep convertTo ref up to date
+  useEffect(() => {
+    convertToRef.current = convertTo;
+  }, [convertTo]);
 
   // Fetch current portfolio value separately
   const { value: currentPortfolioValue } = usePortfolioValue({
@@ -253,13 +259,14 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       // If data is already available, set it immediately
       // This handles the case where data loads before chart initializes
       const currentData = portfolioDataRef.current;
+      const currentConvertTo = convertToRef.current;
       if (currentData && currentData.length > 0) {
         const chartData: LineData[] = currentData
           .map((snapshot) => {
             const timestamp = moment(snapshot.timestamp).unix();
             let value: number | null = null;
             
-            if (convertTo === 'ae') {
+            if (currentConvertTo === 'ae') {
               value = snapshot.total_value_ae;
             } else {
               if (snapshot.total_value_usd != null) {

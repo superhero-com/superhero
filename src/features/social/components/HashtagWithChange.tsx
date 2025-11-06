@@ -10,11 +10,13 @@ export default function HashtagWithChange({ tag, post }: { tag: string, post?: P
 
   // Try to find topic in post topics (case-insensitive)
   // Handle both TopicDto objects and string arrays (for backward compatibility)
+  // Also handle trailing punctuation in topic names (e.g., "people." vs "people")
+  const normalizeTopicName = (name: string) => name.toLowerCase().replace(/[.,!?;:]+$/, '');
   const topic = post?.topics?.find((t) => {
     if (typeof t === 'string') {
-      return t.toLowerCase() === normalized;
+      return normalizeTopicName(t) === normalized;
     }
-    return t.name?.toLowerCase() === normalized;
+    return normalizeTopicName(t.name || '') === normalized;
   });
   const topicPerf = typeof topic === 'object' && topic !== null && 'token' in topic 
     ? topic.token?.performance 
@@ -26,7 +28,12 @@ export default function HashtagWithChange({ tag, post }: { tag: string, post?: P
   const topicToken = typeof topic === 'object' && topic !== null && 'token' in topic 
     ? topic.token 
     : null;
-  const topicTokenHasPerformance = !!(topicToken?.performance?.past_30d || topicToken?.performance?.past_7d || topicToken?.performance?.past_24h);
+  // Check if topic token has actual change percent data (not just null periods)
+  const topicTokenHasPerformance = !!(
+    topicToken?.performance?.past_30d?.current_change_percent != null ||
+    topicToken?.performance?.past_7d?.current_change_percent != null ||
+    topicToken?.performance?.past_24h?.current_change_percent != null
+  );
 
   // If topic has token but no performance, fetch performance for that token
   const shouldFetchTopicPerformance = !!topicToken && !topicTokenHasPerformance && !!topicToken?.sale_address;
@@ -74,7 +81,12 @@ export default function HashtagWithChange({ tag, post }: { tag: string, post?: P
 
   // If token exists but doesn't have performance data, fetch it separately
   const tokenExists = !!tokenData;
-  const tokenHasPerformance = !!(tokenData?.performance?.past_30d || tokenData?.performance?.past_7d || tokenData?.performance?.past_24h);
+  // Check if token has actual change percent data (not just null periods)
+  const tokenHasPerformance = !!(
+    tokenData?.performance?.past_30d?.current_change_percent != null ||
+    tokenData?.performance?.past_7d?.current_change_percent != null ||
+    tokenData?.performance?.past_24h?.current_change_percent != null
+  );
   const shouldFetchPerformance = shouldFetchToken && tokenExists && !tokenHasPerformance && !!tokenData?.sale_address;
   const { data: performanceData } = useQuery({
     queryKey: ['token-performance', tokenData?.sale_address],

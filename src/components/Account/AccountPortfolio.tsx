@@ -251,10 +251,10 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       const handleResize = () => {
         if (chartContainerRef.current && chart) {
           const newWidth = chartContainerRef.current.clientWidth;
-          if (newWidth > 0) {
-            chart.applyOptions({
-              width: newWidth,
-            });
+          const newHeight = chartContainerRef.current.clientHeight;
+          if (newWidth > 0 && newHeight > 0) {
+            // Use resize method for more reliable resizing
+            chart.resize(newWidth, newHeight);
           }
         }
       };

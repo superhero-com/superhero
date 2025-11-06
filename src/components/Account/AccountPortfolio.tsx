@@ -171,14 +171,24 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       rightPriceScale: {
         visible: false,
         borderVisible: false,
+        scaleMargins: {
+          top: 0,
+          bottom: 0,
+        },
       },
       leftPriceScale: {
         visible: false,
         borderVisible: false,
+        scaleMargins: {
+          top: 0,
+          bottom: 0,
+        },
       },
       timeScale: {
         visible: false,
         borderVisible: false,
+        rightOffset: 0,
+        leftOffset: 0,
       },
       crosshair: {
           mode: 1,
@@ -258,6 +268,10 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             chart.applyOptions({
               width: newWidth,
               height: newHeight,
+              timeScale: {
+                rightOffset: 0,
+                leftOffset: 0,
+              },
             });
           }
         }
@@ -430,47 +444,57 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     // Set data after ensuring width is correct
     seriesRef.current.setData(chartData);
     
-    // Use requestAnimationFrame to ensure width is applied before fitContent
+    // Use double requestAnimationFrame to ensure chart has fully rendered before fitContent
     requestAnimationFrame(() => {
-      if (!chartRef.current || !chartContainerRef.current) return;
-      
-      // Double-check width is still correct
-      const currentWidth = chartContainerRef.current.clientWidth;
-      const currentHeight = chartContainerRef.current.clientHeight;
-      if (currentWidth > 0 && currentHeight > 0 && (currentWidth !== containerWidth || currentHeight !== containerHeight)) {
-        chartRef.current.resize(currentWidth, currentHeight);
-        chartRef.current.applyOptions({
-          width: currentWidth,
-          height: currentHeight,
-        });
-      }
-      
-      const currentTime = moment().unix();
-      chartRef.current.timeScale().fitContent();
-      
-      // Ensure we don't show future data
-      const visibleRange = chartRef.current.timeScale().getVisibleRange();
-      if (visibleRange && visibleRange.to > currentTime) {
-        if (visibleRange.from != null && typeof visibleRange.from === 'number') {
-          chartRef.current.timeScale().setVisibleRange({
-            from: visibleRange.from,
-            to: currentTime,
-          });
-        }
-      }
-      
-      // Final resize after fitContent to ensure graph fills entire width
-      if (chartContainerRef.current) {
-        const finalWidth = chartContainerRef.current.clientWidth;
-        const finalHeight = chartContainerRef.current.clientHeight;
-        if (finalWidth > 0 && finalHeight > 0) {
-          chartRef.current.resize(finalWidth, finalHeight);
+      requestAnimationFrame(() => {
+        if (!chartRef.current || !chartContainerRef.current) return;
+        
+        // Ensure width is correct before fitContent
+        const currentWidth = chartContainerRef.current.clientWidth;
+        const currentHeight = chartContainerRef.current.clientHeight;
+        if (currentWidth > 0 && currentHeight > 0) {
+          chartRef.current.resize(currentWidth, currentHeight);
           chartRef.current.applyOptions({
-            width: finalWidth,
-            height: finalHeight,
+            width: currentWidth,
+            height: currentHeight,
           });
         }
-      }
+        
+        const currentTime = moment().unix();
+        chartRef.current.timeScale().fitContent();
+        
+        // Ensure we don't show future data
+        const visibleRange = chartRef.current.timeScale().getVisibleRange();
+        if (visibleRange && visibleRange.to > currentTime) {
+          if (visibleRange.from != null && typeof visibleRange.from === 'number') {
+            chartRef.current.timeScale().setVisibleRange({
+              from: visibleRange.from,
+              to: currentTime,
+            });
+          }
+        }
+        
+        // Final resize after fitContent and visible range adjustment
+        // Use another requestAnimationFrame to ensure chart has fully rendered
+        requestAnimationFrame(() => {
+          if (!chartRef.current || !chartContainerRef.current) return;
+          
+          const finalWidth = chartContainerRef.current.clientWidth;
+          const finalHeight = chartContainerRef.current.clientHeight;
+          if (finalWidth > 0 && finalHeight > 0) {
+            // Force resize to ensure plot area fills entire width
+            chartRef.current.resize(finalWidth, finalHeight);
+            chartRef.current.applyOptions({
+              width: finalWidth,
+              height: finalHeight,
+            });
+            
+            // Force a repaint by getting the visible range again
+            // This ensures the chart library recalculates the plot area
+            chartRef.current.timeScale().getVisibleRange();
+          }
+        });
+      });
     });
   }, [portfolioData, convertTo, selectedTimeRange, currentCurrencyInfo]);
 

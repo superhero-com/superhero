@@ -40,7 +40,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
   // Root
   if (pathname === '/' || pathname === '') {
     return {
-      title: 'Superhero – Crypto Social Network: Posts, Tokens, Governance',
+      title: 'Superhero.com – the all‑in‑one social + crypto app',
       description: 'Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.',
       canonical: `${fullUrl.origin}/`,
       ogImage: `${fullUrl.origin}/og-default.png`,

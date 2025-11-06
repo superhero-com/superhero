@@ -472,7 +472,7 @@ export default function FeedList({
   const content = (
     <div className="w-full">
       <Head
-        title="Superhero – Crypto Social Network: Posts, Tokens, Governance"
+        title="Superhero.com – the all‑in‑one social + crypto app"
         description="Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network."
         canonicalPath="/"
       />

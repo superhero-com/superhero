@@ -172,7 +172,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         visible: false,
         borderVisible: false,
         scaleMargins: {
-          top: 0,
+          top: 0.1,
           bottom: 0,
         },
       },
@@ -180,7 +180,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         visible: false,
         borderVisible: false,
         scaleMargins: {
-          top: 0,
+          top: 0.1,
           bottom: 0,
         },
       },

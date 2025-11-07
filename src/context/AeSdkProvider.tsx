@@ -155,8 +155,8 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
         // Check immediately
         checkAccountChange();
 
-        // Poll every 2 seconds - check accounts directly from SDK
-        const interval = setInterval(checkAccountChange, 2000);
+        // Poll every 1 second for faster account change detection
+        const interval = setInterval(checkAccountChange, 1000);
 
         return () => {
             console.log("[AeSdkProvider] Stopping account change polling");

@@ -26,7 +26,15 @@ export default function WalletOverviewCard({
 }: WalletOverviewCardProps) {
   const navigate = useNavigate();
   const { activeAccount, currentBlockHeight } = useAeSdk();
-  const { decimalBalance } = useAccountBalances(activeAccount);
+  const { decimalBalance, loadAccountData } = useAccountBalances(activeAccount);
+  
+  // Immediately reload balance when account changes
+  useEffect(() => {
+    if (activeAccount) {
+      console.log("[WalletOverviewCard] Account changed, reloading balance:", activeAccount);
+      loadAccountData();
+    }
+  }, [activeAccount, loadAccountData]);
 
   // Persisted expand/collapse state
   const [open, setOpen] = useState<boolean>(() =>

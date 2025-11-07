@@ -43,10 +43,9 @@ export default function Invite() {
 
   return (
     <Shell>
-      <div className="mx-auto px-4 py-4 sm:py-6 max-w-7xl">
+      <div className="mx-auto px-4 py-4 sm:py-6 max-w-7xl relative">
         {/* Hero Section - Redesigned */}
         <div className="text-center mb-8 sm:mb-12 py-6 sm:py-8 relative overflow-hidden">
-          {/* Animated background */}
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-blue-500/5 rounded-3xl blur-3xl animate-pulse opacity-50" />
           <div className="relative z-10">
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold m-0 leading-tight mb-4">
@@ -55,9 +54,11 @@ export default function Invite() {
               </span>
             </h1>
             <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-slate-300 font-bold mb-6">
-              Earn
+              Earn up to
               {' '}
-              <span className="bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">0.5%</span>
+              <span className="bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+                0.5%
+              </span>
               {' '}
               of Every Token Purchase
             </div>
@@ -78,7 +79,7 @@ export default function Invite() {
             <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 mb-8">
               <div className="flex flex-col items-center">
                 <div className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-                  0.5%
+                  Up to 0.5%
                 </div>
                 <div className="text-xs sm:text-sm text-slate-400 mt-1">Commission Rate</div>
               </div>

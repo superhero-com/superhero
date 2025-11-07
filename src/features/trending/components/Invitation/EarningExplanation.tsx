@@ -44,7 +44,7 @@ export default function EarningExplanation({ className }: EarningExplanationProp
           <div className="flex items-center justify-center gap-3 mb-2">
             <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10 text-pink-400" />
             <span className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
-              {EARNING_PERCENTAGE}%
+              Up to {EARNING_PERCENTAGE}%
             </span>
           </div>
           <p className="text-sm sm:text-base text-slate-300 m-0">

@@ -62,7 +62,7 @@ export default function EarningFlow({ className }: EarningFlowProps) {
 
       {/* Percentage badge */}
       <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 rounded-full border-2 border-black/20 shadow-lg">
-        <span className="text-xs sm:text-sm font-bold text-white">0.5% Commission</span>
+        <span className="text-xs sm:text-sm font-bold text-white">Up to 0.5% Commission</span>
       </div>
     </div>
   );

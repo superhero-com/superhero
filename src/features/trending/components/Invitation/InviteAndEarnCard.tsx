@@ -1,4 +1,6 @@
-import { AlertCircle } from 'lucide-react';
+import {
+  AlertCircle, Share2, Twitter, MessageCircle, Copy, Check,
+} from 'lucide-react';
 import React, { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAccount } from '../../../../hooks/useAccount';
@@ -40,6 +42,7 @@ const InviteAndEarnCard = ({
   const [invitationLinks, setInvitationLinks] = useState<string[]>([]);
   const [linkHasBeenCopied, setLinkHasBeenCopied] = useState(false);
   const [closeBlockedPulse, setCloseBlockedPulse] = useState(false);
+  const [copiedLinkIndex, setCopiedLinkIndex] = useState<number | null>(null);
 
   // Refs
   const amountInputRef = useRef<HTMLInputElement>(null);
@@ -101,6 +104,7 @@ const InviteAndEarnCard = ({
     setCopyInviteLinkDialog(false);
     setTimeout(() => {
       setLinkHasBeenCopied(false);
+      setCopiedLinkIndex(null);
     }, 500);
   };
 
@@ -124,32 +128,83 @@ const InviteAndEarnCard = ({
     setCopyInviteLinkDialog(true);
   }, [linkHasBeenCopied, pulseCloseBlocked]);
 
+  const copyToClipboard = async (text: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedLinkIndex(index);
+      setTimeout(() => setCopiedLinkIndex(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const shareToTwitter = (link: string) => {
+    const text = encodeURIComponent(`Join me on Superhero! Earn rewards by trading trend tokens. Use my invite link: ${link}`);
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+  };
+
+  const shareToDiscord = (link: string) => {
+    copyToClipboard(link, -1);
+  };
+
+  const canUseNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
+  const shellClassName = [
+    'bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10',
+    'relative overflow-hidden min-h-0 before:content-[\'\'] before:absolute before:top-0',
+    'before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400',
+    'before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity',
+    'before:duration-300 hover:before:opacity-100',
+    className || '',
+  ].filter(Boolean).join(' ');
+
   return (
-    <div className={`bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 ${className || ''}`}>
+    <div className={shellClassName}>
       <div className="flex items-center gap-4 mb-6">
-        <div className="text-3xl md:text-4xl lg:text-5xl drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] flex-shrink-0">
-          🎯
+        <div className="text-3xl md:text-4xl lg:text-5xl drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] flex-shrink-0 animate-bounce">
+          🚀
         </div>
-        <h3 className="m-0 text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
-          Generate Invites
-        </h3>
+        <div className="flex-1">
+          <h3 className="m-0 text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent break-words">
+            Generate Invite Links
+          </h3>
+          <p className="text-sm md:text-base text-slate-400 mt-2">
+            Create unique invite links and start earning rewards
+          </p>
+        </div>
       </div>
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
         {/* Description - Left Side */}
-        <div className="flex-1 space-y-4 text-sm text-muted-foreground">
-          <p>
-            Create invite links by funding a one-time AE reward per invite. Each
-            link contains a secret code; when someone opens the link and claims
-            it, they receive the funded reward and the invitation is marked as
-            used.
-          </p>
-          <p>
-            You can generate multiple links at once and share them with friends
-            or your community. You can also revoke an invite before it’s claimed.
-          </p>
-          <p className="text-xs opacity-60">
-            Important: save your links before closing the popup. The secret code
-            is only shown to you at creation time.
+        <div className="flex-1 space-y-4">
+          <div className="p-4 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-xl border border-pink-400/20">
+            <p className="text-sm md:text-base text-white m-0 font-medium">
+              <span className="text-pink-400 font-bold">Earn 0.5%</span>
+              {' '}
+              of every token purchase made by your invitees. Fund a one-time AE reward per invite;
+              {' '}
+              when someone claims the link, they receive it and the invite is used.
+            </p>
+          </div>
+          <div className="space-y-3 text-sm text-slate-300">
+            <div className="flex items-start gap-2">
+              <span className="text-green-400 mt-0.5">✓</span>
+              <p className="m-0">Fund AE to create unique invite links</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-purple-400 mt-0.5">✓</span>
+              <p className="m-0">Share links via social media or direct message</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-blue-400 mt-0.5">✓</span>
+              <p className="m-0">
+                Earn automatically when invitees buy tokens; you can revoke unclaimed invites
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-slate-400 opacity-80 m-0">
+            Important: save your links before closing the popup.
+            {' '}
+            The secret is only shown at creation time.
           </p>
         </div>
 
@@ -282,13 +337,56 @@ const InviteAndEarnCard = ({
 
             {/* Links */}
             <div className="space-y-3 max-h-60 overflow-y-auto">
-              {invitationLinks.map((link) => (
-                <CopyText
-                  key={link}
-                  value={link}
-                  bordered
-                  className="w-full"
-                />
+              {invitationLinks.map((link, index) => (
+                <div key={link} className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <CopyText
+                      value={link}
+                      bordered
+                      className="flex-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(link, index)}
+                      className="p-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-all duration-300 hover:border-pink-400"
+                      title="Copy link"
+                    >
+                      {copiedLinkIndex === index ? (
+                        <Check className="w-4 h-4 text-green-400" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-white" />
+                      )}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => shareToTwitter(link)}
+                      className="flex-1 min-w-[7rem] flex items-center justify-center gap-2 px-3 py-2 bg-[#1DA1F2]/20 hover:bg-[#1DA1F2]/30 border border-[#1DA1F2]/30 rounded-lg transition-all duration-300 text-sm text-white"
+                    >
+                      <Twitter className="w-4 h-4" />
+                      <span>Twitter</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => shareToDiscord(link)}
+                      className="flex-1 min-w-[7rem] flex items-center justify-center gap-2 px-3 py-2 bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/30 rounded-lg transition-all duration-300 text-sm text-white"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>Discord</span>
+                    </button>
+                    {canUseNativeShare && (
+                      <button
+                        type="button"
+                        onClick={() => navigator.share({ text: link, title: 'Superhero Invite Link' })}
+                        className="flex-1 min-w-[7rem] flex items-center justify-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-all duration-300 text-sm text-white"
+                      >
+                        <Share2 className="w-4 h-4" />
+                        <span>Share</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
 

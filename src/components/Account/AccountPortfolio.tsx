@@ -369,7 +369,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       if (windowResizeHandler) {
         window.removeEventListener('resize', windowResizeHandler);
       }
-      if (chartRef.current && !chartContainerRef.current) {
+      // Always clean up chart on unmount
+      if (chartRef.current) {
         chartRef.current.remove();
         chartRef.current = null;
         seriesRef.current = null;

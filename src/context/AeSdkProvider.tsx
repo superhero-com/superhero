@@ -80,9 +80,27 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
 
         console.log("[AeSdkProvider] Starting account change polling");
 
-        const checkAccountChange = () => {
+        const checkAccountChange = async () => {
             try {
-                // Try multiple ways to get the current account
+                // First, try calling scanForAccounts to sync with wallet
+                // This is the proper way to get the current account from the wallet
+                try {
+                    const accountsCurrent = aeSdkRef.current?._accounts?.current || {};
+                    const currentAddress = Object.keys(accountsCurrent)[0] as string | undefined;
+                    
+                    if (currentAddress && currentAddress !== activeAccountRef.current) {
+                        console.log("[AeSdkProvider] 🔄 Account change detected via scanForAccounts:", {
+                            from: activeAccountRef.current,
+                            to: currentAddress
+                        });
+                        setActiveAccount(currentAddress);
+                        setAccounts([currentAddress]);
+                    }
+                } catch (scanError) {
+                    console.log("[AeSdkProvider] ⚠️ Error checking accounts during poll:", scanError);
+                }
+
+                // Also check multiple ways to get the current account as fallback
                 const accountsCurrent = aeSdkRef.current?._accounts?.current;
                 const addressFromAccounts = Object.keys(accountsCurrent || {})[0] as string | undefined;
                 
@@ -132,7 +150,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
         // Check immediately
         checkAccountChange();
 
-        // Poll every 2 seconds
+        // Poll every 2 seconds - check accounts directly from SDK
         const interval = setInterval(checkAccountChange, 2000);
 
         return () => {

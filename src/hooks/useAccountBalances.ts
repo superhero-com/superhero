@@ -1,7 +1,7 @@
 import { useAtom } from "jotai";
 import { aex9BalancesAtom, balanceAtom, chainNamesAtom } from "../atoms/walletAtoms";
 import { useAeSdk } from "./useAeSdk";
-import { useEffect, useMemo, useCallback } from "react";
+import { useEffect, useMemo, useCallback, useRef } from "react";
 import { Decimal } from "../libs/decimal";
 import { toAe } from "@aeternity/aepp-sdk";
 import { DEX_ADDRESSES, getTokenBalance } from "../libs/dex";
@@ -18,11 +18,24 @@ export const useAccountBalances = (selectedAccount: string) => {
 
     const aex9Balances = useMemo(() => _aex9Balances[selectedAccount] || [], [_aex9Balances, selectedAccount]);
 
+    // Use refs to store stable references and avoid recreating callbacks
+    const sdkRef = useRef(sdk);
+    const selectedAccountRef = useRef(selectedAccount);
+
+    // Keep refs updated
+    useEffect(() => {
+        sdkRef.current = sdk;
+        selectedAccountRef.current = selectedAccount;
+    }, [sdk, selectedAccount]);
+
     const getAccountBalance = useCallback(async () => {
-        if (!selectedAccount) return;
-        const balance = await sdk?.getBalance(selectedAccount);
-        setBalance(prev => ({ ...prev, [selectedAccount]: balance }));
-    }, [selectedAccount, sdk, setBalance]);
+        const account = selectedAccountRef.current;
+        if (!account || !sdkRef.current) return;
+        const balance = await sdkRef.current.getBalance(account as any);
+        // Convert balance to number if it's a string
+        const balanceNum = typeof balance === 'string' ? Number(balance) : balance;
+        setBalance(prev => ({ ...prev, [account]: balanceNum }));
+    }, [setBalance]);
 
     const _loadAex9DataFromMdw = useCallback(async (url: string, items: any[] = []): Promise<any[]> => {
         try {
@@ -50,11 +63,12 @@ export const useAccountBalances = (selectedAccount: string) => {
     }, []);
 
     const loadAccountAex9Balances = useCallback(async () => {
-        if (!selectedAccount) return;
-        const url = `/v2/aex9/account-balances/${selectedAccount}?limit=100`;
+        const account = selectedAccountRef.current;
+        if (!account) return;
+        const url = `/v2/aex9/account-balances/${account}?limit=100`;
 
         const balances = await _loadAex9DataFromMdw(url, []);
-        const waeBalances = await getTokenBalance(sdk, DEX_ADDRESSES.wae, selectedAccount);
+        const waeBalances = await getTokenBalance(sdkRef.current, DEX_ADDRESSES.wae, account);
 
         const accountBalances = balances.concat({
             contract_id: DEX_ADDRESSES.wae,
@@ -64,24 +78,32 @@ export const useAccountBalances = (selectedAccount: string) => {
             symbol: 'WAE',
         });
         setAex9Balances(prev => ({
-            ...prev, [selectedAccount]: accountBalances
+            ...prev, [account]: accountBalances
         }));
         return accountBalances;
-    }, [selectedAccount, sdk, _loadAex9DataFromMdw]);
+    }, [_loadAex9DataFromMdw, setAex9Balances]);
 
     const loadAccountData = useCallback(async () => {
-        if (selectedAccount) {
+        const account = selectedAccountRef.current;
+        if (account) {
             await getAccountBalance();
             await loadAccountAex9Balances();
         }
-    }, [selectedAccount, getAccountBalance, loadAccountAex9Balances]);
+    }, [getAccountBalance, loadAccountAex9Balances]);
 
-    // Automatically reload account data when the selected account or SDK changes
+    // Store loadAccountData in a ref to avoid including it in effect dependencies
+    const loadAccountDataRef = useRef(loadAccountData);
+    useEffect(() => {
+        loadAccountDataRef.current = loadAccountData;
+    }, [loadAccountData]);
+
+    // Automatically reload account data when the selected account changes
+    // Only depend on selectedAccount to avoid infinite loops
     useEffect(() => {
         if (selectedAccount) {
-            loadAccountData();
+            loadAccountDataRef.current();
         }
-    }, [selectedAccount, loadAccountData]);
+    }, [selectedAccount]);
 
     return {
         selectedAccount,

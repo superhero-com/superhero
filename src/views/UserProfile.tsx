@@ -77,6 +77,8 @@ export default function UserProfile({
 
   const [profile, setProfile] = useState<any>(null);
   const [editOpen, setEditOpen] = useState(false);
+  // Optimistic bio state - updated immediately when bio is posted
+  const [optimisticBio, setOptimisticBio] = useState<string | null>(null);
   
   // Get tab from URL search params, default to "feed"
   const tabFromUrl = searchParams.get("tab") as TabType;
@@ -171,12 +173,14 @@ export default function UserProfile({
     return undefined;
   }, [posts]);
   const bioText =
-    (accountInfo?.bio || "").trim() ||
+    (optimisticBio || accountInfo?.bio || "").trim() ||
     latestBioPost?.content?.trim() ||
     profile?.biography;
 
   useEffect(() => {
     if (!effectiveAddress) return;
+    // Clear optimistic bio when address changes
+    setOptimisticBio(null);
     // Scroll to top whenever navigating to a user profile
     window.scrollTo(0, 0);
     loadAccountData();
@@ -186,41 +190,87 @@ export default function UserProfile({
     })();
   }, [effectiveAddress]);
 
-  // Listen for bio post submissions to show a spinner and refetch until updated
+  // Listen for bio post submissions to optimistically update and then poll until backend confirms
   useEffect(() => {
     function handleBioPosted(e: Event) {
       try {
-        const detail = (e as CustomEvent).detail as { address?: string; bio?: string };
-        if (!detail?.address || detail.address !== effectiveAddress) return;
+        const detail = (e as CustomEvent).detail as { address?: string; bio?: string; txHash?: string };
+        if (!detail?.address) {
+          console.warn("[UserProfile] Bio post event missing address");
+          return;
+        }
+        if (detail.address !== effectiveAddress) {
+          console.log("[UserProfile] Bio post event for different address:", detail.address, "current:", effectiveAddress);
+          return;
+        }
         const submittedBio = (detail.bio || "").trim();
+        if (!submittedBio) {
+          console.warn("[UserProfile] Bio post event missing bio text");
+          return;
+        }
+        
+        console.log("[UserProfile] Received bio post event, updating optimistically:", submittedBio);
+        
+        // Update optimistic bio state immediately - this will make bio appear right away
+        setOptimisticBio(submittedBio);
+        
+        // Optimistically update the React Query cache immediately so bio appears right after wallet confirmation
+        const queryKey = ["AccountsService.getAccount", effectiveAddress];
+        queryClient.setQueryData(queryKey, (oldData: any) => {
+          if (oldData) {
+            return {
+              ...oldData,
+              bio: submittedBio,
+            };
+          }
+          // If no account info exists yet, create a minimal entry
+          return {
+            address: effectiveAddress,
+            bio: submittedBio,
+          };
+        });
+        
+        // Also update the profile state if it exists
+        if (profile) {
+          setProfile({ ...profile, biography: submittedBio });
+        }
+        
+        // Refetch posts to ensure the new bio post appears in the feed
+        refetchPosts();
+        
         const el = document.getElementById("bio-loading-indicator");
         if (el) el.classList.remove("hidden");
-        // Poll account endpoint briefly to pick up new bio
+        
+        // Poll account endpoint to ensure backend has processed the transaction
         const start = Date.now();
         const interval = window.setInterval(async () => {
           await refetchAccount();
           // Get fresh account info from React Query cache after refetch
-          const freshAccountInfo = queryClient.getQueryData<any>([
-            "AccountsService.getAccount",
-            effectiveAddress,
-          ]);
+          const freshAccountInfo = queryClient.getQueryData<any>(queryKey);
           const latestBio = (freshAccountInfo?.bio || "").trim();
           // Check if bio matches what was submitted (for updates) or if bio exists (for new bios)
           if (latestBio && (submittedBio ? latestBio === submittedBio : true)) {
+            // Clear optimistic bio once backend confirms
+            setOptimisticBio(null);
             if (el) el.classList.add("hidden");
             window.clearInterval(interval);
           }
           if (Date.now() - start > 15_000) {
-            // timeout after 15s
+            // timeout after 15s - clear optimistic bio even if backend hasn't confirmed
+            setOptimisticBio(null);
             if (el) el.classList.add("hidden");
             window.clearInterval(interval);
           }
         }, 1500);
-      } catch { }
+      } catch (error) {
+        console.error("[UserProfile] Error handling bio post:", error);
+        // Clear optimistic bio on error
+        setOptimisticBio(null);
+      }
     }
     window.addEventListener("profile-bio-posted", handleBioPosted as any);
     return () => window.removeEventListener("profile-bio-posted", handleBioPosted as any);
-  }, [effectiveAddress, refetchAccount, queryClient]);
+  }, [effectiveAddress, refetchAccount, refetchPosts, queryClient, profile]);
 
   const content = (
     <div className="w-full">

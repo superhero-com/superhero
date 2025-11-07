@@ -1,16 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import configs from '../../configs';
-import { Backend, TrendminerApi } from '@/api/backend';
+import { Link } from 'react-router-dom';
+import { Backend } from '@/api/backend';
 
 export default function FooterSection({ compact = false }: { compact?: boolean }) {
-  const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [apiStatus, setApiStatus] = useState<{
     backend: 'online' | 'offline' | 'checking';
-    trending: 'online' | 'offline' | 'checking';
-    dex: 'online' | 'offline' | 'checking';
-  }>({ backend: 'checking', trending: 'checking', dex: 'checking' });
+  }>({ backend: 'checking' });
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -28,24 +24,6 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
       } catch (error) {
         console.error('[FooterSection] Backend API check failed:', error);
         setApiStatus((prev) => ({ ...prev, backend: 'offline' }));
-      }
-
-      // Check Trendminer API
-      try {
-        await TrendminerApi.listTrendingTags({ limit: 1 });
-        setApiStatus((prev) => ({ ...prev, trending: 'online' }));
-      } catch (error) {
-        console.error('[FooterSection] Trendminer API check failed:', error);
-        setApiStatus((prev) => ({ ...prev, trending: 'offline' }));
-      }
-
-      // Check DEX API
-      try {
-        await Backend.getPrice();
-        setApiStatus((prev) => ({ ...prev, dex: 'online' }));
-      } catch (error) {
-        console.error('[FooterSection] DEX API check failed:', error);
-        setApiStatus((prev) => ({ ...prev, dex: 'offline' }));
       }
     };
 

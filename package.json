@@ -9,7 +9,8 @@
     "preview": "vite preview --port 5174",
     "test": "vitest",
     "generate:api": "openapi --input http://localhost:3000/api-json --output ./src/api/generated --useOptions",
-    "generate:sitemap": "ts-node ./scripts/generate-sitemap.ts"
+    "generate:sitemap": "ts-node ./scripts/generate-sitemap.ts",
+    "postinstall": "node ./scripts/update-package-type.cjs"
   },
   "dependencies": {
     "@aeternity/aepp-sdk": "^13.3.2",

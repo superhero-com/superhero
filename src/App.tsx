@@ -51,12 +51,13 @@ export default function App() {
   // setup intervals
   useEffect(() => {
     if (!activeAccount) return;
+    console.log("[App] activeAccount changed, loading account data:", activeAccount);
     loadAccountData();
     const interval = setInterval(() => {
       loadAccountData();
     }, 10000);
     return () => clearInterval(interval);
-  }, [activeAccount]);
+  }, [activeAccount, loadAccountData]);
 
   return (
     <div className="app-container">

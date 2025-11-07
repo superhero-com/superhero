@@ -134,8 +134,13 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
 
                 if (currentAddress && currentAddress !== activeAccountRef.current) {
                     console.log("[AeSdkProvider] ✅ Poll detected account change from", activeAccountRef.current, "to", currentAddress);
+                    console.log("[AeSdkProvider] 🔄 Updating activeAccount atom and accounts list");
                     setActiveAccount(currentAddress);
                     setAccounts([currentAddress]);
+                    // Force a small delay to ensure state updates propagate
+                    setTimeout(() => {
+                        console.log("[AeSdkProvider] ✅ Account update completed, new activeAccount:", currentAddress);
+                    }, 100);
                 } else if (!currentAddress) {
                     console.log("[AeSdkProvider] ⚠️ No current address found in any SDK source");
                 } else {
@@ -191,9 +196,14 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                 
                 if (newAddress && newAddress !== activeAccountRef.current) {
                     console.log("[AeSdkProvider] ✅ onAddressChange - Updating account from", activeAccountRef.current, "to", newAddress);
+                    console.log("[AeSdkProvider] 🔄 Calling setActiveAccount and setAccounts");
                     setActiveAccount(newAddress);
                     // Update accounts list
                     setAccounts([newAddress]);
+                    // Force a small delay to ensure state updates propagate
+                    setTimeout(() => {
+                        console.log("[AeSdkProvider] ✅ onAddressChange update completed, new activeAccount:", newAddress);
+                    }, 100);
                 } else {
                     console.log("[AeSdkProvider] ⏭️ onAddressChange - Skipping update (same account or no address)");
                 }

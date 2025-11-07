@@ -259,8 +259,14 @@ export const AddressAvatarWithChainName = memo(({
     }
     return prevProps.size === nextProps.size &&
         prevProps.overlaySize === nextProps.overlaySize &&
+        prevProps.showPrimaryOnly === nextProps.showPrimaryOnly &&
+        prevProps.showAddressAndChainName === nextProps.showAddressAndChainName &&
         prevProps.showBalance === nextProps.showBalance &&
         prevProps.truncateAddress === nextProps.truncateAddress &&
+        prevProps.className === nextProps.className &&
+        prevProps.isHoverEnabled === nextProps.isHoverEnabled &&
+        prevProps.avatarBackground === nextProps.avatarBackground &&
+        prevProps.hideFallbackName === nextProps.hideFallbackName &&
         prevProps.secondary === nextProps.secondary &&
         prevProps.contentClassName === nextProps.contentClassName;
 });

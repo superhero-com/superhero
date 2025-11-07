@@ -321,6 +321,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           .filter((item): item is LineData => item !== null);
 
         if (chartData.length > 0) {
+          // Note: Current portfolio value will be added in the update effect
+          // This is just for initial chart setup
           areaSeries.setData(chartData);
     const currentTime = moment().unix();
       chart.timeScale().fitContent();
@@ -405,6 +407,47 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       .filter((item): item is LineData => item !== null);
 
     if (chartData.length === 0) return;
+
+    // Always add current portfolio value as the last point with current timestamp
+    if (currentPortfolioValue !== null && currentPortfolioValue !== undefined) {
+      try {
+        const currentValue = typeof currentPortfolioValue.toNumber === 'function' 
+          ? currentPortfolioValue.toNumber()
+          : typeof currentPortfolioValue === 'number'
+          ? currentPortfolioValue
+          : Number(currentPortfolioValue);
+
+        if (!isNaN(currentValue) && isFinite(currentValue)) {
+          // Calculate current timestamp based on time range
+          let currentTimestamp: moment.Moment;
+          
+          if (selectedTimeRange === '6h' || selectedTimeRange === '1d') {
+            // For hourly ranges, round down to the current hour
+            currentTimestamp = moment().startOf('hour');
+          } else {
+            // For daily ranges (1w, 1m, all), round down to the current day
+            currentTimestamp = moment().startOf('day');
+          }
+          
+          const currentTimeUnix = currentTimestamp.unix();
+          
+          // Always ensure the last point is the current value with current timestamp
+          // Remove any points that are at or after the current timestamp to avoid duplicates
+          while (chartData.length > 0 && (chartData[chartData.length - 1].time as number) >= currentTimeUnix) {
+            chartData.pop();
+          }
+          
+          // Add the current value as the last point
+          chartData.push({
+            time: currentTimeUnix as any,
+            value: currentValue,
+          });
+        }
+      } catch (error) {
+        // Silently handle errors when converting current portfolio value
+        console.warn('Failed to add current portfolio value to chart:', error);
+      }
+    }
 
     // Update price formatter when currency changes
     seriesRef.current.applyOptions({
@@ -521,7 +564,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         });
       });
     });
-  }, [portfolioData, convertTo, selectedTimeRange, currentCurrencyInfo]);
+  }, [portfolioData, convertTo, selectedTimeRange, currentCurrencyInfo, currentPortfolioValue]);
 
   if (isError) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

@@ -82,72 +82,22 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
 
         const checkAccountChange = async () => {
             try {
-                // First, try calling scanForAccounts to sync with wallet
-                // This is the proper way to get the current account from the wallet
-                try {
-                    const accountsCurrent = aeSdkRef.current?._accounts?.current || {};
-                    const currentAddress = Object.keys(accountsCurrent)[0] as string | undefined;
-                    
-                    if (currentAddress && currentAddress !== activeAccountRef.current) {
-                        console.log("[AeSdkProvider] 🔄 Account change detected via scanForAccounts:", {
-                            from: activeAccountRef.current,
-                            to: currentAddress
-                        });
-                        setActiveAccount(currentAddress);
-                        setAccounts([currentAddress]);
-                    }
-                } catch (scanError) {
-                    console.log("[AeSdkProvider] ⚠️ Error checking accounts during poll:", scanError);
-                }
-
-                // Also check multiple ways to get the current account as fallback
-                const accountsCurrent = aeSdkRef.current?._accounts?.current;
-                const addressFromAccounts = Object.keys(accountsCurrent || {})[0] as string | undefined;
+                // Check the SDK's current account state
+                const accountsCurrent = aeSdkRef.current?._accounts?.current || {};
+                const currentAddress = Object.keys(accountsCurrent)[0] as string | undefined;
                 
-                // Also try accessing address directly from SDK
-                const addressFromSdk = (aeSdkRef.current as any)?.address;
-                const addressFromSelectedAccount = (aeSdkRef.current as any)?.selectedAccount;
-                
-                // Try to get from accounts array
-                const accountsArray = (aeSdkRef.current as any)?._accounts?.accounts;
-                const addressFromAccountsArray = accountsArray && accountsArray.length > 0 ? accountsArray[0] : undefined;
-                
-                // Log all possible sources
-                console.log("[AeSdkProvider] 🔍 Poll check - All account sources:", {
-                    timestamp: new Date().toISOString(),
-                    accountsCurrent: accountsCurrent ? Object.keys(accountsCurrent) : null,
-                    addressFromAccounts,
-                    addressFromSdk,
-                    addressFromSelectedAccount,
-                    accountsArray,
-                    addressFromAccountsArray,
-                    activeAccountRef: activeAccountRef.current,
-                    sdkStructure: {
-                        has_accounts: !!aeSdkRef.current?._accounts,
-                        accounts_keys: aeSdkRef.current?._accounts ? Object.keys(aeSdkRef.current._accounts) : [],
-                        sdk_keys: aeSdkRef.current ? Object.keys(aeSdkRef.current).filter(k => !k.startsWith('_')) : []
-                    }
-                });
-
-                // Try each source in order of preference
-                const currentAddress = addressFromAccounts || addressFromSdk || addressFromSelectedAccount || addressFromAccountsArray;
-
+                // Only log and update if there's an actual change
                 if (currentAddress && currentAddress !== activeAccountRef.current) {
-                    console.log("[AeSdkProvider] ✅ Poll detected account change from", activeAccountRef.current, "to", currentAddress);
-                    console.log("[AeSdkProvider] 🔄 Updating activeAccount atom and accounts list");
+                    console.log("[AeSdkProvider] 🔄 Poll detected account change:", {
+                        from: activeAccountRef.current,
+                        to: currentAddress,
+                        timestamp: new Date().toISOString()
+                    });
                     setActiveAccount(currentAddress);
                     setAccounts([currentAddress]);
-                    // Force a small delay to ensure state updates propagate
-                    setTimeout(() => {
-                        console.log("[AeSdkProvider] ✅ Account update completed, new activeAccount:", currentAddress);
-                    }, 100);
-                } else if (!currentAddress) {
-                    console.log("[AeSdkProvider] ⚠️ No current address found in any SDK source");
-                } else {
-                    console.log("[AeSdkProvider] ℹ️ Account unchanged:", currentAddress);
                 }
             } catch (error) {
-                // Silently handle errors (wallet might be disconnected)
+                // Only log errors, not every poll check
                 console.error("[AeSdkProvider] Error checking account change:", error);
             }
         };

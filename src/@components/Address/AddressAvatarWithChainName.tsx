@@ -81,8 +81,7 @@ export const AddressAvatarWithChainName = memo(({
         if (showBalance || visible) {
             loadAccountData();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [address, showBalance, visible]);
+    }, [address, showBalance, visible, loadAccountData]);
 
     // Handle click outside to close card
     useEffect(() => {

@@ -297,11 +297,11 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     };
 
     // Add touch event listeners
-    const container = chartContainerRef.current;
-    if (container) {
-      container.addEventListener('touchstart', handleTouchStart, { passive: false });
-      container.addEventListener('touchmove', handleTouchMove, { passive: false });
-      container.addEventListener('touchend', handleTouchEnd, { passive: false });
+    const touchContainer = chartContainerRef.current;
+    if (touchContainer) {
+      touchContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+      touchContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+      touchContainer.addEventListener('touchend', handleTouchEnd, { passive: false });
     }
     
       // Handle resize - use ResizeObserver for container size changes
@@ -417,10 +417,15 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         window.removeEventListener('resize', windowResizeHandler);
       }
       // Clean up touch event listeners
-      if (container) {
-        container.removeEventListener('touchstart', handleTouchStart);
-        container.removeEventListener('touchmove', handleTouchMove);
-        container.removeEventListener('touchend', handleTouchEnd);
+      if (touchContainer) {
+        touchContainer.removeEventListener('touchstart', handleTouchStart);
+        touchContainer.removeEventListener('touchmove', handleTouchMove);
+        touchContainer.removeEventListener('touchend', handleTouchEnd);
+      } else if (chartContainerRef.current) {
+        // Fallback: remove listeners using ref directly
+        chartContainerRef.current.removeEventListener('touchstart', handleTouchStart);
+        chartContainerRef.current.removeEventListener('touchmove', handleTouchMove);
+        chartContainerRef.current.removeEventListener('touchend', handleTouchEnd);
       }
       // Always clean up chart on unmount
       if (chartRef.current) {

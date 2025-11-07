@@ -45,7 +45,7 @@ export default function Invite() {
     <Shell>
       <div className="mx-auto px-4 py-4 sm:py-6 max-w-7xl relative">
         {/* Hero Section - Redesigned */}
-        <div className="text-center mb-8 sm:mb-12 py-6 sm:py-8 relative overflow-hidden">
+        <div className="text-center mb-8 sm:mb-12 py-6 sm:py-8 relative overflow-hidden rounded-3xl">
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-blue-500/5 rounded-3xl blur-3xl animate-pulse opacity-50" />
           <div className="relative z-10">
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold m-0 leading-tight mb-4">

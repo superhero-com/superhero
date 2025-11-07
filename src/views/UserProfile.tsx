@@ -79,6 +79,8 @@ export default function UserProfile({
   const [editOpen, setEditOpen] = useState(false);
   // Optimistic bio state - updated immediately when bio is posted
   const [optimisticBio, setOptimisticBio] = useState<string | null>(null);
+  // Loading indicator state for bio updates
+  const [isBioLoading, setIsBioLoading] = useState(false);
   
   // Get tab from URL search params, default to "feed"
   const tabFromUrl = searchParams.get("tab") as TabType;
@@ -179,8 +181,9 @@ export default function UserProfile({
 
   useEffect(() => {
     if (!effectiveAddress) return;
-    // Clear optimistic bio when address changes
+    // Clear optimistic bio and loading state when address changes
     setOptimisticBio(null);
+    setIsBioLoading(false);
     // Scroll to top whenever navigating to a user profile
     window.scrollTo(0, 0);
     loadAccountData();
@@ -199,8 +202,11 @@ export default function UserProfile({
           console.warn("[UserProfile] Bio post event missing address");
           return;
         }
-        if (detail.address !== effectiveAddress) {
-          console.log("[UserProfile] Bio post event for different address:", detail.address, "current:", effectiveAddress);
+        // Normalize addresses for comparison (trim and lowercase)
+        const eventAddress = (detail.address || "").trim().toLowerCase();
+        const currentAddress = (effectiveAddress || "").trim().toLowerCase();
+        if (eventAddress !== currentAddress) {
+          console.log("[UserProfile] Bio post event for different address:", eventAddress, "current:", currentAddress);
           return;
         }
         const submittedBio = (detail.bio || "").trim();
@@ -213,6 +219,7 @@ export default function UserProfile({
         
         // Update optimistic bio state immediately - this will make bio appear right away
         setOptimisticBio(submittedBio);
+        setIsBioLoading(true);
         
         // Optimistically update the React Query cache immediately so bio appears right after wallet confirmation
         const queryKey = ["AccountsService.getAccount", effectiveAddress];
@@ -238,9 +245,6 @@ export default function UserProfile({
         // Refetch posts to ensure the new bio post appears in the feed
         refetchPosts();
         
-        const el = document.getElementById("bio-loading-indicator");
-        if (el) el.classList.remove("hidden");
-        
         // Poll account endpoint to ensure backend has processed the transaction
         const start = Date.now();
         const interval = window.setInterval(async () => {
@@ -250,22 +254,22 @@ export default function UserProfile({
           const latestBio = (freshAccountInfo?.bio || "").trim();
           // Check if bio matches what was submitted (for updates) or if bio exists (for new bios)
           if (latestBio && (submittedBio ? latestBio === submittedBio : true)) {
-            // Clear optimistic bio once backend confirms
+            // Clear optimistic bio once backend confirms - backend data will take over
             setOptimisticBio(null);
-            if (el) el.classList.add("hidden");
+            setIsBioLoading(false);
             window.clearInterval(interval);
           }
           if (Date.now() - start > 15_000) {
-            // timeout after 15s - clear optimistic bio even if backend hasn't confirmed
-            setOptimisticBio(null);
-            if (el) el.classList.add("hidden");
+            // timeout after 15s - keep optimistic bio but stop loading indicator
+            setIsBioLoading(false);
             window.clearInterval(interval);
           }
         }, 1500);
       } catch (error) {
         console.error("[UserProfile] Error handling bio post:", error);
-        // Clear optimistic bio on error
+        // Clear optimistic bio and loading state on error
         setOptimisticBio(null);
+        setIsBioLoading(false);
       }
     }
     window.addEventListener("profile-bio-posted", handleBioPosted as any);
@@ -330,7 +334,9 @@ export default function UserProfile({
               {bioText && (
                 <div className="mt-2 text-sm text-white/80 leading-relaxed line-clamp-2">
                   <span>{bioText}</span>
-                  <span id="bio-loading-indicator" className="hidden ml-2 w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  {isBioLoading && (
+                    <span className="ml-2 w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+                  )}
                 </div>
               )}
             </div>

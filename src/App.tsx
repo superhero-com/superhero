@@ -48,16 +48,18 @@ export default function App() {
     }
   }, [sdkInitialized]);
 
-  // setup intervals
+  // setup intervals for periodic data refresh
   useEffect(() => {
     if (!activeAccount) return;
-    console.log("[App] activeAccount changed, loading account data:", activeAccount);
-    loadAccountData();
+    console.log("[App] activeAccount changed, setting up refresh interval:", activeAccount);
+    // Note: Initial load is handled by useAccountBalances hook when account changes
+    // This interval is just for periodic refreshes
     const interval = setInterval(() => {
       loadAccountData();
     }, 10000);
     return () => clearInterval(interval);
-  }, [activeAccount, loadAccountData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeAccount]);
 
   return (
     <div className="app-container">

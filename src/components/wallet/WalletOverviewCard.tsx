@@ -29,12 +29,8 @@ export default function WalletOverviewCard({
   const { decimalBalance, loadAccountData } = useAccountBalances(activeAccount);
   
   // Immediately reload balance when account changes
-  useEffect(() => {
-    if (activeAccount) {
-      console.log("[WalletOverviewCard] Account changed, reloading balance:", activeAccount);
-      loadAccountData();
-    }
-  }, [activeAccount, loadAccountData]);
+  // Note: loadAccountData is already called by useAccountBalances when selectedAccount changes
+  // So we don't need to call it again here to avoid duplicate calls
 
   // Persisted expand/collapse state
   const [open, setOpen] = useState<boolean>(() =>

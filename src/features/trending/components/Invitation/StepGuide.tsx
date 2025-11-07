@@ -43,10 +43,9 @@ export default function StepGuide({ onDismiss }: StepGuideProps) {
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
 
   return (
-    <div className="bg-gradient-to-br from-black/40 via-black/30 to-black/40 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 relative overflow-hidden">
+    <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-6 sm:p-8 md:p-10 relative overflow-hidden transition-all duration-300 hover:border-white/15 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3),0_2px_8px_rgba(0,0,0,0.2)]">
       {/* Animated background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-blue-500/5 animate-pulse pointer-events-none" />
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-pink-400/50 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-pink-500/3 via-purple-500/3 to-blue-500/3 pointer-events-none opacity-50" />
       
       {/* Close button */}
       {onDismiss && (
@@ -83,8 +82,8 @@ export default function StepGuide({ onDismiss }: StepGuideProps) {
               <div
                 key={step.number}
                 onClick={() => setExpandedStep(isExpanded ? null : step.number)}
-                className={`group relative bg-white/5 hover:bg-white/10 border border-white/10 hover:border-pink-400/50 rounded-xl sm:rounded-2xl p-5 sm:p-6 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-pink-500/20 ${
-                  isExpanded ? "bg-white/10 border-pink-400/50 shadow-lg shadow-pink-500/20" : ""
+                className={`group relative bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/15 rounded-xl sm:rounded-2xl p-5 sm:p-6 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3),0_2px_8px_rgba(0,0,0,0.2)] ${
+                  isExpanded ? "bg-white/10 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.3),0_2px_8px_rgba(0,0,0,0.2)]" : ""
                 }`}
               >
                 {/* Step Number Badge */}
@@ -135,7 +134,7 @@ export default function StepGuide({ onDismiss }: StepGuideProps) {
         </div>
 
         {/* Call to Action */}
-        <div className="mt-8 p-4 sm:p-6 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-xl sm:rounded-2xl border border-pink-400/20 text-center">
+        <div className="mt-8 p-4 sm:p-6 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-xl sm:rounded-2xl border border-white/10 text-center">
           <p className="text-sm sm:text-base text-white font-medium mb-0">
             <span className="text-pink-400 font-bold">Ready to start earning?</span> Generate your first invite link below!
           </p>

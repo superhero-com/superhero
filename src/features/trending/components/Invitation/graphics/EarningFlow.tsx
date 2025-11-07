@@ -8,7 +8,7 @@ export default function EarningFlow({ className }: EarningFlowProps) {
   return (
     <div className={`relative ${className || ""}`}>
       {/* Flow visualization */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 p-6 sm:p-8 bg-white/5 rounded-xl border border-white/10">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 p-6 sm:p-8 bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] transition-all duration-300 hover:border-white/15 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3),0_2px_8px_rgba(0,0,0,0.2)]">
         {/* Step 1: Invite */}
         <div className="flex flex-col items-center gap-3 flex-1">
           <div className="relative">

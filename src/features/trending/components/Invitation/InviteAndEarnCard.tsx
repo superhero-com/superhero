@@ -123,7 +123,7 @@ export default function InviteAndEarnCard({
   };
 
   return (
-    <div className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
+    <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 transition-all duration-300 hover:border-white/15 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3),0_2px_8px_rgba(0,0,0,0.2)] hover:-translate-y-1">
       {/* Enhanced Header */}
       <div className="flex items-center gap-4 mb-6">
         <div className="text-3xl md:text-4xl lg:text-5xl drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] flex-shrink-0 animate-bounce">
@@ -141,7 +141,7 @@ export default function InviteAndEarnCard({
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
         {/* Description - Left Side */}
         <div className="flex-1 space-y-4">
-          <div className="p-4 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-xl border border-pink-400/20">
+          <div className="p-4 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-xl border border-white/10">
             <p className="text-sm md:text-base text-white m-0 font-medium">
               <span className="text-pink-400 font-bold">Earn 0.5%</span> of every token purchase made by your invitees. 
               The more friends you invite, the more you can earn!

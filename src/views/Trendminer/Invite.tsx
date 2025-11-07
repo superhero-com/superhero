@@ -39,7 +39,7 @@ export default function Invite() {
         {/* Hero Section - Redesigned */}
         <div className="text-center mb-8 sm:mb-12 py-6 sm:py-8 relative overflow-hidden">
           {/* Animated background */}
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-3xl blur-3xl animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-blue-500/5 rounded-3xl blur-3xl animate-pulse opacity-50" />
           
           <div className="relative z-10">
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold m-0 leading-tight mb-4">
@@ -100,7 +100,7 @@ export default function Invite() {
         {/* Network Visualization */}
         {activeAccount && inviteCount > 0 && (
           <div className="mb-8 sm:mb-12">
-            <div className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 sm:p-8">
+            <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-6 sm:p-8 transition-all duration-300 hover:border-white/15 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3),0_2px_8px_rgba(0,0,0,0.2)]">
               <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent text-center mb-6">
                 Your Invite Network
               </h3>

@@ -19,10 +19,9 @@ export default function EarningExplanation({ className }: EarningExplanationProp
   const exampleEarnings = (exampleAmount * exampleInvitees * EARNING_PERCENTAGE) / 100;
 
   return (
-    <div className={`bg-gradient-to-br from-black/40 via-purple-900/20 to-black/40 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 relative overflow-hidden ${className || ""}`}>
+    <div className={`bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-6 sm:p-8 md:p-10 relative overflow-hidden transition-all duration-300 hover:border-white/15 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3),0_2px_8px_rgba(0,0,0,0.2)] ${className || ""}`}>
       {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-blue-500/5 animate-pulse pointer-events-none" />
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-400/50 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-pink-500/3 via-purple-500/3 to-blue-500/3 pointer-events-none opacity-50" />
 
       <div className="relative z-10">
         {/* Header */}
@@ -41,7 +40,7 @@ export default function EarningExplanation({ className }: EarningExplanationProp
         </div>
 
         {/* Earning Percentage Display */}
-        <div className="mb-8 p-6 sm:p-8 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-xl sm:rounded-2xl border border-pink-400/30 text-center">
+        <div className="mb-8 p-6 sm:p-8 bg-gradient-to-r from-pink-500/15 via-purple-500/15 to-blue-500/15 rounded-xl sm:rounded-2xl border border-white/10 text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
             <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10 text-pink-400" />
             <span className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
@@ -131,7 +130,7 @@ export default function EarningExplanation({ className }: EarningExplanationProp
               />
             </div>
           </div>
-          <div className="p-4 bg-gradient-to-r from-green-500/20 to-teal-500/20 rounded-lg border border-green-400/30">
+          <div className="p-4 bg-gradient-to-r from-green-500/15 to-teal-500/15 rounded-lg border border-white/10">
             <div className="text-xs sm:text-sm text-slate-300 mb-1">Your Potential Earnings</div>
             <LivePriceFormatter
               aePrice={Decimal.from(exampleEarnings)}

@@ -249,10 +249,16 @@ async function fetchJson(path: string, init?: RequestInit) {
     return mockFetch(path);
   }
   const url = base ? `${base}/${path}` : `/${path}`;
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[fetchJson] Fetching: ${url}`);
+  }
   const res = await fetch(url, init);
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new Error(`Request failed: ${res.status} ${body || ''}`.trim());
+    const error = new Error(`Request failed: ${res.status} ${body || ''}`.trim());
+    (error as any).url = url;
+    (error as any).status = res.status;
+    throw error;
   }
   return res.json();
 }
@@ -270,7 +276,7 @@ function mockFetch(path: string) {
   }
   if (path === 'payfortx/post') return Promise.resolve({ challenge: 'mock-challenge' });
   if (path === 'cache/price') return Promise.resolve({ aeternity: { usd: 0.25, eur: 0.23 } });
-  if (path === 'stats') return Promise.resolve({ totalTipsLength: 123, totalAmount: '1000000000000000000', sendersLength: 42 });
+  if (path === 'api/stats') return Promise.resolve({ totalTipsLength: 123, totalAmount: '1000000000000000000', sendersLength: 42 });
   if (path.startsWith('comment/api/tip/')) return Promise.resolve([]);
   if (path === 'verified') return Promise.resolve([]);
   if (path === 'static/wallet/graylist') return Promise.resolve([]);
@@ -357,7 +363,7 @@ export const Backend = {
     body: JSON.stringify({ address }),
     headers: { 'Content-Type': 'application/json' },
   }),
-  getTipStats: () => fetchJson('stats'),
+  getTipStats: () => fetchJson('api/stats'),
   getCacheChainNames: () => fetchJson('cache/chainnames'),
   getPrice: () => fetchJson('cache/price'),
   getTopics: () => fetchJson('tips/topics'),

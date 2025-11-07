@@ -1,16 +1,12 @@
-import WebSocketClient from '@/libs/WebSocketClient';
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import configs from '../../configs';
+import { Link } from 'react-router-dom';
+import { Backend } from '@/api/backend';
 
 export default function FooterSection({ compact = false }: { compact?: boolean }) {
-  const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [apiStatus, setApiStatus] = useState<{
     backend: 'online' | 'offline' | 'checking';
-    trending: 'online' | 'offline' | 'checking';
-    dex: 'online' | 'offline' | 'checking';
-  }>({ backend: 'checking', trending: 'checking', dex: 'checking' });
+  }>({ backend: 'checking' });
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -19,19 +15,26 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
     window.addEventListener('offline', handleOffline);
 
     const checkApiStatus = async () => {
-      const isConnected = WebSocketClient.isConnected();
-      const status = isConnected ? 'online' : 'offline';
       setIsOnline(navigator.onLine);
-      setApiStatus((p) => ({ ...p, backend: status, trending: status, dex: status }));
+      
+      // Check Backend API
+      try {
+        await Backend.getPrice();
+        setApiStatus((prev) => ({ ...prev, backend: 'online' }));
+      } catch (error) {
+        console.error('[FooterSection] Backend API check failed:', error);
+        setApiStatus((prev) => ({ ...prev, backend: 'offline' }));
+      }
     };
 
     
     const interval = setInterval(checkApiStatus, 5000);
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       checkApiStatus();
     }, 1000);
     return () => {
       clearInterval(interval);
+      clearTimeout(timeout);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };

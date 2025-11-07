@@ -1,7 +1,7 @@
-import WebSocketClient from '@/libs/WebSocketClient';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import configs from '../../configs';
+import { Backend, TrendminerApi } from '@/api/backend';
 
 export default function FooterSection({ compact = false }: { compact?: boolean }) {
   const navigate = useNavigate();
@@ -19,10 +19,31 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
     window.addEventListener('offline', handleOffline);
 
     const checkApiStatus = async () => {
-      const isConnected = WebSocketClient.isConnected();
-      const status = isConnected ? 'online' : 'offline';
       setIsOnline(navigator.onLine);
-      setApiStatus((p) => ({ ...p, backend: status, trending: status, dex: status }));
+      
+      // Check Backend API
+      try {
+        await Backend.getTopics();
+        setApiStatus((prev) => ({ ...prev, backend: 'online' }));
+      } catch {
+        setApiStatus((prev) => ({ ...prev, backend: 'offline' }));
+      }
+
+      // Check Trendminer API
+      try {
+        await TrendminerApi.listTrendingTags({ limit: 1 });
+        setApiStatus((prev) => ({ ...prev, trending: 'online' }));
+      } catch {
+        setApiStatus((prev) => ({ ...prev, trending: 'offline' }));
+      }
+
+      // Check DEX API
+      try {
+        await Backend.getPrice();
+        setApiStatus((prev) => ({ ...prev, dex: 'online' }));
+      } catch {
+        setApiStatus((prev) => ({ ...prev, dex: 'offline' }));
+      }
     };
 
     

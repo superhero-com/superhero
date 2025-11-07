@@ -76,13 +76,12 @@ export const useAccountBalances = (selectedAccount: string) => {
         }
     }, [selectedAccount, getAccountBalance, loadAccountAex9Balances]);
 
-    // Automatically reload account data when the selected account changes
+    // Automatically reload account data when the selected account or SDK changes
     useEffect(() => {
         if (selectedAccount) {
             loadAccountData();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedAccount]);
+    }, [selectedAccount, loadAccountData]);
 
     return {
         selectedAccount,

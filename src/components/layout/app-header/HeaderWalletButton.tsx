@@ -55,6 +55,7 @@ export default function HeaderWalletButton() {
         aria-label="View profile"
       >
         <AddressAvatarWithChainName
+          key={activeAccount}
           isHoverEnabled={false}
           address={activeAccount}
           size={36}
@@ -81,6 +82,7 @@ export default function HeaderWalletButton() {
 
         <DropdownMenuContent className="min-w-[560px] p-4" align="end">
           <AddressAvatarWithChainName
+            key={activeAccount}
             isHoverEnabled={false}
             address={activeAccount}
             size={40}

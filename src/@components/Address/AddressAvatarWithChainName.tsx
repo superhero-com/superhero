@@ -81,6 +81,7 @@ export const AddressAvatarWithChainName = memo(({
         if (showBalance || visible) {
             loadAccountData();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [address, showBalance, visible]);
 
     // Handle click outside to close card
@@ -252,9 +253,13 @@ export const AddressAvatarWithChainName = memo(({
     );
 }, (prevProps, nextProps) => {
     // Custom comparison for better performance
-    return prevProps.address === nextProps.address &&
-        prevProps.size === nextProps.size &&
+    // Always return false if address changes to force re-render and reload balance
+    if (prevProps.address !== nextProps.address) {
+        return false;
+    }
+    return prevProps.size === nextProps.size &&
         prevProps.overlaySize === nextProps.overlaySize &&
+        prevProps.showBalance === nextProps.showBalance &&
         prevProps.truncateAddress === nextProps.truncateAddress &&
         prevProps.secondary === nextProps.secondary &&
         prevProps.contentClassName === nextProps.contentClassName;

@@ -6,7 +6,7 @@ import AeButton from "../components/AeButton";
 import RightRail from "../components/layout/RightRail";
 import Shell from "../components/layout/Shell";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PostsService } from "../api/generated";
 import { AccountsService } from "../api/generated/services/AccountsService";
 import { AccountTokensService } from "../api/generated/services/AccountTokensService";
@@ -48,6 +48,7 @@ export default function UserProfile({
   const { chainName } = useChainName(effectiveAddress);
   const { getProfile, canEdit } = useProfile(effectiveAddress);
   const { openModal } = useModal();
+  const queryClient = useQueryClient();
 
   const { data, refetch: refetchPosts } = useQuery({
     queryKey: ["PostsService.listAll", address],
@@ -189,16 +190,23 @@ export default function UserProfile({
   useEffect(() => {
     function handleBioPosted(e: Event) {
       try {
-        const detail = (e as CustomEvent).detail as { address?: string };
+        const detail = (e as CustomEvent).detail as { address?: string; bio?: string };
         if (!detail?.address || detail.address !== effectiveAddress) return;
+        const submittedBio = (detail.bio || "").trim();
         const el = document.getElementById("bio-loading-indicator");
         if (el) el.classList.remove("hidden");
         // Poll account endpoint briefly to pick up new bio
         const start = Date.now();
         const interval = window.setInterval(async () => {
           await refetchAccount();
-          const latestBio = (accountInfo?.bio || "").trim();
-          if (latestBio) {
+          // Get fresh account info from React Query cache after refetch
+          const freshAccountInfo = queryClient.getQueryData<any>([
+            "AccountsService.getAccount",
+            effectiveAddress,
+          ]);
+          const latestBio = (freshAccountInfo?.bio || "").trim();
+          // Check if bio matches what was submitted (for updates) or if bio exists (for new bios)
+          if (latestBio && (submittedBio ? latestBio === submittedBio : true)) {
             if (el) el.classList.add("hidden");
             window.clearInterval(interval);
           }
@@ -212,7 +220,7 @@ export default function UserProfile({
     }
     window.addEventListener("profile-bio-posted", handleBioPosted as any);
     return () => window.removeEventListener("profile-bio-posted", handleBioPosted as any);
-  }, [effectiveAddress, accountInfo?.bio]);
+  }, [effectiveAddress, refetchAccount, queryClient]);
 
   const content = (
     <div className="w-full">
@@ -423,6 +431,7 @@ export default function UserProfile({
         onClose={() => {
           setEditOpen(false);
           refetchPosts();
+          refetchAccount(); // Refetch account info to get updated bio
           (async () => {
             const p = await getProfile();
             setProfile(p);
@@ -440,6 +449,7 @@ export default function UserProfile({
         onClose={() => {
           setEditOpen(false);
           refetchPosts();
+          refetchAccount(); // Refetch account info to get updated bio
           (async () => {
             const p = await getProfile();
             setProfile(p);

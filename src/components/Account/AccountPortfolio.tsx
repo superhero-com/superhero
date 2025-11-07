@@ -432,17 +432,44 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           
           const currentTimeUnix = currentTimestamp.unix();
           
-          // Always ensure the last point is the current value with current timestamp
-          // Remove any points that are at or after the current timestamp to avoid duplicates
-          while (chartData.length > 0 && (chartData[chartData.length - 1].time as number) >= currentTimeUnix) {
-            chartData.pop();
-          }
+          // Check if we should update the last point or add a new one
+          const lastPoint = chartData.length > 0 ? chartData[chartData.length - 1] : null;
+          const nowUnix = moment.utc().unix();
           
-          // Add the current value as the last point
-          chartData.push({
-            time: currentTimeUnix as any,
-            value: currentValue,
-          });
+          if (lastPoint) {
+            const lastPointTime = lastPoint.time as number;
+            const lastPointValue = lastPoint.value as number;
+            const valueMatches = Math.abs(lastPointValue - currentValue) < 0.000001;
+            
+            // If the last point has the same value, just update its timestamp to current time
+            // This prevents visual drops when the value hasn't actually changed
+            if (valueMatches) {
+              // Only update timestamp if it's older than current time (don't move backwards)
+              if (lastPointTime < nowUnix) {
+                chartData[chartData.length - 1] = {
+                  time: nowUnix as any,
+                  value: currentValue,
+                };
+              }
+              // If last point is already at or after current time, keep it as is
+            } else {
+              // Value is different - remove points at or after rounded timestamp and add new point
+              while (chartData.length > 0 && (chartData[chartData.length - 1].time as number) >= currentTimeUnix) {
+                chartData.pop();
+              }
+              // Add the current value as the last point with actual current timestamp
+              chartData.push({
+                time: nowUnix as any,
+                value: currentValue,
+              });
+            }
+          } else {
+            // No existing points, add the current value with actual current timestamp
+            chartData.push({
+              time: nowUnix as any,
+              value: currentValue,
+            });
+          }
         }
       } catch (error) {
         // Silently handle errors when converting current portfolio value

@@ -256,6 +256,53 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         setHoveredPrice(null);
       }
     });
+
+    // Add touch handlers for mobile drag support
+    const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      if (!chart || !chartContainerRef.current) return;
+      
+      const touch = e.touches[0];
+      const rect = chartContainerRef.current.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      
+      // Set crosshair position which will trigger subscribeCrosshairMove
+      chart.setCrosshairPosition(x, 0, {
+        time: chart.coordinateToTime(x) as any,
+      });
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      if (!chart || !chartContainerRef.current) return;
+      
+      const touch = e.touches[0];
+      const rect = chartContainerRef.current.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      
+      // Clamp x to chart bounds
+      const clampedX = Math.max(0, Math.min(x, rect.width));
+      
+      // Set crosshair position which will trigger subscribeCrosshairMove
+      chart.setCrosshairPosition(clampedX, 0, {
+        time: chart.coordinateToTime(clampedX) as any,
+      });
+    };
+
+    const handleTouchEnd = () => {
+      if (!chart) return;
+      // Clear crosshair to reset hover state
+      chart.setCrosshairPosition(-1, -1, {});
+      setHoveredPrice(null);
+    };
+
+    // Add touch event listeners
+    const container = chartContainerRef.current;
+    if (container) {
+      container.addEventListener('touchstart', handleTouchStart, { passive: false });
+      container.addEventListener('touchmove', handleTouchMove, { passive: false });
+      container.addEventListener('touchend', handleTouchEnd, { passive: false });
+    }
     
       // Handle resize - use ResizeObserver for container size changes
       const handleResize = () => {
@@ -368,6 +415,12 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       }
       if (windowResizeHandler) {
         window.removeEventListener('resize', windowResizeHandler);
+      }
+      // Clean up touch event listeners
+      if (container) {
+        container.removeEventListener('touchstart', handleTouchStart);
+        container.removeEventListener('touchmove', handleTouchMove);
+        container.removeEventListener('touchend', handleTouchEnd);
       }
       // Always clean up chart on unmount
       if (chartRef.current) {

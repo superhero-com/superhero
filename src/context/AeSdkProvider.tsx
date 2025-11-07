@@ -49,6 +49,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     const [walletInfo] = useAtom(walletInfoAtom);
     const transactionsQueueRef = useRef(transactionsQueue);
     const activeAccountRef = useRef<string | undefined>(activeAccount);
+    const generationPollIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const { openModal } = useModal();
 
     // Keep the refs in sync with the atom values
@@ -59,6 +60,15 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         activeAccountRef.current = activeAccount;
     }, [activeAccount]);
+
+    // Cleanup generation polling interval on unmount
+    useEffect(() => {
+        return () => {
+            if (generationPollIntervalRef.current) {
+                clearInterval(generationPollIntervalRef.current);
+            }
+        };
+    }, []);
 
     // Poll for account changes when wallet is connected
     useEffect(() => {
@@ -127,7 +137,13 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             addStaticAccount(activeAccount);
         }
 
-        setInterval(async () => {
+        // Clear any existing interval before creating a new one
+        if (generationPollIntervalRef.current) {
+            clearInterval(generationPollIntervalRef.current);
+        }
+
+        // Poll for current generation every 30 seconds
+        generationPollIntervalRef.current = setInterval(async () => {
             getCurrentGeneration(_aeSdk);
         }, 30000);
         getCurrentGeneration(_aeSdk);

@@ -22,7 +22,7 @@ export const useAccountBalances = (selectedAccount: string) => {
         if (!selectedAccount) return;
         const balance = await sdk?.getBalance(selectedAccount);
         setBalance(prev => ({ ...prev, [selectedAccount]: balance }));
-    }, [selectedAccount, sdk]);
+    }, [selectedAccount, sdk, setBalance]);
 
     const _loadAex9DataFromMdw = useCallback(async (url: string, items: any[] = []): Promise<any[]> => {
         try {

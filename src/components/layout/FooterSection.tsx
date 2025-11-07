@@ -27,14 +27,11 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
       }
     };
 
-    
+    // Check immediately on mount, then set up interval for periodic checks
+    checkApiStatus();
     const interval = setInterval(checkApiStatus, 5000);
-    const timeout = setTimeout(() => {
-      checkApiStatus();
-    }, 1000);
     return () => {
       clearInterval(interval);
-      clearTimeout(timeout);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };

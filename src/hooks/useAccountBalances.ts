@@ -8,7 +8,7 @@ import { DEX_ADDRESSES, getTokenBalance } from "../libs/dex";
 import { BridgeConstants } from "@/features/ae-eth-bridge";
 
 export const useAccountBalances = (selectedAccount: string) => {
-    const { sdk } = useAeSdk();
+    const { sdk, activeAccount } = useAeSdk();
     const [chainNames] = useAtom(chainNamesAtom);
     const [_balance, setBalance] = useAtom(balanceAtom);
     const [_aex9Balances, setAex9Balances] = useAtom(aex9BalancesAtom);
@@ -79,7 +79,11 @@ export const useAccountBalances = (selectedAccount: string) => {
     // Automatically reload account data when the selected account changes
     useEffect(() => {
         if (selectedAccount) {
-            console.log("[useAccountBalances] Account changed, reloading data for:", selectedAccount);
+            // Only log for active account to reduce console noise when viewing other users' profiles
+            // This hook is called for many accounts (feed items, user profiles), so we only log for the connected wallet
+            if (selectedAccount === activeAccount) {
+                console.log("[useAccountBalances] Active account changed, reloading data for:", selectedAccount);
+            }
             loadAccountData();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps

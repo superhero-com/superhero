@@ -46,12 +46,17 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     const [activeNetwork, setActiveNetwork] = useState<INetwork>(NETWORK_MAINNET);
     const [transactionsQueue, setTransactionsQueue] = useAtom(transactionsQueueAtom);
     const transactionsQueueRef = useRef(transactionsQueue);
+    const activeAccountRef = useRef<string | undefined>(activeAccount);
     const { openModal } = useModal();
 
-    // Keep the ref in sync with the atom value
+    // Keep the refs in sync with the atom values
     useEffect(() => {
         transactionsQueueRef.current = transactionsQueue;
     }, [transactionsQueue]);
+
+    useEffect(() => {
+        activeAccountRef.current = activeAccount;
+    }, [activeAccount]);
 
     async function initSdk() {
         console.log("[AeSdkProvider] initSdk activeAccount", activeAccount);
@@ -63,7 +68,14 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             ttl: 10000,
             onCompiler: new CompilerHttp(NETWORK_MAINNET.compilerUrl),
             onAddressChange: (a: any) => {
-                setActiveAccount(Object.keys(a.current || {})[0] as any);
+                const newAddress = Object.keys(a.current || {})[0] as any;
+                console.log("[AeSdkProvider] onAddressChange - Account changed to:", newAddress);
+                if (newAddress && newAddress !== activeAccountRef.current) {
+                    console.log("[AeSdkProvider] onAddressChange - Updating account from", activeAccountRef.current, "to", newAddress);
+                    setActiveAccount(newAddress);
+                    // Update accounts list
+                    setAccounts([newAddress]);
+                }
             },
             onDisconnect: () => {
                 setActiveAccount(undefined);

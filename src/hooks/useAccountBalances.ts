@@ -74,6 +74,15 @@ export const useAccountBalances = (selectedAccount: string) => {
         }
     }
 
+    // Automatically reload account data when the selected account changes
+    useEffect(() => {
+        if (selectedAccount) {
+            console.log("[useAccountBalances] Account changed, reloading data for:", selectedAccount);
+            loadAccountData();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedAccount]);
+
     return {
         selectedAccount,
         chainNames,

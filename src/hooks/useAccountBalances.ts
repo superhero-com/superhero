@@ -79,11 +79,6 @@ export const useAccountBalances = (selectedAccount: string) => {
     // Automatically reload account data when the selected account changes
     useEffect(() => {
         if (selectedAccount) {
-            // Only log for active account to reduce console noise when viewing other users' profiles
-            // This hook is called for many accounts (feed items, user profiles), so we only log for the connected wallet
-            if (selectedAccount === activeAccount) {
-                console.log("[useAccountBalances] Active account changed, reloading data for:", selectedAccount);
-            }
             loadAccountData();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps

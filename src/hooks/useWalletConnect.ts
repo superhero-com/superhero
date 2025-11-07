@@ -74,18 +74,14 @@ export function useWalletConnect() {
 
             (async () => {
                 try {
-                    console.log("[useWalletConnect] 🔗 Subscribing to wallet address...");
                     await aeSdk.subscribeAddress(
                         SUBSCRIPTION_TYPES.subscribe,
                         "connected",
                     );
-                    console.log("[useWalletConnect] ✅ Wallet subscription successful, scanning for accounts...");
                     await scanForAccounts();
-                    console.log("[useWalletConnect] ✅ Account scan completed");
 
                     resolve(true);
                 } catch (error) {
-                    console.error("[useWalletConnect] ❌ Error during wallet subscription:", error);
                     reject(error);
                 } finally {
                     setScanningForAccounts(false);
@@ -128,14 +124,11 @@ export function useWalletConnect() {
         }
 
         try {
-            console.log("[useWalletConnect] 🔌 Connecting to wallet...");
             const _walletInfo = await aeSdk.connectToWallet(wallet.current.getConnection());
             setWalletInfo(_walletInfo);
-            console.log("[useWalletConnect] ✅ Wallet connected, walletInfo:", _walletInfo);
 
             await subscribeAddress();
             setWalletConnected(true);
-            console.log("[useWalletConnect] ✅ Wallet connection flow completed");
         } catch (error) {
             console.log("wallet connect error ::", error);
             disconnectWallet();

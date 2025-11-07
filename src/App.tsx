@@ -59,7 +59,6 @@ export default function App() {
   // setup intervals for periodic data refresh
   useEffect(() => {
     if (!activeAccount) return;
-    console.log("[App] activeAccount changed, setting up refresh interval:", activeAccount);
     // Note: Initial load is handled by useAccountBalances hook when account changes
     // This interval is just for periodic refreshes
     const interval = setInterval(() => {

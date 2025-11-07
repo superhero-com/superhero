@@ -57,28 +57,14 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     }, [transactionsQueue]);
 
     useEffect(() => {
-        const previousAccount = activeAccountRef.current;
         activeAccountRef.current = activeAccount;
-        console.log("[AeSdkProvider] 📝 activeAccount state updated:", {
-            timestamp: new Date().toISOString(),
-            newActiveAccount: activeAccount,
-            previousActiveAccount: previousAccount,
-            changed: previousAccount !== activeAccount
-        });
     }, [activeAccount]);
 
     // Poll for account changes when wallet is connected
     useEffect(() => {
         if (!sdkInitialized || !walletInfo || !aeSdkRef.current) {
-            console.log("[AeSdkProvider] Polling skipped:", {
-                sdkInitialized,
-                hasWalletInfo: !!walletInfo,
-                hasAeSdk: !!aeSdkRef.current
-            });
             return;
         }
-
-        console.log("[AeSdkProvider] Starting account change polling");
 
         const checkAccountChange = async () => {
             try {
@@ -86,19 +72,13 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                 const accountsCurrent = aeSdkRef.current?._accounts?.current || {};
                 const currentAddress = Object.keys(accountsCurrent)[0] as string | undefined;
                 
-                // Only log and update if there's an actual change
+                // Update if there's an actual change
                 if (currentAddress && currentAddress !== activeAccountRef.current) {
-                    console.log("[AeSdkProvider] 🔄 Poll detected account change:", {
-                        from: activeAccountRef.current,
-                        to: currentAddress,
-                        timestamp: new Date().toISOString()
-                    });
                     setActiveAccount(currentAddress);
                     setAccounts([currentAddress]);
                 }
             } catch (error) {
-                // Only log errors, not every poll check
-                console.error("[AeSdkProvider] Error checking account change:", error);
+                // Silently handle errors (wallet might be disconnected)
             }
         };
 
@@ -109,13 +89,11 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
         const interval = setInterval(checkAccountChange, 1000);
 
         return () => {
-            console.log("[AeSdkProvider] Stopping account change polling");
             clearInterval(interval);
         };
     }, [sdkInitialized, walletInfo, setActiveAccount, setAccounts]);
 
     async function initSdk() {
-        console.log("[AeSdkProvider] initSdk activeAccount", activeAccount);
         const _aeSdk = new AeSdkAepp({
             name: "Superhero",
             nodes,
@@ -124,38 +102,11 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             ttl: 10000,
             onCompiler: new CompilerHttp(NETWORK_MAINNET.compilerUrl),
             onAddressChange: (a: any) => {
-                console.log("[AeSdkProvider] 🔔 onAddressChange callback triggered - FULL EVENT:", {
-                    timestamp: new Date().toISOString(),
-                    event: a,
-                    eventType: typeof a,
-                    eventKeys: a ? Object.keys(a) : [],
-                    aCurrent: a?.current,
-                    aCurrentType: typeof a?.current,
-                    aCurrentKeys: a?.current ? Object.keys(a?.current) : [],
-                    accountsInCurrent: a?.current ? Object.keys(a.current) : [],
-                    stringified: JSON.stringify(a, null, 2)
-                });
-                
                 const newAddress = Object.keys(a.current || {})[0] as any;
                 
-                console.log("[AeSdkProvider] 🔔 onAddressChange parsed:", {
-                    newAddress,
-                    currentActiveAccount: activeAccountRef.current,
-                    willUpdate: newAddress && newAddress !== activeAccountRef.current
-                });
-                
                 if (newAddress && newAddress !== activeAccountRef.current) {
-                    console.log("[AeSdkProvider] ✅ onAddressChange - Updating account from", activeAccountRef.current, "to", newAddress);
-                    console.log("[AeSdkProvider] 🔄 Calling setActiveAccount and setAccounts");
                     setActiveAccount(newAddress);
-                    // Update accounts list
                     setAccounts([newAddress]);
-                    // Force a small delay to ensure state updates propagate
-                    setTimeout(() => {
-                        console.log("[AeSdkProvider] ✅ onAddressChange update completed, new activeAccount:", newAddress);
-                    }, 100);
-                } else {
-                    console.log("[AeSdkProvider] ⏭️ onAddressChange - Skipping update (same account or no address)");
                 }
             },
             onDisconnect: () => {
@@ -304,15 +255,8 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     async function scanForAccounts() {
-        console.log("[AeSdkProvider] 🔍 scanForAccounts called");
         const accountsCurrent = aeSdkRef.current._accounts?.current || {};
         const currentAddress = Object.keys(accountsCurrent)[0] as any;
-
-        console.log("[AeSdkProvider] scanForAccounts result:", {
-            accountsCurrent: Object.keys(accountsCurrent),
-            currentAddress,
-            previousActiveAccount: activeAccountRef.current
-        });
 
         setAccounts([currentAddress]);
         setActiveAccount(currentAddress);

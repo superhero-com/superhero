@@ -423,11 +423,11 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           let currentTimestamp: moment.Moment;
           
           if (selectedTimeRange === '6h' || selectedTimeRange === '1d') {
-            // For hourly ranges, round down to the current hour
-            currentTimestamp = moment().startOf('hour');
+            // For hourly ranges, round down to the current hour (use UTC to match API timestamps)
+            currentTimestamp = moment.utc().startOf('hour');
           } else {
-            // For daily ranges (1w, 1m, all), round down to the current day
-            currentTimestamp = moment().startOf('day');
+            // For daily ranges (1w, 1m, all), round down to the current day (use UTC to match API timestamps)
+            currentTimestamp = moment.utc().startOf('day');
           }
           
           const currentTimeUnix = currentTimestamp.unix();

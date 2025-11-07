@@ -205,14 +205,14 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                         "x-cancel": decodeURI(cancelUrl.href),
                     });
 
-                    setTransactionsQueue({
-                        ...transactionsQueue,
+                    setTransactionsQueue(prev => ({
+                        ...prev,
                         [uniqueId]: {
                             status: "pending",
                             tx,
                             signUrl,
                         }
-                    });
+                    }));
 
                     return new Promise((resolve, reject) => {
                         let newWindow: Window | null = null;

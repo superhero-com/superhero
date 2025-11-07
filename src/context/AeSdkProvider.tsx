@@ -3,6 +3,7 @@ import { useAtom } from "jotai";
 import { createContext, useEffect, useRef, useState } from "react";
 import { activeAccountAtom } from "../atoms/accountAtoms";
 import { transactionsQueueAtom } from "../atoms/txQueueAtoms";
+import { walletInfoAtom } from "../atoms/walletAtoms";
 import { useModal } from "../hooks/useModal";
 import configs from "../configs";
 import { NETWORK_MAINNET } from "../utils/constants";
@@ -45,6 +46,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     const [currentBlockHeight, setCurrentBlockHeight] = useState<number | null>(null);
     const [activeNetwork, setActiveNetwork] = useState<INetwork>(NETWORK_MAINNET);
     const [transactionsQueue, setTransactionsQueue] = useAtom(transactionsQueueAtom);
+    const [walletInfo] = useAtom(walletInfoAtom);
     const transactionsQueueRef = useRef(transactionsQueue);
     const activeAccountRef = useRef<string | undefined>(activeAccount);
     const { openModal } = useModal();
@@ -57,6 +59,38 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         activeAccountRef.current = activeAccount;
     }, [activeAccount]);
+
+    // Poll for account changes when wallet is connected
+    useEffect(() => {
+        if (!sdkInitialized || !walletInfo || !aeSdkRef.current) {
+            return;
+        }
+
+        const checkAccountChange = () => {
+            try {
+                const currentAddress = Object.keys(
+                    aeSdkRef.current?._accounts?.current || {},
+                )[0] as string | undefined;
+
+                if (currentAddress && currentAddress !== activeAccountRef.current) {
+                    console.log("[AeSdkProvider] Poll detected account change from", activeAccountRef.current, "to", currentAddress);
+                    setActiveAccount(currentAddress);
+                    setAccounts([currentAddress]);
+                }
+            } catch (error) {
+                // Silently handle errors (wallet might be disconnected)
+                console.debug("[AeSdkProvider] Error checking account change:", error);
+            }
+        };
+
+        // Check immediately
+        checkAccountChange();
+
+        // Poll every 2 seconds
+        const interval = setInterval(checkAccountChange, 2000);
+
+        return () => clearInterval(interval);
+    }, [sdkInitialized, walletInfo, setActiveAccount, setAccounts]);
 
     async function initSdk() {
         console.log("[AeSdkProvider] initSdk activeAccount", activeAccount);

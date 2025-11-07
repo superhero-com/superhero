@@ -82,23 +82,46 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
 
         const checkAccountChange = () => {
             try {
+                // Try multiple ways to get the current account
                 const accountsCurrent = aeSdkRef.current?._accounts?.current;
-                const currentAddress = Object.keys(accountsCurrent || {})[0] as string | undefined;
-
-                console.log("[AeSdkProvider] Poll check:", {
+                const addressFromAccounts = Object.keys(accountsCurrent || {})[0] as string | undefined;
+                
+                // Also try accessing address directly from SDK
+                const addressFromSdk = (aeSdkRef.current as any)?.address;
+                const addressFromSelectedAccount = (aeSdkRef.current as any)?.selectedAccount;
+                
+                // Try to get from accounts array
+                const accountsArray = (aeSdkRef.current as any)?._accounts?.accounts;
+                const addressFromAccountsArray = accountsArray && accountsArray.length > 0 ? accountsArray[0] : undefined;
+                
+                // Log all possible sources
+                console.log("[AeSdkProvider] 🔍 Poll check - All account sources:", {
                     timestamp: new Date().toISOString(),
                     accountsCurrent: accountsCurrent ? Object.keys(accountsCurrent) : null,
-                    currentAddress,
+                    addressFromAccounts,
+                    addressFromSdk,
+                    addressFromSelectedAccount,
+                    accountsArray,
+                    addressFromAccountsArray,
                     activeAccountRef: activeAccountRef.current,
-                    areEqual: currentAddress === activeAccountRef.current
+                    sdkStructure: {
+                        has_accounts: !!aeSdkRef.current?._accounts,
+                        accounts_keys: aeSdkRef.current?._accounts ? Object.keys(aeSdkRef.current._accounts) : [],
+                        sdk_keys: aeSdkRef.current ? Object.keys(aeSdkRef.current).filter(k => !k.startsWith('_')) : []
+                    }
                 });
+
+                // Try each source in order of preference
+                const currentAddress = addressFromAccounts || addressFromSdk || addressFromSelectedAccount || addressFromAccountsArray;
 
                 if (currentAddress && currentAddress !== activeAccountRef.current) {
                     console.log("[AeSdkProvider] ✅ Poll detected account change from", activeAccountRef.current, "to", currentAddress);
                     setActiveAccount(currentAddress);
                     setAccounts([currentAddress]);
                 } else if (!currentAddress) {
-                    console.log("[AeSdkProvider] ⚠️ No current address found in SDK accounts");
+                    console.log("[AeSdkProvider] ⚠️ No current address found in any SDK source");
+                } else {
+                    console.log("[AeSdkProvider] ℹ️ Account unchanged:", currentAddress);
                 }
             } catch (error) {
                 // Silently handle errors (wallet might be disconnected)
@@ -128,12 +151,21 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             ttl: 10000,
             onCompiler: new CompilerHttp(NETWORK_MAINNET.compilerUrl),
             onAddressChange: (a: any) => {
-                const newAddress = Object.keys(a.current || {})[0] as any;
-                console.log("[AeSdkProvider] 🔔 onAddressChange callback triggered:", {
+                console.log("[AeSdkProvider] 🔔 onAddressChange callback triggered - FULL EVENT:", {
                     timestamp: new Date().toISOString(),
-                    a: a,
-                    aCurrent: a.current,
-                    accountsInCurrent: a.current ? Object.keys(a.current) : [],
+                    event: a,
+                    eventType: typeof a,
+                    eventKeys: a ? Object.keys(a) : [],
+                    aCurrent: a?.current,
+                    aCurrentType: typeof a?.current,
+                    aCurrentKeys: a?.current ? Object.keys(a?.current) : [],
+                    accountsInCurrent: a?.current ? Object.keys(a.current) : [],
+                    stringified: JSON.stringify(a, null, 2)
+                });
+                
+                const newAddress = Object.keys(a.current || {})[0] as any;
+                
+                console.log("[AeSdkProvider] 🔔 onAddressChange parsed:", {
                     newAddress,
                     currentActiveAccount: activeAccountRef.current,
                     willUpdate: newAddress && newAddress !== activeAccountRef.current

@@ -23,9 +23,10 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
       
       // Check Backend API
       try {
-        await Backend.getTopics();
+        await Backend.getTipStats();
         setApiStatus((prev) => ({ ...prev, backend: 'online' }));
-      } catch {
+      } catch (error) {
+        console.error('[FooterSection] Backend API check failed:', error);
         setApiStatus((prev) => ({ ...prev, backend: 'offline' }));
       }
 
@@ -33,7 +34,8 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
       try {
         await TrendminerApi.listTrendingTags({ limit: 1 });
         setApiStatus((prev) => ({ ...prev, trending: 'online' }));
-      } catch {
+      } catch (error) {
+        console.error('[FooterSection] Trendminer API check failed:', error);
         setApiStatus((prev) => ({ ...prev, trending: 'offline' }));
       }
 
@@ -41,7 +43,8 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
       try {
         await Backend.getPrice();
         setApiStatus((prev) => ({ ...prev, dex: 'online' }));
-      } catch {
+      } catch (error) {
+        console.error('[FooterSection] DEX API check failed:', error);
         setApiStatus((prev) => ({ ...prev, dex: 'offline' }));
       }
     };

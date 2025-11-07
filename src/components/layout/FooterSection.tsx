@@ -19,7 +19,7 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
       
       // Check Backend API
       try {
-        await Backend.getTipStats();
+        await Backend.getPrice();
         setApiStatus((prev) => ({ ...prev, backend: 'online' }));
       } catch (error) {
         console.error('[FooterSection] Backend API check failed:', error);

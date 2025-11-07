@@ -149,6 +149,12 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     
     let resizeObserver: ResizeObserver | null = null;
     let windowResizeHandler: (() => void) | null = null;
+    let touchHandlers: {
+      handleTouchStart: (e: TouchEvent) => void;
+      handleTouchMove: (e: TouchEvent) => void;
+      handleTouchEnd: (e: TouchEvent) => void;
+      container: HTMLDivElement;
+    } | null = null;
     
     const checkAndInit = () => {
       if (!chartContainerRef.current) return false;
@@ -260,48 +266,72 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     // Add touch handlers for mobile drag support
     const handleTouchStart = (e: TouchEvent) => {
       e.preventDefault();
-      if (!chart || !chartContainerRef.current) return;
+      e.stopPropagation();
+      if (!chart || !container || !areaSeries) return;
       
       const touch = e.touches[0];
-      const rect = chartContainerRef.current.getBoundingClientRect();
+      const rect = container.getBoundingClientRect();
       const x = touch.clientX - rect.left;
       
-      // Set crosshair position which will trigger subscribeCrosshairMove
-      chart.setCrosshairPosition(x, 0, {
-        time: chart.coordinateToTime(x) as any,
-      });
+      try {
+        // Use timeScale to convert coordinate to time
+        const time = chart.timeScale().coordinateToTime(x);
+        if (time !== null) {
+          // Set crosshair position - this will trigger subscribeCrosshairMove
+          chart.setCrosshairPosition(x, 0, { time: time as any });
+        }
+      } catch (error) {
+        console.warn('[AccountPortfolio] Error setting crosshair on touchstart:', error);
+      }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       e.preventDefault();
-      if (!chart || !chartContainerRef.current) return;
+      e.stopPropagation();
+      if (!chart || !container || !areaSeries) return;
       
       const touch = e.touches[0];
-      const rect = chartContainerRef.current.getBoundingClientRect();
+      const rect = container.getBoundingClientRect();
       const x = touch.clientX - rect.left;
       
       // Clamp x to chart bounds
       const clampedX = Math.max(0, Math.min(x, rect.width));
       
-      // Set crosshair position which will trigger subscribeCrosshairMove
-      chart.setCrosshairPosition(clampedX, 0, {
-        time: chart.coordinateToTime(clampedX) as any,
-      });
+      try {
+        // Use timeScale to convert coordinate to time
+        const time = chart.timeScale().coordinateToTime(clampedX);
+        if (time !== null) {
+          // Set crosshair position - this will trigger subscribeCrosshairMove
+          chart.setCrosshairPosition(clampedX, 0, { time: time as any });
+        }
+      } catch (error) {
+        console.warn('[AccountPortfolio] Error setting crosshair on touchmove:', error);
+      }
     };
 
-    const handleTouchEnd = () => {
+    const handleTouchEnd = (e: TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
       if (!chart) return;
-      // Clear crosshair to reset hover state
-      chart.setCrosshairPosition(-1, -1, {});
-      setHoveredPrice(null);
+      
+      try {
+        // Clear crosshair to reset hover state
+        chart.setCrosshairPosition(-1, -1, {});
+        setHoveredPrice(null);
+      } catch (error) {
+        console.warn('[AccountPortfolio] Error clearing crosshair on touchend:', error);
+      }
     };
 
-    // Add touch event listeners
-    const touchContainer = chartContainerRef.current;
-    if (touchContainer) {
-      touchContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
-      touchContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
-      touchContainer.addEventListener('touchend', handleTouchEnd, { passive: false });
+    // Add touch event listeners after chart is initialized
+    if (container) {
+      container.addEventListener('touchstart', handleTouchStart, { passive: false });
+      container.addEventListener('touchmove', handleTouchMove, { passive: false });
+      container.addEventListener('touchend', handleTouchEnd, { passive: false });
+      container.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+      
+      // Store handlers for cleanup
+      touchHandlers = { handleTouchStart, handleTouchMove, handleTouchEnd, container };
     }
     
       // Handle resize - use ResizeObserver for container size changes
@@ -417,15 +447,11 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         window.removeEventListener('resize', windowResizeHandler);
       }
       // Clean up touch event listeners
-      if (touchContainer) {
-        touchContainer.removeEventListener('touchstart', handleTouchStart);
-        touchContainer.removeEventListener('touchmove', handleTouchMove);
-        touchContainer.removeEventListener('touchend', handleTouchEnd);
-      } else if (chartContainerRef.current) {
-        // Fallback: remove listeners using ref directly
-        chartContainerRef.current.removeEventListener('touchstart', handleTouchStart);
-        chartContainerRef.current.removeEventListener('touchmove', handleTouchMove);
-        chartContainerRef.current.removeEventListener('touchend', handleTouchEnd);
+      if (touchHandlers) {
+        touchHandlers.container.removeEventListener('touchstart', touchHandlers.handleTouchStart);
+        touchHandlers.container.removeEventListener('touchmove', touchHandlers.handleTouchMove);
+        touchHandlers.container.removeEventListener('touchend', touchHandlers.handleTouchEnd);
+        touchHandlers.container.removeEventListener('touchcancel', touchHandlers.handleTouchEnd);
       }
       // Always clean up chart on unmount
       if (chartRef.current) {

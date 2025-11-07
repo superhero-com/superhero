@@ -143,7 +143,7 @@ export default function InviteAndEarnCard({
         <div className="flex-1 space-y-4">
           <div className="p-4 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 rounded-xl border border-white/10">
             <p className="text-sm md:text-base text-white m-0 font-medium">
-              <span className="text-pink-400 font-bold">Earn 0.5%</span> of every token purchase made by your invitees. 
+              <span className="text-pink-400 font-bold">Earn up to 0.5%</span> of every token purchase made by your invitees. 
               The more friends you invite, the more you can earn!
             </p>
           </div>

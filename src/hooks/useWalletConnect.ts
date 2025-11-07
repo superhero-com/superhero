@@ -126,7 +126,6 @@ export function useWalletConnect() {
         try {
             const _walletInfo = await aeSdk.connectToWallet(wallet.current.getConnection());
             setWalletInfo(_walletInfo);
-            console.log("[useWalletConnect] connectWallet _walletInfo", _walletInfo);
 
             await subscribeAddress();
             setWalletConnected(true);

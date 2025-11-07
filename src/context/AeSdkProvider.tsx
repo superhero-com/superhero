@@ -3,6 +3,7 @@ import { useAtom } from "jotai";
 import { createContext, useEffect, useRef, useState } from "react";
 import { activeAccountAtom } from "../atoms/accountAtoms";
 import { transactionsQueueAtom } from "../atoms/txQueueAtoms";
+import { walletInfoAtom } from "../atoms/walletAtoms";
 import { useModal } from "../hooks/useModal";
 import configs from "../configs";
 import { NETWORK_MAINNET } from "../utils/constants";
@@ -45,16 +46,54 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     const [currentBlockHeight, setCurrentBlockHeight] = useState<number | null>(null);
     const [activeNetwork, setActiveNetwork] = useState<INetwork>(NETWORK_MAINNET);
     const [transactionsQueue, setTransactionsQueue] = useAtom(transactionsQueueAtom);
+    const [walletInfo] = useAtom(walletInfoAtom);
     const transactionsQueueRef = useRef(transactionsQueue);
+    const activeAccountRef = useRef<string | undefined>(activeAccount);
     const { openModal } = useModal();
 
-    // Keep the ref in sync with the atom value
+    // Keep the refs in sync with the atom values
     useEffect(() => {
         transactionsQueueRef.current = transactionsQueue;
     }, [transactionsQueue]);
 
+    useEffect(() => {
+        activeAccountRef.current = activeAccount;
+    }, [activeAccount]);
+
+    // Poll for account changes when wallet is connected
+    useEffect(() => {
+        if (!sdkInitialized || !walletInfo || !aeSdkRef.current) {
+            return;
+        }
+
+        const checkAccountChange = async () => {
+            try {
+                // Check the SDK's current account state
+                const accountsCurrent = aeSdkRef.current?._accounts?.current || {};
+                const currentAddress = Object.keys(accountsCurrent)[0] as string | undefined;
+                
+                // Update if there's an actual change
+                if (currentAddress && currentAddress !== activeAccountRef.current) {
+                    setActiveAccount(currentAddress);
+                    setAccounts([currentAddress]);
+                }
+            } catch (error) {
+                // Silently handle errors (wallet might be disconnected)
+            }
+        };
+
+        // Check immediately
+        checkAccountChange();
+
+        // Poll every 1 second for faster account change detection
+        const interval = setInterval(checkAccountChange, 1000);
+
+        return () => {
+            clearInterval(interval);
+        };
+    }, [sdkInitialized, walletInfo, setActiveAccount, setAccounts]);
+
     async function initSdk() {
-        console.log("[AeSdkProvider] initSdk activeAccount", activeAccount);
         const _aeSdk = new AeSdkAepp({
             name: "Superhero",
             nodes,
@@ -63,7 +102,12 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             ttl: 10000,
             onCompiler: new CompilerHttp(NETWORK_MAINNET.compilerUrl),
             onAddressChange: (a: any) => {
-                setActiveAccount(Object.keys(a.current || {})[0] as any);
+                const newAddress = Object.keys(a.current || {})[0] as any;
+                
+                if (newAddress && newAddress !== activeAccountRef.current) {
+                    setActiveAccount(newAddress);
+                    setAccounts([newAddress]);
+                }
             },
             onDisconnect: () => {
                 setActiveAccount(undefined);
@@ -211,13 +255,10 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     async function scanForAccounts() {
-        const currentAddress = Object.keys(
-            aeSdkRef.current._accounts?.current || {},
-        )[0] as any;
+        const accountsCurrent = aeSdkRef.current._accounts?.current || {};
+        const currentAddress = Object.keys(accountsCurrent)[0] as any;
 
-        console.log("[AeSdkProvider] scanForAccounts currentAddress", currentAddress);
         setAccounts([currentAddress]);
-
         setActiveAccount(currentAddress);
     }
 

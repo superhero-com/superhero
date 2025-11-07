@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect } from "react";
+import React, { Suspense, useEffect, useRef } from "react";
 import { useRoutes } from "react-router-dom";
 import GlobalNewAccountEducation from "./components/GlobalNewAccountEducation";
 import { CollectInvitationLinkCard } from "./features/trending/components/Invitation";
@@ -38,6 +38,9 @@ export default function App() {
   const { initSdk, sdkInitialized, activeAccount } = useAeSdk();
   const { loadAccountData } = useAccount();
   const { checkWalletConnection } = useWalletConnect();
+  // Use a ref to store the latest loadAccountData to avoid dependency issues
+  const loadAccountDataRef = useRef(loadAccountData);
+  
   useEffect(() => {
     initSdk();
   }, []);
@@ -48,12 +51,18 @@ export default function App() {
     }
   }, [sdkInitialized]);
 
-  // setup intervals
+  // Keep the ref updated with the latest loadAccountData function
+  useEffect(() => {
+    loadAccountDataRef.current = loadAccountData;
+  }, [loadAccountData]);
+
+  // setup intervals for periodic data refresh
   useEffect(() => {
     if (!activeAccount) return;
-    loadAccountData();
+    // Note: Initial load is handled by useAccountBalances hook when account changes
+    // This interval is just for periodic refreshes
     const interval = setInterval(() => {
-      loadAccountData();
+      loadAccountDataRef.current();
     }, 10000);
     return () => clearInterval(interval);
   }, [activeAccount]);

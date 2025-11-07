@@ -1,14 +1,14 @@
 import { useAtom } from "jotai";
 import { aex9BalancesAtom, balanceAtom, chainNamesAtom } from "../atoms/walletAtoms";
 import { useAeSdk } from "./useAeSdk";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useCallback } from "react";
 import { Decimal } from "../libs/decimal";
 import { toAe } from "@aeternity/aepp-sdk";
 import { DEX_ADDRESSES, getTokenBalance } from "../libs/dex";
 import { BridgeConstants } from "@/features/ae-eth-bridge";
 
 export const useAccountBalances = (selectedAccount: string) => {
-    const { sdk } = useAeSdk();
+    const { sdk, activeAccount } = useAeSdk();
     const [chainNames] = useAtom(chainNamesAtom);
     const [_balance, setBalance] = useAtom(balanceAtom);
     const [_aex9Balances, setAex9Balances] = useAtom(aex9BalancesAtom);
@@ -18,13 +18,13 @@ export const useAccountBalances = (selectedAccount: string) => {
 
     const aex9Balances = useMemo(() => _aex9Balances[selectedAccount] || [], [_aex9Balances, selectedAccount]);
 
-    async function getAccountBalance() {
+    const getAccountBalance = useCallback(async () => {
         if (!selectedAccount) return;
         const balance = await sdk?.getBalance(selectedAccount);
         setBalance(prev => ({ ...prev, [selectedAccount]: balance }));
-    }
+    }, [selectedAccount, sdk]);
 
-    const _loadAex9DataFromMdw = async (url, items = []) => {
+    const _loadAex9DataFromMdw = useCallback(async (url: string, items: any[] = []): Promise<any[]> => {
         try {
             // Check if url is already a full URL (absolute) or a relative path
             const fetchUrl = url.startsWith('http://') || url.startsWith('https://') 
@@ -47,8 +47,10 @@ export const useAccountBalances = (selectedAccount: string) => {
             console.error('Error loading AEX9 balances:', error);
             return items;
         }
-    }
-    async function loadAccountAex9Balances() {
+    }, []);
+
+    const loadAccountAex9Balances = useCallback(async () => {
+        if (!selectedAccount) return;
         const url = `/v2/aex9/account-balances/${selectedAccount}?limit=100`;
 
         const balances = await _loadAex9DataFromMdw(url, []);
@@ -65,14 +67,21 @@ export const useAccountBalances = (selectedAccount: string) => {
             ...prev, [selectedAccount]: accountBalances
         }));
         return accountBalances;
-    }
+    }, [selectedAccount, sdk, _loadAex9DataFromMdw]);
 
-    async function loadAccountData() {
+    const loadAccountData = useCallback(async () => {
         if (selectedAccount) {
-            getAccountBalance();
-            loadAccountAex9Balances();
+            await getAccountBalance();
+            await loadAccountAex9Balances();
         }
-    }
+    }, [selectedAccount, getAccountBalance, loadAccountAex9Balances]);
+
+    // Automatically reload account data when the selected account or SDK changes
+    useEffect(() => {
+        if (selectedAccount) {
+            loadAccountData();
+        }
+    }, [selectedAccount, loadAccountData]);
 
     return {
         selectedAccount,

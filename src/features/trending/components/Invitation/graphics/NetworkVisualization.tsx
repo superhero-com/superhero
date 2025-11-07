@@ -119,7 +119,7 @@ export default function NetworkVisualization({ inviteCount = 0, className }: Net
         </svg>
 
         {/* Stats overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-black/40 backdrop-blur-sm rounded-b-xl border-t border-white/10">
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/5 backdrop-blur-sm rounded-b-xl border-t border-white/10">
           <div className="text-center">
             <div className="text-xs text-slate-400 mb-1">Your Network</div>
             <div className="text-lg font-bold bg-gradient-to-r from-pink-400 to-blue-400 bg-clip-text text-transparent">

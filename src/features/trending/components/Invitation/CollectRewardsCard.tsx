@@ -306,16 +306,15 @@ const CollectRewardsCard = () => {
     );
   }, [collectingReward, thresholdReached, accumulatedRewardsAe]);
 
+  const collectRewardsShellClassName = [
+    'bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px]',
+    'rounded-[20px] p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0',
+    'transition-all duration-300 hover:border-white/15',
+    'hover:shadow-[0_8px_32px_rgba(0,0,0,0.3),0_2px_8px_rgba(0,0,0,0.2)] hover:-translate-y-1',
+  ].join(' ');
+
   return (
-    <div
-      className={
-        'bg-gradient-to-br from-black/40 via-purple-900/20 to-black/40 backdrop-blur-xl '
-        + 'border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 '
-        + 'before:content-[\'\'] before:absolute before:top-0 before:left-0 before:right-0 before:h-px '
-        + 'before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 '
-        + 'before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100'
-      }
-    >
+    <div className={collectRewardsShellClassName}>
       {/* Animated background particles */}
       {isEligibleForRewards && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -359,7 +358,7 @@ const CollectRewardsCard = () => {
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 relative z-10">
         {/* Description - Left Side */}
         <div className="flex-1 space-y-4">
-          <div className="p-4 bg-gradient-to-r from-green-500/10 via-teal-500/10 to-blue-500/10 rounded-xl border border-green-400/20">
+          <div className="p-4 bg-gradient-to-r from-green-500/10 via-teal-500/10 to-blue-500/10 rounded-xl border border-white/10">
             <p className="text-sm md:text-base text-white m-0 font-medium">
               Once
               {' '}
@@ -441,7 +440,7 @@ const CollectRewardsCard = () => {
             <div
               className={`text-center font-medium text-xs md:text-sm p-2 rounded-lg break-words relative z-10 ${
                 thresholdReached
-                  ? 'bg-green-500/20 text-green-300 border border-green-400/30'
+                  ? 'bg-green-500/10 text-green-300 border border-white/10'
                   : 'bg-white/5 text-slate-400'
               }`}
             >
@@ -502,7 +501,7 @@ const CollectRewardsCard = () => {
             <div
               className={`flex flex-col gap-2 text-center p-5 sm:p-6 rounded-xl border relative overflow-hidden ${
                 isEligibleForRewards
-                  ? 'bg-gradient-to-br from-green-500/20 via-teal-500/20 to-blue-500/20 border-green-400/30'
+                  ? 'bg-gradient-to-br from-green-500/10 via-teal-500/10 to-blue-500/10 border-white/15'
                   : 'bg-white/5 border-white/10'
               }`}
             >

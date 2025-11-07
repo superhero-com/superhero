@@ -29,11 +29,12 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
 
     
     const interval = setInterval(checkApiStatus, 5000);
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       checkApiStatus();
     }, 1000);
     return () => {
       clearInterval(interval);
+      clearTimeout(timeout);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };

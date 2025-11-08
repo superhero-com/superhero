@@ -138,6 +138,12 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   const gifBtnRef = useRef<HTMLButtonElement>(null);
   const [overlayComputed, setOverlayComputed] = useState<{ paddingTop: number; paddingRight: number; paddingBottom: number; paddingLeft: number; fontFamily: string; fontSize: string; fontWeight: string; lineHeight: string; letterSpacing: string; } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isDesktopViewport, setIsDesktopViewport] = useState(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return false;
+    }
+    return window.matchMedia('(min-width: 768px)').matches;
+  });
 
   useEffect(() => {
     setPromptIndex(Math.floor(Math.random() * PROMPTS.length));
@@ -201,9 +207,34 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   }, []);
 
   // Desktop: single-line height; Mobile: slightly taller for ergonomics
-  const isDesktopViewport = typeof window !== 'undefined'
-    && typeof window.matchMedia === 'function'
-    && window.matchMedia('(min-width: 768px)').matches;
+  // Use useEffect to listen for window resize events instead of calling matchMedia on every render
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    
+    // Set initial value
+    setIsDesktopViewport(mediaQuery.matches);
+
+    // Modern browsers support addEventListener on MediaQueryList
+    if (mediaQuery.addEventListener) {
+      const handleChange = (e: MediaQueryListEvent) => {
+        setIsDesktopViewport(e.matches);
+      };
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    } else {
+      // Fallback for older browsers (MediaQueryList type)
+      const legacyHandler = (mq: MediaQueryList) => {
+        setIsDesktopViewport(mq.matches);
+      };
+      mediaQuery.addListener(legacyHandler);
+      return () => mediaQuery.removeListener(legacyHandler);
+    }
+  }, []);
+
   const computedMinHeight = isDesktopViewport ? '52px' : '88px';
 
   const requiredMissing = useMemo(() => {

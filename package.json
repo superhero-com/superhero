@@ -17,6 +17,7 @@
     "@dicebear/avatars": "^4.2.5",
     "@dicebear/avatars-avataaars-sprites": "^4.2.5",
     "@ethersproject/bignumber": "^5.8.0",
+    "@radix-ui/react-tooltip": "^1.1.7",
     "@mdi/font": "7.4.47",
     "@multiavatar/multiavatar": "^1.0.7",
     "@radix-ui/react-avatar": "^1.1.10",

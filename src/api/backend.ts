@@ -281,6 +281,13 @@ export const SuperheroApi = {
     if (currency) qp.set('currency', currency);
     return this.fetchJson(`/api/coins/aeternity/market-data?${qp.toString()}`);
   },
+  getHistoricalPrice(currency: string = 'usd', days: number = 1, interval: 'daily' | 'hourly' | 'minute' = 'daily') {
+    const qp = new URLSearchParams();
+    if (currency) qp.set('currency', currency);
+    if (days) qp.set('days', String(days));
+    if (interval) qp.set('interval', interval);
+    return this.fetchJson(`/api/coins/aeternity/history?${qp.toString()}`);
+  },
   // Posts endpoints
   listPosts(params: { limit?: number; page?: number; orderBy?: 'total_comments'|'created_at'; orderDirection?: 'ASC'|'DESC'; search?: string; accountAddress?: string; topics?: string } = {}) {
     const qp = new URLSearchParams();

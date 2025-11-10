@@ -56,7 +56,42 @@ export const SuperheroApi = {
         throw error;
       }
       
-      return res.json();
+      // Check if response has content before trying to parse JSON
+      const contentType = res.headers.get('content-type');
+      const contentLength = res.headers.get('content-length');
+      
+      if (contentLength === '0' || (!contentType?.includes('application/json') && !contentType?.includes('text/json'))) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`[SuperheroApi] Unexpected response type for ${url}:`, {
+            contentType,
+            contentLength,
+            status: res.status,
+            statusText: res.statusText,
+          });
+        }
+        // Return null for empty responses instead of throwing
+        return null;
+      }
+      
+      const text = await res.text();
+      if (!text || text.trim().length === 0) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`[SuperheroApi] Empty response body for ${url}`);
+        }
+        return null;
+      }
+      
+      try {
+        return JSON.parse(text);
+      } catch (parseError) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error(`[SuperheroApi] Failed to parse JSON response from ${url}:`, {
+            text: text.substring(0, 200),
+            error: parseError,
+          });
+        }
+        throw new Error(`Invalid JSON response from ${url}: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+      }
     } catch (err) {
       // Clear timeout on error
       if (timeoutId) {

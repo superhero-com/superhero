@@ -1,14 +1,14 @@
 import { CONFIG } from '../config';
 
-// Trendminer API client
-export const TrendminerApi = {
+// Superhero API client
+export const SuperheroApi = {
   async fetchJson(path: string, init?: RequestInit) {
     const base = (CONFIG.SUPERHERO_API_URL || '').replace(/\/$/, '');
     if (!base) throw new Error('SUPERHERO_API_URL not configured');
     const url = `${base}${path.startsWith('/') ? '' : '/'}${path}`;
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[TrendminerApi] Base URL: ${base}`);
-      console.log(`[TrendminerApi] Fetching: ${url}`);
+      console.log(`[SuperheroApi] Base URL: ${base}`);
+      console.log(`[SuperheroApi] Fetching: ${url}`);
     }
     
     // Create timeout controller if no signal provided
@@ -51,7 +51,7 @@ export const TrendminerApi = {
         
         const error = new Error(`Trendminer API error (${res.status}): ${errorMessage}`);
         if (process.env.NODE_ENV === 'development') {
-          console.error(`[TrendminerApi] Error fetching ${url}:`, error);
+          console.error(`[SuperheroApi] Error fetching ${url}:`, error);
         }
         throw error;
       }
@@ -68,14 +68,14 @@ export const TrendminerApi = {
         if (err.name === 'AbortError' || err.message.includes('aborted')) {
           const timeoutError = new Error('Request timeout: The API request took too long. Please try again.');
           if (process.env.NODE_ENV === 'development') {
-            console.error(`[TrendminerApi] Request timeout for ${url}`);
+            console.error(`[SuperheroApi] Request timeout for ${url}`);
           }
           throw timeoutError;
         }
         if (err instanceof TypeError && err.message.includes('fetch')) {
           const networkError = new Error('Network error: Unable to connect to API. Please check your internet connection.');
           if (process.env.NODE_ENV === 'development') {
-            console.error(`[TrendminerApi] Network error fetching ${url}:`, err);
+            console.error(`[SuperheroApi] Network error fetching ${url}:`, err);
           }
           throw networkError;
         }
@@ -422,9 +422,9 @@ export const Backend = {
     body: JSON.stringify({ ...postParam, author: address }),
     headers: { 'Content-Type': 'application/json' },
   }),
-  // Portfolio history - delegate to TrendminerApi to avoid duplication
+  // Portfolio history - delegate to SuperheroApi to avoid duplication
   getAccountPortfolioHistory(address: string, params: { startDate?: string; endDate?: string; interval?: number; convertTo?: 'ae'|'usd'|'eur'|'aud'|'brl'|'cad'|'chf'|'gbp'|'xau' } = {}) {
-    return TrendminerApi.getAccountPortfolioHistory(address, params);
+    return SuperheroApi.getAccountPortfolioHistory(address, params);
   },
 };
 

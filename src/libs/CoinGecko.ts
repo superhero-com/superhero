@@ -1,7 +1,7 @@
 /**
  * Market data response interface from CoinGecko API
  * @deprecated This type is kept for backward compatibility.
- * Price data is now fetched from the backend API via TrendminerApi.
+ * Price data is now fetched from the backend API via SuperheroApi.
  */
 export interface CoinGeckoMarketResponse {
   ath: number;

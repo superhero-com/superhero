@@ -4,7 +4,7 @@ import TokenCreatedActivityItem from "@/features/social/components/TokenCreatedA
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { TrendminerApi } from "@/api/backend";
+import { SuperheroApi } from "@/api/backend";
 import type { PostDto } from "@/api/generated";
 
 interface AccountFeedProps {
@@ -27,7 +27,7 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
     enabled: !!address && tab === "feed",
     initialPageParam: 1,
     queryFn: async ({ pageParam = 1 }) => {
-      const resp = await TrendminerApi.listTokens({
+      const resp = await SuperheroApi.listTokens({
         creatorAddress: address,
         orderBy: "created_at",
         orderDirection: "DESC",

@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { PostsService } from "../../../api/generated";
 import type { PostDto } from "../../../api/generated";
-import { TrendminerApi } from "../../../api/backend";
+import { SuperheroApi } from "../../../api/backend";
 import WebSocketClient from "../../../libs/WebSocketClient";
 import AeButton from "../../../components/AeButton";
 import HeroBannerCarousel from "../../../components/hero-banner/HeroBannerCarousel";
@@ -134,7 +134,7 @@ export default function FeedList({
     enabled: sortBy !== "hot",
     initialPageParam: 1,
     queryFn: async ({ pageParam = 1 }) => {
-      const resp = await TrendminerApi.listTokens({
+      const resp = await SuperheroApi.listTokens({
         orderBy: "created_at",
         orderDirection: "DESC",
         limit: ACTIVITY_PAGE_SIZE,

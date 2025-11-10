@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import moment from 'moment';
-import { TrendminerApi } from '@/api/backend';
+import { SuperheroApi } from '@/api/backend';
 import { useCurrencies } from '@/hooks/useCurrencies';
 import { Decimal } from '@/libs/decimal';
 
@@ -50,7 +50,7 @@ export function usePortfolioValue({
       try {
         // Optimized: Fetch current snapshot only (no date range = current snapshot)
         // This is more efficient than fetching a day's worth of data
-        const response = await TrendminerApi.getAccountPortfolioHistory(address, {
+        const response = await SuperheroApi.getAccountPortfolioHistory(address, {
           // No startDate/endDate = current snapshot only
           convertTo: currency,
         });

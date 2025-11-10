@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { TrendminerApi } from '../../api/backend';
+import { SuperheroApi } from '../../api/backend';
 import TrendCloudVisx from './TrendCloudVisx';
 import MobileCard from '../../components/MobileCard';
 import MobileInput from '../../components/MobileInput';
@@ -72,7 +72,7 @@ export default function TrendCloud() {
       setLoading(true);
       setError(null);
       try {
-        const resp = await TrendminerApi.listTrendingTags({ orderBy: 'score', orderDirection: 'DESC', limit: 500, page: 1 });
+        const resp = await SuperheroApi.listTrendingTags({ orderBy: 'score', orderDirection: 'DESC', limit: 500, page: 1 });
         const items = Array.isArray(resp?.items) ? resp.items : (Array.isArray(resp) ? resp : []);
         const mapped: TrendingTag[] = items.map((it: any) => ({ tag: it.tag ?? it.name ?? '', score: Number(it.score ?? it.value ?? 0), source: it.source || it.platform || undefined }));
         if (!cancelled) setTags(mapped.filter((t) => t.tag));
@@ -92,7 +92,7 @@ export default function TrendCloud() {
     let cancelled = false;
     async function loadTokens() {
       try {
-        const resp = await TrendminerApi.listTokens({ orderBy: 'market_cap' as any, orderDirection: 'DESC', limit: 300, page: 1 });
+        const resp = await SuperheroApi.listTokens({ orderBy: 'market_cap' as any, orderDirection: 'DESC', limit: 300, page: 1 });
         const items: any[] = resp?.items ?? resp ?? [];
         if (!cancelled) setTokenItems(items.map((t) => ({ address: t.address, name: t.name, market_cap: Number(t.market_cap ?? 0), holders_count: Number(t.holders_count ?? 0), price: Number(t.price ?? 0) })));
       } catch {

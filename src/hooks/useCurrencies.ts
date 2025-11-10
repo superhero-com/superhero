@@ -7,7 +7,7 @@ import { atomWithStorage } from 'jotai/utils';
 
 import { PriceDto } from '../api/generated';
 import { Decimal } from '../libs/decimal';
-import { TrendminerApi } from '../api/backend';
+import { SuperheroApi } from '../api/backend';
 import { selectedCurrencyAtom } from '../atoms/walletAtoms';
 import { CoinGeckoMarketResponse } from '../libs/CoinGecko';
 import { CURRENCIES } from '../utils/constants';
@@ -40,7 +40,7 @@ export function useCurrencies() {
   const { isLoading: isLoadingRates, refetch: refetchRates } = useQuery({
     queryKey: ['currency-rates'],
     queryFn: async () => {
-      const rates = await TrendminerApi.getCurrencyRates();
+      const rates = await SuperheroApi.getCurrencyRates();
       if (rates) {
         setCurrencyRates(rates);
       }
@@ -54,7 +54,7 @@ export function useCurrencies() {
   const { isLoading: isLoadingAeternityData, refetch: refetchAeternityData } = useQuery({
     queryKey: ['aeternity-data', currentCurrencyCode],
     queryFn: async () => {
-      const data = await TrendminerApi.getMarketData(currentCurrencyCode);
+      const data = await SuperheroApi.getMarketData(currentCurrencyCode);
       if (data) {
         setAeternityData(data);
       }
@@ -78,7 +78,7 @@ export function useCurrencies() {
 
   // Load functions that match the Vue composable
   const loadAeternityData = useCallback(async () => {
-    const data = await TrendminerApi.getMarketData(currentCurrencyCode);
+    const data = await SuperheroApi.getMarketData(currentCurrencyCode);
     if (data) {
       setAeternityData(data);
     }
@@ -86,7 +86,7 @@ export function useCurrencies() {
   }, [currentCurrencyCode, setAeternityData]);
 
   const loadCurrencyRates = useCallback(async () => {
-    const rates = await TrendminerApi.getCurrencyRates();
+    const rates = await SuperheroApi.getCurrencyRates();
     if (rates) {
       setCurrencyRates(rates);
     }

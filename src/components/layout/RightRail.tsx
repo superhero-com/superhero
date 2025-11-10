@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
-import { Backend, TrendminerApi } from "../../api/backend";
+import { Backend, SuperheroApi } from "../../api/backend";
 import { useAccountBalances } from "../../hooks/useAccountBalances";
 import WalletOverviewCard from "@/components/wallet/WalletOverviewCard";
 import { useAeSdk } from "../../hooks/useAeSdk";
@@ -243,7 +243,7 @@ export default function RightRail({
       // Search tokens if filter is enabled
       if (searchFilters.tokens) {
         searchPromises.push(
-          TrendminerApi.listTokens({ search: query, limit: 5 }).catch(() => ({
+          SuperheroApi.listTokens({ search: query, limit: 5 }).catch(() => ({
             items: [],
           }))
         );
@@ -257,7 +257,7 @@ export default function RightRail({
       // Search DAOs if filter is enabled
       if (searchFilters.daos) {
         searchPromises.push(
-          TrendminerApi.listTokens({
+          SuperheroApi.listTokens({
             search: query,
             limit: 3,
             collection: "all",
@@ -473,7 +473,7 @@ export default function RightRail({
 
       // Check Trendminer API
       try {
-        await TrendminerApi.listTrendingTags({ limit: 1 });
+        await SuperheroApi.listTrendingTags({ limit: 1 });
         setApiStatus((prev) => ({ ...prev, trending: "online" }));
       } catch {
         setApiStatus((prev) => ({ ...prev, trending: "offline" }));
@@ -481,7 +481,7 @@ export default function RightRail({
 
       // Check DEX API (simulate)
       try {
-        await Backend.getPrice();
+        await SuperheroApi.getCurrencyRates();
         setApiStatus((prev) => ({ ...prev, dex: "online" }));
       } catch {
         setApiStatus((prev) => ({ ...prev, dex: "offline" }));
@@ -519,24 +519,39 @@ export default function RightRail({
 
     async function loadPrice() {
       try {
-        const p = await Backend.getPrice();
-        const a = p?.aeternity || null;
-        setPrices(a);
+        // Fetch currency rates and market data
+        const [rates, marketData] = await Promise.all([
+          SuperheroApi.getCurrencyRates(),
+          SuperheroApi.getMarketData(selectedCurrency),
+        ]);
 
-        if (a?.usd != null) {
-          setUsdSpark((prev) => {
-            const next = [...prev, Number(a.usd)].slice(-50);
-            sessionStorage.setItem("ae_spark_usd", JSON.stringify(next));
-            return next;
-          });
-        }
+        if (rates && marketData) {
+          // Transform to expected format: { usd, eur, cny, change24h, marketCap, volume24h }
+          const priceData = {
+            usd: rates.usd || null,
+            eur: rates.eur || null,
+            cny: rates.cny || null,
+            change24h: marketData.priceChangePercentage24h || null,
+            marketCap: marketData.marketCap || null,
+            volume24h: marketData.totalVolume || null,
+          };
+          setPrices(priceData);
 
-        if (a?.eur != null) {
-          setEurSpark((prev) => {
-            const next = [...prev, Number(a.eur)].slice(-50);
-            sessionStorage.setItem("ae_spark_eur", JSON.stringify(next));
-            return next;
-          });
+          if (rates.usd != null) {
+            setUsdSpark((prev) => {
+              const next = [...prev, Number(rates.usd)].slice(-50);
+              sessionStorage.setItem("ae_spark_usd", JSON.stringify(next));
+              return next;
+            });
+          }
+
+          if (rates.eur != null) {
+            setEurSpark((prev) => {
+              const next = [...prev, Number(rates.eur)].slice(-50);
+              sessionStorage.setItem("ae_spark_eur", JSON.stringify(next));
+              return next;
+            });
+          }
         }
       } catch (error) {
         console.error("Failed to load price data:", error);
@@ -548,7 +563,7 @@ export default function RightRail({
     return () => {
       window.clearInterval(t);
     };
-  }, []);
+  }, [selectedCurrency]);
 
   // Load saved searches from localStorage
   useEffect(() => {
@@ -642,15 +657,15 @@ export default function RightRail({
     async function loadData() {
       try {
         const [tokensResp, txResp, createdResp] = await Promise.all([
-          TrendminerApi.listTokens({
+          SuperheroApi.listTokens({
             orderBy: "market_cap",
             orderDirection: "DESC",
             limit: 5,
           }).catch(() => ({ items: [] })),
-          TrendminerApi.fetchJson("/api/transactions?limit=5").catch(() => ({
+          SuperheroApi.fetchJson("/api/transactions?limit=5").catch(() => ({
             items: [],
           })),
-          TrendminerApi.fetchJson(
+          SuperheroApi.fetchJson(
             "/api/tokens?order_by=created_at&order_direction=DESC&limit=3"
           ).catch(() => ({ items: [] })),
         ]);

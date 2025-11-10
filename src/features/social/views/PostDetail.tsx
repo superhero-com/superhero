@@ -123,15 +123,16 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   // No need for author helpers; cards handle display
 
   // Handle reply added callback
+  // Extract postId to avoid recreating callback when postData changes (only id matters)
+  const postId = postData?.id;
   const handleCommentAdded = useCallback(() => {
     refetchPost();
     // Refresh replies list keys used by DirectReplies and any legacy comment queries
-    const rootId = String((postData as any)?.id || postId || '');
-    if (rootId) {
-      queryClient.refetchQueries({ queryKey: ['post-comments', rootId, 'infinite'] });
-      queryClient.refetchQueries({ queryKey: ['post-comments', rootId] });
+    if (postId) {
+      queryClient.refetchQueries({ queryKey: ['post-comments', postId, 'infinite'] });
+      queryClient.refetchQueries({ queryKey: ['post-comments', postId] });
     }
-  }, [refetchPost, queryClient, postData, postId]);
+  }, [refetchPost, queryClient, postId]);
 
   // Render helpers
   const renderLoadingState = () => (

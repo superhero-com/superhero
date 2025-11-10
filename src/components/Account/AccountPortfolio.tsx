@@ -266,13 +266,21 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     });
 
     // Add touch handlers for mobile drag support
+    // Track initial touch position and drag direction
+    let initialTouchX: number | null = null;
+    let initialTouchY: number | null = null;
+    let isHorizontalDrag: boolean | null = null;
+    const DRAG_THRESHOLD = 10; // pixels to determine drag direction
+
     const handleTouchStart = (e: TouchEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
       if (!chart || !container || !areaSeries) return;
       
       const touch = e.touches[0];
       const rect = container.getBoundingClientRect();
+      initialTouchX = touch.clientX;
+      initialTouchY = touch.clientY;
+      isHorizontalDrag = null;
+      
       const x = touch.clientX - rect.left;
       
       try {
@@ -288,32 +296,54 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (!chart || !container || !areaSeries) return;
+      if (!chart || !container || !areaSeries || initialTouchX === null || initialTouchY === null) return;
       
       const touch = e.touches[0];
-      const rect = container.getBoundingClientRect();
-      const x = touch.clientX - rect.left;
+      const deltaX = Math.abs(touch.clientX - initialTouchX);
+      const deltaY = Math.abs(touch.clientY - initialTouchY);
       
-      // Clamp x to chart bounds
-      const clampedX = Math.max(0, Math.min(x, rect.width));
-      
-      try {
-        // Use timeScale to convert coordinate to time
-        const time = chart.timeScale().coordinateToTime(clampedX);
-        if (time !== null) {
-          // Set crosshair position - this will trigger subscribeCrosshairMove
-          chart.setCrosshairPosition(clampedX, 0, { time: time as any });
+      // Determine drag direction if not yet determined
+      if (isHorizontalDrag === null) {
+        if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
+          isHorizontalDrag = deltaX > deltaY;
+        } else {
+          // Still within threshold, don't prevent default yet
+          return;
         }
-      } catch (error) {
-        console.warn('[AccountPortfolio] Error setting crosshair on touchmove:', error);
       }
+      
+      // Only handle crosshair movement for horizontal drags
+      if (isHorizontalDrag) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const rect = container.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        
+        // Clamp x to chart bounds
+        const clampedX = Math.max(0, Math.min(x, rect.width));
+        
+        try {
+          // Use timeScale to convert coordinate to time
+          const time = chart.timeScale().coordinateToTime(clampedX);
+          if (time !== null) {
+            // Set crosshair position - this will trigger subscribeCrosshairMove
+            chart.setCrosshairPosition(clampedX, 0, { time: time as any });
+          }
+        } catch (error) {
+          console.warn('[AccountPortfolio] Error setting crosshair on touchmove:', error);
+        }
+      }
+      // If vertical drag, don't prevent default - allow page scrolling
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
+      // Only prevent default if it was a horizontal drag
+      if (isHorizontalDrag === true) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      
       if (!chart) return;
       
       try {
@@ -323,6 +353,11 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       } catch (error) {
         console.warn('[AccountPortfolio] Error clearing crosshair on touchend:', error);
       }
+      
+      // Reset drag state
+      initialTouchX = null;
+      initialTouchY = null;
+      isHorizontalDrag = null;
     };
 
     // Add touch event listeners after chart is initialized
@@ -775,8 +810,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         <div className="px-4 md:px-6 pb-4 relative">
               <div 
                 ref={chartContainerRef} 
-                className="w-full h-[180px] min-w-0 touch-none"
-                style={{ touchAction: 'none' }}
+                className="w-full h-[180px] min-w-0"
+                style={{ touchAction: 'pan-y' }}
               />
           
           {/* Loading indicator */}

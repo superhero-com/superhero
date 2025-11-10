@@ -219,23 +219,6 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                         const windowFeatures =
                             "name=Superhero Wallet,width=362,height=594,toolbar=false,location=false,menubar=false,popup";
 
-                        openModal({
-                            name: 'transaction-confirm',
-                            props: {
-                                transaction: tx,
-                                onConfirm: () => {
-                                    /**
-                                     * By setting a name and width/height,
-                                     * the extension is forced to open in a new window
-                                     */
-                                    newWindow = window.open(signUrl, "_blank", windowFeatures);
-                                },
-                                onCancel: () => {
-                                    reject(new Error("Transaction cancelled"));
-                                }
-                            }
-                        });
-
                         let interval: NodeJS.Timeout | null = null;
                         let timeout: NodeJS.Timeout | null = null;
                         let isCleanedUp = false;
@@ -263,6 +246,31 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                                 newWindow = null;
                             }
                         };
+
+                        openModal({
+                            name: 'transaction-confirm',
+                            props: {
+                                transaction: tx,
+                                onConfirm: () => {
+                                    /**
+                                     * By setting a name and width/height,
+                                     * the extension is forced to open in a new window
+                                     */
+                                    newWindow = window.open(signUrl, "_blank", windowFeatures);
+                                },
+                                onCancel: () => {
+                                    cleanup();
+                                    // Remove transaction from queue
+                                    const currentQueue = transactionsQueueRef.current;
+                                    if (Object.keys(currentQueue).includes(uniqueId)) {
+                                        const newQueue = { ...currentQueue };
+                                        delete newQueue[uniqueId];
+                                        setTransactionsQueue(newQueue);
+                                    }
+                                    reject(new Error("Transaction cancelled"));
+                                }
+                            }
+                        });
 
                         // Set a timeout to prevent infinite polling (5 minutes max)
                         const MAX_POLL_TIME = 5 * 60 * 1000; // 5 minutes

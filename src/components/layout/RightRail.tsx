@@ -146,11 +146,8 @@ export default function RightRail({
     }
   }, [decimalBalance]);
 
-  useEffect(() => {
-    if (accountId) {
-      loadAccountData();
-    }
-  }, [accountId]);
+  // Note: loadAccountData() is automatically called by useAccountBalances hook
+  // when accountId changes, so no manual call is needed here
 
   const formatPrice = (price: number, currency: string) => {
     const formatter = new Intl.NumberFormat("en-US", {

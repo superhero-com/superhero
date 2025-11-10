@@ -1565,7 +1565,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                       {/* Tooltip content */}
                       <div
                         ref={tooltipContentRef}
-                        className="max-w-[320px] rounded-xl border border-white/10 bg-white/10 text-white/90 backdrop-blur-md shadow-lg ring-1 ring-black/5 px-3 py-2 text-[12px] leading-relaxed"
+                        className="max-w-[320px] rounded-xl border border-white/10 bg-white/10 text-white/90 backdrop-blur-md shadow-lg ring-1 ring-black/5 px-3 py-2 text-[12px] leading-relaxed z-[100]"
                         onClick={(e) => e.stopPropagation()}
                       >
                         Portfolio value summarizes the total worth of all assets held in this wallet — including AE balance, Trend tokens, and other assets such as WAE, aeETH and more. This chart represents the wallet's complete portfolio.

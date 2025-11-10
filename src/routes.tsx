@@ -92,6 +92,10 @@ export const routes: RouteObject[] = [
     element: <SocialLayout />,
     children: [
       { index: true, element: <FeedList standalone={false} /> },
+      // New slug-based post routes (preferred)
+      { path: "post/:slug", element: <PostDetail standalone={false} /> },
+      { path: "post/:slug/comment/:id", element: <PostDetail standalone={false} /> },
+      // Legacy id-based post routes (kept for backward compatibility)
       { path: "post/:postId", element: <PostDetail standalone={false} /> },
       {
         path: "post/:postId/comment/:id",

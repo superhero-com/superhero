@@ -131,7 +131,8 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
           onOpenPost={(id: string) => {
             try {
               const cleanId = String(id || item.id).replace(/_v3$/, "");
-              window.location.assign(`/post/${cleanId}`);
+              const target = (item as any)?.slug || cleanId;
+              window.location.assign(`/post/${target}`);
             } catch {
               // no-op
             }

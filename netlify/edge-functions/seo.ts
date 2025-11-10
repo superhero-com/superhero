@@ -69,23 +69,45 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
     };
   }
 
-  // Post detail: /post/:postId
+  // Post detail: /post/:segment (slug or id)
   const postMatch = pathname.match(/^\/post\/([^/]+)/);
   if (postMatch) {
-    const postId = postMatch[1];
-    const id = postId.endsWith('_v3') ? postId : `${postId}_v3`;
-    const apiUrl = `${API_BASE.replace(/\/$/, '')}/api/posts/${encodeURIComponent(id)}`;
+    const segment = postMatch[1];
+    const baseApi = API_BASE.replace(/\/$/, '');
+    async function fetchPostBySegment(seg: string): Promise<any | null> {
+      const url = `${baseApi}/api/posts/${encodeURIComponent(seg)}`;
+      const r = await fetch(url, { headers: { accept: 'application/json' } });
+      if (r.ok) return r.json();
+      return null;
+    }
     try {
-      const r = await fetch(apiUrl, { headers: { accept: 'application/json' } });
-      if (r.ok) {
-        const data: any = await r.json();
+      // Try direct by segment (works for slug or id)
+      let data: any | null = await fetchPostBySegment(segment);
+      // If not found and bare numeric id, try with _v3
+      if (!data && (/^\d+$/.test(segment) || segment.endsWith('_v3'))) {
+        const id = segment.endsWith('_v3') ? segment : `${segment}_v3`;
+        data = await fetchPostBySegment(id);
+      }
+      // If still not found, try search by slug/content and refetch by id
+      if (!data) {
+        const searchUrl = `${baseApi}/api/posts?search=${encodeURIComponent(segment)}&limit=1&page=1`;
+        const sr = await fetch(searchUrl, { headers: { accept: 'application/json' } });
+        if (sr.ok) {
+          const sdata: any = await sr.json();
+          const first = Array.isArray(sdata?.items) ? sdata.items[0] : null;
+          if (first?.id) {
+            data = await fetchPostBySegment(String(first.id));
+          }
+        }
+      }
+      if (data) {
         const raw: string = (data?.content || '').toString();
         const content: string = raw.replace(/\s+/g, ' ').trim();
         const media: string[] = Array.isArray(data?.media) ? data.media : [];
         return {
           title: `${truncate(content, 80) || 'Post'} – Superhero`,
           description: truncate(content, 200) || 'View post on Superhero, the crypto social network.',
-          canonical: `${fullUrl.origin}/post/${postId}`,
+          canonical: `${fullUrl.origin}/post/${data?.slug || segment}`,
           ogImage: absolutize(media[0], fullUrl.origin),
           ogType: 'article',
           jsonLd: {
@@ -109,7 +131,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
     } catch {}
     return {
       title: 'Post – Superhero',
-      canonical: `${fullUrl.origin}/post/${postId}`,
+      canonical: `${fullUrl.origin}/post/${segment}`,
       ogType: 'article',
     };
   }

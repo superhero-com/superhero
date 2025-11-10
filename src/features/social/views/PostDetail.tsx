@@ -14,7 +14,7 @@ import DirectReplies from '../components/DirectReplies';
 import CommentForm from '../components/CommentForm';
 
 export default function PostDetail({ standalone = true }: { standalone?: boolean } = {}) {
-  const { postId } = useParams();
+  const { postId, slug } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -25,9 +25,37 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     error: postError,
     refetch: refetchPost
   } = useQuery({
-    queryKey: ['post', postId],
-    queryFn: () => PostsService.getById({ id: `${String(postId).replace(/_v3$/,'')}_v3` }),
-    enabled: !!postId,
+    queryKey: ['post', slug || postId],
+    queryFn: async () => {
+      const key = String(slug || postId || '');
+      if (!key) throw new Error('Missing post identifier');
+      // Try direct fetch (supports either id or slug if backend accepts)
+      try {
+        return (await PostsService.getById({ id: key })) as unknown as PostDto;
+      } catch (e1: any) {
+        // If numeric id, try with _v3 suffix
+        if (/^\d+$/.test(key) || key.endsWith('_v3')) {
+          const id = key.endsWith('_v3') ? key : `${key}_v3`;
+          try {
+            return (await PostsService.getById({ id })) as unknown as PostDto;
+          } catch (_e2) {
+            // fallthrough to search
+          }
+        }
+        // Fallback: search by slug/content, take first match then refetch by id (ensures full object)
+        try {
+          const res: any = await (PostsService.listAll({ search: key, limit: 1, page: 1 }) as unknown as Promise<any>);
+          const first = Array.isArray(res?.items) ? res.items[0] : null;
+          if (first?.id) {
+            return (await PostsService.getById({ id: String(first.id) })) as unknown as PostDto;
+          }
+        } catch (_e3) {
+          // ignore
+        }
+        throw e1;
+      }
+    },
+    enabled: !!(slug || postId),
     refetchInterval: 120 * 1000, // Auto-refresh every 2 minutes
   });
 
@@ -45,7 +73,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   // Resolve full ancestors iteratively
   const parentId = postData ? extractParentId(postData as any) : null;
   const { data: ancestors = [] } = useQuery<PostDto[]>({
-    queryKey: ['post-ancestors', postId, parentId],
+    queryKey: ['post-ancestors', slug || postId, parentId],
     enabled: !!postData,
     refetchInterval: 120 * 1000,
     queryFn: async () => {
@@ -120,11 +148,12 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   const handleCommentAdded = useCallback(() => {
     refetchPost();
     // Refresh replies list keys used by DirectReplies and any legacy comment queries
-    if (postId) {
-      queryClient.refetchQueries({ queryKey: ['post-comments', postId, 'infinite'] });
-      queryClient.refetchQueries({ queryKey: ['post-comments', postId] });
+    const rootId = String((postData as any)?.id || postId || '');
+    if (rootId) {
+      queryClient.refetchQueries({ queryKey: ['post-comments', rootId, 'infinite'] });
+      queryClient.refetchQueries({ queryKey: ['post-comments', rootId] });
     }
-  }, [refetchPost, queryClient, postId]);
+  }, [refetchPost, queryClient, postData, postId]);
 
   // Render helpers
   const renderLoadingState = () => (
@@ -151,13 +180,13 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
           allowInlineRepliesToggle={false}
           item={anc as any}
           commentCount={(anc as any).total_comments ?? 0}
-          onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)}
+          onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)}
           isActive={false}
         />
       ))}
       {postData && (
         <div ref={currentPostRef}>
-          <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(descendantCount ?? (postData as any).total_comments ?? 0) as number} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} isActive />
+          <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(descendantCount ?? (postData as any).total_comments ?? 0) as number} onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)} isActive />
         </div>
       )}
     </div>
@@ -169,7 +198,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
         <Head
           title={`Post on Superhero.com: "${(postData as any)?.content?.slice(0, 100) || 'Post'}"`}
           description={(postData as any)?.content?.slice(0, 160) || 'View post on Superhero, the crypto social network.'}
-          canonicalPath={`/post/${String(postId).replace(/_v3$/,'')}`}
+          canonicalPath={`/post/${(postData as any)?.slug || String((postData as any)?.id || slug || postId).replace(/_v3$/,'')}`}
           ogImage={(Array.isArray((postData as any)?.media) && (postData as any).media[0]) || undefined}
           jsonLd={{
             '@context': 'https://schema.org',
@@ -208,9 +237,9 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
 
           <section className="mt-2">
             <h3 className="text-white/90 font-semibold mb-2">Replies</h3>
-            <DirectReplies id={postId!} onOpenPost={(id) => navigate(`/post/${id}`)} />
+            <DirectReplies id={String((postData as any)?.id)} onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)} />
             <div className="mt-6">
-              <CommentForm postId={postId!} onCommentAdded={handleCommentAdded} placeholder="Write a reply..." />
+              <CommentForm postId={String((postData as any)?.id)} onCommentAdded={handleCommentAdded} placeholder="Write a reply..." />
             </div>
           </section>
         </article>

@@ -237,6 +237,15 @@ export const TrendminerApi = {
     if (params.tokenSaleAddresses) qp.set('token_sale_addresses', (params.tokenSaleAddresses as any));
     return this.fetchJson(`/api/analytics/daily-market-cap-sum?${qp.toString()}`);
   },
+  // Pricing endpoints
+  getCurrencyRates() {
+    return this.fetchJson('/api/pricing/rates');
+  },
+  getMarketData(currency: string = 'usd') {
+    const qp = new URLSearchParams();
+    if (currency) qp.set('currency', currency);
+    return this.fetchJson(`/api/pricing/market-data?${qp.toString()}`);
+  },
 };
 
 const USE_MOCK = false; // Override to true to force mock in development

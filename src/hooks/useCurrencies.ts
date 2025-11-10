@@ -7,13 +7,11 @@ import { atomWithStorage } from 'jotai/utils';
 
 import { PriceDto } from '../api/generated';
 import { Decimal } from '../libs/decimal';
-import { Backend } from '../api/backend';
+import { TrendminerApi } from '../api/backend';
 import { selectedCurrencyAtom } from '../atoms/walletAtoms';
-import { CoinGecko, CoinGeckoMarketResponse } from '../libs/CoinGecko';
+import { CoinGeckoMarketResponse } from '../libs/CoinGecko';
 import { CURRENCIES } from '../utils/constants';
 import { ICurrency, CurrencyCode as AllCurrencyCode, CurrencyRates } from '../utils/types';
-
-const COIN_GECKO_COIN_ID = 'aeternity';
 
 // Create atoms for currency data state management (similar to Vue stores)
 const aeternityDataAtom = atomWithStorage<CoinGeckoMarketResponse | null>('currency:aeternity-data', null);
@@ -24,7 +22,7 @@ const currencyRatesAtom = atomWithStorage<CurrencyRates>('currency:rates', {});
  * 
  * This hook provides functionality equivalent to the Vue composable:
  * - Managing current currency selection
- * - Fetching AE price data from CoinGecko and backend
+ * - Fetching AE price data from backend API
  * - Converting AE amounts to fiat currencies
  * - Formatting currency values
  * - Loading currency rates and market data
@@ -38,11 +36,11 @@ export function useCurrencies() {
 
 
 
-  // Fetch currency rates from CoinGecko
+  // Fetch currency rates from backend API
   const { isLoading: isLoadingRates, refetch: refetchRates } = useQuery({
     queryKey: ['currency-rates'],
     queryFn: async () => {
-      const rates = await CoinGecko.fetchCoinCurrencyRates(COIN_GECKO_COIN_ID);
+      const rates = await TrendminerApi.getCurrencyRates();
       if (rates) {
         setCurrencyRates(rates);
       }
@@ -52,11 +50,11 @@ export function useCurrencies() {
     refetchInterval: 60 * 1000, // 1 minute
   });
 
-  // Fetch detailed Aeternity market data from CoinGecko
+  // Fetch detailed Aeternity market data from backend API
   const { isLoading: isLoadingAeternityData, refetch: refetchAeternityData } = useQuery({
     queryKey: ['aeternity-data', currentCurrencyCode],
     queryFn: async () => {
-      const data = await CoinGecko.fetchCoinMarketData(COIN_GECKO_COIN_ID, currentCurrencyCode);
+      const data = await TrendminerApi.getMarketData(currentCurrencyCode);
       if (data) {
         setAeternityData(data);
       }
@@ -80,7 +78,7 @@ export function useCurrencies() {
 
   // Load functions that match the Vue composable
   const loadAeternityData = useCallback(async () => {
-    const data = await CoinGecko.fetchCoinMarketData(COIN_GECKO_COIN_ID, currentCurrencyCode);
+    const data = await TrendminerApi.getMarketData(currentCurrencyCode);
     if (data) {
       setAeternityData(data);
     }
@@ -88,7 +86,7 @@ export function useCurrencies() {
   }, [currentCurrencyCode, setAeternityData]);
 
   const loadCurrencyRates = useCallback(async () => {
-    const rates = await CoinGecko.fetchCoinCurrencyRates(COIN_GECKO_COIN_ID);
+    const rates = await TrendminerApi.getCurrencyRates();
     if (rates) {
       setCurrencyRates(rates);
     }

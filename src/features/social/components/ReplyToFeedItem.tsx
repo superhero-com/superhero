@@ -117,7 +117,10 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
     };
   }, [parentId, hideParentContext]);
 
-  const handleOpen = useCallback(() => onOpenPost(postId), [onOpenPost, postId]);
+  const handleOpen = useCallback(() => {
+    const slugOrId = (item as any)?.slug || String(postId).replace(/_v3$/, "");
+    onOpenPost(slugOrId);
+  }, [onOpenPost, postId, item]);
   const toggleReplies = useCallback(() => setShowReplies((s) => !s), []);
 
   const media = Array.isArray(item.media)
@@ -238,7 +241,8 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                onOpenPost(parentId);
+                const slugOrId = (parent as any)?.slug || String(parentId).replace(/_v3$/, "");
+                onOpenPost(slugOrId);
               }}
               className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/15 rounded-xl p-3 transition-none shadow-none hover:bg-white/[0.04] hover:border-white/40 hover:shadow-none"
               title={t('openParent')}
@@ -324,7 +328,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
             {typeof descendantCount === 'number' ? descendantCount : commentCount}
             </button>
             </div>
-            <SharePopover postId={item.id} />
+            <SharePopover postId={item.id} postSlug={(item as any)?.slug} />
           </div>
 
           {/* Nested replies for this item */}
@@ -348,7 +352,7 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
                   commentCount={reply.total_comments ?? 0}
                   hideParentContext
                   allowInlineRepliesToggle={false}
-                  onOpenPost={(id) => onOpenPost(String(id).replace(/_v3$/,''))}
+                  onOpenPost={(_id) => onOpenPost((reply as any)?.slug || String(reply.id).replace(/_v3$/,''))}
                 />
               ))}
             </div>

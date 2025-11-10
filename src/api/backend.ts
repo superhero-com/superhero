@@ -49,7 +49,7 @@ export const SuperheroApi = {
           errorMessage = res.statusText || errorMessage;
         }
         
-        const error = new Error(`Trendminer API error (${res.status}): ${errorMessage}`);
+        const error = new Error(`Superhero API error (${res.status}): ${errorMessage}`);
         if (process.env.NODE_ENV === 'development') {
           console.error(`[SuperheroApi] Error fetching ${url}:`, error);
         }

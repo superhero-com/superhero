@@ -479,9 +479,9 @@ export default function RightRail({
         setApiStatus((prev) => ({ ...prev, trending: "offline" }));
       }
 
-      // Check DEX API (simulate)
+      // Check DEX API
       try {
-        await SuperheroApi.getCurrencyRates();
+        await SuperheroApi.fetchJson('/api/dex/tokens?limit=1');
         setApiStatus((prev) => ({ ...prev, dex: "online" }));
       } catch {
         setApiStatus((prev) => ({ ...prev, dex: "offline" }));

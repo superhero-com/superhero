@@ -385,6 +385,12 @@ export function PoolCandlestickChart({
     });
 
     // Add touch handlers for mobile drag support
+    // Clean up any existing touch handlers first to prevent memory leaks
+    if (touchHandlersCleanup.current) {
+      touchHandlersCleanup.current();
+      touchHandlersCleanup.current = null;
+    }
+
     const container = chartContainer.current;
     if (container) {
       const handleTouchStart = (e: TouchEvent) => {

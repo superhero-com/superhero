@@ -582,7 +582,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     // If not ready, check periodically
     if (!initializedImmediately) {
       intervalId = setInterval(() => {
-        if (checkAndInit() || chartRef.current) {
+        if (chartRef.current || checkAndInit()) {
           if (intervalId) {
             clearInterval(intervalId);
             intervalId = null;
@@ -592,7 +592,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
       // Also try on next frame
       timeoutId = setTimeout(() => {
-        if (checkAndInit() || chartRef.current) {
+        if (chartRef.current || checkAndInit()) {
           if (intervalId) {
             clearInterval(intervalId);
             intervalId = null;

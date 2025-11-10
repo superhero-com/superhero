@@ -50,7 +50,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   // Resolve full ancestors iteratively
   const parentId = postData ? extractParentId(postData as any) : null;
   const { data: ancestors = [] } = useQuery<PostDto[]>({
-    queryKey: ['post-ancestors', slug || postId, parentId],
+    queryKey: ['post-ancestors', (postData as any)?.id, parentId],
     enabled: !!postData,
     refetchInterval: 120 * 1000,
     queryFn: async () => {
@@ -83,12 +83,13 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
 
   // Compute total descendant comments (all levels) for current post
   const { data: descendantCount } = useQuery<number>({
-    queryKey: ['post-desc-count', postId],
-    enabled: !!postId,
+    queryKey: ['post-desc-count', (postData as any)?.id],
+    enabled: !!(postData as any)?.id,
     refetchInterval: 120 * 1000,
     queryFn: async () => {
       const normalize = (id: string) => (String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`);
-      const queue: string[] = [normalize(String(postId))];
+      const root = String((postData as any)?.id);
+      const queue: string[] = [normalize(root)];
       let total = 0;
       let requestBudget = 200; // safety cap
       while (queue.length > 0 && requestBudget > 0) {

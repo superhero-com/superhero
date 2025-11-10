@@ -359,24 +359,23 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               const toTime = visibleRange.to as number;
               
               if (timeValue >= fromTime && timeValue <= toTime) {
-                // Try both methods: programmatic and simulated mouse event
-                // Method 1: Programmatic setCrosshairPosition
+                // Set crosshair position - ensure we're using the correct chart instance
+                // The chart should automatically calculate Y from series data when time is provided
                 chart.setCrosshairPosition(clampedX, 0, { time: timeValue as any });
                 
-                // Method 2: Simulate mouse move event to trigger chart's internal crosshair update
-                // This might be needed for the chart to properly render the crosshair
-                const rect = container.getBoundingClientRect();
-                const mouseEvent = new MouseEvent('mousemove', {
-                  bubbles: true,
-                  cancelable: true,
-                  clientX: rect.left + clampedX,
-                  clientY: rect.top + rect.height / 2,
-                });
-                container.dispatchEvent(mouseEvent);
+                // Force chart to update by calling timeScale methods
+                // This might help trigger the visual update
+                chart.timeScale().getVisibleRange();
                 
                 // Log occasionally to avoid spam
                 if (Math.random() < 0.05) {
-                  console.log('[AccountPortfolio] Moving crosshair:', { clampedX, time: timeValue, inRange: true });
+                  console.log('[AccountPortfolio] Moving crosshair:', { 
+                    clampedX, 
+                    time: timeValue, 
+                    inRange: true,
+                    chartExists: !!chart,
+                    seriesExists: !!areaSeries
+                  });
                 }
               } else {
                 console.warn('[AccountPortfolio] Time out of visible range:', { timeValue, fromTime, toTime });

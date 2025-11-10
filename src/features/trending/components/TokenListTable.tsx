@@ -332,6 +332,15 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
             padding: 0 !important;
             border: none !important;
           }
+          
+          /* Ensure chart column has same width as desktop for consistent chart sizes */
+          .bctsl-token-list-table .cell-chart {
+            width: 210px;
+          }
+          
+          .bctsl-token-list-table .cell-chart .chart {
+            max-width: 180px;
+          }
         }
 
         @media screen and (max-width: 1100px) {

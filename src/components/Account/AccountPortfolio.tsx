@@ -697,17 +697,38 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             const lastPointValue = lastPoint.value as number;
             const valueMatches = Math.abs(lastPointValue - currentValue) < 0.000001;
             
-            // If the last point has the same value, just update its timestamp to current time
-            // This prevents visual drops when the value hasn't actually changed
+            // If the last point has the same value, check if we need to update it
             if (valueMatches) {
-              // Only update timestamp if it's older than current time (don't move backwards)
-              if (lastPointTime < nowUnix) {
+              // Check how old the last point is relative to the current time
+              const timeDiff = nowUnix - lastPointTime;
+              
+              // For 6h view, check if the last point is within the current hour
+              // If it is and the value matches, don't update to avoid rendering issues
+              let shouldSkipUpdate = false;
+              if (selectedTimeRange === '6h' || selectedTimeRange === '1d') {
+                const lastPointHour = moment.unix(lastPointTime).utc().startOf('hour').unix();
+                const currentHour = moment.utc().startOf('hour').unix();
+                
+                // If the last point is already in the current hour and value matches,
+                // don't update the timestamp - this prevents the visual drop
+                if (lastPointHour === currentHour && timeDiff < 3600) {
+                  // Last point is already in current hour with same value - skip update
+                  // This prevents the chart from re-rendering incorrectly
+                  shouldSkipUpdate = true;
+                }
+              }
+              
+              // Only update timestamp if it's significantly older (more than 5 minutes)
+              // AND we're not skipping the update
+              if (!shouldSkipUpdate && timeDiff > 300) {
+                // Timestamp is more than 5 minutes old, update it
                 chartData[chartData.length - 1] = {
                   time: nowUnix as any,
                   value: currentValue,
                 };
               }
-              // If last point is already at or after current time, keep it as is
+              // If timestamp is recent (within 5 minutes) or we're skipping update,
+              // don't modify chartData - this prevents the chart from re-rendering and showing a drop
             } else {
               // Value is different - remove points at or after rounded timestamp and add new point
               while (chartData.length > 0 && (chartData[chartData.length - 1].time as number) >= currentTimeUnix) {
@@ -726,6 +747,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               value: currentValue,
             });
           }
+          
+          // Ensure data is sorted by time (should already be sorted, but be safe)
+          chartData.sort((a, b) => (a.time as number) - (b.time as number));
         }
       } catch (error) {
         // Silently handle errors when converting current portfolio value
@@ -768,8 +792,25 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       height: containerHeight,
     });
     
+    // Remove any duplicate timestamps (keep the last one) to prevent rendering issues
+    const cleanedChartData: LineData[] = [];
+    const seenTimes = new Set<number>();
+    
+    // Process in reverse to keep the last occurrence of each timestamp
+    for (let i = chartData.length - 1; i >= 0; i--) {
+      const time = chartData[i].time as number;
+      if (!seenTimes.has(time)) {
+        seenTimes.add(time);
+        cleanedChartData.unshift(chartData[i]);
+      }
+    }
+    
+    // Ensure we have at least 2 points for proper rendering
+    // If the last two points have the same value, ensure they're both included
+    const finalData = cleanedChartData.length > 0 ? cleanedChartData : chartData;
+    
     // Set data after ensuring width is correct
-    seriesRef.current.setData(chartData);
+    seriesRef.current.setData(finalData);
     
     // Use double requestAnimationFrame to ensure chart has fully rendered before fitContent
     requestAnimationFrame(() => {
@@ -790,9 +831,13 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         const currentTime = moment().unix();
         
         // Calculate the actual data range from chartData
-        if (chartData.length > 0) {
-          const firstTime = chartData[0].time as number;
-          const lastTime = Math.min(chartData[chartData.length - 1].time as number, currentTime);
+        // Use finalData which is cleanedChartData if available, otherwise chartData
+        const dataForRange = finalData;
+        if (dataForRange.length > 0) {
+          const firstTime = dataForRange[0].time as number;
+          // Use the last point's time directly to ensure it's fully visible
+          // Don't clamp to currentTime as it might cause rendering issues
+          const lastTime = dataForRange[dataForRange.length - 1].time as number;
           
           // Set visible range directly to ensure full width without padding
           // This ensures the graph line always fills the entire plot area width
@@ -836,9 +881,11 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             });
             
             // Re-apply visible range to ensure graph fills full width after resize
-            if (chartData.length > 0) {
-              const firstTime = chartData[0].time as number;
-              const lastTime = Math.min(chartData[chartData.length - 1].time as number, currentTime);
+            const dataForRange = finalData;
+            if (dataForRange.length > 0) {
+              const firstTime = dataForRange[0].time as number;
+              // Use the last point's time directly to ensure it's fully visible
+              const lastTime = dataForRange[dataForRange.length - 1].time as number;
               chartRef.current.timeScale().setVisibleRange({
                 from: firstTime,
                 to: lastTime,

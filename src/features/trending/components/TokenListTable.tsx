@@ -121,6 +121,9 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
       }) as string[];
     if (!toFetch.length) return;
     
+    // Track addresses added in this effect run for proper cleanup
+    const addressesAddedThisRun = new Set<string>(toFetch);
+    
     // Mark addresses as being fetched
     toFetch.forEach(addr => fetchingRef.current.add(addr));
     
@@ -142,8 +145,8 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
         })
       );
       if (aborted) {
-        // Clean up fetching ref if aborted
-        toFetch.forEach(addr => fetchingRef.current.delete(addr));
+        // Clean up fetching ref if aborted - clear all addresses added in this run
+        addressesAddedThisRun.forEach(addr => fetchingRef.current.delete(addr));
         return;
       }
       setChangeMap((prev) => {
@@ -158,8 +161,8 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
     })();
     return () => { 
       aborted = true;
-      // Clean up fetching ref on unmount/rerun
-      toFetch.forEach(addr => fetchingRef.current.delete(addr));
+      // Clean up fetching ref on unmount/rerun - clear all addresses added in this run
+      addressesAddedThisRun.forEach(addr => fetchingRef.current.delete(addr));
     };
   }, [allItems]);
 

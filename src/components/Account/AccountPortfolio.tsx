@@ -378,17 +378,46 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         // Reset drag state even if chart is not available
         initialTouchX = null;
         initialTouchY = null;
+        lastTouchY = null;
         isHorizontalDrag = null;
         hasMoved = false;
         return;
       }
       
       try {
-        // Clear crosshair to reset hover state
-        chart.setCrosshairPosition(-1, -1, {});
-        setHoveredPrice(null);
+        // If it was a horizontal drag or a tap (no drag detected), jump crosshair back to current time
+        if (isHorizontalDrag === true || (isHorizontalDrag === null && !hasMoved)) {
+          const currentTime = moment().unix();
+          const currentX = chart.timeScale().timeToCoordinate(currentTime);
+          
+          if (currentX !== null && currentX >= 0) {
+            // Set crosshair to current time position
+            chart.setCrosshairPosition(currentX, 0, { time: currentTime as any });
+          } else {
+            // Fallback: get the rightmost position (end of visible range)
+            const visibleRange = chart.timeScale().getVisibleRange();
+            if (visibleRange && visibleRange.to) {
+              const endTime = visibleRange.to as number;
+              const endX = chart.timeScale().timeToCoordinate(endTime);
+              if (endX !== null && endX >= 0) {
+                chart.setCrosshairPosition(endX, 0, { time: endTime as any });
+              }
+            }
+          }
+        } else {
+          // For vertical drags, clear crosshair
+          chart.setCrosshairPosition(-1, -1, {});
+          setHoveredPrice(null);
+        }
       } catch (error) {
-        console.warn('[AccountPortfolio] Error clearing crosshair on touchend:', error);
+        console.warn('[AccountPortfolio] Error handling crosshair on touchend:', error);
+        // Fallback: clear crosshair on error
+        try {
+          chart.setCrosshairPosition(-1, -1, {});
+          setHoveredPrice(null);
+        } catch (e) {
+          // Ignore fallback errors
+        }
       }
       
       // Reset drag state

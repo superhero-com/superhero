@@ -55,19 +55,16 @@ function SortableColumnHeader({
     }
   };
 
-  const alignRight = className.includes('text-right');
-  const isRankCell = className.includes('cell-rank');
-
   return (
     <th 
       className={`${className} cursor-pointer hover:opacity-75 transition-opacity select-none`}
       onClick={handleClick}
       title={title}
     >
-      <div className={`flex items-center ${isRankCell ? 'gap-0 relative' : 'gap-1'} ${alignRight ? 'justify-end w-full' : ''}`}>
+      <div className="flex items-center gap-1">
         {children}
         {isActive && (
-          <span className={`text-[#1161FE] text-xs ${isRankCell ? 'absolute right-0' : ''}`}>
+          <span className="text-[#1161FE] text-xs">
             {isRankHeader ? getDisplayDirection() : (getDisplayDirection() === 'DESC' ? '↓' : '↑')}
           </span>
         )}
@@ -100,7 +97,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
   // Detect mobile viewport to map the "Market cap" header to market_cap sorting
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
-    const mm = typeof window !== 'undefined' ? window.matchMedia('(max-width: 960px)') : null;
+    const mm = typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)') : null;
     const handler = () => setIsMobile(!!mm?.matches);
     handler();
     if (mm?.addEventListener) mm.addEventListener('change', handler);
@@ -158,7 +155,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
               currentSort={orderBy}
               currentDirection={orderDirection}
               onSort={onSort}
-              className="cell cell-rank text-xs opacity-50 text-left pl-2 pr-2 pr-md-4 whitespace-nowrap"
+              className="cell cell-rank text-xs opacity-50 text-left pr-2 pr-md-4 whitespace-nowrap"
               title={t('titles.clickToReverseRankingOrder')}
             >
               <span className="hidden md:inline">Rank</span>
@@ -186,7 +183,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
               currentSort={orderBy}
               currentDirection={orderDirection}
               onSort={onSort}
-              className="cell cell-price text-xs opacity-50 text-right md:text-right py-1 px-1 px-lg-3 whitespace-nowrap"
+              className="cell cell-price text-xs opacity-50 text-left text-md-right py-1 px-1 px-lg-3 whitespace-nowrap"
             >
               Price
             </SortableColumnHeader>
@@ -208,13 +205,11 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
             >
               Holders
             </SortableColumnHeader>
-            <th className="cell cell-chart text-xs text-right md:text-center opacity-50 py-1 pr-2 md:pl-3 whitespace-nowrap">
-              <div className="flex items-center justify-end w-full gap-1">
-                <span className="hidden md:inline">Performance</span>
-                <span className="md:hidden inline">24h %</span>
-              </div>
+            <th className="cell cell-chart text-xs text-center opacity-50 py-1 pl-3 whitespace-nowrap">
+              <span className="hidden md:inline">Performance</span>
+              <span className="md:hidden inline">24h %</span>
             </th>
-            <th className="cell-link hidden md:table-cell">{/* Links placeholder column */}</th>
+            <th className="cell-link hidden lg:table-cell">{/* Links placeholder column */}</th>
           </tr>
         </thead>
 
@@ -260,7 +255,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
           border-spacing: 0 8px;
         }
 
-        @media screen and (max-width: 960px) {
+        @media screen and (max-width: 767px) {
           .bctsl-token-list-table {
             border-spacing: 0;
           }
@@ -276,6 +271,12 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
 
         .bctsl-token-list-table th {
           font-weight: bold;
+        }
+
+        .bctsl-token-list-table .cell-fake {
+          width: 0 !important;
+          padding: 0 !important;
+          border: none !important;
         }
 
         .cell-name {
@@ -320,6 +321,18 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
             width: 8px;
           }
         }
+        
+        /* Hide cell-link on tablets (768px - 1024px) */
+        @media screen and (min-width: 768px) and (max-width: 1024px) {
+          .bctsl-token-list-table .cell-link,
+          .bctsl-token-list-table > thead > tr > th.cell-link,
+          .bctsl-token-list-table > tbody > tr > td.cell-link {
+            display: none !important;
+            width: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+          }
+        }
 
         @media screen and (max-width: 1100px) {
           .cell-name {
@@ -332,8 +345,8 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
           }
         }
 
-        /* Mobile header + rows */
-        @media screen and (max-width: 960px) {
+        /* Mobile header + rows (only for screens < 768px) */
+        @media screen and (max-width: 767px) {
           .bctsl-token-list-table {
             table-layout: fixed; /* stabilize widths during skeleton */
             width: 100%;
@@ -391,7 +404,14 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
 
           /* Keep consistent column widths */
           .bctsl-token-list-table .cell-fake { width: 0; padding: 0; }
-          .bctsl-token-list-table .cell-rank { width: 36px; padding-left: 8px !important; }
+          .bctsl-token-list-table .cell-rank { 
+            width: 36px; 
+            padding-left: 8px !important; 
+            text-align: center !important;
+          }
+          .bctsl-token-list-table > thead > tr > th.cell-rank {
+            text-align: center !important;
+          }
           .bctsl-token-list-table .cell-price { width: 34%; }
           .bctsl-token-list-table .cell-chart { width: 22%; padding-right: 8px !important; }
           
@@ -403,11 +423,6 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
           /* Right-align 24h % header on mobile */
           .bctsl-token-list-table > thead > tr > th.cell-chart {
             text-align: right !important;
-          }
-          
-          .bctsl-token-list-table > thead > tr > th.cell-chart > div {
-            justify-content: flex-end !important;
-            width: 100% !important;
           }
 
           .bctsl-token-list-table > tbody > tr.mobile-only-card td {

@@ -80,7 +80,7 @@ export default function TokenListTableRow({
       <tr className="mobile-only-card md:hidden relative">
         <td className="cell-fake" />
         {/* Rank */}
-        <td className="pl-3 pr-3 py-1.5 align-middle text-white/60 text-xs font-semibold">{collectionRank}</td>
+        <td className="pl-3 pr-3 py-1.5 align-middle text-white/60 text-xs font-semibold text-center">{collectionRank}</td>
         {/* Content cell spans remaining columns: Row 1 name, Row 2 mc/price/24h */}
         <td className="pl-2 py-1.5 pr-3 align-middle relative" colSpan={3}>
           {/* Row 1: full name (wrap allowed) */}
@@ -118,7 +118,7 @@ export default function TokenListTableRow({
         </td>
       </tr>
 
-      {/* Desktop table row for larger screens */}
+      {/* Desktop table row for larger screens (including tablets) */}
       <tr className="bctsl-token-list-table-row rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hidden md:table-row">
         {/* Fake cell to match header structure */}
         <td className="cell-fake"></td>
@@ -148,7 +148,7 @@ export default function TokenListTableRow({
         )}
 
         {/* Price */}
-        <td className="cell cell-price px-1 px-lg-3 text-md-right">
+        <td className="cell cell-price px-1 px-lg-3 text-left text-md-right">
           <div className="flex align-center md:block">
             <div className="mobile-label block md:hidden text-white/60 w-16">Price:</div>
             <div className="bg-gradient-to-r  text-sm from-yellow-400 to-cyan-500 bg-clip-text text-transparent">
@@ -255,7 +255,7 @@ export default function TokenListTableRow({
         }
 
         /* Mobile responsive styles */
-        @media screen and (max-width: 960px) {
+        @media screen and (max-width: 767px) {
           .only-fiat .price { display: none; }
           .bctsl-token-list-table-row {
             display: grid;

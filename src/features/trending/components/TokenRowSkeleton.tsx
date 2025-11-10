@@ -2,12 +2,12 @@ export default function TokenRowSkeleton() {
   return (
     <>
       {/* Mobile skeleton layout matching TokenListTableRow */}
-      <tr className="token-row-skeleton mobile-only-card md:hidden">
+      <tr className="token-row-skeleton mobile-only-card md:hidden relative">
         <td className="cell-fake"></td>
-        <td className="cell cell-rank pl-2 pr-1 py-1.5 align-middle">
+        <td className="pl-3 pr-3 py-1.5 align-middle text-center">
           <div className="skeleton-loader skeleton-text w-4 h-4 m-0" />
         </td>
-        <td className="cell cell-name py-1.5 pr-2 align-middle relative" colSpan={3}>
+        <td className="pl-2 py-1.5 pr-3 align-middle relative" colSpan={3}>
           {/* Row 1: token name skeleton */}
           <div className="skeleton-loader skeleton-text token-name w-3/4 h-4 mb-1" />
           {/* Row 2: market cap and price/24h skeletons */}
@@ -22,32 +22,28 @@ export default function TokenRowSkeleton() {
       </tr>
       
       {/* Desktop skeleton layout */}
-      <tr className="bctsl-token-list-table-row token-row-skeleton rounded hidden md:table-row">
+      <tr className="bctsl-token-list-table-row token-row-skeleton rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hidden md:table-row">
         <td className="cell-fake"></td>
         <td className="cell cell-rank pl-2 pl-md-4">
           <div className="rank">
             <div className="skeleton-loader skeleton-text w-4 h-4 m-0" />
           </div>
         </td>
-        <td className="cell cell-name px-1 px-md-3">
+        <td className="cell cell-name px-1 px-lg-3">
           <div className="skeleton-loader skeleton-text token-name w-full h-4 m-0" />
         </td>
-        <td className="cell cell-price px-1 px-md-3">
-          <div className="flex-container">
-            <div className="skeleton-loader skeleton-text price-value w-full h-4 m-0" />
-          </div>
+        <td className="cell cell-price px-1 px-lg-3 text-left text-md-right">
+          <div className="skeleton-loader skeleton-text price-value w-full h-4 m-0" />
         </td>
-        <td className="cell cell-market-cap px-1 px-md-3 text-md-right">
-          <div className="flex-container">
-            <div className="skeleton-loader skeleton-text market-cap-value w-full h-4 m-0" />
-          </div>
+        <td className="cell cell-market-cap px-1 px-lg-3 text-md-right">
+          <div className="skeleton-loader skeleton-text market-cap-value w-full h-4 m-0" />
         </td>
-        <td className="cell cell-address text-right px-1 px-md-3">
-          <div className="skeleton-loader skeleton-text address-chip w-full h-4 m-0" />
+        <td className="cell cell-holders text-left px-1 px-lg-3">
+          <div className="skeleton-loader skeleton-text h-4 w-8 m-0" />
         </td>
         <td className="cell cell-chart text-right pr-md-4">
-          <div className="flex-container">
-            <div className="change-skeleton skeleton-loader skeleton-text h-4 w-12 m-0" />
+          <div className="ml-auto chart max-w-[180px]">
+            <div className="skeleton-loader skeleton-text h-10 w-full m-0" />
           </div>
         </td>
         <td className="cell cell-link"></td>
@@ -60,16 +56,6 @@ export default function TokenRowSkeleton() {
           padding-block: 8px;
         }
 
-        .cell-market-cap,
-        .cell-price,
-        .cell-chart {
-          .flex-container {
-            height: 100%;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-          }
-        }
 
         .skeleton-loader {
           background: linear-gradient(90deg, 
@@ -123,19 +109,9 @@ export default function TokenRowSkeleton() {
         }
 
         /* Mobile: only show columns used in mobile layout */
-        @media screen and (max-width: 960px) {
+        @media screen and (max-width: 767px) {
           /* Keep the first (fake) column zero-width so header doesn't shift */
           .cell-fake { width: 0; padding: 0; }
-
-          /* Fix Rank column width to match header/body (prevents header jump) */
-          .cell-rank { width: 36px; }
-
-          .cell-collection,
-          .cell-address,
-          .cell-market-cap,
-          .cell-link {
-            display: none;
-          }
 
           .token-row-skeleton {
             height: auto;
@@ -144,8 +120,9 @@ export default function TokenRowSkeleton() {
             margin: 0;
           }
 
-          .cell-price .price-value { width: 90px; }
-          .cell-chart .change-skeleton { width: 58px; }
+          .bctsl-token-list-table-row.token-row-skeleton {
+            display: none !important;
+          }
         }
       `}</style>
     </>

@@ -519,11 +519,22 @@ export default function RightRail({
 
     async function loadPrice() {
       try {
-        // Fetch currency rates and market data
-        const [rates, marketData] = await Promise.all([
+        // Fetch currency rates and market data (handle partial failures gracefully)
+        const [ratesResult, marketDataResult] = await Promise.allSettled([
           SuperheroApi.getCurrencyRates(),
           SuperheroApi.getMarketData(selectedCurrency),
         ]);
+
+        const rates = ratesResult.status === 'fulfilled' ? ratesResult.value : null;
+        const marketData = marketDataResult.status === 'fulfilled' ? marketDataResult.value : null;
+
+        // Log errors for failed requests
+        if (ratesResult.status === 'rejected') {
+          console.error("Failed to load currency rates:", ratesResult.reason);
+        }
+        if (marketDataResult.status === 'rejected') {
+          console.error("Failed to load market data:", marketDataResult.reason);
+        }
 
         // Update sparklines whenever rates are available (regardless of marketData)
         if (rates) {
@@ -544,16 +555,16 @@ export default function RightRail({
           }
         }
 
-        // Update price data only when both rates and marketData are available
-        if (rates && marketData) {
+        // Update price data whenever rates are available (even if marketData fails)
+        if (rates) {
           // Transform to expected format: { usd, eur, cny, change24h, marketCap, volume24h }
           const priceData = {
             usd: rates.usd || null,
             eur: rates.eur || null,
             cny: rates.cny || null,
-            change24h: marketData.priceChangePercentage24h || null,
-            marketCap: marketData.marketCap || null,
-            volume24h: marketData.totalVolume || null,
+            change24h: marketData?.priceChangePercentage24h || null,
+            marketCap: marketData?.marketCap || null,
+            volume24h: marketData?.totalVolume || null,
           };
           setPrices(priceData);
         }

@@ -555,26 +555,40 @@ export default function RightRail({
           }
         }
 
-        // Update price data whenever rates are available (even if marketData fails)
-        // Check if rates exists and has at least one currency value
+        // Update price data, preserving existing market stats when marketData fails
+        // Only update currency prices when rates are available
+        // Only update market stats when marketData is available
         if (rates && (rates.usd != null || rates.eur != null || rates.cny != null)) {
-          // Transform to expected format: { usd, eur, cny, change24h, marketCap, volume24h }
-          // Handle both camelCase (if backend conversion works) and snake_case (if it doesn't)
-          const priceData = {
-            usd: rates.usd || null,
-            eur: rates.eur || null,
-            cny: rates.cny || null,
-            change24h: marketData?.priceChangePercentage24h || 
-                       marketData?.price_change_percentage_24h || 
-                       null,
-            marketCap: marketData?.marketCap || 
-                       marketData?.market_cap || 
-                       null,
-            volume24h: marketData?.totalVolume || 
-                       marketData?.total_volume || 
-                       null,
-          };
-          setPrices(priceData);
+          setPrices((prevPrices) => {
+            // Transform to expected format: { usd, eur, cny, change24h, marketCap, volume24h }
+            // Handle both camelCase (if backend conversion works) and snake_case (if it doesn't)
+            const priceData: any = {
+              usd: rates.usd || null,
+              eur: rates.eur || null,
+              cny: rates.cny || null,
+            };
+
+            // Only update market stats if marketData is available
+            // Otherwise preserve existing values to prevent overwriting with null
+            if (marketData) {
+              priceData.change24h = marketData.priceChangePercentage24h || 
+                                    marketData.price_change_percentage_24h || 
+                                    null;
+              priceData.marketCap = marketData.marketCap || 
+                                   marketData.market_cap || 
+                                   null;
+              priceData.volume24h = marketData.totalVolume || 
+                                   marketData.total_volume || 
+                                   null;
+            } else {
+              // Preserve existing market stats when marketData fails
+              priceData.change24h = prevPrices?.change24h ?? null;
+              priceData.marketCap = prevPrices?.marketCap ?? null;
+              priceData.volume24h = prevPrices?.volume24h ?? null;
+            }
+
+            return priceData;
+          });
         }
       } catch (error) {
         console.error("Failed to load price data:", error);

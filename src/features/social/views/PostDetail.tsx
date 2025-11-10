@@ -82,14 +82,15 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   }, [postData, ancestors.length]);
 
   // Compute total descendant comments (all levels) for current post
+  // Use postData.id in cache key for consistency (same post regardless of slug/ID navigation)
   const { data: descendantCount } = useQuery<number>({
-    queryKey: ['post-desc-count', (postData as any)?.id],
-    enabled: !!(postData as any)?.id,
+    queryKey: ['post-desc-count', postData?.id],
+    enabled: !!postData?.id,
     refetchInterval: 120 * 1000,
     queryFn: async () => {
       const normalize = (id: string) => (String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`);
-      const root = String((postData as any)?.id);
-      const queue: string[] = [normalize(root)];
+      const postIdForQuery = postData!.id;
+      const queue: string[] = [normalize(String(postIdForQuery))];
       let total = 0;
       let requestBudget = 200; // safety cap
       while (queue.length > 0 && requestBudget > 0) {
@@ -123,16 +124,16 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   // No need for author helpers; cards handle display
 
   // Handle reply added callback
-  // Extract postId to avoid recreating callback when postData changes (only id matters)
-  const postId = postData?.id;
+  // Extract currentPostId to avoid recreating callback when postData changes (only id matters)
+  const currentPostId = postData?.id;
   const handleCommentAdded = useCallback(() => {
     refetchPost();
     // Refresh replies list keys used by DirectReplies and any legacy comment queries
-    if (postId) {
-      queryClient.refetchQueries({ queryKey: ['post-comments', postId, 'infinite'] });
-      queryClient.refetchQueries({ queryKey: ['post-comments', postId] });
+    if (currentPostId) {
+      queryClient.refetchQueries({ queryKey: ['post-comments', currentPostId, 'infinite'] });
+      queryClient.refetchQueries({ queryKey: ['post-comments', currentPostId] });
     }
-  }, [refetchPost, queryClient, postId]);
+  }, [refetchPost, queryClient, currentPostId]);
 
   // Render helpers
   const renderLoadingState = () => (

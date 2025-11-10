@@ -525,6 +525,26 @@ export default function RightRail({
           SuperheroApi.getMarketData(selectedCurrency),
         ]);
 
+        // Update sparklines whenever rates are available (regardless of marketData)
+        if (rates) {
+          if (rates.usd != null) {
+            setUsdSpark((prev) => {
+              const next = [...prev, Number(rates.usd)].slice(-50);
+              sessionStorage.setItem("ae_spark_usd", JSON.stringify(next));
+              return next;
+            });
+          }
+
+          if (rates.eur != null) {
+            setEurSpark((prev) => {
+              const next = [...prev, Number(rates.eur)].slice(-50);
+              sessionStorage.setItem("ae_spark_eur", JSON.stringify(next));
+              return next;
+            });
+          }
+        }
+
+        // Update price data only when both rates and marketData are available
         if (rates && marketData) {
           // Transform to expected format: { usd, eur, cny, change24h, marketCap, volume24h }
           const priceData = {
@@ -536,22 +556,6 @@ export default function RightRail({
             volume24h: marketData.totalVolume || null,
           };
           setPrices(priceData);
-
-          if (rates.usd != null) {
-          setUsdSpark((prev) => {
-              const next = [...prev, Number(rates.usd)].slice(-50);
-            sessionStorage.setItem("ae_spark_usd", JSON.stringify(next));
-            return next;
-          });
-        }
-
-          if (rates.eur != null) {
-          setEurSpark((prev) => {
-              const next = [...prev, Number(rates.eur)].slice(-50);
-            sessionStorage.setItem("ae_spark_eur", JSON.stringify(next));
-            return next;
-          });
-          }
         }
       } catch (error) {
         console.error("Failed to load price data:", error);

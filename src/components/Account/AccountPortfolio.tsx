@@ -359,9 +359,20 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               const toTime = visibleRange.to as number;
               
               if (timeValue >= fromTime && timeValue <= toTime) {
-                // Set crosshair position using X coordinate and time
-                // When time is provided, chart automatically calculates Y from series data
+                // Try both methods: programmatic and simulated mouse event
+                // Method 1: Programmatic setCrosshairPosition
                 chart.setCrosshairPosition(clampedX, 0, { time: timeValue as any });
+                
+                // Method 2: Simulate mouse move event to trigger chart's internal crosshair update
+                // This might be needed for the chart to properly render the crosshair
+                const rect = container.getBoundingClientRect();
+                const mouseEvent = new MouseEvent('mousemove', {
+                  bubbles: true,
+                  cancelable: true,
+                  clientX: rect.left + clampedX,
+                  clientY: rect.top + rect.height / 2,
+                });
+                container.dispatchEvent(mouseEvent);
                 
                 // Log occasionally to avoid spam
                 if (Math.random() < 0.05) {

@@ -155,6 +155,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       handleTouchEnd: (e: TouchEvent) => void;
       container: HTMLDivElement;
     } | null = null;
+    let intervalId: NodeJS.Timeout | null = null;
+    let timeoutId: NodeJS.Timeout | null = null;
     
     const checkAndInit = () => {
       if (!chartContainerRef.current) return false;
@@ -421,25 +423,38 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     };
 
     // Try immediately
-    if (checkAndInit()) return;
+    const initializedImmediately = checkAndInit();
 
     // If not ready, check periodically
-    const intervalId = setInterval(() => {
-      if (checkAndInit() || chartRef.current) {
-        clearInterval(intervalId);
-      }
-    }, 100); // Check every 100ms
+    if (!initializedImmediately) {
+      intervalId = setInterval(() => {
+        if (checkAndInit() || chartRef.current) {
+          if (intervalId) {
+            clearInterval(intervalId);
+            intervalId = null;
+          }
+        }
+      }, 100); // Check every 100ms
 
-    // Also try on next frame
-    const timeoutId = setTimeout(() => {
-      if (checkAndInit() || chartRef.current) {
-        clearInterval(intervalId);
-      }
-    }, 0);
+      // Also try on next frame
+      timeoutId = setTimeout(() => {
+        if (checkAndInit() || chartRef.current) {
+          if (intervalId) {
+            clearInterval(intervalId);
+            intervalId = null;
+          }
+        }
+      }, 0);
+    }
 
+    // Always return cleanup function to ensure resources are cleaned up
     return () => {
-      clearInterval(intervalId);
-      clearTimeout(timeoutId);
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       if (resizeObserver) {
         resizeObserver.disconnect();
       }

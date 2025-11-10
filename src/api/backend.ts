@@ -246,6 +246,19 @@ export const SuperheroApi = {
     if (currency) qp.set('currency', currency);
     return this.fetchJson(`/api/coins/aeternity/market-data?${qp.toString()}`);
   },
+  // Posts endpoints
+  listPosts(params: { limit?: number; page?: number; orderBy?: 'total_comments'|'created_at'; orderDirection?: 'ASC'|'DESC'; search?: string; accountAddress?: string; topics?: string } = {}) {
+    const qp = new URLSearchParams();
+    if (params.limit != null) qp.set('limit', String(params.limit));
+    if (params.page != null) qp.set('page', String(params.page));
+    if (params.orderBy) qp.set('order_by', params.orderBy);
+    if (params.orderDirection) qp.set('order_direction', params.orderDirection);
+    if (params.search) qp.set('search', params.search);
+    if (params.accountAddress) qp.set('account_address', params.accountAddress);
+    if (params.topics) qp.set('topics', params.topics);
+    const query = qp.toString();
+    return this.fetchJson(`/api/posts${query ? `?${query}` : ''}`);
+  },
 };
 
 const USE_MOCK = false; // Override to true to force mock in development
@@ -297,11 +310,7 @@ function mockFetch(path: string) {
 
 // API function for new posts endpoint
 export async function fetchPosts(limit: number = 5) {
-  const response = await fetch(`https://api.superhero.com/api/posts?limit=${limit}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch posts: ${response.status}`);
-  }
-  return response.json();
+  return SuperheroApi.listPosts({ limit });
 }
 
 export const Backend = {

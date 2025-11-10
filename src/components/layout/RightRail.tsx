@@ -538,19 +538,19 @@ export default function RightRail({
           setPrices(priceData);
 
           if (rates.usd != null) {
-            setUsdSpark((prev) => {
+          setUsdSpark((prev) => {
               const next = [...prev, Number(rates.usd)].slice(-50);
-              sessionStorage.setItem("ae_spark_usd", JSON.stringify(next));
-              return next;
-            });
-          }
+            sessionStorage.setItem("ae_spark_usd", JSON.stringify(next));
+            return next;
+          });
+        }
 
           if (rates.eur != null) {
-            setEurSpark((prev) => {
+          setEurSpark((prev) => {
               const next = [...prev, Number(rates.eur)].slice(-50);
-              sessionStorage.setItem("ae_spark_eur", JSON.stringify(next));
-              return next;
-            });
+            sessionStorage.setItem("ae_spark_eur", JSON.stringify(next));
+            return next;
+          });
           }
         }
       } catch (error) {

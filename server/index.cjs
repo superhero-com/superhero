@@ -53,25 +53,41 @@ async function buildMeta(pathname, origin){
   // Post
   const pm = pathname.match(/^\/post\/([^/]+)/);
   if (pm) {
-    const postId = pm[1];
-    const id = postId.endsWith('_v3') ? postId : `${postId}_v3`;
+    const segment = pm[1];
+    const baseApi = API_BASE.replace(/\/$/, '');
+    async function fetchPostBySegment(seg){
+      const r = await fetch(`${baseApi}/api/posts/${encodeURIComponent(seg)}`, { headers: { accept: 'application/json' } });
+      if (r.ok) return r.json();
+      return null;
+    }
     try {
-      const r = await fetch(`${API_BASE.replace(/\/$/, '')}/api/posts/${encodeURIComponent(id)}`, { headers: { accept: 'application/json' } });
-      if (r.ok) {
-        const data = await r.json();
+      let data = await fetchPostBySegment(segment);
+      if (!data && (/^\d+$/.test(segment) || segment.endsWith('_v3'))) {
+        const id = segment.endsWith('_v3') ? segment : `${segment}_v3`;
+        data = await fetchPostBySegment(id);
+      }
+      if (!data) {
+        const sr = await fetch(`${baseApi}/api/posts?search=${encodeURIComponent(segment)}&limit=1&page=1`, { headers: { accept: 'application/json' } });
+        if (sr.ok) {
+          const sdata = await sr.json();
+          const first = Array.isArray(sdata?.items) ? sdata.items[0] : null;
+          if (first?.id) data = await fetchPostBySegment(String(first.id));
+        }
+      }
+      if (data) {
         const raw = String(data?.content || '');
         const content = raw.replace(/\s+/g,' ').trim();
         const media = Array.isArray(data?.media) ? data.media : [];
         return {
           title: `${truncate(content,80) || 'Post'} – Superhero`,
           description: truncate(content,200) || 'View post on Superhero, the crypto social network.',
-          canonical: `${origin}/post/${postId}`,
+          canonical: `${origin}/post/${data?.slug || segment}`,
           ogImage: absolutize(media[0], origin) || `${origin}/og-default.png`,
           ogType: 'article',
         };
       }
     } catch {}
-    return { title: 'Post – Superhero', canonical: `${origin}/post/${postId}`, ogImage: `${origin}/og-default.png`, ogType: 'article' };
+    return { title: 'Post – Superhero', canonical: `${origin}/post/${segment}`, ogImage: `${origin}/og-default.png`, ogType: 'article' };
   }
 
   // User

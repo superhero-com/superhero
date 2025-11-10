@@ -12,6 +12,7 @@ import ReplyToFeedItem from '../components/ReplyToFeedItem';
 // PostTipButton is intentionally not imported here as it's not used on detail page
 import DirectReplies from '../components/DirectReplies';
 import CommentForm from '../components/CommentForm';
+import { resolvePostByKey } from '../utils/resolvePost';
 
 export default function PostDetail({ standalone = true }: { standalone?: boolean } = {}) {
   const { postId, slug } = useParams();
@@ -29,31 +30,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     queryFn: async () => {
       const key = String(slug || postId || '');
       if (!key) throw new Error('Missing post identifier');
-      // Try direct fetch (supports either id or slug if backend accepts)
-      try {
-        return (await PostsService.getById({ id: key })) as unknown as PostDto;
-      } catch (e1: any) {
-        // If numeric id, try with _v3 suffix
-        if (/^\d+$/.test(key) || key.endsWith('_v3')) {
-          const id = key.endsWith('_v3') ? key : `${key}_v3`;
-          try {
-            return (await PostsService.getById({ id })) as unknown as PostDto;
-          } catch (_e2) {
-            // fallthrough to search
-          }
-        }
-        // Fallback: search by slug/content, take first match then refetch by id (ensures full object)
-        try {
-          const res: any = await (PostsService.listAll({ search: key, limit: 1, page: 1 }) as unknown as Promise<any>);
-          const first = Array.isArray(res?.items) ? res.items[0] : null;
-          if (first?.id) {
-            return (await PostsService.getById({ id: String(first.id) })) as unknown as PostDto;
-          }
-        } catch (_e3) {
-          // ignore
-        }
-        throw e1;
-      }
+      return resolvePostByKey(key);
     },
     enabled: !!(slug || postId),
     refetchInterval: 120 * 1000, // Auto-refresh every 2 minutes

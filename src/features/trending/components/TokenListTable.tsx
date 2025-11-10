@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import TokenListTableRow from "./TokenListTableRow";
@@ -108,13 +108,22 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
 
   // Fetch preview 24h change for items in current pages (visible tokens)
   const [changeMap, setChangeMap] = useState<Record<string, number>>({});
+  const fetchingRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!allItems?.length) return;
     let aborted = false;
     const toFetch = allItems
       .map((it) => it.sale_address || it.address)
-      .filter((addr) => addr && changeMap[addr] == null) as string[];
+      .filter((addr) => {
+        if (!addr) return false;
+        // Skip if already fetched or currently being fetched
+        return changeMap[addr] == null && !fetchingRef.current.has(addr);
+      }) as string[];
     if (!toFetch.length) return;
+    
+    // Mark addresses as being fetched
+    toFetch.forEach(addr => fetchingRef.current.add(addr));
+    
     (async () => {
       const { TransactionHistoricalService } = await import('@/api/generated/services/TransactionHistoricalService');
       const entries = await Promise.all(
@@ -132,15 +141,27 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
           }
         })
       );
-      if (aborted) return;
+      if (aborted) {
+        // Clean up fetching ref if aborted
+        toFetch.forEach(addr => fetchingRef.current.delete(addr));
+        return;
+      }
       setChangeMap((prev) => {
         const next = { ...prev } as Record<string, number>;
-        for (const [addr, val] of entries) next[addr] = val;
+        for (const [addr, val] of entries) {
+          next[addr] = val;
+          // Remove from fetching ref once completed
+          fetchingRef.current.delete(addr);
+        }
         return next;
       });
     })();
-    return () => { aborted = true; };
-  }, [allItems, changeMap]);
+    return () => { 
+      aborted = true;
+      // Clean up fetching ref on unmount/rerun
+      toFetch.forEach(addr => fetchingRef.current.delete(addr));
+    };
+  }, [allItems]);
 
   return (
     <div className="relative -mx-4 md:mx-0">

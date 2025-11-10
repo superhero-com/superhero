@@ -350,6 +350,12 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           const time = chart.timeScale().coordinateToTime(clampedX);
           if (time !== null) {
             chart.setCrosshairPosition(clampedX, 0, { time: time as any });
+            // Log occasionally to avoid spam
+            if (Math.random() < 0.1) {
+              console.log('[AccountPortfolio] Moving crosshair:', { clampedX, time });
+            }
+          } else {
+            console.warn('[AccountPortfolio] Could not convert X to time:', clampedX);
           }
         } catch (error) {
           console.warn('[AccountPortfolio] Error setting crosshair on touchmove:', error);
@@ -385,27 +391,52 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       }
       
       try {
-        // If it was a horizontal drag or a tap (no drag detected), jump crosshair back to current time
-        if (isHorizontalDrag === true || (isHorizontalDrag === null && !hasMoved)) {
+        // If it was a horizontal drag, jump crosshair back to current time
+        if (isHorizontalDrag === true) {
+          console.log('[AccountPortfolio] Horizontal drag ended, jumping to current time');
           const currentTime = moment().unix();
-          const currentX = chart.timeScale().timeToCoordinate(currentTime);
+          const visibleRange = chart.timeScale().getVisibleRange();
           
-          if (currentX !== null && currentX >= 0) {
+          // Use the end of visible range (which should be current time or close to it)
+          let targetTime = currentTime;
+          let targetX: number | null = null;
+          
+          if (visibleRange && visibleRange.to) {
+            // Use the end of visible range as it represents the latest data point
+            targetTime = visibleRange.to as number;
+            targetX = chart.timeScale().timeToCoordinate(targetTime);
+            console.log('[AccountPortfolio] Using visible range end:', { targetTime, targetX });
+          }
+          
+          // Fallback to current time if visible range end doesn't work
+          if (targetX === null || targetX < 0) {
+            targetX = chart.timeScale().timeToCoordinate(currentTime);
+            console.log('[AccountPortfolio] Fallback to current time:', { currentTime, targetX });
+          }
+          
+          if (targetX !== null && targetX >= 0) {
             // Set crosshair to current time position
-            chart.setCrosshairPosition(currentX, 0, { time: currentTime as any });
+            chart.setCrosshairPosition(targetX, 0, { time: targetTime as any });
+            console.log('[AccountPortfolio] Crosshair set to current time position');
           } else {
-            // Fallback: get the rightmost position (end of visible range)
-            const visibleRange = chart.timeScale().getVisibleRange();
-            if (visibleRange && visibleRange.to) {
-              const endTime = visibleRange.to as number;
-              const endX = chart.timeScale().timeToCoordinate(endTime);
-              if (endX !== null && endX >= 0) {
-                chart.setCrosshairPosition(endX, 0, { time: endTime as any });
-              }
+            console.warn('[AccountPortfolio] Could not determine current time position, clearing crosshair');
+            chart.setCrosshairPosition(-1, -1, {});
+            setHoveredPrice(null);
+          }
+        } else if (isHorizontalDrag === null && !hasMoved) {
+          // Tap without drag: also jump to current time
+          console.log('[AccountPortfolio] Tap detected, jumping to current time');
+          const visibleRange = chart.timeScale().getVisibleRange();
+          if (visibleRange && visibleRange.to) {
+            const endTime = visibleRange.to as number;
+            const endX = chart.timeScale().timeToCoordinate(endTime);
+            if (endX !== null && endX >= 0) {
+              chart.setCrosshairPosition(endX, 0, { time: endTime as any });
             }
           }
         } else {
           // For vertical drags, clear crosshair
+          console.log('[AccountPortfolio] Vertical drag or other, clearing crosshair');
           chart.setCrosshairPosition(-1, -1, {});
           setHoveredPrice(null);
         }

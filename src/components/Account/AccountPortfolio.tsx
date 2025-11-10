@@ -270,7 +270,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     let initialTouchX: number | null = null;
     let initialTouchY: number | null = null;
     let isHorizontalDrag: boolean | null = null;
-    const DRAG_THRESHOLD = 5; // pixels to determine drag direction (reduced for better responsiveness)
+    let hasMoved: boolean = false;
+    const DRAG_THRESHOLD = 3; // pixels to determine drag direction (reduced for faster detection)
 
     const handleTouchStart = (e: TouchEvent) => {
       if (!chart || !container || !areaSeries) return;
@@ -280,6 +281,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       initialTouchX = touch.clientX;
       initialTouchY = touch.clientY;
       isHorizontalDrag = null;
+      hasMoved = false;
       
       const x = touch.clientX - rect.left;
       
@@ -296,7 +298,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!chart || !container || !areaSeries || initialTouchX === null || initialTouchY === null) return;
+      if (!chart || !container || !areaSeries || initialTouchX === null || initialTouchY === null) {
+        return;
+      }
       
       const touch = e.touches[0];
       const deltaX = Math.abs(touch.clientX - initialTouchX);
@@ -311,6 +315,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         // Check if we've moved enough to determine direction
         if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
           isHorizontalDrag = deltaX > deltaY;
+          hasMoved = true;
         } else {
           // Still within threshold - update crosshair position but don't prevent default yet
           // This allows smooth crosshair movement even for small movements
@@ -322,12 +327,14 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           } catch (error) {
             // Ignore errors during threshold phase
           }
+          // Don't prevent default during threshold - allow scrolling
           return;
         }
       }
       
       // Handle crosshair movement for horizontal drags
-      if (isHorizontalDrag) {
+      if (isHorizontalDrag === true) {
+        // Prevent default to stop page scrolling for horizontal drags
         e.preventDefault();
         e.stopPropagation();
         
@@ -342,7 +349,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           console.warn('[AccountPortfolio] Error setting crosshair on touchmove:', error);
         }
       }
-      // If vertical drag, don't prevent default - allow page scrolling
+      // If vertical drag (isHorizontalDrag === false), don't prevent default - allow page scrolling
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
@@ -352,7 +359,14 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         e.stopPropagation();
       }
       
-      if (!chart) return;
+      if (!chart) {
+        // Reset drag state even if chart is not available
+        initialTouchX = null;
+        initialTouchY = null;
+        isHorizontalDrag = null;
+        hasMoved = false;
+        return;
+      }
       
       try {
         // Clear crosshair to reset hover state
@@ -366,6 +380,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       initialTouchX = null;
       initialTouchY = null;
       isHorizontalDrag = null;
+      hasMoved = false;
     };
 
     // Add touch event listeners after chart is initialized
@@ -819,7 +834,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               <div 
                 ref={chartContainerRef} 
                 className="w-full h-[180px] min-w-0"
-                style={{ touchAction: 'none' }}
+                style={{ touchAction: 'pan-y' }}
               />
           
           {/* Loading indicator */}

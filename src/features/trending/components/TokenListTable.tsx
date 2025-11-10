@@ -140,7 +140,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
       });
     })();
     return () => { aborted = true; };
-  }, [allItems]);
+  }, [allItems, changeMap]);
 
   return (
     <div className="relative -mx-4 md:mx-0">

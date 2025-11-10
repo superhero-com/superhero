@@ -650,6 +650,15 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       if (top < 8) {
         // If not enough space above, position below
         top = buttonRect.bottom + 8;
+        // Check if positioning below would overflow the bottom of the viewport
+        if (top + contentHeight > viewportHeight - 8) {
+          // If it would overflow, position it above anyway but keep it within viewport bounds
+          top = Math.max(8, viewportHeight - contentHeight - 8);
+        }
+      }
+      // Also check if positioned above would overflow the top (shouldn't happen, but safety check)
+      if (top < 8) {
+        top = 8;
       }
       if (left + contentWidth > viewportWidth - 8) {
         left = viewportWidth - contentWidth - 8;
@@ -665,10 +674,11 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     };
 
     // Use requestAnimationFrame to ensure DOM is ready
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     const rafId = requestAnimationFrame(() => {
       positionTooltip();
       // Also position after a small delay to account for content sizing
-      setTimeout(positionTooltip, 0);
+      timeoutId = setTimeout(positionTooltip, 0);
     });
 
     // Position on resize/scroll
@@ -677,6 +687,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     return () => {
       cancelAnimationFrame(rafId);
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
       window.removeEventListener('resize', positionTooltip);
       window.removeEventListener('scroll', positionTooltip, true);
     };

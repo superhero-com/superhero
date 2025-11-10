@@ -270,7 +270,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     let initialTouchX: number | null = null;
     let initialTouchY: number | null = null;
     let isHorizontalDrag: boolean | null = null;
-    const DRAG_THRESHOLD = 10; // pixels to determine drag direction
+    const DRAG_THRESHOLD = 5; // pixels to determine drag direction (reduced for better responsiveness)
 
     const handleTouchStart = (e: TouchEvent) => {
       if (!chart || !container || !areaSeries) return;
@@ -302,26 +302,34 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       const deltaX = Math.abs(touch.clientX - initialTouchX);
       const deltaY = Math.abs(touch.clientY - initialTouchY);
       
+      const rect = container.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const clampedX = Math.max(0, Math.min(x, rect.width));
+      
       // Determine drag direction if not yet determined
       if (isHorizontalDrag === null) {
+        // Check if we've moved enough to determine direction
         if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
           isHorizontalDrag = deltaX > deltaY;
         } else {
-          // Still within threshold, don't prevent default yet
+          // Still within threshold - update crosshair position but don't prevent default yet
+          // This allows smooth crosshair movement even for small movements
+          try {
+            const time = chart.timeScale().coordinateToTime(clampedX);
+            if (time !== null) {
+              chart.setCrosshairPosition(clampedX, 0, { time: time as any });
+            }
+          } catch (error) {
+            // Ignore errors during threshold phase
+          }
           return;
         }
       }
       
-      // Only handle crosshair movement for horizontal drags
+      // Handle crosshair movement for horizontal drags
       if (isHorizontalDrag) {
         e.preventDefault();
         e.stopPropagation();
-        
-        const rect = container.getBoundingClientRect();
-        const x = touch.clientX - rect.left;
-        
-        // Clamp x to chart bounds
-        const clampedX = Math.max(0, Math.min(x, rect.width));
         
         try {
           // Use timeScale to convert coordinate to time
@@ -811,7 +819,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               <div 
                 ref={chartContainerRef} 
                 className="w-full h-[180px] min-w-0"
-                style={{ touchAction: 'pan-y' }}
+                style={{ touchAction: 'none' }}
               />
           
           {/* Loading indicator */}

@@ -262,215 +262,138 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       }
     });
 
-    // Add touch handlers for mobile drag support
-    // Track initial touch position and drag direction
-    let initialTouchX: number | null = null;
-    let initialTouchY: number | null = null;
-    let lastTouchY: number | null = null;
-    let isHorizontalDrag: boolean | null = null;
-    let hasMoved: boolean = false;
-    const DRAG_THRESHOLD = 3; // pixels to determine drag direction (reduced for faster detection)
+    // Mobile touch handling - completely rewritten for reliability
+    // Track touch state
+    let touchStartX: number | null = null;
+    let touchStartY: number | null = null;
+    let dragDirection: 'horizontal' | 'vertical' | null = null;
+    const DRAG_THRESHOLD = 10; // pixels to determine drag direction
+    
+    // Helper function to get price at a given time from series data
+    const getPriceAtTime = (targetTime: number): number | null => {
+      try {
+        const seriesData = areaSeries.data();
+        if (!seriesData || seriesData.length === 0) return null;
+        
+        // Find closest data point
+        let closestPoint = seriesData[0];
+        let minDiff = Math.abs((closestPoint.time as number) - targetTime);
+        
+        for (const point of seriesData) {
+          const diff = Math.abs((point.time as number) - targetTime);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestPoint = point;
+          }
+        }
+        
+        return typeof closestPoint.value === 'number' ? closestPoint.value : null;
+      } catch (error) {
+        return null;
+      }
+    };
+    
+    // Helper function to set crosshair using the correct API format
+    const setCrosshairAtPosition = (x: number) => {
+      try {
+        const time = chart.timeScale().coordinateToTime(x);
+        if (time === null) return false;
+        
+        const price = getPriceAtTime(time as number);
+        if (price === null) return false;
+        
+        // Use the correct API format: { time, price } instead of (x, y, { time })
+        chart.setCrosshairPosition({ time: time as any, price });
+        return true;
+      } catch (error) {
+        console.warn('[AccountPortfolio] Error setting crosshair:', error);
+        return false;
+      }
+    };
 
     const handleTouchStart = (e: TouchEvent) => {
       if (!chart || !container || !areaSeries) return;
       
       const touch = e.touches[0];
       const rect = container.getBoundingClientRect();
-      initialTouchX = touch.clientX;
-      initialTouchY = touch.clientY;
-      lastTouchY = touch.clientY;
-      isHorizontalDrag = null;
-      hasMoved = false;
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      dragDirection = null;
       
       const x = touch.clientX - rect.left;
-      
-      try {
-        // Use timeScale to convert coordinate to time
-        const time = chart.timeScale().coordinateToTime(x);
-        if (time !== null) {
-          // Set crosshair position - chart will calculate Y automatically from time
-          chart.setCrosshairPosition(x, 0, { time: time as any });
-        }
-      } catch (error) {
-        console.warn('[AccountPortfolio] Error setting crosshair on touchstart:', error);
-      }
+      setCrosshairAtPosition(x);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!chart || !container || !areaSeries || initialTouchX === null || initialTouchY === null) {
+      if (!chart || !container || !areaSeries || touchStartX === null || touchStartY === null) {
         return;
       }
       
       const touch = e.touches[0];
-      const deltaX = Math.abs(touch.clientX - initialTouchX);
-      const deltaY = Math.abs(touch.clientY - initialTouchY);
-      const currentY = touch.clientY;
-      const lastY = lastTouchY ?? initialTouchY;
-      
-      const rect = container.getBoundingClientRect();
-      const x = touch.clientX - rect.left;
-      const clampedX = Math.max(0, Math.min(x, rect.width));
+      const deltaX = Math.abs(touch.clientX - touchStartX);
+      const deltaY = Math.abs(touch.clientY - touchStartY);
       
       // Determine drag direction if not yet determined
-      if (isHorizontalDrag === null) {
-        // Check if we've moved enough to determine direction
+      if (dragDirection === null) {
         if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
-          isHorizontalDrag = deltaX > deltaY;
-          hasMoved = true;
-          
-          // If horizontal, prevent default immediately
-          if (isHorizontalDrag) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
+          dragDirection = deltaX > deltaY ? 'horizontal' : 'vertical';
         } else {
-          // Still within threshold - update crosshair position but don't prevent default yet
-          try {
-            const time = chart.timeScale().coordinateToTime(clampedX);
-            if (time !== null) {
-              chart.setCrosshairPosition(clampedX, 0, { time: time as any });
-            }
-          } catch (error) {
-            // Ignore errors during threshold phase
-          }
+          // Still within threshold - update crosshair but allow scrolling
+          const rect = container.getBoundingClientRect();
+          const x = touch.clientX - rect.left;
+          const clampedX = Math.max(0, Math.min(x, rect.width));
+          setCrosshairAtPosition(clampedX);
           return;
         }
       }
       
-      // Handle based on drag direction
-      if (isHorizontalDrag === true) {
-        // Horizontal drag: prevent default and move crosshair
+      // Handle horizontal drag
+      if (dragDirection === 'horizontal') {
         e.preventDefault();
         e.stopPropagation();
         
-        try {
-          const time = chart.timeScale().coordinateToTime(clampedX);
-          if (time !== null) {
-            // Ensure we have valid time before setting crosshair
-            const timeValue = time as number;
-            
-            // Check if time is within visible range
-            const visibleRange = chart.timeScale().getVisibleRange();
-            if (visibleRange && visibleRange.from && visibleRange.to) {
-              const fromTime = visibleRange.from as number;
-              const toTime = visibleRange.to as number;
-              
-              if (timeValue >= fromTime && timeValue <= toTime) {
-                // Set crosshair position - ensure we're using the correct chart instance
-                // The chart should automatically calculate Y from series data when time is provided
-                chart.setCrosshairPosition(clampedX, 0, { time: timeValue as any });
-                
-                // Force chart to update by calling timeScale methods
-                // This might help trigger the visual update
-                chart.timeScale().getVisibleRange();
-                
-                // Log occasionally to avoid spam
-                if (Math.random() < 0.05) {
-                  console.log('[AccountPortfolio] Moving crosshair:', { 
-                    clampedX, 
-                    time: timeValue, 
-                    inRange: true,
-                    chartExists: !!chart,
-                    seriesExists: !!areaSeries
-                  });
-                }
-              } else {
-                console.warn('[AccountPortfolio] Time out of visible range:', { timeValue, fromTime, toTime });
-              }
-            } else {
-              // Fallback: set crosshair even if visible range not available
-              chart.setCrosshairPosition(clampedX, 0, { time: timeValue as any });
-            }
-          } else {
-            console.warn('[AccountPortfolio] Could not convert X to time:', clampedX);
-          }
-        } catch (error) {
-          console.warn('[AccountPortfolio] Error setting crosshair on touchmove:', error);
-        }
-      } else {
-        // Vertical drag: allow native page scrolling
-        // Don't prevent default - let the browser handle scrolling natively
-        // This provides better UX with momentum scrolling and rubber-banding
+        const rect = container.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const clampedX = Math.max(0, Math.min(x, rect.width));
+        setCrosshairAtPosition(clampedX);
       }
+      // For vertical drag, don't prevent default - allow native scrolling
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      // Only prevent default if it was a horizontal drag
-      if (isHorizontalDrag === true) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      
       if (!chart) {
-        // Reset drag state even if chart is not available
-        initialTouchX = null;
-        initialTouchY = null;
-        lastTouchY = null;
-        isHorizontalDrag = null;
-        hasMoved = false;
+        touchStartX = null;
+        touchStartY = null;
+        dragDirection = null;
         return;
       }
       
       try {
-        // If it was a horizontal drag, jump crosshair back to current time
-        if (isHorizontalDrag === true) {
-          console.log('[AccountPortfolio] Horizontal drag ended, jumping to current time');
+        if (dragDirection === 'horizontal') {
+          // Jump crosshair back to current time (end of visible range)
           const visibleRange = chart.timeScale().getVisibleRange();
-          
-          // Use the end of visible range (which represents the latest data point / current time)
           if (visibleRange && visibleRange.to) {
             const endTime = visibleRange.to as number;
-            const endX = chart.timeScale().timeToCoordinate(endTime);
-            
-            if (endX !== null && endX >= 0) {
-              // Set crosshair to current time position (end of visible range)
-              chart.setCrosshairPosition(endX, 0, { time: endTime as any });
-              console.log('[AccountPortfolio] Crosshair set to current time:', { endTime, endX });
-            } else {
-              console.warn('[AccountPortfolio] Could not convert end time to coordinate');
-              // Fallback: try current unix time
-              const currentTime = moment().unix();
-              const currentX = chart.timeScale().timeToCoordinate(currentTime);
-              if (currentX !== null && currentX >= 0) {
-                chart.setCrosshairPosition(currentX, 0, { time: currentTime as any });
-              } else {
-                // Last resort: clear crosshair
-                chart.setCrosshairPosition(-1, -1, {});
-                setHoveredPrice(null);
-              }
+            const price = getPriceAtTime(endTime);
+            if (price !== null) {
+              chart.setCrosshairPosition({ time: endTime as any, price });
             }
-          } else {
-            console.warn('[AccountPortfolio] No visible range available');
-            chart.setCrosshairPosition(-1, -1, {});
-            setHoveredPrice(null);
           }
-        } else if (isHorizontalDrag === null && !hasMoved) {
-          // Tap without drag: keep crosshair at tap position (already set in touchstart)
-          console.log('[AccountPortfolio] Tap without drag, keeping crosshair at tap position');
-          // Crosshair is already set in touchstart, so we don't need to do anything
+        } else if (dragDirection === null) {
+          // Tap without drag - crosshair already set in touchstart, keep it
         } else {
-          // For vertical drags, clear crosshair
-          console.log('[AccountPortfolio] Vertical drag, clearing crosshair');
+          // Vertical drag - clear crosshair
           chart.setCrosshairPosition(-1, -1, {});
           setHoveredPrice(null);
         }
       } catch (error) {
         console.warn('[AccountPortfolio] Error handling crosshair on touchend:', error);
-        // Fallback: clear crosshair on error
-        try {
-          chart.setCrosshairPosition(-1, -1, {});
-          setHoveredPrice(null);
-        } catch (e) {
-          // Ignore fallback errors
-        }
       }
       
-      // Reset drag state
-      initialTouchX = null;
-      initialTouchY = null;
-      lastTouchY = null;
-      isHorizontalDrag = null;
-      hasMoved = false;
+      // Reset state
+      touchStartX = null;
+      touchStartY = null;
+      dragDirection = null;
     };
 
     // Add touch event listeners after chart is initialized
@@ -971,6 +894,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               <div 
                 ref={chartContainerRef} 
                 className="w-full h-[180px] min-w-0"
+                style={{ touchAction: 'pan-y' }}
               />
           
           {/* Loading indicator */}

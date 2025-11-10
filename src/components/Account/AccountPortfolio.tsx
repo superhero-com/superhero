@@ -648,17 +648,39 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
       // Ensure it doesn't go off screen
       if (top < 8) {
-        // If not enough space above, position below
+        // If not enough space above, try positioning below
         top = buttonRect.bottom + 8;
         // Check if positioning below would overflow the bottom of the viewport
         if (top + contentHeight > viewportHeight - 8) {
-          // If it would overflow, position it above anyway but keep it within viewport bounds
-          top = Math.max(8, viewportHeight - contentHeight - 8);
+          // If both above and below would overflow, position it in the direction with more space
+          // while keeping it as close to the button as possible
+          const spaceAbove = buttonRect.top - 8;
+          const spaceBelow = viewportHeight - buttonRect.bottom - 8;
+          
+          if (spaceAbove >= spaceBelow && spaceAbove > 0) {
+            // More space above, position above the button (may be partially cut off at top)
+            top = Math.max(8, buttonRect.top - contentHeight - 8);
+          } else if (spaceBelow > 0) {
+            // More space below, position below the button (may be partially cut off at bottom)
+            top = buttonRect.bottom + 8;
+            // Clamp to bottom edge if it would overflow
+            if (top + contentHeight > viewportHeight - 8) {
+              top = viewportHeight - contentHeight - 8;
+            }
+          } else {
+            // No space above or below (very edge case), position overlapping the button
+            top = buttonRect.top - (contentHeight / 2);
+            // Clamp to viewport bounds
+            top = Math.max(8, Math.min(top, viewportHeight - contentHeight - 8));
+          }
         }
       }
-      // Also check if positioned above would overflow the top (shouldn't happen, but safety check)
+      // Final safety check: ensure it's within viewport bounds
       if (top < 8) {
         top = 8;
+      }
+      if (top + contentHeight > viewportHeight - 8) {
+        top = viewportHeight - contentHeight - 8;
       }
       if (left + contentWidth > viewportWidth - 8) {
         left = viewportWidth - contentWidth - 8;

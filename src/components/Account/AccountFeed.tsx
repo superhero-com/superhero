@@ -167,7 +167,7 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
             item={item}
             commentCount={item.total_comments ?? 0}
             allowInlineRepliesToggle={false}
-            onOpenPost={(id: string) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)}
+            onOpenPost={(slugOrId: string) => navigate(`/post/${slugOrId.replace(/_v3$/,'')}`)}
           />
         );
         i += 1;

@@ -12,9 +12,10 @@ import ReplyToFeedItem from '../components/ReplyToFeedItem';
 // PostTipButton is intentionally not imported here as it's not used on detail page
 import DirectReplies from '../components/DirectReplies';
 import CommentForm from '../components/CommentForm';
+import { resolvePostByKey } from '../utils/resolvePost';
 
 export default function PostDetail({ standalone = true }: { standalone?: boolean } = {}) {
-  const { postId } = useParams();
+  const { postId, slug } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -25,9 +26,13 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     error: postError,
     refetch: refetchPost
   } = useQuery({
-    queryKey: ['post', postId],
-    queryFn: () => PostsService.getById({ id: `${String(postId).replace(/_v3$/,'')}_v3` }),
-    enabled: !!postId,
+    queryKey: ['post', slug || postId],
+    queryFn: async () => {
+      const key = String(slug || postId || '');
+      if (!key) throw new Error('Missing post identifier');
+      return resolvePostByKey(key);
+    },
+    enabled: !!(slug || postId),
     refetchInterval: 120 * 1000, // Auto-refresh every 2 minutes
   });
 
@@ -45,7 +50,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   // Resolve full ancestors iteratively
   const parentId = postData ? extractParentId(postData as any) : null;
   const { data: ancestors = [] } = useQuery<PostDto[]>({
-    queryKey: ['post-ancestors', postId, parentId],
+    queryKey: ['post-ancestors', (postData as any)?.id, parentId],
     enabled: !!postData,
     refetchInterval: 120 * 1000,
     queryFn: async () => {
@@ -77,13 +82,15 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   }, [postData, ancestors.length]);
 
   // Compute total descendant comments (all levels) for current post
+  // Use postData.id in cache key for consistency (same post regardless of slug/ID navigation)
   const { data: descendantCount } = useQuery<number>({
-    queryKey: ['post-desc-count', postId],
-    enabled: !!postId,
+    queryKey: ['post-desc-count', postData?.id],
+    enabled: !!postData?.id,
     refetchInterval: 120 * 1000,
     queryFn: async () => {
       const normalize = (id: string) => (String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`);
-      const queue: string[] = [normalize(String(postId))];
+      const postIdForQuery = postData!.id;
+      const queue: string[] = [normalize(String(postIdForQuery))];
       let total = 0;
       let requestBudget = 200; // safety cap
       while (queue.length > 0 && requestBudget > 0) {
@@ -117,14 +124,16 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   // No need for author helpers; cards handle display
 
   // Handle reply added callback
+  // Extract currentPostId to avoid recreating callback when postData changes (only id matters)
+  const currentPostId = postData?.id;
   const handleCommentAdded = useCallback(() => {
     refetchPost();
     // Refresh replies list keys used by DirectReplies and any legacy comment queries
-    if (postId) {
-      queryClient.refetchQueries({ queryKey: ['post-comments', postId, 'infinite'] });
-      queryClient.refetchQueries({ queryKey: ['post-comments', postId] });
+    if (currentPostId) {
+      queryClient.refetchQueries({ queryKey: ['post-comments', currentPostId, 'infinite'] });
+      queryClient.refetchQueries({ queryKey: ['post-comments', currentPostId] });
     }
-  }, [refetchPost, queryClient, postId]);
+  }, [refetchPost, queryClient, currentPostId]);
 
   // Render helpers
   const renderLoadingState = () => (
@@ -151,13 +160,13 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
           allowInlineRepliesToggle={false}
           item={anc as any}
           commentCount={(anc as any).total_comments ?? 0}
-          onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)}
+          onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)}
           isActive={false}
         />
       ))}
       {postData && (
         <div ref={currentPostRef}>
-          <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(descendantCount ?? (postData as any).total_comments ?? 0) as number} onOpenPost={(id) => navigate(`/post/${String(id).replace(/_v3$/,'')}`)} isActive />
+          <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(descendantCount ?? (postData as any).total_comments ?? 0) as number} onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)} isActive />
         </div>
       )}
     </div>
@@ -169,7 +178,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
         <Head
           title={`Post on Superhero.com: "${(postData as any)?.content?.slice(0, 100) || 'Post'}"`}
           description={(postData as any)?.content?.slice(0, 160) || 'View post on Superhero, the crypto social network.'}
-          canonicalPath={`/post/${String(postId).replace(/_v3$/,'')}`}
+          canonicalPath={`/post/${(postData as any)?.slug || String((postData as any)?.id || slug || postId).replace(/_v3$/,'')}`}
           ogImage={(Array.isArray((postData as any)?.media) && (postData as any).media[0]) || undefined}
           jsonLd={{
             '@context': 'https://schema.org',
@@ -208,9 +217,9 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
 
           <section className="mt-2">
             <h3 className="text-white/90 font-semibold mb-2">Replies</h3>
-            <DirectReplies id={postId!} onOpenPost={(id) => navigate(`/post/${id}`)} />
+            <DirectReplies id={String((postData as any)?.id)} onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)} />
             <div className="mt-6">
-              <CommentForm postId={postId!} onCommentAdded={handleCommentAdded} placeholder="Write a reply..." />
+              <CommentForm postId={String((postData as any)?.id)} onCommentAdded={handleCommentAdded} placeholder="Write a reply..." />
             </div>
           </section>
         </article>

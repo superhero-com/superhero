@@ -92,9 +92,10 @@ export const routes: RouteObject[] = [
     element: <SocialLayout />,
     children: [
       { index: true, element: <FeedList standalone={false} /> },
-      { path: "post/:postId", element: <PostDetail standalone={false} /> },
+      // Post routes - slug-based (also handles IDs, which will redirect in PostDetail)
+      { path: "post/:slug", element: <PostDetail standalone={false} /> },
       {
-        path: "post/:postId/comment/:id",
+        path: "post/:slug/comment/:id",
         element: <PostDetail standalone={false} />,
       },
       { path: "users/:address", element: <UserProfile standalone={false} /> },

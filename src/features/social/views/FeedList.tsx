@@ -286,8 +286,8 @@ export default function FeedList({
   );
 
   const handleItemClick = useCallback(
-    (postId: string) => {
-      const idStr = String(postId);
+    (idOrSlug: string) => {
+      const idStr = String(idOrSlug);
       if (idStr.startsWith("token-created:")) {
         const parts = idStr.replace(/_v3$/, "").split(":");
         const tokenNameEnc = parts[1] || "";
@@ -299,8 +299,7 @@ export default function FeedList({
       try {
         sessionStorage.setItem("feedScrollY", String(window.scrollY || 0));
       } catch {}
-      const cleanId = idStr.replace(/_v3$/, "");
-      navigate(`/post/${cleanId}`);
+      navigate(`/post/${idStr.replace(/_v3$/, "")}`);
     },
     [navigate]
   );

@@ -20,7 +20,6 @@ interface PortfolioSnapshot {
 }
 
 const TIME_RANGES = {
-  '6h': { days: 0.25, interval: 3600 }, // 6 hours, hourly intervals
   '1d': { days: 1, interval: 3600 }, // 1 day, hourly intervals
   '1w': { days: 7, interval: 86400 }, // 7 days, daily intervals
   '1m': { days: 30, interval: 86400 }, // 30 days, daily intervals
@@ -67,8 +66,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     let startDate: moment.Moment;
     if (range.days === Infinity) {
       startDate = MIN_START_DATE;
-    } else if (selectedTimeRange === '6h') {
-      startDate = moment().subtract(6, 'hours');
     } else {
       startDate = moment().subtract(range.days, 'days');
       if (startDate.isBefore(MIN_START_DATE)) {
@@ -678,7 +675,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           // Calculate current timestamp based on time range
           let currentTimestamp: moment.Moment;
           
-          if (selectedTimeRange === '6h' || selectedTimeRange === '1d') {
+          if (selectedTimeRange === '1d') {
             // For hourly ranges, round down to the current hour (use UTC to match API timestamps)
             currentTimestamp = moment.utc().startOf('hour');
           } else {
@@ -702,10 +699,10 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               // Check how old the last point is relative to the current time
               const timeDiff = nowUnix - lastPointTime;
               
-              // For 6h view, check if the last point is within the current hour
+              // For 1d view, check if the last point is within the current hour
               // If it is and the value matches, don't update to avoid rendering issues
               let shouldSkipUpdate = false;
-              if (selectedTimeRange === '6h' || selectedTimeRange === '1d') {
+              if (selectedTimeRange === '1d') {
                 const lastPointHour = moment.unix(lastPointTime).utc().startOf('hour').unix();
                 const currentHour = moment.utc().startOf('hour').unix();
                 

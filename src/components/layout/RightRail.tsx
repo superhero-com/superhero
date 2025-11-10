@@ -536,6 +536,17 @@ export default function RightRail({
           console.error("Failed to load market data:", marketDataResult.reason);
         }
 
+        // Debug logging
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[RightRail] Price data fetch:', {
+            rates,
+            marketData,
+            selectedCurrency,
+            ratesStatus: ratesResult.status,
+            marketDataStatus: marketDataResult.status,
+          });
+        }
+
         // Update sparklines whenever rates are available (regardless of marketData)
         if (rates) {
           if (rates.usd != null) {
@@ -556,7 +567,8 @@ export default function RightRail({
         }
 
         // Update price data whenever rates are available (even if marketData fails)
-        if (rates) {
+        // Check if rates exists and has at least one currency value
+        if (rates && (rates.usd != null || rates.eur != null || rates.cny != null)) {
           // Transform to expected format: { usd, eur, cny, change24h, marketCap, volume24h }
           // Handle both camelCase (if backend conversion works) and snake_case (if it doesn't)
           const priceData = {
@@ -573,7 +585,16 @@ export default function RightRail({
                        marketData?.total_volume || 
                        null,
           };
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[RightRail] Setting price data:', priceData);
+          }
+          
           setPrices(priceData);
+        } else {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[RightRail] Rates is null or empty, not updating prices', { rates });
+          }
         }
       } catch (error) {
         console.error("Failed to load price data:", error);

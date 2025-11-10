@@ -29,7 +29,7 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
 
     // Check immediately on mount, then set up interval for periodic checks
     checkApiStatus();
-    const interval = setInterval(checkApiStatus, 5000);
+    const interval = setInterval(checkApiStatus, 30000); // Check every 30 seconds
     return () => {
       clearInterval(interval);
       window.removeEventListener('online', handleOnline);

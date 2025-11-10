@@ -388,15 +388,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           console.warn('[AccountPortfolio] Error setting crosshair on touchmove:', error);
         }
       } else {
-        // Vertical drag: manually scroll the page
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const scrollDelta = currentY - lastY;
-        window.scrollBy(0, -scrollDelta);
-        
-        // Update last Y for next move to enable continuous scrolling
-        lastTouchY = currentY;
+        // Vertical drag: allow native page scrolling
+        // Don't prevent default - let the browser handle scrolling natively
+        // This provides better UX with momentum scrolling and rubber-banding
       }
     };
 
@@ -977,7 +971,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               <div 
                 ref={chartContainerRef} 
                 className="w-full h-[180px] min-w-0"
-                style={{ touchAction: 'none' }}
               />
           
           {/* Loading indicator */}

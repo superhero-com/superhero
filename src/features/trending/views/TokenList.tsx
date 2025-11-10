@@ -269,6 +269,9 @@ export default function TokenList() {
             orderBy={orderBy}
             orderDirection={finalOrderDirection}
             onSort={handleSort}
+            hasNextPage={hasNextPage}
+            isFetching={isFetching}
+            onLoadMore={() => fetchNextPage()}
           />
         </div>
 

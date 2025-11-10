@@ -89,7 +89,7 @@ export default function TokenListTableRow({
           </div>
           {/* Row 2: left = MC, right = Price + 24h */}
           <div className="flex items-center justify-between gap-3 pt-0.5">
-            <div className="only-fiat text-[11px] text-white/60 leading-4 font-medium">
+            <div className="only-fiat mobile-market-cap text-[11px] text-white/60 leading-4 font-medium">
               <PriceDataFormatter
                 bignumber
                 watchPrice={false}
@@ -101,6 +101,7 @@ export default function TokenListTableRow({
               <div className="only-fiat text-sm text-white font-semibold text-right tabular-nums min-w-[80px]">
                 <PriceDataFormatter
                   watchPrice={false}
+                  hideFiatPrice
                   className="text-white"
                   priceData={token.price_data}
                 />
@@ -256,7 +257,11 @@ export default function TokenListTableRow({
 
         /* Mobile responsive styles */
         @media screen and (max-width: 767px) {
-          .only-fiat .price { display: none; }
+          /* Hide AE price, show only fiat for market cap on mobile */
+          .mobile-market-cap .price {
+            display: none;
+          }
+          
           .bctsl-token-list-table-row {
             display: grid;
             grid-template-columns: 42px 1fr 1fr 1fr; /* rank + 3 cols */

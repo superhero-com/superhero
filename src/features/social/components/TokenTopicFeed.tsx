@@ -19,6 +19,7 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["topic-by-name", lookup],
     queryFn: () => SuperheroApi.getTopicByName(baseName.toLowerCase()) as Promise<any>,
+    enabled: Boolean(baseName),
     refetchInterval: 120 * 1000,
   });
 
@@ -32,10 +33,20 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
     });
   }, [posts]);
 
+  // Build a unified hashtag regex early to check if posts match the filter
+  const hashtagRegex = useMemo(() => {
+    return new RegExp(`(^|[^A-Za-z0-9_])#${escapeRegExp(baseName)}(?![A-Za-z0-9_])`, 'i');
+  }, [baseName]);
+
+  // Check if any posts match the hashtag filter (not just if posts exist)
+  const hasFilteredPosts = useMemo(() => {
+    return posts.some((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || '')));
+  }, [posts, hashtagRegex]);
+
   // Alternate casing fallback: try original-cased topic if lowercase is empty
   const { data: dataOriginal, isFetching: isFetchingOriginal, refetch: refetchOriginal } = useQuery({
     queryKey: ["topic-by-name-original", lookupOriginal],
-    enabled: sortedPosts.length === 0,
+    enabled: !hasFilteredPosts && Boolean(baseName),
     queryFn: () => SuperheroApi.getTopicByName(baseName) as Promise<any>,
     refetchInterval: 120 * 1000,
   });
@@ -47,7 +58,7 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
   // Fallback: if Trendminer has no posts for this topic, search the on-chain feed by hashtag
   const { data: fallbackFeed, refetch: refetchFallback, isFetching: isFetchingFallback } = useQuery({
     queryKey: ["fallback-feed-hashtag", lookup],
-    enabled: sortedPosts.length === 0,
+    enabled: !hasFilteredPosts && Boolean(baseName),
     queryFn: async () => {
       // Page 1, newest first; include posts (v3). Search supports substring match server-side.
       const res = await Backend.getFeed(1, "new", null, lookup);
@@ -57,26 +68,54 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
   });
 
   const fallbackPosts: any[] = useMemo(() => {
-    if (!fallbackFeed || sortedPosts.length > 0) return [];
-    const regex = new RegExp(`(^|[^A-Za-z0-9_])${escapeRegExp(lookup)}([^A-Za-z0-9_]|$)`, "i");
+    if (!fallbackFeed || hasFilteredPosts) return [];
+    const regex = new RegExp(`(^|[^A-Za-z0-9_])${escapeRegExp(lookup)}(?![A-Za-z0-9_])`, "i");
     const items = Array.isArray((fallbackFeed as any)?.results || (fallbackFeed as any)?.items)
       ? ((fallbackFeed as any).results || (fallbackFeed as any).items)
       : [];
     return items.filter((p: any) => regex.test(String(p?.text || p?.title || "")));
-  }, [fallbackFeed, lookup, sortedPosts.length]);
+  }, [fallbackFeed, lookup, hasFilteredPosts]);
 
   // Include replies that reference the hashtag in their content or topics
-  const { data: repliesSearch, isFetching: isFetchingReplies } = useQuery({
-    queryKey: ["posts-search-hashtag", lookup],
-    enabled: sortedPosts.length === 0, // only needed when base topic had none
-    queryFn: () => PostsService.listAll({ orderBy: 'created_at', orderDirection: 'DESC', search: lookup }) as unknown as Promise<any>,
+  const { data: repliesSearch, isFetching: isFetchingReplies, refetch: refetchReplies } = useQuery({
+    // Include baseName in queryKey to ensure different case variations get different cache entries
+    queryKey: ["posts-search-hashtag", baseName],
+    enabled: Boolean(baseName),
+    // Use full-text search for the hashtag to reduce payload to exact mentions
+    queryFn: () => PostsService.listAll({ orderBy: 'created_at', orderDirection: 'DESC', search: `#${baseName}`, limit: 200 }) as unknown as Promise<any>,
     refetchInterval: 120 * 1000,
   });
   const replyMatches: any[] = useMemo(() => {
     const items = Array.isArray((repliesSearch as any)?.items) ? (repliesSearch as any).items : [];
-    const regex = new RegExp(`(^|[^A-Za-z0-9_])#?${escapeRegExp(baseName)}(?![A-Za-z0-9_])`, 'i');
-    return items.filter((p: any) => regex.test(String(p?.content || '')));
-  }, [repliesSearch, baseName]);
+    return items.filter((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || '')));
+  }, [repliesSearch, hashtagRegex]);
+
+  const MAX_POSTS = 200;
+
+  // Merge all sources, ensure uniq (by id/slug) and newest-first sorting
+  const displayPosts: any[] = useMemo(() => {
+    const postsFiltered = posts.filter((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || '')));
+    const altPostsFiltered = altPosts.filter((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || '')));
+    // fallbackPosts already filtered at line 66, but use consistent field priority to avoid excluding valid posts
+    // Check all fields (text || title || content) to match the initial filter's priority
+    const fallbackFiltered = fallbackPosts.filter((p: any) => {
+      const searchText = String(p?.text || p?.title || p?.content || '');
+      return hashtagRegex.test(searchText);
+    });
+
+    const merged = [...postsFiltered, ...altPostsFiltered, ...replyMatches, ...fallbackFiltered];
+    const byKey = new Map<string, any>();
+    for (const p of merged) {
+      const key = String((p as any)?.id ?? (p as any)?.slug ?? '');
+      if (!key) continue;
+      if (!byKey.has(key)) byKey.set(key, p);
+    }
+    return Array.from(byKey.values()).sort((a: any, b: any) => {
+      const at = new Date(a?.created_at || 0).getTime();
+      const bt = new Date(b?.created_at || 0).getTime();
+      return bt - at;
+    }).slice(0, MAX_POSTS);
+  }, [posts, altPosts, replyMatches, fallbackPosts, hashtagRegex]);
 
   useEffect(() => {
     // initial refetch safety if needed
@@ -115,14 +154,10 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
           )}
         </div>
       )}
-      {sortedPosts.length === 0 && showEmptyMessage && (
+      {displayPosts.length === 0 && showEmptyMessage && (
         <div className="text-white/60 text-sm">Be the first to speak about {displayTag}.</div>
       )}
-      {(
-        sortedPosts.length > 0
-          ? sortedPosts
-          : (altPosts.length > 0 ? altPosts : [...replyMatches, ...fallbackPosts])
-        ).map((item: any) => (
+      {displayPosts.map((item: any) => (
         <ReplyToFeedItem
           key={item.id}
           item={item}
@@ -131,7 +166,8 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
           onOpenPost={(id: string) => {
             try {
               const cleanId = String(id || item.id).replace(/_v3$/, "");
-              window.location.assign(`/post/${cleanId}`);
+              const target = (item as any)?.slug || cleanId;
+              window.location.assign(`/post/${target}`);
             } catch {
               // no-op
             }
@@ -139,8 +175,8 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
         />
       ))}
       <div className="text-center mt-1.5">
-        <AeButton onClick={() => { refetch(); if (sortedPosts.length === 0) { refetchOriginal(); refetchFallback(); } }} disabled={isFetching || isFetchingOriginal || isFetchingFallback} loading={isFetching || isFetchingOriginal || isFetchingFallback} variant="ghost" size="medium" className="min-w-24">
-          {isFetching ? 'Loading…' : 'Refresh'}
+        <AeButton onClick={() => { refetch(); refetchReplies(); if (displayPosts.length === 0) { refetchOriginal(); refetchFallback(); } }} disabled={isFetching || isFetchingOriginal || isFetchingFallback || isFetchingReplies} loading={isFetching || isFetchingOriginal || isFetchingFallback || isFetchingReplies} variant="ghost" size="medium" className="min-w-24">
+          {(isFetching || isFetchingReplies) ? 'Loading…' : 'Refresh'}
         </AeButton>
       </div>
     </div>

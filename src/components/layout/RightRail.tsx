@@ -558,13 +558,20 @@ export default function RightRail({
         // Update price data whenever rates are available (even if marketData fails)
         if (rates) {
           // Transform to expected format: { usd, eur, cny, change24h, marketCap, volume24h }
+          // Handle both camelCase (if backend conversion works) and snake_case (if it doesn't)
           const priceData = {
             usd: rates.usd || null,
             eur: rates.eur || null,
             cny: rates.cny || null,
-            change24h: marketData?.priceChangePercentage24h || null,
-            marketCap: marketData?.marketCap || null,
-            volume24h: marketData?.totalVolume || null,
+            change24h: marketData?.priceChangePercentage24h || 
+                       marketData?.price_change_percentage_24h || 
+                       null,
+            marketCap: marketData?.marketCap || 
+                       marketData?.market_cap || 
+                       null,
+            volume24h: marketData?.totalVolume || 
+                       marketData?.total_volume || 
+                       null,
           };
           setPrices(priceData);
         }

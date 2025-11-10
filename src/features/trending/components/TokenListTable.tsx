@@ -256,10 +256,10 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
       </table>
 
       {/* Mobile-only Load More inside the list */}
-      {hasNextPage && (
+      {hasNextPage && onLoadMore && (
         <div className="md:hidden text-center pt-2 pb-3">
           <button
-            onClick={() => onLoadMore?.()}
+            onClick={() => onLoadMore()}
             disabled={isFetching}
             className={`${isFetching
               ? 'bg-white/10 cursor-not-allowed opacity-60'

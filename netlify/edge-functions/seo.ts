@@ -84,9 +84,8 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
       // Try direct by segment (works for slug or id)
       let data: any | null = await fetchPostBySegment(segment);
       // If not found and bare numeric id, try with _v3
-      if (!data && (/^\d+$/.test(segment) || segment.endsWith('_v3'))) {
-        const id = segment.endsWith('_v3') ? segment : `${segment}_v3`;
-        data = await fetchPostBySegment(id);
+      if (!data && /^\d+$/.test(segment)) {
+        data = await fetchPostBySegment(`${segment}_v3`);
       }
       // If still not found, try search by slug/content and refetch by id
       if (!data) {

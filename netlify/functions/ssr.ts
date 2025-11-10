@@ -73,9 +73,8 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
     }
     try {
       let data: any | null = await fetchPostBySegment(segment);
-      if (!data && (/^\d+$/.test(segment) || segment.endsWith('_v3'))) {
-        const id = segment.endsWith('_v3') ? segment : `${segment}_v3`;
-        data = await fetchPostBySegment(id);
+      if (!data && /^\d+$/.test(segment)) {
+        data = await fetchPostBySegment(`${segment}_v3`);
       }
       if (!data) {
         const searchUrl = `${baseApi}/api/posts?search=${encodeURIComponent(segment)}&limit=1&page=1`;

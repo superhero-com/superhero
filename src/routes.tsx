@@ -132,8 +132,6 @@ export const routes: RouteObject[] = [
     path: "/user/:address",
     element: <NavigateUserProfile />,
   },
-  // Kept for backward compatibility; redirecting into SocialLayout version
-  { path: "/users/:address", element: <UserProfile /> },
   { path: "/landing", element: <Landing /> },
   { path: "/meet/:room?", element: <Conference /> },
   { path: "/voting", element: <Governance /> },

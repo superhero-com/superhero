@@ -269,6 +269,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     // Track initial touch position and drag direction
     let initialTouchX: number | null = null;
     let initialTouchY: number | null = null;
+    let lastTouchY: number | null = null;
     let isHorizontalDrag: boolean | null = null;
     let hasMoved: boolean = false;
     const DRAG_THRESHOLD = 3; // pixels to determine drag direction (reduced for faster detection)
@@ -280,6 +281,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       const rect = container.getBoundingClientRect();
       initialTouchX = touch.clientX;
       initialTouchY = touch.clientY;
+      lastTouchY = touch.clientY;
       isHorizontalDrag = null;
       hasMoved = false;
       
@@ -305,6 +307,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       const touch = e.touches[0];
       const deltaX = Math.abs(touch.clientX - initialTouchX);
       const deltaY = Math.abs(touch.clientY - initialTouchY);
+      const currentY = touch.clientY;
+      const lastY = lastTouchY ?? initialTouchY;
       
       const rect = container.getBoundingClientRect();
       const x = touch.clientX - rect.left;
@@ -316,9 +320,14 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
           isHorizontalDrag = deltaX > deltaY;
           hasMoved = true;
+          
+          // If horizontal, prevent default immediately
+          if (isHorizontalDrag) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
         } else {
           // Still within threshold - update crosshair position but don't prevent default yet
-          // This allows smooth crosshair movement even for small movements
           try {
             const time = chart.timeScale().coordinateToTime(clampedX);
             if (time !== null) {
@@ -327,29 +336,35 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           } catch (error) {
             // Ignore errors during threshold phase
           }
-          // Don't prevent default during threshold - allow scrolling
           return;
         }
       }
       
-      // Handle crosshair movement for horizontal drags
+      // Handle based on drag direction
       if (isHorizontalDrag === true) {
-        // Prevent default to stop page scrolling for horizontal drags
+        // Horizontal drag: prevent default and move crosshair
         e.preventDefault();
         e.stopPropagation();
         
         try {
-          // Use timeScale to convert coordinate to time
           const time = chart.timeScale().coordinateToTime(clampedX);
           if (time !== null) {
-            // Set crosshair position - this will trigger subscribeCrosshairMove
             chart.setCrosshairPosition(clampedX, 0, { time: time as any });
           }
         } catch (error) {
           console.warn('[AccountPortfolio] Error setting crosshair on touchmove:', error);
         }
+      } else {
+        // Vertical drag: manually scroll the page
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const scrollDelta = currentY - lastY;
+        window.scrollBy(0, -scrollDelta);
+        
+        // Update last Y for next move to enable continuous scrolling
+        lastTouchY = currentY;
       }
-      // If vertical drag (isHorizontalDrag === false), don't prevent default - allow page scrolling
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
@@ -379,6 +394,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       // Reset drag state
       initialTouchX = null;
       initialTouchY = null;
+      lastTouchY = null;
       isHorizontalDrag = null;
       hasMoved = false;
     };
@@ -834,7 +850,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               <div 
                 ref={chartContainerRef} 
                 className="w-full h-[180px] min-w-0"
-                style={{ touchAction: 'pan-y' }}
+                style={{ touchAction: 'none' }}
               />
           
           {/* Loading indicator */}

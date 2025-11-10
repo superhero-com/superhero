@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { createChart, IChartApi, ISeriesApi, LineData, ColorType, AreaSeries, AreaSeriesPartialOptions } from 'lightweight-charts';
+import { createChart, IChartApi, ISeriesApi, LineData, ColorType, AreaSeries, AreaSeriesPartialOptions, CrosshairMode } from 'lightweight-charts';
 import moment from 'moment';
 import { TrendminerApi } from '@/api/backend';
 import { useCurrencies } from '@/hooks/useCurrencies';
@@ -199,15 +199,15 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         leftOffset: 0,
       },
       crosshair: {
-          mode: 1,
+        mode: CrosshairMode.Normal,
         vertLine: {
           visible: true,
-            color: 'rgba(34, 197, 94, 0.5)',
+          color: 'rgba(34, 197, 94, 0.5)',
           width: 1,
-            style: 0,
+          style: 0,
         },
         horzLine: {
-            visible: false,
+          visible: false,
         },
       },
       handleScale: false,
@@ -291,8 +291,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         // Use timeScale to convert coordinate to time
         const time = chart.timeScale().coordinateToTime(x);
         if (time !== null) {
-          // Set crosshair position - use null for Y to let chart calculate it automatically
-          chart.setCrosshairPosition(x, null as any, { time: time as any });
+          // Set crosshair position - chart will calculate Y automatically from time
+          chart.setCrosshairPosition(x, 0, { time: time as any });
         }
       } catch (error) {
         console.warn('[AccountPortfolio] Error setting crosshair on touchstart:', error);
@@ -331,7 +331,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           try {
             const time = chart.timeScale().coordinateToTime(clampedX);
             if (time !== null) {
-              chart.setCrosshairPosition(clampedX, null as any, { time: time as any });
+              chart.setCrosshairPosition(clampedX, 0, { time: time as any });
             }
           } catch (error) {
             // Ignore errors during threshold phase
@@ -349,17 +349,31 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         try {
           const time = chart.timeScale().coordinateToTime(clampedX);
           if (time !== null) {
-            // Use null for Y coordinate - chart will calculate it automatically based on series data
-            // Use requestAnimationFrame to ensure the update happens in the next frame
-            requestAnimationFrame(() => {
-              if (chart && areaSeries) {
-                chart.setCrosshairPosition(clampedX, null as any, { time: time as any });
+            // Ensure we have valid time before setting crosshair
+            const timeValue = time as number;
+            
+            // Check if time is within visible range
+            const visibleRange = chart.timeScale().getVisibleRange();
+            if (visibleRange && visibleRange.from && visibleRange.to) {
+              const fromTime = visibleRange.from as number;
+              const toTime = visibleRange.to as number;
+              
+              if (timeValue >= fromTime && timeValue <= toTime) {
+                // Set crosshair position using X coordinate and time
+                // When time is provided, chart automatically calculates Y from series data
+                chart.setCrosshairPosition(clampedX, 0, { time: timeValue as any });
+                
                 // Log occasionally to avoid spam
-                if (Math.random() < 0.1) {
-                  console.log('[AccountPortfolio] Moving crosshair:', { clampedX, time });
+                if (Math.random() < 0.05) {
+                  console.log('[AccountPortfolio] Moving crosshair:', { clampedX, time: timeValue, inRange: true });
                 }
+              } else {
+                console.warn('[AccountPortfolio] Time out of visible range:', { timeValue, fromTime, toTime });
               }
-            });
+            } else {
+              // Fallback: set crosshair even if visible range not available
+              chart.setCrosshairPosition(clampedX, 0, { time: timeValue as any });
+            }
           } else {
             console.warn('[AccountPortfolio] Could not convert X to time:', clampedX);
           }
@@ -409,7 +423,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             
             if (endX !== null && endX >= 0) {
               // Set crosshair to current time position (end of visible range)
-              chart.setCrosshairPosition(endX, null as any, { time: endTime as any });
+              chart.setCrosshairPosition(endX, 0, { time: endTime as any });
               console.log('[AccountPortfolio] Crosshair set to current time:', { endTime, endX });
             } else {
               console.warn('[AccountPortfolio] Could not convert end time to coordinate');
@@ -417,7 +431,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               const currentTime = moment().unix();
               const currentX = chart.timeScale().timeToCoordinate(currentTime);
               if (currentX !== null && currentX >= 0) {
-                chart.setCrosshairPosition(currentX, null as any, { time: currentTime as any });
+                chart.setCrosshairPosition(currentX, 0, { time: currentTime as any });
               } else {
                 // Last resort: clear crosshair
                 chart.setCrosshairPosition(-1, -1, {});

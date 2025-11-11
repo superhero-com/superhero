@@ -91,6 +91,20 @@ export default function FeedList({
   const [localSearch, setLocalSearch] = useState(search);
   const [popularWindow, setPopularWindow] = useState<'24h'|'7d'|'all'>(initialWindow);
 
+  // Keep popularWindow in sync with URL (e.g., browser back/forward or direct URL edits)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const fromUrl = (params.get("window") as '24h'|'7d'|'all' | null) || 'all';
+    if (fromUrl !== popularWindow) {
+      setPopularWindow(fromUrl);
+      if (sortBy === 'hot') {
+        // Reset cached pages to avoid mixing windows
+        queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
+        queryClient.removeQueries({ queryKey: ["latest-after-popular"], exact: false });
+      }
+    }
+  }, [location.search, sortBy, queryClient, popularWindow]);
+
   // Helper to map a token object or websocket payload into a Post-like item
   const mapTokenCreatedToPost = useCallback((payload: any): PostDto => {
     const saleAddress: string = payload?.sale_address || payload?.address || "";
@@ -197,7 +211,7 @@ export default function FeedList({
     refetch: refetchLatest,
   } = useInfiniteQuery({
     enabled: sortBy !== "hot",
-    queryKey: ["posts", { limit: 10, sortBy, search, filterBy }],
+    queryKey: ["posts", { limit: 10, sortBy, search: localSearch, filterBy }],
     queryFn: ({ pageParam = 1 }) =>
       PostsService.listAll({
         limit: 10,
@@ -307,6 +321,34 @@ export default function FeedList({
     [afterPopularData]
   );
 
+  // Apply search/filter on the "after popular" segment as well
+  const filteredAfterPopularList = useMemo(() => {
+    let filtered = [...afterPopularList];
+    if (localSearch.trim()) {
+      const searchTerm = localSearch.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          (item.content && item.content.toLowerCase().includes(searchTerm)) ||
+          (item.topics &&
+            item.topics.some((topic) =>
+              topic.toLowerCase().includes(searchTerm)
+            )) ||
+          (item.sender_address &&
+            item.sender_address.toLowerCase().includes(searchTerm)) ||
+          (chainNames?.[item.sender_address] &&
+            chainNames[item.sender_address].toLowerCase().includes(searchTerm))
+      );
+    }
+    if (filterBy === "withMedia") {
+      filtered = filtered.filter(
+        (item) => item.media && Array.isArray(item.media) && item.media.length > 0
+      );
+    } else if (filterBy === "withComments") {
+      filtered = filtered.filter((item) => (item.total_comments ?? 0) > 0);
+    }
+    return filtered;
+  }, [afterPopularList, localSearch, filterBy, chainNames]);
+
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo(() => {
     if (sortBy === "hot") {
@@ -405,15 +447,17 @@ export default function FeedList({
   // Render helpers
   const renderEmptyState = () => {
     if (sortBy === "hot") {
-      const initialLoading = popularLoading;
+      const initialLoading = popularLoading || afterPopularLoading;
       const err = popularError || afterPopularError;
       if (err) {
         return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); refetchAfterPopular(); }} />;
       }
-      if (!err && combinedList.length === 0 && !initialLoading) {
+      // Show empty state when there are no popular posts for the selected window,
+      // even if we will show latest posts as a fallback.
+      if (!err && filteredAndSortedList.length === 0 && !initialLoading) {
         return <EmptyState type="empty" hasSearch={!!localSearch} />;
       }
-      if (initialLoading && combinedList.length === 0) {
+      if (initialLoading && filteredAndSortedList.length === 0) {
         return <EmptyState type="loading" />;
       }
       return null;
@@ -562,7 +606,7 @@ export default function FeedList({
   const fetchingRef = useRef(false);
   const initialLoading =
     sortBy === "hot"
-      ? popularLoading
+      ? (popularLoading || afterPopularLoading)
       : (sortBy !== "hot" && activitiesLoading) || latestLoading;
   const [showLoadMore, setShowLoadMore] = useState(false);
   useEffect(() => { setShowLoadMore(false); }, [sortBy]);
@@ -670,7 +714,7 @@ export default function FeedList({
         {sortBy === "hot" && !popularLoading && (
           <>
             {/* Popular posts list */}
-            {combinedList.map((item) => (
+            {filteredAndSortedList.map((item) => (
               <ReplyToFeedItem
                 key={item.id}
                 item={item}
@@ -681,7 +725,7 @@ export default function FeedList({
             ))}
 
             {/* Separator + latest list after popular ends */}
-            {!hasMorePopular && afterPopularList.length > 0 && (
+            {!hasMorePopular && filteredAfterPopularList.length > 0 && (
               <>
                 <div className="my-6 md:my-8 flex items-center gap-3">
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
@@ -690,7 +734,7 @@ export default function FeedList({
                   </div>
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                 </div>
-                {afterPopularList.map((item) => (
+                {filteredAfterPopularList.map((item) => (
                   <ReplyToFeedItem
                     key={item.id}
                     item={item}

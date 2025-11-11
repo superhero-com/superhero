@@ -730,15 +730,18 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       usd: portfolioValueChange.usd - purchasesDuringPeriod.usd,
     };
     
-    // Calculate percentage based on starting portfolio value
-    const startPortfolioValue = firstSnapshot.total_value_ae;
+    // Calculate percentage - prioritize purchases during period if starting value is low
+    // ROI should be calculated based on what was actually invested during the period
     let periodPercentage = 0;
-    if (startPortfolioValue > 0.000001) {
-      // ROI = gain / starting portfolio value
-      periodPercentage = (periodGain.ae / startPortfolioValue) * 100;
-    } else if (Math.abs(purchasesDuringPeriod.ae) > 0.000001) {
-      // If no starting portfolio but purchases were made, calculate ROI on those purchases
+    if (Math.abs(purchasesDuringPeriod.ae) > 0.000001) {
+      // If purchases were made during the period, calculate ROI on those purchases
       periodPercentage = (periodGain.ae / Math.abs(purchasesDuringPeriod.ae)) * 100;
+    } else {
+      // If no purchases during period, calculate ROI based on starting portfolio value
+      const startPortfolioValue = firstSnapshot.total_value_ae;
+      if (startPortfolioValue > 0.000001) {
+        periodPercentage = (periodGain.ae / startPortfolioValue) * 100;
+      }
     }
     
     return {
@@ -1592,12 +1595,17 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                       : closest;
                   });
                   pnlData = closestSnapshot?.total_pnl;
-                } else if (periodPnl) {
+                } else if (periodPnl && portfolioData) {
                   // Use period PNL (convert to TotalPnl format)
+                  // For period PNL, current_value should be the actual end value, not the change
+                  const lastSnapshot = portfolioData[portfolioData.length - 1];
                   pnlData = {
                     percentage: periodPnl.percentage,
                     invested: periodPnl.invested,
-                    current_value: periodPnl.current_value,
+                    current_value: {
+                      ae: lastSnapshot.total_pnl?.current_value.ae || 0,
+                      usd: lastSnapshot.total_pnl?.current_value.usd || 0,
+                    },
                     gain: periodPnl.gain,
                   };
                 }

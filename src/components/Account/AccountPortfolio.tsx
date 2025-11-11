@@ -531,45 +531,43 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               zIndex: 10,
             }}
           />
-          {/* Crosshair dot - hidden on mobile for now */}
-          {false && (
-            <div
-              style={{
-                position: 'absolute',
-                left: `${crosshairX}px`,
-                top: `${(() => {
-                  if (!svgBounds || !crosshairPoint) return '50%';
-                  
-                  const minValue = Math.min(...data.map(d => d.value));
-                  const maxValue = Math.max(...data.map(d => d.value));
-                  const valueRange = maxValue - minValue;
-                  
-                  if (valueRange === 0) return `${svgBounds.top + svgBounds.height / 2}px`;
-                  
-                  // Calculate value position: 0 = bottom, 1 = top
-                  // Recharts plots from bottom to top, so higher values are at the top
-                  const valuePercent = (crosshairPoint.value - minValue) / valueRange;
-                  
-                  // Account for AreaChart margin: { top: 5, right: 0, left: 0, bottom: 0 }
-                  const marginTop = 5;
-                  const plotHeight = svgBounds.height - marginTop;
-                  
-                  // Calculate Y position: top of plot area + margin + (inverted percent * plot height)
-                  // Invert because CSS top=0 is at top, but we want min value at bottom
-                  const y = svgBounds.top + marginTop + ((1 - valuePercent) * plotHeight);
-                  return `${y}px`;
-                })()}`,
-                width: '12px',
-                height: '12px',
-                borderRadius: '50%',
-                backgroundColor: '#22c55e',
-                border: '2px solid #22c55e',
-                transform: 'translate(-50%, -50%)',
-                pointerEvents: 'none',
-                zIndex: 11,
-              }}
-            />
-          )}
+          {/* Crosshair dot */}
+          <div
+            style={{
+              position: 'absolute',
+              left: `${crosshairX}px`,
+              top: `${(() => {
+                if (!svgBounds || !crosshairPoint) return '50%';
+                
+                const minValue = Math.min(...data.map(d => d.value));
+                const maxValue = Math.max(...data.map(d => d.value));
+                const valueRange = maxValue - minValue;
+                
+                if (valueRange === 0) return `${svgBounds.top + svgBounds.height / 2}px`;
+                
+                // Calculate value position: 0 = bottom, 1 = top
+                // Recharts plots from bottom to top, so higher values are at the top
+                const valuePercent = (crosshairPoint.value - minValue) / valueRange;
+                
+                // Account for AreaChart margin: { top: 5, right: 0, left: 0, bottom: 0 }
+                const marginTop = 5;
+                const plotHeight = svgBounds.height - marginTop;
+                
+                // Calculate Y position: top of plot area + margin + (inverted percent * plot height)
+                // Invert because CSS top=0 is at top, but we want min value at bottom
+                const y = svgBounds.top + marginTop + ((1 - valuePercent) * plotHeight);
+                return `${y}px`;
+              })()}`,
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              backgroundColor: '#22c55e',
+              border: '2px solid #22c55e',
+              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'none',
+              zIndex: 11,
+            }}
+          />
         </>
       )}
     </div>

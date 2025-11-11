@@ -39,176 +39,28 @@ interface RechartsChartProps {
   currentCurrencyInfo: { code: string };
 }
 
-// Recharts component with touch support
+// Recharts component with touch support - simplified with default styling
 const RechartsChart: React.FC<RechartsChartProps> = ({
   data,
   onHover,
   convertTo,
   currentCurrencyInfo,
 }) => {
-  const chartRef = useRef<HTMLDivElement>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const svgRef = useRef<SVGSVGElement | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [crosshairX, setCrosshairX] = useState<number | null>(null);
-  const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null);
-  const [isContainerReady, setIsContainerReady] = useState(false);
-  const [svgBounds, setSvgBounds] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  const [crosshairY, setCrosshairY] = useState<number | null>(null);
+  const [hoveredPoint, setHoveredPoint] = useState<{ value: number; time: number } | null>(null);
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const isHorizontalDragRef = useRef<boolean | null>(null);
   const DRAG_THRESHOLD = 10; // pixels
 
-  // Measure container size for ResponsiveContainer
-  useEffect(() => {
-    const updateSize = () => {
-      if (chartRef.current) {
-        const rect = chartRef.current.getBoundingClientRect();
-        // Get the parent container to measure full width
-        const parent = chartRef.current.parentElement;
-        const parentRect = parent?.getBoundingClientRect();
-        
-        // Always use 180px for height to match the container
-        const height = 180;
-        
-        if (rect.width > 0 && height > 0) {
-          // Use parent width if available and larger, otherwise use container width
-          const width = parentRect && parentRect.width > rect.width ? parentRect.width : rect.width;
-          setContainerSize({ width, height });
-          
-          // Check if wrapper is ready (180px height)
-          if (wrapperRef.current) {
-            const wrapperRect = wrapperRef.current.getBoundingClientRect();
-            if (wrapperRect.height >= 180) {
-              setIsContainerReady(true);
-            } else {
-              // Force wrapper to 180px
-              wrapperRef.current.style.height = '180px';
-              wrapperRef.current.style.minHeight = '180px';
-              wrapperRef.current.style.maxHeight = '180px';
-              setIsContainerReady(true);
-            }
-          }
-        } else {
-          // If size is 0, try again on next frame
-          requestAnimationFrame(() => {
-            if (chartRef.current) {
-              const newRect = chartRef.current.getBoundingClientRect();
-              const newParent = chartRef.current.parentElement;
-              const newParentRect = newParent?.getBoundingClientRect();
-              const newHeight = 180;
-              if (newRect.width > 0 && newHeight > 0) {
-                const width = newParentRect && newParentRect.width > newRect.width ? newParentRect.width : newRect.width;
-                setContainerSize({ width, height: newHeight });
-              }
-            }
-          });
-        }
-      }
-    };
-
-    // Initial measurement with delay to ensure DOM is ready
-    const timeoutId = setTimeout(updateSize, 0);
-    window.addEventListener('resize', updateSize);
-    const resizeObserver = new ResizeObserver(updateSize);
-    if (chartRef.current) {
-      resizeObserver.observe(chartRef.current);
-      // Also observe parent if it exists
-      if (chartRef.current.parentElement) {
-        resizeObserver.observe(chartRef.current.parentElement);
-      }
-    }
-
-    return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('resize', updateSize);
-      resizeObserver.disconnect();
-    };
-  }, []);
-
-  // Ensure wrapper is 180px before ResponsiveContainer renders
-  useEffect(() => {
-    if (wrapperRef.current && containerSize) {
-      const checkAndSetHeight = () => {
-        if (wrapperRef.current) {
-          const rect = wrapperRef.current.getBoundingClientRect();
-          if (rect.height < 180) {
-            wrapperRef.current.style.height = '180px';
-            wrapperRef.current.style.minHeight = '180px';
-            wrapperRef.current.style.maxHeight = '180px';
-          }
-          // Use requestAnimationFrame to ensure DOM has updated
-          requestAnimationFrame(() => {
-            if (wrapperRef.current) {
-              const newRect = wrapperRef.current.getBoundingClientRect();
-              if (newRect.height >= 180) {
-                setIsContainerReady(true);
-              }
-            }
-          });
-        }
-      };
-      
-      checkAndSetHeight();
-      // Also check after a short delay
-      const timeoutId = setTimeout(checkAndSetHeight, 10);
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [containerSize]);
-
-  // Measure actual SVG element bounds and plot area
-  useEffect(() => {
-    const measureSvg = () => {
-      if (!chartRef.current) return;
-      
-      // Find the SVG element inside the container
-      const svg = chartRef.current.querySelector('svg');
-      if (svg) {
-        const containerRect = chartRef.current.getBoundingClientRect();
-        
-        // Find the actual plot area - look for the clipPath or the main chart group
-        // Recharts uses a clipPath to define the plot area
-        const clipPath = svg.querySelector('defs clipPath');
-        let plotArea = svg.querySelector('g[clip-path]');
-        
-        // If no clip-path group, try to find the cartesian grid or the area path parent
-        if (!plotArea) {
-          plotArea = svg.querySelector('g.recharts-cartesian-grid') || 
-                     svg.querySelector('g.recharts-layer') ||
-                     svg.querySelector('g');
-        }
-        
-        let plotRect = svg.getBoundingClientRect();
-        
-        if (plotArea) {
-          plotRect = plotArea.getBoundingClientRect();
-        }
-        
-        // Calculate position relative to container
-        setSvgBounds({
-          left: plotRect.left - containerRect.left,
-          top: plotRect.top - containerRect.top,
-          width: plotRect.width,
-          height: plotRect.height,
-        });
-      }
-    };
-    
-    // Measure after a short delay to ensure SVG is rendered
-    const timeoutId = setTimeout(measureSvg, 100);
-    const intervalId = setInterval(measureSvg, 500); // Re-measure periodically
-    
-    return () => {
-      clearTimeout(timeoutId);
-      clearInterval(intervalId);
-    };
-  }, [data, isContainerReady]);
-
   // Use native event listeners to allow preventDefault
   useEffect(() => {
-    const container = chartRef.current;
+    const container = containerRef.current;
     if (!container) return;
 
+    // Update crosshair position and find Y coordinate from SVG path
     const updateCrosshair = (x: number) => {
       if (!container || data.length === 0) return;
       
@@ -237,11 +89,152 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
       
       const point = data[closestIndex];
       if (point) {
-        // Calculate actual X position based on the point's time
+        // Calculate actual X position percentage based on the point's time
         const pointXPercent = (point.time - firstTime) / (lastTime - firstTime);
-        const pointX = pointXPercent * rect.width;
-        setCrosshairX(pointX);
+        setHoveredPoint(point);
         onHover(point.value, point.time);
+        
+        // Find Y position by querying the SVG path element
+        // Use requestAnimationFrame to ensure SVG is rendered
+        requestAnimationFrame(() => {
+          const svg = container.querySelector('svg');
+          if (svg) {
+            // Find the stroke path (the actual data line), not the fill area
+            // Recharts AreaChart has two paths: fill area (first) and stroke/curve (second)
+            const paths = Array.from(svg.querySelectorAll('path')) as SVGPathElement[];
+            let strokePath: SVGPathElement | null = null;
+            
+            // Strategy 1: Look for path with 'curve' in class name (most reliable)
+            for (const path of paths) {
+              const className = path.getAttribute('class') || '';
+              if (className.includes('curve')) {
+                strokePath = path;
+                break;
+              }
+            }
+            
+            // Strategy 2: If not found, identify by path characteristics
+            // The stroke path typically has a smaller bounding box height than the fill area
+            if (!strokePath && paths.length > 1) {
+              // Check bounding boxes - fill area spans full height, stroke is just the line
+              const pathBounds = paths.map(p => {
+                const bbox = p.getBBox();
+                return { path: p, height: bbox.height, y: bbox.y };
+              });
+              
+              // The stroke path should have a smaller height (just the line thickness)
+              // Sort by height ascending - the smallest is likely the stroke
+              pathBounds.sort((a, b) => a.height - b.height);
+              
+              // Use the path with smallest height, but make sure it's not too small (at least 10px)
+              // and not at the very bottom (fill area typically starts near bottom)
+              for (const { path: p } of pathBounds) {
+                const bbox = p.getBBox();
+                // Stroke path should be near the top/middle, not at the bottom
+                if (bbox.height < svg.getBoundingClientRect().height * 0.9 && bbox.y < svg.getBoundingClientRect().height * 0.8) {
+                  strokePath = p;
+                  break;
+                }
+              }
+            }
+            
+            // Strategy 3: Fallback to second path (stroke usually comes after fill in DOM order)
+            if (!strokePath && paths.length > 1) {
+              strokePath = paths[1];
+            }
+            
+            // Only proceed if we found a valid stroke path
+            // Verify it's actually the stroke path by checking its bounding box
+            if (strokePath && strokePath.getTotalLength() > 0) {
+              const pathBBox = strokePath.getBBox();
+              const svgRect = svg.getBoundingClientRect();
+              const svgHeight = svgRect.height;
+              
+              // Verify: stroke path should not span the full height (that would be fill area)
+              // Stroke path bounding box should be reasonable (not too tall)
+              if (pathBBox.height > svgHeight * 0.9) {
+                // This is likely the fill area, skip it
+                return;
+              }
+              
+              const containerBounds = container.getBoundingClientRect();
+              
+              // Get the actual plot area bounds from the path's bounding box
+              // This accounts for Recharts margins/padding
+              const plotAreaLeft = pathBBox.x;
+              const plotAreaWidth = pathBBox.width;
+              
+              // Calculate X position within the plot area (not the full SVG)
+              const relativeX = plotAreaLeft + (pointXPercent * plotAreaWidth);
+              
+              // Set crosshair X position relative to container
+              // Convert from SVG coordinates to container coordinates
+              const crosshairXPos = svgRect.left - containerBounds.left + relativeX;
+              setCrosshairX(crosshairXPos);
+              
+              // Use binary search to find the exact point on the path at this X coordinate
+              const pathLength = strokePath.getTotalLength();
+              
+              // Binary search for the point closest to our X coordinate
+              let low = 0;
+              let high = pathLength;
+              let bestPoint = { x: 0, y: 0 };
+              let minDistance = Infinity;
+              const tolerance = 0.1; // pixels
+              
+              // Binary search with refinement
+              for (let iteration = 0; iteration < 50; iteration++) {
+                const mid = (low + high) / 2;
+                const pathPoint = strokePath.getPointAtLength(mid);
+                const distance = pathPoint.x - relativeX;
+                
+                if (Math.abs(distance) < minDistance) {
+                  minDistance = Math.abs(distance);
+                  bestPoint = pathPoint;
+                }
+                
+                if (Math.abs(distance) < tolerance) {
+                  break; // Found close enough point
+                }
+                
+                if (distance > 0) {
+                  high = mid;
+                } else {
+                  low = mid;
+                }
+              }
+              
+              // Final refinement: check points around the best point
+              const refineLength = Math.max(0, Math.min(pathLength, 
+                strokePath.getTotalLength() * (pointXPercent - 0.01)
+              ));
+              const refineEnd = Math.max(0, Math.min(pathLength,
+                strokePath.getTotalLength() * (pointXPercent + 0.01)
+              ));
+              
+              for (let i = 0; i <= 50; i++) {
+                const length = refineLength + (refineEnd - refineLength) * (i / 50);
+                const pathPoint = strokePath.getPointAtLength(length);
+                const distance = Math.abs(pathPoint.x - relativeX);
+                if (distance < minDistance) {
+                  minDistance = distance;
+                  bestPoint = pathPoint;
+                }
+              }
+              
+              // Validate the Y position - it should be within the SVG bounds
+              const y = svgRect.top - containerBounds.top + bestPoint.y;
+              const containerTop = 0; // Relative to container
+              const containerBottom = svgRect.height;
+              
+              // Only set Y if it's reasonable (not at the very bottom, which indicates fill area)
+              // The Y should be within the SVG bounds and not too close to the bottom
+              if (y >= containerTop && y <= containerBottom * 0.95) {
+                setCrosshairY(y);
+              }
+            }
+          }
+        });
       }
     };
 
@@ -307,7 +300,8 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
 
     const handleMouseLeave = () => {
       setCrosshairX(null);
-      // Don't reset hover state - let parent component handle it
+      setCrosshairY(null);
+      setHoveredPoint(null);
     };
 
     // Use { passive: false } to allow preventDefault
@@ -326,207 +320,48 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
     };
   }, [data, onHover]); // Re-run if data or onHover changes
 
-  // Format X axis labels
-  const formatXAxis = (tickItem: Date) => {
-    return moment(tickItem).format('MMM D');
-  };
-
-  // Format Y axis labels
-  const formatYAxis = (value: number) => {
-    if (convertTo === 'ae') {
-      return `${value.toFixed(2)}`;
-    }
-    return Number(value).toLocaleString('en-US', {
-      style: 'currency',
-      currency: currentCurrencyInfo.code.toUpperCase(),
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
-  };
-
-  // Find the closest point to crosshair
-  const crosshairPoint = crosshairX !== null && data.length > 0
-    ? (() => {
-        const firstTime = data[0].time;
-        const lastTime = data[data.length - 1].time;
-        const rect = chartRef.current?.getBoundingClientRect();
-        if (!rect) return null;
-        
-        // Calculate X position as percentage of container width
-        const xPercent = crosshairX / rect.width;
-        const targetTime = firstTime + (lastTime - firstTime) * xPercent;
-        
-        // Find closest point by time
-        let closestIndex = 0;
-        let minDiff = Math.abs(data[0].time - targetTime);
-        for (let i = 1; i < data.length; i++) {
-          const diff = Math.abs(data[i].time - targetTime);
-          if (diff < minDiff) {
-            minDiff = diff;
-            closestIndex = i;
-          }
-        }
-        
-        return data[closestIndex];
-      })()
-    : null;
-
   return (
-    <>
-      <style>{`
-        .recharts-chart-container *,
-        .recharts-chart-container svg,
-        .recharts-chart-container svg * {
-          outline: none !important;
-          -webkit-tap-highlight-color: transparent !important;
-        }
-      `}</style>
-      <div
-        ref={chartRef}
-        className="w-full h-[180px] relative recharts-chart-container"
-        tabIndex={-1}
-        style={{ 
-          touchAction: 'pan-y', 
-          width: '100%', 
-          height: '180px', 
-          minWidth: 0, 
-          position: 'relative', 
-          display: 'block',
-          boxSizing: 'border-box',
-          outline: 'none',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-        onTouchStart={(e) => {
-          // Prevent focus on touch
-          e.currentTarget.blur();
-          if (e.target instanceof HTMLElement) {
-            e.target.blur();
-          }
-          // Also blur any parent elements that might be focusable
-          let parent = e.currentTarget.parentElement;
-          while (parent) {
-            if (parent instanceof HTMLElement) {
-              parent.blur();
-            }
-            parent = parent.parentElement;
-          }
-        }}
-      >
+    <div
+      ref={containerRef}
+      className="w-full h-[180px] relative"
+      style={{ 
+        touchAction: 'pan-y', 
+        width: '100%', 
+        height: '180px',
+      }}
+    >
       {data.length > 0 && (
-        containerSize && containerSize.width > 0 ? (
-          <div 
-            ref={wrapperRef}
-            tabIndex={-1}
-            style={{ 
-              width: containerSize.width, 
-              height: '180px', 
-              minWidth: 0, 
-              minHeight: '180px',
-              maxHeight: '180px',
-              overflow: 'visible',
-              position: 'relative',
-              display: 'block',
-              outline: 'none',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            {isContainerReady && (
-              <ResponsiveContainer 
-                width={containerSize.width} 
-                height={180}
-              >
-                <AreaChart
-                  data={data}
-                  margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="rgba(34, 197, 94, 0.3)" stopOpacity={1} />
-                      <stop offset="100%" stopColor="rgba(34, 197, 94, 0.01)" stopOpacity={1} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis
-                    dataKey="date"
-                    type="number"
-                    scale="time"
-                    domain={['dataMin', 'dataMax']}
-                    tick={false}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={false}
-                    axisLine={false}
-                    tickLine={false}
-                    domain={['auto', 'auto']}
-                    width={0}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="value"
-                    stroke="#22c55e"
-                    strokeWidth={2}
-                    fill="url(#colorValue)"
-                    dot={false}
-                    activeDot={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height={180}>
-            <AreaChart
-              data={data}
-              margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
-              style={{ width: '100%', height: '100%' }}
-            >
-              <defs>
-                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="rgba(34, 197, 94, 0.3)" stopOpacity={1} />
-                  <stop offset="100%" stopColor="rgba(34, 197, 94, 0.01)" stopOpacity={1} />
-                </linearGradient>
-              </defs>
-              <XAxis
-                dataKey="date"
-                type="number"
-                scale="time"
-                domain={['dataMin', 'dataMax']}
-                tick={false}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={false}
-                axisLine={false}
-                tickLine={false}
-                domain={['auto', 'auto']}
-                width={0}
-              />
-              <Area
-                type="monotone"
-                dataKey="value"
-                stroke="#22c55e"
-                strokeWidth={2}
-                fill="url(#colorValue)"
-                dot={false}
-                activeDot={false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        )
+        <ResponsiveContainer width="100%" height={180}>
+          <AreaChart data={data}>
+            <defs>
+              <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="rgba(34, 197, 94, 0.3)" stopOpacity={1} />
+                <stop offset="100%" stopColor="rgba(34, 197, 94, 0.01)" stopOpacity={1} />
+              </linearGradient>
+            </defs>
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke="#22c55e"
+              strokeWidth={2}
+              fill="url(#colorValue)"
+              dot={false}
+              activeDot={false}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       )}
-      {crosshairX !== null && crosshairPoint && (
+      {crosshairX !== null && crosshairY !== null && hoveredPoint && (
         <>
-          {/* Vertical crosshair line - match SVG height */}
+          {/* Vertical crosshair line */}
           <div
             style={{
               position: 'absolute',
               left: `${crosshairX}px`,
-              top: svgBounds ? `${svgBounds.top - 10}px` : '-10px',
-              height: svgBounds ? `${svgBounds.height + 20}px` : '158px',
-              width: '2px',
-              backgroundColor: 'rgba(34, 197, 94, 0.7)',
+              top: 0,
+              height: '180px',
+              width: '1px',
+              backgroundColor: '#22c55e',
               pointerEvents: 'none',
               zIndex: 10,
             }}
@@ -536,33 +371,11 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
             style={{
               position: 'absolute',
               left: `${crosshairX}px`,
-              top: `${(() => {
-                if (!svgBounds || !crosshairPoint) return '50%';
-                
-                const minValue = Math.min(...data.map(d => d.value));
-                const maxValue = Math.max(...data.map(d => d.value));
-                const valueRange = maxValue - minValue;
-                
-                if (valueRange === 0) return `${svgBounds.top + svgBounds.height / 2}px`;
-                
-                // Calculate value position: 0 = bottom, 1 = top
-                // Recharts plots from bottom to top, so higher values are at the top
-                const valuePercent = (crosshairPoint.value - minValue) / valueRange;
-                
-                // Account for AreaChart margin: { top: 5, right: 0, left: 0, bottom: 0 }
-                const marginTop = 5;
-                const plotHeight = svgBounds.height - marginTop;
-                
-                // Calculate Y position: top of plot area + margin + (inverted percent * plot height)
-                // Invert because CSS top=0 is at top, but we want min value at bottom
-                const y = svgBounds.top + marginTop + ((1 - valuePercent) * plotHeight);
-                return `${y}px`;
-              })()}`,
+              top: `${crosshairY}px`,
               width: '12px',
               height: '12px',
               borderRadius: '50%',
               backgroundColor: '#22c55e',
-              border: '2px solid #22c55e',
               transform: 'translate(-50%, -50%)',
               pointerEvents: 'none',
               zIndex: 11,
@@ -571,7 +384,6 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
         </>
       )}
     </div>
-    </>
   );
 };
 

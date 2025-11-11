@@ -89,8 +89,6 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
       
       const point = data[closestIndex];
       if (point) {
-        // Calculate actual X position percentage based on the point's time
-        const pointXPercent = (point.time - firstTime) / (lastTime - firstTime);
         setHoveredPoint(point);
         onHover(point.value, point.time);
         
@@ -166,8 +164,10 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               const plotAreaTop = pathBBox.y;
               const plotAreaHeight = pathBBox.height;
         
-              // Calculate X position within the plot area (not the full SVG)
-              const relativeX = plotAreaLeft + (pointXPercent * plotAreaWidth);
+              // Calculate X position within the plot area using the actual mouse position
+              // Use xPercent (from mouse position) instead of pointXPercent (from data point time)
+              // This ensures the crosshair follows the mouse, not the data point's time position
+              const relativeX = plotAreaLeft + (xPercent * plotAreaWidth);
               
               // Set crosshair X position relative to container
               // Convert from SVG coordinates to container coordinates
@@ -181,7 +181,7 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               const pathStartX = pathBBox.x;
               const pathEndX = pathBBox.x + pathBBox.width;
               const clampedRelativeX = Math.max(pathStartX, Math.min(pathEndX, relativeX));
-              
+
               // Binary search for the point closest to our X coordinate
               let low = 0;
               let high = pathLength;
@@ -724,25 +724,25 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           // Only add/update if the last point is in the past (not at or after current time)
           // This prevents creating future data points
           if (!lastPoint || lastPoint.time < nowUnix) {
-            if (lastPoint && Math.abs(lastPoint.value - currentValue) < 0.000001) {
+          if (lastPoint && Math.abs(lastPoint.value - currentValue) < 0.000001) {
               // Same value, update timestamp to current time
-              const timeDiff = nowUnix - lastPoint.time;
-              if (timeDiff > 300) {
-                data[data.length - 1] = {
-                  ...lastPoint,
-                  time: nowUnix,
-                  timestamp: nowUnix,
-                  date: moment.unix(nowUnix).toDate(),
-                };
-              }
-            } else {
-              // Different value, add new point with current time
-              data.push({
+            const timeDiff = nowUnix - lastPoint.time;
+            if (timeDiff > 300) {
+              data[data.length - 1] = {
+                ...lastPoint,
                 time: nowUnix,
                 timestamp: nowUnix,
-                value: currentValue,
                 date: moment.unix(nowUnix).toDate(),
-              });
+              };
+            }
+          } else {
+              // Different value, add new point with current time
+            data.push({
+              time: nowUnix,
+              timestamp: nowUnix,
+              value: currentValue,
+              date: moment.unix(nowUnix).toDate(),
+            });
             }
           }
         }

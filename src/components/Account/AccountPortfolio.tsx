@@ -34,7 +34,7 @@ const MIN_START_DATE = moment('2025-01-01T00:00:00Z');
 
 interface RechartsChartProps {
   data: Array<{ time: number; timestamp: number; value: number; date: Date }>;
-  onHover: (price: number, time: number) => void;
+  onHover: (price: number | null, time: number | null) => void;
   convertTo: string;
   currentCurrencyInfo: { code: string };
 }
@@ -75,7 +75,7 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
       const xPercent = Math.max(0, Math.min(1, clampedX / rect.width));
       
       const targetTime = firstTime + (lastTime - firstTime) * xPercent;
-      
+          
       // Find closest point by time
       let closestIndex = 0;
       let minDiff = Math.abs(data[0].time - targetTime);
@@ -96,7 +96,7 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
         
         // Find Y position by querying the SVG path element
         // Use requestAnimationFrame to ensure SVG is rendered
-        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
           const svg = container.querySelector('svg');
           if (svg) {
             // Find the stroke path (the actual data line), not the fill area
@@ -110,8 +110,8 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               if (className.includes('curve')) {
                 strokePath = path;
                 break;
-              }
-            }
+        }
+      }
             
             // Strategy 2: If not found, identify by path characteristics
             // The stroke path typically has a smaller bounding box height than the fill area
@@ -141,7 +141,7 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
             // Strategy 3: Fallback to second path (stroke usually comes after fill in DOM order)
             if (!strokePath && paths.length > 1) {
               strokePath = paths[1];
-            }
+          }
             
             // Only proceed if we found a valid stroke path
             // Verify it's actually the stroke path by checking its bounding box
@@ -158,12 +158,12 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               }
               
               const containerBounds = container.getBoundingClientRect();
-              
+        
               // Get the actual plot area bounds from the path's bounding box
               // This accounts for Recharts margins/padding
               const plotAreaLeft = pathBBox.x;
               const plotAreaWidth = pathBBox.width;
-              
+        
               // Calculate X position within the plot area (not the full SVG)
               const relativeX = plotAreaLeft + (pointXPercent * plotAreaWidth);
               
@@ -302,6 +302,7 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
       setCrosshairX(null);
       setCrosshairY(null);
       setHoveredPoint(null);
+      onHover(null, null); // Reset hover state in parent
     };
 
     // Use { passive: false } to allow preventDefault
@@ -321,35 +322,35 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
   }, [data, onHover]); // Re-run if data or onHover changes
 
   return (
-    <div
+      <div
       ref={containerRef}
       className="w-full h-[180px] relative"
-      style={{ 
-        touchAction: 'pan-y', 
-        width: '100%', 
-        height: '180px',
-      }}
-    >
+        style={{ 
+          touchAction: 'pan-y', 
+          width: '100%', 
+          height: '180px', 
+        }}
+      >
       {data.length > 0 && (
-        <ResponsiveContainer width="100%" height={180}>
+          <ResponsiveContainer width="100%" height={180}>
           <AreaChart data={data}>
-            <defs>
-              <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="rgba(34, 197, 94, 0.3)" stopOpacity={1} />
-                <stop offset="100%" stopColor="rgba(34, 197, 94, 0.01)" stopOpacity={1} />
-              </linearGradient>
-            </defs>
-            <Area
-              type="monotone"
-              dataKey="value"
-              stroke="#22c55e"
-              strokeWidth={2}
-              fill="url(#colorValue)"
-              dot={false}
-              activeDot={false}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+              <defs>
+                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="rgba(34, 197, 94, 0.3)" stopOpacity={1} />
+                  <stop offset="100%" stopColor="rgba(34, 197, 94, 0.01)" stopOpacity={1} />
+                </linearGradient>
+              </defs>
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke="#22c55e"
+                strokeWidth={2}
+                fill="url(#colorValue)"
+                dot={false}
+                activeDot={false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
       )}
       {crosshairX !== null && crosshairY !== null && hoveredPoint && (
         <>
@@ -367,20 +368,20 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
             }}
           />
           {/* Crosshair dot */}
-          <div
-            style={{
-              position: 'absolute',
-              left: `${crosshairX}px`,
+            <div
+              style={{
+                position: 'absolute',
+                left: `${crosshairX}px`,
               top: `${crosshairY}px`,
-              width: '12px',
-              height: '12px',
-              borderRadius: '50%',
-              backgroundColor: '#22c55e',
-              transform: 'translate(-50%, -50%)',
-              pointerEvents: 'none',
-              zIndex: 11,
-            }}
-          />
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                backgroundColor: '#22c55e',
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'none',
+                zIndex: 11,
+              }}
+            />
         </>
       )}
     </div>
@@ -837,44 +838,50 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
         {/* Chart - no padding, full width */}
         <div className="p-4 w-full">
-          <div 
-            className="h-[180px] relative w-full" 
-            tabIndex={-1}
-            style={{ 
-              width: '100%',
-              minWidth: 0,
-              maxWidth: '100%',
-              outline: 'none',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-            onTouchStart={(e) => {
-              // Prevent focus on touch
-              e.currentTarget.blur();
-              if (e.target instanceof HTMLElement) {
-                e.target.blur();
-              }
-            }}
-          >
-            {isLoading ? (
-              <div className="absolute inset-0 flex items-center justify-center z-10 px-4 md:px-6">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/40 border border-white/10 rounded-full text-white text-xs font-medium">
-                  <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" aria-label="loading" />
-                  <span>Loading portfolio data...</span>
+            <div 
+              className="h-[180px] relative w-full" 
+              tabIndex={-1}
+              style={{ 
+                width: '100%',
+                minWidth: 0,
+                maxWidth: '100%',
+                outline: 'none',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+              onTouchStart={(e) => {
+                // Prevent focus on touch
+                e.currentTarget.blur();
+                if (e.target instanceof HTMLElement) {
+                  e.target.blur();
+                }
+              }}
+            >
+              {isLoading ? (
+                <div className="absolute inset-0 flex items-center justify-center z-10 px-4 md:px-6">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/40 border border-white/10 rounded-full text-white text-xs font-medium">
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" aria-label="loading" />
+                    <span>Loading portfolio data...</span>
+                  </div>
                 </div>
-              </div>
-            ) : rechartsData.length > 0 ? (
+              ) : rechartsData.length > 0 ? (
               <RechartsChart
-                data={rechartsData}
-                onHover={(price, time) => setHoveredPrice({ price, time })}
-                convertTo={convertTo}
-                currentCurrencyInfo={currentCurrencyInfo}
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none z-10 px-4 md:px-6">
-                <div className="text-white/60">No portfolio data available</div>
-              </div>
-            )}
-          </div>
+                  data={rechartsData}
+                  onHover={(price, time) => {
+                    if (price !== null && time !== null) {
+                      setHoveredPrice({ price, time });
+                    } else {
+                      setHoveredPrice(null);
+                    }
+                  }}
+                  convertTo={convertTo}
+                  currentCurrencyInfo={currentCurrencyInfo}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none z-10 px-4 md:px-6">
+                  <div className="text-white/60">No portfolio data available</div>
+                </div>
+              )}
+            </div>
         </div>
 
         {/* Time range buttons */}

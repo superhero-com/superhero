@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { createChart, IChartApi, ISeriesApi, LineData, ColorType, AreaSeries, AreaSeriesPartialOptions, CrosshairMode } from 'lightweight-charts';
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import moment from 'moment';
 import { TrendminerApi } from '@/api/backend';
@@ -33,15 +32,15 @@ type TimeRange = keyof typeof TIME_RANGES;
 
 const MIN_START_DATE = moment('2025-01-01T00:00:00Z');
 
-interface MobileRechartsChartProps {
+interface RechartsChartProps {
   data: Array<{ time: number; timestamp: number; value: number; date: Date }>;
   onHover: (price: number, time: number) => void;
   convertTo: string;
   currentCurrencyInfo: { code: string };
 }
 
-// Mobile Recharts component with touch support
-const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
+// Recharts component with touch support
+const RechartsChart: React.FC<RechartsChartProps> = ({
   data,
   onHover,
   convertTo,
@@ -299,15 +298,31 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
       // Keep crosshair visible after drag ends
     };
 
+    // Mouse hover support for desktop
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = container.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      updateCrosshair(x);
+    };
+
+    const handleMouseLeave = () => {
+      setCrosshairX(null);
+      // Don't reset hover state - let parent component handle it
+    };
+
     // Use { passive: false } to allow preventDefault
     container.addEventListener('touchstart', handleTouchStart, { passive: false });
     container.addEventListener('touchmove', handleTouchMove, { passive: false });
     container.addEventListener('touchend', handleTouchEnd, { passive: false });
+    container.addEventListener('mousemove', handleMouseMove);
+    container.addEventListener('mouseleave', handleMouseLeave);
 
     return () => {
       container.removeEventListener('touchstart', handleTouchStart);
       container.removeEventListener('touchmove', handleTouchMove);
       container.removeEventListener('touchend', handleTouchEnd);
+      container.removeEventListener('mousemove', handleMouseMove);
+      container.removeEventListener('mouseleave', handleMouseLeave);
     };
   }, [data, onHover]); // Re-run if data or onHover changes
 
@@ -359,16 +374,16 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
   return (
     <>
       <style>{`
-        .mobile-chart-container *,
-        .mobile-chart-container svg,
-        .mobile-chart-container svg * {
+        .recharts-chart-container *,
+        .recharts-chart-container svg,
+        .recharts-chart-container svg * {
           outline: none !important;
           -webkit-tap-highlight-color: transparent !important;
         }
       `}</style>
       <div
         ref={chartRef}
-        className="w-full h-[180px] relative mobile-chart-container"
+        className="w-full h-[180px] relative recharts-chart-container"
         tabIndex={-1}
         style={{ 
           touchAction: 'pan-y', 
@@ -563,9 +578,6 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
 };
 
 export default function AccountPortfolio({ address }: AccountPortfolioProps) {
-  const chartContainerRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<IChartApi | null>(null);
-  const seriesRef = useRef<ISeriesApi<'Area'> | null>(null);
   const portfolioDataRef = useRef<PortfolioSnapshot[] | undefined>(undefined);
   const convertToRef = useRef<string>('ae');
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('1m');
@@ -806,7 +818,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     return null;
   }, [hoveredPrice, currentPortfolioValue]);
 
-  // Prepare chart data for Recharts (mobile)
+  // Prepare chart data for Recharts
   const rechartsData = useMemo(() => {
     if (!portfolioData || portfolioData.length === 0) return [];
     
@@ -875,659 +887,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     return data.sort((a, b) => a.time - b.time);
   }, [portfolioData, convertTo, currentPortfolioValue]);
-
-  // Check container readiness and initialize chart (desktop only)
-  useEffect(() => {
-    if (isMobile) return; // Skip lightweight-charts on mobile
-    if (chartRef.current) return; // Already initialized
-    
-    let resizeObserver: ResizeObserver | null = null;
-    let windowResizeHandler: (() => void) | null = null;
-    let intervalId: NodeJS.Timeout | null = null;
-    let timeoutId: NodeJS.Timeout | null = null;
-    let touchStartHandler: ((e: TouchEvent) => void) | null = null;
-    let touchMoveHandler: ((e: TouchEvent) => void) | null = null;
-    let touchEndHandler: ((e: TouchEvent) => void) | null = null;
-    let touchContainer: HTMLDivElement | null = null;
-    
-    const checkAndInit = () => {
-      if (!chartContainerRef.current) return false;
-
-    const container = chartContainerRef.current;
-      if (container.clientWidth === 0) return false; // Not ready yet
-      
-      // Container is ready, initialize chart
-    const chart = createChart(container, {
-      width: container.clientWidth,
-      height: 180,
-      layout: {
-        background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: '#ffffff',
-      },
-      grid: {
-        vertLines: { visible: false },
-        horzLines: { visible: false },
-      },
-      rightPriceScale: {
-        visible: false,
-        borderVisible: false,
-        scaleMargins: {
-          top: 0.1,
-          bottom: 0,
-        },
-      },
-      leftPriceScale: {
-        visible: false,
-        borderVisible: false,
-        scaleMargins: {
-          top: 0.1,
-          bottom: 0,
-        },
-      },
-      timeScale: {
-        visible: false,
-        borderVisible: false,
-        rightOffset: 0,
-        leftOffset: 0,
-      },
-      crosshair: {
-        mode: CrosshairMode.Normal,
-        vertLine: {
-          visible: true,
-          color: 'rgba(34, 197, 94, 0.5)',
-          width: 1,
-          style: 0,
-        },
-        horzLine: {
-          visible: false,
-        },
-      },
-      handleScale: false,
-      handleScroll: false,
-      // Disable built-in touch drag - we handle it manually
-      horzTouchDrag: false,
-      vertTouchDrag: false,
-    });
-
-    chartRef.current = chart;
-
-    const seriesOptions: AreaSeriesPartialOptions = {
-      priceLineVisible: false,
-        lineColor: '#22c55e',
-        topColor: 'rgba(34, 197, 94, 0.3)',
-        bottomColor: 'rgba(34, 197, 94, 0.01)',
-      lineWidth: 2,
-        crosshairMarkerVisible: true,
-        crosshairMarkerRadius: 6,
-        crosshairMarkerBorderColor: '#22c55e',
-        crosshairMarkerBackgroundColor: '#22c55e',
-      baseLineVisible: false,
-      priceFormat: {
-        type: 'custom',
-        minMove: 0.000001,
-        formatter: (price: number) => {
-            if (convertTo === 'ae') {
-            return `${price.toFixed(4)} AE`;
-          }
-          const currencyCode = currentCurrencyInfo.code.toUpperCase();
-          return Number(price).toLocaleString('en-US', {
-            style: 'currency',
-            currency: currencyCode,
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          });
-        },
-      },
-    };
-
-    const areaSeries = chart.addSeries(AreaSeries, seriesOptions);
-    seriesRef.current = areaSeries;
-
-      // Subscribe to crosshair moves
-    chart.subscribeCrosshairMove((param) => {
-      console.log('[AccountPortfolio] subscribeCrosshairMove fired:', { 
-        time: param.time, 
-        point: param.point,
-        seriesData: param.seriesData ? 'exists' : 'null'
-      });
-      
-      if (param.time && param.seriesData) {
-        const priceData = param.seriesData.get(areaSeries) as LineData | undefined;
-        if (priceData && typeof priceData.value === 'number') {
-          setHoveredPrice({
-            price: priceData.value,
-            time: param.time as number,
-          });
-        } else {
-          setHoveredPrice(null);
-        }
-      } else {
-        setHoveredPrice(null);
-      }
-    });
-
-    // Mobile touch handling - replicate mouse hover logic 1:1 but for touch drag
-    // The library handles mousemove automatically - we'll simulate that for touch
-    
-    // Track if we're in a touch drag to prevent conflicts
-    let isTouchDrag = false;
-    
-    const handleTouchStart = (e: TouchEvent) => {
-      if (!container || !chart) return;
-      
-      isTouchDrag = true;
-      
-      const touch = e.touches[0];
-      const rect = container.getBoundingClientRect();
-      const x = touch.clientX - rect.left;
-      const clampedX = Math.max(0, Math.min(x, rect.width));
-      const xPercent = (clampedX / rect.width) * 100;
-      
-      console.log(`[AccountPortfolio] Touch start: ${xPercent.toFixed(2)}% (${clampedX.toFixed(1)}px / ${rect.width.toFixed(1)}px)`);
-      
-      // Simulate full mouse interaction: mousedown -> mousemove
-      // This activates mouse mode in the library
-      const mouseDownEvent = new MouseEvent('mousedown', {
-        bubbles: true,
-        cancelable: true,
-        view: window,
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-        button: 0,
-        buttons: 1,
-      });
-      
-      const mouseMoveEvent = new MouseEvent('mousemove', {
-        bubbles: true,
-        cancelable: true,
-        view: window,
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-        button: 0,
-        buttons: 1,
-      });
-      
-      // Dispatch mousedown first to activate mouse mode
-      container.dispatchEvent(mouseDownEvent);
-      
-      // Then dispatch mousemove to set crosshair position
-      container.dispatchEvent(mouseMoveEvent);
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!container || !chart || !isTouchDrag) {
-        return;
-      }
-      
-      const touch = e.touches[0];
-      const rect = container.getBoundingClientRect();
-      const x = touch.clientX - rect.left;
-      const clampedX = Math.max(0, Math.min(x, rect.width));
-      const xPercent = (clampedX / rect.width) * 100;
-      
-      console.log(`[AccountPortfolio] X drag: ${xPercent.toFixed(2)}% (${clampedX.toFixed(1)}px / ${rect.width.toFixed(1)}px)`);
-      
-      // Try NOT preventing default - let library process touch naturally
-      // Then manually update crosshair
-      try {
-        const time = chart.timeScale().coordinateToTime(clampedX);
-        if (time !== null) {
-          console.log('[AccountPortfolio] TouchMove: Setting crosshair directly:', { clampedX, time });
-          
-          // Set crosshair directly
-          chart.setCrosshairPosition(clampedX, 0, { time: time as any });
-          
-          console.log('[AccountPortfolio] TouchMove: Crosshair set');
-        }
-      } catch (error) {
-        console.error('[AccountPortfolio] Error updating crosshair:', error);
-      }
-      
-      // Only prevent default if we're dragging horizontally
-      // For now, always prevent to test
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (!container) return;
-      
-      isTouchDrag = false;
-      
-      // Simulate mouseup to end mouse interaction
-      const touch = e.changedTouches[0] || e.touches[0];
-      if (touch) {
-        const mouseUpEvent = new MouseEvent('mouseup', {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-          clientX: touch.clientX,
-          clientY: touch.clientY,
-          button: 0,
-          buttons: 0,
-        });
-        
-        container.dispatchEvent(mouseUpEvent);
-      }
-      
-      // Don't clear crosshair - keep it visible
-      console.log('[AccountPortfolio] Touch end - crosshair remains visible');
-    };
-
-    // Add touch event listeners
-    if (container) {
-      touchStartHandler = handleTouchStart;
-      touchMoveHandler = handleTouchMove;
-      touchEndHandler = handleTouchEnd;
-      touchContainer = container;
-      container.addEventListener('touchstart', handleTouchStart, { passive: false });
-      container.addEventListener('touchmove', handleTouchMove, { passive: false });
-      container.addEventListener('touchend', handleTouchEnd, { passive: false });
-    }
-    
-      // Handle resize - use ResizeObserver for container size changes
-      const handleResize = () => {
-        if (chartContainerRef.current && chart) {
-          const newWidth = chartContainerRef.current.clientWidth;
-          const newHeight = chartContainerRef.current.clientHeight;
-          if (newWidth > 0 && newHeight > 0) {
-            // Use both resize and applyOptions to ensure chart internal state is correct
-            chart.resize(newWidth, newHeight);
-            chart.applyOptions({
-              width: newWidth,
-              height: newHeight,
-              timeScale: {
-                rightOffset: 0,
-                leftOffset: 0,
-              },
-            });
-          }
-        }
-      };
-
-      // Initial resize
-      handleResize();
-
-      // Use ResizeObserver to watch container size changes
-      resizeObserver = new ResizeObserver(() => {
-        handleResize();
-      });
-
-      if (chartContainerRef.current) {
-        resizeObserver.observe(chartContainerRef.current);
-      }
-
-      // Also listen to window resize as fallback
-      windowResizeHandler = () => handleResize();
-      window.addEventListener('resize', windowResizeHandler);
-
-      // If data is already available, set it immediately
-      // This handles the case where data loads before chart initializes
-      const currentData = portfolioDataRef.current;
-      const currentConvertTo = convertToRef.current;
-      if (currentData && currentData.length > 0) {
-        const chartData: LineData[] = currentData
-          .map((snapshot) => {
-            const timestamp = moment(snapshot.timestamp).unix();
-            let value: number | null = null;
-            
-            if (currentConvertTo === 'ae') {
-              value = snapshot.total_value_ae;
-            } else {
-              if (snapshot.total_value_usd != null) {
-                value = snapshot.total_value_usd;
-              } else {
-                return null;
-              }
-            }
-            
-            return {
-              time: timestamp as any,
-              value: value as number,
-            };
-          })
-          .filter((item): item is LineData => item !== null);
-
-        if (chartData.length > 0) {
-          // Note: Current portfolio value will be added in the update effect
-          // This is just for initial chart setup
-          areaSeries.setData(chartData);
-    const currentTime = moment().unix();
-      chart.timeScale().fitContent();
-      
-          // Ensure we don't show future data
-      const visibleRange = chart.timeScale().getVisibleRange();
-      if (visibleRange && visibleRange.to > currentTime) {
-        if (visibleRange.from != null && typeof visibleRange.from === 'number') {
-          chart.timeScale().setVisibleRange({
-            from: visibleRange.from,
-            to: currentTime,
-          });
-        }
-      }
-    }
-      }
-
-      return true; // Successfully initialized
-    };
-
-    // Try immediately
-    const initializedImmediately = checkAndInit();
-
-    // If not ready, check periodically
-    if (!initializedImmediately) {
-      intervalId = setInterval(() => {
-        if (chartRef.current || checkAndInit()) {
-          if (intervalId) {
-            clearInterval(intervalId);
-            intervalId = null;
-          }
-        }
-      }, 100); // Check every 100ms
-
-      // Also try on next frame
-      timeoutId = setTimeout(() => {
-        if (chartRef.current || checkAndInit()) {
-          if (intervalId) {
-            clearInterval(intervalId);
-            intervalId = null;
-          }
-        }
-      }, 0);
-    }
-
-    // Always return cleanup function to ensure resources are cleaned up
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
-      if (windowResizeHandler) {
-        window.removeEventListener('resize', windowResizeHandler);
-      }
-      // Clean up touch event listeners
-      if (touchContainer && touchStartHandler && touchMoveHandler && touchEndHandler) {
-        touchContainer.removeEventListener('touchstart', touchStartHandler);
-        touchContainer.removeEventListener('touchmove', touchMoveHandler);
-        touchContainer.removeEventListener('touchend', touchEndHandler);
-      }
-      // Always clean up chart on unmount
-      if (chartRef.current) {
-        chartRef.current.remove();
-        chartRef.current = null;
-        seriesRef.current = null;
-        setHoveredPrice(null);
-      }
-    };
-  }, [isMobile]); // Re-run when mobile state changes
-
-  // Update chart data when portfolio data, currency, or time range changes (desktop only)
-  useEffect(() => {
-    if (isMobile) return; // Skip lightweight-charts updates on mobile
-    if (!chartRef.current || !seriesRef.current || !portfolioData || portfolioData.length === 0) {
-      return;
-    }
-
-    const chartData: LineData[] = portfolioData
-      .map((snapshot) => {
-        const timestamp = moment(snapshot.timestamp).unix();
-        let value: number | null = null;
-        
-        if (convertTo === 'ae') {
-          value = snapshot.total_value_ae;
-        } else {
-          if (snapshot.total_value_usd != null) {
-            value = snapshot.total_value_usd;
-          } else {
-            return null;
-          }
-        }
-        
-        return {
-          time: timestamp as any,
-          value: value as number,
-        };
-      })
-      .filter((item): item is LineData => item !== null);
-
-    if (chartData.length === 0) return;
-
-    // Always add current portfolio value as the last point with current timestamp
-    if (currentPortfolioValue !== null && currentPortfolioValue !== undefined) {
-      try {
-        const currentValue = typeof currentPortfolioValue.toNumber === 'function' 
-          ? currentPortfolioValue.toNumber()
-          : typeof currentPortfolioValue === 'number'
-          ? currentPortfolioValue
-          : Number(currentPortfolioValue);
-
-        if (!isNaN(currentValue) && isFinite(currentValue)) {
-          // Calculate current timestamp based on time range
-          let currentTimestamp: moment.Moment;
-          
-          if (selectedTimeRange === '1d') {
-            // For hourly ranges, round down to the current hour (use UTC to match API timestamps)
-            currentTimestamp = moment.utc().startOf('hour');
-          } else {
-            // For daily ranges (1w, 1m, all), round down to the current day (use UTC to match API timestamps)
-            currentTimestamp = moment.utc().startOf('day');
-          }
-          
-          const currentTimeUnix = currentTimestamp.unix();
-          
-          // Check if we should update the last point or add a new one
-          const lastPoint = chartData.length > 0 ? chartData[chartData.length - 1] : null;
-          const nowUnix = moment.utc().unix();
-          
-          if (lastPoint) {
-            const lastPointTime = lastPoint.time as number;
-            const lastPointValue = lastPoint.value as number;
-            const valueMatches = Math.abs(lastPointValue - currentValue) < 0.000001;
-            
-            // If the last point has the same value, check if we need to update it
-            if (valueMatches) {
-              // Check how old the last point is relative to the current time
-              const timeDiff = nowUnix - lastPointTime;
-              
-              // For 1d view, check if the last point is within the current hour
-              // If it is and the value matches, don't update to avoid rendering issues
-              let shouldSkipUpdate = false;
-              if (selectedTimeRange === '1d') {
-                const lastPointHour = moment.unix(lastPointTime).utc().startOf('hour').unix();
-                const currentHour = moment.utc().startOf('hour').unix();
-                
-                // If the last point is already in the current hour and value matches,
-                // don't update the timestamp - this prevents the visual drop
-                if (lastPointHour === currentHour && timeDiff < 3600) {
-                  // Last point is already in current hour with same value - skip update
-                  // This prevents the chart from re-rendering incorrectly
-                  shouldSkipUpdate = true;
-                }
-              }
-              
-              // Only update timestamp if it's significantly older (more than 5 minutes)
-              // AND we're not skipping the update
-              if (!shouldSkipUpdate && timeDiff > 300) {
-                // Timestamp is more than 5 minutes old, update it
-                chartData[chartData.length - 1] = {
-                  time: nowUnix as any,
-                  value: currentValue,
-                };
-              }
-              // If timestamp is recent (within 5 minutes) or we're skipping update,
-              // don't modify chartData - this prevents the chart from re-rendering and showing a drop
-            } else {
-              // Value is different - remove points at or after rounded timestamp and add new point
-              while (chartData.length > 0 && (chartData[chartData.length - 1].time as number) >= currentTimeUnix) {
-                chartData.pop();
-              }
-              // Add the current value as the last point with actual current timestamp
-              chartData.push({
-                time: nowUnix as any,
-                value: currentValue,
-              });
-            }
-          } else {
-            // No existing points, add the current value with actual current timestamp
-            chartData.push({
-              time: nowUnix as any,
-              value: currentValue,
-            });
-          }
-          
-          // Ensure data is sorted by time (should already be sorted, but be safe)
-          chartData.sort((a, b) => (a.time as number) - (b.time as number));
-        }
-      } catch (error) {
-        // Silently handle errors when converting current portfolio value
-        console.warn('Failed to add current portfolio value to chart:', error);
-      }
-    }
-
-    // Update price formatter when currency changes
-    seriesRef.current.applyOptions({
-      priceFormat: {
-        type: 'custom',
-        minMove: 0.000001,
-        formatter: (price: number) => {
-          if (convertTo === 'ae') {
-            return `${price.toFixed(4)} AE`;
-          }
-          const currencyCode = currentCurrencyInfo.code.toUpperCase();
-          return Number(price).toLocaleString('en-US', {
-            style: 'currency',
-            currency: currencyCode,
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          });
-        },
-      },
-    });
-
-    // Ensure chart width matches container BEFORE setting data
-    if (!chartContainerRef.current) return;
-    
-    const containerWidth = chartContainerRef.current.clientWidth;
-    const containerHeight = chartContainerRef.current.clientHeight;
-    
-    if (containerWidth <= 0 || containerHeight <= 0) return;
-    
-    // Explicitly set width using both resize and applyOptions to ensure chart internal state is correct
-    chartRef.current.resize(containerWidth, containerHeight);
-    chartRef.current.applyOptions({
-      width: containerWidth,
-      height: containerHeight,
-    });
-    
-    // Remove any duplicate timestamps (keep the last one) to prevent rendering issues
-    const cleanedChartData: LineData[] = [];
-    const seenTimes = new Set<number>();
-    
-    // Process in reverse to keep the last occurrence of each timestamp
-    for (let i = chartData.length - 1; i >= 0; i--) {
-      const time = chartData[i].time as number;
-      if (!seenTimes.has(time)) {
-        seenTimes.add(time);
-        cleanedChartData.unshift(chartData[i]);
-      }
-    }
-    
-    // Ensure we have at least 2 points for proper rendering
-    // If the last two points have the same value, ensure they're both included
-    const finalData = cleanedChartData.length > 0 ? cleanedChartData : chartData;
-    
-    // Set data after ensuring width is correct
-    seriesRef.current.setData(finalData);
-    
-    // Use double requestAnimationFrame to ensure chart has fully rendered before fitContent
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!chartRef.current || !chartContainerRef.current) return;
-        
-        // Ensure width is correct before fitContent
-        const currentWidth = chartContainerRef.current.clientWidth;
-        const currentHeight = chartContainerRef.current.clientHeight;
-        if (currentWidth > 0 && currentHeight > 0) {
-          chartRef.current.resize(currentWidth, currentHeight);
-          chartRef.current.applyOptions({
-            width: currentWidth,
-            height: currentHeight,
-          });
-        }
-        
-        const currentTime = moment().unix();
-        
-        // Calculate the actual data range from chartData
-        // Use finalData which is cleanedChartData if available, otherwise chartData
-        const dataForRange = finalData;
-        if (dataForRange.length > 0) {
-          const firstTime = dataForRange[0].time as number;
-          // Use the last point's time directly to ensure it's fully visible
-          // Don't clamp to currentTime as it might cause rendering issues
-          const lastTime = dataForRange[dataForRange.length - 1].time as number;
-          
-          // Set visible range directly to ensure full width without padding
-          // This ensures the graph line always fills the entire plot area width
-          chartRef.current.timeScale().setVisibleRange({
-            from: firstTime,
-            to: lastTime,
-          });
-        } else {
-          // Fallback to fitContent if no data
-          chartRef.current.timeScale().fitContent();
-          
-          // Ensure we don't show future data
-          const visibleRange = chartRef.current.timeScale().getVisibleRange();
-          if (visibleRange && visibleRange.to > currentTime) {
-            if (visibleRange.from != null && typeof visibleRange.from === 'number') {
-              chartRef.current.timeScale().setVisibleRange({
-                from: visibleRange.from,
-                to: currentTime,
-              });
-            }
-          }
-        }
-        
-        // Final resize after visible range adjustment
-        // Use another requestAnimationFrame to ensure chart has fully rendered
-        requestAnimationFrame(() => {
-          if (!chartRef.current || !chartContainerRef.current) return;
-          
-          const finalWidth = chartContainerRef.current.clientWidth;
-          const finalHeight = chartContainerRef.current.clientHeight;
-          if (finalWidth > 0 && finalHeight > 0) {
-            // Force resize to ensure plot area fills entire width
-            chartRef.current.resize(finalWidth, finalHeight);
-            chartRef.current.applyOptions({
-              width: finalWidth,
-              height: finalHeight,
-              timeScale: {
-                rightOffset: 0,
-                leftOffset: 0,
-              },
-            });
-            
-            // Re-apply visible range to ensure graph fills full width after resize
-            const dataForRange = finalData;
-            if (dataForRange.length > 0) {
-              const firstTime = dataForRange[0].time as number;
-              // Use the last point's time directly to ensure it's fully visible
-              const lastTime = dataForRange[dataForRange.length - 1].time as number;
-              chartRef.current.timeScale().setVisibleRange({
-                from: firstTime,
-                to: lastTime,
-              });
-            }
-          }
-        });
-      });
-    });
-  }, [portfolioData, convertTo, selectedTimeRange, currentCurrencyInfo, currentPortfolioValue]);
 
   if (isError) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -1668,73 +1027,44 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
         {/* Chart - no padding, full width */}
         <div className="p-4 w-full">
-          {isMobile ? (
-            // Recharts for mobile - full width
-            <div 
-              className="h-[180px] relative w-full" 
-              tabIndex={-1}
-              style={{ 
-                width: '100%',
-                minWidth: 0,
-                maxWidth: '100%',
-                outline: 'none',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-              onTouchStart={(e) => {
-                // Prevent focus on touch
-                e.currentTarget.blur();
-                if (e.target instanceof HTMLElement) {
-                  e.target.blur();
-                }
-              }}
-            >
-              {isLoading ? (
-                <div className="absolute inset-0 flex items-center justify-center z-10 px-4 md:px-6">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/40 border border-white/10 rounded-full text-white text-xs font-medium">
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" aria-label="loading" />
-                    <span>Loading portfolio data...</span>
-                  </div>
+          <div 
+            className="h-[180px] relative w-full" 
+            tabIndex={-1}
+            style={{ 
+              width: '100%',
+              minWidth: 0,
+              maxWidth: '100%',
+              outline: 'none',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+            onTouchStart={(e) => {
+              // Prevent focus on touch
+              e.currentTarget.blur();
+              if (e.target instanceof HTMLElement) {
+                e.target.blur();
+              }
+            }}
+          >
+            {isLoading ? (
+              <div className="absolute inset-0 flex items-center justify-center z-10 px-4 md:px-6">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/40 border border-white/10 rounded-full text-white text-xs font-medium">
+                  <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" aria-label="loading" />
+                  <span>Loading portfolio data...</span>
                 </div>
-              ) : rechartsData.length > 0 ? (
-                <MobileRechartsChart
-                  data={rechartsData}
-                  onHover={(price, time) => setHoveredPrice({ price, time })}
-                  convertTo={convertTo}
-                  currentCurrencyInfo={currentCurrencyInfo}
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none z-10 px-4 md:px-6">
-                  <div className="text-white/60">No portfolio data available</div>
-                </div>
-              )}
-            </div>
-          ) : (
-            // Lightweight-charts for desktop
-            <div className="px-4 md:px-6 relative">
-              <div 
-                ref={chartContainerRef} 
-                className="w-full h-[180px] min-w-0"
-                style={{ touchAction: 'none' }}
+              </div>
+            ) : rechartsData.length > 0 ? (
+              <RechartsChart
+                data={rechartsData}
+                onHover={(price, time) => setHoveredPrice({ price, time })}
+                convertTo={convertTo}
+                currentCurrencyInfo={currentCurrencyInfo}
               />
-              
-              {/* Loading indicator */}
-              {isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center z-10">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/40 border border-white/10 rounded-full text-white text-xs font-medium">
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" aria-label="loading" />
-                    <span>Loading portfolio data...</span>
-                  </div>
-                </div>
-              )}
-              
-              {/* No data message */}
-              {!isLoading && (!portfolioData || portfolioData.length === 0) && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none z-10">
-                  <div className="text-white/60">No portfolio data available</div>
-                </div>
-              )}
-            </div>
-          )}
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none z-10 px-4 md:px-6">
+                <div className="text-white/60">No portfolio data available</div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Time range buttons */}

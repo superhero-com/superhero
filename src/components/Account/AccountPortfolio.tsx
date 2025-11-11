@@ -405,6 +405,11 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('1m');
   const [useCurrentCurrency, setUseCurrentCurrency] = useState(false);
   const [hoveredPrice, setHoveredPrice] = useState<{ price: number; time: number } | null>(null);
+  const [animatedValue, setAnimatedValue] = useState<number | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const animationStartRef = useRef<number | null>(null);
+  const animationStartValueRef = useRef<number | null>(null);
+  const animationTargetValueRef = useRef<number | null>(null);
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
   const [useTouchPopover, setUseTouchPopover] = useState(false);
   const [tooltipOpen, setTooltipOpen] = useState(false);
@@ -673,6 +678,65 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     return null;
   }, [hoveredPrice, currentPortfolioValue]);
 
+  // Animate value when displayValue changes
+  useEffect(() => {
+    if (displayValue === null) {
+      setAnimatedValue(null);
+      return;
+    }
+
+    // Cancel any ongoing animation
+    if (animationFrameRef.current !== null) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+
+    const startValue = animatedValue ?? displayValue;
+    const targetValue = displayValue;
+    const duration = 400; // 400ms animation duration
+
+    // If values are the same, no need to animate
+    if (Math.abs(startValue - targetValue) < 0.0001) {
+      setAnimatedValue(targetValue);
+      return;
+    }
+
+    animationStartRef.current = performance.now();
+    animationStartValueRef.current = startValue;
+    animationTargetValueRef.current = targetValue;
+
+    const animate = (currentTime: number) => {
+      const startTime = animationStartRef.current ?? currentTime;
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Easing function (ease-out)
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+
+      const start = animationStartValueRef.current ?? startValue;
+      const target = animationTargetValueRef.current ?? targetValue;
+      const current = start + (target - start) * easeOut;
+
+      setAnimatedValue(current);
+
+      if (progress < 1) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+      } else {
+        setAnimatedValue(targetValue);
+        animationFrameRef.current = null;
+      }
+    };
+
+    animationFrameRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+    };
+  }, [displayValue]);
+
   // Prepare chart data for Recharts
   const rechartsData = useMemo(() => {
     if (!portfolioData || portfolioData.length === 0) return [];
@@ -854,18 +918,18 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           </div>
           <div className="mb-2 min-h-[3.5rem]">
             <span className={`text-3xl md:text-4xl font-extrabold ${hoveredPrice ? 'text-green-400' : 'text-white'} block min-h-[2.5rem] leading-tight`}>
-              {displayValue !== null ? (
+              {animatedValue !== null ? (
                 convertTo === 'ae' 
                   ? (() => {
                       try {
-                        return `${Decimal.from(displayValue).prettify()} AE`;
+                        return `${Decimal.from(animatedValue).prettify()} AE`;
                       } catch {
-                        return `${Number(displayValue).toFixed(4)} AE`;
+                        return `${Number(animatedValue).toFixed(4)} AE`;
                       }
                     })()
                   : (() => {
                       try {
-                        const fiatValue = typeof displayValue === 'number' ? displayValue : Number(displayValue);
+                        const fiatValue = typeof animatedValue === 'number' ? animatedValue : Number(animatedValue);
                       const currencyCode = currentCurrencyInfo.code.toUpperCase();
                       return fiatValue.toLocaleString('en-US', {
                         style: 'currency',
@@ -874,7 +938,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                         maximumFractionDigits: 2,
                       });
                       } catch {
-                        return `$${Number(displayValue).toFixed(2)}`;
+                        return `$${Number(animatedValue).toFixed(2)}`;
                       }
                     })()
               ) : (

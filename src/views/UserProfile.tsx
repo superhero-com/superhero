@@ -409,7 +409,7 @@ export default function UserProfile({
               Owned Trends
             </div>
             <div className="text-base md:text-lg font-bold text-white">
-              {(ownedTokensResp as any)?.meta?.totalItems ?? (Array.isArray(aex9Balances) ? aex9Balances.length : 0)}
+              {((ownedTokensResp as any)?.meta?.totalItems ?? (Array.isArray(aex9Balances) ? aex9Balances.length : 0)).toLocaleString()}
             </div>
           </button>
           <button
@@ -420,7 +420,7 @@ export default function UserProfile({
               Created Trends
             </div>
             <div className="text-base md:text-lg font-bold text-white">
-              {accountInfo?.total_created_tokens ?? 0}
+              {(accountInfo?.total_created_tokens ?? 0).toLocaleString()}
             </div>
           </button>
           <button
@@ -431,7 +431,7 @@ export default function UserProfile({
               Posts
             </div>
             <div className="text-base md:text-lg font-bold text-white">
-              {posts.length}
+              {posts.length.toLocaleString()}
             </div>
           </button>
         </div>

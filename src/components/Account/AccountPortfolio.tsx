@@ -163,6 +163,8 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               // This accounts for Recharts margins/padding
               const plotAreaLeft = pathBBox.x;
               const plotAreaWidth = pathBBox.width;
+              const plotAreaTop = pathBBox.y;
+              const plotAreaHeight = pathBBox.height;
         
               // Calculate X position within the plot area (not the full SVG)
               const relativeX = plotAreaLeft + (pointXPercent * plotAreaWidth);
@@ -172,12 +174,36 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               const crosshairXPos = svgRect.left - containerBounds.left + relativeX;
               setCrosshairX(crosshairXPos);
               
+              // Special handling for first and last data points - use binary search with wider range
+              // This prevents issues with path edge cases and accounts for Recharts Y-axis padding
+              const isFirstPoint = closestIndex === 0;
+              const isLastPoint = closestIndex === data.length - 1;
+              
               // Use binary search to find the exact point on the path at this X coordinate
               const pathLength = strokePath.getTotalLength();
               
+              // Clamp relativeX to path bounds to prevent edge case issues
+              const pathStartX = pathBBox.x;
+              const pathEndX = pathBBox.x + pathBBox.width;
+              const clampedRelativeX = Math.max(pathStartX, Math.min(pathEndX, relativeX));
+              
+              // For edge points, use binary search but with tighter bounds
+              let searchLow = 0;
+              let searchHigh = pathLength;
+              
+              if (isFirstPoint) {
+                // Search in first 10% of path
+                searchHigh = Math.min(pathLength * 0.1, pathLength);
+              } else if (isLastPoint) {
+                // Search in last 10% of path, but ensure we include the very end
+                searchLow = Math.max(pathLength * 0.9, 0);
+                // Make sure we can reach the absolute end
+                searchHigh = pathLength;
+              }
+              
               // Binary search for the point closest to our X coordinate
-              let low = 0;
-              let high = pathLength;
+              let low = searchLow;
+              let high = searchHigh;
               let bestPoint = { x: 0, y: 0 };
               let minDistance = Infinity;
               const tolerance = 0.1; // pixels
@@ -186,7 +212,7 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               for (let iteration = 0; iteration < 50; iteration++) {
                 const mid = (low + high) / 2;
                 const pathPoint = strokePath.getPointAtLength(mid);
-                const distance = pathPoint.x - relativeX;
+                const distance = pathPoint.x - clampedRelativeX;
                 
                 if (Math.abs(distance) < minDistance) {
                   minDistance = Math.abs(distance);
@@ -205,20 +231,34 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               }
               
               // Final refinement: check points around the best point
-              const refineLength = Math.max(0, Math.min(pathLength, 
-                strokePath.getTotalLength() * (pointXPercent - 0.01)
-              ));
-              const refineEnd = Math.max(0, Math.min(pathLength,
-                strokePath.getTotalLength() * (pointXPercent + 0.01)
-              ));
+              // Use a percentage-based refinement around the found point
+              const refinePercent = isFirstPoint || isLastPoint ? 0.02 : 0.01; // 2% for edges, 1% for middle
+              const refineRange = pathLength * refinePercent;
+              const refineLengthStart = Math.max(searchLow, 
+                (bestPoint.x - pathStartX) / pathBBox.width * pathLength - refineRange
+              );
+              const refineLengthEnd = Math.min(searchHigh,
+                (bestPoint.x - pathStartX) / pathBBox.width * pathLength + refineRange
+              );
               
-              for (let i = 0; i <= 50; i++) {
-                const length = refineLength + (refineEnd - refineLength) * (i / 50);
+              for (let i = 0; i <= 100; i++) {
+                const length = Math.max(searchLow, Math.min(searchHigh, 
+                  refineLengthStart + (refineLengthEnd - refineLengthStart) * (i / 100)
+                ));
                 const pathPoint = strokePath.getPointAtLength(length);
-                const distance = Math.abs(pathPoint.x - relativeX);
+                const distance = Math.abs(pathPoint.x - clampedRelativeX);
                 if (distance < minDistance) {
                   minDistance = distance;
                   bestPoint = pathPoint;
+                }
+              }
+              
+              // For last point, also check the absolute end of the path
+              if (isLastPoint) {
+                const endPoint = strokePath.getPointAtLength(pathLength);
+                const endDistance = Math.abs(endPoint.x - clampedRelativeX);
+                if (endDistance < minDistance) {
+                  bestPoint = endPoint;
                 }
               }
               
@@ -231,6 +271,11 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               // The Y should be within the SVG bounds and not too close to the bottom
               if (y >= containerTop && y <= containerBottom * 0.95) {
                 setCrosshairY(y);
+              }
+              
+              // For edge points, we're done
+              if (isFirstPoint || isLastPoint) {
+                return;
               }
             }
           }

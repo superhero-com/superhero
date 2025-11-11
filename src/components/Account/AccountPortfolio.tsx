@@ -7,7 +7,8 @@ import { TrendminerApi } from '@/api/backend';
 import { useCurrencies } from '@/hooks/useCurrencies';
 import { usePortfolioValue } from '@/hooks/usePortfolioValue';
 import { Decimal } from '@/libs/decimal';
-import { IS_MOBILE } from '@/utils/constants';
+import { Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface AccountPortfolioProps {
   address: string;
@@ -570,20 +571,11 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('1m');
   const [useCurrentCurrency, setUseCurrentCurrency] = useState(false);
   const [hoveredPrice, setHoveredPrice] = useState<{ price: number; time: number } | null>(null);
-  
-  // Responsive mobile detection
-  const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth < 768 || IS_MOBILE;
-  });
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768 || IS_MOBILE);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
+  const [useTouchPopover, setUseTouchPopover] = useState(false);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+  const tooltipButtonRef = useRef<HTMLButtonElement>(null);
+  const tooltipContentRef = useRef<HTMLDivElement>(null);
 
   const { currentCurrencyInfo } = useCurrencies();
   const convertTo = useMemo(
@@ -595,6 +587,135 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   useEffect(() => {
     convertToRef.current = convertTo;
   }, [convertTo]);
+
+  // Detect coarse pointer (mobile/tablet) for tooltip behavior
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mql = window.matchMedia('(pointer: coarse)');
+    const setFromMql = () => setIsCoarsePointer(!!mql.matches);
+    setFromMql();
+    try {
+      mql.addEventListener('change', setFromMql);
+    } catch {
+      // Safari fallback
+      // @ts-ignore
+      mql.addListener(setFromMql);
+    }
+    return () => {
+      try {
+        mql.removeEventListener('change', setFromMql);
+      } catch {
+        // @ts-ignore
+        mql.removeListener(setFromMql);
+      }
+    };
+  }, []);
+
+  // Broad touch/small-screen detection for devtools/mobile quirks
+  useEffect(() => {
+    const compute = () => {
+      const hasTouch = typeof navigator !== 'undefined' && (navigator.maxTouchPoints || 0) > 0;
+      const smallScreen = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
+      setUseTouchPopover(isCoarsePointer || hasTouch || smallScreen);
+    };
+    compute();
+    const resize = () => compute();
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, [isCoarsePointer]);
+
+  // Position tooltip manually on mobile
+  useEffect(() => {
+    if (!useTouchPopover || !tooltipOpen || !tooltipButtonRef.current || !tooltipContentRef.current) return;
+
+    const positionTooltip = () => {
+      const button = tooltipButtonRef.current;
+      const content = tooltipContentRef.current;
+      if (!button || !content) return;
+
+      const buttonRect = button.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      // Get content dimensions (may be 0 on first render, so use a reasonable default)
+      const contentRect = content.getBoundingClientRect();
+      const contentHeight = contentRect.height || 100; // fallback if not measured yet
+      const contentWidth = contentRect.width || 320; // fallback if not measured yet
+
+      // Position above the button
+      let top = buttonRect.top - contentHeight - 8;
+      let left = buttonRect.left;
+
+      // Ensure it doesn't go off screen
+      if (top < 8) {
+        // If not enough space above, try positioning below
+        top = buttonRect.bottom + 8;
+        // Check if positioning below would overflow the bottom of the viewport
+        if (top + contentHeight > viewportHeight - 8) {
+          // If both above and below would overflow, position it in the direction with more space
+          // while keeping it as close to the button as possible
+          const spaceAbove = buttonRect.top - 8;
+          const spaceBelow = viewportHeight - buttonRect.bottom - 8;
+          
+          if (spaceAbove >= spaceBelow && spaceAbove > 0) {
+            // More space above, position above the button (may be partially cut off at top)
+            top = Math.max(8, buttonRect.top - contentHeight - 8);
+          } else if (spaceBelow > 0) {
+            // More space below, position below the button (may be partially cut off at bottom)
+            top = buttonRect.bottom + 8;
+            // Clamp to bottom edge if it would overflow
+            if (top + contentHeight > viewportHeight - 8) {
+              top = viewportHeight - contentHeight - 8;
+            }
+          } else {
+            // No space above or below (very edge case), position overlapping the button
+            top = buttonRect.top - (contentHeight / 2);
+            // Clamp to viewport bounds
+            top = Math.max(8, Math.min(top, viewportHeight - contentHeight - 8));
+          }
+        }
+      }
+      // Final safety check: ensure it's within viewport bounds
+      if (top < 8) {
+        top = 8;
+      }
+      if (top + contentHeight > viewportHeight - 8) {
+        top = viewportHeight - contentHeight - 8;
+      }
+      if (left + contentWidth > viewportWidth - 8) {
+        left = viewportWidth - contentWidth - 8;
+      }
+      if (left < 8) {
+        left = 8;
+      }
+
+      content.style.position = 'fixed';
+      content.style.top = `${top}px`;
+      content.style.left = `${left}px`;
+      content.style.zIndex = '100';
+    };
+
+    // Use requestAnimationFrame to ensure DOM is ready
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const rafId = requestAnimationFrame(() => {
+      positionTooltip();
+      // Also position after a small delay to account for content sizing
+      timeoutId = setTimeout(positionTooltip, 0);
+    });
+
+    // Position on resize/scroll
+    window.addEventListener('resize', positionTooltip);
+    window.addEventListener('scroll', positionTooltip, true);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
+      window.removeEventListener('resize', positionTooltip);
+      window.removeEventListener('scroll', positionTooltip, true);
+    };
+  }, [useTouchPopover, tooltipOpen]);
 
   // Fetch current portfolio value separately
   const { value: currentPortfolioValue } = usePortfolioValue({
@@ -1439,7 +1560,66 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         {/* Header */}
         <div className="px-4 md:px-6 pt-4 pb-0">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-bold text-white">Portfolio Value</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-bold text-white">Portfolio Value</h3>
+              {useTouchPopover ? (
+                <>
+                  <button
+                    ref={tooltipButtonRef}
+                    type="button"
+                    aria-label="What does Portfolio Value include?"
+                    aria-expanded={tooltipOpen}
+                    className="relative p-1 rounded-md text-white/60 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 transition-colors touch-none"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTooltipOpen((v) => !v);
+                    }}
+                  >
+                    <Info className="w-4 h-4" />
+                  </button>
+                  {tooltipOpen && (
+                    <>
+                      {/* Backdrop to close on click outside */}
+                      <div
+                        className="fixed inset-0 z-[99]"
+                        onClick={() => setTooltipOpen(false)}
+                      />
+                      {/* Tooltip content */}
+                      <div
+                        ref={tooltipContentRef}
+                        className="max-w-[320px] rounded-xl border border-white/10 bg-white/10 text-white/90 backdrop-blur-md shadow-lg ring-1 ring-black/5 px-3 py-2 text-[12px] leading-relaxed z-[100]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Portfolio value summarizes the total worth of all assets held in this wallet — including AE balance, Trend tokens, and other assets such as WAE, aeETH and more. This chart represents the wallet's complete portfolio.
+                      </div>
+                    </>
+                  )}
+                </>
+              ) : (
+                <TooltipProvider delayDuration={150} skipDelayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="What does Portfolio Value include?"
+                        className="p-1 rounded-md text-white/60 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 transition-colors"
+                      >
+                        <Info className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent 
+                      side="top" 
+                      align="start" 
+                      sideOffset={8}
+                      alignOffset={0}
+                      className="max-w-[320px] z-[100]"
+                    >
+                      Portfolio value summarizes the total worth of all assets held in this wallet — including AE balance, Trend tokens, and other assets such as WAE, aeETH and more. This chart represents the wallet's complete portfolio.
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
             <button
               onClick={() => setUseCurrentCurrency(!useCurrentCurrency)}
               className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-white/20 hover:border-white/40 transition-colors bg-white/[0.05] hover:bg-white/[0.08] text-white/80 hover:text-white"

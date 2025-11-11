@@ -146,14 +146,12 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     
     let resizeObserver: ResizeObserver | null = null;
     let windowResizeHandler: (() => void) | null = null;
-    let touchHandlers: {
-      handleTouchStart: (e: TouchEvent) => void;
-      handleTouchMove: (e: TouchEvent) => void;
-      handleTouchEnd: (e: TouchEvent) => void;
-      container: HTMLDivElement;
-    } | null = null;
     let intervalId: NodeJS.Timeout | null = null;
     let timeoutId: NodeJS.Timeout | null = null;
+    let touchStartHandler: ((e: TouchEvent) => void) | null = null;
+    let touchMoveHandler: ((e: TouchEvent) => void) | null = null;
+    let touchEndHandler: ((e: TouchEvent) => void) | null = null;
+    let touchContainer: HTMLDivElement | null = null;
     
     const checkAndInit = () => {
       if (!chartContainerRef.current) return false;
@@ -209,6 +207,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       },
       handleScale: false,
       handleScroll: false,
+      // Disable built-in touch drag - we handle it manually
+      horzTouchDrag: false,
+      vertTouchDrag: false,
     });
 
     chartRef.current = chart;
@@ -262,149 +263,91 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       }
     });
 
-    // Mobile touch handling - completely rewritten for reliability
-    // Track touch state
-    let touchStartX: number | null = null;
-    let touchStartY: number | null = null;
-    let dragDirection: 'horizontal' | 'vertical' | null = null;
-    const DRAG_THRESHOLD = 10; // pixels to determine drag direction
-    
-    // Helper function to get price at a given time from series data
-    const getPriceAtTime = (targetTime: number): number | null => {
-      try {
-        const seriesData = areaSeries.data();
-        if (!seriesData || seriesData.length === 0) return null;
-        
-        // Find closest data point
-        let closestPoint = seriesData[0];
-        let minDiff = Math.abs((closestPoint.time as number) - targetTime);
-        
-        for (const point of seriesData) {
-          const diff = Math.abs((point.time as number) - targetTime);
-          if (diff < minDiff) {
-            minDiff = diff;
-            closestPoint = point;
-          }
-        }
-        
-        return typeof closestPoint.value === 'number' ? closestPoint.value : null;
-      } catch (error) {
-        return null;
-      }
-    };
-    
-    // Helper function to set crosshair using the correct API format
-    const setCrosshairAtPosition = (x: number) => {
-      try {
-        const time = chart.timeScale().coordinateToTime(x);
-        if (time === null) return false;
-        
-        const price = getPriceAtTime(time as number);
-        if (price === null) return false;
-        
-        // Use the correct API format: { time, price } instead of (x, y, { time })
-        chart.setCrosshairPosition({ time: time as any, price });
-        return true;
-      } catch (error) {
-        console.warn('[AccountPortfolio] Error setting crosshair:', error);
-        return false;
-      }
-    };
-
+    // Mobile touch handling - log X drag percentage and update crosshair
     const handleTouchStart = (e: TouchEvent) => {
-      if (!chart || !container || !areaSeries) return;
+      if (!container || !chart) return;
       
       const touch = e.touches[0];
       const rect = container.getBoundingClientRect();
-      touchStartX = touch.clientX;
-      touchStartY = touch.clientY;
-      dragDirection = null;
-      
       const x = touch.clientX - rect.left;
-      setCrosshairAtPosition(x);
+      const clampedX = Math.max(0, Math.min(x, rect.width));
+      const xPercent = (clampedX / rect.width) * 100;
+      
+      console.log(`[AccountPortfolio] Touch start: ${xPercent.toFixed(2)}% (${clampedX.toFixed(1)}px / ${rect.width.toFixed(1)}px)`);
+      
+      // Set crosshair position on touch start
+      try {
+        const visibleRange = chart.timeScale().getVisibleRange();
+        if (visibleRange && visibleRange.from && visibleRange.to) {
+          const timeRange = (visibleRange.to as number) - (visibleRange.from as number);
+          const targetTime = (visibleRange.from as number) + (timeRange * (xPercent / 100));
+          
+          chart.setCrosshairPosition(clampedX, 0, { time: targetTime as any });
+          console.log(`[AccountPortfolio] Crosshair set on touchstart: time=${targetTime}, x=${clampedX}`);
+        } else {
+          const time = chart.timeScale().coordinateToTime(clampedX);
+          if (time !== null) {
+            chart.setCrosshairPosition(clampedX, 0, { time: time as any });
+          }
+        }
+      } catch (error) {
+        console.warn('[AccountPortfolio] Error setting crosshair on touchstart:', error);
+      }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!chart || !container || !areaSeries || touchStartX === null || touchStartY === null) {
-        return;
-      }
+      if (!container || !chart) return;
       
       const touch = e.touches[0];
-      const deltaX = Math.abs(touch.clientX - touchStartX);
-      const deltaY = Math.abs(touch.clientY - touchStartY);
+      const rect = container.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const clampedX = Math.max(0, Math.min(x, rect.width));
+      const xPercent = (clampedX / rect.width) * 100;
       
-      // Determine drag direction if not yet determined
-      if (dragDirection === null) {
-        if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
-          dragDirection = deltaX > deltaY ? 'horizontal' : 'vertical';
+      console.log(`[AccountPortfolio] X drag: ${xPercent.toFixed(2)}% (${clampedX.toFixed(1)}px / ${rect.width.toFixed(1)}px)`);
+      
+      // Update crosshair position based on percentage
+      try {
+        const visibleRange = chart.timeScale().getVisibleRange();
+        if (visibleRange && visibleRange.from && visibleRange.to) {
+          const timeRange = (visibleRange.to as number) - (visibleRange.from as number);
+          const targetTime = (visibleRange.from as number) + (timeRange * (xPercent / 100));
+          
+          // Set crosshair position using the finger's X coordinate and calculated time
+          chart.setCrosshairPosition(clampedX, 0, { time: targetTime as any });
         } else {
-          // Still within threshold - update crosshair but allow scrolling
-          const rect = container.getBoundingClientRect();
-          const x = touch.clientX - rect.left;
-          const clampedX = Math.max(0, Math.min(x, rect.width));
-          setCrosshairAtPosition(clampedX);
-          return;
+          // Fallback: use coordinateToTime if visible range not available
+          const time = chart.timeScale().coordinateToTime(clampedX);
+          if (time !== null) {
+            chart.setCrosshairPosition(clampedX, 0, { time: time as any });
+          }
         }
+      } catch (error) {
+        console.warn('[AccountPortfolio] Error updating crosshair on touchmove:', error);
       }
-      
-      // Handle horizontal drag
-      if (dragDirection === 'horizontal') {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const rect = container.getBoundingClientRect();
-        const x = touch.clientX - rect.left;
-        const clampedX = Math.max(0, Math.min(x, rect.width));
-        setCrosshairAtPosition(clampedX);
-      }
-      // For vertical drag, don't prevent default - allow native scrolling
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (!chart) {
-        touchStartX = null;
-        touchStartY = null;
-        dragDirection = null;
-        return;
-      }
+      if (!chart) return;
       
+      // Clear crosshair on touch end
       try {
-        if (dragDirection === 'horizontal') {
-          // Jump crosshair back to current time (end of visible range)
-          const visibleRange = chart.timeScale().getVisibleRange();
-          if (visibleRange && visibleRange.to) {
-            const endTime = visibleRange.to as number;
-            const price = getPriceAtTime(endTime);
-            if (price !== null) {
-              chart.setCrosshairPosition({ time: endTime as any, price });
-            }
-          }
-        } else if (dragDirection === null) {
-          // Tap without drag - crosshair already set in touchstart, keep it
-        } else {
-          // Vertical drag - clear crosshair
-          chart.setCrosshairPosition(-1, -1, {});
-          setHoveredPrice(null);
-        }
+        chart.setCrosshairPosition(-1, -1, {});
+        console.log('[AccountPortfolio] Crosshair cleared on touchend');
       } catch (error) {
-        console.warn('[AccountPortfolio] Error handling crosshair on touchend:', error);
+        console.warn('[AccountPortfolio] Error clearing crosshair on touchend:', error);
       }
-      
-      // Reset state
-      touchStartX = null;
-      touchStartY = null;
-      dragDirection = null;
     };
 
-    // Add touch event listeners after chart is initialized
+    // Add touch event listeners
     if (container) {
+      touchStartHandler = handleTouchStart;
+      touchMoveHandler = handleTouchMove;
+      touchEndHandler = handleTouchEnd;
+      touchContainer = container;
       container.addEventListener('touchstart', handleTouchStart, { passive: false });
       container.addEventListener('touchmove', handleTouchMove, { passive: false });
       container.addEventListener('touchend', handleTouchEnd, { passive: false });
-      container.addEventListener('touchcancel', handleTouchEnd, { passive: false });
-      
-      // Store handlers for cleanup
-      touchHandlers = { handleTouchStart, handleTouchMove, handleTouchEnd, container };
     }
     
       // Handle resize - use ResizeObserver for container size changes
@@ -533,11 +476,10 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         window.removeEventListener('resize', windowResizeHandler);
       }
       // Clean up touch event listeners
-      if (touchHandlers) {
-        touchHandlers.container.removeEventListener('touchstart', touchHandlers.handleTouchStart);
-        touchHandlers.container.removeEventListener('touchmove', touchHandlers.handleTouchMove);
-        touchHandlers.container.removeEventListener('touchend', touchHandlers.handleTouchEnd);
-        touchHandlers.container.removeEventListener('touchcancel', touchHandlers.handleTouchEnd);
+      if (touchContainer && touchStartHandler && touchMoveHandler && touchEndHandler) {
+        touchContainer.removeEventListener('touchstart', touchStartHandler);
+        touchContainer.removeEventListener('touchmove', touchMoveHandler);
+        touchContainer.removeEventListener('touchend', touchEndHandler);
       }
       // Always clean up chart on unmount
       if (chartRef.current) {
@@ -894,7 +836,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               <div 
                 ref={chartContainerRef} 
                 className="w-full h-[180px] min-w-0"
-                style={{ touchAction: 'pan-y' }}
+                style={{ touchAction: 'none' }}
               />
           
           {/* Loading indicator */}
@@ -937,3 +879,4 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     </div>
   );
 }
+

@@ -42,17 +42,27 @@ const SortControls = memo(
           </button>
         </div>
         {sortBy === 'hot' && (
-          <div className="flex items-center justify-center gap-2 px-4 mt-3">
-            <select
-              value={popularWindow}
-              onChange={(e) => onPopularWindowChange && onPopularWindowChange(e.target.value as '24h'|'7d'|'all')}
-              className="text-[10px] bg-white/10 border border-white/20 rounded px-2 py-1 text-white outline-none cursor-pointer hover:bg-white/20 transition-colors"
-              style={{ colorScheme: 'dark' }}
-            >
-              <option value="24h" style={{ backgroundColor: '#1a1a1a' }}>Today</option>
-              <option value="7d" style={{ backgroundColor: '#1a1a1a' }}>This week</option>
-              <option value="all" style={{ backgroundColor: '#1a1a1a' }}>All time</option>
-            </select>
+          <div className="px-4 mt-4">
+            <div className="flex w-full items-center justify-between gap-2">
+              {(['24h','7d','all'] as const).map((tf) => {
+                const isActive = popularWindow === tf;
+                const label = tf === '24h' ? 'Today' : tf === '7d' ? 'This week' : 'All time';
+                return (
+                  <button
+                    key={tf}
+                    onClick={() => onPopularWindowChange && onPopularWindowChange(tf)}
+                    className={cn(
+                      'flex-1 px-2 py-2 h-9 text-[11px] rounded-full border transition-all duration-300 focus:outline-none active:scale-[0.98]',
+                      isActive
+                        ? 'bg-[#1161FE] text-white border-transparent shadow-md'
+                        : 'bg-white/[0.04] text-white/80 border-white/10 hover:bg-white/[0.08]'
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -90,17 +100,25 @@ const SortControls = memo(
           </AeButton>
         </div>
         {sortBy === 'hot' && (
-          <div className="flex items-center gap-2">
-            <select
-              value={popularWindow}
-              onChange={(e) => onPopularWindowChange && onPopularWindowChange(e.target.value as '24h'|'7d'|'all')}
-              className="text-[11px] bg-white/10 border border-white/20 rounded px-2 py-1 text-white outline-none cursor-pointer hover:bg-white/20 transition-colors"
-              style={{ colorScheme: 'dark' }}
-            >
-              <option value="24h" style={{ backgroundColor: '#1a1a1a' }}>Today</option>
-              <option value="7d" style={{ backgroundColor: '#1a1a1a' }}>This week</option>
-              <option value="all" style={{ backgroundColor: '#1a1a1a' }}>All time</option>
-            </select>
+          <div className="inline-flex items-center gap-1 bg-white/5 rounded-full p-0.5 border border-white/10">
+            {(['24h','7d','all'] as const).map((tf) => {
+              const isActive = popularWindow === tf;
+              const label = tf === '24h' ? 'Today' : tf === '7d' ? 'This week' : 'All time';
+              return (
+                <button
+                  key={tf}
+                  onClick={() => onPopularWindowChange && onPopularWindowChange(tf)}
+                  className={cn(
+                    'px-3 py-1.5 text-[11px] rounded-full border transition-all duration-300',
+                    isActive
+                      ? 'bg-[#1161FE] text-white border-transparent shadow-sm'
+                      : 'bg-transparent text-white/80 border-white/10 hover:bg-white/10'
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

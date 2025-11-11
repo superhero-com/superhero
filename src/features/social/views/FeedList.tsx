@@ -186,33 +186,89 @@ export default function FeedList({
   }, [mapTokenCreatedToPost, queryClient, sortBy]);
 
   // Infinite query for posts
+  // For non-hot: single list of latest posts
   const {
-    data,
-    isLoading,
-    error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    refetch,
+    data: latestData,
+    isLoading: latestLoading,
+    error: latestError,
+    fetchNextPage: fetchNextLatest,
+    hasNextPage: hasMoreLatest,
+    isFetchingNextPage: fetchingMoreLatest,
+    refetch: refetchLatest,
   } = useInfiniteQuery({
-    queryKey: ["posts", { limit: 10, sortBy, search, filterBy, window: sortBy === 'hot' ? popularWindow : undefined }],
-    queryFn: async ({ pageParam = 1 }) => {
-      if (sortBy === 'hot') {
-        // New popular posts endpoint with window
-        return (await TrendminerApi.listPopularPosts({
-          window: popularWindow,
-          page: pageParam as number,
-          limit: 10,
-        })) as unknown as PostApiResponse;
-      }
-      return (await PostsService.listAll({
+    enabled: sortBy !== "hot",
+    queryKey: ["posts", { limit: 10, sortBy, search, filterBy }],
+    queryFn: ({ pageParam = 1 }) =>
+      PostsService.listAll({
         limit: 10,
-        page: pageParam as number,
-        orderBy: 'created_at',
-        orderDirection: 'DESC',
+        page: pageParam,
+        orderBy: "created_at",
+        orderDirection: "DESC",
         search: localSearch,
-      })) as unknown as PostApiResponse;
+      }) as unknown as Promise<PostApiResponse>,
+    getNextPageParam: (lastPage) => {
+      if (
+        lastPage?.meta?.currentPage &&
+        lastPage?.meta?.totalPages &&
+        lastPage.meta.currentPage < lastPage.meta.totalPages
+      ) {
+        return lastPage.meta.currentPage + 1;
+      }
+      return undefined;
     },
+    initialPageParam: 1,
+  });
+
+  // For hot: first fetch popular posts, then continue with latest posts after separator
+  const {
+    data: popularData,
+    isLoading: popularLoading,
+    error: popularError,
+    fetchNextPage: fetchNextPopular,
+    hasNextPage: hasMorePopular,
+    isFetchingNextPage: fetchingMorePopular,
+    refetch: refetchPopular,
+  } = useInfiniteQuery({
+    enabled: sortBy === "hot",
+    queryKey: ["popular-posts", { limit: 10, window: popularWindow }],
+    queryFn: ({ pageParam = 1 }) =>
+      TrendminerApi.listPopularPosts({
+        window: popularWindow,
+        page: pageParam as number,
+        limit: 10,
+      }) as unknown as Promise<PostApiResponse>,
+    getNextPageParam: (lastPage) => {
+      if (
+        lastPage?.meta?.currentPage &&
+        lastPage?.meta?.totalPages &&
+        lastPage.meta.currentPage < lastPage.meta.totalPages
+      ) {
+        return lastPage.meta.currentPage + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
+  });
+
+  const {
+    data: afterPopularData,
+    isLoading: afterPopularLoading,
+    error: afterPopularError,
+    fetchNextPage: fetchNextAfterPopular,
+    hasNextPage: hasMoreAfterPopular,
+    isFetchingNextPage: fetchingMoreAfterPopular,
+    refetch: refetchAfterPopular,
+  } = useInfiniteQuery({
+    enabled: sortBy === "hot",
+    queryKey: ["latest-after-popular", { limit: 10, search: localSearch }],
+    queryFn: ({ pageParam = 1 }) =>
+      PostsService.listAll({
+        limit: 10,
+        page: pageParam,
+        orderBy: "created_at",
+        orderDirection: "DESC",
+        search: localSearch,
+      }) as unknown as Promise<PostApiResponse>,
     getNextPageParam: (lastPage) => {
       if (
         lastPage?.meta?.currentPage &&
@@ -228,23 +284,43 @@ export default function FeedList({
 
   // Derived state: posts list
   const list = useMemo(
-    () => (data?.pages ? (data.pages as any[]).flatMap((page: any) => page?.items ?? []) : []),
-    [data]
+    () =>
+      latestData?.pages
+        ? ((latestData.pages as any[]) || []).flatMap((page: any) => page?.items ?? [])
+        : [],
+    [latestData]
+  );
+
+  const popularList = useMemo(
+    () =>
+      popularData?.pages
+        ? ((popularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? [])
+        : [],
+    [popularData]
+  );
+
+  const afterPopularList = useMemo(
+    () =>
+      afterPopularData?.pages
+        ? ((afterPopularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? [])
+        : [],
+    [afterPopularData]
   );
 
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo(() => {
-    // Hide token-created events on the popular (hot) tab
-    const includeEvents = sortBy !== "hot";
-    const merged = includeEvents ? [...activityList, ...list] : [...list];
-    // Keep backend order for 'hot'; only sort by time when we interleave activities
-    if (!includeEvents) return merged;
+    if (sortBy === "hot") {
+      // For hot: show popular first; after popular ends, we will render separator + latest-after-popular in render layer
+      return popularList;
+    }
+    // Default path: interleave activities and latest, sorted by created_at desc
+    const merged = [...activityList, ...list];
     return merged.sort((a: any, b: any) => {
       const at = new Date(a?.created_at || 0).getTime();
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     });
-  }, [list, activityList, sortBy]);
+  }, [list, activityList, sortBy, popularList]);
 
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {
@@ -325,11 +401,25 @@ export default function FeedList({
 
   // Render helpers
   const renderEmptyState = () => {
-    const initialLoading = (sortBy !== "hot" && activitiesLoading) || isLoading;
-    if (error) {
-      return <EmptyState type="error" error={error} onRetry={refetch} />;
+    if (sortBy === "hot") {
+      const initialLoading = popularLoading;
+      const err = popularError || afterPopularError;
+      if (err) {
+        return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); refetchAfterPopular(); }} />;
+      }
+      if (!err && combinedList.length === 0 && !initialLoading) {
+        return <EmptyState type="empty" hasSearch={!!localSearch} />;
+      }
+      if (initialLoading && combinedList.length === 0) {
+        return <EmptyState type="loading" />;
+      }
+      return null;
     }
-    if (!error && filteredAndSortedList.length === 0 && !initialLoading) {
+    const initialLoading = (sortBy !== "hot" && activitiesLoading) || latestLoading;
+    if (latestError) {
+      return <EmptyState type="error" error={latestError as any} onRetry={refetchLatest} />;
+    }
+    if (!latestError && filteredAndSortedList.length === 0 && !initialLoading) {
       return <EmptyState type="empty" hasSearch={!!localSearch} />;
     }
     if (initialLoading && filteredAndSortedList.length === 0) {
@@ -467,7 +557,10 @@ export default function FeedList({
   // Auto-load more when reaching bottom using IntersectionObserver (all screens)
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const fetchingRef = useRef(false);
-  const initialLoading = (sortBy !== "hot" && activitiesLoading) || isLoading;
+  const initialLoading =
+    sortBy === "hot"
+      ? popularLoading
+      : (sortBy !== "hot" && activitiesLoading) || latestLoading;
   const [showLoadMore, setShowLoadMore] = useState(false);
   useEffect(() => { setShowLoadMore(false); }, [sortBy]);
   useEffect(() => {
@@ -481,15 +574,39 @@ export default function FeedList({
       setShowLoadMore(true);
       fetchingRef.current = true;
       const tasks: Promise<any>[] = [];
-      if (hasNextPage && !isFetchingNextPage) tasks.push(fetchNextPage());
-      if (sortBy !== "hot" && hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
+      if (sortBy === "hot") {
+        if (hasMorePopular && !fetchingMorePopular) tasks.push(fetchNextPopular());
+        else if (hasMoreAfterPopular && !fetchingMoreAfterPopular) tasks.push(fetchNextAfterPopular());
+      } else {
+        if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
+        if (hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
+      }
       Promise.all(tasks).finally(() => {
         fetchingRef.current = false;
       });
     }, { root: null, rootMargin: '800px 0px', threshold: 0.01 });
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [initialLoading, hasNextPage, isFetchingNextPage, fetchNextPage, sortBy, hasMoreActivities, fetchingMoreActivities, fetchNextActivities]);
+  }, [
+    initialLoading,
+    sortBy,
+    // latest
+    hasMoreLatest,
+    fetchingMoreLatest,
+    fetchNextLatest,
+    // activities
+    hasMoreActivities,
+    fetchingMoreActivities,
+    fetchNextActivities,
+    // popular
+    hasMorePopular,
+    fetchingMorePopular,
+    fetchNextPopular,
+    // after popular
+    hasMoreAfterPopular,
+    fetchingMoreAfterPopular,
+    fetchNextAfterPopular,
+  ]);
 
   const content = (
     <div className="w-full">
@@ -509,7 +626,18 @@ export default function FeedList({
       )}
       {/* Single CreatePost instance for consistent focus/scroll across viewports */}
       <div>
-        <CreatePost ref={createPostRef} onSuccess={refetch} autoFocus={shouldAutoFocusPost} />
+        <CreatePost
+          ref={createPostRef}
+          onSuccess={() => {
+            if (sortBy === "hot") {
+              refetchPopular();
+              refetchAfterPopular();
+            } else {
+              refetchLatest();
+            }
+          }}
+          autoFocus={shouldAutoFocusPost}
+        />
         {/* Sort controls rendered once; styles adapt per breakpoint */}
         <div className="md:hidden">
           <SortControls
@@ -532,17 +660,71 @@ export default function FeedList({
 
       <div className="w-full flex flex-col gap-0 md:gap-2 md:mx-0">
         {renderEmptyState()}
-        {((sortBy !== "hot" && !activitiesLoading) || sortBy === "hot") && !isLoading && renderFeedItems}
+        {/* Non-hot: existing renderer */}
+        {sortBy !== "hot" && !latestLoading && renderFeedItems}
+
+        {/* Hot: render popular first, then separator, then latest-after-popular */}
+        {sortBy === "hot" && !popularLoading && (
+          <>
+            {/* Popular posts list */}
+            {combinedList.map((item) => (
+              <ReplyToFeedItem
+                key={item.id}
+                item={item}
+                commentCount={item.total_comments ?? 0}
+                allowInlineRepliesToggle={false}
+                onOpenPost={handleItemClick}
+              />
+            ))}
+
+            {/* Separator + latest list after popular ends */}
+            {!hasMorePopular && afterPopularList.length > 0 && (
+              <>
+                <div className="my-6 md:my-8 flex items-center gap-3">
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                  <div className="text-[11px] md:text-xs uppercase tracking-wider text-white/70 bg-white/[0.06] border border-white/10 rounded-full px-3 py-1 backdrop-blur-sm">
+                    Popular posts ended — showing latest posts
+                  </div>
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                </div>
+                {afterPopularList.map((item) => (
+                  <ReplyToFeedItem
+                    key={item.id}
+                    item={item}
+                    commentCount={item.total_comments ?? 0}
+                    allowInlineRepliesToggle={false}
+                    onOpenPost={handleItemClick}
+                  />
+                ))}
+              </>
+            )}
+          </>
+        )}
       </div>
 
-      {!initialLoading && hasNextPage && filteredAndSortedList.length > 0 && (
+      {/* Load more button (desktop) */}
+      {!initialLoading && (
         <>
           {/* Desktop: explicit load more button */}
           {showLoadMore && (
             <div className="hidden md:block p-4 md:p-6 text-center">
               <AeButton
-                loading={isFetchingNextPage}
-                onClick={() => fetchNextPage()}
+                loading={
+                  sortBy === "hot"
+                    ? fetchingMorePopular || fetchingMoreAfterPopular
+                    : (fetchingMoreLatest || fetchingMoreActivities)
+                }
+                onClick={() => {
+                  if (sortBy === "hot") {
+                    if (hasMorePopular && !fetchingMorePopular) return fetchNextPopular();
+                    if (hasMoreAfterPopular && !fetchingMoreAfterPopular) return fetchNextAfterPopular();
+                    return;
+                  }
+                  const tasks: Promise<any>[] = [];
+                  if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
+                  if (hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
+                  if (tasks.length > 0) return Promise.all(tasks);
+                }}
                 className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5"
               >
                 Load more

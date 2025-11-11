@@ -992,7 +992,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                         className="max-w-[320px] rounded-xl border border-white/10 bg-white/10 text-white/90 backdrop-blur-md shadow-lg ring-1 ring-black/5 px-3 py-2 text-[12px] leading-relaxed z-[100]"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        Portfolio value summarizes the total worth of all assets held in this wallet — including AE balance, Trend tokens, and other assets such as WAE, aeETH and more. This chart represents the wallet's complete portfolio.
+                        Portfolio value shows the combined worth of AE balance and trend tokens held in this wallet. The chart tracks how this value changes over time.
                       </div>
                     </>
                   )}
@@ -1016,7 +1016,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                       alignOffset={0}
                       className="max-w-[320px] z-[100]"
                     >
-                      Portfolio value summarizes the total worth of all assets held in this wallet — including AE balance, Trend tokens, and other assets such as WAE, aeETH and more. This chart represents the wallet's complete portfolio.
+                      Portfolio value shows the combined worth of AE balance and trend tokens held in this wallet. The chart tracks how this value changes over time.
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

@@ -457,7 +457,7 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
       >
       {data.length > 0 && (
           <ResponsiveContainer width="100%" height={180}>
-          <AreaChart data={data}>
+          <AreaChart data={data} animationDuration={300}>
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="rgba(34, 197, 94, 0.3)" stopOpacity={1} />
@@ -472,6 +472,7 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
                 fill="url(#colorValue)"
                 dot={false}
                 activeDot={false}
+                animationDuration={300}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -790,7 +791,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       let startDate: moment.Moment;
       if (range.days === Infinity) {
         startDate = MIN_START_DATE;
-      } else {
+        } else {
         startDate = moment().subtract(range.days, 'days');
         if (startDate.isBefore(MIN_START_DATE)) {
           startDate = MIN_START_DATE;
@@ -925,7 +926,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
       if (progress < 1) {
         animationFrameRef.current = requestAnimationFrame(animate);
-      } else {
+            } else {
         setAnimatedValue(targetValue);
         animationFrameRef.current = null;
       }

@@ -393,7 +393,7 @@ export default function UserProfile({
 
         {/* Stats Grid - Right column on md+, full width on mobile */}
         <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5 md:gap-2.5">
-          <div className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all">
+          <div className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all flex flex-col justify-center">
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
               AE Balance
             </div>

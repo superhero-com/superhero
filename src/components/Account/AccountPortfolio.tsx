@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import moment from 'moment';
 import { TrendminerApi } from '@/api/backend';
@@ -535,6 +535,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     [useCurrentCurrency, currentCurrencyInfo.code]
   );
 
+  const queryClient = useQueryClient();
+
   // Keep convertTo ref up to date
   useEffect(() => {
     convertToRef.current = convertTo;
@@ -769,6 +771,95 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   useEffect(() => {
     portfolioDataRef.current = portfolioData;
   }, [portfolioData]);
+
+  // Prefetch other time ranges in the background after first load
+  useEffect(() => {
+    // Only prefetch if the current query has successfully loaded
+    if (!portfolioData || isLoading) return;
+
+    // Get all time ranges except the currently selected one
+    const otherTimeRanges = (Object.keys(TIME_RANGES) as TimeRange[]).filter(
+      (range) => range !== selectedTimeRange
+    );
+
+    // Prefetch each other time range
+    otherTimeRanges.forEach((timeRange) => {
+      const range = TIME_RANGES[timeRange];
+      const endDate = moment();
+      
+      let startDate: moment.Moment;
+      if (range.days === Infinity) {
+        startDate = MIN_START_DATE;
+      } else {
+        startDate = moment().subtract(range.days, 'days');
+        if (startDate.isBefore(MIN_START_DATE)) {
+          startDate = MIN_START_DATE;
+        }
+      }
+
+      const prefetchDateRange = {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        interval: range.interval,
+      };
+
+      // Check if data is already cached
+      const queryKey = ['portfolio-history', address, timeRange, convertTo];
+      const cachedData = queryClient.getQueryData(queryKey);
+      
+      // Only prefetch if not already cached
+      if (!cachedData) {
+        // Prefetch the query
+        queryClient.prefetchQuery({
+          queryKey,
+          queryFn: async () => {
+            const response = await TrendminerApi.getAccountPortfolioHistory(address, {
+              startDate: prefetchDateRange.startDate,
+              endDate: prefetchDateRange.endDate,
+              interval: prefetchDateRange.interval,
+              convertTo: convertTo as any,
+            });
+            
+            const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
+            
+            // Sort by timestamp ascending
+            const sorted = snapshots.sort((a, b) => 
+              moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf()
+            );
+            
+            // Filter to ensure one point per interval period
+            const intervalSeconds = prefetchDateRange.interval;
+            const periodMap = new Map<number, PortfolioSnapshot>();
+            
+            for (const snapshot of sorted) {
+              const timestamp = moment(snapshot.timestamp).unix();
+              const periodStart = Math.floor(timestamp / intervalSeconds) * intervalSeconds;
+              
+              const existing = periodMap.get(periodStart);
+              if (!existing) {
+                periodMap.set(periodStart, snapshot);
+              } else {
+                const existingTime = moment(existing.timestamp).unix();
+                const existingDistance = Math.abs(existingTime - periodStart);
+                const currentDistance = Math.abs(timestamp - periodStart);
+                
+                if (currentDistance < existingDistance || 
+                    (currentDistance === existingDistance && timestamp > existingTime)) {
+                  periodMap.set(periodStart, snapshot);
+                }
+              }
+            }
+            
+            return Array.from(periodMap.values()).sort((a, b) => 
+              moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf()
+            );
+          },
+          staleTime: 5 * 60 * 1000, // 5 minutes
+          gcTime: 30 * 60 * 1000, // Keep cached data for 30 minutes
+        });
+      }
+    });
+  }, [portfolioData, isLoading, selectedTimeRange, address, convertTo, queryClient]);
 
   // Calculate display value
   const displayValue = useMemo(() => {

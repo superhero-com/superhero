@@ -143,19 +143,111 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
             
             // Only proceed if we found a valid stroke path
             // Verify it's actually the stroke path by checking its bounding box
+            const containerBounds = container.getBoundingClientRect();
+            const svgRect = svg.getBoundingClientRect();
+            
             if (strokePath && strokePath.getTotalLength() > 0) {
               const pathBBox = strokePath.getBBox();
-              const svgRect = svg.getBoundingClientRect();
               const svgHeight = svgRect.height;
               
               // Verify: stroke path should not span the full height (that would be fill area)
               // Stroke path bounding box should be reasonable (not too tall)
               if (pathBBox.height > svgHeight * 0.9) {
-                // This is likely the fill area, skip it
+                // This is likely the fill area - use it to find the top edge (data line)
+                const fillPath = strokePath;
+                const fillBBox = pathBBox;
+                
+                // Calculate X position within the plot area
+                const plotAreaLeft = fillBBox.x;
+                const plotAreaWidth = fillBBox.width;
+                const relativeX = plotAreaLeft + (xPercent * plotAreaWidth);
+                const clampedRelativeX = Math.max(plotAreaLeft, Math.min(plotAreaLeft + plotAreaWidth, relativeX));
+                
+                // Set crosshair X position
+                const crosshairXPos = svgRect.left - containerBounds.left + clampedRelativeX;
+                setCrosshairX(crosshairXPos);
+                
+                // Sample the fill area path to find the Y coordinate at this X
+                // The top edge of the fill area corresponds to the data line
+                const pathLength = fillPath.getTotalLength();
+                let bestY = fillBBox.y + fillBBox.height; // Default to bottom
+                let bestLength = 0;
+                
+                // Find the point(s) at this X coordinate
+                // Then find the minimum Y among those points (top edge)
+                const tolerance = 0.5; // pixels
+                
+                // First pass: find all points close to target X and track minimum Y
+                const sampleCount = 1000; // More samples for better accuracy
+                for (let i = 0; i <= sampleCount; i++) {
+                  const length = (i / sampleCount) * pathLength;
+                  const pathPoint = fillPath.getPointAtLength(length);
+                  const xDistance = Math.abs(pathPoint.x - clampedRelativeX);
+                  
+                  // If this point is very close to our X coordinate
+                  if (xDistance < tolerance) {
+                    // Track the topmost point (minimum Y)
+                    if (pathPoint.y < bestY) {
+                      bestY = pathPoint.y;
+                      bestLength = length;
+                    }
+                  }
+                }
+                
+                // If we found a point, refine around it
+                if (bestY < fillBBox.y + fillBBox.height) {
+                  // Refine in a small range around bestLength
+                  const refineRange = pathLength * 0.02; // 2% of path
+                  const refineStart = Math.max(0, bestLength - refineRange);
+                  const refineEnd = Math.min(pathLength, bestLength + refineRange);
+                  
+                  // Sample more densely in this range
+                  for (let i = 0; i <= 200; i++) {
+                    const length = refineStart + (refineEnd - refineStart) * (i / 200);
+                    const pathPoint = fillPath.getPointAtLength(length);
+                    const xDistance = Math.abs(pathPoint.x - clampedRelativeX);
+                    
+                    // Only consider points very close to target X
+                    if (xDistance < tolerance && pathPoint.y < bestY) {
+                      bestY = pathPoint.y;
+                      bestLength = length;
+                    }
+                  }
+                  
+                  // Final ultra-fine refinement
+                  const finalRefineRange = pathLength * 0.005; // 0.5% of path
+                  const finalRefineStart = Math.max(0, bestLength - finalRefineRange);
+                  const finalRefineEnd = Math.min(pathLength, bestLength + finalRefineRange);
+                  
+                  for (let i = 0; i <= 100; i++) {
+                    const length = finalRefineStart + (finalRefineEnd - finalRefineStart) * (i / 100);
+                    const pathPoint = fillPath.getPointAtLength(length);
+                    const xDistance = Math.abs(pathPoint.x - clampedRelativeX);
+                    
+                    if (xDistance < tolerance * 0.5 && pathPoint.y < bestY) {
+                      bestY = pathPoint.y;
+                    }
+                  }
+                } else {
+                  // Fallback: if we didn't find a close match, use a wider tolerance
+                  for (let i = 0; i <= sampleCount; i++) {
+                    const length = (i / sampleCount) * pathLength;
+                    const pathPoint = fillPath.getPointAtLength(length);
+                    const xDistance = Math.abs(pathPoint.x - clampedRelativeX);
+                    
+                    if (xDistance < 10 && pathPoint.y < bestY) {
+                      bestY = pathPoint.y;
+                    }
+                  }
+                }
+                
+                // Convert to container coordinates
+                const y = svgRect.top - containerBounds.top + bestY;
+                if (y >= 0 && y <= svgRect.height) {
+                  setCrosshairY(y);
+                }
                 return;
               }
-              
-              const containerBounds = container.getBoundingClientRect();
         
               // Get the actual plot area bounds from the path's bounding box
               // This accounts for Recharts margins/padding
@@ -238,10 +330,31 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               const containerTop = 0; // Relative to container
               const containerBottom = svgRect.height;
               
-              // Only set Y if it's reasonable (not at the very bottom, which indicates fill area)
-              // The Y should be within the SVG bounds and not too close to the bottom
-              if (y >= containerTop && y <= containerBottom * 0.95) {
+              // Set Y if it's within reasonable bounds
+              // Use a more lenient check for "ALL" time range which may have data at edges
+              if (y >= containerTop && y <= containerBottom) {
                 setCrosshairY(y);
+              } else {
+                // Fallback: calculate Y from data value if path-based calculation fails
+                // This ensures crosshair still appears even if path detection has issues
+                const valueRange = Math.max(...data.map(d => d.value)) - Math.min(...data.map(d => d.value));
+                if (valueRange > 0) {
+                  const normalizedValue = (point.value - Math.min(...data.map(d => d.value))) / valueRange;
+                  const fallbackY = containerTop + (1 - normalizedValue) * (containerBottom - containerTop) * 0.8 + containerTop * 0.1;
+                  setCrosshairY(Math.max(containerTop, Math.min(containerBottom, fallbackY)));
+                }
+              }
+            } else {
+              // Fallback when stroke path is not found - use data-based calculation
+              const fallbackX = svgRect.left - containerBounds.left + svgRect.width * xPercent;
+              setCrosshairX(fallbackX);
+              
+              // Calculate Y from data value
+              const valueRange = Math.max(...data.map(d => d.value)) - Math.min(...data.map(d => d.value));
+              if (valueRange > 0) {
+                const normalizedValue = (point.value - Math.min(...data.map(d => d.value))) / valueRange;
+                const fallbackY = svgRect.top - containerBounds.top + svgRect.height * (1 - normalizedValue) * 0.8 + svgRect.height * 0.1;
+                setCrosshairY(Math.max(0, Math.min(svgRect.height, fallbackY)));
               }
             }
           }
@@ -698,9 +811,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     // If values are the same, no need to animate
     if (Math.abs(startValue - targetValue) < 0.0001) {
       setAnimatedValue(targetValue);
-      return;
-    }
-
+        return;
+      }
+      
     animationStartRef.current = performance.now();
     animationStartValueRef.current = startValue;
     animationTargetValueRef.current = targetValue;
@@ -744,12 +857,12 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     const nowUnix = moment.utc().unix();
     
     const data = portfolioData
-      .map((snapshot) => {
-        const timestamp = moment(snapshot.timestamp).unix();
+          .map((snapshot) => {
+            const timestamp = moment(snapshot.timestamp).unix();
         
         // Filter out any future data points
         if (timestamp > nowUnix) {
-          return null;
+                return null;
         }
         
         let value: number | null = null;
@@ -799,12 +912,12 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                 date: moment.unix(nowUnix).toDate(),
               };
             }
-          } else {
+            } else {
               // Different value, add new point with current time
             data.push({
               time: nowUnix,
               timestamp: nowUnix,
-              value: currentValue,
+                value: currentValue,
               date: moment.unix(nowUnix).toDate(),
             });
             }
@@ -940,14 +1053,14 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                   : (() => {
                       try {
                         const fiatValue = typeof animatedValue === 'number' ? animatedValue : Number(animatedValue);
-                        const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                      const currencyCode = currentCurrencyInfo.code.toUpperCase();
                         // Format number separately to extract currency symbol
                         const formatter = new Intl.NumberFormat('en-US', {
-                          style: 'currency',
-                          currency: currencyCode,
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        });
+                        style: 'currency',
+                        currency: currencyCode,
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      });
                         const parts = formatter.formatToParts(fiatValue);
                         const currencySymbol = parts.find(p => p.type === 'currency')?.value || '$';
                         const amount = parts.filter(p => p.type !== 'currency').map(p => p.value).join('');

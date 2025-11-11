@@ -917,32 +917,61 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             </button>
           </div>
           <div className="mb-2 min-h-[3.5rem]">
-            <span className={`text-3xl md:text-4xl font-extrabold ${hoveredPrice ? 'text-green-400' : 'text-white'} block min-h-[2.5rem] leading-tight`}>
+            <span className={`text-3xl md:text-4xl ${hoveredPrice ? 'text-green-400' : 'text-white'} block min-h-[2.5rem] leading-tight`}>
               {animatedValue !== null ? (
                 convertTo === 'ae' 
                   ? (() => {
                       try {
-                        return `${Decimal.from(animatedValue).prettify()} AE`;
+                        return (
+                          <>
+                            <span className="font-light">AE</span>{' '}
+                            <span className="font-extrabold">{Decimal.from(animatedValue).prettify()}</span>
+                          </>
+                        );
                       } catch {
-                        return `${Number(animatedValue).toFixed(4)} AE`;
+                        return (
+                          <>
+                            <span className="font-light">AE</span>{' '}
+                            <span className="font-extrabold">{Number(animatedValue).toFixed(4)}</span>
+                          </>
+                        );
                       }
                     })()
                   : (() => {
                       try {
                         const fiatValue = typeof animatedValue === 'number' ? animatedValue : Number(animatedValue);
-                      const currencyCode = currentCurrencyInfo.code.toUpperCase();
-                      return fiatValue.toLocaleString('en-US', {
-                        style: 'currency',
-                        currency: currencyCode,
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      });
+                        const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                        // Format number separately to extract currency symbol
+                        const formatter = new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: currencyCode,
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        });
+                        const parts = formatter.formatToParts(fiatValue);
+                        const currencySymbol = parts.find(p => p.type === 'currency')?.value || '$';
+                        const amount = parts.filter(p => p.type !== 'currency').map(p => p.value).join('');
+                        return (
+                          <>
+                            <span className="font-light">{currencySymbol}</span>
+                            <span className="font-extrabold">{amount}</span>
+                          </>
+                        );
                       } catch {
-                        return `$${Number(animatedValue).toFixed(2)}`;
+                        const amount = Number(animatedValue).toFixed(2);
+                        return (
+                          <>
+                            <span className="font-light">$</span>
+                            <span className="font-extrabold">{amount}</span>
+                          </>
+                        );
                       }
                     })()
               ) : (
-                <span className="opacity-0">0.00 AE</span>
+                <>
+                  <span className="font-light opacity-0">AE</span>{' '}
+                  <span className="font-extrabold opacity-0">0.00</span>
+                </>
               )}
             </span>
             <div className="text-sm text-white/60 mt-1 h-5">

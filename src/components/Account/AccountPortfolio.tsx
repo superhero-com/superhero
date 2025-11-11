@@ -23,7 +23,7 @@ interface PortfolioSnapshot {
 
 const TIME_RANGES = {
   '1d': { days: 1, interval: 3600 }, // 1 day, hourly intervals
-  '1w': { days: 7, interval: 86400 }, // 7 days, daily intervals
+  '1w': { days: 7, interval: 21600 }, // 7 days, 6-hour intervals (4x as many intervals as original)
   '1m': { days: 30, interval: 86400 }, // 30 days, daily intervals
   'all': { days: Infinity, interval: 86400 }, // All time, daily intervals
 } as const;
@@ -174,11 +174,6 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               const crosshairXPos = svgRect.left - containerBounds.left + relativeX;
               setCrosshairX(crosshairXPos);
               
-              // Special handling for first and last data points - use binary search with wider range
-              // This prevents issues with path edge cases and accounts for Recharts Y-axis padding
-              const isFirstPoint = closestIndex === 0;
-              const isLastPoint = closestIndex === data.length - 1;
-              
               // Use binary search to find the exact point on the path at this X coordinate
               const pathLength = strokePath.getTotalLength();
               
@@ -187,23 +182,9 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               const pathEndX = pathBBox.x + pathBBox.width;
               const clampedRelativeX = Math.max(pathStartX, Math.min(pathEndX, relativeX));
               
-              // For edge points, use binary search but with tighter bounds
-              let searchLow = 0;
-              let searchHigh = pathLength;
-              
-              if (isFirstPoint) {
-                // Search in first 10% of path
-                searchHigh = Math.min(pathLength * 0.1, pathLength);
-              } else if (isLastPoint) {
-                // Search in last 10% of path, but ensure we include the very end
-                searchLow = Math.max(pathLength * 0.9, 0);
-                // Make sure we can reach the absolute end
-                searchHigh = pathLength;
-              }
-              
               // Binary search for the point closest to our X coordinate
-              let low = searchLow;
-              let high = searchHigh;
+              let low = 0;
+              let high = pathLength;
               let bestPoint = { x: 0, y: 0 };
               let minDistance = Infinity;
               const tolerance = 0.1; // pixels
@@ -231,18 +212,17 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               }
               
               // Final refinement: check points around the best point
-              // Use a percentage-based refinement around the found point
-              const refinePercent = isFirstPoint || isLastPoint ? 0.02 : 0.01; // 2% for edges, 1% for middle
+              const refinePercent = 0.01; // 1% of path
               const refineRange = pathLength * refinePercent;
-              const refineLengthStart = Math.max(searchLow, 
+              const refineLengthStart = Math.max(0, 
                 (bestPoint.x - pathStartX) / pathBBox.width * pathLength - refineRange
               );
-              const refineLengthEnd = Math.min(searchHigh,
+              const refineLengthEnd = Math.min(pathLength,
                 (bestPoint.x - pathStartX) / pathBBox.width * pathLength + refineRange
               );
               
               for (let i = 0; i <= 100; i++) {
-                const length = Math.max(searchLow, Math.min(searchHigh, 
+                const length = Math.max(0, Math.min(pathLength, 
                   refineLengthStart + (refineLengthEnd - refineLengthStart) * (i / 100)
                 ));
                 const pathPoint = strokePath.getPointAtLength(length);
@@ -250,15 +230,6 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
                 if (distance < minDistance) {
                   minDistance = distance;
                   bestPoint = pathPoint;
-                }
-              }
-              
-              // For last point, also check the absolute end of the path
-              if (isLastPoint) {
-                const endPoint = strokePath.getPointAtLength(pathLength);
-                const endDistance = Math.abs(endPoint.x - clampedRelativeX);
-                if (endDistance < minDistance) {
-                  bestPoint = endPoint;
                 }
               }
               
@@ -271,11 +242,6 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               // The Y should be within the SVG bounds and not too close to the bottom
               if (y >= containerTop && y <= containerBottom * 0.95) {
                 setCrosshairY(y);
-              }
-              
-              // For edge points, we're done
-              if (isFirstPoint || isLastPoint) {
-                return;
               }
             }
           }
@@ -635,7 +601,40 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
       
       // Sort by timestamp ascending
-      return snapshots.sort((a, b) => 
+      const sorted = snapshots.sort((a, b) => 
+        moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf()
+      );
+      
+      // Filter to ensure one point per interval period
+      // Group snapshots by their interval period and take the latest one in each period
+      const intervalSeconds = dateRange.interval;
+      const periodMap = new Map<number, PortfolioSnapshot>();
+      
+      for (const snapshot of sorted) {
+        const timestamp = moment(snapshot.timestamp).unix();
+        // Calculate which interval period this timestamp belongs to
+        const periodStart = Math.floor(timestamp / intervalSeconds) * intervalSeconds;
+        
+        // If we already have a snapshot for this period, keep the one closest to the period start
+        // (or the latest one if they're equally close)
+        const existing = periodMap.get(periodStart);
+        if (!existing) {
+          periodMap.set(periodStart, snapshot);
+        } else {
+          const existingTime = moment(existing.timestamp).unix();
+          const existingDistance = Math.abs(existingTime - periodStart);
+          const currentDistance = Math.abs(timestamp - periodStart);
+          
+          // Keep the one closer to the period start, or the later one if equidistant
+          if (currentDistance < existingDistance || 
+              (currentDistance === existingDistance && timestamp > existingTime)) {
+            periodMap.set(periodStart, snapshot);
+          }
+        }
+      }
+      
+      // Convert map values back to array and sort
+      return Array.from(periodMap.values()).sort((a, b) => 
         moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf()
       );
     },
@@ -678,9 +677,17 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const rechartsData = useMemo(() => {
     if (!portfolioData || portfolioData.length === 0) return [];
     
+    const nowUnix = moment.utc().unix();
+    
     const data = portfolioData
       .map((snapshot) => {
         const timestamp = moment(snapshot.timestamp).unix();
+        
+        // Filter out any future data points
+        if (timestamp > nowUnix) {
+          return null;
+        }
+        
         let value: number | null = null;
         
         if (convertTo === 'ae') {
@@ -702,7 +709,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       })
       .filter((item): item is { time: number; timestamp: number; value: number; date: Date } => item !== null);
 
-    // Add current portfolio value
+    // Add current portfolio value, but don't create a future point
     if (currentPortfolioValue !== null && currentPortfolioValue !== undefined) {
       try {
         const currentValue = typeof currentPortfolioValue.toNumber === 'function' 
@@ -712,28 +719,31 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           : Number(currentPortfolioValue);
 
         if (!isNaN(currentValue) && isFinite(currentValue)) {
-          const nowUnix = moment.utc().unix();
           const lastPoint = data.length > 0 ? data[data.length - 1] : null;
           
-          if (lastPoint && Math.abs(lastPoint.value - currentValue) < 0.000001) {
-            // Same value, update timestamp if needed
-            const timeDiff = nowUnix - lastPoint.time;
-            if (timeDiff > 300) {
-              data[data.length - 1] = {
-                ...lastPoint,
+          // Only add/update if the last point is in the past (not at or after current time)
+          // This prevents creating future data points
+          if (!lastPoint || lastPoint.time < nowUnix) {
+            if (lastPoint && Math.abs(lastPoint.value - currentValue) < 0.000001) {
+              // Same value, update timestamp to current time
+              const timeDiff = nowUnix - lastPoint.time;
+              if (timeDiff > 300) {
+                data[data.length - 1] = {
+                  ...lastPoint,
+                  time: nowUnix,
+                  timestamp: nowUnix,
+                  date: moment.unix(nowUnix).toDate(),
+                };
+              }
+            } else {
+              // Different value, add new point with current time
+              data.push({
                 time: nowUnix,
                 timestamp: nowUnix,
+                value: currentValue,
                 date: moment.unix(nowUnix).toDate(),
-              };
+              });
             }
-          } else {
-            // Different value, add new point
-            data.push({
-              time: nowUnix,
-              timestamp: nowUnix,
-              value: currentValue,
-              date: moment.unix(nowUnix).toDate(),
-            });
           }
         }
       } catch (error) {

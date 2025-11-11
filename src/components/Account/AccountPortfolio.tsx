@@ -59,20 +59,45 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
     const updateSize = () => {
       if (chartRef.current) {
         const rect = chartRef.current.getBoundingClientRect();
+        // Get the parent container to measure full width
+        const parent = chartRef.current.parentElement;
+        const parentRect = parent?.getBoundingClientRect();
+        
         if (rect.width > 0 && rect.height > 0) {
-          setContainerSize({ width: rect.width, height: rect.height });
+          // Use parent width if available and larger, otherwise use container width
+          const width = parentRect && parentRect.width > rect.width ? parentRect.width : rect.width;
+          setContainerSize({ width, height: rect.height });
+        } else {
+          // If size is 0, try again on next frame
+          requestAnimationFrame(() => {
+            if (chartRef.current) {
+              const newRect = chartRef.current.getBoundingClientRect();
+              const newParent = chartRef.current.parentElement;
+              const newParentRect = newParent?.getBoundingClientRect();
+              if (newRect.width > 0 && newRect.height > 0) {
+                const width = newParentRect && newParentRect.width > newRect.width ? newParentRect.width : newRect.width;
+                setContainerSize({ width, height: newRect.height });
+              }
+            }
+          });
         }
       }
     };
 
-    updateSize();
+    // Initial measurement with delay to ensure DOM is ready
+    const timeoutId = setTimeout(updateSize, 0);
     window.addEventListener('resize', updateSize);
     const resizeObserver = new ResizeObserver(updateSize);
     if (chartRef.current) {
       resizeObserver.observe(chartRef.current);
+      // Also observe parent if it exists
+      if (chartRef.current.parentElement) {
+        resizeObserver.observe(chartRef.current.parentElement);
+      }
     }
 
     return () => {
+      clearTimeout(timeoutId);
       window.removeEventListener('resize', updateSize);
       resizeObserver.disconnect();
     };
@@ -276,46 +301,99 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
     <div
       ref={chartRef}
       className="w-full h-[180px] relative"
-      style={{ touchAction: 'pan-y', width: '100%', height: '180px', minWidth: 0, position: 'relative', display: 'block' }}
+      style={{ 
+        touchAction: 'pan-y', 
+        width: '100%', 
+        height: '180px', 
+        minWidth: 0, 
+        position: 'relative', 
+        display: 'block',
+        boxSizing: 'border-box'
+      }}
     >
-      {data.length > 0 && containerSize && (
-        <ResponsiveContainer width={containerSize.width} height={containerSize.height}>
-          <AreaChart
-            data={data}
-            margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
-          >
-          <defs>
-            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgba(34, 197, 94, 0.3)" stopOpacity={1} />
-              <stop offset="100%" stopColor="rgba(34, 197, 94, 0.01)" stopOpacity={1} />
-            </linearGradient>
-          </defs>
-          <XAxis
-            dataKey="date"
-            type="number"
-            scale="time"
-            domain={['dataMin', 'dataMax']}
-            tick={false}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            tick={false}
-            axisLine={false}
-            tickLine={false}
-            domain={['auto', 'auto']}
-          />
-          <Area
-            type="monotone"
-            dataKey="value"
-            stroke="#22c55e"
-            strokeWidth={2}
-            fill="url(#colorValue)"
-            dot={false}
-            activeDot={false}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+      {data.length > 0 && (
+        containerSize && containerSize.width > 0 && containerSize.height > 0 ? (
+          <div style={{ width: containerSize.width, height: containerSize.height, minWidth: 0, overflow: 'visible' }}>
+            <ResponsiveContainer width={containerSize.width} height={containerSize.height}>
+              <AreaChart
+                data={data}
+                margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="rgba(34, 197, 94, 0.3)" stopOpacity={1} />
+                    <stop offset="100%" stopColor="rgba(34, 197, 94, 0.01)" stopOpacity={1} />
+                  </linearGradient>
+                </defs>
+                <XAxis
+                  dataKey="date"
+                  type="number"
+                  scale="time"
+                  domain={['dataMin', 'dataMax']}
+                  tick={false}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={false}
+                  axisLine={false}
+                  tickLine={false}
+                  domain={['auto', 'auto']}
+                  width={0}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#22c55e"
+                  strokeWidth={2}
+                  fill="url(#colorValue)"
+                  dot={false}
+                  activeDot={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={180}>
+            <AreaChart
+              data={data}
+              margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
+              style={{ width: '100%', height: '100%' }}
+            >
+              <defs>
+                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="rgba(34, 197, 94, 0.3)" stopOpacity={1} />
+                  <stop offset="100%" stopColor="rgba(34, 197, 94, 0.01)" stopOpacity={1} />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="date"
+                type="number"
+                scale="time"
+                domain={['dataMin', 'dataMax']}
+                tick={false}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={false}
+                axisLine={false}
+                tickLine={false}
+                domain={['auto', 'auto']}
+                width={0}
+              />
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke="#22c55e"
+                strokeWidth={2}
+                fill="url(#colorValue)"
+                dot={false}
+                activeDot={false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        )
       )}
       {crosshairX !== null && crosshairPoint && (
         <>
@@ -1293,13 +1371,20 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           </div>
         </div>
 
-        {/* Chart */}
-        <div className="pb-4 relative">
+        {/* Chart - no padding, full width */}
+        <div className="pb-4 w-full">
           {isMobile ? (
-            // Recharts for mobile - full width (no padding)
-            <div className="w-full h-[180px] min-w-0 relative" style={{ width: '100%', minWidth: 0 }}>
+            // Recharts for mobile - full width
+            <div 
+              className="h-[180px] relative w-full" 
+              style={{ 
+                width: '100%',
+                minWidth: 0,
+                maxWidth: '100%'
+              }}
+            >
               {isLoading ? (
-                <div className="absolute inset-0 flex items-center justify-center z-10">
+                <div className="absolute inset-0 flex items-center justify-center z-10 px-4 md:px-6">
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/40 border border-white/10 rounded-full text-white text-xs font-medium">
                     <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" aria-label="loading" />
                     <span>Loading portfolio data...</span>
@@ -1313,7 +1398,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                   currentCurrencyInfo={currentCurrencyInfo}
                 />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none z-10">
+                <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none z-10 px-4 md:px-6">
                   <div className="text-white/60">No portfolio data available</div>
                 </div>
               )}

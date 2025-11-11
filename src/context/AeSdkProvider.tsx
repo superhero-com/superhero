@@ -219,6 +219,34 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                         const windowFeatures =
                             "name=Superhero Wallet,width=362,height=594,toolbar=false,location=false,menubar=false,popup";
 
+                        let interval: NodeJS.Timeout | null = null;
+                        let timeout: NodeJS.Timeout | null = null;
+                        let isCleanedUp = false;
+                        let unloadHandler: (() => void) | null = null;
+
+                        // Cleanup function to prevent memory leaks
+                        const cleanup = () => {
+                            if (isCleanedUp) return;
+                            isCleanedUp = true;
+                            
+                            if (interval) {
+                                clearInterval(interval);
+                                interval = null;
+                            }
+                            if (timeout) {
+                                clearTimeout(timeout);
+                                timeout = null;
+                            }
+                            if (unloadHandler && typeof window !== 'undefined') {
+                                window.removeEventListener('beforeunload', unloadHandler);
+                                unloadHandler = null;
+                            }
+                            if (newWindow) {
+                                newWindow.close();
+                                newWindow = null;
+                            }
+                        };
+
                         openModal({
                             name: 'transaction-confirm',
                             props: {
@@ -231,35 +259,58 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                                     newWindow = window.open(signUrl, "_blank", windowFeatures);
                                 },
                                 onCancel: () => {
+                                    cleanup();
+                                    // Remove transaction from queue
+                                    const currentQueue = transactionsQueueRef.current;
+                                    if (Object.keys(currentQueue).includes(uniqueId)) {
+                                        const newQueue = { ...currentQueue };
+                                        delete newQueue[uniqueId];
+                                        setTransactionsQueue(newQueue);
+                                    }
                                     reject(new Error("Transaction cancelled"));
                                 }
                             }
                         });
 
-                        const interval = setInterval(() => {
+                        // Set a timeout to prevent infinite polling (5 minutes max)
+                        const MAX_POLL_TIME = 5 * 60 * 1000; // 5 minutes
+                        timeout = setTimeout(() => {
+                            cleanup();
+                            reject(new Error("Transaction polling timeout"));
+                        }, MAX_POLL_TIME);
+
+                        // Handle page unload to cleanup interval
+                        if (typeof window !== 'undefined') {
+                            unloadHandler = () => {
+                                cleanup();
+                            };
+                            window.addEventListener('beforeunload', unloadHandler);
+                        }
+
+                        interval = setInterval(() => {
                             const currentQueue = transactionsQueueRef.current;
                             if (Object.keys(currentQueue).includes(uniqueId)) {
                                 if (currentQueue[uniqueId]?.status === "cancelled") {
-                                    clearInterval(interval);
+                                    cleanup();
                                     reject(new Error("Transaction cancelled"));
-                                    newWindow?.close();
                                     // delete transaction from queue
                                     const newQueue = { ...currentQueue };
                                     delete newQueue[uniqueId];
                                     setTransactionsQueue(newQueue);
+                                    return;
                                 }
 
                                 if (
                                     currentQueue[uniqueId]?.status === "completed" &&
                                     currentQueue[uniqueId]?.transaction
                                 ) {
-                                    clearInterval(interval);
+                                    cleanup();
                                     resolve(currentQueue[uniqueId].transaction);
-                                    newWindow?.close();
                                     // delete transaction from queue
                                     const newQueue = { ...currentQueue };
                                     delete newQueue[uniqueId];
                                     setTransactionsQueue(newQueue);
+                                    return;
                                 }
                             }
                         }, 500);

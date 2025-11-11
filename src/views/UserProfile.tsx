@@ -186,7 +186,8 @@ export default function UserProfile({
     setIsBioLoading(false);
     // Scroll to top whenever navigating to a user profile
     window.scrollTo(0, 0);
-    loadAccountData();
+    // Note: loadAccountData() is automatically called by useAccountBalances hook
+    // when effectiveAddress changes, so no manual call is needed here
     (async () => {
       const p = await getProfile();
       setProfile(p);

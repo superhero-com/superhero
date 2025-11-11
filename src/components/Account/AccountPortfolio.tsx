@@ -47,8 +47,12 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
   currentCurrencyInfo,
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
   const [crosshairX, setCrosshairX] = useState<number | null>(null);
   const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null);
+  const [isContainerReady, setIsContainerReady] = useState(false);
+  const [svgBounds, setSvgBounds] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const isHorizontalDragRef = useRef<boolean | null>(null);
@@ -63,10 +67,27 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
         const parent = chartRef.current.parentElement;
         const parentRect = parent?.getBoundingClientRect();
         
-        if (rect.width > 0 && rect.height > 0) {
+        // Always use 180px for height to match the container
+        const height = 180;
+        
+        if (rect.width > 0 && height > 0) {
           // Use parent width if available and larger, otherwise use container width
           const width = parentRect && parentRect.width > rect.width ? parentRect.width : rect.width;
-          setContainerSize({ width, height: rect.height });
+          setContainerSize({ width, height });
+          
+          // Check if wrapper is ready (180px height)
+          if (wrapperRef.current) {
+            const wrapperRect = wrapperRef.current.getBoundingClientRect();
+            if (wrapperRect.height >= 180) {
+              setIsContainerReady(true);
+            } else {
+              // Force wrapper to 180px
+              wrapperRef.current.style.height = '180px';
+              wrapperRef.current.style.minHeight = '180px';
+              wrapperRef.current.style.maxHeight = '180px';
+              setIsContainerReady(true);
+            }
+          }
         } else {
           // If size is 0, try again on next frame
           requestAnimationFrame(() => {
@@ -74,9 +95,10 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
               const newRect = chartRef.current.getBoundingClientRect();
               const newParent = chartRef.current.parentElement;
               const newParentRect = newParent?.getBoundingClientRect();
-              if (newRect.width > 0 && newRect.height > 0) {
+              const newHeight = 180;
+              if (newRect.width > 0 && newHeight > 0) {
                 const width = newParentRect && newParentRect.width > newRect.width ? newParentRect.width : newRect.width;
-                setContainerSize({ width, height: newRect.height });
+                setContainerSize({ width, height: newHeight });
               }
             }
           });
@@ -103,21 +125,84 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
     };
   }, []);
 
-  // Get chart plot area bounds accounting for Recharts margins
-  const getChartBounds = (): { left: number; top: number; width: number; height: number } | null => {
-    if (!chartRef.current) return null;
-    
-    // Recharts margin is { top: 5, right: 0, left: 0, bottom: 0 }
-    const margin = { top: 5, right: 0, left: 0, bottom: 0 };
-    const rect = chartRef.current.getBoundingClientRect();
-    
-    return {
-      left: margin.left,
-      top: margin.top,
-      width: rect.width - margin.left - margin.right,
-      height: rect.height - margin.top - margin.bottom,
+  // Ensure wrapper is 180px before ResponsiveContainer renders
+  useEffect(() => {
+    if (wrapperRef.current && containerSize) {
+      const checkAndSetHeight = () => {
+        if (wrapperRef.current) {
+          const rect = wrapperRef.current.getBoundingClientRect();
+          if (rect.height < 180) {
+            wrapperRef.current.style.height = '180px';
+            wrapperRef.current.style.minHeight = '180px';
+            wrapperRef.current.style.maxHeight = '180px';
+          }
+          // Use requestAnimationFrame to ensure DOM has updated
+          requestAnimationFrame(() => {
+            if (wrapperRef.current) {
+              const newRect = wrapperRef.current.getBoundingClientRect();
+              if (newRect.height >= 180) {
+                setIsContainerReady(true);
+              }
+            }
+          });
+        }
+      };
+      
+      checkAndSetHeight();
+      // Also check after a short delay
+      const timeoutId = setTimeout(checkAndSetHeight, 10);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [containerSize]);
+
+  // Measure actual SVG element bounds and plot area
+  useEffect(() => {
+    const measureSvg = () => {
+      if (!chartRef.current) return;
+      
+      // Find the SVG element inside the container
+      const svg = chartRef.current.querySelector('svg');
+      if (svg) {
+        const containerRect = chartRef.current.getBoundingClientRect();
+        
+        // Find the actual plot area - look for the clipPath or the main chart group
+        // Recharts uses a clipPath to define the plot area
+        const clipPath = svg.querySelector('defs clipPath');
+        let plotArea = svg.querySelector('g[clip-path]');
+        
+        // If no clip-path group, try to find the cartesian grid or the area path parent
+        if (!plotArea) {
+          plotArea = svg.querySelector('g.recharts-cartesian-grid') || 
+                     svg.querySelector('g.recharts-layer') ||
+                     svg.querySelector('g');
+        }
+        
+        let plotRect = svg.getBoundingClientRect();
+        
+        if (plotArea) {
+          plotRect = plotArea.getBoundingClientRect();
+        }
+        
+        // Calculate position relative to container
+        setSvgBounds({
+          left: plotRect.left - containerRect.left,
+          top: plotRect.top - containerRect.top,
+          width: plotRect.width,
+          height: plotRect.height,
+        });
+      }
     };
-  };
+    
+    // Measure after a short delay to ensure SVG is rendered
+    const timeoutId = setTimeout(measureSvg, 100);
+    const intervalId = setInterval(measureSvg, 500); // Re-measure periodically
+    
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+    };
+  }, [data, isContainerReady]);
 
   // Use native event listeners to allow preventDefault
   useEffect(() => {
@@ -134,17 +219,8 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
       const firstTime = data[0].time;
       const lastTime = data[data.length - 1].time;
       
-      const bounds = getChartBounds();
-      let xPercent: number;
-      
-      if (bounds) {
-        // Calculate X position relative to chart plot area
-        const plotX = clampedX - bounds.left;
-        xPercent = Math.max(0, Math.min(1, plotX / bounds.width));
-      } else {
-        // Fallback to simple calculation
-        xPercent = clampedX / rect.width;
-      }
+      // Calculate X position as percentage of container width
+      const xPercent = Math.max(0, Math.min(1, clampedX / rect.width));
       
       const targetTime = firstTime + (lastTime - firstTime) * xPercent;
       
@@ -161,17 +237,10 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
       
       const point = data[closestIndex];
       if (point) {
-        // Calculate actual X position based on the point's time, accounting for chart margins
-        if (bounds) {
-          const pointXPercent = (point.time - firstTime) / (lastTime - firstTime);
-          const pointX = bounds.left + (pointXPercent * bounds.width);
-          setCrosshairX(pointX);
-        } else {
-          // Fallback to simple calculation
-          const pointXPercent = (point.time - firstTime) / (lastTime - firstTime);
-          const pointX = pointXPercent * rect.width;
-          setCrosshairX(pointX);
-        }
+        // Calculate actual X position based on the point's time
+        const pointXPercent = (point.time - firstTime) / (lastTime - firstTime);
+        const pointX = pointXPercent * rect.width;
+        setCrosshairX(pointX);
         onHover(point.value, point.time);
       }
     };
@@ -259,27 +328,8 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
         const rect = chartRef.current?.getBoundingClientRect();
         if (!rect) return null;
         
-        const bounds = getChartBounds();
-        if (!bounds) {
-          // Fallback to simple calculation
-          const xPercent = crosshairX / rect.width;
-          const targetTime = firstTime + (lastTime - firstTime) * xPercent;
-          
-          let closestIndex = 0;
-          let minDiff = Math.abs(data[0].time - targetTime);
-          for (let i = 1; i < data.length; i++) {
-            const diff = Math.abs(data[i].time - targetTime);
-            if (diff < minDiff) {
-              minDiff = diff;
-              closestIndex = i;
-            }
-          }
-          return data[closestIndex];
-        }
-        
-        // Calculate X position relative to chart plot area
-        const plotX = crosshairX - bounds.left;
-        const xPercent = plotX / bounds.width;
+        // Calculate X position as percentage of container width
+        const xPercent = crosshairX / rect.width;
         const targetTime = firstTime + (lastTime - firstTime) * xPercent;
         
         // Find closest point by time
@@ -312,46 +362,63 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
       }}
     >
       {data.length > 0 && (
-        containerSize && containerSize.width > 0 && containerSize.height > 0 ? (
-          <div style={{ width: containerSize.width, height: containerSize.height, minWidth: 0, overflow: 'visible' }}>
-            <ResponsiveContainer width={containerSize.width} height={containerSize.height}>
-              <AreaChart
-                data={data}
-                margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
+        containerSize && containerSize.width > 0 ? (
+          <div 
+            ref={wrapperRef}
+            style={{ 
+              width: containerSize.width, 
+              height: '180px', 
+              minWidth: 0, 
+              minHeight: '180px',
+              maxHeight: '180px',
+              overflow: 'visible',
+              position: 'relative',
+              display: 'block'
+            }}
+          >
+            {isContainerReady && (
+              <ResponsiveContainer 
+                width={containerSize.width} 
+                height={180}
               >
-                <defs>
-                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="rgba(34, 197, 94, 0.3)" stopOpacity={1} />
-                    <stop offset="100%" stopColor="rgba(34, 197, 94, 0.01)" stopOpacity={1} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="date"
-                  type="number"
-                  scale="time"
-                  domain={['dataMin', 'dataMax']}
-                  tick={false}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={false}
-                  axisLine={false}
-                  tickLine={false}
-                  domain={['auto', 'auto']}
-                  width={0}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#22c55e"
-                  strokeWidth={2}
-                  fill="url(#colorValue)"
-                  dot={false}
-                  activeDot={false}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+                <AreaChart
+                  data={data}
+                  margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="rgba(34, 197, 94, 0.3)" stopOpacity={1} />
+                      <stop offset="100%" stopColor="rgba(34, 197, 94, 0.01)" stopOpacity={1} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="date"
+                    type="number"
+                    scale="time"
+                    domain={['dataMin', 'dataMax']}
+                    tick={false}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={false}
+                    axisLine={false}
+                    tickLine={false}
+                    domain={['auto', 'auto']}
+                    width={0}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#22c55e"
+                    strokeWidth={2}
+                    fill="url(#colorValue)"
+                    dot={false}
+                    activeDot={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={180}>
@@ -397,49 +464,58 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
       )}
       {crosshairX !== null && crosshairPoint && (
         <>
-          {/* Vertical crosshair line */}
+          {/* Vertical crosshair line - match SVG height */}
           <div
             style={{
               position: 'absolute',
               left: `${crosshairX}px`,
-              top: 0,
-              bottom: 0,
-              width: '1px',
-              backgroundColor: 'rgba(34, 197, 94, 0.5)',
+              top: svgBounds ? `${svgBounds.top - 10}px` : '-10px',
+              height: svgBounds ? `${svgBounds.height + 20}px` : '158px',
+              width: '2px',
+              backgroundColor: 'rgba(34, 197, 94, 0.7)',
               pointerEvents: 'none',
               zIndex: 10,
             }}
           />
-          {/* Crosshair dot */}
-          <div
-            style={{
-              position: 'absolute',
-              left: `${crosshairX}px`,
-              top: `${(() => {
-                const bounds = getChartBounds();
-                if (!bounds) return '50%';
-                
-                const minValue = Math.min(...data.map(d => d.value));
-                const maxValue = Math.max(...data.map(d => d.value));
-                const valueRange = maxValue - minValue;
-                const valuePercent = valueRange > 0 
-                  ? (crosshairPoint.value - minValue) / valueRange 
-                  : 0.5;
-                
-                // Calculate Y position accounting for margins
-                const y = bounds.top + (bounds.height - (valuePercent * bounds.height));
-                return `${y}px`;
-              })()}`,
-              width: '12px',
-              height: '12px',
-              borderRadius: '50%',
-              backgroundColor: '#22c55e',
-              border: '2px solid #22c55e',
-              transform: 'translate(-50%, -50%)',
-              pointerEvents: 'none',
-              zIndex: 11,
-            }}
-          />
+          {/* Crosshair dot - hidden on mobile for now */}
+          {false && (
+            <div
+              style={{
+                position: 'absolute',
+                left: `${crosshairX}px`,
+                top: `${(() => {
+                  if (!svgBounds || !crosshairPoint) return '50%';
+                  
+                  const minValue = Math.min(...data.map(d => d.value));
+                  const maxValue = Math.max(...data.map(d => d.value));
+                  const valueRange = maxValue - minValue;
+                  
+                  if (valueRange === 0) return `${svgBounds.top + svgBounds.height / 2}px`;
+                  
+                  // Calculate value position: 0 = bottom, 1 = top
+                  // Recharts plots from bottom to top, so higher values are at the top
+                  const valuePercent = (crosshairPoint.value - minValue) / valueRange;
+                  
+                  // Account for AreaChart margin: { top: 5, right: 0, left: 0, bottom: 0 }
+                  const marginTop = 5;
+                  const plotHeight = svgBounds.height - marginTop;
+                  
+                  // Calculate Y position: top of plot area + margin + (inverted percent * plot height)
+                  // Invert because CSS top=0 is at top, but we want min value at bottom
+                  const y = svgBounds.top + marginTop + ((1 - valuePercent) * plotHeight);
+                  return `${y}px`;
+                })()}`,
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                backgroundColor: '#22c55e',
+                border: '2px solid #22c55e',
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'none',
+                zIndex: 11,
+              }}
+            />
+          )}
         </>
       )}
     </div>
@@ -1372,7 +1448,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         </div>
 
         {/* Chart - no padding, full width */}
-        <div className="pb-4 w-full">
+        <div className="b-4 w-full">
           {isMobile ? (
             // Recharts for mobile - full width
             <div 

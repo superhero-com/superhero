@@ -226,7 +226,7 @@ export function TokenListCards({
                     Price
                   </div>
                   <div className="text-sm text-white font-semibold">
-                  <PriceDataFormatter priceData={token.price} bignumber />
+                  <PriceDataFormatter priceData={token.price} />
                   </div>
                 </div>
 

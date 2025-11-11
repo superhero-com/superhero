@@ -362,6 +362,8 @@ export default function FeedList({
       // Clear cached pages to avoid showing stale lists during rapid tab switches
       queryClient.removeQueries({ queryKey: ["posts"], exact: false });
       queryClient.removeQueries({ queryKey: ["home-activities"], exact: false });
+      queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
+      queryClient.removeQueries({ queryKey: ["latest-after-popular"], exact: false });
       if (newSortBy === 'hot') {
         navigate(`/?sortBy=hot&window=${popularWindow}`);
       } else {
@@ -376,7 +378,8 @@ export default function FeedList({
     if (sortBy === 'hot') {
       navigate(`/?sortBy=hot&window=${w}`);
       // Reset pages for new window
-      queryClient.removeQueries({ queryKey: ["posts"], exact: false });
+      queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
+      queryClient.removeQueries({ queryKey: ["latest-after-popular"], exact: false });
     }
   }, [navigate, sortBy, queryClient]);
 

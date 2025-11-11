@@ -744,11 +744,20 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       }
     }
     
+    // Calculate portfolio value percentage change
+    const startPortfolioValue = firstSnapshot.total_value_ae;
+    const endPortfolioValue = lastSnapshot.total_value_ae;
+    let portfolioValuePercentageChange = 0;
+    if (startPortfolioValue > 0.000001) {
+      portfolioValuePercentageChange = ((endPortfolioValue - startPortfolioValue) / startPortfolioValue) * 100;
+    }
+    
     return {
       gain: periodGain,
       invested: purchasesDuringPeriod,
       current_value: portfolioValueChange,
       percentage: periodPercentage,
+      portfolio_value_percentage_change: portfolioValuePercentageChange,
     };
   }, [portfolioData]);
 
@@ -1541,34 +1550,72 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             </button>
           </div>
           <div className="mb-2 min-h-[3.5rem]">
-            <span className={`text-3xl md:text-4xl font-extrabold ${hoveredPrice ? 'text-green-400' : 'text-white'} block min-h-[2.5rem] leading-tight`}>
-              {displayValue !== null ? (
-                convertTo === 'ae' 
-                  ? (() => {
-                      try {
-                        return `${Decimal.from(displayValue).prettify()} AE`;
-                      } catch {
-                        return `${Number(displayValue).toFixed(4)} AE`;
-                      }
-                    })()
-                  : (() => {
-                      try {
-                        const fiatValue = typeof displayValue === 'number' ? displayValue : Number(displayValue);
-                      const currencyCode = currentCurrencyInfo.code.toUpperCase();
-                      return fiatValue.toLocaleString('en-US', {
-                        style: 'currency',
-                        currency: currencyCode,
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      });
-                      } catch {
-                        return `$${Number(displayValue).toFixed(2)}`;
-                      }
-                    })()
-              ) : (
-                <span className="opacity-0">0.00 AE</span>
-              )}
-            </span>
+            <div className="flex items-baseline gap-3">
+              <span className={`text-3xl md:text-4xl font-extrabold ${hoveredPrice ? 'text-green-400' : 'text-white'} min-h-[2.5rem] leading-tight`}>
+                {displayValue !== null ? (
+                  convertTo === 'ae' 
+                    ? (() => {
+                        try {
+                          return `${Decimal.from(displayValue).prettify()} AE`;
+                        } catch {
+                          return `${Number(displayValue).toFixed(4)} AE`;
+                        }
+                      })()
+                    : (() => {
+                        try {
+                          const fiatValue = typeof displayValue === 'number' ? displayValue : Number(displayValue);
+                        const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                        return fiatValue.toLocaleString('en-US', {
+                          style: 'currency',
+                          currency: currencyCode,
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        });
+                        } catch {
+                          return `$${Number(displayValue).toFixed(2)}`;
+                        }
+                      })()
+                ) : (
+                  <span className="opacity-0">0.00 AE</span>
+                )}
+              </span>
+              {/* Portfolio value percentage change - show for period PNL or when hovering */}
+              {(() => {
+                let portfolioPercentageChange: number | undefined;
+                
+                if (hoveredPrice && portfolioData && portfolioData.length > 0) {
+                  // Calculate percentage change from start of period to hovered point
+                  const firstSnapshot = portfolioData[0];
+                  const hoveredTimestamp = hoveredPrice.time;
+                  const closestSnapshot = portfolioData.reduce((closest, snapshot) => {
+                    const snapshotTime = moment(snapshot.timestamp).unix();
+                    const closestTime = closest ? moment(closest.timestamp).unix() : Infinity;
+                    return Math.abs(snapshotTime - hoveredTimestamp) < Math.abs(closestTime - hoveredTimestamp)
+                      ? snapshot
+                      : closest;
+                  });
+                  
+                  const startPortfolioValue = firstSnapshot.total_value_ae;
+                  const hoveredPortfolioValue = closestSnapshot.total_value_ae;
+                  
+                  if (startPortfolioValue > 0.000001) {
+                    portfolioPercentageChange = ((hoveredPortfolioValue - startPortfolioValue) / startPortfolioValue) * 100;
+                  }
+                } else if (periodPnl && periodPnl.portfolio_value_percentage_change !== undefined) {
+                  portfolioPercentageChange = periodPnl.portfolio_value_percentage_change;
+                }
+                
+                if (portfolioPercentageChange !== undefined && Math.abs(portfolioPercentageChange) > 0.0001) {
+                  return (
+                    <span className={`text-lg font-semibold ${portfolioPercentageChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {portfolioPercentageChange >= 0 ? '+' : ''}
+                      {portfolioPercentageChange.toFixed(2)}%
+                    </span>
+                  );
+                }
+                return null;
+              })()}
+            </div>
             <div className="text-sm text-white/60 mt-1 h-5">
               {hoveredPrice ? (
                 <span>{moment.unix(hoveredPrice.time).format('MMM D, YYYY HH:mm')}</span>
@@ -1608,6 +1655,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                     },
                     gain: periodPnl.gain,
                   };
+                  
+                  // Add portfolio value percentage change for period PNL
+                  (pnlData as any).portfolio_value_percentage_change = periodPnl.portfolio_value_percentage_change;
                 }
                 
                 if (!pnlData) return null;

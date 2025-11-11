@@ -246,6 +246,14 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
     };
 
     const handleTouchStart = (e: TouchEvent) => {
+      // Prevent focus outline
+      if (e.target instanceof HTMLElement) {
+        e.target.blur();
+      }
+      if (container instanceof HTMLElement) {
+        container.blur();
+      }
+      
       const touch = e.touches[0];
       const rect = container.getBoundingClientRect();
       dragStartRef.current = {
@@ -348,23 +356,51 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
     : null;
 
   return (
-    <div
-      ref={chartRef}
-      className="w-full h-[180px] relative"
-      style={{ 
-        touchAction: 'pan-y', 
-        width: '100%', 
-        height: '180px', 
-        minWidth: 0, 
-        position: 'relative', 
-        display: 'block',
-        boxSizing: 'border-box'
-      }}
-    >
+    <>
+      <style>{`
+        .mobile-chart-container *,
+        .mobile-chart-container svg,
+        .mobile-chart-container svg * {
+          outline: none !important;
+          -webkit-tap-highlight-color: transparent !important;
+        }
+      `}</style>
+      <div
+        ref={chartRef}
+        className="w-full h-[180px] relative mobile-chart-container"
+        tabIndex={-1}
+        style={{ 
+          touchAction: 'pan-y', 
+          width: '100%', 
+          height: '180px', 
+          minWidth: 0, 
+          position: 'relative', 
+          display: 'block',
+          boxSizing: 'border-box',
+          outline: 'none',
+          WebkitTapHighlightColor: 'transparent',
+        }}
+        onTouchStart={(e) => {
+          // Prevent focus on touch
+          e.currentTarget.blur();
+          if (e.target instanceof HTMLElement) {
+            e.target.blur();
+          }
+          // Also blur any parent elements that might be focusable
+          let parent = e.currentTarget.parentElement;
+          while (parent) {
+            if (parent instanceof HTMLElement) {
+              parent.blur();
+            }
+            parent = parent.parentElement;
+          }
+        }}
+      >
       {data.length > 0 && (
         containerSize && containerSize.width > 0 ? (
           <div 
             ref={wrapperRef}
+            tabIndex={-1}
             style={{ 
               width: containerSize.width, 
               height: '180px', 
@@ -373,7 +409,9 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
               maxHeight: '180px',
               overflow: 'visible',
               position: 'relative',
-              display: 'block'
+              display: 'block',
+              outline: 'none',
+              WebkitTapHighlightColor: 'transparent',
             }}
           >
             {isContainerReady && (
@@ -519,6 +557,7 @@ const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
         </>
       )}
     </div>
+    </>
   );
 };
 
@@ -1448,15 +1487,25 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         </div>
 
         {/* Chart - no padding, full width */}
-        <div className="b-4 w-full">
+        <div className="p-4 w-full">
           {isMobile ? (
             // Recharts for mobile - full width
             <div 
               className="h-[180px] relative w-full" 
+              tabIndex={-1}
               style={{ 
                 width: '100%',
                 minWidth: 0,
-                maxWidth: '100%'
+                maxWidth: '100%',
+                outline: 'none',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+              onTouchStart={(e) => {
+                // Prevent focus on touch
+                e.currentTarget.blur();
+                if (e.target instanceof HTMLElement) {
+                  e.target.blur();
+                }
               }}
             >
               {isLoading ? (

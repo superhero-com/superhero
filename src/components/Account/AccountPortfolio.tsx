@@ -699,6 +699,56 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     refetchOnReconnect: true,
   });
 
+  // Calculate period PNL (change over the selected timeframe)
+  const periodPnl = useMemo(() => {
+    if (!portfolioData || portfolioData.length < 2) return null;
+    
+    const firstSnapshot = portfolioData[0];
+    const lastSnapshot = portfolioData[portfolioData.length - 1];
+    
+    if (!firstSnapshot.total_pnl || !lastSnapshot.total_pnl) return null;
+    
+    // For period PNL, calculate the actual change in portfolio value
+    // Period gain = (end portfolio value - start portfolio value) - purchases made during period
+    // This shows the profit/loss from price movements, excluding new capital invested
+    
+    const purchasesDuringPeriod = {
+      ae: lastSnapshot.total_pnl.invested.ae - firstSnapshot.total_pnl.invested.ae,
+      usd: lastSnapshot.total_pnl.invested.usd - firstSnapshot.total_pnl.invested.usd,
+    };
+    
+    // Use the actual portfolio value change (what the chart shows)
+    const portfolioValueChange = {
+      ae: lastSnapshot.total_value_ae - firstSnapshot.total_value_ae,
+      usd: (lastSnapshot.total_value_usd || 0) - (firstSnapshot.total_value_usd || 0),
+    };
+    
+    // Period gain = portfolio value change - purchases
+    // If you bought tokens during the period, that increases portfolio value but isn't a gain
+    const periodGain = {
+      ae: portfolioValueChange.ae - purchasesDuringPeriod.ae,
+      usd: portfolioValueChange.usd - purchasesDuringPeriod.usd,
+    };
+    
+    // Calculate percentage based on starting portfolio value
+    const startPortfolioValue = firstSnapshot.total_value_ae;
+    let periodPercentage = 0;
+    if (startPortfolioValue > 0.000001) {
+      // ROI = gain / starting portfolio value
+      periodPercentage = (periodGain.ae / startPortfolioValue) * 100;
+    } else if (Math.abs(purchasesDuringPeriod.ae) > 0.000001) {
+      // If no starting portfolio but purchases were made, calculate ROI on those purchases
+      periodPercentage = (periodGain.ae / Math.abs(purchasesDuringPeriod.ae)) * 100;
+    }
+    
+    return {
+      gain: periodGain,
+      invested: purchasesDuringPeriod,
+      current_value: portfolioValueChange,
+      percentage: periodPercentage,
+    };
+  }, [portfolioData]);
+
   // Keep portfolioData ref up to date for initialization effect
   useEffect(() => {
     portfolioDataRef.current = portfolioData;
@@ -1526,10 +1576,10 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           </div>
           
           {/* Profit/Loss Information */}
-          {(currentPnlData?.total_pnl || (hoveredPrice && portfolioData)) && (
+          {(periodPnl || (hoveredPrice && portfolioData)) && (
             <div className="mb-4 pt-3 border-t border-white/10">
               {(() => {
-                // Use hovered snapshot PNL if available, otherwise use current PNL
+                // Use hovered snapshot PNL if available, otherwise use period PNL
                 let pnlData: TotalPnl | undefined;
                 if (hoveredPrice && portfolioData) {
                   // Find the snapshot closest to the hovered time
@@ -1542,8 +1592,14 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                       : closest;
                   });
                   pnlData = closestSnapshot?.total_pnl;
-                } else {
-                  pnlData = currentPnlData?.total_pnl;
+                } else if (periodPnl) {
+                  // Use period PNL (convert to TotalPnl format)
+                  pnlData = {
+                    percentage: periodPnl.percentage,
+                    invested: periodPnl.invested,
+                    current_value: periodPnl.current_value,
+                    gain: periodPnl.gain,
+                  };
                 }
                 
                 if (!pnlData) return null;

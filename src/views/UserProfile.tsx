@@ -6,7 +6,7 @@ import AeButton from "../components/AeButton";
 import RightRail from "../components/layout/RightRail";
 import Shell from "../components/layout/Shell";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PostsService } from "../api/generated";
 import { AccountsService } from "../api/generated/services/AccountsService";
 import { AccountTokensService } from "../api/generated/services/AccountTokensService";
@@ -48,6 +48,7 @@ export default function UserProfile({
   const { chainName } = useChainName(effectiveAddress);
   const { getProfile, canEdit } = useProfile(effectiveAddress);
   const { openModal } = useModal();
+  const queryClient = useQueryClient();
 
   const { data, refetch: refetchPosts } = useQuery({
     queryKey: ["PostsService.listAll", address],
@@ -76,6 +77,10 @@ export default function UserProfile({
 
   const [profile, setProfile] = useState<any>(null);
   const [editOpen, setEditOpen] = useState(false);
+  // Optimistic bio state - updated immediately when bio is posted
+  const [optimisticBio, setOptimisticBio] = useState<string | null>(null);
+  // Loading indicator state for bio updates
+  const [isBioLoading, setIsBioLoading] = useState(false);
   
   // Get tab from URL search params, default to "feed"
   const tabFromUrl = searchParams.get("tab") as TabType;
@@ -170,49 +175,107 @@ export default function UserProfile({
     return undefined;
   }, [posts]);
   const bioText =
-    (accountInfo?.bio || "").trim() ||
+    (optimisticBio || accountInfo?.bio || "").trim() ||
     latestBioPost?.content?.trim() ||
     profile?.biography;
 
   useEffect(() => {
     if (!effectiveAddress) return;
+    // Clear optimistic bio and loading state when address changes
+    setOptimisticBio(null);
+    setIsBioLoading(false);
     // Scroll to top whenever navigating to a user profile
     window.scrollTo(0, 0);
-    loadAccountData();
+    // Note: loadAccountData() is automatically called by useAccountBalances hook
+    // when effectiveAddress changes, so no manual call is needed here
     (async () => {
       const p = await getProfile();
       setProfile(p);
     })();
   }, [effectiveAddress]);
 
-  // Listen for bio post submissions to show a spinner and refetch until updated
+  // Listen for bio post submissions to optimistically update and then poll until backend confirms
   useEffect(() => {
     function handleBioPosted(e: Event) {
       try {
-        const detail = (e as CustomEvent).detail as { address?: string };
-        if (!detail?.address || detail.address !== effectiveAddress) return;
-        const el = document.getElementById("bio-loading-indicator");
-        if (el) el.classList.remove("hidden");
-        // Poll account endpoint briefly to pick up new bio
+        const detail = (e as CustomEvent).detail as { address?: string; bio?: string; txHash?: string };
+        if (!detail?.address) {
+          console.warn("[UserProfile] Bio post event missing address");
+          return;
+        }
+        // Normalize addresses for comparison (trim and lowercase)
+        const eventAddress = (detail.address || "").trim().toLowerCase();
+        const currentAddress = (effectiveAddress || "").trim().toLowerCase();
+        if (eventAddress !== currentAddress) {
+          console.log("[UserProfile] Bio post event for different address:", eventAddress, "current:", currentAddress);
+          return;
+        }
+        const submittedBio = (detail.bio || "").trim();
+        if (!submittedBio) {
+          console.warn("[UserProfile] Bio post event missing bio text");
+          return;
+        }
+        
+        console.log("[UserProfile] Received bio post event, updating optimistically:", submittedBio);
+        
+        // Update optimistic bio state immediately - this will make bio appear right away
+        setOptimisticBio(submittedBio);
+        setIsBioLoading(true);
+        
+        // Optimistically update the React Query cache immediately so bio appears right after wallet confirmation
+        const queryKey = ["AccountsService.getAccount", effectiveAddress];
+        queryClient.setQueryData(queryKey, (oldData: any) => {
+          if (oldData) {
+            return {
+              ...oldData,
+              bio: submittedBio,
+            };
+          }
+          // If no account info exists yet, create a minimal entry
+          return {
+            address: effectiveAddress,
+            bio: submittedBio,
+          };
+        });
+        
+        // Also update the profile state if it exists
+        if (profile) {
+          setProfile({ ...profile, biography: submittedBio });
+        }
+        
+        // Refetch posts to ensure the new bio post appears in the feed
+        refetchPosts();
+        
+        // Poll account endpoint to ensure backend has processed the transaction
         const start = Date.now();
         const interval = window.setInterval(async () => {
           await refetchAccount();
-          const latestBio = (accountInfo?.bio || "").trim();
-          if (latestBio) {
-            if (el) el.classList.add("hidden");
+          // Get fresh account info from React Query cache after refetch
+          const freshAccountInfo = queryClient.getQueryData<any>(queryKey);
+          const latestBio = (freshAccountInfo?.bio || "").trim();
+          // Check if bio matches what was submitted (for updates) or if bio exists (for new bios)
+          if (latestBio && (submittedBio ? latestBio === submittedBio : true)) {
+            // Clear optimistic bio once backend confirms - backend data will take over
+            setOptimisticBio(null);
+            setIsBioLoading(false);
             window.clearInterval(interval);
           }
           if (Date.now() - start > 15_000) {
-            // timeout after 15s
-            if (el) el.classList.add("hidden");
+            // timeout after 15s - keep optimistic bio but stop loading indicator
+            setIsBioLoading(false);
             window.clearInterval(interval);
           }
         }, 1500);
-      } catch { }
+      } catch (error) {
+        console.error("[UserProfile] Error handling bio post:", error);
+        // Clear optimistic bio and loading state on error
+        setOptimisticBio(null);
+        setIsBioLoading(false);
+      }
     }
     window.addEventListener("profile-bio-posted", handleBioPosted as any);
     return () => window.removeEventListener("profile-bio-posted", handleBioPosted as any);
-  }, [effectiveAddress, accountInfo?.bio]);
+  }, [effectiveAddress, refetchAccount, refetchPosts, queryClient, profile]);
 
   const content = (
     <div className="w-full">
@@ -272,7 +335,9 @@ export default function UserProfile({
               {bioText && (
                 <div className="mt-2 text-sm text-white/80 leading-relaxed line-clamp-2">
                   <span>{bioText}</span>
-                  <span id="bio-loading-indicator" className="hidden ml-2 w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  {isBioLoading && (
+                    <span className="ml-2 w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+                  )}
                 </div>
               )}
             </div>
@@ -423,6 +488,7 @@ export default function UserProfile({
         onClose={() => {
           setEditOpen(false);
           refetchPosts();
+          refetchAccount(); // Refetch account info to get updated bio
           (async () => {
             const p = await getProfile();
             setProfile(p);
@@ -440,6 +506,7 @@ export default function UserProfile({
         onClose={() => {
           setEditOpen(false);
           refetchPosts();
+          refetchAccount(); // Refetch account info to get updated bio
           (async () => {
             const p = await getProfile();
             setProfile(p);

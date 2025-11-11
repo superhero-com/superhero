@@ -18,10 +18,12 @@ export const useAeSdk = () => {
             return context.aeSdk;
         }
         return context.staticAeSdk;
-    }, [walletInfo, activeAccount]);
+    }, [walletInfo, activeAccount, context.aeSdk, context.staticAeSdk]);
 
     return {
         ...context,
         sdk,
+        // Override activeAccount from context with the atom value to ensure reactivity
+        activeAccount,
     };
 };

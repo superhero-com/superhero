@@ -92,9 +92,10 @@ export const routes: RouteObject[] = [
     element: <SocialLayout />,
     children: [
       { index: true, element: <FeedList standalone={false} /> },
-      { path: "post/:postId", element: <PostDetail standalone={false} /> },
+      // Post routes - slug-based (also handles IDs, which will redirect in PostDetail)
+      { path: "post/:slug", element: <PostDetail standalone={false} /> },
       {
-        path: "post/:postId/comment/:id",
+        path: "post/:slug/comment/:id",
         element: <PostDetail standalone={false} />,
       },
       { path: "users/:address", element: <UserProfile standalone={false} /> },
@@ -131,8 +132,6 @@ export const routes: RouteObject[] = [
     path: "/user/:address",
     element: <NavigateUserProfile />,
   },
-  // Kept for backward compatibility; redirecting into SocialLayout version
-  { path: "/users/:address", element: <UserProfile /> },
   { path: "/landing", element: <Landing /> },
   { path: "/meet/:room?", element: <Conference /> },
   { path: "/voting", element: <Governance /> },

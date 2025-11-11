@@ -56,9 +56,7 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
-    optimizeDeps: {
-      include: ['bctsl-sdk'],
-    },
+    optimizeDeps: {},
 
     // Ensure env is loaded from the app directory
     // Vite will automatically expose VITE_* vars to import.meta.env
@@ -75,8 +73,6 @@ export default defineConfig(({ mode }) => {
           main: resolve(__dirname, 'index.html'),
         },
       },
-      // Ensure JSON files are included in the build
-      assetsInclude: ['**/*.json'],
     },
     css: {
       preprocessorOptions: {

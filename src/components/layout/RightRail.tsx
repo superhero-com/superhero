@@ -146,11 +146,8 @@ export default function RightRail({
     }
   }, [decimalBalance]);
 
-  useEffect(() => {
-    if (accountId) {
-      loadAccountData();
-    }
-  }, [accountId]);
+  // Note: loadAccountData() is automatically called by useAccountBalances hook
+  // when accountId changes, so no manual call is needed here
 
   const formatPrice = (price: number, currency: string) => {
     const formatter = new Intl.NumberFormat("en-US", {
@@ -694,7 +691,7 @@ export default function RightRail({
       {/* Network & Wallet Overview - Hidden on own profile */}
       {!isOwnProfile && (
         <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] px-5 py-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-[var(--border-gradient)] before:opacity-0 before:transition-opacity before:duration-300">
-          <WalletOverviewCard selectedCurrency={selectedCurrency} prices={prices} />
+          <WalletOverviewCard key={activeAccount} selectedCurrency={selectedCurrency} prices={prices} />
         </div>
       )}
 

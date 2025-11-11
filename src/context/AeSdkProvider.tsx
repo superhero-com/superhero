@@ -3,6 +3,7 @@ import { useAtom } from "jotai";
 import { createContext, useEffect, useRef, useState } from "react";
 import { activeAccountAtom } from "../atoms/accountAtoms";
 import { transactionsQueueAtom } from "../atoms/txQueueAtoms";
+import { walletInfoAtom } from "../atoms/walletAtoms";
 import { useModal } from "../hooks/useModal";
 import configs from "../configs";
 import { NETWORK_MAINNET } from "../utils/constants";
@@ -45,16 +46,64 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     const [currentBlockHeight, setCurrentBlockHeight] = useState<number | null>(null);
     const [activeNetwork, setActiveNetwork] = useState<INetwork>(NETWORK_MAINNET);
     const [transactionsQueue, setTransactionsQueue] = useAtom(transactionsQueueAtom);
+    const [walletInfo] = useAtom(walletInfoAtom);
     const transactionsQueueRef = useRef(transactionsQueue);
+    const activeAccountRef = useRef<string | undefined>(activeAccount);
+    const generationPollIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const { openModal } = useModal();
 
-    // Keep the ref in sync with the atom value
+    // Keep the refs in sync with the atom values
     useEffect(() => {
         transactionsQueueRef.current = transactionsQueue;
     }, [transactionsQueue]);
 
+    useEffect(() => {
+        activeAccountRef.current = activeAccount;
+    }, [activeAccount]);
+
+    // Cleanup generation polling interval on unmount
+    useEffect(() => {
+        return () => {
+            if (generationPollIntervalRef.current) {
+                clearInterval(generationPollIntervalRef.current);
+            }
+        };
+    }, []);
+
+    // Poll for account changes when wallet is connected
+    useEffect(() => {
+        if (!sdkInitialized || !walletInfo || !aeSdkRef.current) {
+            return;
+        }
+
+        const checkAccountChange = async () => {
+            try {
+                // Check the SDK's current account state
+                const accountsCurrent = aeSdkRef.current?._accounts?.current || {};
+                const currentAddress = Object.keys(accountsCurrent)[0] as string | undefined;
+                
+                // Update if there's an actual change
+                if (currentAddress && currentAddress !== activeAccountRef.current) {
+                    setActiveAccount(currentAddress);
+                    setAccounts([currentAddress]);
+                }
+            } catch (error) {
+                // Silently handle errors (wallet might be disconnected)
+            }
+        };
+
+        // Check immediately
+        checkAccountChange();
+
+        // Poll every 1 second for faster account change detection
+        const interval = setInterval(checkAccountChange, 1000);
+
+        return () => {
+            clearInterval(interval);
+        };
+    }, [sdkInitialized, walletInfo, setActiveAccount, setAccounts]);
+
     async function initSdk() {
-        console.log("[AeSdkProvider] initSdk activeAccount", activeAccount);
         const _aeSdk = new AeSdkAepp({
             name: "Superhero",
             nodes,
@@ -63,7 +112,12 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             ttl: 10000,
             onCompiler: new CompilerHttp(NETWORK_MAINNET.compilerUrl),
             onAddressChange: (a: any) => {
-                setActiveAccount(Object.keys(a.current || {})[0] as any);
+                const newAddress = Object.keys(a.current || {})[0] as any;
+                
+                if (newAddress && newAddress !== activeAccountRef.current) {
+                    setActiveAccount(newAddress);
+                    setAccounts([newAddress]);
+                }
             },
             onDisconnect: () => {
                 setActiveAccount(undefined);
@@ -83,7 +137,13 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
             addStaticAccount(activeAccount);
         }
 
-        setInterval(async () => {
+        // Clear any existing interval before creating a new one
+        if (generationPollIntervalRef.current) {
+            clearInterval(generationPollIntervalRef.current);
+        }
+
+        // Poll for current generation every 30 seconds
+        generationPollIntervalRef.current = setInterval(async () => {
             getCurrentGeneration(_aeSdk);
         }, 30000);
         getCurrentGeneration(_aeSdk);
@@ -145,19 +205,47 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                         "x-cancel": decodeURI(cancelUrl.href),
                     });
 
-                    setTransactionsQueue({
-                        ...transactionsQueue,
+                    setTransactionsQueue(prev => ({
+                        ...prev,
                         [uniqueId]: {
                             status: "pending",
                             tx,
                             signUrl,
                         }
-                    });
+                    }));
 
                     return new Promise((resolve, reject) => {
                         let newWindow: Window | null = null;
                         const windowFeatures =
                             "name=Superhero Wallet,width=362,height=594,toolbar=false,location=false,menubar=false,popup";
+
+                        let interval: NodeJS.Timeout | null = null;
+                        let timeout: NodeJS.Timeout | null = null;
+                        let isCleanedUp = false;
+                        let unloadHandler: (() => void) | null = null;
+
+                        // Cleanup function to prevent memory leaks
+                        const cleanup = () => {
+                            if (isCleanedUp) return;
+                            isCleanedUp = true;
+                            
+                            if (interval) {
+                                clearInterval(interval);
+                                interval = null;
+                            }
+                            if (timeout) {
+                                clearTimeout(timeout);
+                                timeout = null;
+                            }
+                            if (unloadHandler && typeof window !== 'undefined') {
+                                window.removeEventListener('beforeunload', unloadHandler);
+                                unloadHandler = null;
+                            }
+                            if (newWindow) {
+                                newWindow.close();
+                                newWindow = null;
+                            }
+                        };
 
                         openModal({
                             name: 'transaction-confirm',
@@ -171,35 +259,58 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                                     newWindow = window.open(signUrl, "_blank", windowFeatures);
                                 },
                                 onCancel: () => {
+                                    cleanup();
+                                    // Remove transaction from queue
+                                    const currentQueue = transactionsQueueRef.current;
+                                    if (Object.keys(currentQueue).includes(uniqueId)) {
+                                        const newQueue = { ...currentQueue };
+                                        delete newQueue[uniqueId];
+                                        setTransactionsQueue(newQueue);
+                                    }
                                     reject(new Error("Transaction cancelled"));
                                 }
                             }
                         });
 
-                        const interval = setInterval(() => {
+                        // Set a timeout to prevent infinite polling (5 minutes max)
+                        const MAX_POLL_TIME = 5 * 60 * 1000; // 5 minutes
+                        timeout = setTimeout(() => {
+                            cleanup();
+                            reject(new Error("Transaction polling timeout"));
+                        }, MAX_POLL_TIME);
+
+                        // Handle page unload to cleanup interval
+                        if (typeof window !== 'undefined') {
+                            unloadHandler = () => {
+                                cleanup();
+                            };
+                            window.addEventListener('beforeunload', unloadHandler);
+                        }
+
+                        interval = setInterval(() => {
                             const currentQueue = transactionsQueueRef.current;
                             if (Object.keys(currentQueue).includes(uniqueId)) {
                                 if (currentQueue[uniqueId]?.status === "cancelled") {
-                                    clearInterval(interval);
+                                    cleanup();
                                     reject(new Error("Transaction cancelled"));
-                                    newWindow?.close();
                                     // delete transaction from queue
                                     const newQueue = { ...currentQueue };
                                     delete newQueue[uniqueId];
                                     setTransactionsQueue(newQueue);
+                                    return;
                                 }
 
                                 if (
                                     currentQueue[uniqueId]?.status === "completed" &&
                                     currentQueue[uniqueId]?.transaction
                                 ) {
-                                    clearInterval(interval);
+                                    cleanup();
                                     resolve(currentQueue[uniqueId].transaction);
-                                    newWindow?.close();
                                     // delete transaction from queue
                                     const newQueue = { ...currentQueue };
                                     delete newQueue[uniqueId];
                                     setTransactionsQueue(newQueue);
+                                    return;
                                 }
                             }
                         }, 500);
@@ -211,13 +322,10 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     async function scanForAccounts() {
-        const currentAddress = Object.keys(
-            aeSdkRef.current._accounts?.current || {},
-        )[0] as any;
+        const accountsCurrent = aeSdkRef.current._accounts?.current || {};
+        const currentAddress = Object.keys(accountsCurrent)[0] as any;
 
-        console.log("[AeSdkProvider] scanForAccounts currentAddress", currentAddress);
         setAccounts([currentAddress]);
-
         setActiveAccount(currentAddress);
     }
 

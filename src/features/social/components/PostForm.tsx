@@ -138,6 +138,12 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   const gifBtnRef = useRef<HTMLButtonElement>(null);
   const [overlayComputed, setOverlayComputed] = useState<{ paddingTop: number; paddingRight: number; paddingBottom: number; paddingLeft: number; fontFamily: string; fontSize: string; fontWeight: string; lineHeight: string; letterSpacing: string; } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isDesktopViewport, setIsDesktopViewport] = useState(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return false;
+    }
+    return window.matchMedia('(min-width: 768px)').matches;
+  });
 
   useEffect(() => {
     setPromptIndex(Math.floor(Math.random() * PROMPTS.length));
@@ -199,6 +205,86 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     document.addEventListener("click", onDocClick);
     return () => document.removeEventListener("click", onDocClick);
   }, []);
+
+  // Desktop: single-line height; Mobile: slightly taller for ergonomics
+  // Use useEffect to listen for window resize events instead of calling matchMedia on every render
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    
+    // Set initial value
+    setIsDesktopViewport(mediaQuery.matches);
+
+    // Modern browsers support addEventListener on MediaQueryList
+    if (mediaQuery.addEventListener) {
+      const handleChange = (e: MediaQueryListEvent) => {
+        setIsDesktopViewport(e.matches);
+      };
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    } else {
+      // Fallback for older browsers (MediaQueryList type)
+      const legacyHandler = (mq: MediaQueryList) => {
+        setIsDesktopViewport(mq.matches);
+      };
+      mediaQuery.addListener(legacyHandler);
+      return () => mediaQuery.removeListener(legacyHandler);
+    }
+  }, []);
+
+  const computedMinHeight = isDesktopViewport ? '52px' : '88px';
+
+  const requiredMissing = useMemo(() => {
+    if (!requiredHashtag) return false;
+    const escaped = String(requiredHashtag).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Consider the tag present if it appears as a standalone hashtag token anywhere in the text
+    const pattern = new RegExp(`(^|[^A-Za-z0-9_])${escaped}(?![A-Za-z0-9_])`, 'i');
+    return !pattern.test(text);
+  }, [text, requiredHashtag]);
+
+  // Inline autocomplete: when typing a hashtag token that matches the start of requiredHashtag,
+  // show only the remaining characters (e.g., "#a" -> suggest "ENS").
+  const caretPosition = textareaRef.current?.selectionStart ?? text.length;
+  const textBeforeCaret = text.slice(0, caretPosition);
+  const activeHashtagMatch = textBeforeCaret.match(/(^|\s)#([a-zA-Z0-9_]*)$/);
+  const typedHashtagBody = activeHashtagMatch ? activeHashtagMatch[2] : '';
+  const requiredLower = (requiredHashtag || '').toLowerCase();
+  const typedLowerWithHash = `#${typedHashtagBody}`.toLowerCase();
+  const matchesRequiredPrefix = requiredHashtag
+    ? requiredLower.startsWith(typedLowerWithHash)
+    : false;
+  const remainingSuggestion = matchesRequiredPrefix
+    ? (requiredHashtag || '').toUpperCase().slice(1 + typedHashtagBody.length)
+    : '';
+  const showAutoComplete = Boolean(
+    requiredHashtag &&
+    requiredMissing &&
+    activeHashtagMatch &&
+    matchesRequiredPrefix &&
+    remainingSuggestion.length > 0
+  );
+
+  // Measure the pixel width of the prefix using canvas to fine-tune horizontal placement
+  const measuredLeft = useMemo(() => {
+    if (!overlayComputed) return 0;
+    const el = textareaRef.current;
+    if (!el) return 0;
+    const canvas = canvasRef.current || (canvasRef.current = document.createElement('canvas'));
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return 0;
+    ctx.font = `${overlayComputed.fontWeight} ${overlayComputed.fontSize} ${overlayComputed.fontFamily}`;
+    // Only measure the current token since last space/newline for stability
+    const prefix = textBeforeCaret.slice(textBeforeCaret.lastIndexOf('\n') + 1);
+    const metrics = ctx.measureText(prefix);
+    const base = metrics.width;
+    // Approximate letterSpacing effect
+    const ls = parseFloat(overlayComputed.letterSpacing as any) || 0;
+    const extra = ls * Math.max(prefix.length - 1, 0);
+    return overlayComputed.paddingLeft + base + extra;
+  }, [overlayComputed, textBeforeCaret]);
 
   const insertAtCursor = (value: string) => {
     const el = textareaRef.current;
@@ -344,61 +430,6 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       </div>
     );
   }
-
-  // Desktop: single-line height; Mobile: slightly taller for ergonomics
-  const isDesktopViewport = typeof window !== 'undefined'
-    && typeof window.matchMedia === 'function'
-    && window.matchMedia('(min-width: 768px)').matches;
-  const computedMinHeight = isDesktopViewport ? '52px' : '88px';
-
-  const requiredMissing = useMemo(() => {
-    if (!requiredHashtag) return false;
-    const escaped = String(requiredHashtag).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    // Consider the tag present if it appears as a standalone hashtag token anywhere in the text
-    const pattern = new RegExp(`(^|[^A-Za-z0-9_])${escaped}(?![A-Za-z0-9_])`, 'i');
-    return !pattern.test(text);
-  }, [text, requiredHashtag]);
-
-  // Inline autocomplete: when typing a hashtag token that matches the start of requiredHashtag,
-  // show only the remaining characters (e.g., "#a" -> suggest "ENS").
-  const caretPosition = textareaRef.current?.selectionStart ?? text.length;
-  const textBeforeCaret = text.slice(0, caretPosition);
-  const activeHashtagMatch = textBeforeCaret.match(/(^|\s)#([a-zA-Z0-9_]*)$/);
-  const typedHashtagBody = activeHashtagMatch ? activeHashtagMatch[2] : '';
-  const requiredLower = (requiredHashtag || '').toLowerCase();
-  const typedLowerWithHash = `#${typedHashtagBody}`.toLowerCase();
-  const matchesRequiredPrefix = requiredHashtag
-    ? requiredLower.startsWith(typedLowerWithHash)
-    : false;
-  const remainingSuggestion = matchesRequiredPrefix
-    ? (requiredHashtag || '').toUpperCase().slice(1 + typedHashtagBody.length)
-    : '';
-  const showAutoComplete = Boolean(
-    requiredHashtag &&
-    requiredMissing &&
-    activeHashtagMatch &&
-    matchesRequiredPrefix &&
-    remainingSuggestion.length > 0
-  );
-
-  // Measure the pixel width of the prefix using canvas to fine-tune horizontal placement
-  const measuredLeft = useMemo(() => {
-    if (!overlayComputed) return 0;
-    const el = textareaRef.current;
-    if (!el) return 0;
-    const canvas = canvasRef.current || (canvasRef.current = document.createElement('canvas'));
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return 0;
-    ctx.font = `${overlayComputed.fontWeight} ${overlayComputed.fontSize} ${overlayComputed.fontFamily}`;
-    // Only measure the current token since last space/newline for stability
-    const prefix = textBeforeCaret.slice(textBeforeCaret.lastIndexOf('\n') + 1);
-    const metrics = ctx.measureText(prefix);
-    const base = metrics.width;
-    // Approximate letterSpacing effect
-    const ls = parseFloat(overlayComputed.letterSpacing as any) || 0;
-    const extra = ls * Math.max(prefix.length - 1, 0);
-    return overlayComputed.paddingLeft + base + extra;
-  }, [overlayComputed, textBeforeCaret]);
 
   return (
     <div

@@ -52,6 +52,9 @@ export const AddressAvatarWithChainName = memo(({
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const ref = useRef<HTMLDivElement | null>(null);
     const cardRef = useRef<HTMLDivElement | null>(null);
+    // Use a ref to store the latest loadAccountData to avoid duplicate calls
+    // Note: useAccountBalances already calls loadAccountData when selectedAccount changes
+    const loadAccountDataRef = useRef(loadAccountData);
 
     // Calculate position for hover card
     const updatePosition = () => {
@@ -75,11 +78,16 @@ export const AddressAvatarWithChainName = memo(({
         return () => window.clearTimeout(id);
     }, [hover, isHoverEnabled]);
 
+    // Keep the ref updated with the latest loadAccountData function
+    useEffect(() => {
+        loadAccountDataRef.current = loadAccountData;
+    }, [loadAccountData]);
+
     // Load balances when needed (only when showing balance or when hover card is visible)
     useEffect(() => {
         if (!address) return;
         if (showBalance || visible) {
-            loadAccountData();
+            loadAccountDataRef.current();
         }
     }, [address, showBalance, visible]);
 
@@ -252,10 +260,20 @@ export const AddressAvatarWithChainName = memo(({
     );
 }, (prevProps, nextProps) => {
     // Custom comparison for better performance
-    return prevProps.address === nextProps.address &&
-        prevProps.size === nextProps.size &&
+    // Always return false if address changes to force re-render and reload balance
+    if (prevProps.address !== nextProps.address) {
+        return false;
+    }
+    return prevProps.size === nextProps.size &&
         prevProps.overlaySize === nextProps.overlaySize &&
+        prevProps.showPrimaryOnly === nextProps.showPrimaryOnly &&
+        prevProps.showAddressAndChainName === nextProps.showAddressAndChainName &&
+        prevProps.showBalance === nextProps.showBalance &&
         prevProps.truncateAddress === nextProps.truncateAddress &&
+        prevProps.className === nextProps.className &&
+        prevProps.isHoverEnabled === nextProps.isHoverEnabled &&
+        prevProps.avatarBackground === nextProps.avatarBackground &&
+        prevProps.hideFallbackName === nextProps.hideFallbackName &&
         prevProps.secondary === nextProps.secondary &&
         prevProps.contentClassName === nextProps.contentClassName;
 });

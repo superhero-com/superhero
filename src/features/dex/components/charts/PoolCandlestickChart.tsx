@@ -69,6 +69,7 @@ export function PoolCandlestickChart({
   const volumeSeries = useRef<ISeriesApi<'Histogram'> | null>(null);
   const marketCapSeries = useRef<ISeriesApi<'Histogram'> | null>(null);
   const subscription = useRef<(() => void) | null>(null);
+  const touchHandlersCleanup = useRef<(() => void) | null>(null);
 
   const convertTo = useMemo(() =>
     useCurrentCurrency ? 'usd' : 'ae',
@@ -383,6 +384,82 @@ export function PoolCandlestickChart({
       }
     });
 
+    // Add touch handlers for mobile drag support
+    // Clean up any existing touch handlers first to prevent memory leaks
+    if (touchHandlersCleanup.current) {
+      touchHandlersCleanup.current();
+      touchHandlersCleanup.current = null;
+    }
+
+    const container = chartContainer.current;
+    if (container) {
+      const handleTouchStart = (e: TouchEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!chartInstance || !container) return;
+        
+        const touch = e.touches[0];
+        const rect = container.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        
+        try {
+          const time = chartInstance.timeScale().coordinateToTime(x);
+          if (time !== null) {
+            chartInstance.setCrosshairPosition(x, 0, { time: time as any });
+          }
+        } catch (error) {
+          console.warn('[PoolCandlestickChart] Error setting crosshair on touchstart:', error);
+        }
+      };
+
+      const handleTouchMove = (e: TouchEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!chartInstance || !container) return;
+        
+        const touch = e.touches[0];
+        const rect = container.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        
+        // Clamp x to chart bounds
+        const clampedX = Math.max(0, Math.min(x, rect.width));
+        
+        try {
+          const time = chartInstance.timeScale().coordinateToTime(clampedX);
+          if (time !== null) {
+            chartInstance.setCrosshairPosition(clampedX, 0, { time: time as any });
+          }
+        } catch (error) {
+          console.warn('[PoolCandlestickChart] Error setting crosshair on touchmove:', error);
+        }
+      };
+
+      const handleTouchEnd = (e: TouchEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!chartInstance) return;
+        
+        try {
+          chartInstance.setCrosshairPosition(-1, -1, {});
+        } catch (error) {
+          console.warn('[PoolCandlestickChart] Error clearing crosshair on touchend:', error);
+        }
+      };
+
+      container.addEventListener('touchstart', handleTouchStart, { passive: false });
+      container.addEventListener('touchmove', handleTouchMove, { passive: false });
+      container.addEventListener('touchend', handleTouchEnd, { passive: false });
+      container.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+      // Store cleanup function
+      touchHandlersCleanup.current = () => {
+        container.removeEventListener('touchstart', handleTouchStart);
+        container.removeEventListener('touchmove', handleTouchMove);
+        container.removeEventListener('touchend', handleTouchEnd);
+        container.removeEventListener('touchcancel', handleTouchEnd);
+      };
+    }
+
     candlestickSeries.current = candlestickSeriesInstance;
     volumeSeries.current = volumeSeriesInstance;
     marketCapSeries.current = marketCapSeriesInstance;
@@ -500,6 +577,16 @@ export function PoolCandlestickChart({
       subscription.current?.();
     };
   }, [pairAddress, intervalBy.value, convertTo, fromToken]);
+
+  // Cleanup touch handlers when component unmounts or chart changes
+  useEffect(() => {
+    return () => {
+      if (touchHandlersCleanup.current) {
+        touchHandlersCleanup.current();
+        touchHandlersCleanup.current = null;
+      }
+    };
+  }, [chart]);
 
   if (hasError) {
     return (

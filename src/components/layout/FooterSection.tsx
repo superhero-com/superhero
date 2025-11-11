@@ -1,17 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Backend, TrendminerApi } from '../../api/backend';
-import configs from '../../configs';
-import { useNavigate } from 'react-router-dom';
+import { Backend } from '@/api/backend';
 
 export default function FooterSection({ compact = false }: { compact?: boolean }) {
-  const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [apiStatus, setApiStatus] = useState<{
     backend: 'online' | 'offline' | 'checking';
-    trending: 'online' | 'offline' | 'checking';
-    dex: 'online' | 'offline' | 'checking';
-  }>({ backend: 'checking', trending: 'checking', dex: 'checking' });
+  }>({ backend: 'checking' });
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -20,30 +15,21 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
     window.addEventListener('offline', handleOffline);
 
     const checkApiStatus = async () => {
-      try {
-        await Backend.getTopics();
-        setApiStatus((p) => ({ ...p, backend: 'online' }));
-      } catch {
-        setApiStatus((p) => ({ ...p, backend: 'offline' }));
-      }
-
-      try {
-        await TrendminerApi.listTrendingTags({ limit: 1 });
-        setApiStatus((p) => ({ ...p, trending: 'online' }));
-      } catch {
-        setApiStatus((p) => ({ ...p, trending: 'offline' }));
-      }
-
+      setIsOnline(navigator.onLine);
+      
+      // Check Backend API
       try {
         await Backend.getPrice();
-        setApiStatus((p) => ({ ...p, dex: 'online' }));
-      } catch {
-        setApiStatus((p) => ({ ...p, dex: 'offline' }));
+        setApiStatus((prev) => ({ ...prev, backend: 'online' }));
+      } catch (error) {
+        console.error('[FooterSection] Backend API check failed:', error);
+        setApiStatus((prev) => ({ ...prev, backend: 'offline' }));
       }
     };
 
+    // Check immediately on mount, then set up interval for periodic checks
     checkApiStatus();
-    const interval = setInterval(checkApiStatus, 30000);
+    const interval = setInterval(checkApiStatus, 30000); // Check every 30 seconds
     return () => {
       clearInterval(interval);
       window.removeEventListener('online', handleOnline);
@@ -124,16 +110,6 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
             </span>
             <span style={{ color: statusColor(apiStatus.backend) }}>
               {`${statusEmoji(apiStatus.backend)} Backend`}
-            </span>
-            {
-              configs.features.trending && (
-                <span style={{ color: statusColor(apiStatus.trending) }}>
-                  {`${statusEmoji(apiStatus.trending)} Trendminer`}
-                </span>
-              )
-            }
-            <span style={{ color: statusColor(apiStatus.dex) }}>
-              {`${statusEmoji(apiStatus.dex)} DEX`}
             </span>
           </div>
         </div>

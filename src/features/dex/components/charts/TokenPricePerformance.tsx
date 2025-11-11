@@ -43,6 +43,7 @@ export default function TokenPricePerformance({
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<any> | null>(null);
+  const touchHandlersCleanup = useRef<(() => void) | null>(null);
   
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<TimeFrame>(initialTimeFrame as TimeFrame);
   const [selectedChart, setSelectedChart] = useState<ChartType>(initialChart);
@@ -108,8 +109,82 @@ export default function TokenPricePerformance({
     handleResize(); // Initial resize
     window.addEventListener('resize', handleResize);
 
+    // Add touch handlers for mobile drag support
+    const container = chartContainerRef.current;
+    if (container) {
+      const handleTouchStart = (e: TouchEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!chart || !container) return;
+        
+        const touch = e.touches[0];
+        const rect = container.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        
+        try {
+          const time = chart.timeScale().coordinateToTime(x);
+          if (time !== null) {
+            chart.setCrosshairPosition(x, 0, { time: time as any });
+          }
+        } catch (error) {
+          console.warn('[TokenPricePerformance] Error setting crosshair on touchstart:', error);
+        }
+      };
+
+      const handleTouchMove = (e: TouchEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!chart || !container) return;
+        
+        const touch = e.touches[0];
+        const rect = container.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        
+        // Clamp x to chart bounds
+        const clampedX = Math.max(0, Math.min(x, rect.width));
+        
+        try {
+          const time = chart.timeScale().coordinateToTime(clampedX);
+          if (time !== null) {
+            chart.setCrosshairPosition(clampedX, 0, { time: time as any });
+          }
+        } catch (error) {
+          console.warn('[TokenPricePerformance] Error setting crosshair on touchmove:', error);
+        }
+      };
+
+      const handleTouchEnd = (e: TouchEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!chart) return;
+        
+        try {
+          chart.setCrosshairPosition(-1, -1, {});
+        } catch (error) {
+          console.warn('[TokenPricePerformance] Error clearing crosshair on touchend:', error);
+        }
+      };
+
+      container.addEventListener('touchstart', handleTouchStart, { passive: false });
+      container.addEventListener('touchmove', handleTouchMove, { passive: false });
+      container.addEventListener('touchend', handleTouchEnd, { passive: false });
+      container.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+      // Store cleanup function
+      touchHandlersCleanup.current = () => {
+        container.removeEventListener('touchstart', handleTouchStart);
+        container.removeEventListener('touchmove', handleTouchMove);
+        container.removeEventListener('touchend', handleTouchEnd);
+        container.removeEventListener('touchcancel', handleTouchEnd);
+      };
+    }
+
     return () => {
       window.removeEventListener('resize', handleResize);
+      if (touchHandlersCleanup.current) {
+        touchHandlersCleanup.current();
+        touchHandlersCleanup.current = null;
+      }
       if (seriesRef.current) {
         seriesRef.current = null;
       }

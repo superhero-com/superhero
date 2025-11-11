@@ -65,3 +65,4 @@ try {
   console.error('Error updating bctsl-sdk package.json:', err.message);
   process.exit(1);
 }
+

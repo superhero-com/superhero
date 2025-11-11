@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { createChart, IChartApi, ISeriesApi, LineData, ColorType, AreaSeries, AreaSeriesPartialOptions, CrosshairMode } from 'lightweight-charts';
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import moment from 'moment';
 import { TrendminerApi } from '@/api/backend';
 import { useCurrencies } from '@/hooks/useCurrencies';
 import { usePortfolioValue } from '@/hooks/usePortfolioValue';
 import { Decimal } from '@/libs/decimal';
+import { IS_MOBILE } from '@/utils/constants';
 
 interface AccountPortfolioProps {
   address: string;
@@ -30,6 +32,342 @@ type TimeRange = keyof typeof TIME_RANGES;
 
 const MIN_START_DATE = moment('2025-01-01T00:00:00Z');
 
+interface MobileRechartsChartProps {
+  data: Array<{ time: number; timestamp: number; value: number; date: Date }>;
+  onHover: (price: number, time: number) => void;
+  convertTo: string;
+  currentCurrencyInfo: { code: string };
+}
+
+// Mobile Recharts component with touch support
+const MobileRechartsChart: React.FC<MobileRechartsChartProps> = ({
+  data,
+  onHover,
+  convertTo,
+  currentCurrencyInfo,
+}) => {
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [crosshairX, setCrosshairX] = useState<number | null>(null);
+  const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null);
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const isHorizontalDragRef = useRef<boolean | null>(null);
+  const DRAG_THRESHOLD = 10; // pixels
+
+  // Measure container size for ResponsiveContainer
+  useEffect(() => {
+    const updateSize = () => {
+      if (chartRef.current) {
+        const rect = chartRef.current.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          setContainerSize({ width: rect.width, height: rect.height });
+        }
+      }
+    };
+
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    const resizeObserver = new ResizeObserver(updateSize);
+    if (chartRef.current) {
+      resizeObserver.observe(chartRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateSize);
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  // Get chart plot area bounds accounting for Recharts margins
+  const getChartBounds = (): { left: number; top: number; width: number; height: number } | null => {
+    if (!chartRef.current) return null;
+    
+    // Recharts margin is { top: 5, right: 0, left: 0, bottom: 0 }
+    const margin = { top: 5, right: 0, left: 0, bottom: 0 };
+    const rect = chartRef.current.getBoundingClientRect();
+    
+    return {
+      left: margin.left,
+      top: margin.top,
+      width: rect.width - margin.left - margin.right,
+      height: rect.height - margin.top - margin.bottom,
+    };
+  };
+
+  // Use native event listeners to allow preventDefault
+  useEffect(() => {
+    const container = chartRef.current;
+    if (!container) return;
+
+    const updateCrosshair = (x: number) => {
+      if (!container || data.length === 0) return;
+      
+      const rect = container.getBoundingClientRect();
+      const clampedX = Math.max(0, Math.min(x, rect.width));
+      
+      // Find the closest data point based on time position
+      const firstTime = data[0].time;
+      const lastTime = data[data.length - 1].time;
+      
+      const bounds = getChartBounds();
+      let xPercent: number;
+      
+      if (bounds) {
+        // Calculate X position relative to chart plot area
+        const plotX = clampedX - bounds.left;
+        xPercent = Math.max(0, Math.min(1, plotX / bounds.width));
+      } else {
+        // Fallback to simple calculation
+        xPercent = clampedX / rect.width;
+      }
+      
+      const targetTime = firstTime + (lastTime - firstTime) * xPercent;
+      
+      // Find closest point by time
+      let closestIndex = 0;
+      let minDiff = Math.abs(data[0].time - targetTime);
+      for (let i = 1; i < data.length; i++) {
+        const diff = Math.abs(data[i].time - targetTime);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestIndex = i;
+        }
+      }
+      
+      const point = data[closestIndex];
+      if (point) {
+        // Calculate actual X position based on the point's time, accounting for chart margins
+        if (bounds) {
+          const pointXPercent = (point.time - firstTime) / (lastTime - firstTime);
+          const pointX = bounds.left + (pointXPercent * bounds.width);
+          setCrosshairX(pointX);
+        } else {
+          // Fallback to simple calculation
+          const pointXPercent = (point.time - firstTime) / (lastTime - firstTime);
+          const pointX = pointXPercent * rect.width;
+          setCrosshairX(pointX);
+        }
+        onHover(point.value, point.time);
+      }
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      const rect = container.getBoundingClientRect();
+      dragStartRef.current = {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top,
+      };
+      isDraggingRef.current = true;
+      isHorizontalDragRef.current = null;
+      updateCrosshair(dragStartRef.current.x);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDraggingRef.current || !dragStartRef.current) return;
+      
+      const touch = e.touches[0];
+      const rect = container.getBoundingClientRect();
+      const currentX = touch.clientX - rect.left;
+      const currentY = touch.clientY - rect.top;
+      
+      const deltaX = Math.abs(currentX - dragStartRef.current.x);
+      const deltaY = Math.abs(currentY - dragStartRef.current.y);
+      
+      // Determine drag direction if not yet determined
+      if (isHorizontalDragRef.current === null) {
+        if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
+          isHorizontalDragRef.current = deltaX > deltaY;
+        }
+      }
+      
+      // If horizontal drag, prevent default and update crosshair
+      if (isHorizontalDragRef.current === true) {
+        e.preventDefault();
+        updateCrosshair(currentX);
+      }
+      // If vertical drag, allow default (scrolling)
+    };
+
+    const handleTouchEnd = () => {
+      isDraggingRef.current = false;
+      dragStartRef.current = null;
+      isHorizontalDragRef.current = null;
+      // Keep crosshair visible after drag ends
+    };
+
+    // Use { passive: false } to allow preventDefault
+    container.addEventListener('touchstart', handleTouchStart, { passive: false });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [data, onHover]); // Re-run if data or onHover changes
+
+  // Format X axis labels
+  const formatXAxis = (tickItem: Date) => {
+    return moment(tickItem).format('MMM D');
+  };
+
+  // Format Y axis labels
+  const formatYAxis = (value: number) => {
+    if (convertTo === 'ae') {
+      return `${value.toFixed(2)}`;
+    }
+    return Number(value).toLocaleString('en-US', {
+      style: 'currency',
+      currency: currentCurrencyInfo.code.toUpperCase(),
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+  };
+
+  // Find the closest point to crosshair
+  const crosshairPoint = crosshairX !== null && data.length > 0
+    ? (() => {
+        const firstTime = data[0].time;
+        const lastTime = data[data.length - 1].time;
+        const rect = chartRef.current?.getBoundingClientRect();
+        if (!rect) return null;
+        
+        const bounds = getChartBounds();
+        if (!bounds) {
+          // Fallback to simple calculation
+          const xPercent = crosshairX / rect.width;
+          const targetTime = firstTime + (lastTime - firstTime) * xPercent;
+          
+          let closestIndex = 0;
+          let minDiff = Math.abs(data[0].time - targetTime);
+          for (let i = 1; i < data.length; i++) {
+            const diff = Math.abs(data[i].time - targetTime);
+            if (diff < minDiff) {
+              minDiff = diff;
+              closestIndex = i;
+            }
+          }
+          return data[closestIndex];
+        }
+        
+        // Calculate X position relative to chart plot area
+        const plotX = crosshairX - bounds.left;
+        const xPercent = plotX / bounds.width;
+        const targetTime = firstTime + (lastTime - firstTime) * xPercent;
+        
+        // Find closest point by time
+        let closestIndex = 0;
+        let minDiff = Math.abs(data[0].time - targetTime);
+        for (let i = 1; i < data.length; i++) {
+          const diff = Math.abs(data[i].time - targetTime);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestIndex = i;
+          }
+        }
+        
+        return data[closestIndex];
+      })()
+    : null;
+
+  return (
+    <div
+      ref={chartRef}
+      className="w-full h-[180px] relative"
+      style={{ touchAction: 'pan-y', width: '100%', height: '180px', minWidth: 0, position: 'relative', display: 'block' }}
+    >
+      {data.length > 0 && containerSize && (
+        <ResponsiveContainer width={containerSize.width} height={containerSize.height}>
+          <AreaChart
+            data={data}
+            margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
+          >
+          <defs>
+            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="rgba(34, 197, 94, 0.3)" stopOpacity={1} />
+              <stop offset="100%" stopColor="rgba(34, 197, 94, 0.01)" stopOpacity={1} />
+            </linearGradient>
+          </defs>
+          <XAxis
+            dataKey="date"
+            type="number"
+            scale="time"
+            domain={['dataMin', 'dataMax']}
+            tick={false}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            tick={false}
+            axisLine={false}
+            tickLine={false}
+            domain={['auto', 'auto']}
+          />
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke="#22c55e"
+            strokeWidth={2}
+            fill="url(#colorValue)"
+            dot={false}
+            activeDot={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+      )}
+      {crosshairX !== null && crosshairPoint && (
+        <>
+          {/* Vertical crosshair line */}
+          <div
+            style={{
+              position: 'absolute',
+              left: `${crosshairX}px`,
+              top: 0,
+              bottom: 0,
+              width: '1px',
+              backgroundColor: 'rgba(34, 197, 94, 0.5)',
+              pointerEvents: 'none',
+              zIndex: 10,
+            }}
+          />
+          {/* Crosshair dot */}
+          <div
+            style={{
+              position: 'absolute',
+              left: `${crosshairX}px`,
+              top: `${(() => {
+                const bounds = getChartBounds();
+                if (!bounds) return '50%';
+                
+                const minValue = Math.min(...data.map(d => d.value));
+                const maxValue = Math.max(...data.map(d => d.value));
+                const valueRange = maxValue - minValue;
+                const valuePercent = valueRange > 0 
+                  ? (crosshairPoint.value - minValue) / valueRange 
+                  : 0.5;
+                
+                // Calculate Y position accounting for margins
+                const y = bounds.top + (bounds.height - (valuePercent * bounds.height));
+                return `${y}px`;
+              })()}`,
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              backgroundColor: '#22c55e',
+              border: '2px solid #22c55e',
+              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'none',
+              zIndex: 11,
+            }}
+          />
+        </>
+      )}
+    </div>
+  );
+};
+
 export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -39,6 +377,20 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('1m');
   const [useCurrentCurrency, setUseCurrentCurrency] = useState(false);
   const [hoveredPrice, setHoveredPrice] = useState<{ price: number; time: number } | null>(null);
+  
+  // Responsive mobile detection
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 768 || IS_MOBILE;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768 || IS_MOBILE);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const { currentCurrencyInfo } = useCurrencies();
   const convertTo = useMemo(
@@ -140,8 +492,79 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     return null;
   }, [hoveredPrice, currentPortfolioValue]);
 
-  // Check container readiness and initialize chart
+  // Prepare chart data for Recharts (mobile)
+  const rechartsData = useMemo(() => {
+    if (!portfolioData || portfolioData.length === 0) return [];
+    
+    const data = portfolioData
+      .map((snapshot) => {
+        const timestamp = moment(snapshot.timestamp).unix();
+        let value: number | null = null;
+        
+        if (convertTo === 'ae') {
+          value = snapshot.total_value_ae;
+        } else {
+          if (snapshot.total_value_usd != null) {
+            value = snapshot.total_value_usd;
+          } else {
+            return null;
+          }
+        }
+        
+        return {
+          time: timestamp,
+          timestamp: timestamp,
+          value: value as number,
+          date: moment(snapshot.timestamp).toDate(),
+        };
+      })
+      .filter((item): item is { time: number; timestamp: number; value: number; date: Date } => item !== null);
+
+    // Add current portfolio value
+    if (currentPortfolioValue !== null && currentPortfolioValue !== undefined) {
+      try {
+        const currentValue = typeof currentPortfolioValue.toNumber === 'function' 
+          ? currentPortfolioValue.toNumber()
+          : typeof currentPortfolioValue === 'number'
+          ? currentPortfolioValue
+          : Number(currentPortfolioValue);
+
+        if (!isNaN(currentValue) && isFinite(currentValue)) {
+          const nowUnix = moment.utc().unix();
+          const lastPoint = data.length > 0 ? data[data.length - 1] : null;
+          
+          if (lastPoint && Math.abs(lastPoint.value - currentValue) < 0.000001) {
+            // Same value, update timestamp if needed
+            const timeDiff = nowUnix - lastPoint.time;
+            if (timeDiff > 300) {
+              data[data.length - 1] = {
+                ...lastPoint,
+                time: nowUnix,
+                timestamp: nowUnix,
+                date: moment.unix(nowUnix).toDate(),
+              };
+            }
+          } else {
+            // Different value, add new point
+            data.push({
+              time: nowUnix,
+              timestamp: nowUnix,
+              value: currentValue,
+              date: moment.unix(nowUnix).toDate(),
+            });
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to add current portfolio value to chart:', error);
+      }
+    }
+
+    return data.sort((a, b) => a.time - b.time);
+  }, [portfolioData, convertTo, currentPortfolioValue]);
+
+  // Check container readiness and initialize chart (desktop only)
   useEffect(() => {
+    if (isMobile) return; // Skip lightweight-charts on mobile
     if (chartRef.current) return; // Already initialized
     
     let resizeObserver: ResizeObserver | null = null;
@@ -248,6 +671,12 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
       // Subscribe to crosshair moves
     chart.subscribeCrosshairMove((param) => {
+      console.log('[AccountPortfolio] subscribeCrosshairMove fired:', { 
+        time: param.time, 
+        point: param.point,
+        seriesData: param.seriesData ? 'exists' : 'null'
+      });
+      
       if (param.time && param.seriesData) {
         const priceData = param.seriesData.get(areaSeries) as LineData | undefined;
         if (priceData && typeof priceData.value === 'number') {
@@ -263,9 +692,16 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       }
     });
 
-    // Mobile touch handling - log X drag percentage and update crosshair
+    // Mobile touch handling - replicate mouse hover logic 1:1 but for touch drag
+    // The library handles mousemove automatically - we'll simulate that for touch
+    
+    // Track if we're in a touch drag to prevent conflicts
+    let isTouchDrag = false;
+    
     const handleTouchStart = (e: TouchEvent) => {
       if (!container || !chart) return;
+      
+      isTouchDrag = true;
       
       const touch = e.touches[0];
       const rect = container.getBoundingClientRect();
@@ -275,28 +711,39 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       
       console.log(`[AccountPortfolio] Touch start: ${xPercent.toFixed(2)}% (${clampedX.toFixed(1)}px / ${rect.width.toFixed(1)}px)`);
       
-      // Set crosshair position on touch start
-      try {
-        const visibleRange = chart.timeScale().getVisibleRange();
-        if (visibleRange && visibleRange.from && visibleRange.to) {
-          const timeRange = (visibleRange.to as number) - (visibleRange.from as number);
-          const targetTime = (visibleRange.from as number) + (timeRange * (xPercent / 100));
-          
-          chart.setCrosshairPosition(clampedX, 0, { time: targetTime as any });
-          console.log(`[AccountPortfolio] Crosshair set on touchstart: time=${targetTime}, x=${clampedX}`);
-        } else {
-          const time = chart.timeScale().coordinateToTime(clampedX);
-          if (time !== null) {
-            chart.setCrosshairPosition(clampedX, 0, { time: time as any });
-          }
-        }
-      } catch (error) {
-        console.warn('[AccountPortfolio] Error setting crosshair on touchstart:', error);
-      }
+      // Simulate full mouse interaction: mousedown -> mousemove
+      // This activates mouse mode in the library
+      const mouseDownEvent = new MouseEvent('mousedown', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        button: 0,
+        buttons: 1,
+      });
+      
+      const mouseMoveEvent = new MouseEvent('mousemove', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        button: 0,
+        buttons: 1,
+      });
+      
+      // Dispatch mousedown first to activate mouse mode
+      container.dispatchEvent(mouseDownEvent);
+      
+      // Then dispatch mousemove to set crosshair position
+      container.dispatchEvent(mouseMoveEvent);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!container || !chart) return;
+      if (!container || !chart || !isTouchDrag) {
+        return;
+      }
       
       const touch = e.touches[0];
       const rect = container.getBoundingClientRect();
@@ -306,37 +753,51 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       
       console.log(`[AccountPortfolio] X drag: ${xPercent.toFixed(2)}% (${clampedX.toFixed(1)}px / ${rect.width.toFixed(1)}px)`);
       
-      // Update crosshair position based on percentage
+      // Try NOT preventing default - let library process touch naturally
+      // Then manually update crosshair
       try {
-        const visibleRange = chart.timeScale().getVisibleRange();
-        if (visibleRange && visibleRange.from && visibleRange.to) {
-          const timeRange = (visibleRange.to as number) - (visibleRange.from as number);
-          const targetTime = (visibleRange.from as number) + (timeRange * (xPercent / 100));
+        const time = chart.timeScale().coordinateToTime(clampedX);
+        if (time !== null) {
+          console.log('[AccountPortfolio] TouchMove: Setting crosshair directly:', { clampedX, time });
           
-          // Set crosshair position using the finger's X coordinate and calculated time
-          chart.setCrosshairPosition(clampedX, 0, { time: targetTime as any });
-        } else {
-          // Fallback: use coordinateToTime if visible range not available
-          const time = chart.timeScale().coordinateToTime(clampedX);
-          if (time !== null) {
-            chart.setCrosshairPosition(clampedX, 0, { time: time as any });
-          }
+          // Set crosshair directly
+          chart.setCrosshairPosition(clampedX, 0, { time: time as any });
+          
+          console.log('[AccountPortfolio] TouchMove: Crosshair set');
         }
       } catch (error) {
-        console.warn('[AccountPortfolio] Error updating crosshair on touchmove:', error);
+        console.error('[AccountPortfolio] Error updating crosshair:', error);
       }
+      
+      // Only prevent default if we're dragging horizontally
+      // For now, always prevent to test
+      e.preventDefault();
+      e.stopPropagation();
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (!chart) return;
+      if (!container) return;
       
-      // Clear crosshair on touch end
-      try {
-        chart.setCrosshairPosition(-1, -1, {});
-        console.log('[AccountPortfolio] Crosshair cleared on touchend');
-      } catch (error) {
-        console.warn('[AccountPortfolio] Error clearing crosshair on touchend:', error);
+      isTouchDrag = false;
+      
+      // Simulate mouseup to end mouse interaction
+      const touch = e.changedTouches[0] || e.touches[0];
+      if (touch) {
+        const mouseUpEvent = new MouseEvent('mouseup', {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+          button: 0,
+          buttons: 0,
+        });
+        
+        container.dispatchEvent(mouseUpEvent);
       }
+      
+      // Don't clear crosshair - keep it visible
+      console.log('[AccountPortfolio] Touch end - crosshair remains visible');
     };
 
     // Add touch event listeners
@@ -489,10 +950,11 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         setHoveredPrice(null);
       }
     };
-  }, []); // Only run once on mount - use ref to access latest data
+  }, [isMobile]); // Re-run when mobile state changes
 
-  // Update chart data when portfolio data, currency, or time range changes
+  // Update chart data when portfolio data, currency, or time range changes (desktop only)
   useEffect(() => {
+    if (isMobile) return; // Skip lightweight-charts updates on mobile
     if (!chartRef.current || !seriesRef.current || !portfolioData || portfolioData.length === 0) {
       return;
     }
@@ -832,27 +1294,55 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         </div>
 
         {/* Chart */}
-        <div className="px-4 md:px-6 pb-4 relative">
+        <div className="pb-4 relative">
+          {isMobile ? (
+            // Recharts for mobile - full width (no padding)
+            <div className="w-full h-[180px] min-w-0 relative" style={{ width: '100%', minWidth: 0 }}>
+              {isLoading ? (
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/40 border border-white/10 rounded-full text-white text-xs font-medium">
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" aria-label="loading" />
+                    <span>Loading portfolio data...</span>
+                  </div>
+                </div>
+              ) : rechartsData.length > 0 ? (
+                <MobileRechartsChart
+                  data={rechartsData}
+                  onHover={(price, time) => setHoveredPrice({ price, time })}
+                  convertTo={convertTo}
+                  currentCurrencyInfo={currentCurrencyInfo}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none z-10">
+                  <div className="text-white/60">No portfolio data available</div>
+                </div>
+              )}
+            </div>
+          ) : (
+            // Lightweight-charts for desktop
+            <div className="px-4 md:px-6">
               <div 
                 ref={chartContainerRef} 
                 className="w-full h-[180px] min-w-0"
                 style={{ touchAction: 'none' }}
               />
-          
-          {/* Loading indicator */}
-          {isLoading && (
-            <div className="absolute left-0 right-0 top-[30%] flex justify-center z-10">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/40 border border-white/10 rounded-full text-white text-xs font-medium">
-                <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" aria-label="loading" />
-                <span>Loading portfolio data...</span>
-              </div>
-            </div>
-          )}
-          
-          {/* No data message */}
-          {!isLoading && (!portfolioData || portfolioData.length === 0) && (
-            <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none z-10">
-              <div className="text-white/60">No portfolio data available</div>
+              
+              {/* Loading indicator */}
+              {isLoading && (
+                <div className="absolute left-0 right-0 top-[30%] flex justify-center z-10">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/40 border border-white/10 rounded-full text-white text-xs font-medium">
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" aria-label="loading" />
+                    <span>Loading portfolio data...</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* No data message */}
+              {!isLoading && (!portfolioData || portfolioData.length === 0) && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none z-10">
+                  <div className="text-white/60">No portfolio data available</div>
+                </div>
+              )}
             </div>
           )}
         </div>

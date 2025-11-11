@@ -457,7 +457,7 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
       >
       {data.length > 0 && (
           <ResponsiveContainer width="100%" height={180}>
-          <AreaChart data={data} animationDuration={300}>
+          <AreaChart data={data}>
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="rgba(34, 197, 94, 0.3)" stopOpacity={1} />
@@ -1231,8 +1231,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               }}
             >
               {isLoading ? (
-                <div className="absolute inset-0 flex items-center justify-center z-10 px-4 md:px-6">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/40 border border-white/10 rounded-full text-white text-xs font-medium">
+                <div className="absolute inset-0 flex items-start justify-center pt-10 z-10 px-4 md:px-6">
+                  <div className="inline-flex items-center gap-1.5 text-white text-xs font-medium">
                     <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" aria-label="loading" />
                     <span>Loading portfolio data...</span>
                   </div>

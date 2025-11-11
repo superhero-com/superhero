@@ -1035,6 +1035,17 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                 convertTo === 'ae' 
                   ? (() => {
                       try {
+                        const value = Number(animatedValue);
+                        // If value is above 1 AE, show 2 decimals
+                        if (value >= 1) {
+                          return (
+                            <>
+                              <span className="font-light">AE</span>{' '}
+                              <span className="font-extrabold">{value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            </>
+                          );
+                        }
+                        // Otherwise use prettify for values below 1 AE
                         return (
                           <>
                             <span className="font-light">AE</span>{' '}
@@ -1042,10 +1053,20 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                           </>
                         );
                       } catch {
+                        const value = Number(animatedValue);
+                        // If value is above 1 AE, show 2 decimals
+                        if (value >= 1) {
+                          return (
+                            <>
+                              <span className="font-light">AE</span>{' '}
+                              <span className="font-extrabold">{value.toFixed(2)}</span>
+                            </>
+                          );
+                        }
                         return (
                           <>
                             <span className="font-light">AE</span>{' '}
-                            <span className="font-extrabold">{Number(animatedValue).toFixed(4)}</span>
+                            <span className="font-extrabold">{value.toFixed(4)}</span>
                           </>
                         );
                       }

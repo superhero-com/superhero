@@ -398,7 +398,24 @@ export default function UserProfile({
               AE Balance
             </div>
             <div className="text-base md:text-lg font-bold text-white">
-              {decimalBalance ? `${decimalBalance.prettify()} AE` : "Loading..."}
+              {decimalBalance ? (() => {
+                try {
+                  const value = typeof decimalBalance.toNumber === 'function' 
+                    ? decimalBalance.toNumber()
+                    : typeof decimalBalance === 'number'
+                    ? decimalBalance
+                    : Number(decimalBalance);
+                  // If value is above 1 AE, show 2 decimals
+                  if (value >= 1) {
+                    return `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AE`;
+                  }
+                  // Otherwise use prettify for values below 1 AE
+                  return `${decimalBalance.prettify()} AE`;
+                } catch {
+                  // Fallback to prettify if conversion fails
+                  return `${decimalBalance.prettify()} AE`;
+                }
+              })() : "Loading..."}
             </div>
           </div>
           <button

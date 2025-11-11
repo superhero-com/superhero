@@ -13,12 +13,34 @@ interface AccountPortfolioProps {
   address: string;
 }
 
+interface PnlAmount {
+  ae: number;
+  usd: number;
+}
+
+interface TotalPnl {
+  percentage: number;
+  invested: PnlAmount;
+  current_value: PnlAmount;
+  gain: PnlAmount;
+}
+
+interface TokenPnl {
+  current_unit_price: PnlAmount;
+  percentage: number;
+  invested: PnlAmount;
+  current_value: PnlAmount;
+  gain: PnlAmount;
+}
+
 interface PortfolioSnapshot {
   timestamp: string | Date;
   total_value_ae: number;
   ae_balance: number;
   tokens_value_ae: number;
   total_value_usd?: number;
+  total_pnl?: TotalPnl;
+  tokens_pnl?: Record<string, TokenPnl>;
 }
 
 const TIME_RANGES = {
@@ -641,6 +663,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         endDate: dateRange.endDate,
         interval: dateRange.interval,
         convertTo: convertTo as any,
+        include: 'pnl', // Request PNL data
       });
       
       const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
@@ -655,6 +678,23 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     gcTime: 30 * 60 * 1000, // Keep cached data for 30 minutes
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+  });
+
+  // Fetch current PNL data separately for the latest snapshot
+  const {
+    data: currentPnlData,
+    isLoading: isLoadingPnl,
+  } = useQuery({
+    queryKey: ['account-pnl', address],
+    queryFn: async () => {
+      return await TrendminerApi.getAccountPnl(address);
+    },
+    enabled: !!address,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // Keep cached data for 30 minutes
+    retry: 2,
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
@@ -1484,6 +1524,109 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               )}
             </div>
           </div>
+          
+          {/* Profit/Loss Information */}
+          {(currentPnlData?.total_pnl || (hoveredPrice && portfolioData)) && (
+            <div className="mb-4 pt-3 border-t border-white/10">
+              {(() => {
+                // Use hovered snapshot PNL if available, otherwise use current PNL
+                let pnlData: TotalPnl | undefined;
+                if (hoveredPrice && portfolioData) {
+                  // Find the snapshot closest to the hovered time
+                  const hoveredTimestamp = hoveredPrice.time;
+                  const closestSnapshot = portfolioData.reduce((closest, snapshot) => {
+                    const snapshotTime = moment(snapshot.timestamp).unix();
+                    const closestTime = closest ? moment(closest.timestamp).unix() : Infinity;
+                    return Math.abs(snapshotTime - hoveredTimestamp) < Math.abs(closestTime - hoveredTimestamp)
+                      ? snapshot
+                      : closest;
+                  });
+                  pnlData = closestSnapshot?.total_pnl;
+                } else {
+                  pnlData = currentPnlData?.total_pnl;
+                }
+                
+                if (!pnlData) return null;
+                
+                const isPositive = pnlData.gain.ae >= 0;
+                const gainValue = convertTo === 'ae' 
+                  ? pnlData.gain.ae 
+                  : (convertTo === 'usd' ? pnlData.gain.usd : pnlData.gain.usd);
+                const investedValue = convertTo === 'ae'
+                  ? pnlData.invested.ae
+                  : (convertTo === 'usd' ? pnlData.invested.usd : pnlData.invested.usd);
+                const currentValue = convertTo === 'ae'
+                  ? pnlData.current_value.ae
+                  : (convertTo === 'usd' ? pnlData.current_value.usd : pnlData.current_value.usd);
+                
+                return (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-xs text-white/60 mb-1">Profit/Loss</div>
+                      <div className={`text-lg font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
+                        {isPositive ? '+' : ''}
+                        {convertTo === 'ae' 
+                          ? `${Decimal.from(gainValue).prettify()} AE`
+                          : (() => {
+                              try {
+                                const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                                return gainValue.toLocaleString('en-US', {
+                                  style: 'currency',
+                                  currency: currencyCode,
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                });
+                              } catch {
+                                return `$${Number(gainValue).toFixed(2)}`;
+                              }
+                            })()}
+                      </div>
+                      <div className={`text-xs ${isPositive ? 'text-green-400/80' : 'text-red-400/80'}`}>
+                        {isPositive ? '+' : ''}{pnlData.percentage.toFixed(2)}%
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-white/60 mb-1">Total Purchased</div>
+                      <div className="text-sm font-semibold text-white">
+                        {convertTo === 'ae'
+                          ? `${Decimal.from(investedValue).prettify()} AE`
+                          : (() => {
+                              try {
+                                const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                                return investedValue.toLocaleString('en-US', {
+                                  style: 'currency',
+                                  currency: currencyCode,
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                });
+                              } catch {
+                                return `$${Number(investedValue).toFixed(2)}`;
+                              }
+                            })()}
+                      </div>
+                      <div className="text-xs text-white/60">
+                        Current: {convertTo === 'ae'
+                          ? `${Decimal.from(currentValue).prettify()} AE`
+                          : (() => {
+                              try {
+                                const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                                return currentValue.toLocaleString('en-US', {
+                                  style: 'currency',
+                                  currency: currencyCode,
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                });
+                              } catch {
+                                return `$${Number(currentValue).toFixed(2)}`;
+                              }
+                            })()}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
 
         {/* Chart - no padding, full width */}

@@ -1550,72 +1550,82 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             </button>
           </div>
           <div className="mb-2 min-h-[3.5rem]">
-            <div className="flex items-baseline gap-3">
-              <span className={`text-3xl md:text-4xl font-extrabold ${hoveredPrice ? 'text-green-400' : 'text-white'} min-h-[2.5rem] leading-tight`}>
-                {displayValue !== null ? (
-                  convertTo === 'ae' 
-                    ? (() => {
-                        try {
-                          return `${Decimal.from(displayValue).prettify()} AE`;
-                        } catch {
-                          return `${Number(displayValue).toFixed(4)} AE`;
-                        }
-                      })()
-                    : (() => {
-                        try {
-                          const fiatValue = typeof displayValue === 'number' ? displayValue : Number(displayValue);
-                        const currencyCode = currentCurrencyInfo.code.toUpperCase();
-                        return fiatValue.toLocaleString('en-US', {
-                          style: 'currency',
-                          currency: currencyCode,
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        });
-                        } catch {
-                          return `$${Number(displayValue).toFixed(2)}`;
-                        }
-                      })()
-                ) : (
-                  <span className="opacity-0">0.00 AE</span>
-                )}
-              </span>
-              {/* Portfolio value percentage change - show for period PNL or when hovering */}
-              {(() => {
-                let portfolioPercentageChange: number | undefined;
+            {(() => {
+              // Calculate portfolio percentage change for color and display
+              let portfolioPercentageChange: number | undefined;
+              
+              if (hoveredPrice && portfolioData && portfolioData.length > 0) {
+                // Calculate percentage change from start of period to hovered point
+                const firstSnapshot = portfolioData[0];
+                const hoveredTimestamp = hoveredPrice.time;
+                const closestSnapshot = portfolioData.reduce((closest, snapshot) => {
+                  const snapshotTime = moment(snapshot.timestamp).unix();
+                  const closestTime = closest ? moment(closest.timestamp).unix() : Infinity;
+                  return Math.abs(snapshotTime - hoveredTimestamp) < Math.abs(closestTime - hoveredTimestamp)
+                    ? snapshot
+                    : closest;
+                });
                 
-                if (hoveredPrice && portfolioData && portfolioData.length > 0) {
-                  // Calculate percentage change from start of period to hovered point
-                  const firstSnapshot = portfolioData[0];
-                  const hoveredTimestamp = hoveredPrice.time;
-                  const closestSnapshot = portfolioData.reduce((closest, snapshot) => {
-                    const snapshotTime = moment(snapshot.timestamp).unix();
-                    const closestTime = closest ? moment(closest.timestamp).unix() : Infinity;
-                    return Math.abs(snapshotTime - hoveredTimestamp) < Math.abs(closestTime - hoveredTimestamp)
-                      ? snapshot
-                      : closest;
-                  });
-                  
-                  const startPortfolioValue = firstSnapshot.total_value_ae;
-                  const hoveredPortfolioValue = closestSnapshot.total_value_ae;
-                  
-                  if (startPortfolioValue > 0.000001) {
-                    portfolioPercentageChange = ((hoveredPortfolioValue - startPortfolioValue) / startPortfolioValue) * 100;
-                  }
-                } else if (periodPnl && periodPnl.portfolio_value_percentage_change !== undefined) {
-                  portfolioPercentageChange = periodPnl.portfolio_value_percentage_change;
+                const startPortfolioValue = firstSnapshot.total_value_ae;
+                const hoveredPortfolioValue = closestSnapshot.total_value_ae;
+                
+                if (startPortfolioValue > 0.000001) {
+                  portfolioPercentageChange = ((hoveredPortfolioValue - startPortfolioValue) / startPortfolioValue) * 100;
                 }
-                
-                if (portfolioPercentageChange !== undefined && Math.abs(portfolioPercentageChange) > 0.0001) {
-                  return (
+              } else if (periodPnl && periodPnl.portfolio_value_percentage_change !== undefined) {
+                portfolioPercentageChange = periodPnl.portfolio_value_percentage_change;
+              }
+              
+              // Determine portfolio value color based on percentage change
+              // Only color when hovering, otherwise keep white
+              let portfolioValueColor = 'text-white';
+              if (hoveredPrice && portfolioPercentageChange !== undefined && Math.abs(portfolioPercentageChange) > 0.0001) {
+                portfolioValueColor = portfolioPercentageChange >= 0 ? 'text-green-400' : 'text-red-400';
+              } else if (hoveredPrice) {
+                // When hovering but no percentage available, use green
+                portfolioValueColor = 'text-green-400';
+              }
+              
+              return (
+                <div className="flex items-baseline gap-3">
+                  <span className={`text-3xl md:text-4xl font-extrabold ${portfolioValueColor} min-h-[2.5rem] leading-tight`}>
+                    {displayValue !== null ? (
+                      convertTo === 'ae' 
+                        ? (() => {
+                            try {
+                              return `${Decimal.from(displayValue).prettify()} AE`;
+                            } catch {
+                              return `${Number(displayValue).toFixed(4)} AE`;
+                            }
+                          })()
+                        : (() => {
+                            try {
+                              const fiatValue = typeof displayValue === 'number' ? displayValue : Number(displayValue);
+                            const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                            return fiatValue.toLocaleString('en-US', {
+                              style: 'currency',
+                              currency: currencyCode,
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            });
+                            } catch {
+                              return `$${Number(displayValue).toFixed(2)}`;
+                            }
+                          })()
+                    ) : (
+                      <span className="opacity-0">0.00 AE</span>
+                    )}
+                  </span>
+                  {/* Portfolio value percentage change */}
+                  {portfolioPercentageChange !== undefined && Math.abs(portfolioPercentageChange) > 0.0001 && (
                     <span className={`text-lg font-semibold ${portfolioPercentageChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {portfolioPercentageChange >= 0 ? '+' : ''}
                       {portfolioPercentageChange.toFixed(2)}%
                     </span>
-                  );
-                }
-                return null;
-              })()}
-            </div>
+                  )}
+                </div>
+              );
+            })()}
             <div className="text-sm text-white/60 mt-1 h-5">
               {hoveredPrice ? (
                 <span>{moment.unix(hoveredPrice.time).format('MMM D, YYYY HH:mm')}</span>
@@ -1641,13 +1651,15 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                       ? snapshot
                       : closest;
                   });
+                  // Show cumulative PNL at that point in time
                   pnlData = closestSnapshot?.total_pnl;
                 } else if (periodPnl && portfolioData) {
                   // Use period PNL (convert to TotalPnl format)
-                  // For period PNL, current_value should be the actual end value, not the change
+                  // For period PNL, use the last snapshot's PNL data but with period gain/invested
                   const lastSnapshot = portfolioData[portfolioData.length - 1];
                   pnlData = {
-                    percentage: periodPnl.percentage,
+                    // Always use the PNL percentage from the API (last snapshot's total_pnl)
+                    percentage: lastSnapshot.total_pnl?.percentage || 0,
                     invested: periodPnl.invested,
                     current_value: {
                       ae: lastSnapshot.total_pnl?.current_value.ae || 0,

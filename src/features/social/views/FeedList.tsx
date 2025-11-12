@@ -105,18 +105,6 @@ export default function FeedList({
     }
   }, [location.search, sortBy, queryClient, popularWindow]);
 
-  // Navigate to default URL if no params are present
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const hasSortBy = params.has("sortBy");
-    const hasWindow = params.has("window");
-    
-    // If we're on homepage with no params, set defaults
-    if (location.pathname === "/" && !hasSortBy && !hasWindow) {
-      navigate(`/?sortBy=hot&window=24h`, { replace: true });
-    }
-  }, [location.pathname, location.search, navigate]);
-
   // Helper to map a token object or websocket payload into a Post-like item
   const mapTokenCreatedToPost = useCallback((payload: any): PostDto => {
     const saleAddress: string = payload?.sale_address || payload?.address || "";

@@ -14,9 +14,17 @@ interface SortControlsProps {
 // Component: Sort Controls
 const SortControls = memo(
   ({ sortBy, onSortChange, className = "", popularWindow = 'all', onPopularWindowChange, popularFeedEnabled = true }: SortControlsProps) => {
-    // Hide filter completely if popular feed is disabled
+    // Show "Latest Feed" title if popular feed is disabled
     if (!popularFeedEnabled) {
-      return null;
+      return (
+        <div className={cn("w-full mb-0 md:mb-3 mt-4 md:mt-0", className)}>
+          <h2 className="text-lg md:text-lg font-bold text-white tracking-tight [text-shadow:none] [background:none] [-webkit-text-fill-color:white]">
+            Latest Feed
+          </h2>
+          {/* Mobile horizontal line */}
+          <div className="md:hidden border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] mt-3"></div>
+        </div>
+      );
     }
 
     return (

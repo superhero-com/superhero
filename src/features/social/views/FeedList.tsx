@@ -82,10 +82,10 @@ export default function FeedList({
   // Comment counts are now provided directly by the API in post.total_comments
 
   // URL parameters
-  const sortBy = urlQuery.get("sortBy") || "latest";
+  const sortBy = urlQuery.get("sortBy") || "hot";
   const search = urlQuery.get("search") || "";
   const filterBy = urlQuery.get("filterBy") || "all";
-  const initialWindow = (urlQuery.get("window") as '24h'|'7d'|'all' | null) || 'all';
+  const initialWindow = (urlQuery.get("window") as '24h'|'7d'|'all' | null) || '24h';
   const shouldAutoFocusPost = urlQuery.get("post") === "new";
 
   const [localSearch, setLocalSearch] = useState(search);
@@ -94,7 +94,7 @@ export default function FeedList({
   // Keep popularWindow in sync with URL (e.g., browser back/forward or direct URL edits)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const fromUrl = (params.get("window") as '24h'|'7d'|'all' | null) || 'all';
+    const fromUrl = (params.get("window") as '24h'|'7d'|'all' | null) || '24h';
     if (fromUrl !== popularWindow) {
       setPopularWindow(fromUrl);
       if (sortBy === 'hot') {
@@ -104,6 +104,18 @@ export default function FeedList({
       }
     }
   }, [location.search, sortBy, queryClient, popularWindow]);
+
+  // Navigate to default URL if no params are present
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const hasSortBy = params.has("sortBy");
+    const hasWindow = params.has("window");
+    
+    // If we're on homepage with no params, set defaults
+    if (location.pathname === "/" && !hasSortBy && !hasWindow) {
+      navigate(`/?sortBy=hot&window=24h`, { replace: true });
+    }
+  }, [location.pathname, location.search, navigate]);
 
   // Helper to map a token object or websocket payload into a Post-like item
   const mapTokenCreatedToPost = useCallback((payload: any): PostDto => {

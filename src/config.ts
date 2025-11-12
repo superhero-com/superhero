@@ -17,6 +17,7 @@ export type AppConfig = {
   PROFILE_REGISTRY_ADDRESS?: Encoded.ContractAddress;
   LANDING_ENABLED: boolean;
   WORDBAZAAR_ENABLED: boolean;
+  POPULAR_FEED_ENABLED: boolean;
   JITSI_DOMAIN: string;
   GOVERNANCE_API_URL: string;
   GOVERNANCE_CONTRACT_ADDRESS: Encoded.ContractAddress;
@@ -53,6 +54,7 @@ const defaultConfig: AppConfig = {
   PROFILE_REGISTRY_ADDRESS: "",
   LANDING_ENABLED: false,
   WORDBAZAAR_ENABLED: false,
+  POPULAR_FEED_ENABLED: false,
   GOVERNANCE_API_URL:
     "https://governance-server-mainnet.prd.service.aepps.com/",
   GOVERNANCE_CONTRACT_ADDRESS:
@@ -95,7 +97,7 @@ function isPlaceholder(v: unknown): boolean {
 }
 
 function coerceValue(key: keyof AppConfig, v: any): any {
-  if (key === 'LANDING_ENABLED' || key === 'WORDBAZAAR_ENABLED') return toBool(v);
+  if (key === 'LANDING_ENABLED' || key === 'WORDBAZAAR_ENABLED' || key === 'POPULAR_FEED_ENABLED') return toBool(v);
   return v;
 }
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Backend } from '@/api/backend';
+import { SuperheroApi } from '@/api/backend';
 
 export default function FooterSection({ compact = false }: { compact?: boolean }) {
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
@@ -19,7 +19,7 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
       
       // Check Backend API
       try {
-        await Backend.getPrice();
+        await SuperheroApi.getCurrencyRates();
         setApiStatus((prev) => ({ ...prev, backend: 'online' }));
       } catch (error) {
         console.error('[FooterSection] Backend API check failed:', error);

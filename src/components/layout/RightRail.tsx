@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
-import { Backend, TrendminerApi } from "../../api/backend";
+import { Backend, SuperheroApi } from "../../api/backend";
 import { useAccountBalances } from "../../hooks/useAccountBalances";
 import WalletOverviewCard from "@/components/wallet/WalletOverviewCard";
 import { useAeSdk } from "../../hooks/useAeSdk";
@@ -62,7 +62,22 @@ export default function RightRail({
     return effectiveProfileAddress === activeAccount;
   }, [location.pathname, effectiveProfileAddress, activeAccount]);
   const [trending, setTrending] = useState<Array<[string, any]>>([] as any);
-  const [prices, setPrices] = useState<any>(null);
+  const [prices, setPrices] = useState<any>(() => {
+    // Initialize from cache if available
+    try {
+      const cached = sessionStorage.getItem("ae_prices");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        // Check if cache is recent (less than 5 minutes old)
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 5 * 60 * 1000) {
+          return parsed.data;
+        }
+      }
+    } catch {
+      // Ignore cache errors
+    }
+    return null;
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [searchSuggestions, setSearchSuggestions] = useState<
     SearchSuggestion[]
@@ -243,7 +258,7 @@ export default function RightRail({
       // Search tokens if filter is enabled
       if (searchFilters.tokens) {
         searchPromises.push(
-          TrendminerApi.listTokens({ search: query, limit: 5 }).catch(() => ({
+          SuperheroApi.listTokens({ search: query, limit: 5 }).catch(() => ({
             items: [],
           }))
         );
@@ -257,7 +272,7 @@ export default function RightRail({
       // Search DAOs if filter is enabled
       if (searchFilters.daos) {
         searchPromises.push(
-          TrendminerApi.listTokens({
+          SuperheroApi.listTokens({
             search: query,
             limit: 3,
             collection: "all",
@@ -473,15 +488,15 @@ export default function RightRail({
 
       // Check Trendminer API
       try {
-        await TrendminerApi.listTrendingTags({ limit: 1 });
+        await SuperheroApi.listTrendingTags({ limit: 1 });
         setApiStatus((prev) => ({ ...prev, trending: "online" }));
       } catch {
         setApiStatus((prev) => ({ ...prev, trending: "offline" }));
       }
 
-      // Check DEX API (simulate)
+      // Check DEX API
       try {
-        await Backend.getPrice();
+        await SuperheroApi.fetchJson('/api/dex/tokens?limit=1');
         setApiStatus((prev) => ({ ...prev, dex: "online" }));
       } catch {
         setApiStatus((prev) => ({ ...prev, dex: "offline" }));
@@ -519,27 +534,200 @@ export default function RightRail({
 
     async function loadPrice() {
       try {
-        const p = await Backend.getPrice();
-        const a = p?.aeternity || null;
-        setPrices(a);
-
-        if (a?.usd != null) {
-          setUsdSpark((prev) => {
-            const next = [...prev, Number(a.usd)].slice(-50);
-            sessionStorage.setItem("ae_spark_usd", JSON.stringify(next));
-            return next;
-          });
+        // Step 1: First, try to load today's daily price from historical data (fast, cached on backend)
+        // This gives us immediate price data without waiting for CoinGecko
+        // Only fetch the selected currency first for instant display
+        try {
+          const historicalData = await SuperheroApi.getHistoricalPrice(selectedCurrency, 1, 'daily');
+          if (historicalData && Array.isArray(historicalData) && historicalData.length > 0) {
+            // Get the latest price point (last item in array)
+            const latestPrice = historicalData[historicalData.length - 1];
+            if (Array.isArray(latestPrice) && latestPrice.length >= 2) {
+              const price = latestPrice[1];
+              
+              // Update prices immediately with quick data for selected currency
+              setPrices((prevPrices) => {
+                const quickPriceData: any = {
+                  usd: prevPrices?.usd ?? null,
+                  eur: prevPrices?.eur ?? null,
+                  cny: prevPrices?.cny ?? null,
+                  [selectedCurrency]: price,
+                };
+                
+                // Preserve existing market stats
+                quickPriceData.change24h = prevPrices?.change24h ?? null;
+                quickPriceData.marketCap = prevPrices?.marketCap ?? null;
+                quickPriceData.volume24h = prevPrices?.volume24h ?? null;
+                
+                return quickPriceData;
+              });
+            }
+          }
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn("Failed to load quick historical price:", error);
+          }
         }
 
-        if (a?.eur != null) {
-          setEurSpark((prev) => {
-            const next = [...prev, Number(a.eur)].slice(-50);
-            sessionStorage.setItem("ae_spark_eur", JSON.stringify(next));
-            return next;
-          });
+        // Step 2: Fetch current currency rates and market data asynchronously (may hit CoinGecko)
+        // This updates with the latest data in the background
+        const [ratesResult, marketDataResult] = await Promise.allSettled([
+          SuperheroApi.getCurrencyRates(),
+          SuperheroApi.getMarketData(selectedCurrency),
+        ]);
+
+        const rates = ratesResult.status === 'fulfilled' ? ratesResult.value : null;
+        const marketData = marketDataResult.status === 'fulfilled' ? marketDataResult.value : null;
+
+        // Log errors for failed requests
+        if (ratesResult.status === 'rejected') {
+          console.error("Failed to load currency rates:", ratesResult.reason);
+        } else if (ratesResult.status === 'fulfilled' && rates === null) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn("Currency rates API returned empty response");
+          }
         }
+        
+        if (marketDataResult.status === 'rejected') {
+          console.error("Failed to load market data:", marketDataResult.reason);
+        } else if (marketDataResult.status === 'fulfilled' && marketData === null) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn("Market data API returned empty response");
+          }
+        }
+
+        // Update sparklines whenever rates are available (regardless of marketData)
+        if (rates) {
+          if (rates.usd != null) {
+            setUsdSpark((prev) => {
+              const next = [...prev, Number(rates.usd)].slice(-50);
+              sessionStorage.setItem("ae_spark_usd", JSON.stringify(next));
+              return next;
+            });
+          }
+
+          if (rates.eur != null) {
+            setEurSpark((prev) => {
+              const next = [...prev, Number(rates.eur)].slice(-50);
+              sessionStorage.setItem("ae_spark_eur", JSON.stringify(next));
+              return next;
+            });
+          }
+        }
+
+        // Update price data, preserving existing market stats when marketData fails
+        // Use API rates if available, otherwise fallback to latest sparkline value
+        setPrices((prevPrices) => {
+          const priceData: any = {
+            usd: rates?.usd ?? null,
+            eur: rates?.eur ?? null,
+            cny: rates?.cny ?? null,
+          };
+
+          // Fallback to sparkline data if API rates are null but we have sparkline data
+          // Read from sessionStorage to get the most current values
+          if (!priceData.usd) {
+            try {
+              const usdSparkData = sessionStorage.getItem("ae_spark_usd");
+              if (usdSparkData) {
+                const usdSparkArray = JSON.parse(usdSparkData);
+                if (Array.isArray(usdSparkArray) && usdSparkArray.length > 0) {
+                  priceData.usd = usdSparkArray[usdSparkArray.length - 1];
+                }
+              }
+            } catch {
+              // Ignore errors reading sparkline data
+            }
+          }
+          
+          if (!priceData.eur) {
+            try {
+              const eurSparkData = sessionStorage.getItem("ae_spark_eur");
+              if (eurSparkData) {
+                const eurSparkArray = JSON.parse(eurSparkData);
+                if (Array.isArray(eurSparkArray) && eurSparkArray.length > 0) {
+                  priceData.eur = eurSparkArray[eurSparkArray.length - 1];
+                }
+              }
+            } catch {
+              // Ignore errors reading sparkline data
+            }
+          }
+
+          // Only update market stats if marketData is available
+          // Otherwise preserve existing values to prevent overwriting with null
+          if (marketData) {
+            priceData.change24h = marketData.priceChangePercentage24h || 
+                                  marketData.price_change_percentage_24h || 
+                                  null;
+            priceData.marketCap = marketData.marketCap || 
+                                 marketData.market_cap || 
+                                 null;
+            priceData.volume24h = marketData.totalVolume || 
+                                 marketData.total_volume || 
+                                 null;
+          } else {
+            // Preserve existing market stats when marketData fails
+            priceData.change24h = prevPrices?.change24h ?? null;
+            priceData.marketCap = prevPrices?.marketCap ?? null;
+            priceData.volume24h = prevPrices?.volume24h ?? null;
+          }
+
+          // Only update if we have at least one currency price
+          if (priceData.usd != null || priceData.eur != null || priceData.cny != null) {
+            // Cache the price data
+            try {
+              sessionStorage.setItem("ae_prices", JSON.stringify({
+                data: priceData,
+                timestamp: Date.now(),
+              }));
+            } catch {
+              // Ignore cache errors
+            }
+            return priceData;
+          }
+
+          // Return previous prices if no new data available
+          return prevPrices;
+        });
       } catch (error) {
         console.error("Failed to load price data:", error);
+        // On error, try to use cached data or sparkline fallback
+        setPrices((prevPrices) => {
+          if (prevPrices) return prevPrices;
+          
+          // Fallback to sparkline data if available
+          const fallbackData: any = {};
+          try {
+            const usdSparkData = sessionStorage.getItem("ae_spark_usd");
+            if (usdSparkData) {
+              const usdSparkArray = JSON.parse(usdSparkData);
+              if (Array.isArray(usdSparkArray) && usdSparkArray.length > 0) {
+                fallbackData.usd = usdSparkArray[usdSparkArray.length - 1];
+              }
+            }
+          } catch {
+            // Ignore errors
+          }
+          
+          try {
+            const eurSparkData = sessionStorage.getItem("ae_spark_eur");
+            if (eurSparkData) {
+              const eurSparkArray = JSON.parse(eurSparkData);
+              if (Array.isArray(eurSparkArray) && eurSparkArray.length > 0) {
+                fallbackData.eur = eurSparkArray[eurSparkArray.length - 1];
+              }
+            }
+          } catch {
+            // Ignore errors
+          }
+          
+          if (fallbackData.usd != null || fallbackData.eur != null) {
+            return fallbackData;
+          }
+          
+          return null;
+        });
       }
     }
 
@@ -548,7 +736,7 @@ export default function RightRail({
     return () => {
       window.clearInterval(t);
     };
-  }, []);
+  }, [selectedCurrency]);
 
   // Load saved searches from localStorage
   useEffect(() => {
@@ -642,15 +830,15 @@ export default function RightRail({
     async function loadData() {
       try {
         const [tokensResp, txResp, createdResp] = await Promise.all([
-          TrendminerApi.listTokens({
+          SuperheroApi.listTokens({
             orderBy: "market_cap",
             orderDirection: "DESC",
             limit: 5,
           }).catch(() => ({ items: [] })),
-          TrendminerApi.fetchJson("/api/transactions?limit=5").catch(() => ({
+          SuperheroApi.fetchJson("/api/transactions?limit=5").catch(() => ({
             items: [],
           })),
-          TrendminerApi.fetchJson(
+          SuperheroApi.fetchJson(
             "/api/tokens?order_by=created_at&order_direction=DESC&limit=3"
           ).catch(() => ({ items: [] })),
         ]);

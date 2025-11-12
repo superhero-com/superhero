@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { TrendminerApi } from '../../api/backend';
+import { SuperheroApi } from '../../api/backend';
 import AeButton from '../../components/AeButton';
 
 type TokenItem = {
@@ -30,8 +30,8 @@ export default function AccountDetails() {
       setError(null);
       try {
         const [ownedResp, createdResp] = await Promise.all([
-          TrendminerApi.listTokens({ ownerAddress: address, limit: 50, orderBy: 'market_cap', orderDirection: 'DESC' }),
-          TrendminerApi.listTokens({ creatorAddress: address, limit: 50, orderBy: 'created_at', orderDirection: 'DESC' }),
+          SuperheroApi.listTokens({ ownerAddress: address, limit: 50, orderBy: 'market_cap', orderDirection: 'DESC' }),
+          SuperheroApi.listTokens({ creatorAddress: address, limit: 50, orderBy: 'created_at', orderDirection: 'DESC' }),
         ]);
         if (!cancel) {
           setOwned(ownedResp?.items ?? ownedResp ?? []);

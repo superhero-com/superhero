@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import ReplyToFeedItem from "./ReplyToFeedItem";
 import { PostsService } from "../../../api/generated";
 import AeButton from "../../../components/AeButton";
-import { TrendminerApi } from "../../../api/backend";
+import { SuperheroApi } from "../../../api/backend";
 
 export default function TokenTopicFeed({ topicName, showHeader = false, displayTokenName, showEmptyMessage = false }: { topicName: string; showHeader?: boolean; displayTokenName?: string; showEmptyMessage?: boolean }) {
   const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -18,7 +18,7 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["topic-by-name", lookup],
-    queryFn: () => TrendminerApi.getTopicByName(baseName.toLowerCase()) as Promise<any>,
+    queryFn: () => SuperheroApi.getTopicByName(baseName.toLowerCase()) as Promise<any>,
     enabled: Boolean(baseName),
     refetchInterval: 120 * 1000,
   });
@@ -47,7 +47,7 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
   const { data: dataOriginal, isFetching: isFetchingOriginal, refetch: refetchOriginal } = useQuery({
     queryKey: ["topic-by-name-original", lookupOriginal],
     enabled: !hasFilteredPosts && Boolean(baseName),
-    queryFn: () => TrendminerApi.getTopicByName(baseName) as Promise<any>,
+    queryFn: () => SuperheroApi.getTopicByName(baseName) as Promise<any>,
     refetchInterval: 120 * 1000,
   });
   const altPosts: any[] = useMemo(() => {

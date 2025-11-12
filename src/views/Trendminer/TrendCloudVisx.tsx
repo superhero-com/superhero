@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { TrendminerApi } from '../../api/backend';
+import { SuperheroApi } from '../../api/backend';
 import { Wordcloud } from '@visx/wordcloud';
 
 type TrendingTag = { tag: string; score: number; source?: string };
@@ -17,7 +17,7 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
       setLoading(true);
       setError(null);
       try {
-        const resp = await TrendminerApi.listTrendingTags({ orderBy: 'score', orderDirection: 'DESC', limit: 250, page: 1 });
+        const resp = await SuperheroApi.listTrendingTags({ orderBy: 'score', orderDirection: 'DESC', limit: 250, page: 1 });
         const items = Array.isArray(resp?.items) ? resp.items : (Array.isArray(resp) ? resp : []);
         const mapped: TrendingTag[] = items.map((it: any) => ({ tag: it.tag ?? it.name ?? '', score: Number(it.score ?? it.value ?? 0), source: it.source || it.platform || undefined }));
         if (!cancelled) setTags(mapped.filter((t) => t.tag));

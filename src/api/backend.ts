@@ -1,14 +1,14 @@
 import { CONFIG } from '../config';
 
-// Trendminer API client
-export const TrendminerApi = {
+// Superhero API client
+export const SuperheroApi = {
   async fetchJson(path: string, init?: RequestInit) {
     const base = (CONFIG.SUPERHERO_API_URL || '').replace(/\/$/, '');
     if (!base) throw new Error('SUPERHERO_API_URL not configured');
     const url = `${base}${path.startsWith('/') ? '' : '/'}${path}`;
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[TrendminerApi] Base URL: ${base}`);
-      console.log(`[TrendminerApi] Fetching: ${url}`);
+      console.log(`[SuperheroApi] Base URL: ${base}`);
+      console.log(`[SuperheroApi] Fetching: ${url}`);
     }
     
     // Create timeout controller if no signal provided
@@ -49,14 +49,49 @@ export const TrendminerApi = {
           errorMessage = res.statusText || errorMessage;
         }
         
-        const error = new Error(`Trendminer API error (${res.status}): ${errorMessage}`);
+        const error = new Error(`Superhero API error (${res.status}): ${errorMessage}`);
         if (process.env.NODE_ENV === 'development') {
-          console.error(`[TrendminerApi] Error fetching ${url}:`, error);
+          console.error(`[SuperheroApi] Error fetching ${url}:`, error);
         }
         throw error;
       }
       
-      return res.json();
+      // Check if response has content before trying to parse JSON
+      const contentType = res.headers.get('content-type');
+      const contentLength = res.headers.get('content-length');
+      
+      if (contentLength === '0' || (!contentType?.includes('application/json') && !contentType?.includes('text/json'))) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`[SuperheroApi] Unexpected response type for ${url}:`, {
+            contentType,
+            contentLength,
+            status: res.status,
+            statusText: res.statusText,
+          });
+        }
+        // Return null for empty responses instead of throwing
+        return null;
+      }
+      
+      const text = await res.text();
+      if (!text || text.trim().length === 0) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`[SuperheroApi] Empty response body for ${url}`);
+        }
+        return null;
+      }
+      
+      try {
+        return JSON.parse(text);
+      } catch (parseError) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error(`[SuperheroApi] Failed to parse JSON response from ${url}:`, {
+            text: text.substring(0, 200),
+            error: parseError,
+          });
+        }
+        throw new Error(`Invalid JSON response from ${url}: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+      }
     } catch (err) {
       // Clear timeout on error
       if (timeoutId) {
@@ -68,14 +103,14 @@ export const TrendminerApi = {
         if (err.name === 'AbortError' || err.message.includes('aborted')) {
           const timeoutError = new Error('Request timeout: The API request took too long. Please try again.');
           if (process.env.NODE_ENV === 'development') {
-            console.error(`[TrendminerApi] Request timeout for ${url}`);
+            console.error(`[SuperheroApi] Request timeout for ${url}`);
           }
           throw timeoutError;
         }
         if (err instanceof TypeError && err.message.includes('fetch')) {
           const networkError = new Error('Network error: Unable to connect to API. Please check your internet connection.');
           if (process.env.NODE_ENV === 'development') {
-            console.error(`[TrendminerApi] Network error fetching ${url}:`, err);
+            console.error(`[SuperheroApi] Network error fetching ${url}:`, err);
           }
           throw networkError;
         }
@@ -254,6 +289,35 @@ export const TrendminerApi = {
     if (params.tokenSaleAddresses) qp.set('token_sale_addresses', (params.tokenSaleAddresses as any));
     return this.fetchJson(`/api/analytics/daily-market-cap-sum?${qp.toString()}`);
   },
+  // Coins endpoints
+  getCurrencyRates() {
+    return this.fetchJson('/api/coins/aeternity/rates');
+  },
+  getMarketData(currency: string = 'usd') {
+    const qp = new URLSearchParams();
+    if (currency) qp.set('currency', currency);
+    return this.fetchJson(`/api/coins/aeternity/market-data?${qp.toString()}`);
+  },
+  getHistoricalPrice(currency: string = 'usd', days: number = 1, interval: 'daily' | 'hourly' | 'minute' = 'daily') {
+    const qp = new URLSearchParams();
+    if (currency) qp.set('currency', currency);
+    if (days) qp.set('days', String(days));
+    if (interval) qp.set('interval', interval);
+    return this.fetchJson(`/api/coins/aeternity/history?${qp.toString()}`);
+  },
+  // Posts endpoints
+  listPosts(params: { limit?: number; page?: number; orderBy?: 'total_comments'|'created_at'; orderDirection?: 'ASC'|'DESC'; search?: string; accountAddress?: string; topics?: string } = {}) {
+    const qp = new URLSearchParams();
+    if (params.limit != null) qp.set('limit', String(params.limit));
+    if (params.page != null) qp.set('page', String(params.page));
+    if (params.orderBy) qp.set('order_by', params.orderBy);
+    if (params.orderDirection) qp.set('order_direction', params.orderDirection);
+    if (params.search) qp.set('search', params.search);
+    if (params.accountAddress) qp.set('account_address', params.accountAddress);
+    if (params.topics) qp.set('topics', params.topics);
+    const query = qp.toString();
+    return this.fetchJson(`/api/posts${query ? `?${query}` : ''}`);
+  },
 };
 
 const USE_MOCK = false; // Override to true to force mock in development
@@ -305,11 +369,7 @@ function mockFetch(path: string) {
 
 // API function for new posts endpoint
 export async function fetchPosts(limit: number = 5) {
-  const response = await fetch(`https://api.superhero.com/api/posts?limit=${limit}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch posts: ${response.status}`);
-  }
-  return response.json();
+  return SuperheroApi.listPosts({ limit });
 }
 
 export const Backend = {
@@ -430,13 +490,13 @@ export const Backend = {
     body: JSON.stringify({ ...postParam, author: address }),
     headers: { 'Content-Type': 'application/json' },
   }),
-  // Portfolio history - delegate to TrendminerApi to avoid duplication
+  // Portfolio history - delegate to SuperheroApi to avoid duplication
   getAccountPortfolioHistory(address: string, params: { startDate?: string; endDate?: string; interval?: number; convertTo?: 'ae'|'usd'|'eur'|'aud'|'brl'|'cad'|'chf'|'gbp'|'xau'; include?: string } = {}) {
-    return TrendminerApi.getAccountPortfolioHistory(address, params);
+    return SuperheroApi.getAccountPortfolioHistory(address, params);
   },
-  // Account PNL - delegate to TrendminerApi
+  // Account PNL - delegate to SuperheroApi
   getAccountPnl(address: string, params: { blockHeight?: number } = {}) {
-    return TrendminerApi.getAccountPnl(address, params);
+    return SuperheroApi.getAccountPnl(address, params);
   },
 };
 

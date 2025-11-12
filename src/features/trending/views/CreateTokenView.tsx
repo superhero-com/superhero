@@ -10,7 +10,7 @@ import Spinner from '../../../components/Spinner';
 import VerifiedIcon from '../../../svg/verifiedUrl.svg?react';
 import NotVerifiedIcon from '../../../svg/notVerifiedUrl.svg?react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { TrendminerApi } from '../../../api/backend';
+import { SuperheroApi } from '../../../api/backend';
 import AeButton from '../../../components/AeButton';
 import ConnectWalletButton from '../../../components/ConnectWalletButton';
 import { Input } from '../../../components/ui/input';
@@ -269,7 +269,7 @@ export default function CreateTokenView() {
       setNameStatus('checking');
       const mySeq = ++nameCheckSeqRef.current;
       try {
-        const res = await TrendminerApi.listTokens({ limit: 5, search: trimmed });
+        const res = await SuperheroApi.listTokens({ limit: 5, search: trimmed });
         if (cancelled || mySeq !== nameCheckSeqRef.current) return;
         const items: any[] = res?.items || [];
         const exact = items.find((t: any) => t?.name === trimmed);
@@ -424,7 +424,7 @@ export default function CreateTokenView() {
       const message = error?.message || error?.reason || 'Unknown error';
       if (message.includes('NAME_ALREADY_REGISTERED')) {
         try {
-          const searchResult = await TrendminerApi.listTokens({
+          const searchResult = await SuperheroApi.listTokens({
             limit: 10,
             search: tokenName,
           });

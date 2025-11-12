@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { TrendminerApi } from "../../api/backend";
+import { SuperheroApi } from "../../api/backend";
 import { useAeSdk } from "../../hooks";
 import WebSocketClient from "../../libs/WebSocketClient";
 
@@ -95,17 +95,17 @@ export default function LeftRail() {
     async function loadTrendingData() {
       try {
         const [tagsResp, tokensResp, statsResp] = await Promise.all([
-          TrendminerApi.listTrendingTags({
+          SuperheroApi.listTrendingTags({
             orderBy: "score",
             orderDirection: "DESC",
             limit: 10,
           }),
-          TrendminerApi.listTokens({
+          SuperheroApi.listTokens({
             orderBy: "market_cap",
             orderDirection: "DESC",
             limit: 5,
           }),
-          TrendminerApi.fetchJson("/api/analytics/past-24-hours"),
+          SuperheroApi.fetchJson("/api/analytics/past-24-hours"),
         ]);
 
         if (!cancelled) {
@@ -161,8 +161,8 @@ export default function LeftRail() {
     async function loadLiveTransactions() {
       try {
         const [txResp, createdResp] = await Promise.all([
-          TrendminerApi.fetchJson("/api/transactions?limit=5"),
-          TrendminerApi.fetchJson(
+          SuperheroApi.fetchJson("/api/transactions?limit=5"),
+          SuperheroApi.fetchJson(
             "/api/tokens?order_by=created_at&order_direction=DESC&limit=3"
           ),
         ]);

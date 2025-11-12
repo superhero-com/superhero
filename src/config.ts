@@ -54,7 +54,7 @@ const defaultConfig: AppConfig = {
   PROFILE_REGISTRY_ADDRESS: "",
   LANDING_ENABLED: false,
   WORDBAZAAR_ENABLED: false,
-  POPULAR_FEED_ENABLED: true,
+  POPULAR_FEED_ENABLED: false,
   GOVERNANCE_API_URL:
     "https://governance-server-mainnet.prd.service.aepps.com/",
   GOVERNANCE_CONTRACT_ADDRESS:

@@ -15,7 +15,7 @@ import CommentForm from '../components/CommentForm';
 import { resolvePostByKey } from '../utils/resolvePost';
 
 export default function PostDetail({ standalone = true }: { standalone?: boolean } = {}) {
-  const { postId, slug } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -26,13 +26,13 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     error: postError,
     refetch: refetchPost
   } = useQuery({
-    queryKey: ['post', slug || postId],
+    queryKey: ['post', slug],
     queryFn: async () => {
-      const key = String(slug || postId || '');
+      const key = String(slug || '');
       if (!key) throw new Error('Missing post identifier');
       return resolvePostByKey(key);
     },
-    enabled: !!(slug || postId),
+    enabled: !!slug,
     refetchInterval: 120 * 1000, // Auto-refresh every 2 minutes
   });
 
@@ -178,7 +178,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
         <Head
           title={`Post on Superhero.com: "${(postData as any)?.content?.slice(0, 100) || 'Post'}"`}
           description={(postData as any)?.content?.slice(0, 160) || 'View post on Superhero, the crypto social network.'}
-          canonicalPath={`/post/${(postData as any)?.slug || String((postData as any)?.id || slug || postId).replace(/_v3$/,'')}`}
+          canonicalPath={`/post/${(postData as any)?.slug || String((postData as any)?.id || slug).replace(/_v3$/,'')}`}
           ogImage={(Array.isArray((postData as any)?.media) && (postData as any).media[0]) || undefined}
           jsonLd={{
             '@context': 'https://schema.org',

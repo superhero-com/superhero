@@ -878,14 +878,14 @@ export default function RightRail({
     <div id="right-rail-root" className="grid gap-4 h-fit min-w-0 scrollbar-thin scrollbar-track-white/[0.02] scrollbar-thumb-gradient-to-r scrollbar-thumb-from-pink-500/60 scrollbar-thumb-via-[rgba(0,255,157,0.6)] scrollbar-thumb-to-pink-500/60 scrollbar-thumb-rounded-[10px] scrollbar-thumb-border scrollbar-thumb-border-white/10 hover:scrollbar-thumb-from-pink-500/80 hover:scrollbar-thumb-via-[rgba(0,255,157,0.8)] hover:scrollbar-thumb-to-pink-500/80">
       {/* Network & Wallet Overview - Hidden on own profile */}
       {!isOwnProfile && (
-        <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] px-5 py-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-[var(--border-gradient)] before:opacity-0 before:transition-opacity before:duration-300">
+        <div className="bg-white/[0.03] border border-white/10 rounded-[20px] px-5 py-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
           <WalletOverviewCard key={activeAccount} selectedCurrency={selectedCurrency} prices={prices} />
         </div>
       )}
 
       {/* Enhanced Price Section (hidden by default via hidePriceSection) */}
       {!hidePriceSection && (
-        <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-[var(--border-gradient)] before:opacity-0 before:transition-opacity before:duration-300">
+        <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
           <div className="flex items-center gap-3 mb-4">
             <span className="text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
               📈
@@ -1282,7 +1282,7 @@ export default function RightRail({
       )}
 
       {/* Quick Actions - moved to Right Rail bottom */}
-      <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
+      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-lg">⚡</span>
           <h4 className="m-0 text-white text-base font-bold">
@@ -1346,7 +1346,7 @@ export default function RightRail({
       </div>
 
       {/* Buy AE with ETH widget (compact) */}
-      <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-4 shadow-none">
+      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none">
         <BuyAeWidget embedded={true} />
       </div>
 

@@ -119,6 +119,15 @@ export const SuperheroApi = {
       throw err;
     }
   },
+  // GET /api/posts/popular?window=all&page=1&limit=50
+  listPopularPosts(params: { window?: '24h'|'7d'|'all'; page?: number; limit?: number } = {}) {
+    const qp = new URLSearchParams();
+    if (params.window) qp.set('window', params.window);
+    if (params.page != null) qp.set('page', String(params.page));
+    if (params.limit != null) qp.set('limit', String(params.limit));
+    const query = qp.toString();
+    return this.fetchJson(`/api/posts/popular${query ? `?${query}` : ''}`);
+  },
   // GET /api/tips/posts/{postId}/summary
   getPostTipSummary(postId: string) {
     return this.fetchJson(`/api/tips/posts/${encodeURIComponent(postId)}/summary`);

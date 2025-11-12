@@ -8,11 +8,18 @@ interface SortControlsProps {
   className?: string;
   popularWindow?: '24h' | '7d' | 'all';
   onPopularWindowChange?: (value: '24h' | '7d' | 'all') => void;
+  popularFeedEnabled?: boolean;
 }
 
 // Component: Sort Controls
 const SortControls = memo(
-  ({ sortBy, onSortChange, className = "", popularWindow = 'all', onPopularWindowChange }: SortControlsProps) => (
+  ({ sortBy, onSortChange, className = "", popularWindow = 'all', onPopularWindowChange, popularFeedEnabled = true }: SortControlsProps) => {
+    // Hide filter completely if popular feed is disabled
+    if (!popularFeedEnabled) {
+      return null;
+    }
+
+    return (
     <div className={cn("w-full mb-3", className)}>
       {/* Mobile: text tabs with bottom divider and active underline */}
       <div className="md:hidden">
@@ -123,7 +130,8 @@ const SortControls = memo(
         )}
       </div>
     </div>
-  )
+    );
+  }
 );
 
 SortControls.displayName = "SortControls";

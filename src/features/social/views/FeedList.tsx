@@ -18,6 +18,7 @@ import TokenCreatedFeedItem from "../components/TokenCreatedFeedItem";
 import TokenCreatedActivityItem from "../components/TokenCreatedActivityItem";
 import { PostApiResponse } from "../types";
 import Head from "../../../seo/Head";
+import { CONFIG } from "../../../config";
 
 // Custom hook
 function useUrlQuery() {
@@ -81,8 +82,13 @@ export default function FeedList({
 
   // Comment counts are now provided directly by the API in post.total_comments
 
+  // Check if popular feed is enabled
+  const popularFeedEnabled = CONFIG.POPULAR_FEED_ENABLED ?? true;
+
   // URL parameters
-  const sortBy = urlQuery.get("sortBy") || "hot";
+  const urlSortBy = urlQuery.get("sortBy");
+  // Force "latest" if popular feed is disabled, otherwise use URL param or default to "hot"
+  const sortBy = !popularFeedEnabled ? "latest" : (urlSortBy || "hot");
   const search = urlQuery.get("search") || "";
   const filterBy = urlQuery.get("filterBy") || "all";
   const initialWindow = (urlQuery.get("window") as '24h'|'7d'|'all' | null) || '24h';
@@ -401,6 +407,10 @@ export default function FeedList({
   // Memoized event handlers for better performance
   const handleSortChange = useCallback(
     (newSortBy: string) => {
+      // Prevent switching to "hot" if popular feed is disabled
+      if (!popularFeedEnabled && newSortBy === 'hot') {
+        return;
+      }
       // Clear cached pages to avoid showing stale lists during rapid tab switches
       queryClient.removeQueries({ queryKey: ["posts"], exact: false });
       queryClient.removeQueries({ queryKey: ["home-activities"], exact: false });
@@ -412,7 +422,7 @@ export default function FeedList({
         navigate(`/?sortBy=${newSortBy}`);
       }
     },
-    [navigate, queryClient, popularWindow]
+    [navigate, queryClient, popularWindow, popularFeedEnabled]
   );
 
   const handlePopularWindowChange = useCallback((w: '24h'|'7d'|'all') => {
@@ -693,6 +703,7 @@ export default function FeedList({
             className="sticky top-0 z-10 w-full"
             popularWindow={popularWindow}
             onPopularWindowChange={handlePopularWindowChange}
+            popularFeedEnabled={popularFeedEnabled}
           />
         </div>
         <div className="hidden md:block">
@@ -701,6 +712,7 @@ export default function FeedList({
             onSortChange={handleSortChange}
             popularWindow={popularWindow}
             onPopularWindowChange={handlePopularWindowChange}
+            popularFeedEnabled={popularFeedEnabled}
           />
         </div>
       </div>

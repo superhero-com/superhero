@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendminerApi } from '../../../api/backend';
+import { SuperheroApi } from '../../../api/backend';
 import { Input } from '../../../components/ui/input';
 import AeButton from '../../../components/AeButton';
 import { cn } from '../../../lib/utils';
@@ -95,7 +95,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
   const fetchTrendingRepositories = async () => {
     try {
       setIsLoading(true);
-      const response = await TrendminerApi.listTrendingTags({
+      const response = await SuperheroApi.listTrendingTags({
         orderBy: sortBy,
         orderDirection: 'DESC',
         limit: 20, // shouldn't be bigger than the tokens list as it can break the scroll

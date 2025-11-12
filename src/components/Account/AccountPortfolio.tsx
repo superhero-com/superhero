@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import moment from 'moment';
-import { TrendminerApi } from '@/api/backend';
+import { SuperheroApi } from '@/api/backend';
 import { useCurrencies } from '@/hooks/useCurrencies';
 import { usePortfolioValue } from '@/hooks/usePortfolioValue';
 import { Decimal } from '@/libs/decimal';
@@ -712,7 +712,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     // Stable query key: only changes when time range or currency changes
     queryKey: ['portfolio-history', address, selectedTimeRange, convertTo],
     queryFn: async () => {
-      const response = await TrendminerApi.getAccountPortfolioHistory(address, {
+      const response = await SuperheroApi.getAccountPortfolioHistory(address, {
         startDate: dateRange.startDate,
         endDate: dateRange.endDate,
         interval: dateRange.interval,

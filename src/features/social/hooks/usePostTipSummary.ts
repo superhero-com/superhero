@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { TrendminerApi } from '../../../api/backend';
+import { SuperheroApi } from '../../../api/backend';
 
 function normalizePostIdV3(postId: string): string {
   return String(postId).endsWith('_v3') ? String(postId) : `${postId}_v3`;
@@ -13,7 +13,7 @@ export function usePostTipSummary(postId?: string) {
     queryFn: async () => {
       if (!id) return undefined;
       try {
-        return await TrendminerApi.getPostTipSummary(id);
+        return await SuperheroApi.getPostTipSummary(id);
       } catch {
         return undefined;
       }

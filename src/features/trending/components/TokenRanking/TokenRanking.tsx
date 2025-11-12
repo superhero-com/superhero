@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { TrendminerApi } from '../../../../api/backend';
+import { SuperheroApi } from '../../../../api/backend';
 import { Decimal } from '../../../../libs/decimal';
 import { toAe } from '@aeternity/aepp-sdk';
 
@@ -53,7 +53,7 @@ export default function TokenRanking({ token }: TokenRankingProps) {
       
       setLoading(true);
       try {
-        const data = await TrendminerApi.listTokenRankings(token.sale_address, {
+        const data = await SuperheroApi.listTokenRankings(token.sale_address, {
           limit: tokenRankingLimit,
           page: 1,
         });

@@ -72,9 +72,8 @@
   }
   
   .genz-card {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     padding: 20px;
     box-shadow: none;
@@ -85,22 +84,6 @@
     &:hover {
       transform: none;
       box-shadow: none;
-    }
-    
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: var(--border-gradient);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    
-    &:hover::before {
-      opacity: 1;
     }
   }
 

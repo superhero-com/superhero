@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { PostsService } from "../../../api/generated";
 import type { PostDto } from "../../../api/generated";
-import { TrendminerApi } from "../../../api/backend";
+import { SuperheroApi } from "../../../api/backend";
 import WebSocketClient from "../../../libs/WebSocketClient";
 import AeButton from "../../../components/AeButton";
 import HeroBannerCarousel from "../../../components/hero-banner/HeroBannerCarousel";
@@ -18,6 +18,7 @@ import TokenCreatedFeedItem from "../components/TokenCreatedFeedItem";
 import TokenCreatedActivityItem from "../components/TokenCreatedActivityItem";
 import { PostApiResponse } from "../types";
 import Head from "../../../seo/Head";
+import { CONFIG } from "../../../config";
 
 // Custom hook
 function useUrlQuery() {
@@ -81,13 +82,34 @@ export default function FeedList({
 
   // Comment counts are now provided directly by the API in post.total_comments
 
+  // Check if popular feed is enabled
+  const popularFeedEnabled = CONFIG.POPULAR_FEED_ENABLED ?? true;
+
   // URL parameters
-  const sortBy = urlQuery.get("sortBy") || "latest";
+  const urlSortBy = urlQuery.get("sortBy");
+  // Force "latest" if popular feed is disabled, otherwise use URL param or default to "hot"
+  const sortBy = !popularFeedEnabled ? "latest" : (urlSortBy || "hot");
   const search = urlQuery.get("search") || "";
   const filterBy = urlQuery.get("filterBy") || "all";
+  const initialWindow = (urlQuery.get("window") as '24h'|'7d'|'all' | null) || '24h';
   const shouldAutoFocusPost = urlQuery.get("post") === "new";
 
   const [localSearch, setLocalSearch] = useState(search);
+  const [popularWindow, setPopularWindow] = useState<'24h'|'7d'|'all'>(initialWindow);
+
+  // Keep popularWindow in sync with URL (e.g., browser back/forward or direct URL edits)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const fromUrl = (params.get("window") as '24h'|'7d'|'all' | null) || '24h';
+    if (fromUrl !== popularWindow) {
+      setPopularWindow(fromUrl);
+      if (sortBy === 'hot') {
+        // Reset cached pages to avoid mixing windows
+        queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
+        queryClient.removeQueries({ queryKey: ["latest-after-popular"], exact: false });
+      }
+    }
+  }, [location.search, sortBy, queryClient, popularWindow]);
 
   // Helper to map a token object or websocket payload into a Post-like item
   const mapTokenCreatedToPost = useCallback((payload: any): PostDto => {
@@ -134,7 +156,7 @@ export default function FeedList({
     enabled: sortBy !== "hot",
     initialPageParam: 1,
     queryFn: async ({ pageParam = 1 }) => {
-      const resp = await TrendminerApi.listTokens({
+      const resp = await SuperheroApi.listTokens({
         orderBy: "created_at",
         orderDirection: "DESC",
         limit: ACTIVITY_PAGE_SIZE,
@@ -184,26 +206,86 @@ export default function FeedList({
   }, [mapTokenCreatedToPost, queryClient, sortBy]);
 
   // Infinite query for posts
+  // For non-hot: single list of latest posts
   const {
-    data,
-    isLoading,
-    error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    refetch,
+    data: latestData,
+    isLoading: latestLoading,
+    error: latestError,
+    fetchNextPage: fetchNextLatest,
+    hasNextPage: hasMoreLatest,
+    isFetchingNextPage: fetchingMoreLatest,
+    refetch: refetchLatest,
   } = useInfiniteQuery({
-    queryKey: ["posts", { limit: 10, sortBy, search, filterBy }],
+    enabled: sortBy !== "hot",
+    queryKey: ["posts", { limit: 10, sortBy, search: localSearch, filterBy }],
     queryFn: ({ pageParam = 1 }) =>
       PostsService.listAll({
         limit: 10,
         page: pageParam,
-        orderBy:
-          sortBy === "latest"
-            ? "created_at"
-            : sortBy === "hot"
-            ? "total_comments"
-            : "created_at",
+        orderBy: "created_at",
+        orderDirection: "DESC",
+        search: localSearch,
+      }) as unknown as Promise<PostApiResponse>,
+    getNextPageParam: (lastPage) => {
+      if (
+        lastPage?.meta?.currentPage &&
+        lastPage?.meta?.totalPages &&
+        lastPage.meta.currentPage < lastPage.meta.totalPages
+      ) {
+        return lastPage.meta.currentPage + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
+  });
+
+  // For hot: first fetch popular posts, then continue with latest posts after separator
+  const {
+    data: popularData,
+    isLoading: popularLoading,
+    error: popularError,
+    fetchNextPage: fetchNextPopular,
+    hasNextPage: hasMorePopular,
+    isFetchingNextPage: fetchingMorePopular,
+    refetch: refetchPopular,
+  } = useInfiniteQuery({
+    enabled: sortBy === "hot",
+    queryKey: ["popular-posts", { limit: 10, window: popularWindow }],
+    queryFn: ({ pageParam = 1 }) =>
+      SuperheroApi.listPopularPosts({
+        window: popularWindow,
+        page: pageParam as number,
+        limit: 10,
+      }) as unknown as Promise<PostApiResponse>,
+    getNextPageParam: (lastPage) => {
+      if (
+        lastPage?.meta?.currentPage &&
+        lastPage?.meta?.totalPages &&
+        lastPage.meta.currentPage < lastPage.meta.totalPages
+      ) {
+        return lastPage.meta.currentPage + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
+  });
+
+  const {
+    data: afterPopularData,
+    isLoading: afterPopularLoading,
+    error: afterPopularError,
+    fetchNextPage: fetchNextAfterPopular,
+    hasNextPage: hasMoreAfterPopular,
+    isFetchingNextPage: fetchingMoreAfterPopular,
+    refetch: refetchAfterPopular,
+  } = useInfiniteQuery({
+    enabled: sortBy === "hot",
+    queryKey: ["latest-after-popular", { limit: 10, search: localSearch }],
+    queryFn: ({ pageParam = 1 }) =>
+      PostsService.listAll({
+        limit: 10,
+        page: pageParam,
+        orderBy: "created_at",
         orderDirection: "DESC",
         search: localSearch,
       }) as unknown as Promise<PostApiResponse>,
@@ -222,23 +304,71 @@ export default function FeedList({
 
   // Derived state: posts list
   const list = useMemo(
-    () => (data?.pages ? (data.pages as any[]).flatMap((page: any) => page?.items ?? []) : []),
-    [data]
+    () =>
+      latestData?.pages
+        ? ((latestData.pages as any[]) || []).flatMap((page: any) => page?.items ?? [])
+        : [],
+    [latestData]
   );
+
+  const popularList = useMemo(
+    () =>
+      popularData?.pages
+        ? ((popularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? [])
+        : [],
+    [popularData]
+  );
+
+  const afterPopularList = useMemo(
+    () =>
+      afterPopularData?.pages
+        ? ((afterPopularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? [])
+        : [],
+    [afterPopularData]
+  );
+
+  // Apply search/filter on the "after popular" segment as well
+  const filteredAfterPopularList = useMemo(() => {
+    let filtered = [...afterPopularList];
+    if (localSearch.trim()) {
+      const searchTerm = localSearch.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          (item.content && item.content.toLowerCase().includes(searchTerm)) ||
+          (item.topics &&
+            item.topics.some((topic) =>
+              topic.toLowerCase().includes(searchTerm)
+            )) ||
+          (item.sender_address &&
+            item.sender_address.toLowerCase().includes(searchTerm)) ||
+          (chainNames?.[item.sender_address] &&
+            chainNames[item.sender_address].toLowerCase().includes(searchTerm))
+      );
+    }
+    if (filterBy === "withMedia") {
+      filtered = filtered.filter(
+        (item) => item.media && Array.isArray(item.media) && item.media.length > 0
+      );
+    } else if (filterBy === "withComments") {
+      filtered = filtered.filter((item) => (item.total_comments ?? 0) > 0);
+    }
+    return filtered;
+  }, [afterPopularList, localSearch, filterBy, chainNames]);
 
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo(() => {
-    // Hide token-created events on the popular (hot) tab
-    const includeEvents = sortBy !== "hot";
-    const merged = includeEvents ? [...activityList, ...list] : [...list];
-    // Keep backend order for 'hot'; only sort by time when we interleave activities
-    if (!includeEvents) return merged;
+    if (sortBy === "hot") {
+      // For hot: show popular first; after popular ends, we will render separator + latest-after-popular in render layer
+      return popularList;
+    }
+    // Default path: interleave activities and latest, sorted by created_at desc
+    const merged = [...activityList, ...list];
     return merged.sort((a: any, b: any) => {
       const at = new Date(a?.created_at || 0).getTime();
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     });
-  }, [list, activityList, sortBy]);
+  }, [list, activityList, sortBy, popularList]);
 
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {
@@ -277,13 +407,33 @@ export default function FeedList({
   // Memoized event handlers for better performance
   const handleSortChange = useCallback(
     (newSortBy: string) => {
+      // Prevent switching to "hot" if popular feed is disabled
+      if (!popularFeedEnabled && newSortBy === 'hot') {
+        return;
+      }
       // Clear cached pages to avoid showing stale lists during rapid tab switches
       queryClient.removeQueries({ queryKey: ["posts"], exact: false });
       queryClient.removeQueries({ queryKey: ["home-activities"], exact: false });
-      navigate(`/?sortBy=${newSortBy}`);
+      queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
+      queryClient.removeQueries({ queryKey: ["latest-after-popular"], exact: false });
+      if (newSortBy === 'hot') {
+        navigate(`/?sortBy=hot&window=${popularWindow}`);
+      } else {
+        navigate(`/?sortBy=${newSortBy}`);
+      }
     },
-    [navigate, queryClient]
+    [navigate, queryClient, popularWindow, popularFeedEnabled]
   );
+
+  const handlePopularWindowChange = useCallback((w: '24h'|'7d'|'all') => {
+    setPopularWindow(w);
+    if (sortBy === 'hot') {
+      navigate(`/?sortBy=hot&window=${w}`);
+      // Reset pages for new window
+      queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
+      queryClient.removeQueries({ queryKey: ["latest-after-popular"], exact: false });
+    }
+  }, [navigate, sortBy, queryClient]);
 
   const handleItemClick = useCallback(
     (idOrSlug: string) => {
@@ -306,11 +456,27 @@ export default function FeedList({
 
   // Render helpers
   const renderEmptyState = () => {
-    const initialLoading = (sortBy !== "hot" && activitiesLoading) || isLoading;
-    if (error) {
-      return <EmptyState type="error" error={error} onRetry={refetch} />;
+    if (sortBy === "hot") {
+      const initialLoading = popularLoading || afterPopularLoading;
+      const err = popularError || afterPopularError;
+      if (err) {
+        return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); refetchAfterPopular(); }} />;
+      }
+      // Show empty state when there are no popular posts for the selected window,
+      // even if we will show latest posts as a fallback.
+      if (!err && filteredAndSortedList.length === 0 && !initialLoading) {
+        return <EmptyState type="empty" hasSearch={!!localSearch} />;
+      }
+      if (initialLoading && filteredAndSortedList.length === 0) {
+        return <EmptyState type="loading" />;
+      }
+      return null;
     }
-    if (!error && filteredAndSortedList.length === 0 && !initialLoading) {
+    const initialLoading = (sortBy !== "hot" && activitiesLoading) || latestLoading;
+    if (latestError) {
+      return <EmptyState type="error" error={latestError as any} onRetry={refetchLatest} />;
+    }
+    if (!latestError && filteredAndSortedList.length === 0 && !initialLoading) {
       return <EmptyState type="empty" hasSearch={!!localSearch} />;
     }
     if (initialLoading && filteredAndSortedList.length === 0) {
@@ -448,7 +614,10 @@ export default function FeedList({
   // Auto-load more when reaching bottom using IntersectionObserver (all screens)
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const fetchingRef = useRef(false);
-  const initialLoading = (sortBy !== "hot" && activitiesLoading) || isLoading;
+  const initialLoading =
+    sortBy === "hot"
+      ? (popularLoading || afterPopularLoading)
+      : (sortBy !== "hot" && activitiesLoading) || latestLoading;
   const [showLoadMore, setShowLoadMore] = useState(false);
   useEffect(() => { setShowLoadMore(false); }, [sortBy]);
   useEffect(() => {
@@ -462,15 +631,39 @@ export default function FeedList({
       setShowLoadMore(true);
       fetchingRef.current = true;
       const tasks: Promise<any>[] = [];
-      if (hasNextPage && !isFetchingNextPage) tasks.push(fetchNextPage());
-      if (sortBy !== "hot" && hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
+      if (sortBy === "hot") {
+        if (hasMorePopular && !fetchingMorePopular) tasks.push(fetchNextPopular());
+        else if (hasMoreAfterPopular && !fetchingMoreAfterPopular) tasks.push(fetchNextAfterPopular());
+      } else {
+        if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
+        if (hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
+      }
       Promise.all(tasks).finally(() => {
         fetchingRef.current = false;
       });
     }, { root: null, rootMargin: '800px 0px', threshold: 0.01 });
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [initialLoading, hasNextPage, isFetchingNextPage, fetchNextPage, sortBy, hasMoreActivities, fetchingMoreActivities, fetchNextActivities]);
+  }, [
+    initialLoading,
+    sortBy,
+    // latest
+    hasMoreLatest,
+    fetchingMoreLatest,
+    fetchNextLatest,
+    // activities
+    hasMoreActivities,
+    fetchingMoreActivities,
+    fetchNextActivities,
+    // popular
+    hasMorePopular,
+    fetchingMorePopular,
+    fetchNextPopular,
+    // after popular
+    hasMoreAfterPopular,
+    fetchingMoreAfterPopular,
+    fetchNextAfterPopular,
+  ]);
 
   const content = (
     <div className="w-full">
@@ -490,33 +683,107 @@ export default function FeedList({
       )}
       {/* Single CreatePost instance for consistent focus/scroll across viewports */}
       <div>
-        <CreatePost ref={createPostRef} onSuccess={refetch} autoFocus={shouldAutoFocusPost} />
+        <CreatePost
+          ref={createPostRef}
+          onSuccess={() => {
+            if (sortBy === "hot") {
+              refetchPopular();
+              refetchAfterPopular();
+            } else {
+              refetchLatest();
+            }
+          }}
+          autoFocus={shouldAutoFocusPost}
+        />
         {/* Sort controls rendered once; styles adapt per breakpoint */}
         <div className="md:hidden">
           <SortControls
             sortBy={sortBy}
             onSortChange={handleSortChange}
             className="sticky top-0 z-10 w-full"
+            popularWindow={popularWindow}
+            onPopularWindowChange={handlePopularWindowChange}
+            popularFeedEnabled={popularFeedEnabled}
           />
         </div>
         <div className="hidden md:block">
-          <SortControls sortBy={sortBy} onSortChange={handleSortChange} />
+          <SortControls
+            sortBy={sortBy}
+            onSortChange={handleSortChange}
+            popularWindow={popularWindow}
+            onPopularWindowChange={handlePopularWindowChange}
+            popularFeedEnabled={popularFeedEnabled}
+          />
         </div>
       </div>
 
       <div className="w-full flex flex-col gap-0 md:gap-2 md:mx-0">
         {renderEmptyState()}
-        {((sortBy !== "hot" && !activitiesLoading) || sortBy === "hot") && !isLoading && renderFeedItems}
+        {/* Non-hot: existing renderer */}
+        {sortBy !== "hot" && !latestLoading && renderFeedItems}
+
+        {/* Hot: render popular first, then separator, then latest-after-popular */}
+        {sortBy === "hot" && !popularLoading && (
+          <>
+            {/* Popular posts list */}
+            {filteredAndSortedList.map((item) => (
+              <ReplyToFeedItem
+                key={item.id}
+                item={item}
+                commentCount={item.total_comments ?? 0}
+                allowInlineRepliesToggle={false}
+                onOpenPost={handleItemClick}
+              />
+            ))}
+
+            {/* Separator + latest list after popular ends */}
+            {!hasMorePopular && filteredAfterPopularList.length > 0 && (
+              <>
+                <div className="my-6 md:my-8 flex items-center gap-3">
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                  <div className="text-[11px] md:text-xs uppercase tracking-wider text-white/70 bg-white/[0.06] border border-white/10 rounded-full px-3 py-1 backdrop-blur-sm">
+                    Popular posts ended — showing latest posts
+                  </div>
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                </div>
+                {filteredAfterPopularList.map((item) => (
+                  <ReplyToFeedItem
+                    key={item.id}
+                    item={item}
+                    commentCount={item.total_comments ?? 0}
+                    allowInlineRepliesToggle={false}
+                    onOpenPost={handleItemClick}
+                  />
+                ))}
+              </>
+            )}
+          </>
+        )}
       </div>
 
-      {!initialLoading && hasNextPage && filteredAndSortedList.length > 0 && (
+      {/* Load more button (desktop) */}
+      {!initialLoading && (
         <>
           {/* Desktop: explicit load more button */}
           {showLoadMore && (
             <div className="hidden md:block p-4 md:p-6 text-center">
               <AeButton
-                loading={isFetchingNextPage}
-                onClick={() => fetchNextPage()}
+                loading={
+                  sortBy === "hot"
+                    ? fetchingMorePopular || fetchingMoreAfterPopular
+                    : (fetchingMoreLatest || fetchingMoreActivities)
+                }
+                onClick={() => {
+                  if (sortBy === "hot") {
+                    if (hasMorePopular && !fetchingMorePopular) return fetchNextPopular();
+                    if (hasMoreAfterPopular && !fetchingMoreAfterPopular) return fetchNextAfterPopular();
+                    return;
+                  }
+                  const tasks: Promise<any>[] = [];
+                  if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
+                  if (hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
+                  if (tasks.length > 0) return Promise.all(tasks);
+                }}
                 className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5"
               >
                 Load more

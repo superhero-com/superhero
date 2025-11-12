@@ -393,45 +393,62 @@ export default function UserProfile({
 
         {/* Stats Grid - Right column on md+, full width on mobile */}
         <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5 md:gap-2.5">
-          <div className="rounded-2xl bg-white/[0.02] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all">
+          <div className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all flex flex-col justify-center">
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
               AE Balance
             </div>
             <div className="text-base md:text-lg font-bold text-white">
-              {decimalBalance ? `${decimalBalance.prettify()} AE` : "Loading..."}
+              {decimalBalance ? (() => {
+                try {
+                  const value = typeof decimalBalance.toNumber === 'function' 
+                    ? decimalBalance.toNumber()
+                    : typeof decimalBalance === 'number'
+                    ? decimalBalance
+                    : Number(decimalBalance);
+                  // If value is above 1 AE, show 2 decimals
+                  if (value >= 1) {
+                    return `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AE`;
+                  }
+                  // Otherwise use prettify for values below 1 AE
+                  return `${decimalBalance.prettify()} AE`;
+                } catch {
+                  // Fallback to prettify if conversion fails
+                  return `${decimalBalance.prettify()} AE`;
+                }
+              })() : "Loading..."}
             </div>
           </div>
           <button
             onClick={() => handleTabChange("owned")}
-            className="rounded-2xl bg-white/[0.02] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all cursor-pointer text-left w-full focus:outline-none"
+            className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
           >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
               Owned Trends
             </div>
             <div className="text-base md:text-lg font-bold text-white">
-              {(ownedTokensResp as any)?.meta?.totalItems ?? (Array.isArray(aex9Balances) ? aex9Balances.length : 0)}
+              {((ownedTokensResp as any)?.meta?.totalItems ?? (Array.isArray(aex9Balances) ? aex9Balances.length : 0)).toLocaleString()}
             </div>
           </button>
           <button
             onClick={() => handleTabChange("created")}
-            className="rounded-2xl bg-white/[0.02] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all cursor-pointer text-left w-full focus:outline-none"
+            className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
           >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
               Created Trends
             </div>
             <div className="text-base md:text-lg font-bold text-white">
-              {accountInfo?.total_created_tokens ?? 0}
+              {(accountInfo?.total_created_tokens ?? 0).toLocaleString()}
             </div>
           </button>
           <button
             onClick={() => handleTabChange("feed")}
-            className="rounded-2xl bg-white/[0.02] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.04] transition-all cursor-pointer text-left w-full focus:outline-none"
+            className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
           >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
               Posts
             </div>
             <div className="text-base md:text-lg font-bold text-white">
-              {posts.length}
+              {posts.length.toLocaleString()}
             </div>
           </button>
         </div>

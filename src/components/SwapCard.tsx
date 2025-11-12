@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { useEffect, useMemo, useState } from 'react';
-import { TrendminerApi } from '../api/backend';
+import { SuperheroApi } from '../api/backend';
 import { DEX_ADDRESSES, ensureAllowanceForRouter, fromAettos, initDexContracts, subSlippage, toAettos } from '../libs/dex';
 import TradeCard from '../views/Trendminer/TradeCard';
 import AeButton from './AeButton';
@@ -38,7 +38,7 @@ export default function SwapCard() {
       setLoading(true);
       setError(null);
       try {
-        const res = await TrendminerApi.listTokens({ orderBy: 'market_cap', orderDirection: 'DESC', limit: 50 });
+        const res = await SuperheroApi.listTokens({ orderBy: 'market_cap', orderDirection: 'DESC', limit: 50 });
         const items = Array.isArray((res as any)?.data) ? (res as any).data : (res as any)?.items || res;
         if (!ignore) {
           setTokens(items || []);

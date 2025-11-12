@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
-import { TrendminerApi } from '../../api/backend';
+import { SuperheroApi } from '../../api/backend';
 
 export default function Accounts() {
   const [rows, setRows] = useState<any[]>([]);
@@ -18,7 +18,7 @@ export default function Accounts() {
       setLoading(true);
       setError(null);
       try {
-        const resp = await TrendminerApi.listAccounts({ orderBy, orderDirection, limit: 20, page: reset ? 1 : page });
+        const resp = await SuperheroApi.listAccounts({ orderBy, orderDirection, limit: 20, page: reset ? 1 : page });
         const items = resp?.items ?? resp ?? [];
         if (!cancel) {
           setRows((prev) => reset ? items : [...prev, ...items]);

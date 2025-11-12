@@ -11,7 +11,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { WalletInfo } from "node_modules/@aeternity/aepp-sdk/es/aepp-wallet-communication/rpc/types";
 import { createDeepLinkUrl } from "../utils/url";
 import { validateHash } from "../utils/address";
-import { TrendminerApi } from "../api/backend";
+import { SuperheroApi } from "../api/backend";
 import configs from "../configs";
 import type { Wallet, Wallets, NetworkId } from "../utils/types";
 import { walletInfoAtom } from "../atoms/walletAtoms";

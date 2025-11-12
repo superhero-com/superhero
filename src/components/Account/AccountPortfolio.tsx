@@ -814,7 +814,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         queryClient.prefetchQuery({
           queryKey,
           queryFn: async () => {
-            const response = await TrendminerApi.getAccountPortfolioHistory(address, {
+            const response = await SuperheroApi.getAccountPortfolioHistory(address, {
               startDate: prefetchDateRange.startDate,
               endDate: prefetchDateRange.endDate,
               interval: prefetchDateRange.interval,

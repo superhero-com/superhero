@@ -246,7 +246,7 @@ export default function FeedList({
     enabled: sortBy === "hot",
     queryKey: ["popular-posts", { limit: 10, window: popularWindow }],
     queryFn: ({ pageParam = 1 }) =>
-      TrendminerApi.listPopularPosts({
+      SuperheroApi.listPopularPosts({
         window: popularWindow,
         page: pageParam as number,
         limit: 10,

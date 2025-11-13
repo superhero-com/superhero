@@ -409,6 +409,7 @@ export default function FeedList({
   // This ensures posts and activities appear together, not incrementally
   const [bothQueriesReady, setBothQueriesReady] = useState(false);
   const prevSortByForReady = useRef(sortBy);
+  const initialLoadStarted = useRef(false);
   
   useEffect(() => {
     if (sortBy !== "hot") {
@@ -418,23 +419,35 @@ export default function FeedList({
       // Reset ready state when switching feeds
       if (prevSortByForReady.current !== sortBy) {
         setBothQueriesReady(false);
+        initialLoadStarted.current = false;
         prevSortByForReady.current = sortBy;
-        return; // Don't check readiness immediately after switching
       }
       
-      // Mark as ready when:
-      // 1. Both have data, AND
-      // 2. Neither is currently loading (initial load), AND  
-      // 3. Neither is currently fetching (refetch)
-      // This ensures we wait for both queries to complete before showing the combined list
-      const postsReady = hasPostsData && !latestLoading && !latestFetching;
-      const activitiesReady = hasActivitiesData && !activitiesLoading && !activitiesFetching;
+      // Mark that initial load has started if either query is loading or fetching
+      // OR if both already have data (cached case)
+      if (latestLoading || activitiesLoading || latestFetching || activitiesFetching) {
+        initialLoadStarted.current = true;
+      }
+      if (hasPostsData && hasActivitiesData) {
+        initialLoadStarted.current = true;
+      }
       
-      if (postsReady && activitiesReady) {
+      // Only mark as ready when:
+      // 1. Initial load has started (to avoid showing cached data immediately)
+      // 2. Both queries have data
+      // 3. Neither is currently loading (initial load)
+      // 4. Neither is currently fetching (refetch)
+      // This ensures we wait for both queries to complete before showing the combined list
+      const bothHaveData = hasPostsData && hasActivitiesData;
+      const bothNotLoading = !latestLoading && !activitiesLoading;
+      const bothNotFetching = !latestFetching && !activitiesFetching;
+      
+      if (initialLoadStarted.current && bothHaveData && bothNotLoading && bothNotFetching) {
         setBothQueriesReady(true);
       }
     } else {
       setBothQueriesReady(true); // Hot feed doesn't need this check
+      initialLoadStarted.current = false;
     }
   }, [sortBy, latestData, activitiesPages, latestLoading, activitiesLoading, latestFetching, activitiesFetching]);
 

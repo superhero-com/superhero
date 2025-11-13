@@ -83,7 +83,7 @@ const SortControls = memo(
       </div>
 
       {/* Desktop: keep existing pill style */}
-      <div className="hidden md:flex w-full items-center gap-2">
+      <div className="hidden md:flex w-full items-center justify-between gap-2">
         <div className="inline-flex items-center gap-1.5 bg-white/5 rounded-full p-0.5 border border-white/10 md:w-auto">
           <AeButton
             onClick={() => onSortChange("hot")}
@@ -115,7 +115,7 @@ const SortControls = memo(
           </AeButton>
         </div>
         {sortBy === 'hot' && (
-          <div className="inline-flex items-center gap-1 bg-white/5 rounded-full p-0.5 border border-white/10">
+          <div className="inline-flex items-center gap-1 bg-white/5 rounded-full p-0.5 border border-white/10 ml-auto">
             {(['24h','7d','all'] as const).map((tf) => {
               const isActive = popularWindow === tf;
               const label = tf === '24h' ? 'Today' : tf === '7d' ? 'This week' : 'All time';

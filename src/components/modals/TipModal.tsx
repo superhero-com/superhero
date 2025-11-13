@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import { useAccount, useAeSdk } from "../../hooks";
 import { toAettos, fromAettos } from "../../libs/dex";
 import { Decimal } from "../../libs/decimal";
@@ -32,6 +32,21 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
+  
+  // Refs to track polling timers and component mount status
+  const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
+  const isMountedRef = useRef(true);
+  
+  // Cleanup effect to clear all timers on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      // Clear all pending timeouts
+      timeoutRefs.current.forEach(timeoutId => clearTimeout(timeoutId));
+      timeoutRefs.current.clear();
+    };
+  }, []);
 
   const insufficient = useMemo(() => {
     if (!amount) return false;
@@ -102,22 +117,42 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
           const retryInterval = 3000; // 3 seconds between retries
           
           const pollForTip = (attempt: number = 0) => {
-            if (attempt >= maxRetries) {
-              // Final attempt after max retries
-              queryClient.invalidateQueries({ queryKey: ['post-tip-summary', idV3] });
-              queryClient.refetchQueries({ 
-                queryKey: ['post-tip-summary', idV3],
-                type: 'active',
-              });
+            // Stop polling if component is unmounted
+            if (!isMountedRef.current) {
               return;
             }
             
-            setTimeout(() => {
+            if (attempt >= maxRetries) {
+              // Final attempt after max retries
+              if (isMountedRef.current) {
+                queryClient.invalidateQueries({ queryKey: ['post-tip-summary', idV3] });
+                queryClient.refetchQueries({ 
+                  queryKey: ['post-tip-summary', idV3],
+                  type: 'active',
+                });
+              }
+              return;
+            }
+            
+            const timeoutId = setTimeout(() => {
+              // Remove timeout ID from tracking set
+              timeoutRefs.current.delete(timeoutId);
+              
+              // Stop if component unmounted
+              if (!isMountedRef.current) {
+                return;
+              }
+              
               queryClient.invalidateQueries({ queryKey: ['post-tip-summary', idV3] });
               queryClient.refetchQueries({ 
                 queryKey: ['post-tip-summary', idV3],
                 type: 'active',
               }).then(() => {
+                // Stop if component unmounted
+                if (!isMountedRef.current) {
+                  return;
+                }
+                
                 // Check if backend has processed the tip
                 const current = queryClient.getQueryData<{ totalTips?: string }>(['post-tip-summary', idV3]);
                 const currentTotal = current?.totalTips != null ? Number(current.totalTips) : 0;
@@ -132,40 +167,65 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
                 // Continue polling
                 pollForTip(attempt + 1);
               }).catch(() => {
+                // Stop if component unmounted
+                if (!isMountedRef.current) {
+                  return;
+                }
+                
                 // On error, continue polling
                 pollForTip(attempt + 1);
               });
             }, retryInterval);
+            
+            // Track timeout ID for cleanup
+            timeoutRefs.current.add(timeoutId);
           };
           
           // Start polling after initial delay to give backend time to start processing
-          setTimeout(() => {
-            pollForTip(0);
+          const initialTimeoutId = setTimeout(() => {
+            // Remove timeout ID from tracking set
+            timeoutRefs.current.delete(initialTimeoutId);
+            
+            // Only start polling if component is still mounted
+            if (isMountedRef.current) {
+              pollForTip(0);
+            }
           }, 5000); // 5 second initial delay before first poll
+          
+          // Track initial timeout ID for cleanup
+          timeoutRefs.current.add(initialTimeoutId);
         }
         // Auto-reset success state after 2.5s
-        setTimeout(() => {
-          setTipStatus((s) => {
-            const current = s[tipKey];
-            if (!current || current.status !== 'success') return s;
-            const next = { ...s } as any;
-            delete next[tipKey];
-            return next;
-          });
+        const successResetTimeoutId = setTimeout(() => {
+          timeoutRefs.current.delete(successResetTimeoutId);
+          if (isMountedRef.current) {
+            setTipStatus((s) => {
+              const current = s[tipKey];
+              if (!current || current.status !== 'success') return s;
+              const next = { ...s } as any;
+              delete next[tipKey];
+              return next;
+            });
+          }
         }, 2500);
+        timeoutRefs.current.add(successResetTimeoutId);
       }
     } catch (e: any) {
       if (tipKey) {
         setTipStatus((s) => ({ ...s, [tipKey]: { status: 'error', updatedAt: Date.now() } }));
-        setTimeout(() => {
-          setTipStatus((s) => {
-            const current = s[tipKey];
-            if (!current || current.status !== 'error') return s;
-            const next = { ...s } as any;
-            delete next[tipKey];
-            return next;
-          });
+        const errorResetTimeoutId = setTimeout(() => {
+          timeoutRefs.current.delete(errorResetTimeoutId);
+          if (isMountedRef.current) {
+            setTipStatus((s) => {
+              const current = s[tipKey];
+              if (!current || current.status !== 'error') return s;
+              const next = { ...s } as any;
+              delete next[tipKey];
+              return next;
+            });
+          }
         }, 2500);
+        timeoutRefs.current.add(errorResetTimeoutId);
       }
     }
   }

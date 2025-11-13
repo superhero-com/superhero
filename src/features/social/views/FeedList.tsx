@@ -150,6 +150,7 @@ export default function FeedList({
     fetchNextPage: fetchNextActivities,
     hasNextPage: hasMoreActivities,
     isFetchingNextPage: fetchingMoreActivities,
+    refetch: refetchActivities,
   } = useInfiniteQuery<PostDto[], Error>({
     queryKey: ["home-activities"],
     enabled: sortBy !== "hot",
@@ -178,7 +179,7 @@ export default function FeedList({
     },
     getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === ACTIVITY_PAGE_SIZE ? pages.length + 1 : undefined),
     // Use cached data when available, same as posts query
-    staleTime: 60000, // Consider data fresh for 60 seconds - use cached data during this time
+    staleTime: 10000, // Consider data fresh for 10 seconds - shorter to ensure new items appear
     // This ensures activities load at the same time as posts when switching to latest
   });
   const activityList: PostDto[] = useMemo(
@@ -240,11 +241,24 @@ export default function FeedList({
     },
     initialPageParam: 1,
     // Use cached data when available, but still allow fetching new items
-    staleTime: 60000, // Consider data fresh for 60 seconds - use cached data during this time
+    staleTime: 10000, // Consider data fresh for 10 seconds - shorter to ensure new posts appear
     // refetchOnMount defaults to true, but with staleTime it will use cached data if fresh
-    // This means switching to latest will show cached data immediately if fresh (< 60s old)
-    // and will fetch new items if stale (> 60s old)
+    // This means switching to latest will show cached data immediately if fresh (< 10s old)
+    // and will fetch new items if stale (> 10s old)
   });
+
+  // Refetch page 1 when switching to latest to ensure newest posts are shown
+  const prevSortByRef = useRef(sortBy);
+  useEffect(() => {
+    // Only refetch when switching TO "latest" from another feed
+    if (sortBy === "latest" && prevSortByRef.current !== "latest") {
+      // Refetch first page in background to get newest posts and activities
+      // This ensures items created after cache was created will appear
+      refetchLatest();
+      refetchActivities();
+    }
+    prevSortByRef.current = sortBy;
+  }, [sortBy, refetchLatest, refetchActivities]);
 
   // For hot: fetch popular posts, which seamlessly continues with recent posts after popular posts are exhausted
   const {

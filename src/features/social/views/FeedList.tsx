@@ -177,6 +177,9 @@ export default function FeedList({
         .map(mapTokenCreatedToPost);
     },
     getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === ACTIVITY_PAGE_SIZE ? pages.length + 1 : undefined),
+    // Use cached data when available, same as posts query
+    staleTime: 60000, // Consider data fresh for 60 seconds - use cached data during this time
+    // This ensures activities load at the same time as posts when switching to latest
   });
   const activityList: PostDto[] = useMemo(
     () => (activitiesPages?.pages ? (activitiesPages.pages as PostDto[][]).flatMap((p) => p) : []),

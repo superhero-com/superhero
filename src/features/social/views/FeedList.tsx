@@ -13,6 +13,7 @@ import { useWallet } from "../../../hooks";
 import CreatePost, { CreatePostRef } from "../components/CreatePost";
 import SortControls from "../components/SortControls";
 import EmptyState from "../components/EmptyState";
+import PostSkeleton from "../components/PostSkeleton";
 import ReplyToFeedItem from "../components/ReplyToFeedItem";
 import TokenCreatedFeedItem from "../components/TokenCreatedFeedItem";
 import TokenCreatedActivityItem from "../components/TokenCreatedActivityItem";
@@ -441,7 +442,12 @@ export default function FeedList({
         return <EmptyState type="empty" hasSearch={!!localSearch} />;
       }
       if (initialLoading && filteredAndSortedList.length === 0) {
-        return <EmptyState type="loading" />;
+        // Show skeleton loaders instead of loading text
+        return (
+          <div className="w-full flex flex-col gap-2">
+            {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-hot-${i}`} />)}
+          </div>
+        );
       }
       return null;
     }
@@ -456,7 +462,12 @@ export default function FeedList({
       return <EmptyState type="empty" hasSearch={!!localSearch} />;
     }
     if (initialLoading && filteredAndSortedList.length === 0) {
-      return <EmptyState type="loading" />;
+      // Show skeleton loaders instead of loading text
+      return (
+        <div className="w-full flex flex-col gap-2">
+          {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-latest-${i}`} />)}
+        </div>
+      );
     }
     return null;
   };

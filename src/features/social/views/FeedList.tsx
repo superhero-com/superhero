@@ -149,6 +149,7 @@ export default function FeedList({
     data: activitiesPages,
     isLoading: activitiesLoading,
     isFetching: activitiesFetching,
+    isSuccess: activitiesSuccess,
     fetchNextPage: fetchNextActivities,
     hasNextPage: hasMoreActivities,
     isFetchingNextPage: fetchingMoreActivities,
@@ -225,6 +226,7 @@ export default function FeedList({
     data: latestData,
     isLoading: latestLoading,
     isFetching: latestFetching,
+    isSuccess: latestSuccess,
     error: latestError,
     fetchNextPage: fetchNextLatest,
     hasNextPage: hasMoreLatest,
@@ -407,49 +409,21 @@ export default function FeedList({
 
   // Track if we've completed the initial load for both queries
   // This ensures posts and activities appear together, not incrementally
-  const [bothQueriesReady, setBothQueriesReady] = useState(false);
-  const prevSortByForReady = useRef(sortBy);
-  const initialLoadStarted = useRef(false);
-  
-  useEffect(() => {
-    if (sortBy !== "hot") {
-      const hasPostsData = latestData && latestData.pages.length > 0;
-      const hasActivitiesData = activitiesPages && activitiesPages.pages.length > 0;
-      
-      // Reset ready state when switching feeds
-      if (prevSortByForReady.current !== sortBy) {
-        setBothQueriesReady(false);
-        initialLoadStarted.current = false;
-        prevSortByForReady.current = sortBy;
-      }
-      
-      // Mark that initial load has started if either query is loading or fetching
-      // OR if both already have data (cached case)
-      if (latestLoading || activitiesLoading || latestFetching || activitiesFetching) {
-        initialLoadStarted.current = true;
-      }
-      if (hasPostsData && hasActivitiesData) {
-        initialLoadStarted.current = true;
-      }
-      
-      // Only mark as ready when:
-      // 1. Initial load has started (to avoid showing cached data immediately)
-      // 2. Both queries have data
-      // 3. Neither is currently loading (initial load)
-      // 4. Neither is currently fetching (refetch)
-      // This ensures we wait for both queries to complete before showing the combined list
-      const bothHaveData = hasPostsData && hasActivitiesData;
-      const bothNotLoading = !latestLoading && !activitiesLoading;
-      const bothNotFetching = !latestFetching && !activitiesFetching;
-      
-      if (initialLoadStarted.current && bothHaveData && bothNotLoading && bothNotFetching) {
-        setBothQueriesReady(true);
-      }
-    } else {
-      setBothQueriesReady(true); // Hot feed doesn't need this check
-      initialLoadStarted.current = false;
+  // Use isSuccess to ensure both queries have completed at least one successful fetch
+  const bothQueriesReady = useMemo(() => {
+    if (sortBy === "hot") {
+      return true; // Hot feed doesn't need this check
     }
-  }, [sortBy, latestData, activitiesPages, latestLoading, activitiesLoading, latestFetching, activitiesFetching]);
+    
+    // Both queries must have:
+    // 1. Completed successfully (isSuccess = true)
+    // 2. Have data (pages.length > 0)
+    // 3. Not be currently loading or fetching (to avoid showing partial data during refetch)
+    const postsReady = latestSuccess && latestData && latestData.pages.length > 0 && !latestLoading && !latestFetching;
+    const activitiesReady = activitiesSuccess && activitiesPages && activitiesPages.pages.length > 0 && !activitiesLoading && !activitiesFetching;
+    
+    return postsReady && activitiesReady;
+  }, [sortBy, latestSuccess, latestData, latestLoading, latestFetching, activitiesSuccess, activitiesPages, activitiesLoading, activitiesFetching]);
 
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo(() => {

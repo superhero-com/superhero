@@ -236,6 +236,11 @@ export default function FeedList({
       return undefined;
     },
     initialPageParam: 1,
+    // Use cached data when available, but still allow fetching new items
+    staleTime: 60000, // Consider data fresh for 60 seconds - use cached data during this time
+    // refetchOnMount defaults to true, but with staleTime it will use cached data if fresh
+    // This means switching to latest will show cached data immediately if fresh (< 60s old)
+    // and will fetch new items if stale (> 60s old)
   });
 
   // For hot: fetch popular posts, which seamlessly continues with recent posts after popular posts are exhausted
@@ -354,17 +359,26 @@ export default function FeedList({
       if (!popularFeedEnabled && newSortBy === 'hot') {
         return;
       }
-      // Clear cached pages to avoid showing stale lists during rapid tab switches
-      queryClient.removeQueries({ queryKey: ["posts"], exact: false });
-      queryClient.removeQueries({ queryKey: ["home-activities"], exact: false });
-      queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
+      
+      // Only clear cache when switching FROM "latest" to something else
+      // When switching TO "latest", keep cached data and just add new items
+      if (sortBy === "latest" && newSortBy !== "latest") {
+        queryClient.removeQueries({ queryKey: ["posts"], exact: false });
+        queryClient.removeQueries({ queryKey: ["home-activities"], exact: false });
+      }
+      
+      // Always clear popular posts cache when switching away from hot
+      if (sortBy === "hot" && newSortBy !== "hot") {
+        queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
+      }
+      
       if (newSortBy === 'hot') {
         navigate(`/?sortBy=hot&window=${popularWindow}`);
       } else {
         navigate(`/?sortBy=${newSortBy}`);
       }
     },
-    [navigate, queryClient, popularWindow, popularFeedEnabled]
+    [navigate, queryClient, popularWindow, popularFeedEnabled, sortBy]
   );
 
   const handlePopularWindowChange = useCallback((w: '24h'|'7d'|'all') => {

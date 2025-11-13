@@ -65,7 +65,7 @@ const PostSkeleton = memo(() => {
             rgba(255, 255, 255, 0.08) 75%
           );
           background-size: 200% 100%;
-          animation: skeleton-loading 2.5s infinite;
+          animation: skeleton-loading 2.5s infinite linear;
           opacity: 0.6;
         }
 
@@ -75,6 +75,16 @@ const PostSkeleton = memo(() => {
           }
           100% {
             background-position: -200% 0;
+          }
+        }
+
+        /* Ensure consistent animation speed on mobile to match desktop */
+        /* Mobile browsers may render animations faster, so we explicitly set the duration */
+        @media (max-width: 768px) {
+          .skeleton-shimmer {
+            animation: skeleton-loading 2.5s infinite linear !important;
+            animation-duration: 2.5s !important;
+            animation-timing-function: linear !important;
           }
         }
       `}</style>

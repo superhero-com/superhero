@@ -73,21 +73,75 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
       if (tipKey) {
         setTipStatus((s) => ({ ...s, [tipKey]: { status: 'success', updatedAt: Date.now() } }));
         // Ensure the button reflects the new total immediately by optimistically updating cache
-        const idV3 = postIdForKey;
+        // Normalize postId the same way usePostTipSummary does to ensure cache key matches
+        const normalizePostIdV3 = (postId: string): string => {
+          return String(postId).endsWith('_v3') ? String(postId) : `${postId}_v3`;
+        };
+        const idV3 = postIdForKey ? normalizePostIdV3(postIdForKey) : null;
         if (idV3) {
           // Optimistic bump: add the sent amount to current cached summary if present
-          try {
+          // This ensures immediate UI update before backend processes the transaction
+          // Using updater function ensures React Query properly detects the change
+          const expectedTotal = (() => {
             const current = queryClient.getQueryData<{ totalTips?: string }>(['post-tip-summary', idV3]);
-            const next = (() => {
-              const currentNum = current?.totalTips != null ? Number(current.totalTips) : 0;
-              const delta = Number(amount);
-              const sum = (Number.isFinite(currentNum) ? currentNum : 0) + (Number.isFinite(delta) ? delta : 0);
-              return { totalTips: String(sum) } as { totalTips?: string };
-            })();
-            queryClient.setQueryData(['post-tip-summary', idV3], next);
-          } catch {}
-          // Still revalidate from server to converge with canonical totals
-          queryClient.invalidateQueries({ queryKey: ['post-tip-summary', idV3] });
+            const currentNum = current?.totalTips != null ? Number(current.totalTips) : 0;
+            const delta = Number(amount);
+            return (Number.isFinite(currentNum) ? currentNum : 0) + (Number.isFinite(delta) ? delta : 0);
+          })();
+          
+          queryClient.setQueryData<{ totalTips?: string }>(['post-tip-summary', idV3], (old) => {
+            const currentNum = old?.totalTips != null ? Number(old.totalTips) : 0;
+            const delta = Number(amount);
+            const sum = (Number.isFinite(currentNum) ? currentNum : 0) + (Number.isFinite(delta) ? delta : 0);
+            return { totalTips: String(sum) } as { totalTips?: string };
+          });
+          
+          // Poll backend until tip is confirmed or max retries reached
+          // Backend needs time to process blockchain transaction and update database
+          const maxRetries = 18; // Try for up to ~59 seconds (5s initial + 18 retries * 3 seconds)
+          const retryInterval = 3000; // 3 seconds between retries
+          
+          const pollForTip = (attempt: number = 0) => {
+            if (attempt >= maxRetries) {
+              // Final attempt after max retries
+              queryClient.invalidateQueries({ queryKey: ['post-tip-summary', idV3] });
+              queryClient.refetchQueries({ 
+                queryKey: ['post-tip-summary', idV3],
+                type: 'active',
+              });
+              return;
+            }
+            
+            setTimeout(() => {
+              queryClient.invalidateQueries({ queryKey: ['post-tip-summary', idV3] });
+              queryClient.refetchQueries({ 
+                queryKey: ['post-tip-summary', idV3],
+                type: 'active',
+              }).then(() => {
+                // Check if backend has processed the tip
+                const current = queryClient.getQueryData<{ totalTips?: string }>(['post-tip-summary', idV3]);
+                const currentTotal = current?.totalTips != null ? Number(current.totalTips) : 0;
+                
+                // If backend total matches or exceeds expected, we're done
+                // Otherwise, keep polling
+                if (currentTotal >= expectedTotal) {
+                  // Backend has confirmed the tip
+                  return;
+                }
+                
+                // Continue polling
+                pollForTip(attempt + 1);
+              }).catch(() => {
+                // On error, continue polling
+                pollForTip(attempt + 1);
+              });
+            }, retryInterval);
+          };
+          
+          // Start polling after initial delay to give backend time to start processing
+          setTimeout(() => {
+            pollForTip(0);
+          }, 5000); // 5 second initial delay before first poll
         }
         // Auto-reset success state after 2.5s
         setTimeout(() => {

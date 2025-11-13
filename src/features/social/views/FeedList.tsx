@@ -372,9 +372,11 @@ export default function FeedList({
           return lastPage.meta.currentPage + 1;
         }
         // If totalPages is undefined but we got a full page, continue pagination
+        // Check the actual items array length to determine if we got a full page
         if (
           !lastPage.meta.totalPages &&
-          (lastPage.meta as any).itemCount === 10
+          lastPage.items &&
+          lastPage.items.length === 10
         ) {
           return lastPage.meta.currentPage + 1;
         }

@@ -262,7 +262,7 @@ export default function FeedList({
   });
 
   // Prefetch activities (token-created) and posts when component mounts or when switching to latest
-  const prevSortByForPrefetch = useRef(sortBy);
+  const prevSortByForPrefetch = useRef<string | undefined>(undefined);
   useEffect(() => {
     // Only prefetch when switching TO "latest" from another feed or on initial mount
     const shouldPrefetch = sortBy !== "hot" && (

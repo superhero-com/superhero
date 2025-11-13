@@ -374,7 +374,7 @@ export default function FeedList({
         // If totalPages is undefined but we got a full page, continue pagination
         if (
           !lastPage.meta.totalPages &&
-          lastPage.meta.itemCount === 10
+          (lastPage.meta as any).itemCount === 10
         ) {
           return lastPage.meta.currentPage + 1;
         }
@@ -416,19 +416,25 @@ export default function FeedList({
       return true; // Hot feed doesn't need this check
     }
     
-    // Check if we have cached data from both queries
+    // Check if we have data from queries (from cache or fresh)
     const hasPostsData = latestData && latestData.pages.length > 0;
     const hasActivitiesData = activitiesPages && activitiesPages.pages.length > 0;
     
-    // If both have cached data, show immediately (even if refetching in background)
-    if (hasPostsData && hasActivitiesData) {
+    // Also check React Query cache directly for cached data (even if queries are disabled)
+    const cachedPosts = queryClient.getQueryData(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: undefined }]) ||
+                       queryClient.getQueryData(["posts", { limit: 10, sortBy, search: localSearch, filterBy }]);
+    const cachedActivities = queryClient.getQueryData(["home-activities"]);
+    
+    const hasCachedPostsData = cachedPosts && (cachedPosts as any)?.pages?.length > 0;
+    const hasCachedActivitiesData = cachedActivities && (cachedActivities as any)?.pages?.length > 0;
+    
+    // If we have data from queries OR cached data, show it
+    if ((hasPostsData || hasCachedPostsData) && (hasActivitiesData || hasCachedActivitiesData)) {
       return true;
     }
     
-    // If we have cached data from both, show it even if one is still loading/fetching
-    // This allows cached data to appear immediately while background refetch happens
-    return hasPostsData && hasActivitiesData;
-  }, [sortBy, latestData, activitiesPages]);
+    return false;
+  }, [sortBy, latestData, activitiesPages, queryClient, localSearch, filterBy]);
 
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo(() => {
@@ -437,8 +443,28 @@ export default function FeedList({
       return popularList;
     }
     
-    // For latest feed: only show combined list when both queries are ready
-    // This ensures posts and activities appear together, not incrementally
+    // For latest feed: use cached data if queries don't have data yet
+    // This ensures cached/prefetched data shows immediately
+    let postsToUse = list;
+    let activitiesToUse = activityList;
+    
+    // If queries don't have data yet, try to get cached data
+    if ((!latestData || latestData.pages.length === 0) && bothQueriesReady) {
+      const cachedPosts = queryClient.getQueryData<any>(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: undefined }]) ||
+                         queryClient.getQueryData<any>(["posts", { limit: 10, sortBy, search: localSearch, filterBy }]);
+      if (cachedPosts?.pages) {
+        postsToUse = (cachedPosts.pages as any[]).flatMap((page: any) => page?.items ?? []);
+      }
+    }
+    
+    if ((!activitiesPages || activitiesPages.pages.length === 0) && bothQueriesReady) {
+      const cachedActivities = queryClient.getQueryData<any>(["home-activities"]);
+      if (cachedActivities?.pages) {
+        activitiesToUse = (cachedActivities.pages as PostDto[][]).flatMap((p) => p);
+      }
+    }
+    
+    // Only show combined list when both queries are ready (have data from queries or cache)
     if (!bothQueriesReady) {
       return [];
     }
@@ -449,7 +475,7 @@ export default function FeedList({
     const merged: PostDto[] = [];
     
     // Add activities first, then regular posts, skipping duplicates
-    for (const item of [...activityList, ...list]) {
+    for (const item of [...activitiesToUse, ...postsToUse]) {
       const id = String(item?.id || '');
       if (id && !seenIds.has(id)) {
         seenIds.add(id);
@@ -462,7 +488,7 @@ export default function FeedList({
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     });
-  }, [list, activityList, sortBy, popularList, bothQueriesReady]);
+  }, [list, activityList, sortBy, popularList, bothQueriesReady, latestData, activitiesPages, queryClient, localSearch, filterBy]);
 
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {
@@ -559,7 +585,7 @@ export default function FeedList({
   const renderEmptyState = () => {
     if (sortBy === "hot") {
       // Only show loading if we don't have cached data
-      const initialLoading = popularLoading && (!popularData || popularData.pages.length === 0);
+      const initialLoading = popularLoading && (!popularData || (popularData as any)?.pages?.length === 0);
       const err = popularError;
       if (err) {
         return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); }} />;
@@ -583,10 +609,17 @@ export default function FeedList({
       return null;
     }
     // Only show loading if we don't have cached data
-    // For latest feed: show cached data immediately if available
-    const hasCachedData = sortBy !== "hot" && latestData && latestData.pages.length > 0 && activitiesPages && activitiesPages.pages.length > 0;
+    // For latest feed: show cached data immediately if available (from queries or cache)
+    const hasQueryData = latestData && latestData.pages.length > 0 && activitiesPages && activitiesPages.pages.length > 0;
+    const cachedPosts = queryClient.getQueryData<any>(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: undefined }]) ||
+                       queryClient.getQueryData<any>(["posts", { limit: 10, sortBy, search: localSearch, filterBy }]);
+    const cachedActivities = queryClient.getQueryData<any>(["home-activities"]);
+    const hasCachedPostsData = cachedPosts && cachedPosts?.pages?.length > 0;
+    const hasCachedActivitiesData = cachedActivities && cachedActivities?.pages?.length > 0;
+    const hasCachedData = sortBy !== "hot" && (hasQueryData || (hasCachedPostsData && hasCachedActivitiesData));
+    
     const initialLoading = sortBy === "hot"
-      ? (popularLoading && (!popularData || popularData.pages.length === 0))
+      ? (popularLoading && (!popularData || (popularData as any)?.pages?.length === 0))
       : (!hasCachedData && (latestLoading || activitiesLoading)); // Only show loading if no cached data and actually loading
     if (latestError) {
       return <EmptyState type="error" error={latestError as any} onRetry={refetchLatest} />;
@@ -741,11 +774,18 @@ export default function FeedList({
   const fetchingRef = useRef(false);
   // Only show loading if we don't have any data yet and queries are still loading
   // If we have cached data, show it immediately even while refetching
-  // For latest feed: show cached data immediately if available
-  const hasCachedDataForLatest = sortBy !== "hot" && latestData && latestData.pages.length > 0 && activitiesPages && activitiesPages.pages.length > 0;
+  // For latest feed: show cached data immediately if available (from queries or cache)
+  const hasQueryDataForLatest = sortBy !== "hot" && latestData && latestData.pages.length > 0 && activitiesPages && activitiesPages.pages.length > 0;
+  const cachedPostsForLatest = queryClient.getQueryData<any>(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: undefined }]) ||
+                              queryClient.getQueryData<any>(["posts", { limit: 10, sortBy, search: localSearch, filterBy }]);
+  const cachedActivitiesForLatest = queryClient.getQueryData<any>(["home-activities"]);
+  const hasCachedPostsForLatest = cachedPostsForLatest && cachedPostsForLatest?.pages?.length > 0;
+  const hasCachedActivitiesForLatest = cachedActivitiesForLatest && cachedActivitiesForLatest?.pages?.length > 0;
+  const hasCachedDataForLatest = sortBy !== "hot" && (hasQueryDataForLatest || (hasCachedPostsForLatest && hasCachedActivitiesForLatest));
+  
   const initialLoading =
     sortBy === "hot"
-      ? (popularLoading && (!popularData || popularData.pages.length === 0))
+      ? (popularLoading && (!popularData || (popularData as any)?.pages?.length === 0))
       : (!hasCachedDataForLatest && (latestLoading || activitiesLoading)); // Only show loading if no cached data and actually loading
   const [showLoadMore, setShowLoadMore] = useState(false);
   useEffect(() => { setShowLoadMore(false); }, [sortBy]);

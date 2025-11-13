@@ -302,7 +302,7 @@ export default function FeedList({
 
       // Prefetch posts in the background for faster loading (only first page, no search/filter)
       queryClient.prefetchInfiniteQuery({
-        queryKey: ["posts", { limit: 10, sortBy: "latest", search: "", filterBy: undefined }],
+        queryKey: ["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }],
         queryFn: ({ pageParam = 1 }) =>
           PostsService.listAll({
             limit: 10,
@@ -421,7 +421,7 @@ export default function FeedList({
     const hasActivitiesData = activitiesPages && activitiesPages.pages.length > 0;
     
     // Also check React Query cache directly for cached data (even if queries are disabled)
-    const cachedPosts = queryClient.getQueryData(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: undefined }]) ||
+    const cachedPosts = queryClient.getQueryData(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }]) ||
                        queryClient.getQueryData(["posts", { limit: 10, sortBy, search: localSearch, filterBy }]);
     const cachedActivities = queryClient.getQueryData(["home-activities"]);
     
@@ -450,7 +450,7 @@ export default function FeedList({
     
     // If queries don't have data yet, try to get cached data
     if ((!latestData || latestData.pages.length === 0) && bothQueriesReady) {
-      const cachedPosts = queryClient.getQueryData<any>(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: undefined }]) ||
+      const cachedPosts = queryClient.getQueryData<any>(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }]) ||
                          queryClient.getQueryData<any>(["posts", { limit: 10, sortBy, search: localSearch, filterBy }]);
       if (cachedPosts?.pages) {
         postsToUse = (cachedPosts.pages as any[]).flatMap((page: any) => page?.items ?? []);
@@ -611,7 +611,7 @@ export default function FeedList({
     // Only show loading if we don't have cached data
     // For latest feed: show cached data immediately if available (from queries or cache)
     const hasQueryData = latestData && latestData.pages.length > 0 && activitiesPages && activitiesPages.pages.length > 0;
-    const cachedPosts = queryClient.getQueryData<any>(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: undefined }]) ||
+    const cachedPosts = queryClient.getQueryData<any>(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }]) ||
                        queryClient.getQueryData<any>(["posts", { limit: 10, sortBy, search: localSearch, filterBy }]);
     const cachedActivities = queryClient.getQueryData<any>(["home-activities"]);
     const hasCachedPostsData = cachedPosts && cachedPosts?.pages?.length > 0;
@@ -776,7 +776,7 @@ export default function FeedList({
   // If we have cached data, show it immediately even while refetching
   // For latest feed: show cached data immediately if available (from queries or cache)
   const hasQueryDataForLatest = sortBy !== "hot" && latestData && latestData.pages.length > 0 && activitiesPages && activitiesPages.pages.length > 0;
-  const cachedPostsForLatest = queryClient.getQueryData<any>(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: undefined }]) ||
+  const cachedPostsForLatest = queryClient.getQueryData<any>(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }]) ||
                               queryClient.getQueryData<any>(["posts", { limit: 10, sortBy, search: localSearch, filterBy }]);
   const cachedActivitiesForLatest = queryClient.getQueryData<any>(["home-activities"]);
   const hasCachedPostsForLatest = cachedPostsForLatest && cachedPostsForLatest?.pages?.length > 0;

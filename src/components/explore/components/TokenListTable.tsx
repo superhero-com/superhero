@@ -711,7 +711,10 @@ export function TokenListTable({
                     }}
                   >
                     <button
-                      onClick={() => handleSwapClick(token)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSwapClick(token);
+                      }}
                       style={{
                         padding: "6px 12px",
                         borderRadius: 8,
@@ -740,7 +743,10 @@ export function TokenListTable({
                       Swap
                     </button>
                     <button
-                      onClick={() => handleAddClick(token)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddClick(token);
+                      }}
                       style={{
                         padding: "6px 12px",
                         borderRadius: 8,

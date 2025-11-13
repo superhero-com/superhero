@@ -13,6 +13,7 @@ import { useWallet } from "../../../hooks";
 import CreatePost, { CreatePostRef } from "../components/CreatePost";
 import SortControls from "../components/SortControls";
 import EmptyState from "../components/EmptyState";
+import PostSkeleton from "../components/PostSkeleton";
 import ReplyToFeedItem from "../components/ReplyToFeedItem";
 import TokenCreatedFeedItem from "../components/TokenCreatedFeedItem";
 import TokenCreatedActivityItem from "../components/TokenCreatedActivityItem";
@@ -106,7 +107,6 @@ export default function FeedList({
       if (sortBy === 'hot') {
         // Reset cached pages to avoid mixing windows
         queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
-        queryClient.removeQueries({ queryKey: ["latest-after-popular"], exact: false });
       }
     }
   }, [location.search, sortBy, queryClient, popularWindow]);
@@ -148,9 +148,12 @@ export default function FeedList({
   const {
     data: activitiesPages,
     isLoading: activitiesLoading,
+    isFetching: activitiesFetching,
+    isSuccess: activitiesSuccess,
     fetchNextPage: fetchNextActivities,
     hasNextPage: hasMoreActivities,
     isFetchingNextPage: fetchingMoreActivities,
+    refetch: refetchActivities,
   } = useInfiniteQuery<PostDto[], Error>({
     queryKey: ["home-activities"],
     enabled: sortBy !== "hot",
@@ -178,11 +181,24 @@ export default function FeedList({
         .map(mapTokenCreatedToPost);
     },
     getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === ACTIVITY_PAGE_SIZE ? pages.length + 1 : undefined),
+    // Show cached data immediately, refetch in background
+    staleTime: 10000, // Consider data fresh for 10 seconds
+    refetchOnMount: false, // Don't block on refetch - show cached data immediately
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
-  const activityList: PostDto[] = useMemo(
-    () => (activitiesPages?.pages ? (activitiesPages.pages as PostDto[][]).flatMap((p) => p) : []),
-    [activitiesPages]
-  );
+  const activityList: PostDto[] = useMemo(() => {
+    const allItems = activitiesPages?.pages 
+      ? (activitiesPages.pages as PostDto[][]).flatMap((p) => p) 
+      : [];
+    // Deduplicate within activities list (in case backend returns duplicates across pages)
+    const seenIds = new Set<string>();
+    return allItems.filter((item: PostDto) => {
+      const id = String(item?.id || '');
+      if (!id || seenIds.has(id)) return false;
+      seenIds.add(id);
+      return true;
+    });
+  }, [activitiesPages]);
 
   // Live updates for token-created via websocket
   useEffect(() => {
@@ -210,6 +226,8 @@ export default function FeedList({
   const {
     data: latestData,
     isLoading: latestLoading,
+    isFetching: latestFetching,
+    isSuccess: latestSuccess,
     error: latestError,
     fetchNextPage: fetchNextLatest,
     hasNextPage: hasMoreLatest,
@@ -237,9 +255,94 @@ export default function FeedList({
       return undefined;
     },
     initialPageParam: 1,
+    // Show cached data immediately, refetch in background
+    staleTime: 10000, // Consider data fresh for 10 seconds
+    refetchOnMount: false, // Don't block on refetch - show cached data immediately
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
-  // For hot: first fetch popular posts, then continue with latest posts after separator
+  // Prefetch activities (token-created) and posts when component mounts or when switching to latest
+  const prevSortByForPrefetch = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    // Only prefetch when switching TO "latest" from another feed or on initial mount
+    const shouldPrefetch = sortBy !== "hot" && (
+      prevSortByForPrefetch.current === "hot" || 
+      prevSortByForPrefetch.current === undefined
+    );
+    
+    if (shouldPrefetch) {
+      // Prefetch activities (token-created) in the background for faster loading
+      queryClient.prefetchInfiniteQuery({
+        queryKey: ["home-activities"],
+        queryFn: async ({ pageParam = 1 }) => {
+          const resp = await SuperheroApi.listTokens({
+            orderBy: "created_at",
+            orderDirection: "DESC",
+            limit: ACTIVITY_PAGE_SIZE,
+            page: pageParam as number,
+          }).catch(() => ({ items: [] }));
+          const items: any[] = resp?.items || [];
+          return items
+            .map((t) => ({
+              sale_address: t?.sale_address || t?.address || "",
+              token_name: t?.name || "Unknown",
+              created_at: t?.created_at || new Date().toISOString(),
+              creator_address:
+                t?.creator_address ||
+                t?.creatorAddress ||
+                (t?.creator && (t?.creator.address || t?.creator)) ||
+                t?.owner_address ||
+                "",
+            }))
+            .map(mapTokenCreatedToPost);
+        },
+        initialPageParam: 1,
+        getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === ACTIVITY_PAGE_SIZE ? pages.length + 1 : undefined),
+      });
+
+      // Prefetch posts in the background for faster loading (only first page, no search/filter)
+      queryClient.prefetchInfiniteQuery({
+        queryKey: ["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }],
+        queryFn: ({ pageParam = 1 }) =>
+          PostsService.listAll({
+            limit: 10,
+            page: pageParam,
+            orderBy: "created_at",
+            orderDirection: "DESC",
+            search: "",
+          }) as unknown as Promise<PostApiResponse>,
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+          if (
+            lastPage?.meta?.currentPage &&
+            lastPage?.meta?.totalPages &&
+            lastPage.meta.currentPage < lastPage.meta.totalPages
+          ) {
+            return lastPage.meta.currentPage + 1;
+          }
+          return undefined;
+        },
+      });
+    }
+    
+    prevSortByForPrefetch.current = sortBy;
+  }, [sortBy, queryClient, mapTokenCreatedToPost, ACTIVITY_PAGE_SIZE]);
+
+  // Refetch in background when switching to latest (non-blocking)
+  // This updates the feed with new items without blocking the UI
+  const prevSortByRef = useRef(sortBy);
+  useEffect(() => {
+    // Only refetch when switching TO "latest" from another feed
+    if (sortBy === "latest" && prevSortByRef.current !== "latest") {
+      // Refetch in background (non-blocking) to get newest posts and activities
+      // Cached data is shown immediately, new items will be added when refetch completes
+      refetchLatest();
+      refetchActivities();
+    }
+    prevSortByRef.current = sortBy;
+  }, [sortBy, refetchLatest, refetchActivities]);
+
+  // For hot: fetch popular posts, which seamlessly continues with recent posts after popular posts are exhausted
   const {
     data: popularData,
     isLoading: popularLoading,
@@ -258,58 +361,45 @@ export default function FeedList({
         limit: 10,
       }) as unknown as Promise<PostApiResponse>,
     getNextPageParam: (lastPage) => {
-      if (
-        lastPage?.meta?.currentPage &&
-        lastPage?.meta?.totalPages &&
-        lastPage.meta.currentPage < lastPage.meta.totalPages
-      ) {
-        return lastPage.meta.currentPage + 1;
+      // Continue pagination if:
+      // 1. We have totalPages and haven't reached it yet, OR
+      // 2. totalPages is undefined (meaning we're past popular posts) but we got a full page of results
+      if (lastPage?.meta?.currentPage) {
+        if (
+          lastPage.meta.totalPages &&
+          lastPage.meta.currentPage < lastPage.meta.totalPages
+        ) {
+          return lastPage.meta.currentPage + 1;
+        }
+        // If totalPages is undefined but we got a full page, continue pagination
+        // Check the actual items array length to determine if we got a full page
+        if (
+          !lastPage.meta.totalPages &&
+          lastPage.items &&
+          lastPage.items.length === 10
+        ) {
+          return lastPage.meta.currentPage + 1;
+        }
       }
       return undefined;
     },
     initialPageParam: 1,
   });
 
-  const {
-    data: afterPopularData,
-    isLoading: afterPopularLoading,
-    error: afterPopularError,
-    fetchNextPage: fetchNextAfterPopular,
-    hasNextPage: hasMoreAfterPopular,
-    isFetchingNextPage: fetchingMoreAfterPopular,
-    refetch: refetchAfterPopular,
-  } = useInfiniteQuery({
-    enabled: sortBy === "hot",
-    queryKey: ["latest-after-popular", { limit: 10, search: localSearch }],
-    queryFn: ({ pageParam = 1 }) =>
-      PostsService.listAll({
-        limit: 10,
-        page: pageParam,
-        orderBy: "created_at",
-        orderDirection: "DESC",
-        search: localSearch,
-      }) as unknown as Promise<PostApiResponse>,
-    getNextPageParam: (lastPage) => {
-      if (
-        lastPage?.meta?.currentPage &&
-        lastPage?.meta?.totalPages &&
-        lastPage.meta.currentPage < lastPage.meta.totalPages
-      ) {
-        return lastPage.meta.currentPage + 1;
-      }
-      return undefined;
-    },
-    initialPageParam: 1,
-  });
-
-  // Derived state: posts list
-  const list = useMemo(
-    () =>
-      latestData?.pages
-        ? ((latestData.pages as any[]) || []).flatMap((page: any) => page?.items ?? [])
-        : [],
-    [latestData]
-  );
+  // Derived state: posts list (deduplicated by ID)
+  const list = useMemo(() => {
+    const allItems = latestData?.pages
+      ? ((latestData.pages as any[]) || []).flatMap((page: any) => page?.items ?? [])
+      : [];
+    // Deduplicate within the list itself (in case backend returns duplicates across pages)
+    const seenIds = new Set<string>();
+    return allItems.filter((item: any) => {
+      const id = String(item?.id || '');
+      if (!id || seenIds.has(id)) return false;
+      seenIds.add(id);
+      return true;
+    });
+  }, [latestData]);
 
   const popularList = useMemo(
     () =>
@@ -319,56 +409,88 @@ export default function FeedList({
     [popularData]
   );
 
-  const afterPopularList = useMemo(
-    () =>
-      afterPopularData?.pages
-        ? ((afterPopularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? [])
-        : [],
-    [afterPopularData]
-  );
 
-  // Apply search/filter on the "after popular" segment as well
-  const filteredAfterPopularList = useMemo(() => {
-    let filtered = [...afterPopularList];
-    if (localSearch.trim()) {
-      const searchTerm = localSearch.toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          (item.content && item.content.toLowerCase().includes(searchTerm)) ||
-          (item.topics &&
-            item.topics.some((topic) =>
-              topic.toLowerCase().includes(searchTerm)
-            )) ||
-          (item.sender_address &&
-            item.sender_address.toLowerCase().includes(searchTerm)) ||
-          (chainNames?.[item.sender_address] &&
-            chainNames[item.sender_address].toLowerCase().includes(searchTerm))
-      );
+  // Track if we have data from both queries (cached or fresh)
+  // This ensures posts and activities appear together, not incrementally
+  // Show cached data immediately if available
+  const bothQueriesReady = useMemo(() => {
+    if (sortBy === "hot") {
+      return true; // Hot feed doesn't need this check
     }
-    if (filterBy === "withMedia") {
-      filtered = filtered.filter(
-        (item) => item.media && Array.isArray(item.media) && item.media.length > 0
-      );
-    } else if (filterBy === "withComments") {
-      filtered = filtered.filter((item) => (item.total_comments ?? 0) > 0);
+    
+    // Check if we have data from queries (from cache or fresh)
+    const hasPostsData = latestData && latestData.pages.length > 0;
+    const hasActivitiesData = activitiesPages && activitiesPages.pages.length > 0;
+    
+    // Also check React Query cache directly for cached data (even if queries are disabled)
+    const cachedPosts = queryClient.getQueryData(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }]) ||
+                       queryClient.getQueryData(["posts", { limit: 10, sortBy, search: localSearch, filterBy }]);
+    const cachedActivities = queryClient.getQueryData(["home-activities"]);
+    
+    const hasCachedPostsData = cachedPosts && (cachedPosts as any)?.pages?.length > 0;
+    const hasCachedActivitiesData = cachedActivities && (cachedActivities as any)?.pages?.length > 0;
+    
+    // If we have data from queries OR cached data, show it
+    if ((hasPostsData || hasCachedPostsData) && (hasActivitiesData || hasCachedActivitiesData)) {
+      return true;
     }
-    return filtered;
-  }, [afterPopularList, localSearch, filterBy, chainNames]);
+    
+    return false;
+  }, [sortBy, latestData, activitiesPages, queryClient, localSearch, filterBy]);
 
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo(() => {
     if (sortBy === "hot") {
-      // For hot: show popular first; after popular ends, we will render separator + latest-after-popular in render layer
+      // For hot: popular posts seamlessly continue with recent posts (all from the same endpoint)
       return popularList;
     }
+    
+    // For latest feed: use cached data if queries don't have data yet
+    // This ensures cached/prefetched data shows immediately
+    let postsToUse = list;
+    let activitiesToUse = activityList;
+    
+    // If queries don't have data yet, try to get cached data
+    if ((!latestData || latestData.pages.length === 0) && bothQueriesReady) {
+      const cachedPosts = queryClient.getQueryData<any>(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }]) ||
+                         queryClient.getQueryData<any>(["posts", { limit: 10, sortBy, search: localSearch, filterBy }]);
+      if (cachedPosts?.pages) {
+        postsToUse = (cachedPosts.pages as any[]).flatMap((page: any) => page?.items ?? []);
+      }
+    }
+    
+    if ((!activitiesPages || activitiesPages.pages.length === 0) && bothQueriesReady) {
+      const cachedActivities = queryClient.getQueryData<any>(["home-activities"]);
+      if (cachedActivities?.pages) {
+        activitiesToUse = (cachedActivities.pages as PostDto[][]).flatMap((p) => p);
+      }
+    }
+    
+    // Only show combined list when both queries are ready (have data from queries or cache)
+    if (!bothQueriesReady) {
+      return [];
+    }
+    
     // Default path: interleave activities and latest, sorted by created_at desc
-    const merged = [...activityList, ...list];
+    // Deduplicate by post ID to avoid showing the same post twice
+    const seenIds = new Set<string>();
+    const merged: PostDto[] = [];
+    
+    // Add activities first, then regular posts, skipping duplicates
+    for (const item of [...activitiesToUse, ...postsToUse]) {
+      const id = String(item?.id || '');
+      if (id && !seenIds.has(id)) {
+        seenIds.add(id);
+        merged.push(item);
+      }
+    }
+    
     return merged.sort((a: any, b: any) => {
       const at = new Date(a?.created_at || 0).getTime();
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     });
-  }, [list, activityList, sortBy, popularList]);
+  }, [list, activityList, sortBy, popularList, bothQueriesReady, latestData, activitiesPages, queryClient, localSearch, filterBy]);
 
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {
@@ -411,18 +533,26 @@ export default function FeedList({
       if (!popularFeedEnabled && newSortBy === 'hot') {
         return;
       }
-      // Clear cached pages to avoid showing stale lists during rapid tab switches
-      queryClient.removeQueries({ queryKey: ["posts"], exact: false });
-      queryClient.removeQueries({ queryKey: ["home-activities"], exact: false });
-      queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
-      queryClient.removeQueries({ queryKey: ["latest-after-popular"], exact: false });
+      
+      // Only clear cache when switching FROM "latest" to something else
+      // When switching TO "latest", keep cached data and just add new items
+      if (sortBy === "latest" && newSortBy !== "latest") {
+        queryClient.removeQueries({ queryKey: ["posts"], exact: false });
+        queryClient.removeQueries({ queryKey: ["home-activities"], exact: false });
+      }
+      
+      // Always clear popular posts cache when switching away from hot
+      if (sortBy === "hot" && newSortBy !== "hot") {
+        queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
+      }
+      
       if (newSortBy === 'hot') {
         navigate(`/?sortBy=hot&window=${popularWindow}`);
       } else {
         navigate(`/?sortBy=${newSortBy}`);
       }
     },
-    [navigate, queryClient, popularWindow, popularFeedEnabled]
+    [navigate, queryClient, popularWindow, popularFeedEnabled, sortBy]
   );
 
   const handlePopularWindowChange = useCallback((w: '24h'|'7d'|'all') => {
@@ -431,7 +561,6 @@ export default function FeedList({
       navigate(`/?sortBy=hot&window=${w}`);
       // Reset pages for new window
       queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
-      queryClient.removeQueries({ queryKey: ["latest-after-popular"], exact: false });
     }
   }, [navigate, sortBy, queryClient]);
 
@@ -457,30 +586,61 @@ export default function FeedList({
   // Render helpers
   const renderEmptyState = () => {
     if (sortBy === "hot") {
-      const initialLoading = popularLoading || afterPopularLoading;
-      const err = popularError || afterPopularError;
+      // Only show loading if we don't have cached data
+      const initialLoading = popularLoading && (!popularData || (popularData as any)?.pages?.length === 0);
+      const err = popularError;
       if (err) {
-        return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); refetchAfterPopular(); }} />;
+        return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); }} />;
       }
-      // Show empty state when there are no popular posts for the selected window,
-      // even if we will show latest posts as a fallback.
+      // Show skeleton loaders when there are no popular posts for the selected window
       if (!err && filteredAndSortedList.length === 0 && !initialLoading) {
-        return <EmptyState type="empty" hasSearch={!!localSearch} />;
+        return (
+          <div className="w-full flex flex-col gap-2">
+            {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-hot-empty-${i}`} />)}
+          </div>
+        );
       }
       if (initialLoading && filteredAndSortedList.length === 0) {
-        return <EmptyState type="loading" />;
+        // Show skeleton loaders instead of loading text
+        return (
+          <div className="w-full flex flex-col gap-2">
+            {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-hot-${i}`} />)}
+          </div>
+        );
       }
       return null;
     }
-    const initialLoading = (sortBy !== "hot" && activitiesLoading) || latestLoading;
+    // Only show loading if we don't have cached data
+    // For latest feed: show cached data immediately if available (from queries or cache)
+    const hasQueryData = latestData && latestData.pages.length > 0 && activitiesPages && activitiesPages.pages.length > 0;
+    const cachedPosts = queryClient.getQueryData<any>(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }]) ||
+                       queryClient.getQueryData<any>(["posts", { limit: 10, sortBy, search: localSearch, filterBy }]);
+    const cachedActivities = queryClient.getQueryData<any>(["home-activities"]);
+    const hasCachedPostsData = cachedPosts && cachedPosts?.pages?.length > 0;
+    const hasCachedActivitiesData = cachedActivities && cachedActivities?.pages?.length > 0;
+    const hasCachedData = sortBy !== "hot" && (hasQueryData || (hasCachedPostsData && hasCachedActivitiesData));
+    
+    const initialLoading = sortBy === "hot"
+      ? (popularLoading && (!popularData || (popularData as any)?.pages?.length === 0))
+      : (!hasCachedData && (latestLoading || activitiesLoading)); // Only show loading if no cached data and actually loading
     if (latestError) {
       return <EmptyState type="error" error={latestError as any} onRetry={refetchLatest} />;
     }
     if (!latestError && filteredAndSortedList.length === 0 && !initialLoading) {
-      return <EmptyState type="empty" hasSearch={!!localSearch} />;
+      // Show skeleton loaders instead of empty state
+      return (
+        <div className="w-full flex flex-col gap-2">
+          {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-latest-empty-${i}`} />)}
+        </div>
+      );
     }
     if (initialLoading && filteredAndSortedList.length === 0) {
-      return <EmptyState type="loading" />;
+      // Show skeleton loaders instead of loading text
+      return (
+        <div className="w-full flex flex-col gap-2">
+          {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-latest-${i}`} />)}
+        </div>
+      );
     }
     return null;
   };
@@ -614,10 +774,21 @@ export default function FeedList({
   // Auto-load more when reaching bottom using IntersectionObserver (all screens)
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const fetchingRef = useRef(false);
+  // Only show loading if we don't have any data yet and queries are still loading
+  // If we have cached data, show it immediately even while refetching
+  // For latest feed: show cached data immediately if available (from queries or cache)
+  const hasQueryDataForLatest = sortBy !== "hot" && latestData && latestData.pages.length > 0 && activitiesPages && activitiesPages.pages.length > 0;
+  const cachedPostsForLatest = queryClient.getQueryData<any>(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }]) ||
+                              queryClient.getQueryData<any>(["posts", { limit: 10, sortBy, search: localSearch, filterBy }]);
+  const cachedActivitiesForLatest = queryClient.getQueryData<any>(["home-activities"]);
+  const hasCachedPostsForLatest = cachedPostsForLatest && cachedPostsForLatest?.pages?.length > 0;
+  const hasCachedActivitiesForLatest = cachedActivitiesForLatest && cachedActivitiesForLatest?.pages?.length > 0;
+  const hasCachedDataForLatest = sortBy !== "hot" && (hasQueryDataForLatest || (hasCachedPostsForLatest && hasCachedActivitiesForLatest));
+  
   const initialLoading =
     sortBy === "hot"
-      ? (popularLoading || afterPopularLoading)
-      : (sortBy !== "hot" && activitiesLoading) || latestLoading;
+      ? (popularLoading && (!popularData || (popularData as any)?.pages?.length === 0))
+      : (!hasCachedDataForLatest && (latestLoading || activitiesLoading)); // Only show loading if no cached data and actually loading
   const [showLoadMore, setShowLoadMore] = useState(false);
   useEffect(() => { setShowLoadMore(false); }, [sortBy]);
   useEffect(() => {
@@ -633,7 +804,6 @@ export default function FeedList({
       const tasks: Promise<any>[] = [];
       if (sortBy === "hot") {
         if (hasMorePopular && !fetchingMorePopular) tasks.push(fetchNextPopular());
-        else if (hasMoreAfterPopular && !fetchingMoreAfterPopular) tasks.push(fetchNextAfterPopular());
       } else {
         if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
         if (hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
@@ -659,10 +829,6 @@ export default function FeedList({
     hasMorePopular,
     fetchingMorePopular,
     fetchNextPopular,
-    // after popular
-    hasMoreAfterPopular,
-    fetchingMoreAfterPopular,
-    fetchNextAfterPopular,
   ]);
 
   const content = (
@@ -688,7 +854,6 @@ export default function FeedList({
           onSuccess={() => {
             if (sortBy === "hot") {
               refetchPopular();
-              refetchAfterPopular();
             } else {
               refetchLatest();
             }
@@ -719,13 +884,12 @@ export default function FeedList({
 
       <div className="w-full flex flex-col gap-0 md:gap-2 md:mx-0">
         {renderEmptyState()}
-        {/* Non-hot: existing renderer */}
-        {sortBy !== "hot" && !latestLoading && renderFeedItems}
+        {/* Non-hot: existing renderer - show feed if we have data, even while refetching */}
+        {sortBy !== "hot" && (latestData?.pages.length > 0 || activityList.length > 0) && renderFeedItems}
 
-        {/* Hot: render popular first, then separator, then latest-after-popular */}
-        {sortBy === "hot" && !popularLoading && (
+        {/* Hot: render popular posts (which seamlessly includes recent posts after popular posts are exhausted) */}
+        {sortBy === "hot" && (popularData?.pages.length > 0) && (
           <>
-            {/* Popular posts list */}
             {filteredAndSortedList.map((item) => (
               <ReplyToFeedItem
                 key={item.id}
@@ -735,28 +899,6 @@ export default function FeedList({
                 onOpenPost={handleItemClick}
               />
             ))}
-
-            {/* Separator + latest list after popular ends */}
-            {!hasMorePopular && filteredAfterPopularList.length > 0 && (
-              <>
-                <div className="my-6 md:my-8 flex items-center gap-3">
-                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                  <div className="text-[11px] md:text-xs uppercase tracking-wider text-white/70 bg-white/[0.06] border border-white/10 rounded-full px-3 py-1 backdrop-blur-sm">
-                    Popular posts ended — showing latest posts
-                  </div>
-                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                </div>
-                {filteredAfterPopularList.map((item) => (
-                  <ReplyToFeedItem
-                    key={item.id}
-                    item={item}
-                    commentCount={item.total_comments ?? 0}
-                    allowInlineRepliesToggle={false}
-                    onOpenPost={handleItemClick}
-                  />
-                ))}
-              </>
-            )}
           </>
         )}
       </div>
@@ -770,13 +912,12 @@ export default function FeedList({
               <AeButton
                 loading={
                   sortBy === "hot"
-                    ? fetchingMorePopular || fetchingMoreAfterPopular
+                    ? fetchingMorePopular
                     : (fetchingMoreLatest || fetchingMoreActivities)
                 }
                 onClick={() => {
                   if (sortBy === "hot") {
                     if (hasMorePopular && !fetchingMorePopular) return fetchNextPopular();
-                    if (hasMoreAfterPopular && !fetchingMoreAfterPopular) return fetchNextAfterPopular();
                     return;
                   }
                   const tasks: Promise<any>[] = [];

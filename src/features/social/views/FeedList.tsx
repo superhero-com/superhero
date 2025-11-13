@@ -257,6 +257,73 @@ export default function FeedList({
     // and will fetch new items if stale (> 10s old)
   });
 
+  // Prefetch activities (token-created) and posts when component mounts or when switching to latest
+  const prevSortByForPrefetch = useRef(sortBy);
+  useEffect(() => {
+    // Only prefetch when switching TO "latest" from another feed or on initial mount
+    const shouldPrefetch = sortBy !== "hot" && (
+      prevSortByForPrefetch.current === "hot" || 
+      prevSortByForPrefetch.current === undefined
+    );
+    
+    if (shouldPrefetch) {
+      // Prefetch activities (token-created) in the background for faster loading
+      queryClient.prefetchInfiniteQuery({
+        queryKey: ["home-activities"],
+        queryFn: async ({ pageParam = 1 }) => {
+          const resp = await SuperheroApi.listTokens({
+            orderBy: "created_at",
+            orderDirection: "DESC",
+            limit: ACTIVITY_PAGE_SIZE,
+            page: pageParam as number,
+          }).catch(() => ({ items: [] }));
+          const items: any[] = resp?.items || [];
+          return items
+            .map((t) => ({
+              sale_address: t?.sale_address || t?.address || "",
+              token_name: t?.name || "Unknown",
+              created_at: t?.created_at || new Date().toISOString(),
+              creator_address:
+                t?.creator_address ||
+                t?.creatorAddress ||
+                (t?.creator && (t?.creator.address || t?.creator)) ||
+                t?.owner_address ||
+                "",
+            }))
+            .map(mapTokenCreatedToPost);
+        },
+        initialPageParam: 1,
+        getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === ACTIVITY_PAGE_SIZE ? pages.length + 1 : undefined),
+      });
+
+      // Prefetch posts in the background for faster loading (only first page, no search/filter)
+      queryClient.prefetchInfiniteQuery({
+        queryKey: ["posts", { limit: 10, sortBy: "latest", search: "", filterBy: undefined }],
+        queryFn: ({ pageParam = 1 }) =>
+          PostsService.listAll({
+            limit: 10,
+            page: pageParam,
+            orderBy: "created_at",
+            orderDirection: "DESC",
+            search: "",
+          }) as unknown as Promise<PostApiResponse>,
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+          if (
+            lastPage?.meta?.currentPage &&
+            lastPage?.meta?.totalPages &&
+            lastPage.meta.currentPage < lastPage.meta.totalPages
+          ) {
+            return lastPage.meta.currentPage + 1;
+          }
+          return undefined;
+        },
+      });
+    }
+    
+    prevSortByForPrefetch.current = sortBy;
+  }, [sortBy, queryClient, mapTokenCreatedToPost, ACTIVITY_PAGE_SIZE]);
+
   // Refetch page 1 when switching to latest to ensure newest posts are shown
   const prevSortByRef = useRef(sortBy);
   useEffect(() => {

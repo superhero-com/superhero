@@ -22,34 +22,37 @@ const PostSkeleton = memo(() => {
             </div>
           </div>
 
-          <div className="flex-1 min-w-0 pr-8 md:pr-12">
-            {/* Header skeleton: name · time */}
-            <div className="flex items-center justify-between gap-2.5">
-              <div className="flex items-baseline gap-2.5 min-w-0">
-                <div className="h-[15px] w-20 skeleton-shimmer rounded" />
-                <span className="text-white/50 shrink-0">·</span>
-                <div className="h-3 w-12 skeleton-shimmer rounded" />
+          <div className="flex-1 min-w-0">
+            {/* Text content with padding for on-chain badge */}
+            <div className="pr-8 md:pr-12">
+              {/* Header skeleton: name · time */}
+              <div className="flex items-center justify-between gap-2.5">
+                <div className="flex items-baseline gap-2.5 min-w-0">
+                  <div className="h-[15px] w-20 skeleton-shimmer rounded" />
+                  <span className="text-white/50 shrink-0">·</span>
+                  <div className="h-3 w-12 skeleton-shimmer rounded" />
+                </div>
               </div>
-            </div>
-            {/* Address skeleton - mono font style, smaller */}
-            <div className="mt-1 h-[10px] w-48 skeleton-shimmer rounded font-mono" />
+              {/* Address skeleton - mono font style, smaller */}
+              <div className="mt-1 h-[10px] w-48 skeleton-shimmer rounded font-mono" />
 
-            {/* Content skeleton - text lines */}
-            <div className="mt-3 space-y-2">
-              <div className="h-4 w-full skeleton-shimmer rounded" />
-              <div className="h-4 w-5/6 skeleton-shimmer rounded" />
+              {/* Content skeleton - text lines */}
+              <div className="mt-3 space-y-2">
+                <div className="h-4 w-full skeleton-shimmer rounded" />
+                <div className="h-4 w-5/6 skeleton-shimmer rounded" />
+              </div>
             </div>
 
             {/* Actions skeleton - Tip button, Comment button, Share button */}
-            <div className="mt-4 flex items-center justify-between">
+            <div className="mt-4 flex items-center justify-between w-full">
               <div className="inline-flex items-center gap-4 md:gap-2">
                 {/* Tip button skeleton */}
                 <div className="h-[28px] w-12 md:w-14 skeleton-shimmer rounded-lg" />
                 {/* Comment button skeleton */}
                 <div className="h-[28px] w-16 md:w-20 skeleton-shimmer rounded-lg" />
               </div>
-              {/* Share button skeleton (upload icon) */}
-              <div className="h-5 w-5 skeleton-shimmer rounded" />
+              {/* Share button skeleton - 34px width on md+, aligned right */}
+              <div className="h-[28px] w-12 md:w-[34px] skeleton-shimmer rounded-lg shrink-0" />
             </div>
           </div>
         </div>

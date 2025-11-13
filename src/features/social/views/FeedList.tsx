@@ -572,10 +572,13 @@ export default function FeedList({
       if (err) {
         return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); }} />;
       }
-      // Show empty state when there are no popular posts for the selected window,
-      // even if we will show latest posts as a fallback.
+      // Show skeleton loaders when there are no popular posts for the selected window
       if (!err && filteredAndSortedList.length === 0 && !initialLoading) {
-        return <EmptyState type="empty" hasSearch={!!localSearch} />;
+        return (
+          <div className="w-full flex flex-col gap-2">
+            {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-hot-empty-${i}`} />)}
+          </div>
+        );
       }
       if (initialLoading && filteredAndSortedList.length === 0) {
         // Show skeleton loaders instead of loading text
@@ -597,7 +600,12 @@ export default function FeedList({
       return <EmptyState type="error" error={latestError as any} onRetry={refetchLatest} />;
     }
     if (!latestError && filteredAndSortedList.length === 0 && !initialLoading) {
-      return <EmptyState type="empty" hasSearch={!!localSearch} />;
+      // Show skeleton loaders instead of empty state
+      return (
+        <div className="w-full flex flex-col gap-2">
+          {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-latest-empty-${i}`} />)}
+        </div>
+      );
     }
     if (initialLoading && filteredAndSortedList.length === 0) {
       // Show skeleton loaders instead of loading text

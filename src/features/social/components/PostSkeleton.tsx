@@ -6,7 +6,7 @@ const PostSkeleton = memo(() => {
       <article className="relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 pt-4 pb-5 md:w-full md:mx-0 md:p-5 bg-transparent md:bg-white/[0.02] md:border md:border-white/10 md:rounded-2xl md:backdrop-blur-xl">
         {/* Top-right on-chain badge skeleton */}
         <div className="absolute top-4 right-2 md:top-5 md:right-5 z-10">
-          <div className="px-2 py-1 bg-white/[0.08] rounded-lg skeleton-shimmer">
+          <div className="px-2 py-1 md:py-0 md:h-7 bg-white/[0.08] rounded-lg skeleton-shimmer flex items-center">
             <div className="h-3 w-16" />
           </div>
         </div>

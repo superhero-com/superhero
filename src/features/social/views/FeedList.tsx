@@ -148,6 +148,7 @@ export default function FeedList({
   const {
     data: activitiesPages,
     isLoading: activitiesLoading,
+    isFetching: activitiesFetching,
     fetchNextPage: fetchNextActivities,
     hasNextPage: hasMoreActivities,
     isFetchingNextPage: fetchingMoreActivities,
@@ -223,6 +224,7 @@ export default function FeedList({
   const {
     data: latestData,
     isLoading: latestLoading,
+    isFetching: latestFetching,
     error: latestError,
     fetchNextPage: fetchNextLatest,
     hasNextPage: hasMoreLatest,
@@ -403,21 +405,49 @@ export default function FeedList({
   );
 
 
+  // Track if we've completed the initial load for both queries
+  // This ensures posts and activities appear together, not incrementally
+  const [bothQueriesReady, setBothQueriesReady] = useState(false);
+  const prevSortByForReady = useRef(sortBy);
+  
+  useEffect(() => {
+    if (sortBy !== "hot") {
+      const hasPostsData = latestData && latestData.pages.length > 0;
+      const hasActivitiesData = activitiesPages && activitiesPages.pages.length > 0;
+      
+      // Reset ready state when switching feeds
+      if (prevSortByForReady.current !== sortBy) {
+        setBothQueriesReady(false);
+        prevSortByForReady.current = sortBy;
+        return; // Don't check readiness immediately after switching
+      }
+      
+      // Mark as ready when:
+      // 1. Both have data, AND
+      // 2. Neither is currently loading (initial load), AND  
+      // 3. Neither is currently fetching (refetch)
+      // This ensures we wait for both queries to complete before showing the combined list
+      const postsReady = hasPostsData && !latestLoading && !latestFetching;
+      const activitiesReady = hasActivitiesData && !activitiesLoading && !activitiesFetching;
+      
+      if (postsReady && activitiesReady) {
+        setBothQueriesReady(true);
+      }
+    } else {
+      setBothQueriesReady(true); // Hot feed doesn't need this check
+    }
+  }, [sortBy, latestData, activitiesPages, latestLoading, activitiesLoading, latestFetching, activitiesFetching]);
+
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo(() => {
     if (sortBy === "hot") {
       // For hot: popular posts seamlessly continue with recent posts (all from the same endpoint)
       return popularList;
     }
-    // For latest feed: only combine when both sources have data (or at least one has data and both are done loading)
-    // This ensures posts and activities appear together, not incrementally
-    const hasPostsData = latestData && latestData.pages.length > 0;
-    const hasActivitiesData = activitiesPages && activitiesPages.pages.length > 0;
     
-    // If we're on latest feed and both queries are still loading their first page,
-    // wait until at least one has data before showing anything
-    // This prevents showing posts first, then activities added later
-    if (sortBy !== "hot" && latestLoading && activitiesLoading && !hasPostsData && !hasActivitiesData) {
+    // For latest feed: only show combined list when both queries are ready
+    // This ensures posts and activities appear together, not incrementally
+    if (!bothQueriesReady) {
       return [];
     }
     
@@ -440,7 +470,7 @@ export default function FeedList({
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     });
-  }, [list, activityList, sortBy, popularList, latestData, activitiesPages, latestLoading, activitiesLoading]);
+  }, [list, activityList, sortBy, popularList, bothQueriesReady]);
 
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {
@@ -562,11 +592,7 @@ export default function FeedList({
     // This ensures they appear together instead of posts first, then activities added later
     const initialLoading = sortBy === "hot"
       ? (popularLoading && (!popularData || popularData.pages.length === 0))
-      : (
-          // Both queries must have data before showing the combined list
-          (latestLoading && (!latestData || latestData.pages.length === 0)) ||
-          (activitiesLoading && (!activitiesPages || activitiesPages.pages.length === 0))
-        );
+      : !bothQueriesReady; // Wait for both queries to be ready
     if (latestError) {
       return <EmptyState type="error" error={latestError as any} onRetry={refetchLatest} />;
     }
@@ -720,11 +746,7 @@ export default function FeedList({
   const initialLoading =
     sortBy === "hot"
       ? (popularLoading && (!popularData || popularData.pages.length === 0))
-      : (
-          // Both queries must have data before showing the combined list
-          (latestLoading && (!latestData || latestData.pages.length === 0)) ||
-          (activitiesLoading && (!activitiesPages || activitiesPages.pages.length === 0))
-        );
+      : !bothQueriesReady; // Wait for both queries to be ready
   const [showLoadMore, setShowLoadMore] = useState(false);
   useEffect(() => { setShowLoadMore(false); }, [sortBy]);
   useEffect(() => {

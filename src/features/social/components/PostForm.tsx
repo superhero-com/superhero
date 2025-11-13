@@ -136,6 +136,9 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiBtnRef = useRef<HTMLButtonElement>(null);
   const gifBtnRef = useRef<HTMLButtonElement>(null);
+  // Refs to track polling timers and component mount status
+  const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
+  const isMountedRef = useRef(true);
   const [overlayComputed, setOverlayComputed] = useState<{ paddingTop: number; paddingRight: number; paddingBottom: number; paddingLeft: number; fontFamily: string; fontSize: string; fontWeight: string; lineHeight: string; letterSpacing: string; } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDesktopViewport, setIsDesktopViewport] = useState(() => {
@@ -147,6 +150,17 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
 
   useEffect(() => {
     setPromptIndex(Math.floor(Math.random() * PROMPTS.length));
+  }, []);
+
+  // Cleanup effect to clear all timers on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      // Clear all pending timeouts
+      timeoutRefs.current.forEach(timeoutId => clearTimeout(timeoutId));
+      timeoutRefs.current.clear();
+    };
   }, []);
 
   // Do not auto-fill from initialText anymore; keep user input empty by default
@@ -403,22 +417,37 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         const retryInterval = 3000; // 3 seconds between retries
         
         const pollForComment = (attempt: number = 0) => {
-          if (attempt >= maxRetries) {
-            // Final attempt after max retries
-            queryClient.invalidateQueries({ queryKey: ["post-comments", normalizedPostId] });
-            queryClient.invalidateQueries({ queryKey: ["comment-replies", normalizedPostId] });
-            queryClient.refetchQueries({ 
-              queryKey: ["post-comments", normalizedPostId],
-              type: 'active',
-            });
-            queryClient.refetchQueries({ 
-              queryKey: ["comment-replies", normalizedPostId],
-              type: 'active',
-            });
+          // Stop polling if component is unmounted
+          if (!isMountedRef.current) {
             return;
           }
           
-          setTimeout(() => {
+          if (attempt >= maxRetries) {
+            // Final attempt after max retries
+            if (isMountedRef.current) {
+              queryClient.invalidateQueries({ queryKey: ["post-comments", normalizedPostId] });
+              queryClient.invalidateQueries({ queryKey: ["comment-replies", normalizedPostId] });
+              queryClient.refetchQueries({ 
+                queryKey: ["post-comments", normalizedPostId],
+                type: 'active',
+              });
+              queryClient.refetchQueries({ 
+                queryKey: ["comment-replies", normalizedPostId],
+                type: 'active',
+              });
+            }
+            return;
+          }
+          
+          const timeoutId = setTimeout(() => {
+            // Remove timeout ID from tracking set
+            timeoutRefs.current.delete(timeoutId);
+            
+            // Stop if component unmounted
+            if (!isMountedRef.current) {
+              return;
+            }
+            
             queryClient.invalidateQueries({ queryKey: ["post-comments", normalizedPostId] });
             queryClient.invalidateQueries({ queryKey: ["comment-replies", normalizedPostId] });
             Promise.all([
@@ -431,6 +460,11 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                 type: 'active',
               })
             ]).then(() => {
+              // Stop if component unmounted
+              if (!isMountedRef.current) {
+                return;
+              }
+              
               // Check if backend has processed the comment by verifying it exists in the refetched list
               const cachedComments = queryClient.getQueryData<any[]>(["comment-replies", normalizedPostId]);
               const commentExists = cachedComments?.some((c: any) => c?.id === newReplyId);
@@ -444,16 +478,33 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
               // Continue polling
               pollForComment(attempt + 1);
             }).catch(() => {
+              // Stop if component unmounted
+              if (!isMountedRef.current) {
+                return;
+              }
+              
               // On error, continue polling
               pollForComment(attempt + 1);
             });
           }, retryInterval);
+          
+          // Track timeout ID for cleanup
+          timeoutRefs.current.add(timeoutId);
         };
         
         // Start polling after initial delay to give backend time to start processing
-        setTimeout(() => {
-          pollForComment(0);
+        const initialTimeoutId = setTimeout(() => {
+          // Remove timeout ID from tracking set
+          timeoutRefs.current.delete(initialTimeoutId);
+          
+          // Only start polling if component is still mounted
+          if (isMountedRef.current) {
+            pollForComment(0);
+          }
         }, 5000); // 5 second initial delay before first poll
+        
+        // Track initial timeout ID for cleanup
+        timeoutRefs.current.add(initialTimeoutId);
         
         onCommentAdded?.();
       }

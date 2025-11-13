@@ -116,6 +116,8 @@ export const CONFIG: AppConfig = {
   // Vite env overrides for local builds - MUST come after runtimeConfig to override it
   ...(envApiUrl ? { SUPERHERO_API_URL: envApiUrl } : {}),
   ...(envWsUrl ? { SUPERHERO_WS_URL: envWsUrl } : {}),
+  // Ensure POPULAR_FEED_ENABLED defaults to true if not explicitly set
+  POPULAR_FEED_ENABLED: runtimeConfig.POPULAR_FEED_ENABLED ?? defaultConfig.POPULAR_FEED_ENABLED ?? true,
 };
 
 // Debug logging in development - always log to help debug

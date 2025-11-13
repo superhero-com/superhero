@@ -3,22 +3,22 @@ import { memo } from "react";
 const PostSkeleton = memo(() => {
   return (
     <>
-      <article className="relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 pt-4 pb-5 md:w-full md:mx-0 md:p-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:rounded-2xl md:backdrop-blur-xl">
+      <article className="relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 pt-4 pb-5 md:w-full md:mx-0 md:p-5 bg-transparent md:bg-white/[0.02] md:border md:border-white/10 md:rounded-2xl md:backdrop-blur-xl">
         {/* Top-right on-chain badge skeleton */}
         <div className="absolute top-4 right-2 md:top-5 md:right-5 z-10">
-          <div className="px-2 py-1 bg-white/[0.08] border border-white/20 rounded-lg skeleton-shimmer">
+          <div className="px-2 py-1 bg-white/[0.08] rounded-lg skeleton-shimmer">
             <div className="h-3 w-16" />
           </div>
         </div>
 
         <div className="flex gap-2 md:gap-3 items-start">
-          {/* Avatar skeleton - circular with border */}
+          {/* Avatar skeleton - circular */}
           <div className="flex-shrink-0 pt-0.5">
             <div className="md:hidden">
-              <div className="w-[34px] h-[34px] rounded-full border border-white/20 skeleton-shimmer" />
+              <div className="w-[34px] h-[34px] rounded-full skeleton-shimmer" />
             </div>
             <div className="hidden md:block">
-              <div className="w-[40px] h-[40px] rounded-full border border-white/20 skeleton-shimmer" />
+              <div className="w-[40px] h-[40px] rounded-full skeleton-shimmer" />
             </div>
           </div>
 
@@ -40,9 +40,6 @@ const PostSkeleton = memo(() => {
               <div className="h-4 w-5/6 skeleton-shimmer rounded" />
             </div>
 
-            {/* URL link skeleton - green link style (sometimes present) */}
-            <div className="mt-2 h-4 w-56 skeleton-shimmer rounded" style={{ opacity: 0.5 }} />
-
             {/* Actions skeleton - Tip button, Comment button, Share button */}
             <div className="mt-4 flex items-center justify-between">
               <div className="inline-flex items-center gap-4 md:gap-2">
@@ -56,6 +53,8 @@ const PostSkeleton = memo(() => {
             </div>
           </div>
         </div>
+        {/* Full-bleed divider on mobile */}
+        <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />
       </article>
       <style>{`
         .skeleton-shimmer {
@@ -66,6 +65,7 @@ const PostSkeleton = memo(() => {
           );
           background-size: 200% 100%;
           animation: skeleton-loading 1.5s infinite;
+          opacity: 0.6;
         }
 
         @keyframes skeleton-loading {

@@ -28,13 +28,11 @@ const PostSkeleton = memo(() => {
               {/* Header skeleton: name · time */}
               <div className="flex items-center justify-between gap-2.5">
                 <div className="flex items-baseline gap-2.5 min-w-0">
-                  <div className="h-[15px] w-20 skeleton-shimmer rounded" />
-                  <span className="text-white/50 shrink-0">·</span>
-                  <div className="h-3 w-12 skeleton-shimmer rounded" />
+                  <div className="h-[15px] w-24 mt-1 mb-1.5 skeleton-shimmer rounded" />
                 </div>
               </div>
               {/* Address skeleton - mono font style, smaller */}
-              <div className="mt-1 h-[10px] w-48 skeleton-shimmer rounded font-mono" />
+              <div className="mt-1 h-[10px] w-80 skeleton-shimmer rounded font-mono" />
 
               {/* Content skeleton - text lines */}
               <div className="mt-3 space-y-2">
@@ -67,7 +65,7 @@ const PostSkeleton = memo(() => {
             rgba(255, 255, 255, 0.08) 75%
           );
           background-size: 200% 100%;
-          animation: skeleton-loading 1.5s infinite;
+          animation: skeleton-loading 2.5s infinite;
           opacity: 0.6;
         }
 

@@ -61,7 +61,7 @@ const SortControls = memo(
     };
 
     return (
-    <div className={cn("w-full mb-3", className)}>
+    <div className={cn("w-full mb-0 md:mb-3", className)}>
       {/* Mobile: title with dropdown */}
       <div className="md:hidden">
         <div className="flex items-center justify-between border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] px-4 pt-3 pb-3">
@@ -74,14 +74,20 @@ const SortControls = memo(
             </DropdownMenuTrigger>
             <DropdownMenuContent 
               align="start" 
-              className="bg-[#0C0C14] border-white/10 text-white min-w-[180px]"
+              sideOffset={8}
+              className="bg-white/5 backdrop-blur-xl border-white/20 text-white min-w-[240px] py-2 rounded-xl shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-4 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-top"
+              style={{
+                background: "radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.06), transparent 40%), rgba(255, 255, 255, 0.03)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
+              }}
             >
               {sortBy === "hot" ? (
                 <>
                   {popularWindow !== "24h" && (
                     <DropdownMenuItem
                       onClick={() => handleMobileOptionSelect("today")}
-                      className="cursor-pointer focus:bg-white/10 focus:text-white"
+                      className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
                     >
                       Today
                     </DropdownMenuItem>
@@ -89,7 +95,7 @@ const SortControls = memo(
                   {popularWindow !== "7d" && (
                     <DropdownMenuItem
                       onClick={() => handleMobileOptionSelect("this-week")}
-                      className="cursor-pointer focus:bg-white/10 focus:text-white"
+                      className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
                     >
                       This week
                     </DropdownMenuItem>
@@ -97,14 +103,14 @@ const SortControls = memo(
                   {popularWindow !== "all" && (
                     <DropdownMenuItem
                       onClick={() => handleMobileOptionSelect("all-time")}
-                      className="cursor-pointer focus:bg-white/10 focus:text-white"
+                      className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
                     >
                       All time
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem
                     onClick={() => handleMobileOptionSelect("latest")}
-                    className="cursor-pointer focus:bg-white/10 focus:text-white"
+                    className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
                   >
                     Latest
                   </DropdownMenuItem>
@@ -113,19 +119,19 @@ const SortControls = memo(
                 <>
                   <DropdownMenuItem
                     onClick={() => handleMobileOptionSelect("today")}
-                    className="cursor-pointer focus:bg-white/10 focus:text-white"
+                    className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
                   >
                     Popular today
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => handleMobileOptionSelect("this-week")}
-                    className="cursor-pointer focus:bg-white/10 focus:text-white"
+                    className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
                   >
                     Popular this week
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => handleMobileOptionSelect("all-time")}
-                    className="cursor-pointer focus:bg-white/10 focus:text-white"
+                    className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
                   >
                     Popular all time
                   </DropdownMenuItem>

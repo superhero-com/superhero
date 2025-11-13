@@ -38,6 +38,8 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
       return items;
     },
     getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === ACTIVITY_PAGE_SIZE ? pages.length + 1 : undefined),
+    refetchOnMount: false, // Use cached data when switching tabs
+    staleTime: 30_000, // Consider data fresh for 30 seconds
   });
   const createdActivities: PostDto[] = useMemo(
     () => (createdActivitiesPages?.pages ? (createdActivitiesPages.pages as PostDto[][]).flatMap((p) => p) : []),
@@ -73,6 +75,8 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
       }
       return undefined;
     },
+    refetchOnMount: false, // Use cached data when switching tabs
+    staleTime: 30_000, // Consider data fresh for 30 seconds
   });
 
   const list = useMemo(

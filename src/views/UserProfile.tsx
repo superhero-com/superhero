@@ -10,10 +10,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PostsService } from "../api/generated";
 import { AccountsService } from "../api/generated/services/AccountsService";
 import { AccountTokensService } from "../api/generated/services/AccountTokensService";
+import { TokensService } from "../api/generated/services/TokensService";
+import { TransactionsService } from "../api/generated/services/TransactionsService";
 import { PostApiResponse } from "../features/social/types";
 import "../features/social/views/FeedList.scss";
 import { useAccountBalances } from "../hooks/useAccountBalances";
 import { useAddressByChainName, useChainName } from "../hooks/useChainName";
+import { SuperheroApi } from "../api/backend";
 
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import AccountCreatedToken from "@/components/Account/AccountCreatedToken";
@@ -193,6 +196,101 @@ export default function UserProfile({
       setProfile(p);
     })();
   }, [effectiveAddress]);
+
+  // Prefetch all tab data in the background so switching tabs is instant
+  useEffect(() => {
+    if (!effectiveAddress) return;
+    
+    // Prefetch feed tab data (posts and activities)
+    queryClient.prefetchInfiniteQuery({
+      queryKey: ["profile-posts", effectiveAddress],
+      queryFn: ({ pageParam = 1 }) =>
+        PostsService.listAll({
+          accountAddress: effectiveAddress,
+          orderBy: "created_at",
+          orderDirection: "DESC",
+          limit: 10,
+          page: pageParam,
+        }) as any,
+      initialPageParam: 1,
+      getNextPageParam: (lastPage: any) => {
+        if (
+          lastPage?.meta?.currentPage &&
+          lastPage?.meta?.totalPages &&
+          lastPage.meta.currentPage < lastPage.meta.totalPages
+        ) {
+          return lastPage.meta.currentPage + 1;
+        }
+        return undefined;
+      },
+    });
+
+    queryClient.prefetchInfiniteQuery({
+      queryKey: ["profile-activities", effectiveAddress],
+      queryFn: async ({ pageParam = 1 }) => {
+        const resp = await SuperheroApi.listTokens({
+          creatorAddress: effectiveAddress,
+          orderBy: "created_at",
+          orderDirection: "DESC",
+          limit: 50,
+          page: pageParam as number,
+        }).catch(() => ({ items: [] }));
+        return (resp?.items || []);
+      },
+      initialPageParam: 1,
+      getNextPageParam: (lastPage: any[], pages: any[][]) => 
+        (lastPage && lastPage.length === 50 ? pages.length + 1 : undefined),
+    });
+
+    // Prefetch owned tokens tab data
+    queryClient.prefetchQuery({
+      queryKey: ['DataTable', { page: 1, limit: 10 }, { address: effectiveAddress, orderBy: "balance", orderDirection: "DESC" }],
+      queryFn: () =>
+        AccountTokensService.listTokenHolders({
+          address: effectiveAddress,
+          orderBy: "balance",
+          orderDirection: "DESC",
+          limit: 10,
+          page: 1,
+        }) as unknown as Promise<{ items: any[]; meta?: any }>,
+      staleTime: 60_000,
+    });
+
+    // Prefetch created tokens tab data
+    queryClient.prefetchQuery({
+      queryKey: [
+        "TokensService.listAll",
+        "created",
+        effectiveAddress,
+        "market_cap",
+        "DESC",
+        1,
+        20,
+      ],
+      queryFn: () =>
+        TokensService.listAll({
+          creatorAddress: effectiveAddress,
+          orderBy: "market_cap",
+          orderDirection: "DESC",
+          limit: 20,
+          page: 1,
+        }) as unknown as Promise<{ items: any[]; meta?: any }>,
+      staleTime: 60_000,
+    });
+
+    // Prefetch transactions tab data
+    queryClient.prefetchQuery({
+      queryKey: ['DataTable', { page: 1, limit: 10 }, { accountAddress: effectiveAddress, includes: "token" }],
+      queryFn: () =>
+        TransactionsService.listTransactions({
+          accountAddress: effectiveAddress,
+          includes: "token",
+          limit: 10,
+          page: 1,
+        }) as unknown as Promise<{ items: any[]; meta?: any }>,
+      staleTime: 30_000,
+    });
+  }, [effectiveAddress, queryClient]);
 
   // Listen for bio post submissions to optimistically update and then poll until backend confirms
   useEffect(() => {

@@ -106,7 +106,6 @@ export default function FeedList({
       if (sortBy === 'hot') {
         // Reset cached pages to avoid mixing windows
         queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
-        queryClient.removeQueries({ queryKey: ["latest-after-popular"], exact: false });
       }
     }
   }, [location.search, sortBy, queryClient, popularWindow]);
@@ -239,7 +238,7 @@ export default function FeedList({
     initialPageParam: 1,
   });
 
-  // For hot: first fetch popular posts, then continue with latest posts after separator
+  // For hot: fetch popular posts, which seamlessly continues with recent posts after popular posts are exhausted
   const {
     data: popularData,
     isLoading: popularLoading,
@@ -258,44 +257,23 @@ export default function FeedList({
         limit: 10,
       }) as unknown as Promise<PostApiResponse>,
     getNextPageParam: (lastPage) => {
-      if (
-        lastPage?.meta?.currentPage &&
-        lastPage?.meta?.totalPages &&
-        lastPage.meta.currentPage < lastPage.meta.totalPages
-      ) {
-        return lastPage.meta.currentPage + 1;
-      }
-      return undefined;
-    },
-    initialPageParam: 1,
-  });
-
-  const {
-    data: afterPopularData,
-    isLoading: afterPopularLoading,
-    error: afterPopularError,
-    fetchNextPage: fetchNextAfterPopular,
-    hasNextPage: hasMoreAfterPopular,
-    isFetchingNextPage: fetchingMoreAfterPopular,
-    refetch: refetchAfterPopular,
-  } = useInfiniteQuery({
-    enabled: sortBy === "hot",
-    queryKey: ["latest-after-popular", { limit: 10, search: localSearch }],
-    queryFn: ({ pageParam = 1 }) =>
-      PostsService.listAll({
-        limit: 10,
-        page: pageParam,
-        orderBy: "created_at",
-        orderDirection: "DESC",
-        search: localSearch,
-      }) as unknown as Promise<PostApiResponse>,
-    getNextPageParam: (lastPage) => {
-      if (
-        lastPage?.meta?.currentPage &&
-        lastPage?.meta?.totalPages &&
-        lastPage.meta.currentPage < lastPage.meta.totalPages
-      ) {
-        return lastPage.meta.currentPage + 1;
+      // Continue pagination if:
+      // 1. We have totalPages and haven't reached it yet, OR
+      // 2. totalPages is undefined (meaning we're past popular posts) but we got a full page of results
+      if (lastPage?.meta?.currentPage) {
+        if (
+          lastPage.meta.totalPages &&
+          lastPage.meta.currentPage < lastPage.meta.totalPages
+        ) {
+          return lastPage.meta.currentPage + 1;
+        }
+        // If totalPages is undefined but we got a full page, continue pagination
+        if (
+          !lastPage.meta.totalPages &&
+          lastPage.meta.itemCount === 10
+        ) {
+          return lastPage.meta.currentPage + 1;
+        }
       }
       return undefined;
     },
@@ -319,46 +297,11 @@ export default function FeedList({
     [popularData]
   );
 
-  const afterPopularList = useMemo(
-    () =>
-      afterPopularData?.pages
-        ? ((afterPopularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? [])
-        : [],
-    [afterPopularData]
-  );
-
-  // Apply search/filter on the "after popular" segment as well
-  const filteredAfterPopularList = useMemo(() => {
-    let filtered = [...afterPopularList];
-    if (localSearch.trim()) {
-      const searchTerm = localSearch.toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          (item.content && item.content.toLowerCase().includes(searchTerm)) ||
-          (item.topics &&
-            item.topics.some((topic) =>
-              topic.toLowerCase().includes(searchTerm)
-            )) ||
-          (item.sender_address &&
-            item.sender_address.toLowerCase().includes(searchTerm)) ||
-          (chainNames?.[item.sender_address] &&
-            chainNames[item.sender_address].toLowerCase().includes(searchTerm))
-      );
-    }
-    if (filterBy === "withMedia") {
-      filtered = filtered.filter(
-        (item) => item.media && Array.isArray(item.media) && item.media.length > 0
-      );
-    } else if (filterBy === "withComments") {
-      filtered = filtered.filter((item) => (item.total_comments ?? 0) > 0);
-    }
-    return filtered;
-  }, [afterPopularList, localSearch, filterBy, chainNames]);
 
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo(() => {
     if (sortBy === "hot") {
-      // For hot: show popular first; after popular ends, we will render separator + latest-after-popular in render layer
+      // For hot: popular posts seamlessly continue with recent posts (all from the same endpoint)
       return popularList;
     }
     // Default path: interleave activities and latest, sorted by created_at desc
@@ -415,7 +358,6 @@ export default function FeedList({
       queryClient.removeQueries({ queryKey: ["posts"], exact: false });
       queryClient.removeQueries({ queryKey: ["home-activities"], exact: false });
       queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
-      queryClient.removeQueries({ queryKey: ["latest-after-popular"], exact: false });
       if (newSortBy === 'hot') {
         navigate(`/?sortBy=hot&window=${popularWindow}`);
       } else {
@@ -431,7 +373,6 @@ export default function FeedList({
       navigate(`/?sortBy=hot&window=${w}`);
       // Reset pages for new window
       queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
-      queryClient.removeQueries({ queryKey: ["latest-after-popular"], exact: false });
     }
   }, [navigate, sortBy, queryClient]);
 
@@ -457,10 +398,10 @@ export default function FeedList({
   // Render helpers
   const renderEmptyState = () => {
     if (sortBy === "hot") {
-      const initialLoading = popularLoading || afterPopularLoading;
-      const err = popularError || afterPopularError;
+      const initialLoading = popularLoading;
+      const err = popularError;
       if (err) {
-        return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); refetchAfterPopular(); }} />;
+        return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); }} />;
       }
       // Show empty state when there are no popular posts for the selected window,
       // even if we will show latest posts as a fallback.
@@ -616,7 +557,7 @@ export default function FeedList({
   const fetchingRef = useRef(false);
   const initialLoading =
     sortBy === "hot"
-      ? (popularLoading || afterPopularLoading)
+      ? popularLoading
       : (sortBy !== "hot" && activitiesLoading) || latestLoading;
   const [showLoadMore, setShowLoadMore] = useState(false);
   useEffect(() => { setShowLoadMore(false); }, [sortBy]);
@@ -633,7 +574,6 @@ export default function FeedList({
       const tasks: Promise<any>[] = [];
       if (sortBy === "hot") {
         if (hasMorePopular && !fetchingMorePopular) tasks.push(fetchNextPopular());
-        else if (hasMoreAfterPopular && !fetchingMoreAfterPopular) tasks.push(fetchNextAfterPopular());
       } else {
         if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
         if (hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
@@ -659,10 +599,6 @@ export default function FeedList({
     hasMorePopular,
     fetchingMorePopular,
     fetchNextPopular,
-    // after popular
-    hasMoreAfterPopular,
-    fetchingMoreAfterPopular,
-    fetchNextAfterPopular,
   ]);
 
   const content = (
@@ -688,7 +624,6 @@ export default function FeedList({
           onSuccess={() => {
             if (sortBy === "hot") {
               refetchPopular();
-              refetchAfterPopular();
             } else {
               refetchLatest();
             }
@@ -722,10 +657,9 @@ export default function FeedList({
         {/* Non-hot: existing renderer */}
         {sortBy !== "hot" && !latestLoading && renderFeedItems}
 
-        {/* Hot: render popular first, then separator, then latest-after-popular */}
+        {/* Hot: render popular posts (which seamlessly includes recent posts after popular posts are exhausted) */}
         {sortBy === "hot" && !popularLoading && (
           <>
-            {/* Popular posts list */}
             {filteredAndSortedList.map((item) => (
               <ReplyToFeedItem
                 key={item.id}
@@ -735,28 +669,6 @@ export default function FeedList({
                 onOpenPost={handleItemClick}
               />
             ))}
-
-            {/* Separator + latest list after popular ends */}
-            {!hasMorePopular && filteredAfterPopularList.length > 0 && (
-              <>
-                <div className="my-6 md:my-8 flex items-center gap-3">
-                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                  <div className="text-[11px] md:text-xs uppercase tracking-wider text-white/70 bg-white/[0.06] border border-white/10 rounded-full px-3 py-1 backdrop-blur-sm">
-                    Popular posts ended — showing latest posts
-                  </div>
-                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                </div>
-                {filteredAfterPopularList.map((item) => (
-                  <ReplyToFeedItem
-                    key={item.id}
-                    item={item}
-                    commentCount={item.total_comments ?? 0}
-                    allowInlineRepliesToggle={false}
-                    onOpenPost={handleItemClick}
-                  />
-                ))}
-              </>
-            )}
           </>
         )}
       </div>
@@ -770,13 +682,12 @@ export default function FeedList({
               <AeButton
                 loading={
                   sortBy === "hot"
-                    ? fetchingMorePopular || fetchingMoreAfterPopular
+                    ? fetchingMorePopular
                     : (fetchingMoreLatest || fetchingMoreActivities)
                 }
                 onClick={() => {
                   if (sortBy === "hot") {
                     if (hasMorePopular && !fetchingMorePopular) return fetchNextPopular();
-                    if (hasMoreAfterPopular && !fetchingMoreAfterPopular) return fetchNextAfterPopular();
                     return;
                   }
                   const tasks: Promise<any>[] = [];

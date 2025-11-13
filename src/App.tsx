@@ -9,7 +9,7 @@ import "./styles/genz-components.scss";
 import "./styles/mobile-optimizations.scss";
 import AppHeader from "./components/layout/app-header";
 import { useSuperheroChainNames } from "./hooks/useChainName";
-const PostModal = React.lazy(() => import("./components/modals/PostModal"));
+
 const CookiesDialog = React.lazy(
   () => import("./components/modals/CookiesDialog")
 );
@@ -78,7 +78,6 @@ export default function App() {
       <Suspense fallback={<div className="loading-fallback" />}>
         <ModalProvider
           registry={{
-            post: PostModal,
             "cookies-dialog": CookiesDialog,
             "token-select": TokenSelectModal,
             "image-gallery": ImageGallery,

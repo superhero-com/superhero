@@ -94,20 +94,24 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
         };
         const idV3 = postIdForKey ? normalizePostIdV3(postIdForKey) : null;
         if (idV3) {
+          // Read the cache value ONCE before any optimistic updates to ensure accurate expectedTotal calculation
+          // This prevents issues when multiple tips are sent rapidly - each tip calculates expectedTotal
+          // based on the actual backend value, not an optimistically updated value from a previous tip
+          const currentCacheData = queryClient.getQueryData<{ totalTips?: string }>(['post-tip-summary', idV3]);
+          const baseTotal = currentCacheData?.totalTips != null ? Number(currentCacheData.totalTips) : 0;
+          const baseTotalNum = Number.isFinite(baseTotal) ? baseTotal : 0;
+          const delta = Number(amount);
+          const deltaNum = Number.isFinite(delta) ? delta : 0;
+          
+          // Calculate expectedTotal based on the base value (before optimistic update)
+          const expectedTotal = baseTotalNum + deltaNum;
+          
           // Optimistic bump: add the sent amount to current cached summary if present
           // This ensures immediate UI update before backend processes the transaction
           // Using updater function ensures React Query properly detects the change
-          const expectedTotal = (() => {
-            const current = queryClient.getQueryData<{ totalTips?: string }>(['post-tip-summary', idV3]);
-            const currentNum = current?.totalTips != null ? Number(current.totalTips) : 0;
-            const delta = Number(amount);
-            return (Number.isFinite(currentNum) ? currentNum : 0) + (Number.isFinite(delta) ? delta : 0);
-          })();
-          
           queryClient.setQueryData<{ totalTips?: string }>(['post-tip-summary', idV3], (old) => {
             const currentNum = old?.totalTips != null ? Number(old.totalTips) : 0;
-            const delta = Number(amount);
-            const sum = (Number.isFinite(currentNum) ? currentNum : 0) + (Number.isFinite(delta) ? delta : 0);
+            const sum = (Number.isFinite(currentNum) ? currentNum : 0) + deltaNum;
             return { totalTips: String(sum) } as { totalTips?: string };
           });
           

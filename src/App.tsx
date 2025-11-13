@@ -19,9 +19,6 @@ const TokenSelectModal = React.lazy(
 const ImageGallery = React.lazy(
   () => import("./components/modals/ImageGallery")
 );
-const FeedItemMenu = React.lazy(
-  () => import("./components/modals/FeedItemMenu")
-);
 const AlertModal = React.lazy(() => import("./components/modals/AlertModal"));
 const TransactionConfirmModal = React.lazy(
   () => import("./components/modals/TransactionConfirmModal")
@@ -81,7 +78,6 @@ export default function App() {
             "cookies-dialog": CookiesDialog,
             "token-select": TokenSelectModal,
             "image-gallery": ImageGallery,
-            "feed-item-menu": FeedItemMenu,
             alert: AlertModal,
             "transaction-confirm": TransactionConfirmModal,
             "connect-wallet": ConnectWalletModal,

@@ -181,9 +181,10 @@ export default function FeedList({
         .map(mapTokenCreatedToPost);
     },
     getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === ACTIVITY_PAGE_SIZE ? pages.length + 1 : undefined),
-    // Use cached data when available, same as posts query
-    staleTime: 10000, // Consider data fresh for 10 seconds - shorter to ensure new items appear
-    // This ensures activities load at the same time as posts when switching to latest
+    // Show cached data immediately, refetch in background
+    staleTime: 10000, // Consider data fresh for 10 seconds
+    refetchOnMount: false, // Don't block on refetch - show cached data immediately
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
   const activityList: PostDto[] = useMemo(() => {
     const allItems = activitiesPages?.pages 
@@ -254,11 +255,10 @@ export default function FeedList({
       return undefined;
     },
     initialPageParam: 1,
-    // Use cached data when available, but still allow fetching new items
-    staleTime: 10000, // Consider data fresh for 10 seconds - shorter to ensure new posts appear
-    // refetchOnMount defaults to true, but with staleTime it will use cached data if fresh
-    // This means switching to latest will show cached data immediately if fresh (< 10s old)
-    // and will fetch new items if stale (> 10s old)
+    // Show cached data immediately, refetch in background
+    staleTime: 10000, // Consider data fresh for 10 seconds
+    refetchOnMount: false, // Don't block on refetch - show cached data immediately
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
   // Prefetch activities (token-created) and posts when component mounts or when switching to latest
@@ -328,13 +328,14 @@ export default function FeedList({
     prevSortByForPrefetch.current = sortBy;
   }, [sortBy, queryClient, mapTokenCreatedToPost, ACTIVITY_PAGE_SIZE]);
 
-  // Refetch page 1 when switching to latest to ensure newest posts are shown
+  // Refetch in background when switching to latest (non-blocking)
+  // This updates the feed with new items without blocking the UI
   const prevSortByRef = useRef(sortBy);
   useEffect(() => {
     // Only refetch when switching TO "latest" from another feed
     if (sortBy === "latest" && prevSortByRef.current !== "latest") {
-      // Refetch first page in background to get newest posts and activities
-      // This ensures items created after cache was created will appear
+      // Refetch in background (non-blocking) to get newest posts and activities
+      // Cached data is shown immediately, new items will be added when refetch completes
       refetchLatest();
       refetchActivities();
     }
@@ -407,23 +408,39 @@ export default function FeedList({
   );
 
 
-  // Track if we've completed the initial load for both queries
+  // Track if we have data from both queries (cached or fresh)
   // This ensures posts and activities appear together, not incrementally
-  // Use isSuccess to ensure both queries have completed at least one successful fetch
+  // Allow cached data to show immediately, but ensure both have data before combining
   const bothQueriesReady = useMemo(() => {
     if (sortBy === "hot") {
       return true; // Hot feed doesn't need this check
     }
     
-    // Both queries must have:
-    // 1. Completed successfully (isSuccess = true)
-    // 2. Have data (pages.length > 0)
-    // 3. Not be currently loading or fetching (to avoid showing partial data during refetch)
-    const postsReady = latestSuccess && latestData && latestData.pages.length > 0 && !latestLoading && !latestFetching;
-    const activitiesReady = activitiesSuccess && activitiesPages && activitiesPages.pages.length > 0 && !activitiesLoading && !activitiesFetching;
+    // Both queries must have data (from cache or fresh fetch)
+    // We allow cached data to show immediately, but wait for both to have data
+    const hasPostsData = latestData && latestData.pages.length > 0;
+    const hasActivitiesData = activitiesPages && activitiesPages.pages.length > 0;
     
-    return postsReady && activitiesReady;
-  }, [sortBy, latestSuccess, latestData, latestLoading, latestFetching, activitiesSuccess, activitiesPages, activitiesLoading, activitiesFetching]);
+    // If both have data, show them together
+    // If only one has data and the other is still loading, wait
+    // If both are loading and neither has data, wait
+    if (hasPostsData && hasActivitiesData) {
+      return true; // Both have data, show immediately
+    }
+    
+    // If one has data but the other is still loading, wait
+    if ((hasPostsData && activitiesLoading) || (hasActivitiesData && latestLoading)) {
+      return false; // Wait for the other to finish
+    }
+    
+    // If both are loading and neither has data, wait
+    if (latestLoading && activitiesLoading && !hasPostsData && !hasActivitiesData) {
+      return false; // Wait for at least one to finish
+    }
+    
+    // If we have data from both (even if one just finished), show it
+    return hasPostsData && hasActivitiesData;
+  }, [sortBy, latestData, activitiesPages, latestLoading, activitiesLoading]);
 
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo(() => {
@@ -577,12 +594,11 @@ export default function FeedList({
       }
       return null;
     }
-    // Only show loading if we don't have cached data
-    // For latest feed: wait for both posts and activities to load before showing combined list
-    // This ensures they appear together instead of posts first, then activities added later
+    // Only show loading if we don't have cached data and queries are still loading
+    // For latest feed: show cached data immediately, but wait for both to have data before combining
     const initialLoading = sortBy === "hot"
       ? (popularLoading && (!popularData || popularData.pages.length === 0))
-      : !bothQueriesReady; // Wait for both queries to be ready
+      : (!bothQueriesReady && (latestLoading || activitiesLoading)); // Only show loading if actually loading and not ready
     if (latestError) {
       return <EmptyState type="error" error={latestError as any} onRetry={refetchLatest} />;
     }
@@ -734,14 +750,13 @@ export default function FeedList({
   // Auto-load more when reaching bottom using IntersectionObserver (all screens)
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const fetchingRef = useRef(false);
-  // Only show loading if we don't have any data yet
+  // Only show loading if we don't have any data yet and queries are still loading
   // If we have cached data, show it immediately even while refetching
-  // For latest feed: wait for both posts and activities to load before showing combined list
-  // This ensures they appear together instead of posts first, then activities added later
+  // For latest feed: show cached data immediately, but wait for both to have data before combining
   const initialLoading =
     sortBy === "hot"
       ? (popularLoading && (!popularData || popularData.pages.length === 0))
-      : !bothQueriesReady; // Wait for both queries to be ready
+      : (!bothQueriesReady && (latestLoading || activitiesLoading)); // Only show loading if actually loading and not ready
   const [showLoadMore, setShowLoadMore] = useState(false);
   useEffect(() => { setShowLoadMore(false); }, [sortBy]);
   useEffect(() => {

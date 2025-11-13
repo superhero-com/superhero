@@ -8,6 +8,7 @@ import Shell from "../components/layout/Shell";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PostsService } from "../api/generated";
+import type { PostDto } from "../api/generated";
 import { AccountsService } from "../api/generated/services/AccountsService";
 import { AccountTokensService } from "../api/generated/services/AccountTokensService";
 import { TokensService } from "../api/generated/services/TokensService";
@@ -235,7 +236,32 @@ export default function UserProfile({
           limit: 50,
           page: pageParam as number,
         }).catch(() => ({ items: [] }));
-        return (resp?.items || []);
+        // Map token items to PostDto format to match AccountFeed.tsx query
+        const items = (resp?.items || []).map((payload: any): PostDto => {
+          const saleAddress: string = payload?.sale_address || payload?.address || "";
+          const name: string = payload?.token_name || payload?.name || "Unknown";
+          const createdAt: string = payload?.created_at || new Date().toISOString();
+          const encodedName = encodeURIComponent(name);
+          const id = `token-created:${encodedName}:${saleAddress}:${createdAt}_v3`;
+          return {
+            id,
+            tx_hash: payload?.tx_hash || "",
+            tx_args: [
+              { token_name: name },
+              { sale_address: saleAddress },
+              { kind: "token-created" },
+            ],
+            sender_address: payload?.creator_address || effectiveAddress || "",
+            contract_address: saleAddress || "",
+            type: "TOKEN_CREATED",
+            content: "",
+            topics: ["token:created", `token_name:${name}`, `#${name}`].filter(Boolean) as string[],
+            media: [],
+            total_comments: 0,
+            created_at: createdAt,
+          } as PostDto;
+        });
+        return items;
       },
       initialPageParam: 1,
       getNextPageParam: (lastPage: any[], pages: any[][]) => 

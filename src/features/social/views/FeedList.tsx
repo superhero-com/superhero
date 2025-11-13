@@ -429,7 +429,8 @@ export default function FeedList({
   // Render helpers
   const renderEmptyState = () => {
     if (sortBy === "hot") {
-      const initialLoading = popularLoading;
+      // Only show loading if we don't have cached data
+      const initialLoading = popularLoading && (!popularData || popularData.pages.length === 0);
       const err = popularError;
       if (err) {
         return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); }} />;
@@ -444,7 +445,10 @@ export default function FeedList({
       }
       return null;
     }
-    const initialLoading = (sortBy !== "hot" && activitiesLoading) || latestLoading;
+    // Only show loading if we don't have cached data
+    const initialLoading = 
+      (sortBy !== "hot" && activitiesLoading && (!activitiesPages || activitiesPages.pages.length === 0)) || 
+      (latestLoading && (!latestData || latestData.pages.length === 0));
     if (latestError) {
       return <EmptyState type="error" error={latestError as any} onRetry={refetchLatest} />;
     }
@@ -586,10 +590,13 @@ export default function FeedList({
   // Auto-load more when reaching bottom using IntersectionObserver (all screens)
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const fetchingRef = useRef(false);
+  // Only show loading if we don't have any data yet
+  // If we have cached data, show it immediately even while refetching
   const initialLoading =
     sortBy === "hot"
-      ? popularLoading
-      : (sortBy !== "hot" && activitiesLoading) || latestLoading;
+      ? popularLoading && (!popularData || popularData.pages.length === 0)
+      : ((sortBy !== "hot" && activitiesLoading && (!activitiesPages || activitiesPages.pages.length === 0)) || 
+         (latestLoading && (!latestData || latestData.pages.length === 0)));
   const [showLoadMore, setShowLoadMore] = useState(false);
   useEffect(() => { setShowLoadMore(false); }, [sortBy]);
   useEffect(() => {
@@ -685,11 +692,11 @@ export default function FeedList({
 
       <div className="w-full flex flex-col gap-0 md:gap-2 md:mx-0">
         {renderEmptyState()}
-        {/* Non-hot: existing renderer */}
-        {sortBy !== "hot" && !latestLoading && renderFeedItems}
+        {/* Non-hot: existing renderer - show feed if we have data, even while refetching */}
+        {sortBy !== "hot" && (latestData?.pages.length > 0 || activityList.length > 0) && renderFeedItems}
 
         {/* Hot: render popular posts (which seamlessly includes recent posts after popular posts are exhausted) */}
-        {sortBy === "hot" && !popularLoading && (
+        {sortBy === "hot" && (popularData?.pages.length > 0) && (
           <>
             {filteredAndSortedList.map((item) => (
               <ReplyToFeedItem

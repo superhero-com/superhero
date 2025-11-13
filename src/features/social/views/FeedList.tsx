@@ -183,10 +183,19 @@ export default function FeedList({
     staleTime: 10000, // Consider data fresh for 10 seconds - shorter to ensure new items appear
     // This ensures activities load at the same time as posts when switching to latest
   });
-  const activityList: PostDto[] = useMemo(
-    () => (activitiesPages?.pages ? (activitiesPages.pages as PostDto[][]).flatMap((p) => p) : []),
-    [activitiesPages]
-  );
+  const activityList: PostDto[] = useMemo(() => {
+    const allItems = activitiesPages?.pages 
+      ? (activitiesPages.pages as PostDto[][]).flatMap((p) => p) 
+      : [];
+    // Deduplicate within activities list (in case backend returns duplicates across pages)
+    const seenIds = new Set<string>();
+    return allItems.filter((item: PostDto) => {
+      const id = String(item?.id || '');
+      if (!id || seenIds.has(id)) return false;
+      seenIds.add(id);
+      return true;
+    });
+  }, [activitiesPages]);
 
   // Live updates for token-created via websocket
   useEffect(() => {
@@ -303,14 +312,20 @@ export default function FeedList({
     initialPageParam: 1,
   });
 
-  // Derived state: posts list
-  const list = useMemo(
-    () =>
-      latestData?.pages
-        ? ((latestData.pages as any[]) || []).flatMap((page: any) => page?.items ?? [])
-        : [],
-    [latestData]
-  );
+  // Derived state: posts list (deduplicated by ID)
+  const list = useMemo(() => {
+    const allItems = latestData?.pages
+      ? ((latestData.pages as any[]) || []).flatMap((page: any) => page?.items ?? [])
+      : [];
+    // Deduplicate within the list itself (in case backend returns duplicates across pages)
+    const seenIds = new Set<string>();
+    return allItems.filter((item: any) => {
+      const id = String(item?.id || '');
+      if (!id || seenIds.has(id)) return false;
+      seenIds.add(id);
+      return true;
+    });
+  }, [latestData]);
 
   const popularList = useMemo(
     () =>
@@ -328,7 +343,19 @@ export default function FeedList({
       return popularList;
     }
     // Default path: interleave activities and latest, sorted by created_at desc
-    const merged = [...activityList, ...list];
+    // Deduplicate by post ID to avoid showing the same post twice
+    const seenIds = new Set<string>();
+    const merged: PostDto[] = [];
+    
+    // Add activities first, then regular posts, skipping duplicates
+    for (const item of [...activityList, ...list]) {
+      const id = String(item?.id || '');
+      if (id && !seenIds.has(id)) {
+        seenIds.add(id);
+        merged.push(item);
+      }
+    }
+    
     return merged.sort((a: any, b: any) => {
       const at = new Date(a?.created_at || 0).getTime();
       const bt = new Date(b?.created_at || 0).getTime();

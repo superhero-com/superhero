@@ -410,37 +410,25 @@ export default function FeedList({
 
   // Track if we have data from both queries (cached or fresh)
   // This ensures posts and activities appear together, not incrementally
-  // Allow cached data to show immediately, but ensure both have data before combining
+  // Show cached data immediately if available
   const bothQueriesReady = useMemo(() => {
     if (sortBy === "hot") {
       return true; // Hot feed doesn't need this check
     }
     
-    // Both queries must have data (from cache or fresh fetch)
-    // We allow cached data to show immediately, but wait for both to have data
+    // Check if we have cached data from both queries
     const hasPostsData = latestData && latestData.pages.length > 0;
     const hasActivitiesData = activitiesPages && activitiesPages.pages.length > 0;
     
-    // If both have data, show them together
-    // If only one has data and the other is still loading, wait
-    // If both are loading and neither has data, wait
+    // If both have cached data, show immediately (even if refetching in background)
     if (hasPostsData && hasActivitiesData) {
-      return true; // Both have data, show immediately
+      return true;
     }
     
-    // If one has data but the other is still loading, wait
-    if ((hasPostsData && activitiesLoading) || (hasActivitiesData && latestLoading)) {
-      return false; // Wait for the other to finish
-    }
-    
-    // If both are loading and neither has data, wait
-    if (latestLoading && activitiesLoading && !hasPostsData && !hasActivitiesData) {
-      return false; // Wait for at least one to finish
-    }
-    
-    // If we have data from both (even if one just finished), show it
+    // If we have cached data from both, show it even if one is still loading/fetching
+    // This allows cached data to appear immediately while background refetch happens
     return hasPostsData && hasActivitiesData;
-  }, [sortBy, latestData, activitiesPages, latestLoading, activitiesLoading]);
+  }, [sortBy, latestData, activitiesPages]);
 
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo(() => {
@@ -594,11 +582,12 @@ export default function FeedList({
       }
       return null;
     }
-    // Only show loading if we don't have cached data and queries are still loading
-    // For latest feed: show cached data immediately, but wait for both to have data before combining
+    // Only show loading if we don't have cached data
+    // For latest feed: show cached data immediately if available
+    const hasCachedData = sortBy !== "hot" && latestData && latestData.pages.length > 0 && activitiesPages && activitiesPages.pages.length > 0;
     const initialLoading = sortBy === "hot"
       ? (popularLoading && (!popularData || popularData.pages.length === 0))
-      : (!bothQueriesReady && (latestLoading || activitiesLoading)); // Only show loading if actually loading and not ready
+      : (!hasCachedData && (latestLoading || activitiesLoading)); // Only show loading if no cached data and actually loading
     if (latestError) {
       return <EmptyState type="error" error={latestError as any} onRetry={refetchLatest} />;
     }
@@ -752,11 +741,12 @@ export default function FeedList({
   const fetchingRef = useRef(false);
   // Only show loading if we don't have any data yet and queries are still loading
   // If we have cached data, show it immediately even while refetching
-  // For latest feed: show cached data immediately, but wait for both to have data before combining
+  // For latest feed: show cached data immediately if available
+  const hasCachedDataForLatest = sortBy !== "hot" && latestData && latestData.pages.length > 0 && activitiesPages && activitiesPages.pages.length > 0;
   const initialLoading =
     sortBy === "hot"
       ? (popularLoading && (!popularData || popularData.pages.length === 0))
-      : (!bothQueriesReady && (latestLoading || activitiesLoading)); // Only show loading if actually loading and not ready
+      : (!hasCachedDataForLatest && (latestLoading || activitiesLoading)); // Only show loading if no cached data and actually loading
   const [showLoadMore, setShowLoadMore] = useState(false);
   useEffect(() => { setShowLoadMore(false); }, [sortBy]);
   useEffect(() => {

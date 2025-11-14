@@ -1,6 +1,13 @@
 import React, { memo } from "react";
 import { AeButton } from "../../../components/ui/ae-button";
 import { cn } from "@/lib/utils";
+import { ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface SortControlsProps {
   sortBy: string;
@@ -27,63 +34,116 @@ const SortControls = memo(
       );
     }
 
+    // Helper function to get the display title
+    const getMobileTitle = () => {
+      if (sortBy === "latest") {
+        return "Latest";
+      }
+      // Popular feed
+      const timeLabel = popularWindow === '24h' ? 'Today' : popularWindow === '7d' ? 'This week' : 'All time';
+      return `Popular ${timeLabel.toLowerCase()}`;
+    };
+
+    // Helper function to handle dropdown selection
+    const handleMobileOptionSelect = (option: string) => {
+      if (option === "latest") {
+        onSortChange("latest");
+      } else if (option === "this-week") {
+        onSortChange("hot");
+        onPopularWindowChange && onPopularWindowChange("7d");
+      } else if (option === "all-time") {
+        onSortChange("hot");
+        onPopularWindowChange && onPopularWindowChange("all");
+      } else if (option === "today") {
+        onSortChange("hot");
+        onPopularWindowChange && onPopularWindowChange("24h");
+      }
+    };
+
     return (
-    <div className={cn("w-full mb-3", className)}>
-      {/* Mobile: text tabs with bottom divider and active underline */}
+    <div className={cn("w-full mb-0 md:mb-3", className)}>
+      {/* Mobile: title with dropdown */}
       <div className="md:hidden">
-        {/* Edge-to-edge bottom divider with proper mobile spacing */}
-        <div className="flex items-center justify-center gap-6 border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] px-4 -mb-3 md:mb-0">
-          <button
-            onClick={() => onSortChange("hot")}
-            className={cn(
-              "relative px-1 py-4 text-xs leading-none font-semibold transition-colors md:px-3 md:py-3 md:text-sm !bg-transparent !shadow-none hover:!bg-transparent focus:!bg-transparent active:!bg-transparent hover:!shadow-none focus:!shadow-none active:!shadow-none focus-visible:!ring-0 focus:!outline-none",
-              sortBy === "hot"
-                ? "text-white after:content-[''] after:absolute after:left-0 after:right-0 after:-bottom-[1px] after:h-0.5 after:bg-[#1161FE] after:rounded-full after:mx-1"
-                : "text-white/70"
-            )}
-          >
-            Popular
-          </button>
-          <button
-            onClick={() => onSortChange("latest")}
-            className={cn(
-              "relative px-1 py-4 text-xs leading-none font-semibold transition-colors md:px-3 md:py-3 md:text-sm !bg-transparent !shadow-none hover:!bg-transparent focus:!bg-transparent active:!bg-transparent hover:!shadow-none focus:!shadow-none active:!shadow-none focus-visible:!ring-0 focus:!outline-none",
-              sortBy === "latest"
-                ? "text-white after:content-[''] after:absolute after:left-0 after:right-0 after:-bottom-[1px] after:h-0.5 after:bg-[#1161FE] after:rounded-full after:mx-1"
-                : "text-white/70"
-            )}
-          >
-            Latest
-          </button>
-        </div>
-        {sortBy === 'hot' && (
-          <div className="px-4 mt-4">
-            <div className="flex w-full items-center justify-between gap-2">
-              {(['24h','7d','all'] as const).map((tf) => {
-                const isActive = popularWindow === tf;
-                const label = tf === '24h' ? 'Today' : tf === '7d' ? 'This week' : 'All time';
-                return (
-                  <button
-                    key={tf}
-                    onClick={() => onPopularWindowChange && onPopularWindowChange(tf)}
-                    className={cn(
-                      'flex-1 px-2 py-2 h-9 text-[11px] rounded-full border transition-all duration-300 focus:outline-none active:scale-[0.98]',
-                      isActive
-                        ? 'bg-[#1161FE] text-white border-transparent shadow-md'
-                        : 'bg-white/[0.04] text-white/80 border-white/10 hover:bg-white/[0.08]'
-                    )}
+        <div className="flex items-center justify-between border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] px-4 pt-3 pb-3">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 text-base font-bold text-white tracking-tight [text-shadow:none] [background:none] [-webkit-text-fill-color:white] hover:opacity-80 transition-opacity focus:outline-none">
+                <span>{getMobileTitle()}</span>
+                <ChevronDown className="h-4 w-4 text-white/70" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="start" 
+              sideOffset={8}
+              className="bg-white/5 backdrop-blur-xl border-white/20 text-white min-w-[240px] py-2 rounded-xl shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-4 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-top"
+              style={{
+                background: "radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.06), transparent 40%), rgba(255, 255, 255, 0.03)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
+              }}
+            >
+              {sortBy === "hot" ? (
+                <>
+                  {popularWindow !== "24h" && (
+                    <DropdownMenuItem
+                      onClick={() => handleMobileOptionSelect("today")}
+                      className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+                    >
+                      Today
+                    </DropdownMenuItem>
+                  )}
+                  {popularWindow !== "7d" && (
+                    <DropdownMenuItem
+                      onClick={() => handleMobileOptionSelect("this-week")}
+                      className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+                    >
+                      This week
+                    </DropdownMenuItem>
+                  )}
+                  {popularWindow !== "all" && (
+                    <DropdownMenuItem
+                      onClick={() => handleMobileOptionSelect("all-time")}
+                      className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+                    >
+                      All time
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem
+                    onClick={() => handleMobileOptionSelect("latest")}
+                    className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
                   >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+                    Latest
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem
+                    onClick={() => handleMobileOptionSelect("today")}
+                    className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+                  >
+                    Popular today
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleMobileOptionSelect("this-week")}
+                    className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+                  >
+                    Popular this week
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleMobileOptionSelect("all-time")}
+                    className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+                  >
+                    Popular all time
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Desktop: keep existing pill style */}
-      <div className="hidden md:flex w-full items-center gap-2">
+      <div className="hidden md:flex w-full items-center justify-between gap-2">
         <div className="inline-flex items-center gap-1.5 bg-white/5 rounded-full p-0.5 border border-white/10 md:w-auto">
           <AeButton
             onClick={() => onSortChange("hot")}
@@ -115,7 +175,7 @@ const SortControls = memo(
           </AeButton>
         </div>
         {sortBy === 'hot' && (
-          <div className="inline-flex items-center gap-1 bg-white/5 rounded-full p-0.5 border border-white/10">
+          <div className="inline-flex items-center gap-1 bg-white/5 rounded-full p-0.5 border border-white/10 ml-auto">
             {(['24h','7d','all'] as const).map((tf) => {
               const isActive = popularWindow === tf;
               const label = tf === '24h' ? 'Today' : tf === '7d' ? 'This week' : 'All time';

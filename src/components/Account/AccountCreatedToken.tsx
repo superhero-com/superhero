@@ -44,6 +44,7 @@ export default function AccountCreatedToken({
       }) as unknown as Promise<{ items: any[]; meta?: any }>,
     staleTime: 60_000,
     placeholderData: (prev) => prev,
+    refetchOnMount: false, // Use cached data when switching tabs
   });
   return (
     <div className="mt-4">

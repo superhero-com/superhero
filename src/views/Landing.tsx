@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import AeAmountFiat from '../components/AeAmountFiat';
 
 // Assets
 import votingSvg from '../svg/landing/voting.svg';
@@ -18,7 +17,6 @@ import githubSvg from '../svg/landing/github.svg';
 
 export default function Landing() {
   const { t } = useTranslation('landing');
-  const stats = null; // TODO: Replace with useBackend hook
 
   return (
     <div className='bg-black-900'>
@@ -99,41 +97,6 @@ export default function Landing() {
               </div>
             </div>
           </div>
-
-          {stats && (
-            <div className="flex flex-wrap -mx-4 mt-12">
-              <div className="w-full md:w-1/3 px-4 mb-6">
-                <div className="bg-black/20 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-xl hover:shadow-pink-500/20">
-                  <h4 className="text-pink-400 text-2xl font-bold mb-2 text-shadow-[0_0_10px_rgba(255,107,107,0.7)]">
-                    {stats.totalTipsLength}
-                  </h4>
-                  <p className="text-slate-300 text-base leading-relaxed">
-                    {t('stats.tipsAggregated')}
-                  </p>
-                </div>
-              </div>
-              <div className="w-full md:w-1/3 px-4 mb-6">
-                <div className="bg-black/20 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-xl hover:shadow-pink-500/20">
-                  <h4 className="text-pink-400 text-2xl font-bold mb-2 text-shadow-[0_0_10px_rgba(255,107,107,0.7)]">
-                    <AeAmountFiat amount={stats.totalAmount} />
-                  </h4>
-                  <p className="text-slate-300 text-base leading-relaxed">
-                    {t('stats.totalTipsValue')}
-                  </p>
-                </div>
-              </div>
-              <div className="w-full md:w-1/3 px-4 mb-6">
-                <div className="bg-black/20 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-xl hover:shadow-pink-500/20">
-                  <h4 className="text-pink-400 text-2xl font-bold mb-2 text-shadow-[0_0_10px_rgba(255,107,107,0.7)]">
-                    {stats.sendersLength}
-                  </h4>
-                  <p className="text-slate-300 text-base leading-relaxed">
-                    {t('stats.uniqueTipSenders')}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </section>
 

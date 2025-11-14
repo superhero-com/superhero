@@ -2,7 +2,6 @@ import { useCurrencies } from "@/hooks/useCurrencies";
 import { toAe } from "@aeternity/aepp-sdk";
 import { useMemo } from "react";
 import { PriceDto } from "../../../api/generated";
-import { useBackend } from "../../../hooks/useBackend";
 import { Decimal } from "../../../libs/decimal";
 import PriceFormatter from "./PriceFormatter";
 
@@ -34,7 +33,6 @@ export default function PriceDataFormatter({
   ...props
 }: PriceDataFormatterProps) {
   const { currentCurrencyCode, getFiat } = useCurrencies();
-  const { prices } = useBackend();
 
   const aePrice = useMemo(() => {
     if (!priceData?.ae) {
@@ -67,7 +65,7 @@ export default function PriceDataFormatter({
     return bignumber
       ? Decimal.from(toAe(priceData[currentCurrencyCode]))
       : Decimal.from(priceData[currentCurrencyCode]);
-  }, [priceData, currentCurrencyCode, bignumber, prices]);
+  }, [priceData, currentCurrencyCode, bignumber]);
 
   return (
     <PriceFormatter

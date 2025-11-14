@@ -9,7 +9,7 @@ import "./styles/genz-components.scss";
 import "./styles/mobile-optimizations.scss";
 import AppHeader from "./components/layout/app-header";
 import { useSuperheroChainNames } from "./hooks/useChainName";
-const PostModal = React.lazy(() => import("./components/modals/PostModal"));
+
 const CookiesDialog = React.lazy(
   () => import("./components/modals/CookiesDialog")
 );
@@ -18,9 +18,6 @@ const TokenSelectModal = React.lazy(
 );
 const ImageGallery = React.lazy(
   () => import("./components/modals/ImageGallery")
-);
-const FeedItemMenu = React.lazy(
-  () => import("./components/modals/FeedItemMenu")
 );
 const AlertModal = React.lazy(() => import("./components/modals/AlertModal"));
 const TransactionConfirmModal = React.lazy(
@@ -78,11 +75,9 @@ export default function App() {
       <Suspense fallback={<div className="loading-fallback" />}>
         <ModalProvider
           registry={{
-            post: PostModal,
             "cookies-dialog": CookiesDialog,
             "token-select": TokenSelectModal,
             "image-gallery": ImageGallery,
-            "feed-item-menu": FeedItemMenu,
             alert: AlertModal,
             "transaction-confirm": TransactionConfirmModal,
             "connect-wallet": ConnectWalletModal,

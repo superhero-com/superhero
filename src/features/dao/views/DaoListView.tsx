@@ -278,7 +278,7 @@ export default function Daos() {
                 <a
                   className="text-xs opacity-95 text-white no-underline px-3 py-2 rounded-xl border-0 bg-white/5 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all duration-150"
                   href={`/trends/tokens/${encodeURIComponent(
-                    t.sale_address || t.address
+                    t.name
                   )}`}
                 >
                   View token

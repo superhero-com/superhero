@@ -136,6 +136,9 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiBtnRef = useRef<HTMLButtonElement>(null);
   const gifBtnRef = useRef<HTMLButtonElement>(null);
+  // Refs to track polling timers and component mount status
+  const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
+  const isMountedRef = useRef(true);
   const [overlayComputed, setOverlayComputed] = useState<{ paddingTop: number; paddingRight: number; paddingBottom: number; paddingLeft: number; fontFamily: string; fontSize: string; fontWeight: string; lineHeight: string; letterSpacing: string; } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDesktopViewport, setIsDesktopViewport] = useState(() => {
@@ -147,6 +150,17 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
 
   useEffect(() => {
     setPromptIndex(Math.floor(Math.random() * PROMPTS.length));
+  }, []);
+
+  // Cleanup effect to clear all timers on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      // Clear all pending timeouts
+      timeoutRefs.current.forEach(timeoutId => clearTimeout(timeoutId));
+      timeoutRefs.current.clear();
+    };
   }, []);
 
   // Do not auto-fill from initialText anymore; keep user input empty by default
@@ -350,10 +364,19 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         } catch { }
       } else if (postId) {
         // For replies: optimistically show the new reply immediately
+        // Normalize postId the same way CommentItem does to ensure cache key matches
+        const normalizePostIdV3 = (id: string): string => {
+          return String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`;
+        };
+        const normalizedPostId = normalizePostIdV3(postId);
+        const newReplyId = `${String(decodedResult).replace(/_v3$/,'')}_v3`;
+        let newReply: any = null;
+        
         try {
-          const newReply = await PostsService.getById({ id: `${String(decodedResult).replace(/_v3$/,'')}_v3` });
-          // Update infinite replies list if present
-          queryClient.setQueryData(["post-comments", postId, "infinite"], (old: any) => {
+          newReply = await PostsService.getById({ id: newReplyId });
+          
+          // Update infinite replies list if present (normalize key)
+          queryClient.setQueryData(["post-comments", normalizedPostId, "infinite"], (old: any) => {
             if (!old) {
               return {
                 pageParams: [1],
@@ -364,19 +387,125 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
             const nextFirst = { ...firstPage, items: [newReply, ...(firstPage.items || [])] };
             return { ...old, pages: [nextFirst, ...old.pages.slice(1)] };
           });
-          // Update non-infinite comments list if present
+          
+          // Update non-infinite comments list if present (normalize key)
+          queryClient.setQueryData(["post-comments", normalizedPostId], (old: any) => {
+            if (!Array.isArray(old)) return [newReply];
+            return [newReply, ...old];
+          });
+          
+          // Update nested comment replies list if present (used in CommentItem) - normalize key
+          queryClient.setQueryData(["comment-replies", normalizedPostId], (old: any) => {
+            if (!Array.isArray(old)) return [newReply];
+            return [newReply, ...old];
+          });
+          
+          // Also update with original postId format for backward compatibility
           queryClient.setQueryData(["post-comments", postId], (old: any) => {
             if (!Array.isArray(old)) return [newReply];
             return [newReply, ...old];
           });
-          // Update nested comment replies list if present (used in CommentItem)
           queryClient.setQueryData(["comment-replies", postId], (old: any) => {
             if (!Array.isArray(old)) return [newReply];
             return [newReply, ...old];
           });
         } catch {}
-        // Also trigger a refetch in the background to pick up any server-side changes
-        queryClient.refetchQueries({ queryKey: ["post-comments", postId] });
+        
+        // Poll backend until comment is confirmed or max retries reached
+        // Backend needs time to process blockchain transaction and update database
+        const maxRetries = 18; // Try for up to ~59 seconds (5s initial + 18 retries * 3 seconds)
+        const retryInterval = 3000; // 3 seconds between retries
+        
+        const pollForComment = (attempt: number = 0) => {
+          // Stop polling if component is unmounted
+          if (!isMountedRef.current) {
+            return;
+          }
+          
+          if (attempt >= maxRetries) {
+            // Final attempt after max retries
+            if (isMountedRef.current) {
+              queryClient.invalidateQueries({ queryKey: ["post-comments", normalizedPostId] });
+              queryClient.invalidateQueries({ queryKey: ["comment-replies", normalizedPostId] });
+              queryClient.refetchQueries({ 
+                queryKey: ["post-comments", normalizedPostId],
+                type: 'active',
+              });
+              queryClient.refetchQueries({ 
+                queryKey: ["comment-replies", normalizedPostId],
+                type: 'active',
+              });
+            }
+            return;
+          }
+          
+          const timeoutId = setTimeout(() => {
+            // Remove timeout ID from tracking set
+            timeoutRefs.current.delete(timeoutId);
+            
+            // Stop if component unmounted
+            if (!isMountedRef.current) {
+              return;
+            }
+            
+            queryClient.invalidateQueries({ queryKey: ["post-comments", normalizedPostId] });
+            queryClient.invalidateQueries({ queryKey: ["comment-replies", normalizedPostId] });
+            Promise.all([
+              queryClient.refetchQueries({ 
+                queryKey: ["post-comments", normalizedPostId],
+                type: 'active',
+              }),
+              queryClient.refetchQueries({ 
+                queryKey: ["comment-replies", normalizedPostId],
+                type: 'active',
+              })
+            ]).then(() => {
+              // Stop if component unmounted
+              if (!isMountedRef.current) {
+                return;
+              }
+              
+              // Check if backend has processed the comment by verifying it exists in the refetched list
+              const cachedComments = queryClient.getQueryData<any[]>(["comment-replies", normalizedPostId]);
+              const commentExists = cachedComments?.some((c: any) => c?.id === newReplyId);
+              
+              // If comment exists in backend response, we're done
+              // Otherwise, keep polling
+              if (commentExists) {
+                return;
+              }
+              
+              // Continue polling
+              pollForComment(attempt + 1);
+            }).catch(() => {
+              // Stop if component unmounted
+              if (!isMountedRef.current) {
+                return;
+              }
+              
+              // On error, continue polling
+              pollForComment(attempt + 1);
+            });
+          }, retryInterval);
+          
+          // Track timeout ID for cleanup
+          timeoutRefs.current.add(timeoutId);
+        };
+        
+        // Start polling after initial delay to give backend time to start processing
+        const initialTimeoutId = setTimeout(() => {
+          // Remove timeout ID from tracking set
+          timeoutRefs.current.delete(initialTimeoutId);
+          
+          // Only start polling if component is still mounted
+          if (isMountedRef.current) {
+            pollForComment(0);
+          }
+        }, 5000); // 5 second initial delay before first poll
+        
+        // Track initial timeout ID for cleanup
+        timeoutRefs.current.add(initialTimeoutId);
+        
         onCommentAdded?.();
       }
 

@@ -1,6 +1,7 @@
 import { PostsService } from "@/api/generated/services/PostsService";
 import ReplyToFeedItem from "@/features/social/components/ReplyToFeedItem";
 import TokenCreatedActivityItem from "@/features/social/components/TokenCreatedActivityItem";
+import PostSkeleton from "@/features/social/components/PostSkeleton";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -38,6 +39,8 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
       return items;
     },
     getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === ACTIVITY_PAGE_SIZE ? pages.length + 1 : undefined),
+    refetchOnMount: false, // Use cached data when switching tabs
+    staleTime: 30_000, // Consider data fresh for 30 seconds
   });
   const createdActivities: PostDto[] = useMemo(
     () => (createdActivitiesPages?.pages ? (createdActivitiesPages.pages as PostDto[][]).flatMap((p) => p) : []),
@@ -73,6 +76,8 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
       }
       return undefined;
     },
+    refetchOnMount: false, // Use cached data when switching tabs
+    staleTime: 30_000, // Consider data fresh for 30 seconds
   });
 
   const list = useMemo(
@@ -252,10 +257,17 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
   return (
     <div className="w-full">
       <div className="w-full flex flex-col gap-2 mb-8 md:mb-10">
-        {renderItems}
-        {(hasNextPage || hasMoreActivities) && <div ref={sentinelRef} className="h-10" />}
-        {!isLoading && combinedList.length === 0 && (
-          <div className="p-8 text-center text-muted-foreground">No posts yet</div>
+        {initialLoading ? (
+          // Show skeleton loaders while loading
+          Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-${i}`} />)
+        ) : (
+          <>
+            {renderItems}
+            {(hasNextPage || hasMoreActivities) && <div ref={sentinelRef} className="h-10" />}
+            {combinedList.length === 0 && (
+              <div className="p-8 text-center text-muted-foreground">No posts yet</div>
+            )}
+          </>
         )}
       </div>
     </div>

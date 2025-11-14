@@ -12,7 +12,6 @@ import {
 import {
   initDexContracts,
   toAettos,
-  fromAettos,
   subSlippage,
   ensureAllowanceForRouter,
   DEX_ADDRESSES
@@ -197,27 +196,4 @@ export class BridgeService {
     }
   }
 
-  /**
-   * Get bridge quote (estimate output amount)
-   */
-  async getBridgeQuote(sdk: AeSdk, amountEth: string): Promise<string> {
-    if (!amountEth || Number(amountEth) <= 0) {
-      return '0';
-    }
-
-    try {
-      const { router } = await initDexContracts(sdk);
-      const amountIn = toAettos(amountEth, 18);
-      const path = [DEX_ADDRESSES.aeeth, DEX_ADDRESSES.wae];
-
-      const { decodedResult } = await (router as any).get_amounts_out(amountIn, path);
-      const amountOut = decodedResult[decodedResult.length - 1];
-
-      // Convert WAE to AE (1:1 unwrap)
-      return fromAettos(amountOut, 18);
-    } catch (error) {
-      console.warn('[Bridge] Quote failed:', error);
-      return '0';
-    }
-  }
 }

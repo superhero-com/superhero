@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import TokenListTableRow from "./TokenListTableRow";
@@ -106,66 +106,6 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
 
   const isEmptyLoading = !!loading && !allItems?.length;
 
-  // Fetch preview 24h change for items in current pages (visible tokens)
-  const [changeMap, setChangeMap] = useState<Record<string, number>>({});
-  const fetchingRef = useRef<Set<string>>(new Set());
-  useEffect(() => {
-    if (!allItems?.length) return;
-    let aborted = false;
-    const toFetch = allItems
-      .map((it) => it.sale_address || it.address)
-      .filter((addr) => {
-        if (!addr) return false;
-        // Skip if already fetched or currently being fetched
-        return changeMap[addr] == null && !fetchingRef.current.has(addr);
-      }) as string[];
-    if (!toFetch.length) return;
-    
-    // Track addresses added in this effect run for proper cleanup
-    const addressesAddedThisRun = new Set<string>(toFetch);
-    
-    // Mark addresses as being fetched
-    toFetch.forEach(addr => fetchingRef.current.add(addr));
-    
-    (async () => {
-      const { TransactionHistoricalService } = await import('@/api/generated/services/TransactionHistoricalService');
-      const entries = await Promise.all(
-        toFetch.map(async (addr) => {
-          try {
-            const preview = await TransactionHistoricalService.getForPreview({ address: addr, interval: '1d' });
-            const result = (preview?.result || []) as Array<{ last_price: number }>;
-            if (!result.length) return [addr, 0] as const;
-            const first = Number(result[0].last_price || 0);
-            const last = Number(result[result.length - 1].last_price || 0);
-            const pct = first ? ((last - first) / first) * 100 : 0;
-            return [addr, pct] as const;
-          } catch {
-            return [addr, 0] as const;
-          }
-        })
-      );
-      if (aborted) {
-        // Clean up fetching ref if aborted - clear all addresses added in this run
-        addressesAddedThisRun.forEach(addr => fetchingRef.current.delete(addr));
-        return;
-      }
-      setChangeMap((prev) => {
-        const next = { ...prev } as Record<string, number>;
-        for (const [addr, val] of entries) {
-          next[addr] = val;
-          // Remove from fetching ref once completed
-          fetchingRef.current.delete(addr);
-        }
-        return next;
-      });
-    })();
-    return () => { 
-      aborted = true;
-      // Clean up fetching ref on unmount/rerun - clear all addresses added in this run
-      addressesAddedThisRun.forEach(addr => fetchingRef.current.delete(addr));
-    };
-  }, [allItems]);
-
   return (
     <div className="relative -mx-4 md:mx-0">
       <table className="w-full bctsl-token-list-table">
@@ -231,7 +171,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
             </SortableColumnHeader>
             <th className="cell cell-chart text-xs text-center opacity-50 py-1 pl-3 whitespace-nowrap">
               <span className="hidden md:inline">Performance</span>
-              <span className="md:hidden inline">24h %</span>
+              <span className="md:hidden inline">Performance</span>
             </th>
             <th className="cell-link hidden lg:table-cell">{/* Links placeholder column */}</th>
           </tr>
@@ -251,7 +191,6 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
                 token={token}
                 showCollectionColumn={showCollectionColumn}
                 rank={rankOffset + index + 1}
-                changePercentMap={changeMap}
               />
             ))}
           </tbody>
@@ -396,9 +335,9 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
           }
           
           .bctsl-token-list-table > thead th {
-            font-size: 12px; /* match text-xs */
+            font-size: 11px; /* slightly smaller to fit labels */
             line-height: 1rem;
-            white-space: nowrap; /* prevent wrapping when list is empty */
+            white-space: nowrap; /* prevent wrapping by default */
             background: rgba(255, 255, 255, 0.05);
             padding-top: 8px;
             padding-bottom: 8px;
@@ -418,19 +357,19 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
           }
           
           .bctsl-token-list-table > thead th.cell-chart {
-            padding-right: 16px;
+            padding-inline: 0 16px;
           }
           
-          /* Ensure Price header is right-aligned on mobile */
+          /* Center Price header on mobile */
           .bctsl-token-list-table > thead > tr > th.cell-price {
-            text-align: right !important;
-            padding-right: 12px !important;
+            text-align: center !important;
+            padding-right: 0 !important;
           }
           
           .bctsl-token-list-table > thead > tr > th.cell-price > div {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: flex-end !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             width: 100% !important;
             gap: 4px !important;
           }
@@ -445,15 +384,23 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
           .bctsl-token-list-table > thead > tr > th.cell-rank {
             text-align: center !important;
           }
-          .bctsl-token-list-table .cell-price { width: 34%; }
-          .bctsl-token-list-table .cell-chart { width: 22%; padding-right: 8px !important; }
+          .bctsl-token-list-table .cell-price { width: 32%; }
+          .bctsl-token-list-table .cell-chart { width: 24%; padding-right: 8px; }
           
           /* Ensure price alignment in mobile view */
           .bctsl-token-list-table .mobile-only-card .only-fiat {
             text-align: right;
           }
           
-          /* Right-align 24h % header on mobile */
+          /* Allow wrapping for Price and Performance labels on very small screens */
+          @media screen and (max-width: 420px) {
+            .bctsl-token-list-table > thead > tr > th.cell-price,
+            .bctsl-token-list-table > thead > tr > th.cell-chart {
+              white-space: normal;
+            }
+          }
+          
+          /* Right-align Performance header on mobile */
           .bctsl-token-list-table > thead > tr > th.cell-chart {
             text-align: right !important;
           }

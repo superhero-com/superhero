@@ -13,6 +13,7 @@ interface TokenLineChartProps {
   height?: number;
   hideTimeframe?: boolean;
   timeframe?: string;
+  className?: string;
 }
 
 
@@ -30,6 +31,7 @@ export function TokenLineChart({
   saleAddress,
   height = 200,
   hideTimeframe = false,
+  className,
 }: TokenLineChartProps) {
   const [loading, setLoading] = useState(false);
   const areaSeries = useRef<ISeriesApi<'Area'> | undefined>();
@@ -142,8 +144,8 @@ export function TokenLineChart({
   }
 
   return (
-    <div className="chart-container relative mr-2">
-      <div ref={chartContainer} className="lw-chart h-full" />
+    <div className={`chart-container relative ${className ?? ""}`}>
+      <div ref={chartContainer} className="lw-chart h-full w-full" />
       {!hideTimeframe && (data as ChartResponse)?.timeframe && (
         <div className="timeframe-indicator absolute bottom-0 right-0 text-xs lowercase">
           {(data as ChartResponse).timeframe}

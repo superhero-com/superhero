@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { TokenDto } from '@/api/generated/models/TokenDto';
+import type { PriceDto } from '@/api/generated/models/PriceDto';
 import { Decimal } from '@/libs/decimal';
 import { useCurrencies } from '@/hooks/useCurrencies';
 import PriceFormatter from './PriceFormatter';
@@ -18,36 +19,58 @@ interface TokenPriceFormatterProps {
 }
 
 /**
- * TokenPriceFormatter - Formats token prices with proper symbol and fiat conversion
- * 
- * This component takes a token and a price (in token units) and calculates the AE equivalent
- * by multiplying with the token's price, then converts to fiat using the currencies hook.
- * It's equivalent to the Vue TokenPriceFormatter component.
+ * TokenPriceFormatter - Formats a token balance using the token's price data.
+ *
+ * `price` is the amount of tokens (in token units, not aettos).
+ * We derive:
+ * - AE value: tokens * token.price_data.ae (or fallback to token.price if needed)
+ * - Fiat value: tokens * token.price_data[currentCurrency] (or fallback via getFiat(AE))
  */
 export default function TokenPriceFormatter({
   token,
   price,
   ...priceFormatterProps
 }: TokenPriceFormatterProps) {
-  const { getFiat } = useCurrencies();
+  const { currentCurrencyCode, getFiat } = useCurrencies();
 
-  // Calculate AE price by multiplying the token amount with the token's price
+  // Calculate AE price by multiplying the token amount with the token's AE price
   const aePrice = useMemo(() => {
-    if (!price || !token?.price) {
-      return Decimal.ZERO;
-    }
-    return price.mul(Decimal.from(token.price));
-  }, [price, token?.price]);
+    if (!price || !token) return Decimal.ZERO;
+
+    // Prefer structured price_data.ae; fall back to legacy token.price string
+    const priceData = token.price_data as PriceDto | undefined;
+    const perTokenAe = priceData?.ae
+      ? Decimal.from(priceData.ae)
+      : token.price
+        ? Decimal.from(token.price)
+        : Decimal.ZERO;
+
+    if (perTokenAe.isZero) return Decimal.ZERO;
+    return price.mul(perTokenAe);
+  }, [price, token]);
 
   // Calculate fiat price using the getFiat function
   const fiatPrice = useMemo(() => {
+    if (!price || !token) return Decimal.ZERO;
+
+    const priceData = token.price_data as PriceDto | undefined;
+
+    // If backend already provides fiat price per token for the active currency,
+    // use that directly (tokens * per-token fiat).
+    const perTokenFiatRaw = priceData?.[currentCurrencyCode as keyof PriceDto];
+    if (perTokenFiatRaw) {
+      const perTokenFiat = Decimal.from(perTokenFiatRaw as unknown as string);
+      return price.mul(perTokenFiat);
+    }
+
+    // Fallback: derive fiat from AE amount using currency rates
     return getFiat(aePrice);
-  }, [aePrice, getFiat]);
+  }, [aePrice, getFiat, price, token, currentCurrencyCode]);
 
   return (
     <PriceFormatter
       symbol={token.symbol}
-      aePrice={price}
+      aePrice={aePrice}
       fiatPrice={fiatPrice}
       {...priceFormatterProps}
     />

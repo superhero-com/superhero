@@ -103,7 +103,7 @@ function BuyAeWidgetContent({
     if (sdk) {
       loadTokens();
     }
-  }, []);
+  }, [sdk]);
 
   // Handle Ethereum wallet disconnection
   const handleEthDisconnected = useCallback(() => {

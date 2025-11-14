@@ -1,9 +1,6 @@
 import { PriceDataFormatter } from "@/features/shared/components";
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { TokenDto } from "@/api/generated/models/TokenDto";
-import { TransactionHistoricalService } from "@/api/generated";
-import Token24hChange from "@/components/Trendminer/Token24hChange";
 import { TokenLineChart } from "./TokenLineChart";
 
 
@@ -12,7 +9,6 @@ interface TokenListTableRowProps {
   useCollectionRank?: boolean;
   showCollectionColumn?: boolean;
   rank: number;
-  changePercentMap?: Record<string, number>;
 }
 
 // Helper function to parse collection name
@@ -37,7 +33,6 @@ export default function TokenListTableRow({
   useCollectionRank = false,
   showCollectionColumn = false,
   rank,
-  changePercentMap,
 }: TokenListTableRowProps) {
   const tokenAddress = useMemo(() => {
     return token.address;
@@ -45,33 +40,7 @@ export default function TokenListTableRow({
 
   const collectionRank = useCollectionRank ? (token as any).collection_rank : rank;
 
-  // For mobile 24h change
   const saleAddress = useMemo(() => token.sale_address || tokenAddress, [token.sale_address, tokenAddress]);
-  const externalChange = changePercentMap?.[saleAddress as string];
-
-  const { data: previewData } = useQuery({
-    queryFn: () =>
-      TransactionHistoricalService.getForPreview({ address: saleAddress, interval: '1d' }),
-    enabled: !!saleAddress && externalChange === undefined,
-    queryKey: ['TransactionHistoricalService.getForPreview:1d', saleAddress],
-    staleTime: 1000 * 60 * 5,
-  });
-
-  const performance24h = useMemo(() => {
-    try {
-      if (externalChange !== undefined) {
-        return { current_change_percent: externalChange } as any;
-      }
-      const result = (previewData as any)?.result as Array<{ last_price: number }>;
-      if (!result || result.length === 0) return null;
-      const first = Number(result[0].last_price || 0);
-      const last = Number(result[result.length - 1].last_price || 0);
-      if (!first) return null;
-      return { current_change_percent: ((last - first) / first) * 100 } as any;
-    } catch {
-      return null;
-    }
-  }, [previewData, externalChange]);
 
   // Show mobile card on screens smaller than 960px
   return (
@@ -80,15 +49,18 @@ export default function TokenListTableRow({
       <tr className="mobile-only-card md:hidden relative">
         <td className="cell-fake" />
         {/* Rank */}
-        <td className="pl-3 pr-3 py-1.5 align-middle text-white/60 text-xs font-semibold text-center">{collectionRank}</td>
+        <td className="pl-3 pr-3 py-1 align-middle text-white/60 text-[11px] font-semibold text-center">
+          {collectionRank}
+        </td>
         {/* Content cell spans remaining columns: Row 1 name, Row 2 mc/price/24h */}
-        <td className="pl-2 py-1.5 pr-3 align-middle relative" colSpan={3}>
+        <td className="pl-2 py-1 pr-3 align-middle relative" colSpan={3}>
           {/* Row 1: full name (wrap allowed) */}
-          <div className="text-[15px] font-bold text-white leading-5 whitespace-normal break-words">
-            {token.symbol || token.name}
+          <div className="text-[14px] font-bold text-white leading-5 whitespace-nowrap overflow-hidden text-ellipsis">
+            <span className="text-white/60 text-[.85em] mr-0.5 align-baseline">#</span>
+            <span>{token.symbol || token.name}</span>
           </div>
           {/* Row 2: left = MC, right = Price + 24h */}
-          <div className="flex items-center justify-between gap-3 pt-0.5">
+          <div className="flex items-center justify-between gap-3 pt-0">
             <div className="only-fiat mobile-market-cap text-[11px] text-white/60 leading-4 font-medium">
               <PriceDataFormatter
                 bignumber
@@ -97,8 +69,8 @@ export default function TokenListTableRow({
                 priceData={token.market_cap_data}
               />
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="only-fiat text-sm text-white font-semibold text-right tabular-nums min-w-[80px]">
+            <div className="flex items-center gap-4 shrink-0">
+            <div className="only-fiat text-[13px] text-white font-semibold text-right tabular-nums min-w-[72px]">
                 <PriceDataFormatter
                   watchPrice={false}
                   hideFiatPrice
@@ -106,9 +78,16 @@ export default function TokenListTableRow({
                   priceData={token.price_data}
                 />
               </div>
-              <div className="w-[70px] flex justify-end">
-              <Token24hChange tokenAddress={saleAddress} createdAt={token.created_at} performance24h={performance24h} />
-              </div>
+            <div className="flex justify-end">
+              {saleAddress && (
+                <TokenLineChart
+                  saleAddress={saleAddress}
+                  height={26}
+                  hideTimeframe={true}
+                  className="w-[72px]"
+                />
+              )}
+            </div>
             </div>
           </div>
           <a

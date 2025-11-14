@@ -284,7 +284,6 @@ export default function TokenDetail() {
                   {/* ${Decimal.from(token?.tvlUsd || 0).prettify(2)} */}
                   <PriceDataFormatter
                     priceData={tokenDetails?.summary?.total_volume}
-                    bignumber
                   />
                 </div>
                 <div
@@ -339,7 +338,6 @@ export default function TokenDetail() {
                     priceData={
                       tokenDetails?.summary?.change?.[selectedPeriod]?.volume
                     }
-                    bignumber
                   />
                 </div>
                 <div

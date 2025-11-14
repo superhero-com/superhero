@@ -361,25 +361,23 @@ export default function FeedList({
         limit: 10,
       }) as unknown as Promise<PostApiResponse>,
     getNextPageParam: (lastPage) => {
-      // Continue pagination if:
-      // 1. We have totalPages and haven't reached it yet, OR
-      // 2. totalPages is undefined (meaning we're past popular posts) but we got a full page of results
-      if (lastPage?.meta?.currentPage) {
-        if (
-          lastPage.meta.totalPages &&
-          lastPage.meta.currentPage < lastPage.meta.totalPages
-        ) {
-          return lastPage.meta.currentPage + 1;
-        }
-        // If totalPages is undefined but we got a full page, continue pagination
-        // Check the actual items array length to determine if we got a full page
-        if (
-          !lastPage.meta.totalPages &&
-          lastPage.items &&
-          lastPage.items.length === 10
-        ) {
-          return lastPage.meta.currentPage + 1;
-        }
+      // Continue pagination if we have totalPages and haven't reached it yet
+      // The backend now always returns totalPages, so we can use the same pattern as latest feed
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Popular Feed] getNextPageParam:', {
+          lastPage,
+          meta: lastPage?.meta,
+          currentPage: lastPage?.meta?.currentPage,
+          totalPages: lastPage?.meta?.totalPages,
+          hasMore: lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && lastPage.meta.currentPage < lastPage.meta.totalPages,
+        });
+      }
+      if (
+        lastPage?.meta?.currentPage &&
+        lastPage?.meta?.totalPages &&
+        lastPage.meta.currentPage < lastPage.meta.totalPages
+      ) {
+        return lastPage.meta.currentPage + 1;
       }
       return undefined;
     },
@@ -408,6 +406,19 @@ export default function FeedList({
         : [],
     [popularData]
   );
+
+  // Debug logging for popular feed pagination
+  useEffect(() => {
+    if (sortBy === "hot" && process.env.NODE_ENV === 'development') {
+      console.log('[Popular Feed] State:', {
+        hasMorePopular,
+        fetchingMorePopular,
+        pagesCount: popularData?.pages?.length,
+        totalItems: popularList.length,
+        lastPageMeta: popularData?.pages?.[popularData.pages.length - 1]?.meta,
+      });
+    }
+  }, [sortBy, hasMorePopular, fetchingMorePopular, popularData, popularList.length]);
 
 
   // Track if we have data from both queries (cached or fresh)
@@ -803,6 +814,13 @@ export default function FeedList({
       fetchingRef.current = true;
       const tasks: Promise<any>[] = [];
       if (sortBy === "hot") {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Popular Feed] Intersection observer triggered:', {
+            hasMorePopular,
+            fetchingMorePopular,
+            willFetch: hasMorePopular && !fetchingMorePopular,
+          });
+        }
         if (hasMorePopular && !fetchingMorePopular) tasks.push(fetchNextPopular());
       } else {
         if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());

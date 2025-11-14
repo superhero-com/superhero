@@ -13,12 +13,34 @@ interface AccountPortfolioProps {
   address: string;
 }
 
+interface PnlAmount {
+  ae: number;
+  usd: number;
+}
+
+interface TotalPnl {
+  percentage: number;
+  invested: PnlAmount;
+  current_value: PnlAmount;
+  gain: PnlAmount;
+}
+
+interface TokenPnl {
+  current_unit_price: PnlAmount;
+  percentage: number;
+  invested: PnlAmount;
+  current_value: PnlAmount;
+  gain: PnlAmount;
+}
+
 interface PortfolioSnapshot {
   timestamp: string | Date;
   total_value_ae: number;
   ae_balance: number;
   tokens_value_ae: number;
   total_value_usd?: number;
+  total_pnl?: TotalPnl;
+  tokens_pnl?: Record<string, TokenPnl>;
 }
 
 const TIME_RANGES = {
@@ -717,6 +739,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         endDate: dateRange.endDate,
         interval: dateRange.interval,
         convertTo: convertTo as any,
+        include: 'pnl', // Request PNL data
       });
       
       const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
@@ -767,6 +790,85 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
+
+  // Fetch current PNL data separately for the latest snapshot
+  const {
+    data: currentPnlData,
+    isLoading: isLoadingPnl,
+  } = useQuery({
+    queryKey: ['account-pnl', address],
+    queryFn: async () => {
+      return await TrendminerApi.getAccountPnl(address);
+    },
+    enabled: !!address,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // Keep cached data for 30 minutes
+    retry: 2,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+  });
+
+  // Calculate period PNL (change over the selected timeframe)
+  const periodPnl = useMemo(() => {
+    if (!portfolioData || portfolioData.length < 2) return null;
+    
+    const firstSnapshot = portfolioData[0];
+    const lastSnapshot = portfolioData[portfolioData.length - 1];
+    
+    if (!firstSnapshot.total_pnl || !lastSnapshot.total_pnl) return null;
+    
+    // For period PNL, calculate the actual change in portfolio value
+    // Period gain = (end portfolio value - start portfolio value) - purchases made during period
+    // This shows the profit/loss from price movements, excluding new capital invested
+    
+    const purchasesDuringPeriod = {
+      ae: lastSnapshot.total_pnl.invested.ae - firstSnapshot.total_pnl.invested.ae,
+      usd: lastSnapshot.total_pnl.invested.usd - firstSnapshot.total_pnl.invested.usd,
+    };
+    
+    // Use the actual portfolio value change (what the chart shows)
+    const portfolioValueChange = {
+      ae: lastSnapshot.total_value_ae - firstSnapshot.total_value_ae,
+      usd: (lastSnapshot.total_value_usd || 0) - (firstSnapshot.total_value_usd || 0),
+    };
+    
+    // Period gain = portfolio value change - purchases
+    // If you bought tokens during the period, that increases portfolio value but isn't a gain
+    const periodGain = {
+      ae: portfolioValueChange.ae - purchasesDuringPeriod.ae,
+      usd: portfolioValueChange.usd - purchasesDuringPeriod.usd,
+    };
+    
+    // Calculate percentage - prioritize purchases during period if starting value is low
+    // ROI should be calculated based on what was actually invested during the period
+    let periodPercentage = 0;
+    if (Math.abs(purchasesDuringPeriod.ae) > 0.000001) {
+      // If purchases were made during the period, calculate ROI on those purchases
+      periodPercentage = (periodGain.ae / Math.abs(purchasesDuringPeriod.ae)) * 100;
+    } else {
+      // If no purchases during period, calculate ROI based on starting portfolio value
+      const startPortfolioValue = firstSnapshot.total_value_ae;
+      if (startPortfolioValue > 0.000001) {
+        periodPercentage = (periodGain.ae / startPortfolioValue) * 100;
+      }
+    }
+    
+    // Calculate portfolio value percentage change
+    const startPortfolioValue = firstSnapshot.total_value_ae;
+    const endPortfolioValue = lastSnapshot.total_value_ae;
+    let portfolioValuePercentageChange = 0;
+    if (startPortfolioValue > 0.000001) {
+      portfolioValuePercentageChange = ((endPortfolioValue - startPortfolioValue) / startPortfolioValue) * 100;
+    }
+    
+    return {
+      gain: periodGain,
+      invested: purchasesDuringPeriod,
+      current_value: portfolioValueChange,
+      percentage: periodPercentage,
+      portfolio_value_percentage_change: portfolioValuePercentageChange,
+    };
+  }, [portfolioData]);
 
   // Keep portfolioData ref up to date for initialization effect
   useEffect(() => {
@@ -1122,84 +1224,132 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             </button>
           </div>
           <div className="mb-2 min-h-[3.5rem]">
-            <span className={`text-3xl md:text-4xl ${hoveredPrice ? 'text-green-400' : 'text-white'} block min-h-[2.5rem] leading-tight`}>
-              {animatedValue !== null ? (
-                convertTo === 'ae' 
-                  ? (() => {
-                      try {
-                        const value = Number(animatedValue);
-                        // If value is above 1 AE, show 2 decimals
-                        if (value >= 1) {
-                          return (
-                            <>
-                              <span className="font-light">AE</span>{' '}
-                              <span className="font-extrabold">{value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                            </>
-                          );
-                        }
-                        // Otherwise use prettify for values below 1 AE
-                        return (
-                          <>
-                            <span className="font-light">AE</span>{' '}
-                            <span className="font-extrabold">{Decimal.from(animatedValue).prettify()}</span>
-                          </>
-                        );
-                      } catch {
-                        const value = Number(animatedValue);
-                        // If value is above 1 AE, show 2 decimals
-                        if (value >= 1) {
-                          return (
-                            <>
-                              <span className="font-light">AE</span>{' '}
-                              <span className="font-extrabold">{value.toFixed(2)}</span>
-                            </>
-                          );
-                        }
-                        return (
-                          <>
-                            <span className="font-light">AE</span>{' '}
-                            <span className="font-extrabold">{value.toFixed(4)}</span>
-                          </>
-                        );
-                      }
-                    })()
-                  : (() => {
-                      try {
-                        const fiatValue = typeof animatedValue === 'number' ? animatedValue : Number(animatedValue);
-                      const currencyCode = currentCurrencyInfo.code.toUpperCase();
-                        // Format number separately to extract currency symbol
-                        const formatter = new Intl.NumberFormat('en-US', {
-                        style: 'currency',
-                        currency: currencyCode,
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      });
-                        const parts = formatter.formatToParts(fiatValue);
-                        const currencySymbol = parts.find(p => p.type === 'currency')?.value || '$';
-                        const amount = parts.filter(p => p.type !== 'currency').map(p => p.value).join('');
-                        return (
-                          <>
-                            <span className="font-light">{currencySymbol}</span>
-                            <span className="font-extrabold">{amount}</span>
-                          </>
-                        );
-                      } catch {
-                        const amount = Number(animatedValue).toFixed(2);
-                        return (
-                          <>
-                            <span className="font-light">$</span>
-                            <span className="font-extrabold">{amount}</span>
-                          </>
-                        );
-                      }
-                    })()
-              ) : (
-                <>
-                  <span className="font-light opacity-0">AE</span>{' '}
-                  <span className="font-extrabold opacity-0">0.00</span>
-                </>
-              )}
-            </span>
+            {(() => {
+              // Calculate portfolio percentage change for color and display
+              let portfolioPercentageChange: number | undefined;
+              
+              if (hoveredPrice && portfolioData && portfolioData.length > 0) {
+                // Calculate percentage change from start of period to hovered point
+                const firstSnapshot = portfolioData[0];
+                const hoveredTimestamp = hoveredPrice.time;
+                const closestSnapshot = portfolioData.reduce((closest, snapshot) => {
+                  const snapshotTime = moment(snapshot.timestamp).unix();
+                  const closestTime = closest ? moment(closest.timestamp).unix() : Infinity;
+                  return Math.abs(snapshotTime - hoveredTimestamp) < Math.abs(closestTime - hoveredTimestamp)
+                    ? snapshot
+                    : closest;
+                });
+                
+                const startPortfolioValue = firstSnapshot.total_value_ae;
+                const hoveredPortfolioValue = closestSnapshot.total_value_ae;
+                
+                if (startPortfolioValue > 0.000001) {
+                  portfolioPercentageChange = ((hoveredPortfolioValue - startPortfolioValue) / startPortfolioValue) * 100;
+                }
+              } else if (periodPnl && periodPnl.portfolio_value_percentage_change !== undefined) {
+                portfolioPercentageChange = periodPnl.portfolio_value_percentage_change;
+              }
+              
+              // Determine portfolio value color based on percentage change
+              // Only color when hovering, otherwise keep white
+              let portfolioValueColor = 'text-white';
+              if (hoveredPrice && portfolioPercentageChange !== undefined && Math.abs(portfolioPercentageChange) > 0.0001) {
+                portfolioValueColor = portfolioPercentageChange >= 0 ? 'text-green-400' : 'text-red-400';
+              } else if (hoveredPrice) {
+                // When hovering but no percentage available, use green
+                portfolioValueColor = 'text-green-400';
+              }
+              
+              return (
+                <div className="flex items-baseline gap-3">
+                  <span className={`text-3xl md:text-4xl ${portfolioValueColor} block min-h-[2.5rem] leading-tight`}>
+                    {animatedValue !== null ? (
+                      convertTo === 'ae' 
+                        ? (() => {
+                            try {
+                              const value = Number(animatedValue);
+                              // If value is above 1 AE, show 2 decimals
+                              if (value >= 1) {
+                                return (
+                                  <>
+                                    <span className="font-light">AE</span>{' '}
+                                    <span className="font-extrabold">{value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  </>
+                                );
+                              }
+                              // Otherwise use prettify for values below 1 AE
+                              return (
+                                <>
+                                  <span className="font-light">AE</span>{' '}
+                                  <span className="font-extrabold">{Decimal.from(animatedValue).prettify()}</span>
+                                </>
+                              );
+                            } catch {
+                              const value = Number(animatedValue);
+                              // If value is above 1 AE, show 2 decimals
+                              if (value >= 1) {
+                                return (
+                                  <>
+                                    <span className="font-light">AE</span>{' '}
+                                    <span className="font-extrabold">{value.toFixed(2)}</span>
+                                  </>
+                                );
+                              }
+                              return (
+                                <>
+                                  <span className="font-light">AE</span>{' '}
+                                  <span className="font-extrabold">{value.toFixed(4)}</span>
+                                </>
+                              );
+                            }
+                          })()
+                        : (() => {
+                            try {
+                              const fiatValue = typeof animatedValue === 'number' ? animatedValue : Number(animatedValue);
+                              const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                              // Format number separately to extract currency symbol
+                              const formatter = new Intl.NumberFormat('en-US', {
+                                style: 'currency',
+                                currency: currencyCode,
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              });
+                              const parts = formatter.formatToParts(fiatValue);
+                              const currencySymbol = parts.find(p => p.type === 'currency')?.value || '$';
+                              const amount = parts.filter(p => p.type !== 'currency').map(p => p.value).join('');
+                              return (
+                                <>
+                                  <span className="font-light">{currencySymbol}</span>
+                                  <span className="font-extrabold">{amount}</span>
+                                </>
+                              );
+                            } catch {
+                              const amount = Number(animatedValue).toFixed(2);
+                              return (
+                                <>
+                                  <span className="font-light">$</span>
+                                  <span className="font-extrabold">{amount}</span>
+                                </>
+                              );
+                            }
+                          })()
+                    ) : (
+                      <>
+                        <span className="font-light opacity-0">AE</span>{' '}
+                        <span className="font-extrabold opacity-0">0.00</span>
+                      </>
+                    )}
+                  </span>
+                  {/* Portfolio value percentage change */}
+                  {portfolioPercentageChange !== undefined && Math.abs(portfolioPercentageChange) > 0.0001 && (
+                    <span className={`text-lg font-semibold ${portfolioPercentageChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {portfolioPercentageChange >= 0 ? '+' : ''}
+                      {portfolioPercentageChange.toFixed(2)}%
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
             <div className="text-sm text-white/60 mt-1 h-5">
               {hoveredPrice ? (
                 <span>{moment.unix(hoveredPrice.time).format('MMM D, YYYY HH:mm')}</span>
@@ -1208,6 +1358,125 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               )}
             </div>
           </div>
+          
+          {/* Profit/Loss Information */}
+          {(periodPnl || (hoveredPrice && portfolioData)) && (
+            <div className="mb-4 pt-3 border-t border-white/10">
+              {(() => {
+                // Use hovered snapshot PNL if available, otherwise use period PNL
+                let pnlData: TotalPnl | undefined;
+                if (hoveredPrice && portfolioData) {
+                  // Find the snapshot closest to the hovered time
+                  const hoveredTimestamp = hoveredPrice.time;
+                  const closestSnapshot = portfolioData.reduce((closest, snapshot) => {
+                    const snapshotTime = moment(snapshot.timestamp).unix();
+                    const closestTime = closest ? moment(closest.timestamp).unix() : Infinity;
+                    return Math.abs(snapshotTime - hoveredTimestamp) < Math.abs(closestTime - hoveredTimestamp)
+                      ? snapshot
+                      : closest;
+                  });
+                  // Show cumulative PNL at that point in time
+                  pnlData = closestSnapshot?.total_pnl;
+                } else if (periodPnl && portfolioData) {
+                  // Use period PNL (convert to TotalPnl format)
+                  // For period PNL, use the last snapshot's PNL data but with period gain/invested
+                  const lastSnapshot = portfolioData[portfolioData.length - 1];
+                  pnlData = {
+                    // Always use the PNL percentage from the API (last snapshot's total_pnl)
+                    percentage: lastSnapshot.total_pnl?.percentage || 0,
+                    invested: periodPnl.invested,
+                    current_value: {
+                      ae: lastSnapshot.total_pnl?.current_value.ae || 0,
+                      usd: lastSnapshot.total_pnl?.current_value.usd || 0,
+                    },
+                    gain: periodPnl.gain,
+                  };
+                  
+                  // Add portfolio value percentage change for period PNL
+                  (pnlData as any).portfolio_value_percentage_change = periodPnl.portfolio_value_percentage_change;
+                }
+                
+                if (!pnlData) return null;
+                
+                const isPositive = pnlData.gain.ae >= 0;
+                const gainValue = convertTo === 'ae' 
+                  ? pnlData.gain.ae 
+                  : (convertTo === 'usd' ? pnlData.gain.usd : pnlData.gain.usd);
+                const investedValue = convertTo === 'ae'
+                  ? pnlData.invested.ae
+                  : (convertTo === 'usd' ? pnlData.invested.usd : pnlData.invested.usd);
+                const currentValue = convertTo === 'ae'
+                  ? pnlData.current_value.ae
+                  : (convertTo === 'usd' ? pnlData.current_value.usd : pnlData.current_value.usd);
+                
+                return (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-xs text-white/60 mb-1">Profit/Loss</div>
+                      <div className={`text-lg font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
+                        {isPositive ? '+' : ''}
+                        {convertTo === 'ae' 
+                          ? `${Decimal.from(gainValue).prettify()} AE`
+                          : (() => {
+                              try {
+                                const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                                return gainValue.toLocaleString('en-US', {
+                                  style: 'currency',
+                                  currency: currencyCode,
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                });
+                              } catch {
+                                return `$${Number(gainValue).toFixed(2)}`;
+                              }
+                            })()}
+                      </div>
+                      <div className={`text-xs ${isPositive ? 'text-green-400/80' : 'text-red-400/80'}`}>
+                        {isPositive ? '+' : ''}{pnlData.percentage.toFixed(2)}%
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-white/60 mb-1">Total Purchased</div>
+                      <div className="text-sm font-semibold text-white">
+                        {convertTo === 'ae'
+                          ? `${Decimal.from(investedValue).prettify()} AE`
+                          : (() => {
+                              try {
+                                const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                                return investedValue.toLocaleString('en-US', {
+                                  style: 'currency',
+                                  currency: currencyCode,
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                });
+                              } catch {
+                                return `$${Number(investedValue).toFixed(2)}`;
+                              }
+                            })()}
+                      </div>
+                      <div className="text-xs text-white/60">
+                        Current: {convertTo === 'ae'
+                          ? `${Decimal.from(currentValue).prettify()} AE`
+                          : (() => {
+                              try {
+                                const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                                return currentValue.toLocaleString('en-US', {
+                                  style: 'currency',
+                                  currency: currencyCode,
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                });
+                              } catch {
+                                return `$${Number(currentValue).toFixed(2)}`;
+                              }
+                            })()}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
 
         {/* Chart - no padding, full width */}

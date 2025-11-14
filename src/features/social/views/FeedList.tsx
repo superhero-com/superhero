@@ -354,30 +354,37 @@ export default function FeedList({
   } = useInfiniteQuery({
     enabled: sortBy === "hot",
     queryKey: ["popular-posts", { limit: 10, window: popularWindow }],
-    queryFn: ({ pageParam = 1 }) =>
-      SuperheroApi.listPopularPosts({
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await SuperheroApi.listPopularPosts({
         window: popularWindow,
         page: pageParam as number,
         limit: 10,
-      }) as unknown as Promise<PostApiResponse>,
-    getNextPageParam: (lastPage) => {
+      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Popular Feed] Query response:', {
+          pageParam,
+          response,
+          meta: response?.meta,
+        });
+      }
+      return response as PostApiResponse;
+    },
+    getNextPageParam: (lastPage: any) => {
       // Continue pagination if we have totalPages and haven't reached it yet
       // The backend now always returns totalPages, so we can use the same pattern as latest feed
+      const meta = lastPage?.meta;
       if (process.env.NODE_ENV === 'development') {
         console.log('[Popular Feed] getNextPageParam:', {
           lastPage,
-          meta: lastPage?.meta,
-          currentPage: lastPage?.meta?.currentPage,
-          totalPages: lastPage?.meta?.totalPages,
-          hasMore: lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && lastPage.meta.currentPage < lastPage.meta.totalPages,
+          meta,
+          currentPage: meta?.currentPage,
+          totalPages: meta?.totalPages,
+          hasMore: meta?.currentPage && meta?.totalPages && meta.currentPage < meta.totalPages,
+          willReturn: meta?.currentPage && meta?.totalPages && meta.currentPage < meta.totalPages ? meta.currentPage + 1 : undefined,
         });
       }
-      if (
-        lastPage?.meta?.currentPage &&
-        lastPage?.meta?.totalPages &&
-        lastPage.meta.currentPage < lastPage.meta.totalPages
-      ) {
-        return lastPage.meta.currentPage + 1;
+      if (meta?.currentPage && meta?.totalPages && meta.currentPage < meta.totalPages) {
+        return meta.currentPage + 1;
       }
       return undefined;
     },
@@ -410,15 +417,25 @@ export default function FeedList({
   // Debug logging for popular feed pagination
   useEffect(() => {
     if (sortBy === "hot" && process.env.NODE_ENV === 'development') {
+      const lastPage = popularData?.pages?.[popularData.pages.length - 1];
       console.log('[Popular Feed] State:', {
         hasMorePopular,
         fetchingMorePopular,
         pagesCount: popularData?.pages?.length,
         totalItems: popularList.length,
-        lastPageMeta: popularData?.pages?.[popularData.pages.length - 1]?.meta,
+        lastPage,
+        lastPageMeta: lastPage?.meta,
+        computedHasMore: lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && lastPage.meta.currentPage < lastPage.meta.totalPages,
       });
     }
   }, [sortBy, hasMorePopular, fetchingMorePopular, popularData, popularList.length]);
+  
+  // Force check hasMorePopular whenever popularData changes
+  useEffect(() => {
+    if (sortBy === "hot" && process.env.NODE_ENV === 'development') {
+      console.log('[Popular Feed] hasMorePopular changed:', hasMorePopular);
+    }
+  }, [sortBy, hasMorePopular]);
 
 
   // Track if we have data from both queries (cached or fresh)
@@ -806,22 +823,57 @@ export default function FeedList({
     if (initialLoading) return;
     if (!('IntersectionObserver' in window)) return;
     const sentinel = sentinelRef.current;
-    if (!sentinel) return;
+    if (!sentinel) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Popular Feed] Sentinel not found');
+      }
+      return;
+    }
+    if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
+      console.log('[Popular Feed] Setting up intersection observer:', {
+        hasMorePopular,
+        fetchingMorePopular,
+        sentinelExists: !!sentinel,
+      });
+    }
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
-      if (!entry.isIntersecting || fetchingRef.current) return;
+      if (!entry.isIntersecting || fetchingRef.current) {
+        if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
+          console.log('[Popular Feed] Intersection observer: not triggering', {
+            isIntersecting: entry.isIntersecting,
+            fetchingRef: fetchingRef.current,
+          });
+        }
+        return;
+      }
       setShowLoadMore(true);
       fetchingRef.current = true;
       const tasks: Promise<any>[] = [];
       if (sortBy === "hot") {
+        const lastPage = popularData?.pages?.[popularData.pages.length - 1];
+        const manualHasMore = lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && lastPage.meta.currentPage < lastPage.meta.totalPages;
         if (process.env.NODE_ENV === 'development') {
           console.log('[Popular Feed] Intersection observer triggered:', {
             hasMorePopular,
             fetchingMorePopular,
-            willFetch: hasMorePopular && !fetchingMorePopular,
+            lastPageMeta: lastPage?.meta,
+            manualHasMore,
+            willFetch: (hasMorePopular || manualHasMore) && !fetchingMorePopular,
           });
         }
-        if (hasMorePopular && !fetchingMorePopular) tasks.push(fetchNextPopular());
+        // Try to fetch even if hasMorePopular is false but manual check says there's more
+        if ((hasMorePopular || manualHasMore) && !fetchingMorePopular) {
+          tasks.push(fetchNextPopular());
+        } else {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[Popular Feed] Not fetching - conditions not met:', {
+              hasMorePopular,
+              manualHasMore,
+              fetchingMorePopular,
+            });
+          }
+        }
       } else {
         if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
         if (hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
@@ -847,6 +899,7 @@ export default function FeedList({
     hasMorePopular,
     fetchingMorePopular,
     fetchNextPopular,
+    popularData, // Add popularData to dependencies so manualHasMore uses latest data
   ]);
 
   const content = (
@@ -933,15 +986,29 @@ export default function FeedList({
                     ? fetchingMorePopular
                     : (fetchingMoreLatest || fetchingMoreActivities)
                 }
-                onClick={() => {
+                onClick={async () => {
                   if (sortBy === "hot") {
-                    if (hasMorePopular && !fetchingMorePopular) return fetchNextPopular();
+                    const lastPage = popularData?.pages?.[popularData.pages.length - 1];
+                    const manualHasMore = lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && lastPage.meta.currentPage < lastPage.meta.totalPages;
+                    if (process.env.NODE_ENV === 'development') {
+                      console.log('[Popular Feed] Load more button clicked:', {
+                        hasMorePopular,
+                        fetchingMorePopular,
+                        lastPageMeta: lastPage?.meta,
+                        manualHasMore,
+                        willFetch: (hasMorePopular || manualHasMore) && !fetchingMorePopular,
+                      });
+                    }
+                    // Try to fetch even if hasMorePopular is false but manual check says there's more
+                    if ((hasMorePopular || manualHasMore) && !fetchingMorePopular) {
+                      await fetchNextPopular();
+                    }
                     return;
                   }
                   const tasks: Promise<any>[] = [];
                   if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
                   if (hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
-                  if (tasks.length > 0) return Promise.all(tasks);
+                  if (tasks.length > 0) await Promise.all(tasks);
                 }}
                 className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5"
               >
@@ -964,3 +1031,4 @@ export default function FeedList({
     content
   );
 }
+

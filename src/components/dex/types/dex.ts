@@ -110,4 +110,31 @@ export interface RouteInfo {
     reserve1: string;
   }>;
   priceImpact?: number;
+  pairData?: {
+    directPairs?: Array<{
+      address: string;
+      token0: { address: string; decimals: number };
+      token1: { address: string; decimals: number };
+      ratio0: string;
+      ratio1: string;
+      reserve0: string;
+      reserve1: string;
+    }>;
+    paths?: Array<Array<{
+      address: string;
+      token0: { address: string; decimals: number };
+      token1: { address: string; decimals: number };
+      ratio0: string;
+      ratio1: string;
+      reserve0: string;
+      reserve1: string;
+    }>>;
+  };
+  liquidityStatus?: {
+    exceedsLiquidity: boolean;
+    maxAvailable?: string;
+    pairAddress?: string;
+  };
+  routerAmountOut?: string; // Router contract's actual expected output (for execution)
+  routerAmountIn?: string; // Router contract's actual expected input (for execution)
 }

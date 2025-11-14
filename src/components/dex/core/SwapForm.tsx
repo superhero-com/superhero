@@ -255,9 +255,14 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     }
 
     try {
+      // Use router's calculated amounts for execution (accounts for constant product formula)
+      // Display amounts (amountIn/amountOut) are ratio-based for correct pricing display
+      const executionAmountOut = routeInfo.routerAmountOut || amountOut;
+      const executionAmountIn = routeInfo.routerAmountIn || amountIn;
+      
       const txHash = await executeSwap({
-        amountIn,
-        amountOut,
+        amountIn: isExactIn ? amountIn : executionAmountIn,
+        amountOut: isExactIn ? executionAmountOut : amountOut,
         tokenIn,
         tokenOut,
         path: routeInfo.path,
@@ -335,9 +340,14 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     // 2. We have a valid input amount > 0
     // 3. We're not currently loading a quote
     // 4. We don't have a general error (which might be a different issue)
-    // 5. The output amount is 0 or empty after quoting
+    // 5. The output amount is 0 or empty after quoting OR liquidity is exceeded
     if (!tokenIn || !tokenOut || !amountIn || Number(amountIn) <= 0 || quoteLoading || error) {
       return false;
+    }
+
+    // Check if liquidity is exceeded
+    if (routeInfo.liquidityStatus?.exceedsLiquidity) {
+      return true;
     }
 
     // Check if we have a meaningful output amount
@@ -347,11 +357,12 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     const hasNoRoute = routeInfo.path.length === 0;
     
     return !hasValidOutput || hasNoRoute;
-  }, [tokenIn, tokenOut, amountIn, amountOut, quoteLoading, error, routeInfo.path.length]);
+  }, [tokenIn, tokenOut, amountIn, amountOut, quoteLoading, error, routeInfo.path.length, routeInfo.liquidityStatus]);
 
   const isSwapDisabled = useMemo(() => {
-    return swapLoading || !amountIn || Number(amountIn) <= 0 || Number(amountOut) <= 0 || !amountOut || !tokenIn || !tokenOut || hasInsufficientBalance || routeInfo.path.length === 0 || hasNoLiquidity;
-  }, [swapLoading, amountIn, amountOut, tokenIn, tokenOut, hasInsufficientBalance, routeInfo.path.length, hasNoLiquidity]);
+    const liquidityExceeded = routeInfo.liquidityStatus?.exceedsLiquidity === true;
+    return swapLoading || !amountIn || Number(amountIn) <= 0 || Number(amountOut) <= 0 || !amountOut || !tokenIn || !tokenOut || hasInsufficientBalance || routeInfo.path.length === 0 || hasNoLiquidity || liquidityExceeded;
+  }, [swapLoading, amountIn, amountOut, tokenIn, tokenOut, hasInsufficientBalance, routeInfo.path.length, hasNoLiquidity, routeInfo.liquidityStatus]);
 
   return (
     <div className="w-full sm:w-[480px] mx-auto bg-transparent border-0 p-0 relative overflow-hidden flex-shrink-0 sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
@@ -433,6 +444,9 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         tokenIn={tokenIn}
         tokenOut={tokenOut}
         show={hasNoLiquidity}
+        exceedsLiquidity={routeInfo.liquidityStatus?.exceedsLiquidity}
+        maxAvailable={routeInfo.liquidityStatus?.maxAvailable}
+        pairAddress={routeInfo.liquidityStatus?.pairAddress}
       />
 
       {/* Swap Info Display */}

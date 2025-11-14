@@ -14,6 +14,9 @@ import { ConnectEthereumWallet } from "./ConnectEthereumWallet";
 import { Decimal } from "@/libs/decimal";
 import { useAeSdk, useDex, useRecentActivities } from "../../../hooks";
 import { FromTo } from "@/features/shared/components";
+import { useSwapQuote } from "../../../components/dex/hooks/useSwapQuote";
+import { DexService } from "../../../api/generated";
+import { DEX_ADDRESSES } from "../../../libs/dex";
 
 interface BuyAeWidgetProps {
   embedded?: boolean; // renders without outer card/padding for sidebars
@@ -40,8 +43,13 @@ function BuyAeWidgetContent({
   const [ethBridgeStep, setEthBridgeStep] = useState<BridgeStatus>("idle");
   const [ethBalance, setEthBalance] = useState<string | null>(null);
   const [fetchingBalance, setFetchingBalance] = useState(false);
+  const [aeEthToken, setAeEthToken] = useState<any>(null);
+  const [aeToken, setAeToken] = useState<any>(null);
+  const [liquidityExceeded, setLiquidityExceeded] = useState(false);
+  const [maxAvailable, setMaxAvailable] = useState<string | undefined>(undefined);
 
   const bridgeService = BridgeService.getInstance();
+  const { refreshQuote, routeInfo } = useSwapQuote();
 
   // Fetch ETH balance
   const fetchEthBalance = useCallback(async () => {
@@ -75,6 +83,28 @@ function BuyAeWidgetContent({
     }
   }, [ethConnected, walletProvider, ethAddress, fetchEthBalance]);
 
+  // Load tokens for quote
+  useEffect(() => {
+    const loadTokens = async () => {
+      try {
+        // Load aeETH token
+        const aeEth = await DexService.getDexTokenByAddress({ address: DEX_ADDRESSES.aeeth });
+        setAeEthToken(aeEth);
+        
+        // Load AE token (find by is_ae flag or use WAE address)
+        const ae = await DexService.getDexTokenByAddress({ address: DEX_ADDRESSES.wae });
+        // Create AE token object
+        setAeToken({ ...ae, is_ae: true, address: 'AE', symbol: 'AE' });
+      } catch (e) {
+        console.warn('[BuyAeWidget] Failed to load tokens:', e);
+      }
+    };
+    
+    if (sdk) {
+      loadTokens();
+    }
+  }, [sdk]);
+
   // Handle Ethereum wallet disconnection
   const handleEthDisconnected = useCallback(() => {
     setEthBalance(null);
@@ -82,10 +112,13 @@ function BuyAeWidgetContent({
     setEthBridgeOutAe("");
     setEthBridgeError(null);
   }, []);
-  // Automated ETH Bridge quoting
+
+  // Automated ETH Bridge quoting using refreshQuote
   useEffect(() => {
-    if (!ethBridgeIn || Number(ethBridgeIn) <= 0) {
+    if (!ethBridgeIn || Number(ethBridgeIn) <= 0 || !aeEthToken || !aeToken) {
       setEthBridgeOutAe("");
+      setLiquidityExceeded(false);
+      setMaxAvailable(undefined);
       return;
     }
 
@@ -93,11 +126,16 @@ function BuyAeWidgetContent({
       try {
         setEthBridgeQuoting(true);
         setEthBridgeError(null);
-        const quote = await bridgeService.getBridgeQuote(
-          sdk as any,
-          ethBridgeIn
-        );
-        setEthBridgeOutAe(quote);
+        
+        const result = await refreshQuote({
+          amountIn: ethBridgeIn,
+          amountOut: '',
+          tokenIn: aeEthToken,
+          tokenOut: aeToken,
+          isExactIn: true
+        });
+        
+        setEthBridgeOutAe(result.amountOut || "");
       } catch (e: any) {
         setEthBridgeError(errorToUserMessage(e, { action: "quote" }));
       } finally {
@@ -106,7 +144,18 @@ function BuyAeWidgetContent({
     }, 300); // 300ms delay to avoid too many requests
 
     return () => clearTimeout(timer);
-  }, [ethBridgeIn, bridgeService]);
+  }, [ethBridgeIn, aeEthToken, aeToken]);
+
+  // Monitor liquidity status from routeInfo
+  useEffect(() => {
+    if (routeInfo.liquidityStatus) {
+      setLiquidityExceeded(routeInfo.liquidityStatus.exceedsLiquidity || false);
+      setMaxAvailable(routeInfo.liquidityStatus.maxAvailable);
+    } else {
+      setLiquidityExceeded(false);
+      setMaxAvailable(undefined);
+    }
+  }, [routeInfo.liquidityStatus]);
 
   const handleEthBridge = async () => {
     try {
@@ -240,7 +289,10 @@ function BuyAeWidgetContent({
     !activeAccount ||
     !ethConnected ||
     !ethBridgeIn ||
-    Number(ethBridgeIn) <= 0;
+    Number(ethBridgeIn) <= 0 ||
+    liquidityExceeded ||
+    !ethBridgeOutAe ||
+    Number(ethBridgeOutAe) <= 0;
 
   const sectionBase = "border border-white/10 rounded-2xl p-3 sm:p-4";
   const sectionBg = embedded
@@ -356,6 +408,17 @@ function BuyAeWidgetContent({
               <div className="h-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] rounded animate-pulse"></div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Liquidity Warning */}
+      {liquidityExceeded && maxAvailable && (
+        <div className="text-yellow-400 text-sm py-3 px-3 sm:px-4 bg-yellow-400/10 border border-yellow-400/20 rounded-xl mb-4 sm:mb-5">
+          <div className="font-semibold mb-1">Insufficient Liquidity</div>
+          <div className="text-white/80">
+            The requested amount exceeds available liquidity. Maximum available: {Decimal.from(maxAvailable).prettify()} æETH.
+            Please reduce the amount or add liquidity to the pool.
+          </div>
         </div>
       )}
 

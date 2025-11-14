@@ -270,7 +270,7 @@ export default function TokenDetail() {
                     gap: 6,
                   }}
                 >
-                  🏦 Total Value Locked
+                  🏦 Total Volume
                 </div>
                 <div
                   style={{

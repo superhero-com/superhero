@@ -1,6 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { DexTokenDto } from '../../../api/generated';
 import { Decimal } from '@/libs/decimal';
+import Spinner from '@/components/Spinner';
 
 interface LiquidityConfirmationProps {
   show: boolean;
@@ -168,7 +169,7 @@ export default function LiquidityConfirmation({
             >
               {loading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <Spinner className="w-4 h-4" />
                   Confirm in wallet…
                 </>
               ) : 'Confirm Add Liquidity'}

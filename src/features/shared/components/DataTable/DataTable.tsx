@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DataTablePagination } from './DataTablePagination';
+import Spinner from '@/components/Spinner';
 
 export interface DataTableParams {
   page?: number;
@@ -79,7 +80,7 @@ export function DataTable<T>({
       <div className={`flex items-center justify-center p-8 ${className}`}>
         {loadingComponent || (
           <div className="flex items-center space-x-2">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <Spinner className="h-6 w-6" />
             <span className="text-sm text-muted-foreground">Loading...</span>
           </div>
         )}

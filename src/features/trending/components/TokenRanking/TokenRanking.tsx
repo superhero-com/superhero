@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { SuperheroApi } from '../../../../api/backend';
 import { Decimal } from '../../../../libs/decimal';
 import { toAe } from '@aeternity/aepp-sdk';
+import Spinner from '../../../../components/Spinner';
 
 interface TokenRankingProps {
   token: {
@@ -149,7 +150,7 @@ export default function TokenRanking({ token }: TokenRankingProps) {
     return (
       <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
         <div className="flex items-center justify-center py-8">
-          <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          <Spinner className="w-6 h-6" />
         </div>
       </div>
     );

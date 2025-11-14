@@ -6,6 +6,7 @@ import { useAtom } from 'jotai';
 import { tipStatusAtom, makeTipKey } from '../../../atoms/tipAtoms';
 import { Check } from 'lucide-react';
 import { usePostTipSummary } from '../hooks/usePostTipSummary';
+import Spinner from '../../../components/Spinner';
 
 export default function PostTipButton({ toAddress, postId }: { toAddress: string; postId: string }) {
   const { openModal } = useModal();
@@ -47,10 +48,7 @@ export default function PostTipButton({ toAddress, postId }: { toAddress: string
       aria-label="Tip post"
     >
       {isPending && (
-        <svg className="animate-spin w-[14px] h-[14px]" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-        </svg>
+        <Spinner className="w-[14px] h-[14px]" />
       )}
       {isSuccess && <Check className="w-[14px] h-[14px]" />}
       {!isPending && !isSuccess && <IconDiamond className="w-[14px] h-[14px]" />}

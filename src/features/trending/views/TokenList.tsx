@@ -15,6 +15,7 @@ import {
 } from "../../../components/ui/select";
 import AeButton from "@/components/AeButton";
 import Head from "../../../seo/Head";
+import Spinner from "@/components/Spinner";
 
 
 type SelectOptions<T> = Array<{
@@ -292,7 +293,7 @@ export default function TokenList() {
           >
             {isFetching ? (
               <div className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <Spinner className="w-4 h-4" />
                 Loading...
               </div>
             ) : 'Load More'}

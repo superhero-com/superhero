@@ -26,6 +26,7 @@ import { useRecentActivities } from '@/hooks/useRecentActivities';
 import ConnectWalletButton from '@/components/ConnectWalletButton';
 import BridgeTokenSelector from './BridgeTokenSelector';
 import ConnectEthereumWallet from './ConnectEthereumWallet';
+import Spinner from '@/components/Spinner';
 import { BRIDGE_USAGE_INTERVAL_IN_HOURS, BridgeConstants } from '../constants';
 import { useBridge } from '../hooks/useBridge';
 import { useTokenBalances } from '../hooks/useTokenBalances';
@@ -1019,7 +1020,7 @@ export function AeEthBridge() {
                                     >
                                         {buttonBusy ? (
                                             <div className="flex items-center justify-center gap-2">
-                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                <Spinner className="w-4 h-4" />
                                                 {confirming
                                                     ? (confirmingMsg === 'Approving allowance' || confirmingMsg === 'Creating allowance' || confirmingMsg === 'Updating allowance'
                                                         ? t('bridge.approving')

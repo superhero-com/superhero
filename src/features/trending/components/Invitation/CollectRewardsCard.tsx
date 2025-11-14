@@ -5,6 +5,7 @@ import { useAeSdk } from "@/hooks/useAeSdk";
 import { getAffiliationTreasury } from "@/libs/affiliation";
 import { Decimal } from "@/libs/decimal";
 import LivePriceFormatter from "@/features/shared/components/LivePriceFormatter";
+import Spinner from "@/components/Spinner";
 
 const MIN_INVITEES = 4;
 const MIN_SPENT_AE = 10;
@@ -196,7 +197,7 @@ export default function CollectRewardsCard({
             >
               {collectingReward ? (
                 <div className="flex items-center justify-center gap-3">
-                  <div className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 border-2 border-transparent border-t-current rounded-full animate-spin"></div>
+                  <Spinner className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6" />
                   Withdrawing...
                 </div>
               ) : !isEligibleForRewards ? (

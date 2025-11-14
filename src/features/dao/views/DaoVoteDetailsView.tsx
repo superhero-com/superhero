@@ -20,6 +20,7 @@ import VoteSubject from "@/features/dao/components/VoteSubject";
 import VotersTable from "@/features/dao/components/VotersTable";
 import TokenRanking from "@/features/trending/components/TokenRanking";
 import TokenTradeCard from "@/features/trending/components/TokenTradeCard";
+import Spinner from "@/components/Spinner";
 
 export default function DaoVoteDetailsView() {
   const { saleAddress, voteAddress, voteId } = useParams<{
@@ -112,7 +113,7 @@ export default function DaoVoteDetailsView() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-20 w-20 border-b-2 border-blue-500 mx-auto"></div>
+          <Spinner className="w-20 h-20 mx-auto" />
           <div className="text-white/80 mt-4">Loading...</div>
         </div>
       </div>
@@ -357,7 +358,7 @@ export default function DaoVoteDetailsView() {
 
                     {actionLoading && (
                       <div className="flex items-center justify-center py-4">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white/20"></div>
+                        <Spinner className="w-6 h-6" />
                         <span className="ml-3 text-white/60">Processing...</span>
                       </div>
                     )}

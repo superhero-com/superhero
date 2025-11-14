@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 // Custom Components
 import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarWithChainNameFeed";
 import VoteSubject from "./VoteSubject";
+import Spinner from "@/components/Spinner";
 
 interface TokenVoteCardProps {
   address: Encoded.ContractAddress;
@@ -38,7 +39,7 @@ export default function TokenVoteCard({
       <Card className="bg-white/[0.02] border-white/10">
         <CardContent className="p-4">
           <div className="flex items-center justify-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white/20"></div>
+            <Spinner className="w-6 h-6" />
             <span className="ml-3 text-slate-400">Loading...</span>
           </div>
         </CardContent>

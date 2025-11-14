@@ -395,26 +395,7 @@
   z-index: -1;
 }
 
-/* Loading Spinner */
-.genz-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid transparent;
-  border-top: 3px solid var(--neon-pink);
-  border-right: 3px solid var(--neon-teal);
-  border-bottom: 3px solid var(--neon-blue);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
+/* Loading Spinner - Use Spinner component instead */
 
 /* Pulse Animation */
 .genz-pulse {

@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { IconClose } from "@/icons";
 import { CONFIG } from "@/config";
+import Spinner from "@/components/Spinner";
 
 interface GifSelectorDialogProps {
   open: boolean;
@@ -183,7 +184,7 @@ export function GifSelectorDialog({
           )}
           {isLoading && (
             <div className="flex items-center justify-center h-[400px]">
-              <div className="animate-spin h-8 w-8 border-4 border-primary-400 border-t-transparent rounded-full" />
+              <Spinner className="h-8 w-8" />
             </div>
           )}
 
@@ -230,7 +231,7 @@ export function GifSelectorDialog({
               <div ref={sentinelRef} className="col-span-3 h-4" />
               {isFetchingNextPage && (
                 <div className="col-span-3 flex items-center justify-center py-4">
-                  <div className="animate-spin h-6 w-6 border-3 border-primary-400 border-t-transparent rounded-full" />
+                  <Spinner className="h-6 w-6" />
                 </div>
               )}
             </div>

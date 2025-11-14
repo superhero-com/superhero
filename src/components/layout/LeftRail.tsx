@@ -666,10 +666,6 @@ export default function LeftRail() {
             50% { opacity: 0.5; }
           }
           
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
           
           @keyframes slideIn {
             from { 
@@ -682,12 +678,7 @@ export default function LeftRail() {
             }
           }
           
-          .genz-spinner {
-            border: 2px solid rgba(255,255,255,0.1);
-            border-top: 2px solid var(--neon-teal);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-          }
+          // Spinner styles removed - use Spinner component instead
         `,
         }}
       />

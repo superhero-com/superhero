@@ -8,6 +8,7 @@ import AeButton from "../components/AeButton";
 import { TokenPricePerformance } from "../features/dex/components";
 import { useAeSdk } from "../hooks";
 import { Decimal } from "../libs/decimal";
+import Spinner from "../components/Spinner";
 import { getPairsByTokenUsd, getTokenWithUsd } from "../libs/dexBackend";
 
 interface TokenData {
@@ -116,7 +117,7 @@ export default function TokenDetail() {
     return (
       <div className="max-w-[1200px] mx-auto p-5 flex justify-center items-center min-h-[400px]">
         <div className="text-center text-white/60 flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-[3px] border-white/10 border-t-purple-400 rounded-full animate-spin"></div>
+          <Spinner className="w-8 h-8" />
           Loading token details...
         </div>
       </div>
@@ -144,7 +145,7 @@ export default function TokenDetail() {
               {
                 !tokenDetails ? (
                   <div className="text-center text-white/60 flex flex-col items-center gap-4">
-                    <div className="w-8 h-8 border-[3px] border-white/10 border-t-purple-400 rounded-full animate-spin"></div>
+                    <Spinner className="w-8 h-8" />
                     Loading token details...
                   </div>
                 ) : (

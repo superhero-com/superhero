@@ -391,20 +391,7 @@
 .trend-cloud-loading {
   color: $light_font_color;
   
-  .loading-spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid rgba($accent_color, 0.3);
-    border-top: 3px solid $accent_color;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 16px;
-  }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
+  // Spinner styles removed - use Spinner component instead
 }
 
 .trend-cloud-error {

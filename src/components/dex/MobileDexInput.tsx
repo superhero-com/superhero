@@ -1,4 +1,5 @@
 import React, { forwardRef } from 'react';
+import Spinner from '../Spinner';
 
 interface DexInputProps {
   label?: string;
@@ -155,7 +156,7 @@ const DexInput = forwardRef<HTMLInputElement, DexInputProps>(({
         
         {loading && (
           <div className="absolute right-3 flex items-center justify-center pointer-events-none">
-            <div className="w-4 h-4 border-2 border-transparent border-t-[var(--primary-color)] rounded-full animate-spin"></div>
+            <Spinner className="w-4 h-4" />
           </div>
         )}
       </div>

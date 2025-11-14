@@ -8,6 +8,7 @@ import { formatLongDate } from "@/utils/common";
 import { TX_FUNCTIONS } from "@/utils/constants";
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
+import Spinner from "@/components/Spinner";
 
 // Pagination response interface
 interface PaginatedTransactionsResponse {
@@ -314,7 +315,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
         {/* Loading State */}
         {isFetching && (
           <div className="flex items-center justify-center py-12">
-            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            <Spinner className="w-6 h-6" />
           </div>
         )}
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import Spinner from '../Spinner';
 
 interface DexButtonProps {
   children: React.ReactNode;
@@ -117,7 +118,7 @@ export default function DexButton({
     >
       {loading && (
         <div className="flex items-center justify-center">
-          <div className="w-4 h-4 border-2 border-transparent border-t-current rounded-full animate-spin"></div>
+          <Spinner className="w-4 h-4" />
         </div>
       )}
       

@@ -9,6 +9,7 @@ import AddressChip from "../AddressChip";
 import TokenPriceFormatter from "@/features/shared/components/TokenPriceFormatter";
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
+import Spinner from "@/components/Spinner";
 
 // Pagination response interface
 interface PaginatedHoldersResponse {
@@ -214,7 +215,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
         {/* Loading State */}
         {isFetching && !holders.length && (
           <div className="flex items-center justify-center py-12">
-            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            <Spinner className="w-6 h-6" />
           </div>
         )}
 

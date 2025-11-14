@@ -5,6 +5,7 @@ import { DexTokenDto } from '../../../api/generated';
 import { useAccount } from '../../../hooks/useAccount';
 import { Decimal } from '../../../libs/decimal';
 import { DEX_ADDRESSES } from '../../../libs/dex';
+import Spinner from '../../../components/Spinner';
 
 interface TokenSelectorProps {
   label?: string;
@@ -122,7 +123,7 @@ export default function TokenSelector({
               }`}
             >
               {loading ? (
-                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <Spinner className="w-3.5 h-3.5" />
               ) : (
                 <>
                   {selected ? `${selected.symbol}` : 'Select Token'}

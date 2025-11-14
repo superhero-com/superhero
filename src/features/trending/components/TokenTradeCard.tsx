@@ -13,6 +13,7 @@ import ImpactBadge from "./ImpactBadge";
 import MessageBox from "./MessageBox";
 import TradeTokenInput from "./TradeTokenInput";
 import TransactionConfirmDetailRow from "./TransactionConfirmDetailRow";
+import Spinner from "@/components/Spinner";
 
 interface TokenTradeCardProps {
   token: TokenDto;
@@ -210,7 +211,7 @@ export default function TokenTradeCard({
             >
               {loadingTransaction ? (
                 <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <Spinner className="w-4 h-4" />
                   <span>Confirm in wallet</span>
                   {currentStepText && <span>{currentStepText}</span>}
                 </div>

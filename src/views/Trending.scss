@@ -272,15 +272,7 @@
   padding: 40px 20px;
   color: var(--light-font-color);
   
-  .loading-spinner {
-    width: 24px;
-    height: 24px;
-    border: 2px solid rgba(255, 109, 21, 0.3);
-    border-top: 2px solid var(--custom-links-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 12px;
-  }
+  // Spinner styles removed - use Spinner component instead
   
   span {
     font-size: 14px;
@@ -363,10 +355,7 @@
   }
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+// @keyframes spin removed - use Spinner component instead
 
 /* CSS-only mobile detection fallback */
 .mobile-only {
@@ -390,10 +379,7 @@
   .mobile-loading {
     color: #6b7280;
     
-    .loading-spinner {
-      border-color: rgba(255, 109, 21, 0.2);
-      border-top-color: var(--custom-links-color);
-    }
+    // Spinner styles removed - use Spinner component instead
   }
   
   .mobile-error {

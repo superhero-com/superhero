@@ -225,53 +225,10 @@
     }
   }
   
-  // Loader styles
-  &__loader {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  &__spinner {
-    width: 16px;
-    height: 16px;
-    animation: spin 1s linear infinite;
-    
-    .ae-button--xs & {
-      width: 12px;
-      height: 12px;
-    }
-    
-    .ae-button--sm & {
-      width: 14px;
-      height: 14px;
-    }
-    
-    .ae-button--lg & {
-      width: 18px;
-      height: 18px;
-    }
-    
-    .ae-button--xl & {
-      width: 20px;
-      height: 20px;
-    }
-  }
-  
   &__content {
     display: flex;
     align-items: center;
     gap: inherit;
-  }
-}
-
-// Spinner animation
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
   }
 }
 
@@ -456,10 +413,6 @@
     
     &:hover:not(:disabled) {
       transform: none;
-    }
-    
-    &__spinner {
-      animation: none;
     }
   }
 }

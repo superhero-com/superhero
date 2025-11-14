@@ -7,6 +7,7 @@ import { useAtomValue } from "jotai";
 import { performanceChartTimeframeAtom } from "@/features/trending/atoms";
 import PerformanceTimeframeSelector from "@/features/trending/components/PerformanceTimeframeSelector";
 import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
+import Spinner from "@/components/Spinner";
 
 interface TokenListCardsProps {
   tokens: DexTokenDto[];
@@ -93,7 +94,7 @@ export function TokenListCards({
     return (
       <div className="text-center p-[60px] bg-white/[0.02] border border-white/10 rounded-2xl backdrop-blur-[10px]">
         <div className="inline-flex items-center gap-3 text-gray-300 text-base font-medium">
-          <div className="w-5 h-5 border-2 border-green-500/30 border-t-green-500 rounded-full animate-spin"></div>
+          <Spinner className="w-5 h-5" />
           Loading tokens...
         </div>
       </div>

@@ -155,7 +155,12 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
                   <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
                     Account:
                   </div>
-                  <AddressAvatarWithChainName address={holder.address} />
+                  <AddressAvatarWithChainName
+                    address={holder.address}
+                    // Ensure very long names (e.g. long .chain names) wrap
+                    // instead of overflowing into the balance column.
+                    contentClassName="break-all max-w-full"
+                  />
                 </div>
 
                 {/* Balance */}

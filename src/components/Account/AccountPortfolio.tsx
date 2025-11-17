@@ -798,7 +798,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
   } = useQuery({
     queryKey: ['account-pnl', address],
     queryFn: async () => {
-      return await TrendminerApi.getAccountPnl(address);
+      return await SuperheroApi.getAccountPnl(address);
     },
     enabled: !!address,
     staleTime: 5 * 60 * 1000, // 5 minutes

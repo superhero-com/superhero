@@ -13,6 +13,7 @@
     "postinstall": "node ./scripts/update-package-type.cjs"
   },
   "dependencies": {
+    "@base-org/account": "2.4.0",
     "@aeternity/aepp-sdk": "^13.3.2",
     "@dicebear/avatars": "^4.2.5",
     "@dicebear/avatars-avataaars-sprites": "^4.2.5",

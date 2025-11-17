@@ -7,7 +7,7 @@ Superhero is a modular, React + TypeScript web app for the Aeternity ecosystem t
 - Trendminer analytics: trending tokens, charts, and real‑time data
 - Social posting and tipping with wallet‑based identity
 
-This repository contains the Vite-powered frontend that loads its runtime configuration from `public/superconfig.json`.
+This repository contains the Vite-powered frontend whose runtime configuration lives in `src/config.ts` (with optional Vite env overrides).
 
 ## Quick start
 
@@ -46,7 +46,7 @@ Key modules live under:
 
 ## Runtime configuration
 
-At runtime, the app loads `public/superconfig.json`. Adjust endpoints and feature flags without rebuilding. Keys commonly used:
+Configuration is defined in code at `src/config.ts` via the exported `CONFIG` object. Adjust endpoints and feature flags by editing that file, then rebuild/restart the app. Keys commonly used:
 
 - `BACKEND_URL` — application backend
 - `SUPERHERO_API_URL` / `SUPERHERO_WS_URL` — analytics REST and WebSocket endpoints
@@ -58,7 +58,21 @@ At runtime, the app loads `public/superconfig.json`. Adjust endpoints and featur
 - `IMGUR_API_CLIENT_ID`, `GIPHY_API_KEY` — optional media integrations
 - `DEX_BACKEND_URL`, `MAINNET_DEX_BACKEND_URL`, `TESTNET_DEX_BACKEND_URL` — DEX services
 
-Edit `public/superconfig.json` and refresh the app to apply changes.
+You can override some values at build time using Vite env vars:
+
+```bash
+# Example overrides at build/dev time
+VITE_SUPERHERO_API_URL=https://api.example.com \
+VITE_SUPERHERO_WS_URL=wss://ws.example.com \
+VITE_GIPHY_API_KEY=your_key \
+npm run dev
+
+# Or for a production build
+VITE_SUPERHERO_API_URL=https://api.example.com \
+VITE_SUPERHERO_WS_URL=wss://ws.example.com \
+VITE_GIPHY_API_KEY=your_key \
+npm run build
+```
 
 ## Tech stack
 

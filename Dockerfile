@@ -5,6 +5,10 @@ WORKDIR /app
 # Install build dependencies for node-gyp
 RUN apk add --no-cache python3 make g++
 
+# WalletConnect project id passed from GitHub Secrets via build args
+ARG VITE_WALLET_CONNECT_PROJECT_ID
+ENV VITE_WALLET_CONNECT_PROJECT_ID=$VITE_WALLET_CONNECT_PROJECT_ID
+
 COPY package.json package-lock.json ./
 COPY scripts ./scripts
 RUN npm ci

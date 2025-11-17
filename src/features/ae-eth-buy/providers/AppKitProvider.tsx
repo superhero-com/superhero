@@ -3,8 +3,14 @@ import { EthersAdapter } from '@reown/appkit-adapter-ethers';
 import { AppKitNetwork, mainnet, sepolia } from '@reown/appkit/networks';
 import { BRIDGE_CONSTANTS } from '../constants';
 
-// WalletConnect / Reown project ID (must match the working aepp-bridge-and-swap dapp)
-const projectId = '969e93fa16b810b9f5c0f2771bb6fc95';
+// WalletConnect / Reown project ID (must be provided via env)
+const projectId =
+  (import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID as string | undefined) ||
+  (typeof process !== 'undefined'
+    ? ((process.env as any).VITE_WALLET_CONNECT_PROJECT_ID as
+        | string
+        | undefined)
+    : undefined);
 
 // Use mainnet or sepolia based on the bridge configuration
 const isMainnet = BRIDGE_CONSTANTS.CHAIN_ID_HEX === '0x1';

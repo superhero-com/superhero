@@ -342,7 +342,7 @@ export default function FeedList({
     prevSortByRef.current = sortBy;
   }, [sortBy, refetchLatest, refetchActivities]);
 
-  // For hot: fetch popular posts, which seamlessly continues with recent posts after popular posts are exhausted
+  // For hot: fetch popular posts first, then latest posts (filtering out popular ones)
   const {
     data: popularData,
     isLoading: popularLoading,
@@ -369,24 +369,212 @@ export default function FeedList({
       }
       return response as PostApiResponse;
     },
-    getNextPageParam: (lastPage: any) => {
+    getNextPageParam: (lastPage: any, allPages: any[]) => {
       // Continue pagination if we have totalPages and haven't reached it yet
-      // The backend now always returns totalPages, so we can use the same pattern as latest feed
       const meta = lastPage?.meta;
+      const items = lastPage?.items || [];
+      
+      // Stop if we got an empty page AND we've already fetched at least one page
+      // (This handles the case where backend returns wrong totalPages but we've exhausted actual posts)
+      if (items.length === 0 && allPages.length > 0) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Popular Feed] getNextPageParam: Stopping because empty page after fetching', {
+            pagesFetched: allPages.length,
+          });
+        }
+        return undefined;
+      }
+      
+      // Stop if totalItems is set and we've fetched all items
+      // This handles the case where backend returns wrong totalPages
+      if (meta?.totalItems && meta?.itemCount) {
+        // Calculate total items fetched across all pages
+        const totalFetched = allPages.reduce((sum, page) => {
+          return sum + (page?.items?.length || 0);
+        }, 0);
+        
+        // If we've fetched all items (or more), stop
+        if (totalFetched >= meta.totalItems) {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[Popular Feed] getNextPageParam: Stopping because all items fetched', {
+              totalFetched,
+              totalItems: meta.totalItems,
+            });
+          }
+          return undefined;
+        }
+      }
+      
+      const hasMore = meta?.currentPage && meta?.totalPages && meta.currentPage < meta.totalPages;
+      const nextPage = hasMore ? meta.currentPage + 1 : undefined;
+      
       if (process.env.NODE_ENV === 'development') {
-        console.log('[Popular Feed] getNextPageParam:', {
-          lastPage,
-          meta,
+        console.log('🔍 [DEBUG] Popular Feed getNextPageParam:', {
           currentPage: meta?.currentPage,
           totalPages: meta?.totalPages,
-          hasMore: meta?.currentPage && meta?.totalPages && meta.currentPage < meta.totalPages,
-          willReturn: meta?.currentPage && meta?.totalPages && meta.currentPage < meta.totalPages ? meta.currentPage + 1 : undefined,
+          totalItems: meta?.totalItems,
+          itemCount: meta?.itemCount,
+          itemsLength: items.length,
+          pagesFetched: allPages.length,
+          hasMore,
+          nextPage,
+          willReturn: nextPage || 'undefined (stop)',
         });
       }
-      if (meta?.currentPage && meta?.totalPages && meta.currentPage < meta.totalPages) {
-        return meta.currentPage + 1;
+      
+      return nextPage;
+    },
+    initialPageParam: 1,
+  });
+
+  // Track popular post IDs to filter them out from latest posts
+  const popularPostIds = useMemo(() => {
+    if (!popularData?.pages) return new Set<string>();
+    const ids = new Set<string>();
+    popularData.pages.forEach((page: any) => {
+      if (page?.items) {
+        page.items.forEach((item: any) => {
+          if (item?.id) ids.add(String(item.id));
+        });
       }
-      return undefined;
+    });
+    return ids;
+  }, [popularData]);
+
+  // Check if popular posts are exhausted (no more pages and we have data)
+  const popularExhausted = useMemo(() => {
+    if (!popularData?.pages || popularData.pages.length === 0) return false;
+    const lastPage = popularData.pages[popularData.pages.length - 1];
+    const meta = lastPage?.meta;
+    const lastPageItems = lastPage?.items || [];
+    
+    // Calculate total items fetched across all pages
+    const totalFetched = popularData.pages.reduce((sum: number, page: any) => {
+      return sum + (page?.items?.length || 0);
+    }, 0);
+    
+    // Popular posts are exhausted if:
+    // 1. The last page returned 0 items (backend indicates no more popular posts), OR
+    // 2. The last page returned fewer items than requested (indicates no more popular posts available), OR
+    // 3. We've reached the last page according to meta (if totalPages seems reasonable < 100), OR
+    // 4. We've fetched all items according to totalItems (only if totalItems seems reasonable < 1000)
+    const lastPageEmpty = lastPageItems.length === 0 && popularData.pages.length > 0;
+    // If we requested 10 items but got fewer, we've exhausted popular posts
+    const lastPageIncomplete = lastPageItems.length > 0 && lastPageItems.length < 10 && popularData.pages.length > 0;
+    // Only trust totalPages if it seems reasonable (popular posts shouldn't be thousands)
+    const reasonableTotalPages = meta?.totalPages && meta.totalPages < 100;
+    const reachedLastPage = reasonableTotalPages && meta?.currentPage && meta.currentPage >= meta.totalPages;
+    // Only trust totalItems if it seems reasonable (popular posts shouldn't be thousands)
+    const reasonableTotalItems = meta?.totalItems && meta.totalItems < 1000;
+    const fetchedAllItems = reasonableTotalItems && totalFetched >= meta.totalItems;
+    
+    const result = lastPageEmpty || lastPageIncomplete || reachedLastPage || fetchedAllItems;
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 [DEBUG] popularExhausted calculation:', {
+        result,
+        lastPageEmpty,
+        lastPageIncomplete,
+        reachedLastPage,
+        fetchedAllItems,
+        reasonableTotalPages,
+        reasonableTotalItems,
+        totalFetched,
+        totalItems: meta?.totalItems,
+        currentPage: meta?.currentPage,
+        totalPages: meta?.totalPages,
+        lastPageItemsLength: lastPageItems.length,
+        pagesCount: popularData.pages.length,
+      });
+    }
+    
+    return result;
+  }, [popularData]);
+
+  // Fetch latest posts if:
+  // 1. Popular posts are exhausted, OR
+  // 2. We have less than 10 popular posts (to fill up to at least 10 posts on initial load)
+  // Include popularPostIds in queryKey to ensure fresh filtering when popular posts change
+  // Note: We allow queryEnabled even if popularPostIds is empty (e.g., if popular feed returned 0 posts)
+  // The filtering will just be a no-op in that case
+  // Note: We'll compute hasEnoughPopularPosts after popularList is defined, but for now use a temporary check
+  const queryEnabled = sortBy === "hot" && popularExhausted;
+  
+  const {
+    data: latestDataForHot,
+    isLoading: latestLoadingForHot,
+    error: latestErrorForHot,
+    fetchNextPage: fetchNextLatestForHot,
+    hasNextPage: hasMoreLatestForHot,
+    isFetchingNextPage: fetchingMoreLatestForHot,
+  } = useInfiniteQuery({
+    enabled: sortBy === "hot" && (popularExhausted || (popularData?.pages ? ((popularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? []).length < 10 : false)),
+    queryKey: ["latest-posts-for-hot", { limit: 10, window: popularWindow, excludeIds: Array.from(popularPostIds).sort().join(',') }],
+    queryFn: async ({ pageParam = 1 }) => {
+      // Get fresh popularPostIds from the current popularData
+      const currentPopularIds = new Set<string>();
+      if (popularData?.pages) {
+        popularData.pages.forEach((page: any) => {
+          if (page?.items) {
+            page.items.forEach((item: any) => {
+              if (item?.id) currentPopularIds.add(String(item.id));
+            });
+          }
+        });
+      }
+      
+      const response = await PostsService.listAll({
+        limit: 10,
+        page: pageParam,
+        orderBy: "created_at",
+        orderDirection: "DESC",
+        search: "",
+      }) as unknown as PostApiResponse;
+      
+      // Filter out popular posts on the frontend using current popularPostIds
+      const filteredItems = response.items.filter((item: any) => !currentPopularIds.has(String(item.id)));
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 [DEBUG] Latest Feed for Hot Query Response:', {
+          pageParam,
+          totalItems: response.items.length,
+          filteredItems: filteredItems.length,
+          excludedPopular: response.items.length - filteredItems.length,
+          popularPostIdsSize: currentPopularIds.size,
+          popularPostIds: Array.from(currentPopularIds).slice(0, 5),
+          meta: response?.meta,
+        });
+      }
+      
+      return {
+        ...response,
+        items: filteredItems,
+      } as PostApiResponse;
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      const lastPageItems = lastPage?.items || [];
+      const meta = lastPage?.meta;
+      
+      // Always continue fetching based on the original API pagination metadata
+      // Don't stop just because filtered items are empty - we need to skip past popular posts
+      const hasMore = meta?.currentPage && meta?.totalPages && meta.currentPage < meta.totalPages;
+      
+      const nextPage = hasMore ? meta.currentPage + 1 : undefined;
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 [DEBUG] Latest Feed for Hot getNextPageParam:', {
+          currentPage: meta?.currentPage,
+          totalPages: meta?.totalPages,
+          lastPageItemsLength: lastPageItems.length,
+          originalItemsLength: lastPage?.items?.length || 0,
+          pagesFetched: allPages.length,
+          hasMore,
+          nextPage,
+          willReturn: nextPage || 'undefined (stop)',
+        });
+      }
+      
+      return nextPage;
     },
     initialPageParam: 1,
   });
@@ -414,21 +602,90 @@ export default function FeedList({
     [popularData]
   );
 
+  // Check if we have enough popular posts (at least 10) to fill the initial view
+  const hasEnoughPopularPosts = popularList.length >= 10;
+  
+  // Update queryEnabled to also enable if we don't have enough popular posts
+  // This enables the query immediately if we have less than 10 popular posts
+  const queryEnabledWithEnoughPosts = sortBy === "hot" && (popularExhausted || !hasEnoughPopularPosts);
+
+  // Debug log for latestDataForHot query state (after popularList and hasEnoughPopularPosts are computed)
+  if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
+    console.log('🔍 [DEBUG] latestDataForHot query state:', {
+        queryEnabledWithEnoughPosts,
+        sortBy,
+        popularExhausted,
+        hasEnoughPopularPosts,
+        popularListLength: popularList.length,
+      popularPostIdsSize: popularPostIds.size,
+      latestDataForHotPages: latestDataForHot?.pages?.length || 0,
+      hasMoreLatestForHot,
+      fetchingMoreLatestForHot,
+    });
+  }
+
+  // Latest posts for hot feed (filtered to exclude popular ones)
+  const latestListForHot = useMemo(() => {
+    if (!latestDataForHot?.pages) return [];
+    const allItems = ((latestDataForHot.pages as any[]) || []).flatMap((page: any) => page?.items ?? []);
+    // Additional deduplication and filtering (in case backend returns popular posts)
+    const seenIds = new Set<string>();
+    const filtered = allItems.filter((item: any) => {
+      const id = String(item?.id || '');
+      if (!id || seenIds.has(id) || popularPostIds.has(id)) return false;
+      seenIds.add(id);
+      return true;
+    });
+    
+    if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
+      console.log('🔍 [DEBUG] latestListForHot computed:', {
+        pagesCount: latestDataForHot.pages.length,
+        allItemsCount: allItems.length,
+        filteredCount: filtered.length,
+        popularPostIdsSize: popularPostIds.size,
+      });
+    }
+    
+    return filtered;
+  }, [latestDataForHot, popularPostIds, sortBy]);
+
   // Debug logging for popular feed pagination
   useEffect(() => {
     if (sortBy === "hot" && process.env.NODE_ENV === 'development') {
       const lastPage = popularData?.pages?.[popularData.pages.length - 1];
+      const popularListLength = popularData?.pages ? ((popularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? []).length : 0;
       console.log('[Popular Feed] State:', {
         hasMorePopular,
         fetchingMorePopular,
         pagesCount: popularData?.pages?.length,
-        totalItems: popularList.length,
+        totalItems: popularListLength,
         lastPage,
         lastPageMeta: lastPage?.meta,
         computedHasMore: lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && lastPage.meta.currentPage < lastPage.meta.totalPages,
+        popularExhausted,
+        popularPostIdsSize: popularPostIds.size,
+        queryEnabled,
+        latestDataForHotPages: latestDataForHot?.pages?.length || 0,
+        hasMoreLatestForHot,
+        fetchingMoreLatestForHot,
       });
     }
-  }, [sortBy, hasMorePopular, fetchingMorePopular, popularData, popularList.length]);
+  }, [sortBy, hasMorePopular, fetchingMorePopular, popularData, popularExhausted, popularPostIds.size, queryEnabled, latestDataForHot, hasMoreLatestForHot, fetchingMoreLatestForHot]);
+  
+  // Auto-fetch latest posts if we have less than 10 popular posts and haven't fetched yet
+  useEffect(() => {
+    const popularListLength = popularData?.pages ? ((popularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? []).length : 0;
+    if (sortBy === "hot" && queryEnabledWithEnoughPosts && popularListLength < 10 && latestDataForHot?.pages?.length === 0 && !fetchingMoreLatestForHot && hasMoreLatestForHot) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 [DEBUG] Auto-fetching latest posts because popular posts < 10:', {
+          popularListLength,
+          hasEnoughPopularPosts,
+          popularExhausted,
+        });
+      }
+      fetchNextLatestForHot();
+    }
+  }, [sortBy, queryEnabledWithEnoughPosts, popularData, popularExhausted, latestDataForHot?.pages?.length, fetchingMoreLatestForHot, hasMoreLatestForHot, fetchNextLatestForHot, hasEnoughPopularPosts]);
   
   // Force check hasMorePopular whenever popularData changes
   useEffect(() => {
@@ -469,8 +726,16 @@ export default function FeedList({
   // Combine posts with token-created events and sort by created_at DESC
   const combinedList = useMemo(() => {
     if (sortBy === "hot") {
-      // For hot: popular posts seamlessly continue with recent posts (all from the same endpoint)
-      return popularList;
+      // For hot: popular posts first, then latest posts (filtered to exclude popular ones)
+      const combined = [...popularList, ...latestListForHot];
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 [DEBUG] combinedList for hot:', {
+          popularListCount: popularList.length,
+          latestListForHotCount: latestListForHot.length,
+          combinedCount: combined.length,
+        });
+      }
+      return combined;
     }
     
     // For latest feed: use cached data if queries don't have data yet
@@ -518,14 +783,22 @@ export default function FeedList({
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     });
-  }, [list, activityList, sortBy, popularList, bothQueriesReady, latestData, activitiesPages, queryClient, localSearch, filterBy]);
+  }, [list, activityList, sortBy, popularList, latestListForHot, bothQueriesReady, latestData, activitiesPages, queryClient, localSearch, filterBy]);
 
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {
     let filtered = [...combinedList];
+    
+    if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
+      console.log('🔍 [DEBUG] filteredAndSortedList computed:', {
+        combinedListCount: combinedList.length,
+        filteredCountBefore: filtered.length,
+      });
+    }
 
     if (localSearch.trim()) {
       const searchTerm = localSearch.toLowerCase();
+      const beforeFilter = filtered.length;
       filtered = filtered.filter(
         (item) =>
           (item.content && item.content.toLowerCase().includes(searchTerm)) ||
@@ -538,6 +811,19 @@ export default function FeedList({
           (chainNames?.[item.sender_address] &&
             chainNames[item.sender_address].toLowerCase().includes(searchTerm))
       );
+      if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
+        console.log('🔍 [DEBUG] filteredAndSortedList after search filter:', {
+          beforeFilter,
+          afterFilter: filtered.length,
+          searchTerm: localSearch,
+        });
+      }
+    }
+    
+    if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
+      console.log('🔍 [DEBUG] filteredAndSortedList final:', {
+        finalCount: filtered.length,
+      });
     }
 
     if (filterBy === "withMedia") {
@@ -833,6 +1119,9 @@ export default function FeedList({
       console.log('[Popular Feed] Setting up intersection observer:', {
         hasMorePopular,
         fetchingMorePopular,
+        popularExhausted,
+        hasMoreLatestForHot,
+        fetchingMoreLatestForHot,
         sentinelExists: !!sentinel,
       });
     }
@@ -847,6 +1136,12 @@ export default function FeedList({
         }
         return;
       }
+      
+      // Prevent multiple simultaneous fetches
+      if (fetchingRef.current) {
+        return;
+      }
+      
       setShowLoadMore(true);
       fetchingRef.current = true;
       const tasks: Promise<any>[] = [];
@@ -854,25 +1149,51 @@ export default function FeedList({
         const lastPage = popularData?.pages?.[popularData.pages.length - 1];
         const manualHasMore = lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && lastPage.meta.currentPage < lastPage.meta.totalPages;
         if (process.env.NODE_ENV === 'development') {
-          console.log('[Popular Feed] Intersection observer triggered:', {
+          console.log('🔍 [DEBUG] Intersection Observer TRIGGERED:', {
             hasMorePopular,
             fetchingMorePopular,
+            popularExhausted,
+            hasMoreLatestForHot,
+            fetchingMoreLatestForHot,
             lastPageMeta: lastPage?.meta,
             manualHasMore,
-            willFetch: (hasMorePopular || manualHasMore) && !fetchingMorePopular,
+            popularPagesCount: popularData?.pages?.length || 0,
+            latestPagesCount: latestDataForHot?.pages?.length || 0,
+            queryEnabledWithEnoughPosts,
           });
         }
-        // Try to fetch even if hasMorePopular is false but manual check says there's more
-        if ((hasMorePopular || manualHasMore) && !fetchingMorePopular) {
-          tasks.push(fetchNextPopular());
-        } else {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('[Popular Feed] Not fetching - conditions not met:', {
-              hasMorePopular,
-              manualHasMore,
-              fetchingMorePopular,
+        // If popular posts are exhausted or we don't have enough, fetch latest posts (prioritize this)
+        if ((popularExhausted || !hasEnoughPopularPosts) && queryEnabledWithEnoughPosts) {
+          // Only fetch if query is enabled, not currently fetching, and there are more pages
+          if (hasMoreLatestForHot && !fetchingMoreLatestForHot) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('🔍 [DEBUG] Intersection Observer - FETCHING latest posts');
+            }
+            tasks.push(fetchNextLatestForHot());
+          } else if (process.env.NODE_ENV === 'development') {
+            console.log('🔍 [DEBUG] Intersection Observer - NOT fetching latest posts:', {
+              hasMoreLatestForHot,
+              fetchingMoreLatestForHot,
+              queryEnabledWithEnoughPosts,
             });
           }
+        } else if (!popularExhausted && hasEnoughPopularPosts && (hasMorePopular || manualHasMore) && !fetchingMorePopular) {
+          // Try to fetch popular posts if there are more and we have enough already
+          if (process.env.NODE_ENV === 'development') {
+            console.log('🔍 [DEBUG] Intersection Observer - FETCHING popular posts');
+          }
+          tasks.push(fetchNextPopular());
+        } else if (process.env.NODE_ENV === 'development') {
+          console.log('🔍 [DEBUG] Intersection Observer - NOT fetching (no conditions met):', {
+            popularExhausted,
+            hasEnoughPopularPosts,
+            queryEnabledWithEnoughPosts,
+            hasMorePopular,
+            manualHasMore,
+            fetchingMorePopular,
+            hasMoreLatestForHot,
+            fetchingMoreLatestForHot,
+          });
         }
       } else {
         if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
@@ -900,6 +1221,13 @@ export default function FeedList({
     fetchingMorePopular,
     fetchNextPopular,
     popularData, // Add popularData to dependencies so manualHasMore uses latest data
+    popularExhausted,
+    hasMoreLatestForHot,
+    fetchingMoreLatestForHot,
+    fetchNextLatestForHot,
+    queryEnabledWithEnoughPosts, // Add queryEnabledWithEnoughPosts to dependencies
+    hasEnoughPopularPosts, // Add hasEnoughPopularPosts to dependencies
+    latestDataForHot, // Add latestDataForHot to dependencies
   ]);
 
   const content = (
@@ -959,8 +1287,13 @@ export default function FeedList({
         {sortBy !== "hot" && (latestData?.pages.length > 0 || activityList.length > 0) && renderFeedItems}
 
         {/* Hot: render popular posts (which seamlessly includes recent posts after popular posts are exhausted) */}
-        {sortBy === "hot" && (popularData?.pages.length > 0) && (
+        {sortBy === "hot" && (popularData?.pages.length > 0 || latestDataForHot?.pages.length > 0) && (
           <>
+            {process.env.NODE_ENV === 'development' && console.log('🔍 [DEBUG] Rendering hot feed:', {
+              filteredAndSortedListLength: filteredAndSortedList.length,
+              popularDataPages: popularData?.pages?.length || 0,
+              latestDataForHotPages: latestDataForHot?.pages?.length || 0,
+            })}
             {filteredAndSortedList.map((item) => (
               <ReplyToFeedItem
                 key={item.id}
@@ -983,7 +1316,7 @@ export default function FeedList({
               <AeButton
                 loading={
                   sortBy === "hot"
-                    ? fetchingMorePopular
+                    ? (fetchingMorePopular || fetchingMoreLatestForHot)
                     : (fetchingMoreLatest || fetchingMoreActivities)
                 }
                 onClick={async () => {
@@ -991,17 +1324,51 @@ export default function FeedList({
                     const lastPage = popularData?.pages?.[popularData.pages.length - 1];
                     const manualHasMore = lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && lastPage.meta.currentPage < lastPage.meta.totalPages;
                     if (process.env.NODE_ENV === 'development') {
-                      console.log('[Popular Feed] Load more button clicked:', {
+                      console.log('🔍 [DEBUG] Load More Button CLICKED:', {
                         hasMorePopular,
                         fetchingMorePopular,
+                        popularExhausted,
+                        hasMoreLatestForHot,
+                        fetchingMoreLatestForHot,
                         lastPageMeta: lastPage?.meta,
                         manualHasMore,
-                        willFetch: (hasMorePopular || manualHasMore) && !fetchingMorePopular,
+                        popularPagesCount: popularData?.pages?.length || 0,
+                        latestPagesCount: latestDataForHot?.pages?.length || 0,
+                        queryEnabledWithEnoughPosts,
                       });
                     }
-                    // Try to fetch even if hasMorePopular is false but manual check says there's more
-                    if ((hasMorePopular || manualHasMore) && !fetchingMorePopular) {
+                    // If popular posts are exhausted or we don't have enough, fetch latest posts (prioritize this)
+                    if ((popularExhausted || !hasEnoughPopularPosts) && queryEnabledWithEnoughPosts) {
+                      // Only fetch if query is enabled, not currently fetching, and there are more pages
+                      if (hasMoreLatestForHot && !fetchingMoreLatestForHot) {
+                        if (process.env.NODE_ENV === 'development') {
+                          console.log('🔍 [DEBUG] Load More Button - FETCHING latest posts');
+                        }
+                        await fetchNextLatestForHot();
+                      } else if (process.env.NODE_ENV === 'development') {
+                        console.log('🔍 [DEBUG] Load More Button - NOT fetching latest posts:', {
+                          hasMoreLatestForHot,
+                          fetchingMoreLatestForHot,
+                          queryEnabledWithEnoughPosts,
+                        });
+                      }
+                    } else if (!popularExhausted && hasEnoughPopularPosts && (hasMorePopular || manualHasMore) && !fetchingMorePopular) {
+                      // Try to fetch popular posts if there are more and we have enough already
+                      if (process.env.NODE_ENV === 'development') {
+                        console.log('🔍 [DEBUG] Load More Button - FETCHING popular posts');
+                      }
                       await fetchNextPopular();
+                    } else if (process.env.NODE_ENV === 'development') {
+                      console.log('🔍 [DEBUG] Load More Button - NOT fetching:', {
+                        popularExhausted,
+                        hasEnoughPopularPosts,
+                        queryEnabledWithEnoughPosts,
+                        hasMorePopular,
+                        manualHasMore,
+                        fetchingMorePopular,
+                        hasMoreLatestForHot,
+                        fetchingMoreLatestForHot,
+                      });
                     }
                     return;
                   }

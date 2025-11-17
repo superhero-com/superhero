@@ -23,6 +23,10 @@ interface TotalPnl {
   invested: PnlAmount;
   current_value: PnlAmount;
   gain: PnlAmount;
+  range?: {
+    from: string | Date | null;
+    to: string | Date;
+  };
 }
 
 interface TokenPnl {
@@ -739,7 +743,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         endDate: dateRange.endDate,
         interval: dateRange.interval,
         convertTo: convertTo as any,
-        include: 'pnl', // Request PNL data
+        include: 'pnl-range', // Request range-based PNL data
       });
       
       const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
@@ -808,52 +812,20 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     refetchOnReconnect: true,
   });
 
-  // Calculate period PNL (change over the selected timeframe)
+  // Calculate period PNL using range-based PNL from API
   const periodPnl = useMemo(() => {
     if (!portfolioData || portfolioData.length < 2) return null;
     
     const firstSnapshot = portfolioData[0];
     const lastSnapshot = portfolioData[portfolioData.length - 1];
     
-    if (!firstSnapshot.total_pnl || !lastSnapshot.total_pnl) return null;
+    if (!lastSnapshot.total_pnl) return null;
     
-    // For period PNL, calculate the actual change in portfolio value
-    // Period gain = (end portfolio value - start portfolio value) - purchases made during period
-    // This shows the profit/loss from price movements, excluding new capital invested
+    // With pnl-range, the last snapshot's PNL represents the period-specific PNL
+    // for the entire selected timeframe (from startDate to endDate)
+    // Use the last snapshot's PNL data directly
     
-    const purchasesDuringPeriod = {
-      ae: lastSnapshot.total_pnl.invested.ae - firstSnapshot.total_pnl.invested.ae,
-      usd: lastSnapshot.total_pnl.invested.usd - firstSnapshot.total_pnl.invested.usd,
-    };
-    
-    // Use the actual portfolio value change (what the chart shows)
-    const portfolioValueChange = {
-      ae: lastSnapshot.total_value_ae - firstSnapshot.total_value_ae,
-      usd: (lastSnapshot.total_value_usd || 0) - (firstSnapshot.total_value_usd || 0),
-    };
-    
-    // Period gain = portfolio value change - purchases
-    // If you bought tokens during the period, that increases portfolio value but isn't a gain
-    const periodGain = {
-      ae: portfolioValueChange.ae - purchasesDuringPeriod.ae,
-      usd: portfolioValueChange.usd - purchasesDuringPeriod.usd,
-    };
-    
-    // Calculate percentage - prioritize purchases during period if starting value is low
-    // ROI should be calculated based on what was actually invested during the period
-    let periodPercentage = 0;
-    if (Math.abs(purchasesDuringPeriod.ae) > 0.000001) {
-      // If purchases were made during the period, calculate ROI on those purchases
-      periodPercentage = (periodGain.ae / Math.abs(purchasesDuringPeriod.ae)) * 100;
-    } else {
-      // If no purchases during period, calculate ROI based on starting portfolio value
-      const startPortfolioValue = firstSnapshot.total_value_ae;
-      if (startPortfolioValue > 0.000001) {
-        periodPercentage = (periodGain.ae / startPortfolioValue) * 100;
-      }
-    }
-    
-    // Calculate portfolio value percentage change
+    // Calculate portfolio value percentage change for display
     const startPortfolioValue = firstSnapshot.total_value_ae;
     const endPortfolioValue = lastSnapshot.total_value_ae;
     let portfolioValuePercentageChange = 0;
@@ -862,10 +834,10 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     }
     
     return {
-      gain: periodGain,
-      invested: purchasesDuringPeriod,
-      current_value: portfolioValueChange,
-      percentage: periodPercentage,
+      gain: lastSnapshot.total_pnl.gain,
+      invested: lastSnapshot.total_pnl.invested,
+      current_value: lastSnapshot.total_pnl.current_value,
+      percentage: lastSnapshot.total_pnl.percentage,
       portfolio_value_percentage_change: portfolioValuePercentageChange,
     };
   }, [portfolioData]);
@@ -1051,8 +1023,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     const nowUnix = moment.utc().unix();
     
     const data = portfolioData
-          .map((snapshot) => {
-            const timestamp = moment(snapshot.timestamp).unix();
+      .map((snapshot) => {
+        const timestamp = moment(snapshot.timestamp).unix();
         
         // Filter out any future data points
         if (timestamp > nowUnix) {
@@ -1157,7 +1129,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         <div className="px-4 md:px-6 pt-4 pb-0">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold text-white">Portfolio Value</h3>
+            <h3 className="text-lg font-bold text-white">Portfolio Value</h3>
               {useTouchPopover ? (
                 <>
                   <button
@@ -1264,9 +1236,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                 <div className="flex items-baseline gap-3">
                   <span className={`text-3xl md:text-4xl ${portfolioValueColor} block min-h-[2.5rem] leading-tight`}>
                     {animatedValue !== null ? (
-                      convertTo === 'ae' 
-                        ? (() => {
-                            try {
+                convertTo === 'ae' 
+                  ? (() => {
+                      try {
                               const value = Number(animatedValue);
                               // If value is above 1 AE, show 2 decimals
                               if (value >= 1) {
@@ -1284,7 +1256,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                                   <span className="font-extrabold">{Decimal.from(animatedValue).prettify()}</span>
                                 </>
                               );
-                            } catch {
+                      } catch {
                               const value = Number(animatedValue);
                               // If value is above 1 AE, show 2 decimals
                               if (value >= 1) {
@@ -1301,19 +1273,19 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                                   <span className="font-extrabold">{value.toFixed(4)}</span>
                                 </>
                               );
-                            }
-                          })()
-                        : (() => {
-                            try {
+                      }
+                    })()
+                  : (() => {
+                      try {
                               const fiatValue = typeof animatedValue === 'number' ? animatedValue : Number(animatedValue);
-                              const currencyCode = currentCurrencyInfo.code.toUpperCase();
+                      const currencyCode = currentCurrencyInfo.code.toUpperCase();
                               // Format number separately to extract currency symbol
                               const formatter = new Intl.NumberFormat('en-US', {
-                                style: 'currency',
-                                currency: currencyCode,
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              });
+                        style: 'currency',
+                        currency: currencyCode,
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      });
                               const parts = formatter.formatToParts(fiatValue);
                               const currencySymbol = parts.find(p => p.type === 'currency')?.value || '$';
                               const amount = parts.filter(p => p.type !== 'currency').map(p => p.value).join('');
@@ -1323,7 +1295,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                                   <span className="font-extrabold">{amount}</span>
                                 </>
                               );
-                            } catch {
+                      } catch {
                               const amount = Number(animatedValue).toFixed(2);
                               return (
                                 <>
@@ -1331,15 +1303,15 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                                   <span className="font-extrabold">{amount}</span>
                                 </>
                               );
-                            }
-                          })()
-                    ) : (
+                      }
+                    })()
+              ) : (
                       <>
                         <span className="font-light opacity-0">AE</span>{' '}
                         <span className="font-extrabold opacity-0">0.00</span>
                       </>
-                    )}
-                  </span>
+              )}
+            </span>
                   {/* Portfolio value percentage change */}
                   {portfolioPercentageChange !== undefined && Math.abs(portfolioPercentageChange) > 0.0001 && (
                     <span className={`text-lg font-semibold ${portfolioPercentageChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -1377,18 +1349,12 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                   });
                   // Show cumulative PNL at that point in time
                   pnlData = closestSnapshot?.total_pnl;
-                } else if (periodPnl && portfolioData) {
-                  // Use period PNL (convert to TotalPnl format)
-                  // For period PNL, use the last snapshot's PNL data but with period gain/invested
-                  const lastSnapshot = portfolioData[portfolioData.length - 1];
+                } else if (periodPnl) {
+                  // Use period PNL directly from API (range-based PNL)
                   pnlData = {
-                    // Always use the PNL percentage from the API (last snapshot's total_pnl)
-                    percentage: lastSnapshot.total_pnl?.percentage || 0,
+                    percentage: periodPnl.percentage,
                     invested: periodPnl.invested,
-                    current_value: {
-                      ae: lastSnapshot.total_pnl?.current_value.ae || 0,
-                      usd: lastSnapshot.total_pnl?.current_value.usd || 0,
-                    },
+                    current_value: periodPnl.current_value,
                     gain: periodPnl.gain,
                   };
                   

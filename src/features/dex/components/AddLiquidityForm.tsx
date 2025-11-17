@@ -18,6 +18,7 @@ import { useAccount, useDex } from "../../../hooks";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { usePool } from "../context/PoolProvider";
 import { TokenChip } from "@/components/TokenChip";
+import Spinner from "@/components/Spinner";
 
 export default function AddLiquidityForm() {
   const { t } = useTranslation('common');
@@ -580,7 +581,7 @@ export default function AddLiquidityForm() {
         >
           {state.loading ? (
             <div className="flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              <Spinner className="w-4 h-4" />
               Confirm in wallet…
             </div>
           ) : (

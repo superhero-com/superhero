@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { DexTokenDto } from '../../../api/generated';
 import { Token } from '../types/explore';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
+import Spinner from "@/components/Spinner";
 
 interface TokenListTableProps {
   tokens: DexTokenDto[];
@@ -100,24 +101,9 @@ export function TokenListTable({
             fontWeight: 500,
           }}
         >
-          <div
-            style={{
-              width: 20,
-              height: 20,
-              border: "2px solid rgba(76, 175, 80, 0.3)",
-              borderTop: "2px solid var(--accent-color)",
-              borderRadius: "50%",
-              animation: "spin 1s linear infinite",
-            }}
-          ></div>
+          <Spinner className="w-10 h-10" />
           Loading tokens...
         </div>
-        <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
       </div>
     );
   }

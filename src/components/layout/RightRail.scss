@@ -363,7 +363,6 @@
             &:disabled {
               opacity: 0.5;
               cursor: not-allowed;
-              animation: spin 1s linear infinite;
             }
           }
         }
@@ -637,7 +636,7 @@
           }
           
           &.checking {
-            animation: spin 1s linear infinite;
+            // Animation removed - use Spinner component instead
           }
         }
       }
@@ -748,11 +747,6 @@
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
 // Mobile Responsiveness

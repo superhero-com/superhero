@@ -105,26 +105,12 @@
     cursor: wait;
   }
   
-  &__spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid transparent;
-    border-top: 2px solid currentColor;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-  
   &__content {
     display: flex;
     align-items: center;
     justify-content: center;
     flex: 1;
   }
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 
 @include mobile {

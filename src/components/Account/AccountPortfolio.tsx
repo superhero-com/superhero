@@ -8,6 +8,7 @@ import { usePortfolioValue } from '@/hooks/usePortfolioValue';
 import { Decimal } from '@/libs/decimal';
 import { Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import Spinner from '@/components/Spinner';
 
 interface AccountPortfolioProps {
   address: string;
@@ -1233,7 +1234,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               {isLoading ? (
                 <div className="absolute inset-0 flex items-start justify-center pt-10 z-10 px-4 md:px-6">
                   <div className="inline-flex items-center gap-1.5 text-white text-xs font-medium">
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" aria-label="loading" />
+                    <Spinner className="w-3.5 h-3.5" />
                     <span>Loading portfolio data...</span>
                   </div>
                 </div>

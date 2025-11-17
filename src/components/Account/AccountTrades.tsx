@@ -11,6 +11,7 @@ import {
   DataTable,
   DataTableResponse,
 } from "@/features/shared/components/DataTable/DataTable";
+import Spinner from "@/components/Spinner";
 
 interface AccountTradesProps {
   address: string;
@@ -217,7 +218,7 @@ export default function AccountTrades({ address, tab }: AccountTradesProps) {
           )}
           loadingComponent={
             <div className="flex items-center justify-center py-12">
-              <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              <Spinner className="w-6 h-6" />
             </div>
           }
         />

@@ -22,6 +22,7 @@ import { SuperheroApi } from "../api/backend";
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import AccountCreatedToken from "@/components/Account/AccountCreatedToken";
 import AccountFeed from "@/components/Account/AccountFeed";
+import Spinner from "@/components/Spinner";
 import AccountOwnedTokens from "@/components/Account/AccountOwnedTokens";
 import AccountTrades from "@/components/Account/AccountTrades";
 import AccountPortfolio from "@/components/Account/AccountPortfolio";
@@ -460,7 +461,9 @@ export default function UserProfile({
                 <div className="mt-2 text-sm text-white/80 leading-relaxed line-clamp-2">
                   <span>{bioText}</span>
                   {isBioLoading && (
-                    <span className="ml-2 w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+                    <span className="ml-2 inline-block">
+                      <Spinner className="w-3 h-3" />
+                    </span>
                   )}
                 </div>
               )}

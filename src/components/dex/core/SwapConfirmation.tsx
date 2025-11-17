@@ -1,6 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { DexTokenDto } from '../../../api/generated';
 import { addSlippage, fromAettos, subSlippage, toAettos } from '../../../libs/dex';
+import Spinner from '../../../components/Spinner';
 
 interface SwapConfirmationProps {
   show: boolean;
@@ -384,14 +385,7 @@ export default function SwapConfirmation({
             >
               {loading ? (
                 <>
-                  <div style={{
-                    width: 16,
-                    height: 16,
-                    border: '2px solid rgba(255,255,255,0.3)',
-                    borderTop: '2px solid white',
-                    borderRadius: '50%',
-                    animation: 'spin 1s linear infinite'
-                  }}></div>
+                  <Spinner className="w-5 h-5" />
                   {swapStep ? (
                     <>
                       {swapStep.label}... ({swapStep.current}/{swapStep.total})

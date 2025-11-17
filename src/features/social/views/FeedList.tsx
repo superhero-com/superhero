@@ -675,17 +675,22 @@ export default function FeedList({
   // Auto-fetch latest posts if we have less than 10 popular posts and haven't fetched yet
   useEffect(() => {
     const popularListLength = popularData?.pages ? ((popularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? []).length : 0;
-    if (sortBy === "hot" && queryEnabledWithEnoughPosts && popularListLength < 10 && latestDataForHot?.pages?.length === 0 && !fetchingMoreLatestForHot && hasMoreLatestForHot) {
+    // Check if latestDataForHot hasn't been fetched yet (undefined or empty pages array)
+    // Use falsy check instead of === 0 because undefined !== 0
+    const hasNotFetchedLatest = !latestDataForHot?.pages || latestDataForHot.pages.length === 0;
+    if (sortBy === "hot" && queryEnabledWithEnoughPosts && popularListLength < 10 && hasNotFetchedLatest && !fetchingMoreLatestForHot && hasMoreLatestForHot) {
       if (process.env.NODE_ENV === 'development') {
         console.log('🔍 [DEBUG] Auto-fetching latest posts because popular posts < 10:', {
           popularListLength,
           hasEnoughPopularPosts,
           popularExhausted,
+          hasNotFetchedLatest,
+          latestDataForHotPagesLength: latestDataForHot?.pages?.length,
         });
       }
       fetchNextLatestForHot();
     }
-  }, [sortBy, queryEnabledWithEnoughPosts, popularData, popularExhausted, latestDataForHot?.pages?.length, fetchingMoreLatestForHot, hasMoreLatestForHot, fetchNextLatestForHot, hasEnoughPopularPosts]);
+  }, [sortBy, queryEnabledWithEnoughPosts, popularData, popularExhausted, latestDataForHot, fetchingMoreLatestForHot, hasMoreLatestForHot, fetchNextLatestForHot, hasEnoughPopularPosts]);
   
   // Force check hasMorePopular whenever popularData changes
   useEffect(() => {

@@ -441,6 +441,7 @@ export default function TokenSaleDetails() {
                 <TokenSummary
                   token={{ ...token, decimals: String(token.decimals ?? '') as any }}
                 />
+                <TokenRanking token={token} />
                 {/* Quali.chat CTA visible on mobile Info tab */}
                 <TokenChat
                   token={{

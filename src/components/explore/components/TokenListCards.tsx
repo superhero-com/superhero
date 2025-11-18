@@ -13,16 +13,16 @@ interface TokenListCardsProps {
   tokens: DexTokenDto[];
   sort: {
     key:
-      | "pairs_count"
-      | "name"
-      | "symbol"
-      | "created_at"
-      | "price"
-      | "tvl"
-      | "24hchange"
-      | "24hvolume"
-      | "7dchange"
-      | "7dvolume";
+    | "pairs_count"
+    | "name"
+    | "symbol"
+    | "created_at"
+    | "price"
+    | "tvl"
+    | "24hchange"
+    | "24hvolume"
+    | "7dchange"
+    | "7dvolume";
     asc: boolean;
   };
   onSortChange: (
@@ -133,18 +133,17 @@ export function TokenListCards({
 
               <button
                 onClick={() => handleSort(sort.key)}
-                className={`px-2 py-[6px] rounded-md border border-white/10 cursor-pointer backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-7 h-7 flex items-center justify-center outline-none hover:-translate-y-px hover:scale-105 ${
-                  sort.asc 
-                    ? "bg-green-500 text-white" 
+                className={`px-2 py-[6px] rounded-md border border-white/10 cursor-pointer backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-7 h-7 flex items-center justify-center outline-none hover:-translate-y-px hover:scale-105 ${sort.asc
+                    ? "bg-green-500 text-white"
                     : "bg-white/10 text-white hover:bg-green-500 hover:text-white"
-                }`}
+                  }`}
                 title={sort.asc ? "Sort Ascending" : "Sort Descending"}
               >
                 {sort.asc ? "↑" : "↓"}
               </button>
             </div>
             <div className="flex items-center justify-center w-auto flex-shrink-0">
-            <PerformanceTimeframeSelector />
+              <PerformanceTimeframeSelector />
             </div>
           </div>
 
@@ -227,7 +226,7 @@ export function TokenListCards({
                     Price
                   </div>
                   <div className="text-sm text-white font-semibold">
-                  <PriceDataFormatter priceData={token.price} />
+                    <PriceDataFormatter priceData={token.price} />
                   </div>
                 </div>
 
@@ -237,7 +236,7 @@ export function TokenListCards({
                     TVL
                   </div>
                   <div className="text-sm text-white font-semibold">
-                  <PriceDataFormatter priceData={token.summary.total_volume} bignumber />
+                    <PriceDataFormatter priceData={token.summary.total_volume} />
                   </div>
                 </div>
 
@@ -247,17 +246,17 @@ export function TokenListCards({
                     {timeBase} Change
                   </div>
                   <div className="text-sm font-semibold">
-                  <PriceDataFormatter priceData={token.summary.change[timeBase].volume} bignumber />
+                    <PriceDataFormatter priceData={token.summary.change[timeBase].volume} />
                   </div>
                 </div>
 
                 {/* 24h Volume */}
                 <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
-                  {timeBase} Volume
+                    {timeBase} Volume
                   </div>
                   <div className="text-sm text-white font-semibold">
-                  <PriceDataFormatter priceData={token.summary.change[timeBase].volume} bignumber />
+                    <PriceDataFormatter priceData={token.summary.change[timeBase].volume} />
                   </div>
                 </div>
               </div>

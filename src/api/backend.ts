@@ -243,12 +243,13 @@ export const SuperheroApi = {
     return this.fetchJson(`/api/tokens/${encodeURIComponent(address)}/history${query ? `?${query}` : ''}`);
   },
   // Portfolio history
-  getAccountPortfolioHistory(address: string, params: { startDate?: string; endDate?: string; interval?: number; convertTo?: 'ae'|'usd'|'eur'|'aud'|'brl'|'cad'|'chf'|'gbp'|'xau' } = {}) {
+  getAccountPortfolioHistory(address: string, params: { startDate?: string; endDate?: string; interval?: number; convertTo?: 'ae'|'usd'|'eur'|'aud'|'brl'|'cad'|'chf'|'gbp'|'xau'; include?: string } = {}) {
     const qp = new URLSearchParams();
     if (params.startDate) qp.set('startDate', params.startDate);
     if (params.endDate) qp.set('endDate', params.endDate);
     if (params.interval != null) qp.set('interval', String(params.interval));
     if (params.convertTo) qp.set('convertTo', params.convertTo);
+    if (params.include) qp.set('include', params.include);
     const query = qp.toString();
     return this.fetchJson(`/api/accounts/${encodeURIComponent(address)}/portfolio/history${query ? `?${query}` : ''}`);
   },

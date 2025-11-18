@@ -806,9 +806,25 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
       if (snapshots.length === 0) return null;
       
-      // Get the last snapshot which should have the PNL range from start to end
+      // With range-based PNL, the backend now calculates PNL for each timeframe range
+      // The last snapshot's PNL represents PNL for transactions from startDate to endDate
+      // We can use it directly without needing to subtract
       const lastSnapshot = snapshots[snapshots.length - 1];
-      return lastSnapshot.total_pnl || null;
+      if (!lastSnapshot.total_pnl) return null;
+      
+      const firstSnapshot = snapshots[0];
+      
+      // Use the last snapshot's PNL directly - it represents PNL for the timeframe
+      return {
+        percentage: lastSnapshot.total_pnl.percentage,
+        invested: lastSnapshot.total_pnl.invested,
+        current_value: lastSnapshot.total_pnl.current_value,
+        gain: lastSnapshot.total_pnl.gain,
+        range: {
+          from: firstSnapshot.total_pnl?.range?.from || null,
+          to: lastSnapshot.total_pnl?.range?.to || null,
+        },
+      };
     },
     enabled: !!address,
     staleTime: 5 * 60 * 1000,
@@ -833,9 +849,25 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
       if (snapshots.length === 0) return null;
       
-      // Get the last snapshot which should have the PNL range from start to hover time
+      // With range-based PNL, the backend now calculates PNL for each timeframe range
+      // The last snapshot's PNL represents PNL for transactions from startDate to hoverDate
+      // We can use it directly without needing to subtract
       const lastSnapshot = snapshots[snapshots.length - 1];
-      return lastSnapshot.total_pnl || null;
+      if (!lastSnapshot.total_pnl) return null;
+      
+      const firstSnapshot = snapshots[0];
+      
+      // Use the last snapshot's PNL directly - it represents PNL for the timeframe
+      return {
+        percentage: lastSnapshot.total_pnl.percentage,
+        invested: lastSnapshot.total_pnl.invested,
+        current_value: lastSnapshot.total_pnl.current_value,
+        gain: lastSnapshot.total_pnl.gain,
+        range: {
+          from: firstSnapshot.total_pnl?.range?.from || null,
+          to: lastSnapshot.total_pnl?.range?.to || null,
+        },
+      };
     },
     enabled: !!address && !!hoveredPrice,
     staleTime: 5 * 60 * 1000,

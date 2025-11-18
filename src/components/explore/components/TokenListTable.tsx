@@ -685,7 +685,6 @@ export function TokenListTable({
                 >
                   <PriceDataFormatter
                     priceData={token.summary?.total_volume}
-                    bignumber
                   />
                 </td>
                 <td style={{ textAlign: "center", padding: "16px 12px" }}>

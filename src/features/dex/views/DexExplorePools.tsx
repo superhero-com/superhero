@@ -273,7 +273,7 @@ export default function DexExplorePools() {
                           TVL (USD)
                         </div>
                         <div className="text-sm text-[var(--standard-font-color)] font-semibold">
-                          <PriceDataFormatter priceData={pair.summary?.total_volume} bignumber />
+                          <PriceDataFormatter priceData={pair.summary?.total_volume} />
                         </div>
                       </div>
                       <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
@@ -281,7 +281,7 @@ export default function DexExplorePools() {
                           Volume{" "}
                         </div>
                         <div className="text-sm text-[var(--standard-font-color)] font-semibold">
-                          <PriceDataFormatter priceData={pair.summary.change[timeBase].volume} bignumber />
+                          <PriceDataFormatter priceData={pair.summary.change[timeBase].volume} />
                         </div>
                       </div>
                     </div>

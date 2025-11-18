@@ -669,7 +669,6 @@ export function TokenListTable({
                 >
                   <PriceDataFormatter
                     priceData={token.summary?.change?.[timeBase]?.volume}
-                    bignumber
                   />
                 </td>
 

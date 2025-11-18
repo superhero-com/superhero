@@ -737,6 +737,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         endDate: dateRange.endDate,
         interval: dateRange.interval,
         convertTo: convertTo as any,
+        include: 'pnl-range', // Include PNL data with each snapshot for hover support
       });
       
       const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
@@ -831,48 +832,40 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     gcTime: 30 * 60 * 1000,
   });
 
-  // Fetch PNL data for hover position (from start to hover time)
-  const hoverPnlQuery = useQuery({
-    queryKey: ['portfolio-pnl-hover', address, hoveredPrice?.time, convertTo, dateRange.startDate],
-    queryFn: async () => {
-      if (!hoveredPrice) return null;
-      
-      const hoverDate = moment.unix(hoveredPrice.time).toISOString();
-      const response = await SuperheroApi.getAccountPortfolioHistory(address, {
-        startDate: dateRange.startDate,
-        endDate: hoverDate,
-        interval: dateRange.interval,
-        convertTo: convertTo as any,
-        include: 'pnl-range',
-      });
-      
-      const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
-      if (snapshots.length === 0) return null;
-      
-      // With range-based PNL, the backend now calculates PNL for each timeframe range
-      // The last snapshot's PNL represents PNL for transactions from startDate to hoverDate
-      // We can use it directly without needing to subtract
-      const lastSnapshot = snapshots[snapshots.length - 1];
-      if (!lastSnapshot.total_pnl) return null;
-      
-      const firstSnapshot = snapshots[0];
-      
-      // Use the last snapshot's PNL directly - it represents PNL for the timeframe
+  // Use PNL data from portfolioData instead of fetching on hover
+  // Each snapshot already includes PNL range from startDate to that timestamp
+  const hoverPnlData = useMemo(() => {
+    if (!hoveredPrice || !portfolioData || portfolioData.length === 0) {
+      return null;
+    }
+    
+    // Find the snapshot closest to the hovered timestamp
+    const hoverTime = hoveredPrice.time;
+    let closestSnapshot: PortfolioSnapshot | null = null;
+    let minDistance = Infinity;
+    
+    for (const snapshot of portfolioData) {
+      const snapshotTime = moment(snapshot.timestamp).unix();
+      const distance = Math.abs(snapshotTime - hoverTime);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestSnapshot = snapshot;
+      }
+    }
+    
+    // Use PNL data from the closest snapshot (which includes range from startDate to that timestamp)
+    if (closestSnapshot?.total_pnl) {
       return {
-        percentage: lastSnapshot.total_pnl.percentage,
-        invested: lastSnapshot.total_pnl.invested,
-        current_value: lastSnapshot.total_pnl.current_value,
-        gain: lastSnapshot.total_pnl.gain,
-        range: {
-          from: firstSnapshot.total_pnl?.range?.from || null,
-          to: lastSnapshot.total_pnl?.range?.to || null,
-        },
+        percentage: closestSnapshot.total_pnl.percentage,
+        invested: closestSnapshot.total_pnl.invested,
+        current_value: closestSnapshot.total_pnl.current_value,
+        gain: closestSnapshot.total_pnl.gain,
+        range: closestSnapshot.total_pnl.range,
       };
-    },
-    enabled: !!address && !!hoveredPrice,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-  });
+    }
+    
+    return null;
+  }, [hoveredPrice, portfolioData]);
 
   // Keep portfolioData ref up to date for initialization effect
   useEffect(() => {
@@ -1373,28 +1366,28 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             {/* Profit/Loss Display */}
             <div className="mt-1 mb-1 flex flex-col md:flex-row md:items-center md:justify-between gap-1">
               <div className="flex items-center gap-2 text-sm">
-                {hoveredPrice && hoverPnlQuery.data ? (
+                {hoveredPrice && hoverPnlData ? (
                   <>
                     <span className="text-white/60">Profit/Loss:</span>
-                    <span className={`font-semibold ${hoverPnlQuery.data.gain[convertTo === 'ae' ? 'ae' : 'usd'] >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    <span className={`font-semibold ${hoverPnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {convertTo === 'ae' ? (
                         <>
-                          {hoverPnlQuery.data.gain.ae >= 0 ? '+' : ''}
-                          {hoverPnlQuery.data.gain.ae >= 1 
-                            ? hoverPnlQuery.data.gain.ae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                            : Decimal.from(hoverPnlQuery.data.gain.ae).prettify()}
+                          {hoverPnlData.gain.ae >= 0 ? '+' : ''}
+                          {hoverPnlData.gain.ae >= 1 
+                            ? hoverPnlData.gain.ae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                            : Decimal.from(hoverPnlData.gain.ae).prettify()}
                           {' AE '}
                           <span className="text-white/60">
-                            ({hoverPnlQuery.data.percentage >= 0 ? '+' : ''}{hoverPnlQuery.data.percentage.toFixed(2)}%)
+                            ({hoverPnlData.percentage >= 0 ? '+' : ''}{hoverPnlData.percentage.toFixed(2)}%)
                           </span>
                         </>
                       ) : (
                         <>
-                          {hoverPnlQuery.data.gain.usd >= 0 ? '+' : ''}
-                          {hoverPnlQuery.data.gain.usd.toLocaleString('en-US', { style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {hoverPnlData.gain.usd >= 0 ? '+' : ''}
+                          {hoverPnlData.gain.usd.toLocaleString('en-US', { style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           {' '}
                           <span className="text-white/60">
-                            ({hoverPnlQuery.data.percentage >= 0 ? '+' : ''}{hoverPnlQuery.data.percentage.toFixed(2)}%)
+                            ({hoverPnlData.percentage >= 0 ? '+' : ''}{hoverPnlData.percentage.toFixed(2)}%)
                           </span>
                         </>
                       )}

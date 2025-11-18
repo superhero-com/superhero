@@ -936,6 +936,69 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     });
   }, [portfolioData, isLoading, selectedTimeRange, address, convertTo, queryClient]);
 
+  // Prefetch PNL data for other time ranges in the background after first load
+  useEffect(() => {
+    // Only prefetch if the current PNL query has successfully loaded
+    if (!pnlData || isPnlLoading) return;
+
+    // Get all time ranges except the currently selected one
+    const otherTimeRanges = (Object.keys(TIME_RANGES) as TimeRange[]).filter(
+      (range) => range !== selectedTimeRange
+    );
+
+    // Prefetch PNL for each other time range
+    otherTimeRanges.forEach((timeRange) => {
+      const range = TIME_RANGES[timeRange];
+      const endDate = moment();
+      
+      let startDate: moment.Moment;
+      if (range.days === Infinity) {
+        startDate = MIN_START_DATE;
+      } else {
+        startDate = moment().subtract(range.days, 'days');
+        if (startDate.isBefore(MIN_START_DATE)) {
+          startDate = MIN_START_DATE;
+        }
+      }
+
+      const prefetchDateRange = {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        interval: range.interval,
+      };
+
+      // Check if PNL data is already cached
+      const queryKey = ['portfolio-pnl', address, timeRange, convertTo];
+      const cachedData = queryClient.getQueryData(queryKey);
+      
+      // Only prefetch if not already cached
+      if (!cachedData) {
+        // Prefetch the PNL query
+        queryClient.prefetchQuery({
+          queryKey,
+          queryFn: async () => {
+            const response = await SuperheroApi.getAccountPortfolioHistory(address, {
+              startDate: prefetchDateRange.startDate,
+              endDate: prefetchDateRange.endDate,
+              interval: prefetchDateRange.interval,
+              convertTo: convertTo as any,
+              include: 'pnl-range',
+            });
+            
+            const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
+            if (snapshots.length === 0) return null;
+            
+            // Get the last snapshot which should have the PNL range from start to end
+            const lastSnapshot = snapshots[snapshots.length - 1];
+            return lastSnapshot.total_pnl || null;
+          },
+          staleTime: 5 * 60 * 1000, // 5 minutes
+          gcTime: 30 * 60 * 1000, // Keep cached data for 30 minutes
+        });
+      }
+    });
+  }, [pnlData, isPnlLoading, selectedTimeRange, address, convertTo, queryClient]);
+
   // Calculate display value
   const displayValue = useMemo(() => {
     if (hoveredPrice) {
@@ -1276,75 +1339,77 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             </span>
             
             {/* Profit/Loss Display */}
-            <div className="mt-1 mb-1">
-              {hoveredPrice && hoverPnlQuery.data ? (
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-white/60">Profit/Loss:</span>
-                  <span className={`font-semibold ${hoverPnlQuery.data.gain[convertTo === 'ae' ? 'ae' : 'usd'] >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {convertTo === 'ae' ? (
-                      <>
-                        {hoverPnlQuery.data.gain.ae >= 0 ? '+' : ''}
-                        {hoverPnlQuery.data.gain.ae >= 1 
-                          ? hoverPnlQuery.data.gain.ae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                          : Decimal.from(hoverPnlQuery.data.gain.ae).prettify()}
-                        {' AE '}
-                        <span className="text-white/60">
-                          ({hoverPnlQuery.data.percentage >= 0 ? '+' : ''}{hoverPnlQuery.data.percentage.toFixed(2)}%)
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        {hoverPnlQuery.data.gain.usd >= 0 ? '+' : ''}
-                        {hoverPnlQuery.data.gain.usd.toLocaleString('en-US', { style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        {' '}
-                        <span className="text-white/60">
-                          ({hoverPnlQuery.data.percentage >= 0 ? '+' : ''}{hoverPnlQuery.data.percentage.toFixed(2)}%)
-                        </span>
-                      </>
-                    )}
-                  </span>
-                </div>
-              ) : pnlData ? (
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-white/60">Profit/Loss:</span>
-                  <span className={`font-semibold ${pnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {convertTo === 'ae' ? (
-                      <>
-                        {pnlData.gain.ae >= 0 ? '+' : ''}
-                        {pnlData.gain.ae >= 1 
-                          ? pnlData.gain.ae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                          : Decimal.from(pnlData.gain.ae).prettify()}
-                        {' AE '}
-                        <span className="text-white/60">
-                          ({pnlData.percentage >= 0 ? '+' : ''}{pnlData.percentage.toFixed(2)}%)
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        {pnlData.gain.usd >= 0 ? '+' : ''}
-                        {pnlData.gain.usd.toLocaleString('en-US', { style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        {' '}
-                        <span className="text-white/60">
-                          ({pnlData.percentage >= 0 ? '+' : ''}{pnlData.percentage.toFixed(2)}%)
-                        </span>
-                      </>
-                    )}
-                  </span>
-                </div>
-              ) : isPnlLoading ? (
-                <div className="flex items-center gap-2 text-sm text-white/60">
-                  <Spinner className="w-3 h-3" />
-                  <span>Loading Profit/Loss...</span>
-                </div>
-              ) : null}
-            </div>
-            
-            <div className="text-sm text-white/60 mt-1 h-5">
-              {hoveredPrice ? (
-                <span>{moment.unix(hoveredPrice.time).format('MMM D, YYYY HH:mm')}</span>
-              ) : (
-                <span className="opacity-0">&#8203;</span>
-              )}
+            <div className="mt-1 mb-1 flex flex-col md:flex-row md:items-center md:justify-between gap-1">
+              <div className="flex items-center gap-2 text-sm">
+                {hoveredPrice && hoverPnlQuery.data ? (
+                  <>
+                    <span className="text-white/60">Profit/Loss:</span>
+                    <span className={`font-semibold ${hoverPnlQuery.data.gain[convertTo === 'ae' ? 'ae' : 'usd'] >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {convertTo === 'ae' ? (
+                        <>
+                          {hoverPnlQuery.data.gain.ae >= 0 ? '+' : ''}
+                          {hoverPnlQuery.data.gain.ae >= 1 
+                            ? hoverPnlQuery.data.gain.ae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                            : Decimal.from(hoverPnlQuery.data.gain.ae).prettify()}
+                          {' AE '}
+                          <span className="text-white/60">
+                            ({hoverPnlQuery.data.percentage >= 0 ? '+' : ''}{hoverPnlQuery.data.percentage.toFixed(2)}%)
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          {hoverPnlQuery.data.gain.usd >= 0 ? '+' : ''}
+                          {hoverPnlQuery.data.gain.usd.toLocaleString('en-US', { style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {' '}
+                          <span className="text-white/60">
+                            ({hoverPnlQuery.data.percentage >= 0 ? '+' : ''}{hoverPnlQuery.data.percentage.toFixed(2)}%)
+                          </span>
+                        </>
+                      )}
+                    </span>
+                  </>
+                ) : pnlData ? (
+                  <>
+                    <span className="text-white/60">Profit/Loss:</span>
+                    <span className={`font-semibold ${pnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {convertTo === 'ae' ? (
+                        <>
+                          {pnlData.gain.ae >= 0 ? '+' : ''}
+                          {pnlData.gain.ae >= 1 
+                            ? pnlData.gain.ae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                            : Decimal.from(pnlData.gain.ae).prettify()}
+                          {' AE '}
+                          <span className="text-white/60">
+                            ({pnlData.percentage >= 0 ? '+' : ''}{pnlData.percentage.toFixed(2)}%)
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          {pnlData.gain.usd >= 0 ? '+' : ''}
+                          {pnlData.gain.usd.toLocaleString('en-US', { style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {' '}
+                          <span className="text-white/60">
+                            ({pnlData.percentage >= 0 ? '+' : ''}{pnlData.percentage.toFixed(2)}%)
+                          </span>
+                        </>
+                      )}
+                    </span>
+                  </>
+                ) : isPnlLoading ? (
+                  <>
+                    <Spinner className="w-3 h-3" />
+                    <span>Loading Profit/Loss...</span>
+                  </>
+                ) : null}
+              </div>
+              
+              <div className="text-sm text-white/60 md:text-right">
+                {hoveredPrice ? (
+                  <span>{moment.unix(hoveredPrice.time).format('MMM D, YYYY HH:mm')}</span>
+                ) : (
+                  <span className="opacity-0">&#8203;</span>
+                )}
+              </div>
             </div>
           </div>
         </div>

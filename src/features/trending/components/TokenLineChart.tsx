@@ -100,39 +100,117 @@ export function TokenLineChart({
 
   // Watch for data changes
   useEffect(() => {
-    if (!data?.result?.length || !areaSeries.current) {
+    if (!areaSeries.current) {
       return;
     }
+    
     // Clear existing data first
     areaSeries.current.setData([]);
+    
+    // If no data, leave chart empty
+    if (!data?.result?.length) {
+      return;
+    }
+    
     // Update with new data
-    updateSeriesData(data as ChartResponse);
-  }, [data]);
+    const chartData = data as ChartResponse;
+    const now = moment().unix();
+    
+    // Calculate the minimum timestamp based on selected timeframe
+    let minTime: number;
+    switch (performanceChartTimeframe) {
+      case '1d':
+        minTime = now - (24 * 3600); // 24 hours ago
+        break;
+      case '7d':
+        minTime = now - (7 * 24 * 3600); // 7 days ago
+        break;
+      case '30d':
+        minTime = now - (30 * 24 * 3600); // 30 days ago
+        break;
+      default:
+        minTime = 0; // Show all data
+    }
 
-  function updateSeriesData(chartData: ChartResponse) {
-    const formattedData = chartData.result
+    // Map all data with timestamps
+    const allDataPoints = chartData.result
       .map((item) => {
+        const itemTime = moment(item.end_time).unix();
         return {
-          time: moment(item.end_time).unix() as UTCTimestamp,
+          time: itemTime as UTCTimestamp,
           value: Number(item.last_price),
+          originalTime: itemTime,
         };
       })
-      .sort((a, b) => a.time - b.time);
+      .sort((a, b) => a.originalTime - b.originalTime);
 
-    // if formattedData less than 10 generate more data with same value but with time - 1 hour
-    if (formattedData.length < 10) {
-      for (let i = 0; i < 10 - formattedData.length; i++) {
-        const lastItem = formattedData[0];
+    // Filter data to only include points within the selected timeframe
+    const filteredData = allDataPoints
+      .filter((item) => item.originalTime >= minTime)
+      .map(({ time, value }) => ({ time, value }));
+
+    // If no data in timeframe, show a flat line at the last known price
+    if (filteredData.length === 0) {
+      // Find the most recent data point before the timeframe
+      const lastKnownPoint = allDataPoints
+        .filter((item) => item.originalTime < minTime)
+        .pop(); // Get the last item (most recent before timeframe)
+
+      if (lastKnownPoint) {
+        // Create a flat line spanning the entire timeframe
+        const flatLineData = [
+          { time: minTime as UTCTimestamp, value: lastKnownPoint.value },
+          { time: now as UTCTimestamp, value: lastKnownPoint.value },
+        ];
+        areaSeries.current.setData(flatLineData);
+        chart?.timeScale().fitContent();
+        return;
+      } else {
+        // No data at all, clear chart
+        areaSeries.current.setData([]);
+        return;
+      }
+    }
+
+    // If we have data, ensure it spans the full timeframe
+    // Check if all values are the same (flat line scenario)
+    const allValuesSame = filteredData.every(item => item.value === filteredData[0].value);
+    const firstPoint = filteredData[0];
+    const lastPoint = filteredData[filteredData.length - 1];
+
+    let formattedData = [...filteredData];
+
+    // If we have only one point or all values are the same, ensure the line spans the full timeframe
+    if (filteredData.length === 1 || allValuesSame) {
+      // Ensure we have points at the start and end of the timeframe
+      if (firstPoint.time > minTime) {
         formattedData.unshift({
-          time: (lastItem.time - 3600) as UTCTimestamp,
-          value: lastItem.value,
+          time: minTime as UTCTimestamp,
+          value: firstPoint.value,
         });
+      }
+      if (lastPoint.time < now) {
+        formattedData.push({
+          time: now as UTCTimestamp,
+          value: lastPoint.value,
+        });
+      }
+    } else {
+      // For multiple different values, ensure minimum data points for smooth rendering
+      if (formattedData.length < 10 && formattedData.length > 0) {
+        const lastItem = formattedData[formattedData.length - 1];
+        for (let i = 0; i < 10 - formattedData.length; i++) {
+          formattedData.push({
+            time: (lastItem.time + (i + 1) * 3600) as UTCTimestamp,
+            value: lastItem.value,
+          });
+        }
       }
     }
     
-    areaSeries.current?.setData(formattedData);
+    areaSeries.current.setData(formattedData);
     chart?.timeScale().fitContent();
-  }
+  }, [data, performanceChartTimeframe, chart]);
 
   if (loading) {
     return (

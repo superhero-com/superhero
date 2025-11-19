@@ -8,6 +8,7 @@ import { performanceChartTimeframeAtom } from "@/features/trending/atoms";
 import PerformanceTimeframeSelector from "@/features/trending/components/PerformanceTimeframeSelector";
 import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
 import Spinner from "@/components/Spinner";
+import { Decimal } from "@/libs/decimal";
 
 interface TokenListCardsProps {
   tokens: DexTokenDto[];
@@ -236,7 +237,7 @@ export function TokenListCards({
                     TVL
                   </div>
                   <div className="text-sm text-white font-semibold">
-                    <PriceDataFormatter priceData={token.summary.total_volume} />
+                    <PriceDataFormatter priceData={token.summary?.total_volume} />
                   </div>
                 </div>
 
@@ -245,8 +246,20 @@ export function TokenListCards({
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
                     {timeBase} Change
                   </div>
-                  <div className="text-sm font-semibold">
-                    <PriceDataFormatter priceData={token.summary.change[timeBase].volume} />
+                  <div className={`text-sm font-semibold ${
+                    token.summary?.change?.[timeBase]?.percentage && 
+                    Number(token.summary.change[timeBase].percentage) >= 0 
+                      ? "text-green-400" 
+                      : "text-red-400"
+                  }`}>
+                    {token.summary?.change?.[timeBase]?.percentage ? (
+                      <>
+                        {Number(token.summary.change[timeBase].percentage) >= 0 ? "+" : ""}
+                        {Decimal.from(token.summary.change[timeBase].percentage).prettify(2)}%
+                      </>
+                    ) : (
+                      "-"
+                    )}
                   </div>
                 </div>
 
@@ -256,7 +269,7 @@ export function TokenListCards({
                     {timeBase} Volume
                   </div>
                   <div className="text-sm text-white font-semibold">
-                    <PriceDataFormatter priceData={token.summary.change[timeBase].volume} />
+                    <PriceDataFormatter priceData={token.summary?.change?.[timeBase]?.volume} />
                   </div>
                 </div>
               </div>

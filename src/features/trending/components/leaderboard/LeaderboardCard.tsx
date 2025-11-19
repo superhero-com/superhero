@@ -3,6 +3,7 @@ import { formatNumber } from "../../../../utils/number";
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import AeButton from "@/components/AeButton";
 import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
 
 interface LeaderboardCardProps {
   rank: number;
@@ -34,6 +35,16 @@ export function LeaderboardCard({
   const sparkline = item.portfolio_value_usd_sparkline ?? [];
 
   const hasSparkline = Array.isArray(sparkline) && sparkline.length > 1;
+  const [isChartHovered, setIsChartHovered] = useState(false);
+
+  const latestPoint = useMemo(() => {
+    if (!hasSparkline) return null;
+    const [timestamp, value] = sparkline[sparkline.length - 1];
+    return {
+      timestamp,
+      value,
+    };
+  }, [hasSparkline, sparkline]);
 
   const buildSparklinePaths = (
     data: [number, number][],
@@ -101,7 +112,7 @@ export function LeaderboardCard({
       </div>
 
       {/* Main metrics row */}
-      <div className="flex items-stretch gap-4">
+      <div className="flex items-stretch gap-3 sm:gap-4">
         <div className="flex flex-col gap-1">
           <span className="text-[11px] uppercase tracking-wide text-white/50">
             {timeframeLabel} Days PnL (USD)
@@ -142,7 +153,11 @@ export function LeaderboardCard({
         </div>
         {/* Portfolio value sparkline */}
         <div className="hidden sm:flex flex-1 items-center justify-end">
-          <div className="w-28 h-14 rounded-xl bg-[#050712] border border-white/5 flex items-center justify-center px-1 overflow-hidden">
+          <div
+            className="relative w-28 h-14 rounded-xl bg-[#050712] border border-white/5 flex items-center justify-center px-1 overflow-hidden"
+            onMouseEnter={() => setIsChartHovered(true)}
+            onMouseLeave={() => setIsChartHovered(false)}
+          >
             {hasSparkline ? (
               (() => {
                 const { line, area } = buildSparklinePaths(
@@ -192,6 +207,17 @@ export function LeaderboardCard({
               })()
             ) : (
               <div className="w-full h-6 rounded-full bg-white/5" />
+            )}
+
+            {isChartHovered && latestPoint && (
+              <div className="absolute top-1 right-1 px-2 py-1 rounded-md bg-black/80 border border-white/10 text-[10px] text-white/80 shadow-lg pointer-events-none">
+                <div className="font-semibold">
+                  ${formatNumber(latestPoint.value, 2)}
+                </div>
+                <div className="text-[9px] text-white/60">
+                  Latest portfolio value
+                </div>
+              </div>
             )}
           </div>
         </div>

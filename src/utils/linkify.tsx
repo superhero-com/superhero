@@ -177,14 +177,17 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
     const segment = node as string;
     const lines = segment.split('\n');
     lines.forEach((line, lineIdx) => {
-      if (lineIdx > 0) {
-        // Insert <br /> before each line except the first
+      const isLastLine = lineIdx === lines.length - 1;
+      const isTrailingEmptyLine = isLastLine && line.length === 0;
+      
+      if (lineIdx > 0 && !isTrailingEmptyLine) {
+        // Insert <br /> before each line except the first and trailing empty lines
         withLineBreaks.push(<br key={`br-${idx}-${lineIdx}-${brKeyCounter++}`} />);
       }
       if (line.length > 0) {
         withLineBreaks.push(line);
-      } else if (lineIdx > 0) {
-        // Preserve empty lines for paragraph breaks (but not the first empty line)
+      } else if (lineIdx > 0 && !isTrailingEmptyLine) {
+        // Preserve empty lines for paragraph breaks (but not the first empty line or trailing empty lines)
         // Use non-breaking space to maintain visual spacing
         withLineBreaks.push('\u00A0');
       }

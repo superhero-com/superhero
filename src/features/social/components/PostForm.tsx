@@ -411,40 +411,117 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         try {
           newReply = await PostsService.getById({ id: newReplyId });
           
-          // Update infinite replies list if present (normalize key)
-          queryClient.setQueryData(["post-comments", normalizedPostId, "infinite"], (old: any) => {
-            if (!old) {
-              return {
-                pageParams: [1],
-                pages: [ { items: [newReply], meta: { currentPage: 1, totalPages: 1 } } ],
-              };
-            }
-            const firstPage = old.pages?.[0] || { items: [], meta: old.pages?.[0]?.meta };
-            const nextFirst = { ...firstPage, items: [newReply, ...(firstPage.items || [])] };
-            return { ...old, pages: [nextFirst, ...old.pages.slice(1)] };
-          });
+          // Helper function to update infinite query format
+          const updateInfiniteQuery = (queryKey: any[]) => {
+            queryClient.setQueryData(queryKey, (old: any) => {
+              if (!old || !old.pages || !Array.isArray(old.pages)) {
+                return {
+                  pageParams: [1],
+                  pages: [{ items: [newReply], meta: { currentPage: 1, totalPages: 1 } }],
+                };
+              }
+              const firstPage = old.pages?.[0] || { items: [], meta: old.pages?.[0]?.meta || {} };
+              // Check if reply already exists to avoid duplicates
+              const exists = firstPage.items?.some((item: any) => item?.id === newReplyId);
+              if (exists) return old;
+              const nextFirst = { ...firstPage, items: [newReply, ...(firstPage.items || [])] };
+              return { ...old, pages: [nextFirst, ...old.pages.slice(1)] };
+            });
+          };
           
-          // Update non-infinite comments list if present (normalize key)
-          queryClient.setQueryData(["post-comments", normalizedPostId], (old: any) => {
-            if (!Array.isArray(old)) return [newReply];
-            return [newReply, ...old];
-          });
+          // Helper function to update array query format
+          const updateArrayQuery = (queryKey: any[]) => {
+            queryClient.setQueryData(queryKey, (old: any) => {
+              if (!Array.isArray(old)) return [newReply];
+              // Check if reply already exists to avoid duplicates
+              const exists = old.some((item: any) => item?.id === newReplyId);
+              if (exists) return old;
+              return [newReply, ...old];
+            });
+          };
           
-          // Update nested comment replies list if present (used in CommentItem) - normalize key
-          queryClient.setQueryData(["comment-replies", normalizedPostId], (old: any) => {
-            if (!Array.isArray(old)) return [newReply];
-            return [newReply, ...old];
-          });
+          // Update infinite replies list (normalized key)
+          updateInfiniteQuery(["post-comments", normalizedPostId, "infinite"]);
+          
+          // Update non-infinite comments list (normalized key)
+          updateArrayQuery(["post-comments", normalizedPostId]);
+          
+          // Update nested comment replies list (normalized key)
+          updateArrayQuery(["comment-replies", normalizedPostId]);
           
           // Also update with original postId format for backward compatibility
-          queryClient.setQueryData(["post-comments", postId], (old: any) => {
-            if (!Array.isArray(old)) return [newReply];
-            return [newReply, ...old];
+          updateInfiniteQuery(["post-comments", postId, "infinite"]);
+          updateArrayQuery(["post-comments", postId]);
+          updateArrayQuery(["comment-replies", postId]);
+          
+          // Update ALL active query keys that match the pattern (similar to posts)
+          // This ensures we catch any variations of the query key
+          queryClient.getQueryCache().findAll({ queryKey: ["post-comments"], exact: false }).forEach((query) => {
+            const key = query.queryKey as any[];
+            // Check if this query is for the parent post (normalized or original format)
+            const queryPostId = key[1];
+            if (queryPostId === normalizedPostId || queryPostId === postId) {
+              if (key[2] === "infinite") {
+                updateInfiniteQuery(key);
+              } else {
+                updateArrayQuery(key);
+              }
+            }
           });
-          queryClient.setQueryData(["comment-replies", postId], (old: any) => {
-            if (!Array.isArray(old)) return [newReply];
-            return [newReply, ...old];
+          
+          // Update ALL active comment-replies query keys
+          queryClient.getQueryCache().findAll({ queryKey: ["comment-replies"], exact: false }).forEach((query) => {
+            const key = query.queryKey as any[];
+            const queryPostId = key[1];
+            if (queryPostId === normalizedPostId || queryPostId === postId) {
+              updateArrayQuery(key);
+            }
           });
+          
+          // Optimistically update parent post's comment count
+          // Update parent post in cache if it exists (for both normalized and original formats)
+          const updateParentPostCommentCount = (parentId: string) => {
+            // Update all post queries that might contain the parent post
+            queryClient.getQueryCache().findAll({ queryKey: ["posts"], exact: false }).forEach((query) => {
+              const key = query.queryKey as any[];
+              queryClient.setQueryData(key, (old: any) => {
+                if (!old || !old.pages) return old;
+                return {
+                  ...old,
+                  pages: old.pages.map((p: any) => ({
+                    ...p,
+                    items: p.items?.map((i: any) => 
+                      (i?.id === parentId || i?.id === normalizedPostId || i?.id === postId)
+                        ? { ...i, total_comments: (i.total_comments || 0) + 1 }
+                        : i
+                    ) || [],
+                  })),
+                };
+              });
+            });
+            
+            // Also check single post queries
+            queryClient.setQueryData(["post", parentId], (old: any) => {
+              if (old && (old.id === parentId || old.id === normalizedPostId || old.id === postId)) {
+                return { ...old, total_comments: (old.total_comments || 0) + 1 };
+              }
+              return old;
+            });
+            
+            queryClient.setQueryData(["post", normalizedPostId], (old: any) => {
+              if (old && (old.id === normalizedPostId || old.id === postId)) {
+                return { ...old, total_comments: (old.total_comments || 0) + 1 };
+              }
+              return old;
+            });
+          };
+          
+          // Update parent post comment count optimistically
+          updateParentPostCommentCount(normalizedPostId);
+          updateParentPostCommentCount(postId);
+          
+          // Invalidate descendant count queries so they refetch with the new reply
+          queryClient.invalidateQueries({ queryKey: ["post-desc-count"], exact: false });
         } catch {}
         
         // Poll backend until comment is confirmed or max retries reached

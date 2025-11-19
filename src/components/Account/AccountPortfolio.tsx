@@ -851,6 +851,16 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     return rawPortfolioData.raw;
   }, [rawPortfolioData]);
 
+  // Fetch current portfolio value independently of timeframe
+  // This ensures consistency across all timeframes by always using the same current value source
+  const { data: currentPortfolioSnapshot } = usePortfolioValue({
+    address,
+    convertTo: convertTo as any,
+    enabled: !!address,
+    staleTime: 30_000, // 30 seconds
+    refetchInterval: 60_000, // 1 minute
+  });
+
   // Prepare chart data for Recharts first (needed for currentPortfolioValue extraction)
   const rechartsData = useMemo(() => {
     if (!portfolioData || portfolioData.length === 0) return [];
@@ -974,16 +984,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     return data.sort((a, b) => a.time - b.time);
   }, [portfolioData, currentPortfolioSnapshot, convertTo, dateRange]);
-
-  // Fetch current portfolio value independently of timeframe
-  // This ensures consistency across all timeframes by always using the same current value source
-  const { data: currentPortfolioSnapshot } = usePortfolioValue({
-    address,
-    convertTo: convertTo as any,
-    enabled: !!address,
-    staleTime: 30_000, // 30 seconds
-    refetchInterval: 60_000, // 1 minute
-  });
 
   // Extract current portfolio value from the independent query
   // This ensures consistency across all timeframes

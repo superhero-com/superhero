@@ -440,6 +440,25 @@ export default function RightRail({
       </div> */}
 
 
+      {/* Trading Leaderboard promo */}
+      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-lg">🏆</span>
+          <h4 className="m-0 text-white text-base font-bold">
+            Top Traders
+          </h4>
+        </div>
+        <p className="text-[11px] text-[var(--light-font-color)] mb-3">
+          See which wallets are leading the markets by PnL, ROI and AUM on the Trading Leaderboard.
+        </p>
+        <button
+          className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black border-none rounded-xl py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5"
+          onClick={() => navigate('/trends/leaderboard')}
+        >
+          View Trading Leaderboard
+        </button>
+      </div>
+
       {/* Quick Actions - moved to Right Rail bottom */}
       <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
         <div className="flex items-center gap-2 mb-4">

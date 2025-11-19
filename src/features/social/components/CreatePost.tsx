@@ -3,7 +3,7 @@ import PostForm from './PostForm';
 
 interface CreatePostProps {
   onClose?: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (createdPost?: any) => void;
   className?: string;
   onTextChange?: (text: string) => void;
   autoFocus?: boolean;

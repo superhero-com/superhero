@@ -375,7 +375,10 @@ export default function FeedList({
     },
     // Merge optimistic posts with API response
     structuralSharing: (oldData, newData) => {
-      if (!oldData || !newData) return newData || oldData;
+      // If no old data, just return new data (first load)
+      if (!oldData) return newData;
+      // If no new data, return old data (shouldn't happen, but be safe)
+      if (!newData) return oldData;
       
       // Preserve optimistic posts from old data
       const optimisticPosts: any[] = [];
@@ -391,10 +394,14 @@ export default function FeedList({
         });
       }
       
-      // If there are optimistic posts, merge them with new data
-      if (optimisticPosts.length > 0 && newData.pages && newData.pages.length > 0) {
-        // Get IDs from new data to avoid duplicates
-        const newDataPostIds = new Set<string>();
+      // If there are no optimistic posts, just return new data
+      if (optimisticPosts.length === 0) {
+        return newData;
+      }
+      
+      // Get IDs from new data to avoid duplicates
+      const newDataPostIds = new Set<string>();
+      if (newData.pages && newData.pages.length > 0) {
         newData.pages.forEach((page: any) => {
           if (page?.items) {
             page.items.forEach((item: any) => {
@@ -402,32 +409,51 @@ export default function FeedList({
             });
           }
         });
-        
-        // Filter out optimistic posts that are now in the API response
-        const stillOptimistic = optimisticPosts.filter((post: any) => 
-          !newDataPostIds.has(String(post.id))
-        );
-        
-        // Prepend still-optimistic posts to first page of new data
-        if (stillOptimistic.length > 0 && newData.pages[0]?.items) {
-          return {
-            ...newData,
-            pages: [
-              {
-                ...newData.pages[0],
-                items: [...stillOptimistic, ...newData.pages[0].items],
-                meta: {
-                  ...newData.pages[0].meta,
-                  itemCount: newData.pages[0].items.length + stillOptimistic.length,
-                },
-              },
-              ...newData.pages.slice(1),
-            ],
-          };
-        }
       }
       
-      return newData;
+      // Filter out optimistic posts that are now in the API response
+      const stillOptimistic = optimisticPosts.filter((post: any) => 
+        !newDataPostIds.has(String(post.id))
+      );
+      
+      // If no optimistic posts remain, return new data
+      if (stillOptimistic.length === 0) {
+        return newData;
+      }
+      
+      // Merge optimistic posts with new data
+      // If new data has pages, prepend to first page
+      if (newData.pages && newData.pages.length > 0 && newData.pages[0]?.items) {
+        return {
+          ...newData,
+          pages: [
+            {
+              ...newData.pages[0],
+              items: [...stillOptimistic, ...newData.pages[0].items],
+              meta: {
+                ...newData.pages[0].meta,
+                itemCount: newData.pages[0].items.length + stillOptimistic.length,
+              },
+            },
+            ...newData.pages.slice(1),
+          ],
+        };
+      } else {
+        // If new data is empty, create a page with just optimistic posts
+        return {
+          ...newData,
+          pages: [{
+            items: stillOptimistic,
+            meta: {
+              itemCount: stillOptimistic.length,
+              totalItems: stillOptimistic.length,
+              totalPages: 1,
+              currentPage: 1,
+            }
+          }],
+          pageParams: [1],
+        };
+      }
     },
     getNextPageParam: (lastPage: any, allPages: any[]) => {
       // Continue pagination if we have totalPages and haven't reached it yet

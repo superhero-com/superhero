@@ -48,6 +48,9 @@ export const AddressAvatarWithChainNameFeed = memo(({
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const ref = useRef<HTMLDivElement | null>(null);
     const cardRef = useRef<HTMLDivElement | null>(null);
+    // Use a ref to store the latest loadAccountData to avoid duplicate calls
+    // Note: useAccountBalances already calls loadAccountData when selectedAccount changes
+    const loadAccountDataRef = useRef(loadAccountData);
 
     const updatePosition = () => {
         if (ref.current) {
@@ -69,14 +72,19 @@ export const AddressAvatarWithChainNameFeed = memo(({
         return () => window.clearTimeout(id);
     }, [hover, isHoverEnabled]);
 
+    // Keep the ref updated with the latest loadAccountData function
+    useEffect(() => {
+        loadAccountDataRef.current = loadAccountData;
+    }, [loadAccountData]);
+
     // Start loading data immediately when hover starts (not when card becomes visible)
     // This way data is loading/loaded by the time the 300ms delay expires
     useEffect(() => {
         if (!address) return;
         if (showBalance || hover) {
-            loadAccountData();
+            loadAccountDataRef.current();
         }
-    }, [address, showBalance, hover, loadAccountData]);
+    }, [address, showBalance, hover]);
 
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault();

@@ -141,6 +141,11 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   // Refs to track polling timers and component mount status
   const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
   const isMountedRef = useRef(true);
+  
+  // Shared ID normalization function - ensures consistent ID format across the component
+  const normalizeId = (id: string): string => {
+    return String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`;
+  };
   const [overlayComputed, setOverlayComputed] = useState<{ paddingTop: number; paddingRight: number; paddingBottom: number; paddingLeft: number; fontFamily: string; fontSize: string; fontWeight: string; lineHeight: string; letterSpacing: string; } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDesktopViewport, setIsDesktopViewport] = useState(() => {
@@ -459,10 +464,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       } else if (postId) {
         // For replies: optimistically show the new reply immediately
         // Normalize postId the same way CommentItem does to ensure cache key matches
-        const normalizePostIdV3 = (id: string): string => {
-          return String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`;
-        };
-        const normalizedPostId = normalizePostIdV3(postId);
+        const normalizedPostId = normalizeId(postId);
         const newReplyId = `${String(decodedResult).replace(/_v3$/,'')}_v3`;
         
         // Create optimistic reply object immediately (even before API call)
@@ -542,8 +544,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
           
         // Helper to check if two IDs match (handles both normalized and non-normalized)
         const idsMatch = (id1: string, id2: string): boolean => {
-            const normalize = (id: string) => String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`;
-            return normalize(id1) === normalize(id2) || id1 === id2;
+            return normalizeId(id1) === normalizeId(id2) || id1 === id2;
           };
           
         // CRITICAL: Update ALL active query keys FIRST, using their exact key format
@@ -622,11 +623,6 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         
         // Optimistically update parent post's comment count
         // Update parent post in cache if it exists (for both normalized and original formats)
-        // Helper to normalize IDs consistently
-        const normalizeId = (id: string): string => {
-          return String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`;
-        };
-        
         // Normalize parent ID once to use consistently (both normalizedPostId and postId should normalize to the same value)
         const normalizedParentId = normalizeId(normalizedPostId);
         

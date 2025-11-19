@@ -373,6 +373,62 @@ export default function FeedList({
       }
       return response as PostApiResponse;
     },
+    // Merge optimistic posts with API response
+    structuralSharing: (oldData, newData) => {
+      if (!oldData || !newData) return newData || oldData;
+      
+      // Preserve optimistic posts from old data
+      const optimisticPosts: any[] = [];
+      if (oldData.pages && oldData.pages.length > 0) {
+        oldData.pages.forEach((page: any) => {
+          if (page?.items) {
+            page.items.forEach((item: any) => {
+              if (item?._optimistic) {
+                optimisticPosts.push(item);
+              }
+            });
+          }
+        });
+      }
+      
+      // If there are optimistic posts, merge them with new data
+      if (optimisticPosts.length > 0 && newData.pages && newData.pages.length > 0) {
+        // Get IDs from new data to avoid duplicates
+        const newDataPostIds = new Set<string>();
+        newData.pages.forEach((page: any) => {
+          if (page?.items) {
+            page.items.forEach((item: any) => {
+              if (item?.id) newDataPostIds.add(String(item.id));
+            });
+          }
+        });
+        
+        // Filter out optimistic posts that are now in the API response
+        const stillOptimistic = optimisticPosts.filter((post: any) => 
+          !newDataPostIds.has(String(post.id))
+        );
+        
+        // Prepend still-optimistic posts to first page of new data
+        if (stillOptimistic.length > 0 && newData.pages[0]?.items) {
+          return {
+            ...newData,
+            pages: [
+              {
+                ...newData.pages[0],
+                items: [...stillOptimistic, ...newData.pages[0].items],
+                meta: {
+                  ...newData.pages[0].meta,
+                  itemCount: newData.pages[0].items.length + stillOptimistic.length,
+                },
+              },
+              ...newData.pages.slice(1),
+            ],
+          };
+        }
+      }
+      
+      return newData;
+    },
     getNextPageParam: (lastPage: any, allPages: any[]) => {
       // Continue pagination if we have totalPages and haven't reached it yet
       const meta = lastPage?.meta;
@@ -918,8 +974,10 @@ export default function FeedList({
   // Render helpers
   const renderEmptyState = () => {
     if (sortBy === "hot") {
-      // Only show loading if we don't have cached data
-      const initialLoading = popularLoading && (!popularData || (popularData as any)?.pages?.length === 0);
+      // Check if we have any data (including optimistic posts)
+      const hasAnyData = popularData && (popularData as any)?.pages?.length > 0;
+      // Only show loading if we don't have cached data AND query is still loading
+      const initialLoading = popularLoading && !hasAnyData;
       const err = popularError;
       if (err) {
         return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); }} />;
@@ -1276,7 +1334,8 @@ export default function FeedList({
       }
       if (!old || !old.pages || old.pages.length === 0) {
         // If no data exists, create initial structure
-        return {
+        // Note: React Query's useInfiniteQuery expects this structure
+        const newData = {
           pages: [{
             items: [{ ...post, _optimistic: true }],
             meta: {
@@ -1288,6 +1347,15 @@ export default function FeedList({
           }],
           pageParams: [1],
         };
+        
+        if (process.env.NODE_ENV === 'development' && isPopularFeed) {
+          console.log('[Optimistic Post] Created new data structure:', {
+            pagesCount: newData.pages.length,
+            itemsCount: newData.pages[0].items.length,
+          });
+        }
+        
+        return newData;
       }
 
       // Check if post already exists

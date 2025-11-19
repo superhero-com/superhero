@@ -48,7 +48,8 @@ export default function LeaderboardView() {
         page,
         limit: 15,
       }),
-    staleTime: 1000 * 60,
+    staleTime: 60 * 1000, // cache results per window/metric for 1 minute
+    gcTime: 5 * 60 * 1000, // keep cached windows around for 5 minutes
   });
 
   const items = data?.items ?? [];
@@ -202,5 +203,3 @@ export default function LeaderboardView() {
     </div>
   );
 }
-
-

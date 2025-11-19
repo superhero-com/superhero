@@ -1,9 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { DexService } from "../../../api/generated";
 import { TokenListCards } from "../../../components/explore/components/TokenListCards";
 import { TokenListTable } from "../../../components/explore/components/TokenListTable";
 import { useTokenList } from "../../../components/explore/hooks/useTokenList";
+import { useSetAtom } from "jotai";
+import { performanceChartTimeframeAtom } from "@/features/trending/atoms";
+import { Decimal } from "@/libs/decimal";
 
 // Define the actual API response structure
 interface PaginatedResponse<T> {
@@ -16,8 +19,15 @@ interface PaginatedResponse<T> {
 }
 
 export default function DexExploreTokens() {
-  const [sort, setSort] = useState<"pairs_count" | "name" | "symbol" | "created_at" | "price" | "tvl" | "24hchange" | "24hvolume" | "7dchange" | "7dvolume">(
-    "pairs_count"
+  const setPerformanceChartTimeframe = useSetAtom(performanceChartTimeframeAtom);
+
+  // Set default timeframe to "30d" to match the default sort by 30d volume
+  useEffect(() => {
+    setPerformanceChartTimeframe("30d");
+  }, [setPerformanceChartTimeframe]);
+
+  const [sort, setSort] = useState<"pairs_count" | "name" | "symbol" | "created_at" | "price" | "tvl" | "24hchange" | "24hvolume" | "7dchange" | "7dvolume" | "30dchange" | "30dvolume">(
+    "30dvolume"
   );
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [page, setPage] = useState(1);
@@ -35,19 +45,71 @@ export default function DexExploreTokens() {
     }
   };
 
+  // Check if backend supports this sort option (30d options may not be supported yet)
+  const backendSupportsSort = !sort.startsWith('30d');
+  const backendSort = backendSupportsSort ? sort : 'pairs_count'; // Fallback to pairs_count if backend doesn't support 30d
+
   const { data, isLoading } = useQuery({
     queryFn: async () => {
       const result = await DexService.listAllDexTokens({
         page: page,
         limit: limit,
-        orderBy: sort,
+        orderBy: backendSort as any,
         orderDirection: sortDirection,
         search: search,
       });
       return result as unknown as PaginatedResponse<any>;
     },
-    queryKey: ["DexService.listAllDexTokens", sort, sortDirection, page, limit, search],
+    queryKey: ["DexService.listAllDexTokens", backendSort, sortDirection, page, limit, search],
   });
+
+  // Client-side sorting for 30d options if backend doesn't support them
+  const sortedData = useMemo(() => {
+    if (!data?.items || backendSupportsSort) {
+      return data;
+    }
+
+    const sortedItems = [...data.items].sort((a, b) => {
+      const getVolume = (token: any, period: string) => {
+        const volumeData = token.summary?.change?.[period]?.volume;
+        if (!volumeData) return Decimal.ZERO;
+        return Decimal.from(volumeData.ae || 0);
+      };
+
+      const getChange = (token: any, period: string) => {
+        const changeData = token.summary?.change?.[period]?.percentage;
+        if (!changeData) return Decimal.ZERO;
+        return Decimal.from(changeData);
+      };
+
+      let valueA: Decimal;
+      let valueB: Decimal;
+
+      if (sort === '30dvolume') {
+        valueA = getVolume(a, '30d');
+        valueB = getVolume(b, '30d');
+      } else if (sort === '30dchange') {
+        valueA = getChange(a, '30d');
+        valueB = getChange(b, '30d');
+      } else {
+        return 0;
+      }
+
+      // Compare using Decimal methods: returns -1 if A < B, 0 if equal, 1 if A > B
+      let comparison = 0;
+      if (valueA.lt(valueB)) {
+        comparison = -1;
+      } else if (valueA.gt(valueB)) {
+        comparison = 1;
+      }
+      return sortDirection === 'DESC' ? -comparison : comparison;
+    });
+
+    return {
+      ...data,
+      items: sortedItems,
+    };
+  }, [data, sort, sortDirection, backendSupportsSort]);
 
   return (
     <div className="p-0 mx-auto md:pt-0">
@@ -67,7 +129,7 @@ export default function DexExploreTokens() {
         {/* Content: Mobile Cards or Desktop Table */}
         <div className="md:hidden">
           <TokenListCards
-            tokens={data?.items ?? []}
+            tokens={sortedData?.items ?? []}
             sort={{ key: sort, asc: sortDirection === "ASC" }}
             onSortChange={handleSortChange}
             search={search}
@@ -77,7 +139,7 @@ export default function DexExploreTokens() {
         </div>
         <div className="hidden md:block">
           <TokenListTable
-            tokens={data?.items ?? []}
+            tokens={sortedData?.items ?? []}
             sort={{ key: sort, asc: sortDirection === "ASC" }}
             onSortChange={handleSortChange}
             search={search}
@@ -87,13 +149,13 @@ export default function DexExploreTokens() {
         </div>
 
         {/* Responsive Pagination Controls */}
-        {data && data.meta.totalItems > 0 && (
+        {sortedData && sortedData.meta.totalItems > 0 && (
           <div className="flex flex-col md:flex-row justify-between items-center mt-5 p-3 md:py-4 md:px-5 bg-white/[0.02] border border-[var(--glass-border)] rounded-2xl backdrop-blur-[10px] gap-3 md:gap-0">
 
             {/* Pagination Info */}
             <div className="flex items-center gap-2 order-2 md:order-1">
               <span className="text-xs md:text-sm text-[var(--light-font-color)] font-medium text-center md:text-left">
-                Showing {(page - 1) * limit + 1}-{Math.min(page * limit, data.meta.totalItems)} of {data.meta.totalItems} tokens
+                Showing {(page - 1) * limit + 1}-{Math.min(page * limit, sortedData.meta.totalItems)} of {sortedData.meta.totalItems} tokens
               </span>
             </div>
 
@@ -118,15 +180,15 @@ export default function DexExploreTokens() {
                   {page}
                 </span>
                 <span className="text-sm text-[var(--light-font-color)]">
-                  of {Math.ceil(data.meta.totalItems / limit)}
+                  of {Math.ceil(sortedData.meta.totalItems / limit)}
                 </span>
               </div>
 
               {/* Next Page Button */}
               <button
                 onClick={() => setPage(page + 1)}
-                disabled={page >= Math.ceil(data.meta.totalItems / limit)}
-                className={`py-2 px-2 md:px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-sm md:text-[13px] font-medium transition-all duration-300 outline-none min-w-[60px] md:min-w-auto ${page >= Math.ceil(data.meta.totalItems / limit)
+                disabled={page >= Math.ceil(sortedData.meta.totalItems / limit)}
+                className={`py-2 px-2 md:px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-sm md:text-[13px] font-medium transition-all duration-300 outline-none min-w-[60px] md:min-w-auto ${page >= Math.ceil(sortedData.meta.totalItems / limit)
                   ? "bg-white/5 text-[var(--light-font-color)] cursor-not-allowed opacity-50"
                   : "bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer hover:bg-[var(--accent-color)] hover:text-white hover:-translate-y-px"
                   }`}
@@ -138,7 +200,7 @@ export default function DexExploreTokens() {
           </div>
         )}
 
-        {data?.items.length === 0 && !isLoading && (
+        {sortedData?.items.length === 0 && !isLoading && (
           <div className="text-center py-15 bg-white/[0.02] border border-[var(--glass-border)] rounded-2xl backdrop-blur-[10px] mt-5">
             <div className="text-[var(--light-font-color)] text-base font-medium mb-2">
               No tokens found

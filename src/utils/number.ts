@@ -14,14 +14,30 @@ export function formatTokenAmount(
 
 // Generic formatter used across the app (cards, leaderboards, etc.)
 export function formatNumber(num: number | string | undefined, decimals = 2) {
-  const n = Number(num || 0);
-  if (!Number.isFinite(n)) return '0';
-  if (n === 0) return '0';
-  if (n < 0.01) return '< 0.01';
-  if (n < 1000) return n.toFixed(decimals);
-  if (n < 1_000_000) return `${(n / 1_000).toFixed(1)}K`;
-  if (n < 1_000_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  return `${(n / 1_000_000_000).toFixed(1)}B`;
+  const n = Number(num);
+  if (!Number.isFinite(n) || n === 0) return '0';
+
+  const negative = n < 0;
+  const value = Math.abs(n);
+
+  let formatted: string;
+
+  // Preserve "< 0.01" only for very small positive values.
+  if (value < 0.01 && !negative) {
+    return '< 0.01';
+  }
+
+  if (value < 1000) {
+    formatted = value.toFixed(decimals);
+  } else if (value < 1_000_000) {
+    formatted = `${(value / 1_000).toFixed(1)}K`;
+  } else if (value < 1_000_000_000) {
+    formatted = `${(value / 1_000_000).toFixed(1)}M`;
+  } else {
+    formatted = `${(value / 1_000_000_000).toFixed(1)}B`;
+  }
+
+  return negative ? `-${formatted}` : formatted;
 }
 
 

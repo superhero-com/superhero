@@ -590,7 +590,13 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         
         // Optimistically update parent post's comment count
         // Update parent post in cache if it exists (for both normalized and original formats)
-        const updateParentPostCommentCount = (parentId: string) => {
+        // Helper to check if two IDs match (handles both normalized and non-normalized)
+        const idsMatchForCommentCount = (id1: string, id2: string): boolean => {
+          const normalize = (id: string) => String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`;
+          return normalize(id1) === normalize(id2) || id1 === id2;
+        };
+        
+        const updateParentPostCommentCount = () => {
           // Update all post queries that might contain the parent post
           queryClient.getQueryCache().findAll({ queryKey: ["posts"], exact: false }).forEach((query) => {
             const key = query.queryKey as any[];
@@ -601,7 +607,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                 pages: old.pages.map((p: any) => ({
                   ...p,
                   items: p.items?.map((i: any) => 
-                    (i?.id === parentId || i?.id === normalizedPostId || i?.id === postId)
+                    (idsMatchForCommentCount(i?.id, normalizedPostId) || idsMatchForCommentCount(i?.id, postId))
                       ? { ...i, total_comments: (i.total_comments || 0) + 1 }
                       : i
                   ) || [],
@@ -610,25 +616,27 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
             });
           });
           
-          // Also check single post queries
-          queryClient.setQueryData(["post", parentId], (old: any) => {
-            if (old && (old.id === parentId || old.id === normalizedPostId || old.id === postId)) {
+          // Also check single post queries for both formats
+          queryClient.setQueryData(["post", normalizedPostId], (old: any) => {
+            if (old && (idsMatchForCommentCount(old.id, normalizedPostId) || idsMatchForCommentCount(old.id, postId))) {
               return { ...old, total_comments: (old.total_comments || 0) + 1 };
             }
             return old;
           });
           
-          queryClient.setQueryData(["post", normalizedPostId], (old: any) => {
-            if (old && (old.id === normalizedPostId || old.id === postId)) {
-              return { ...old, total_comments: (old.total_comments || 0) + 1 };
-            }
-            return old;
-          });
+          // Only update postId query if it's different from normalizedPostId
+          if (!idsMatchForCommentCount(postId, normalizedPostId)) {
+            queryClient.setQueryData(["post", postId], (old: any) => {
+              if (old && (idsMatchForCommentCount(old.id, normalizedPostId) || idsMatchForCommentCount(old.id, postId))) {
+                return { ...old, total_comments: (old.total_comments || 0) + 1 };
+              }
+              return old;
+            });
+          }
         };
         
-        // Update parent post comment count optimistically
-        updateParentPostCommentCount(normalizedPostId);
-        updateParentPostCommentCount(postId);
+        // Update parent post comment count optimistically (only once to avoid double increment)
+        updateParentPostCommentCount();
         
         // Invalidate descendant count queries so they refetch with the new reply
         queryClient.invalidateQueries({ queryKey: ["post-desc-count"], exact: false });

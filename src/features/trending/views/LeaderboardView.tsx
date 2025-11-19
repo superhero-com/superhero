@@ -127,15 +127,24 @@ export default function LeaderboardView() {
 
           {/* Empty state */}
           {!isLoading && !isFetching && items.length === 0 && !isError && (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="mb-3">
+            <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
+              <div className="mb-1">
                 <Spinner className="w-6 h-6 text-white/40" />
               </div>
-              <p className="text-sm text-white/60">
-                No traders found for the selected filters.
+              <h2 className="text-base font-semibold text-white">
+                No top traders for this view yet
+              </h2>
+              <p className="text-sm text-white/70 max-w-md">
+                The leaderboard highlights wallets with strong on-chain trading performance
+                over the selected timeframe.
               </p>
+              <ul className="text-xs text-white/50 space-y-1 max-w-md list-disc list-inside text-left sm:text-center sm:list-none sm:space-y-0 sm:space-x-3 sm:flex sm:justify-center sm:flex-wrap">
+                <li>Trade trend tokens regularly to build up your volume.</li>
+                <li>Keep your PnL and ROI positive over time.</li>
+                <li>Own and hold trending tokens to grow your AUM.</li>
+              </ul>
               <p className="text-xs text-white/40 mt-1">
-                Try adjusting the timeframe or performance metric.
+                Try a different timeframe or metric, then come back as your on-chain activity grows.
               </p>
             </div>
           )}

@@ -123,7 +123,7 @@ export function LeaderboardCard({
       <div className="flex items-stretch gap-3 sm:gap-4">
         <div className="flex flex-col gap-1.5 sm:gap-1">
           <span className="text-[10px] sm:text-[11px] uppercase tracking-wide text-white/50">
-            {timeframeLabel} Days PnL (USD)
+            {timeframeLabel} PnL (USD)
           </span>
           <span
             className={`text-xl sm:text-2xl font-semibold ${
@@ -151,7 +151,7 @@ export function LeaderboardCard({
                 : "text-white/70"
             }`}
           >
-            {timeframeLabel} Days ROI{" "}
+            {timeframeLabel} ROI{" "}
             {isNaN(roiPct)
               ? "--"
               : `${roiPct > 0 ? "+" : roiPct < 0 ? "-" : ""}${Math.abs(
@@ -241,7 +241,7 @@ export function LeaderboardCard({
         </div>
         <div className="flex flex-col gap-1">
           <span className="uppercase tracking-wide">
-            {timeframeLabel} Days MDD
+            {timeframeLabel} MDD
           </span>
           <span className="text-xs font-mono text-white">
             {isNaN(mddPct) ? "--" : `${mddPct.toFixed(2)}%`}

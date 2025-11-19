@@ -167,6 +167,7 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
   });
 
   // Pass 4: Handle line breaks - split by \n and insert <br /> elements
+  // Multiple consecutive line breaks collapse to a single line break
   const withLineBreaks: React.ReactNode[] = [];
   let brKeyCounter = 0; // Counter to ensure unique keys for <br /> elements
   finalParts.forEach((node, idx) => {
@@ -176,20 +177,29 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
     }
     const segment = node as string;
     const lines = segment.split('\n');
+    let previousLineWasEmpty = false;
     lines.forEach((line, lineIdx) => {
       const isLastLine = lineIdx === lines.length - 1;
       const isTrailingEmptyLine = isLastLine && line.length === 0;
+      const isCurrentLineEmpty = line.length === 0;
       
-      if (lineIdx > 0 && !isTrailingEmptyLine) {
-        // Insert <br /> before each line except the first and trailing empty lines
-        withLineBreaks.push(<br key={`br-${idx}-${lineIdx}-${brKeyCounter++}`} />);
-      }
       if (line.length > 0) {
+        // Non-empty line: add <br /> before it if there was a previous line
+        // (but skip if previous line was empty, as we already handled that)
+        if (lineIdx > 0 && !previousLineWasEmpty) {
+          withLineBreaks.push(<br key={`br-${idx}-${lineIdx}-${brKeyCounter++}`} />);
+        }
         withLineBreaks.push(line);
+        previousLineWasEmpty = false;
       } else if (lineIdx > 0 && !isTrailingEmptyLine) {
-        // Preserve empty lines for paragraph breaks (but not the first empty line or trailing empty lines)
-        // Use non-breaking space to maintain visual spacing
-        withLineBreaks.push('\u00A0');
+        // Empty line: only add <br /> if previous line wasn't empty (collapse consecutive breaks)
+        if (!previousLineWasEmpty) {
+          withLineBreaks.push(<br key={`br-${idx}-${lineIdx}-${brKeyCounter++}`} />);
+          previousLineWasEmpty = true;
+        }
+        // Skip adding anything for consecutive empty lines (they're collapsed)
+      } else if (isCurrentLineEmpty) {
+        previousLineWasEmpty = true;
       }
     });
   });

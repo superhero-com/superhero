@@ -356,12 +356,16 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         }
         
         // Create optimistic post object
+        // Ensure we have an address - should be guaranteed by the check above, but be defensive
+        if (!activeAccount?.address) {
+          throw new Error('Active account address is required');
+        }
         const optimisticPost: any = {
           id: `${decodedResult}_v3`,
           content: trimmed,
           topics: topics,
           media: postMedia || [],
-          sender_address: activeAccount?.address || '',
+          sender_address: activeAccount.address,
           contract_address: CONFIG.CONTRACT_V3_ADDRESS || '',
           type: 'post_without_tip',
           tx_hash: '', // Will be filled when backend processes

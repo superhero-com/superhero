@@ -223,6 +223,12 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
                     <IconLink className="w-2 h-2" />
                   </a>
                 )}
+                {/* Show non-clickable "on-chain" badge for optimistic posts */}
+                {!item.tx_hash && (item as any)._optimistic && (
+                  <span className="inline-flex items-center gap-1 text-xs leading-none text-white/60">
+                    <span>on-chain</span>
+                  </span>
+                )}
               </div>
             </div>
             {/* Right-side block above handles on-chain link; remove duplicate area */}

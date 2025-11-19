@@ -435,10 +435,27 @@ export default function FeedList({
         });
       }
       
-      // Filter out optimistic posts that are now in the API response
-      const stillOptimistic = optimisticPosts.filter((post: any) => 
-        !newDataPostIds.has(String(post.id))
-      );
+      // Filter optimistic posts: keep them if they're NOT in API response OR if they're less than 2 minutes old
+      const now = Date.now();
+      const stillOptimistic = optimisticPosts.filter((post: any) => {
+        const postId = String(post.id);
+        const isInApiResponse = newDataPostIds.has(postId);
+        
+        if (!isInApiResponse) {
+          // Not in API response, keep it optimistic
+          return true;
+        }
+        
+        // In API response - check if it's less than 2 minutes old
+        const timestamp = optimisticPopularPostIdsRef.current.get(postId);
+        if (timestamp && (now - timestamp < OPTIMISTIC_POST_TTL_MS)) {
+          // Less than 2 minutes old, keep it optimistic (we've already updated it with real data)
+          return true;
+        }
+        
+        // Older than 2 minutes and in API response, remove it (will be replaced by API version)
+        return false;
+      });
       
       // If no optimistic posts remain, return new data
       if (stillOptimistic.length === 0) {
@@ -447,16 +464,23 @@ export default function FeedList({
       
       // Merge optimistic posts with new data
       // If new data has pages, prepend to first page
+      // Filter out duplicates: if optimistic post is in API response, exclude it from API items
+      const optimisticPostIds = new Set(stillOptimistic.map((p: any) => String(p.id)));
       if (newData.pages && newData.pages.length > 0 && newData.pages[0]?.items) {
+        // Filter out items from API that are already in optimistic posts
+        const filteredApiItems = newData.pages[0].items.filter((item: any) => 
+          !optimisticPostIds.has(String(item.id))
+        );
+        
         return {
           ...newData,
           pages: [
             {
               ...newData.pages[0],
-              items: [...stillOptimistic, ...newData.pages[0].items],
+              items: [...stillOptimistic, ...filteredApiItems],
               meta: {
                 ...newData.pages[0].meta,
-                itemCount: newData.pages[0].items.length + stillOptimistic.length,
+                itemCount: filteredApiItems.length + stillOptimistic.length,
               },
             },
             ...newData.pages.slice(1),
@@ -1365,6 +1389,69 @@ export default function FeedList({
     latestDataForHot, // Add latestDataForHot to dependencies
   ]);
 
+  // Helper function to update optimistic post with real data from API
+  const updateOptimisticPostWithRealData = useCallback(async (
+    queryKey: any[],
+    postId: string,
+    retryCount = 0,
+    maxRetries = 10
+  ) => {
+    try {
+      // Fetch real post data from API
+      const realPost = await PostsService.getById({ id: postId }) as any;
+      
+      // Update the optimistic post in cache with real data, but keep _optimistic flag
+      queryClient.setQueryData(queryKey, (old: any) => {
+        if (!old || !old.pages) return old;
+        
+        const updatedPages = old.pages.map((page: any) => {
+          if (!page?.items) return page;
+          
+          const updatedItems = page.items.map((item: any) => {
+            // If this is the optimistic post, update it with real data but keep _optimistic flag
+            if (item._optimistic && String(item.id) === String(postId)) {
+              return {
+                ...realPost,
+                _optimistic: true, // Keep the optimistic flag
+              };
+            }
+            return item;
+          });
+          
+          return {
+            ...page,
+            items: updatedItems,
+          };
+        });
+        
+        return {
+          ...old,
+          pages: updatedPages,
+        };
+      });
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Optimistic Post] Updated with real data:', { postId, tx_hash: realPost?.tx_hash });
+      }
+    } catch (error) {
+      // If fetching fails and we haven't exceeded max retries, retry after delay
+      if (retryCount < maxRetries) {
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 10000); // Exponential backoff, max 10s
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Optimistic Post] Retrying fetch real data:', { postId, retryCount, delay });
+        }
+        setTimeout(() => {
+          updateOptimisticPostWithRealData(queryKey, postId, retryCount + 1, maxRetries);
+        }, delay);
+      } else {
+        // If all retries failed, that's okay - optimistic post will remain as is
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Optimistic Post] Failed to fetch real data after retries:', error);
+        }
+      }
+    }
+  }, [queryClient]);
+
   // Helper function to optimistically add post to a feed
   const optimisticallyAddPostToFeed = useCallback((
     queryKey: any[],
@@ -1591,9 +1678,15 @@ export default function FeedList({
       });
     }
 
-    // Also remove _optimistic flag from posts that are in API response (they're now real)
+    // Also remove _optimistic flag from posts that are in API response AND are older than 2 minutes
+    // This allows posts to stay optimistic for 2 minutes even if they appear in API response
     const postsInApi = Array.from(optimisticPopularPostIdsRef.current.keys()).filter(
-      (postId) => apiPostIds.has(postId)
+      (postId) => {
+        if (!apiPostIds.has(postId)) return false;
+        // Only remove if post is older than 2 minutes
+        const timestamp = optimisticPopularPostIdsRef.current.get(postId);
+        return timestamp && (now - timestamp > OPTIMISTIC_POST_TTL_MS);
+      }
     );
 
     if (postsInApi.length > 0) {
@@ -1606,8 +1699,8 @@ export default function FeedList({
             if (!page?.items) return page;
 
             const cleanedItems = page.items.map((item: any) => {
-              // Remove _optimistic flag if post is in API response
-              if (item._optimistic && apiPostIds.has(String(item.id))) {
+              // Remove _optimistic flag if post is in API response AND older than 2 minutes
+              if (item._optimistic && postsInApi.includes(String(item.id))) {
                 const { _optimistic, ...cleanItem } = item;
                 return cleanItem;
               }
@@ -1786,8 +1879,10 @@ export default function FeedList({
                 false
               );
               
-              // Refetch in background to get real data - optimistic post stays visible via structuralSharing
-              refetchPopular();
+              // Fetch real post data from API and update optimistic post
+              // This will get tx_hash and other real data, but keep it optimistic in popular feed
+              // The function will retry automatically if backend hasn't processed it yet
+              updateOptimisticPostWithRealData(popularQueryKey, createdPost.id);
             } else {
               // Optimistically add to latest feed
               optimisticallyAddPostToFeed(

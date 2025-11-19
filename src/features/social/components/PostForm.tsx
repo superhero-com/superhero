@@ -412,6 +412,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
           newReply = await PostsService.getById({ id: newReplyId });
           
           // Helper function to update infinite query format
+          // Replies are ordered ASC (oldest first), so new replies go at the bottom (last page)
           const updateInfiniteQuery = (queryKey: any[]) => {
             queryClient.setQueryData(queryKey, (old: any) => {
               if (!old || !old.pages || !Array.isArray(old.pages)) {
@@ -420,23 +421,40 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                   pages: [{ items: [newReply], meta: { currentPage: 1, totalPages: 1 } }],
                 };
               }
-              const firstPage = old.pages?.[0] || { items: [], meta: old.pages?.[0]?.meta || {} };
-              // Check if reply already exists to avoid duplicates
-              const exists = firstPage.items?.some((item: any) => item?.id === newReplyId);
+              // Check if reply already exists in any page to avoid duplicates
+              const exists = old.pages.some((page: any) => 
+                page?.items?.some((item: any) => item?.id === newReplyId)
+              );
               if (exists) return old;
-              const nextFirst = { ...firstPage, items: [newReply, ...(firstPage.items || [])] };
-              return { ...old, pages: [nextFirst, ...old.pages.slice(1)] };
+              
+              // Append to the last page (newest items) since replies are ordered ASC
+              const lastPageIndex = old.pages.length - 1;
+              const lastPage = old.pages[lastPageIndex] || { items: [], meta: {} };
+              const updatedLastPage = {
+                ...lastPage,
+                items: [...(lastPage.items || []), newReply],
+              };
+              
+              return {
+                ...old,
+                pages: [
+                  ...old.pages.slice(0, lastPageIndex),
+                  updatedLastPage,
+                ],
+              };
             });
           };
           
           // Helper function to update array query format
+          // Replies are ordered ASC (oldest first), so new replies go at the bottom
           const updateArrayQuery = (queryKey: any[]) => {
             queryClient.setQueryData(queryKey, (old: any) => {
               if (!Array.isArray(old)) return [newReply];
               // Check if reply already exists to avoid duplicates
               const exists = old.some((item: any) => item?.id === newReplyId);
               if (exists) return old;
-              return [newReply, ...old];
+              // Append to the end (bottom) since replies are ordered ASC
+              return [...old, newReply];
             });
           };
           
@@ -454,13 +472,19 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
           updateArrayQuery(["post-comments", postId]);
           updateArrayQuery(["comment-replies", postId]);
           
+          // Helper to check if two IDs match (handles both normalized and non-normalized)
+          const idsMatch = (id1: string, id2: string): boolean => {
+            const normalize = (id: string) => String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`;
+            return normalize(id1) === normalize(id2) || id1 === id2;
+          };
+          
           // Update ALL active query keys that match the pattern (similar to posts)
           // This ensures we catch any variations of the query key
           queryClient.getQueryCache().findAll({ queryKey: ["post-comments"], exact: false }).forEach((query) => {
             const key = query.queryKey as any[];
             // Check if this query is for the parent post (normalized or original format)
             const queryPostId = key[1];
-            if (queryPostId === normalizedPostId || queryPostId === postId) {
+            if (idsMatch(queryPostId, normalizedPostId) || idsMatch(queryPostId, postId)) {
               if (key[2] === "infinite") {
                 updateInfiniteQuery(key);
               } else {
@@ -473,7 +497,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
           queryClient.getQueryCache().findAll({ queryKey: ["comment-replies"], exact: false }).forEach((query) => {
             const key = query.queryKey as any[];
             const queryPostId = key[1];
-            if (queryPostId === normalizedPostId || queryPostId === postId) {
+            if (idsMatch(queryPostId, normalizedPostId) || idsMatch(queryPostId, postId)) {
               updateArrayQuery(key);
             }
           });

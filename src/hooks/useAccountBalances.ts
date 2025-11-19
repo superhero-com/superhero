@@ -68,19 +68,27 @@ export const useAccountBalances = (selectedAccount: string) => {
         const url = `/v2/aex9/account-balances/${account}?limit=100`;
 
         const balances = await _loadAex9DataFromMdw(url, []);
-        const waeBalances = await getTokenBalance(sdkRef.current, DEX_ADDRESSES.wae, account);
-
-        const accountBalances = balances.concat({
-            contract_id: DEX_ADDRESSES.wae,
-            amount: waeBalances.toString(),
-            decimals: 18,
-            name: 'Wrapped AE',
-            symbol: 'WAE',
-        });
+        
+        // Check if WAE is already in the middleware response
+        const hasWae = balances.some(b => b.contract_id === DEX_ADDRESSES.wae);
+        
+        // Only fetch WAE separately if it's not in the middleware response
+        // This eliminates an unnecessary blockchain call when WAE is already present
+        if (!hasWae) {
+            const waeBalances = await getTokenBalance(sdkRef.current, DEX_ADDRESSES.wae, account);
+            balances.push({
+                contract_id: DEX_ADDRESSES.wae,
+                amount: waeBalances.toString(),
+                decimals: 18,
+                name: 'Wrapped AE',
+                symbol: 'WAE',
+            });
+        }
+        
         setAex9Balances(prev => ({
-            ...prev, [account]: accountBalances
+            ...prev, [account]: balances
         }));
-        return accountBalances;
+        return balances;
     }, [_loadAex9DataFromMdw, setAex9Balances]);
 
     const loadAccountData = useCallback(async () => {

@@ -83,13 +83,14 @@ export const AddressAvatarWithChainName = memo(({
         loadAccountDataRef.current = loadAccountData;
     }, [loadAccountData]);
 
-    // Load balances when needed (only when showing balance or when hover card is visible)
+    // Start loading data immediately when hover starts (not when card becomes visible)
+    // This way data is loading/loaded by the time the 300ms delay expires
     useEffect(() => {
         if (!address) return;
-        if (showBalance || visible) {
+        if (showBalance || hover) {
             loadAccountDataRef.current();
         }
-    }, [address, showBalance, visible]);
+    }, [address, showBalance, hover]);
 
     // Handle click outside to close card
     useEffect(() => {

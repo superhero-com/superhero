@@ -20,6 +20,25 @@ interface PortfolioSnapshot {
   ae_balance: number;
   tokens_value_ae: number;
   total_value_usd?: number;
+  total_pnl?: {
+    percentage: number;
+    invested: {
+      ae: number;
+      usd: number;
+    };
+    current_value: {
+      ae: number;
+      usd: number;
+    };
+    gain: {
+      ae: number;
+      usd: number;
+    };
+    range: {
+      from: string | null;
+      to: string | null;
+    };
+  };
 }
 
 const TIME_RANGES = {
@@ -55,6 +74,8 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const isHorizontalDragRef = useRef<boolean | null>(null);
   const DRAG_THRESHOLD = 10; // pixels
+  const rafRef = useRef<number | null>(null);
+  const pendingXRef = useRef<number | null>(null);
 
   // Use native event listeners to allow preventDefault
   useEffect(() => {
@@ -170,73 +191,49 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
                 
                 // Sample the fill area path to find the Y coordinate at this X
                 // The top edge of the fill area corresponds to the data line
+                // Optimized: Use binary search instead of exhaustive sampling
                 const pathLength = fillPath.getTotalLength();
                 let bestY = fillBBox.y + fillBBox.height; // Default to bottom
+                
+                // Binary search for the point closest to target X
+                let low = 0;
+                let high = pathLength;
                 let bestLength = 0;
+                const tolerance = 1.0; // pixels - slightly relaxed for performance
                 
-                // Find the point(s) at this X coordinate
-                // Then find the minimum Y among those points (top edge)
-                const tolerance = 0.5; // pixels
-                
-                // First pass: find all points close to target X and track minimum Y
-                const sampleCount = 1000; // More samples for better accuracy
-                for (let i = 0; i <= sampleCount; i++) {
-                  const length = (i / sampleCount) * pathLength;
-                  const pathPoint = fillPath.getPointAtLength(length);
+                // Binary search with fewer iterations for better performance
+                for (let iteration = 0; iteration < 30; iteration++) {
+                  const mid = (low + high) / 2;
+                  const pathPoint = fillPath.getPointAtLength(mid);
                   const xDistance = Math.abs(pathPoint.x - clampedRelativeX);
                   
-                  // If this point is very close to our X coordinate
-                  if (xDistance < tolerance) {
-                    // Track the topmost point (minimum Y)
-                    if (pathPoint.y < bestY) {
-                      bestY = pathPoint.y;
-                      bestLength = length;
-                    }
+                  if (xDistance < tolerance && pathPoint.y < bestY) {
+                    bestY = pathPoint.y;
+                    bestLength = mid;
                   }
+                  
+                  if (pathPoint.x < clampedRelativeX) {
+                    low = mid;
+                  } else {
+                    high = mid;
+                  }
+                  
+                  if (high - low < 0.1) break; // Early exit if range is small enough
                 }
                 
-                // If we found a point, refine around it
-                if (bestY < fillBBox.y + fillBBox.height) {
-                  // Refine in a small range around bestLength
-                  const refineRange = pathLength * 0.02; // 2% of path
+                // Quick refinement around best point (reduced iterations)
+                if (bestLength > 0) {
+                  const refineRange = pathLength * 0.01; // 1% of path
                   const refineStart = Math.max(0, bestLength - refineRange);
                   const refineEnd = Math.min(pathLength, bestLength + refineRange);
                   
-                  // Sample more densely in this range
-                  for (let i = 0; i <= 200; i++) {
-                    const length = refineStart + (refineEnd - refineStart) * (i / 200);
+                  // Reduced from 200 to 50 iterations
+                  for (let i = 0; i <= 50; i++) {
+                    const length = refineStart + (refineEnd - refineStart) * (i / 50);
                     const pathPoint = fillPath.getPointAtLength(length);
                     const xDistance = Math.abs(pathPoint.x - clampedRelativeX);
                     
-                    // Only consider points very close to target X
                     if (xDistance < tolerance && pathPoint.y < bestY) {
-                      bestY = pathPoint.y;
-                      bestLength = length;
-                    }
-                  }
-                  
-                  // Final ultra-fine refinement
-                  const finalRefineRange = pathLength * 0.005; // 0.5% of path
-                  const finalRefineStart = Math.max(0, bestLength - finalRefineRange);
-                  const finalRefineEnd = Math.min(pathLength, bestLength + finalRefineRange);
-                  
-                  for (let i = 0; i <= 100; i++) {
-                    const length = finalRefineStart + (finalRefineEnd - finalRefineStart) * (i / 100);
-                    const pathPoint = fillPath.getPointAtLength(length);
-                    const xDistance = Math.abs(pathPoint.x - clampedRelativeX);
-                    
-                    if (xDistance < tolerance * 0.5 && pathPoint.y < bestY) {
-                      bestY = pathPoint.y;
-                    }
-                  }
-                } else {
-                  // Fallback: if we didn't find a close match, use a wider tolerance
-                  for (let i = 0; i <= sampleCount; i++) {
-                    const length = (i / sampleCount) * pathLength;
-                    const pathPoint = fillPath.getPointAtLength(length);
-                    const xDistance = Math.abs(pathPoint.x - clampedRelativeX);
-                    
-                    if (xDistance < 10 && pathPoint.y < bestY) {
                       bestY = pathPoint.y;
                     }
                   }
@@ -276,14 +273,15 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               const clampedRelativeX = Math.max(pathStartX, Math.min(pathEndX, relativeX));
 
               // Binary search for the point closest to our X coordinate
+              // Optimized: Reduced iterations for better performance
               let low = 0;
               let high = pathLength;
               let bestPoint = { x: 0, y: 0 };
               let minDistance = Infinity;
-              const tolerance = 0.1; // pixels
+              const tolerance = 0.5; // pixels - slightly relaxed for performance
               
-              // Binary search with refinement
-              for (let iteration = 0; iteration < 50; iteration++) {
+              // Binary search with fewer iterations
+              for (let iteration = 0; iteration < 30; iteration++) {
                 const mid = (low + high) / 2;
                 const pathPoint = strokePath.getPointAtLength(mid);
                 const distance = pathPoint.x - clampedRelativeX;
@@ -302,9 +300,11 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
                 } else {
                   low = mid;
                 }
+                
+                if (high - low < 0.1) break; // Early exit if range is small enough
               }
               
-              // Final refinement: check points around the best point
+              // Final refinement: check points around the best point (reduced iterations)
               const refinePercent = 0.01; // 1% of path
               const refineRange = pathLength * refinePercent;
               const refineLengthStart = Math.max(0, 
@@ -314,9 +314,10 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
                 (bestPoint.x - pathStartX) / pathBBox.width * pathLength + refineRange
               );
               
-              for (let i = 0; i <= 100; i++) {
+              // Reduced from 100 to 30 iterations
+              for (let i = 0; i <= 30; i++) {
                 const length = Math.max(0, Math.min(pathLength, 
-                  refineLengthStart + (refineLengthEnd - refineLengthStart) * (i / 100)
+                  refineLengthStart + (refineLengthEnd - refineLengthStart) * (i / 30)
                 ));
                 const pathPoint = strokePath.getPointAtLength(length);
                 const distance = Math.abs(pathPoint.x - clampedRelativeX);
@@ -416,11 +417,24 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
       // Keep crosshair visible after drag ends
     };
 
-    // Mouse hover support for desktop
+    // Mouse hover support for desktop - throttled with requestAnimationFrame
     const handleMouseMove = (e: MouseEvent) => {
       const rect = container.getBoundingClientRect();
       const x = e.clientX - rect.left;
-      updateCrosshair(x);
+      
+      // Store the latest mouse position
+      pendingXRef.current = x;
+      
+      // Throttle updates using requestAnimationFrame
+      if (rafRef.current === null) {
+        rafRef.current = requestAnimationFrame(() => {
+          if (pendingXRef.current !== null) {
+            updateCrosshair(pendingXRef.current);
+            pendingXRef.current = null;
+          }
+          rafRef.current = null;
+        });
+      }
     };
 
     const handleMouseLeave = () => {
@@ -443,17 +457,51 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
       container.removeEventListener('touchend', handleTouchEnd);
       container.removeEventListener('mousemove', handleMouseMove);
       container.removeEventListener('mouseleave', handleMouseLeave);
+      
+      // Cancel any pending animation frame
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      pendingXRef.current = null;
     };
   }, [data, onHover]); // Re-run if data or onHover changes
+
+  // Prevent SVG elements from receiving focus
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const disableSVGFocus = () => {
+      const svg = container.querySelector('svg');
+      if (svg) {
+        svg.setAttribute('tabindex', '-1');
+        svg.setAttribute('focusable', 'false');
+        // Disable focus on all SVG child elements
+        const svgElements = svg.querySelectorAll('*');
+        svgElements.forEach((el) => {
+          el.setAttribute('tabindex', '-1');
+          el.setAttribute('focusable', 'false');
+        });
+      }
+    };
+
+    // Run immediately and after a short delay to catch dynamically rendered SVG
+    disableSVGFocus();
+    const timeout = setTimeout(disableSVGFocus, 100);
+
+    return () => clearTimeout(timeout);
+  }, [data]);
 
   return (
       <div
       ref={containerRef}
-      className="w-full h-[180px] relative"
+      className="w-full h-[180px] relative focus:outline-none focus-visible:outline-none"
         style={{ 
           touchAction: 'pan-y', 
           width: '100%', 
-          height: '180px', 
+          height: '180px',
+          outline: 'none',
         }}
       >
       {data.length > 0 && (
@@ -673,13 +721,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     };
   }, [useTouchPopover, tooltipOpen]);
 
-  // Fetch current portfolio value separately
-  const { value: currentPortfolioValue } = usePortfolioValue({
-    address,
-    convertTo: convertTo as any,
-    enabled: !!address,
-  });
-
   // Calculate date range for the selected time range
   const dateRange = useMemo(() => {
     const range = TIME_RANGES[selectedTimeRange];
@@ -704,7 +745,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
   // Fetch portfolio history - simple useQuery with stable cache key
   const {
-    data: portfolioData,
+    data: rawPortfolioData,
     isLoading,
     error,
     isError,
@@ -718,6 +759,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         endDate: dateRange.endDate,
         interval: dateRange.interval,
         convertTo: convertTo as any,
+        include: 'pnl-range', // Include PNL data with each snapshot for hover support
       });
       
       const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
@@ -731,34 +773,55 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       // Group snapshots by their interval period and take the latest one in each period
       const intervalSeconds = dateRange.interval;
       const periodMap = new Map<number, PortfolioSnapshot>();
+      const nowUnix = moment().unix();
       
       for (const snapshot of sorted) {
         const timestamp = moment(snapshot.timestamp).unix();
         // Calculate which interval period this timestamp belongs to
         const periodStart = Math.floor(timestamp / intervalSeconds) * intervalSeconds;
         
-        // If we already have a snapshot for this period, keep the one closest to the period start
-        // (or the latest one if they're equally close)
+        // Check if this is the last period (current period)
+        const currentPeriodStart = Math.floor(nowUnix / intervalSeconds) * intervalSeconds;
+        const isLastPeriod = periodStart === currentPeriodStart;
+        
         const existing = periodMap.get(periodStart);
         if (!existing) {
           periodMap.set(periodStart, snapshot);
         } else {
-          const existingTime = moment(existing.timestamp).unix();
-          const existingDistance = Math.abs(existingTime - periodStart);
-          const currentDistance = Math.abs(timestamp - periodStart);
-          
-          // Keep the one closer to the period start, or the later one if equidistant
-          if (currentDistance < existingDistance || 
-              (currentDistance === existingDistance && timestamp > existingTime)) {
-            periodMap.set(periodStart, snapshot);
+          if (isLastPeriod) {
+            // For the last period (current period), always keep the latest snapshot
+            // This ensures we use the most recent value for consistency across timeframes
+            const existingTime = moment(existing.timestamp).unix();
+            if (timestamp > existingTime) {
+              periodMap.set(periodStart, snapshot);
+            }
+          } else {
+            // For other periods, keep the one closest to the period start
+            // (or the latest one if they're equally close)
+            const existingTime = moment(existing.timestamp).unix();
+            const existingDistance = Math.abs(existingTime - periodStart);
+            const currentDistance = Math.abs(timestamp - periodStart);
+            
+            // Keep the one closer to the period start, or the later one if equidistant
+            if (currentDistance < existingDistance || 
+                (currentDistance === existingDistance && timestamp > existingTime)) {
+              periodMap.set(periodStart, snapshot);
+            }
           }
         }
       }
       
       // Convert map values back to array and sort
-      return Array.from(periodMap.values()).sort((a, b) => 
+      const filtered = Array.from(periodMap.values()).sort((a, b) => 
         moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf()
       );
+      
+      // Store raw data for current value extraction (before filtering)
+      // This ensures consistency across all timeframes
+      return {
+        filtered,
+        raw: sorted, // Keep raw data for current value extraction
+      };
     },
     enabled: !!address,
     staleTime: 5 * 60 * 1000, // 5 minutes - data is fresh for 5 minutes
@@ -768,6 +831,260 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
+
+  // Extract portfolioData and rawData from query result
+  const portfolioData = useMemo(() => {
+    if (!rawPortfolioData) return undefined;
+    // Handle both old format (array) and new format (object with filtered/raw)
+    if (Array.isArray(rawPortfolioData)) {
+      return rawPortfolioData;
+    }
+    return rawPortfolioData.filtered;
+  }, [rawPortfolioData]);
+  
+  const rawData = useMemo(() => {
+    if (!rawPortfolioData) return undefined;
+    // Handle both old format (array) and new format (object with filtered/raw)
+    if (Array.isArray(rawPortfolioData)) {
+      return rawPortfolioData;
+    }
+    return rawPortfolioData.raw;
+  }, [rawPortfolioData]);
+
+  // Fetch current portfolio value independently of timeframe
+  // This ensures consistency across all timeframes by always using the same current value source
+  const { data: currentPortfolioSnapshot, isLoading: isCurrentValueLoading } = usePortfolioValue({
+    address,
+    convertTo: convertTo as any,
+    enabled: !!address,
+    staleTime: 30_000, // 30 seconds
+    refetchInterval: 60_000, // 1 minute
+  });
+
+  // Prepare chart data for Recharts first (needed for currentPortfolioValue extraction)
+  const rechartsData = useMemo(() => {
+    if (!portfolioData || portfolioData.length === 0) return [];
+    
+    const nowUnix = moment.utc().unix();
+    
+    const data = portfolioData
+          .map((snapshot) => {
+            const timestamp = moment(snapshot.timestamp).unix();
+        
+        // Filter out any future data points
+        if (timestamp > nowUnix) {
+                return null;
+        }
+        
+        let value: number | null = null;
+        
+        if (convertTo === 'ae') {
+          value = snapshot.total_value_ae;
+        } else {
+          if (snapshot.total_value_usd != null) {
+            value = snapshot.total_value_usd;
+          } else {
+            return null;
+          }
+        }
+        
+        return {
+          time: timestamp,
+          timestamp: timestamp,
+          value: value as number,
+          date: moment(snapshot.timestamp).toDate(),
+        };
+      })
+      .filter((item): item is { time: number; timestamp: number; value: number; date: Date } => item !== null);
+
+    // Add current portfolio value from the independent query (usePortfolioValue)
+    // This ensures consistency across all timeframes by always using the same current value source
+    if (currentPortfolioSnapshot) {
+      try {
+        let currentValue: number | null = null;
+        if (convertTo === 'ae') {
+          currentValue = currentPortfolioSnapshot.total_value_ae;
+        } else {
+          currentValue = currentPortfolioSnapshot.total_value_usd ?? currentPortfolioSnapshot.total_value_ae;
+        }
+
+        if (currentValue !== null && !isNaN(currentValue) && isFinite(currentValue)) {
+            const lastPoint = data.length > 0 ? data[data.length - 1] : null;
+            
+            // Only add/update if the last point is in the past (not at or after current time)
+            if (!lastPoint || lastPoint.time < nowUnix) {
+              if (lastPoint) {
+                const valueDiff = Math.abs(lastPoint.value - currentValue);
+                const valueDiffPercent = lastPoint.value > 0 ? (valueDiff / lastPoint.value) * 100 : 0;
+                
+                // For daily intervals (1M, ALL), be more conservative:
+                // Only add a new point if value changed significantly (> 0.1% or > 1 AE)
+                // Otherwise, just update the timestamp to keep the line flat
+                const isDailyInterval = dateRange.interval >= 86400; // Daily or longer intervals
+                const significantChange = valueDiffPercent > 0.1 || valueDiff > 1; // More than 0.1% or 1 AE change
+                
+                if (valueDiff < 0.000001) {
+                  // Same value (within floating point precision), always update value to current
+                  // This ensures consistency across all timeframes, even if timestamp is recent
+                  const timeDiff = nowUnix - lastPoint.time;
+                  if (timeDiff > 300) {
+                    // Update timestamp and value if enough time has passed
+                    data[data.length - 1] = {
+                      ...lastPoint,
+                      value: currentValue, // Update to current value to ensure consistency
+                      time: nowUnix,
+                      timestamp: nowUnix,
+                      date: moment.unix(nowUnix).toDate(),
+                    };
+                  } else {
+                    // Even if timestamp is recent, update value to ensure consistency
+                    data[data.length - 1] = {
+                      ...lastPoint,
+                      value: currentValue, // Always use current value for consistency
+                    };
+                  }
+                } else if (isDailyInterval && !significantChange) {
+                  // Daily interval with insignificant change - update timestamp AND value to current
+                  // This ensures the displayed value matches the actual current value
+                  const timeDiff = nowUnix - lastPoint.time;
+                  if (timeDiff > 300) {
+                    // Update timestamp and value if enough time has passed
+                    data[data.length - 1] = {
+                      ...lastPoint,
+                      value: currentValue, // Update to current value to ensure consistency
+                      time: nowUnix,
+                      timestamp: nowUnix,
+                      date: moment.unix(nowUnix).toDate(),
+                    };
+                  } else {
+                    // Even if timestamp is recent, update value to ensure consistency
+                    // This prevents the displayed value from lagging behind the actual current value
+                    data[data.length - 1] = {
+                      ...lastPoint,
+                      value: currentValue, // Always use current value for consistency
+                    };
+                  }
+                } else {
+                  // Significant change or non-daily interval - add new point
+                  data.push({
+                    time: nowUnix,
+                    timestamp: nowUnix,
+                    value: currentValue,
+                    date: moment.unix(nowUnix).toDate(),
+                  });
+                }
+              } else {
+                // No last point, add current value
+                data.push({
+                  time: nowUnix,
+                  timestamp: nowUnix,
+                  value: currentValue,
+                  date: moment.unix(nowUnix).toDate(),
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.warn('Failed to add current portfolio value to chart:', error);
+        }
+    }
+
+    return data.sort((a, b) => a.time - b.time);
+  }, [portfolioData, currentPortfolioSnapshot, convertTo, dateRange]);
+
+  // Extract current portfolio value from the independent query
+  // This ensures consistency across all timeframes
+  const currentPortfolioValue = useMemo(() => {
+    if (!currentPortfolioSnapshot) return null;
+    
+    try {
+      if (convertTo === 'ae') {
+        return Decimal.from(currentPortfolioSnapshot.total_value_ae);
+      } else {
+        return Decimal.from(currentPortfolioSnapshot.total_value_usd ?? currentPortfolioSnapshot.total_value_ae);
+      }
+    } catch {
+      return null;
+    }
+  }, [currentPortfolioSnapshot, convertTo]);
+
+  // Fetch PNL data for current timeframe
+  const {
+    data: pnlData,
+    isLoading: isPnlLoading,
+  } = useQuery({
+    queryKey: ['portfolio-pnl', address, selectedTimeRange, convertTo],
+    queryFn: async () => {
+      const response = await SuperheroApi.getAccountPortfolioHistory(address, {
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+        interval: dateRange.interval,
+        convertTo: convertTo as any,
+        include: 'pnl-range',
+      });
+      
+      const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
+      if (snapshots.length === 0) return null;
+      
+      // With range-based PNL, the backend now calculates PNL for each timeframe range
+      // The last snapshot's PNL represents PNL for transactions from startDate to endDate
+      // We can use it directly without needing to subtract
+      const lastSnapshot = snapshots[snapshots.length - 1];
+      if (!lastSnapshot.total_pnl) return null;
+      
+      const firstSnapshot = snapshots[0];
+      
+      // Use the last snapshot's PNL directly - it represents PNL for the timeframe
+      return {
+        percentage: lastSnapshot.total_pnl.percentage,
+        invested: lastSnapshot.total_pnl.invested,
+        current_value: lastSnapshot.total_pnl.current_value,
+        gain: lastSnapshot.total_pnl.gain,
+        range: {
+          from: firstSnapshot.total_pnl?.range?.from || null,
+          to: lastSnapshot.total_pnl?.range?.to || null,
+        },
+      };
+    },
+    enabled: !!address,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+
+  // Use PNL data from portfolioData instead of fetching on hover
+  // Each snapshot already includes PNL range from startDate to that timestamp
+  const hoverPnlData = useMemo(() => {
+    if (!hoveredPrice || !portfolioData || portfolioData.length === 0) {
+      return null;
+    }
+    
+    // Find the snapshot closest to the hovered timestamp
+    const hoverTime = hoveredPrice.time;
+    let closestSnapshot: PortfolioSnapshot | null = null;
+    let minDistance = Infinity;
+    
+    for (const snapshot of portfolioData) {
+      const snapshotTime = moment(snapshot.timestamp).unix();
+      const distance = Math.abs(snapshotTime - hoverTime);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestSnapshot = snapshot;
+      }
+    }
+    
+    // Use PNL data from the closest snapshot (which includes range from startDate to that timestamp)
+    if (closestSnapshot?.total_pnl) {
+      return {
+        percentage: closestSnapshot.total_pnl.percentage,
+        invested: closestSnapshot.total_pnl.invested,
+        current_value: closestSnapshot.total_pnl.current_value,
+        gain: closestSnapshot.total_pnl.gain,
+        range: closestSnapshot.total_pnl.range,
+      };
+    }
+    
+    return null;
+  }, [hoveredPrice, portfolioData]);
 
   // Keep portfolioData ref up to date for initialization effect
   useEffect(() => {
@@ -863,17 +1180,99 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     });
   }, [portfolioData, isLoading, selectedTimeRange, address, convertTo, queryClient]);
 
-  // Calculate display value
+  // Prefetch PNL data for other time ranges in the background after first load
+  useEffect(() => {
+    // Only prefetch if the current PNL query has successfully loaded
+    if (!pnlData || isPnlLoading) return;
+
+    // Get all time ranges except the currently selected one
+    const otherTimeRanges = (Object.keys(TIME_RANGES) as TimeRange[]).filter(
+      (range) => range !== selectedTimeRange
+    );
+
+    // Prefetch PNL for each other time range
+    otherTimeRanges.forEach((timeRange) => {
+      const range = TIME_RANGES[timeRange];
+      const endDate = moment();
+      
+      let startDate: moment.Moment;
+      if (range.days === Infinity) {
+        startDate = MIN_START_DATE;
+      } else {
+        startDate = moment().subtract(range.days, 'days');
+        if (startDate.isBefore(MIN_START_DATE)) {
+          startDate = MIN_START_DATE;
+        }
+      }
+
+      const prefetchDateRange = {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        interval: range.interval,
+      };
+
+      // Check if PNL data is already cached
+      const queryKey = ['portfolio-pnl', address, timeRange, convertTo];
+      const cachedData = queryClient.getQueryData(queryKey);
+      
+      // Only prefetch if not already cached
+      if (!cachedData) {
+        // Prefetch the PNL query
+        queryClient.prefetchQuery({
+          queryKey,
+          queryFn: async () => {
+            const response = await SuperheroApi.getAccountPortfolioHistory(address, {
+              startDate: prefetchDateRange.startDate,
+              endDate: prefetchDateRange.endDate,
+              interval: prefetchDateRange.interval,
+              convertTo: convertTo as any,
+              include: 'pnl-range',
+            });
+            
+            const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
+            if (snapshots.length === 0) return null;
+            
+            // Get the last snapshot which should have the PNL range from start to end
+            const lastSnapshot = snapshots[snapshots.length - 1];
+            return lastSnapshot.total_pnl || null;
+          },
+          staleTime: 5 * 60 * 1000, // 5 minutes
+          gcTime: 30 * 60 * 1000, // Keep cached data for 30 minutes
+        });
+      }
+    });
+  }, [pnlData, isPnlLoading, selectedTimeRange, address, convertTo, queryClient]);
+
+  // Check if portfolio value and PNL are ready (independent of chart data)
+  // This allows portfolio value + PNL to show before the chart loads
+  const valueAndPnlReady = useMemo(() => {
+    // If hovering, show immediately (hover data comes from portfolioData which is already loaded)
+    if (hoveredPrice) return true;
+    
+    // Portfolio value and PNL are ready when we have both, regardless of chart data
+    return currentPortfolioValue !== null && currentPortfolioValue !== undefined && pnlData !== null && !isPnlLoading;
+  }, [hoveredPrice, currentPortfolioValue, pnlData, isPnlLoading]);
+
+  // Check if both portfolio value and PNL are ready to display together
+  const bothReady = useMemo(() => {
+    // If hovering, show immediately (hover data comes from portfolioData which is already loaded)
+    if (hoveredPrice) return true;
+    
+    // Otherwise, wait for both portfolio data and PNL to be ready
+    return !isLoading && !isPnlLoading && portfolioData && portfolioData.length > 0 && currentPortfolioValue !== null && currentPortfolioValue !== undefined;
+  }, [hoveredPrice, isLoading, isPnlLoading, portfolioData, currentPortfolioValue]);
+
+  // Calculate display value - show as soon as value and PNL are ready (don't wait for chart)
   const displayValue = useMemo(() => {
     if (hoveredPrice) {
       return hoveredPrice.price;
     }
     
-    if (currentPortfolioValue) {
+    // Show portfolio value as soon as value and PNL are ready (don't wait for chart)
+    if (valueAndPnlReady && currentPortfolioValue) {
       try {
-        return typeof currentPortfolioValue.toNumber === 'function' 
-          ? currentPortfolioValue.toNumber()
-          : typeof currentPortfolioValue === 'number'
+        // Convert Decimal to number for display
+        return typeof currentPortfolioValue === 'number'
           ? currentPortfolioValue
           : Number(currentPortfolioValue);
       } catch {
@@ -882,7 +1281,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     }
     
     return null;
-  }, [hoveredPrice, currentPortfolioValue]);
+  }, [hoveredPrice, currentPortfolioValue, valueAndPnlReady]);
 
   // Animate value when displayValue changes
   useEffect(() => {
@@ -942,87 +1341,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       }
     };
   }, [displayValue]);
-
-  // Prepare chart data for Recharts
-  const rechartsData = useMemo(() => {
-    if (!portfolioData || portfolioData.length === 0) return [];
-    
-    const nowUnix = moment.utc().unix();
-    
-    const data = portfolioData
-          .map((snapshot) => {
-            const timestamp = moment(snapshot.timestamp).unix();
-        
-        // Filter out any future data points
-        if (timestamp > nowUnix) {
-                return null;
-        }
-        
-        let value: number | null = null;
-        
-        if (convertTo === 'ae') {
-          value = snapshot.total_value_ae;
-        } else {
-          if (snapshot.total_value_usd != null) {
-            value = snapshot.total_value_usd;
-          } else {
-            return null;
-          }
-        }
-        
-        return {
-          time: timestamp,
-          timestamp: timestamp,
-          value: value as number,
-          date: moment(snapshot.timestamp).toDate(),
-        };
-      })
-      .filter((item): item is { time: number; timestamp: number; value: number; date: Date } => item !== null);
-
-    // Add current portfolio value, but don't create a future point
-    if (currentPortfolioValue !== null && currentPortfolioValue !== undefined) {
-      try {
-        const currentValue = typeof currentPortfolioValue.toNumber === 'function' 
-          ? currentPortfolioValue.toNumber()
-          : typeof currentPortfolioValue === 'number'
-          ? currentPortfolioValue
-          : Number(currentPortfolioValue);
-
-        if (!isNaN(currentValue) && isFinite(currentValue)) {
-          const lastPoint = data.length > 0 ? data[data.length - 1] : null;
-          
-          // Only add/update if the last point is in the past (not at or after current time)
-          // This prevents creating future data points
-          if (!lastPoint || lastPoint.time < nowUnix) {
-          if (lastPoint && Math.abs(lastPoint.value - currentValue) < 0.000001) {
-              // Same value, update timestamp to current time
-            const timeDiff = nowUnix - lastPoint.time;
-            if (timeDiff > 300) {
-              data[data.length - 1] = {
-                ...lastPoint,
-                time: nowUnix,
-                timestamp: nowUnix,
-                date: moment.unix(nowUnix).toDate(),
-              };
-            }
-            } else {
-              // Different value, add new point with current time
-            data.push({
-              time: nowUnix,
-              timestamp: nowUnix,
-                value: currentValue,
-              date: moment.unix(nowUnix).toDate(),
-            });
-            }
-          }
-        }
-      } catch (error) {
-        console.warn('Failed to add current portfolio value to chart:', error);
-      }
-    }
-
-    return data.sort((a, b) => a.time - b.time);
-  }, [portfolioData, convertTo, currentPortfolioValue]);
 
   if (isError) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -1201,12 +1519,110 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                 </>
               )}
             </span>
-            <div className="text-sm text-white/60 mt-1 h-5">
-              {hoveredPrice ? (
-                <span>{moment.unix(hoveredPrice.time).format('MMM D, YYYY HH:mm')}</span>
-              ) : (
-                <span className="opacity-0">&#8203;</span>
-              )}
+            
+            {/* Profit/Loss Display */}
+            <div className="mt-1 mb-1 flex flex-col md:flex-row md:items-center md:justify-between gap-1">
+              <div className="flex items-center gap-2 text-sm">
+                {hoveredPrice && hoverPnlData ? (
+                  <>
+                    <span className="text-white/60">Profit/Loss:</span>
+                    <span className={`font-semibold ${
+                      hoverPnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] === 0 
+                        ? 'text-white/60' 
+                        : hoverPnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] >= 0 
+                        ? 'text-green-400' 
+                        : 'text-red-400'
+                    }`}>
+                      {convertTo === 'ae' ? (
+                        <>
+                          {hoverPnlData.gain.ae === 0 ? (
+                            <>0 AE</>
+                          ) : (
+                            <>
+                              {hoverPnlData.gain.ae >= 0 ? '+' : ''}
+                              {hoverPnlData.gain.ae >= 1 
+                                ? hoverPnlData.gain.ae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                : Decimal.from(hoverPnlData.gain.ae).prettify()}
+                              {' AE '}
+                              <span className="text-white/60">
+                                ({hoverPnlData.percentage >= 0 ? '+' : ''}{hoverPnlData.percentage.toFixed(2)}%)
+                              </span>
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {hoverPnlData.gain.usd === 0 ? (
+                            <>{hoverPnlData.gain.usd.toLocaleString('en-US', { style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>
+                          ) : (
+                            <>
+                              {hoverPnlData.gain.usd >= 0 ? '+' : ''}
+                              {hoverPnlData.gain.usd.toLocaleString('en-US', { style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              {' '}
+                              <span className="text-white/60">
+                                ({hoverPnlData.percentage >= 0 ? '+' : ''}{hoverPnlData.percentage.toFixed(2)}%)
+                              </span>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </span>
+                  </>
+                ) : valueAndPnlReady && pnlData ? (
+                  <>
+                    <span className="text-white/60">Profit/Loss:</span>
+                    <span className={`font-semibold ${
+                      pnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] === 0 
+                        ? 'text-white/60' 
+                        : pnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] >= 0 
+                        ? 'text-green-400' 
+                        : 'text-red-400'
+                    }`}>
+                      {convertTo === 'ae' ? (
+                        <>
+                          {pnlData.gain.ae === 0 ? (
+                            <>0 AE</>
+                          ) : (
+                            <>
+                              {pnlData.gain.ae >= 0 ? '+' : ''}
+                              {pnlData.gain.ae >= 1 
+                                ? pnlData.gain.ae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                : Decimal.from(pnlData.gain.ae).prettify()}
+                              {' AE '}
+                              <span className="text-white/60">
+                                ({pnlData.percentage >= 0 ? '+' : ''}{pnlData.percentage.toFixed(2)}%)
+                              </span>
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {pnlData.gain.usd === 0 ? (
+                            <>{pnlData.gain.usd.toLocaleString('en-US', { style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>
+                          ) : (
+                            <>
+                              {pnlData.gain.usd >= 0 ? '+' : ''}
+                              {pnlData.gain.usd.toLocaleString('en-US', { style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              {' '}
+                              <span className="text-white/60">
+                                ({pnlData.percentage >= 0 ? '+' : ''}{pnlData.percentage.toFixed(2)}%)
+                              </span>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </span>
+                  </>
+                ) : null}
+              </div>
+              
+              <div className="text-sm text-white/60 md:text-right">
+                {hoveredPrice ? (
+                  <span>{moment.unix(hoveredPrice.time).format('MMM D, YYYY HH:mm')}</span>
+                ) : (
+                  <span className="opacity-0">&#8203;</span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1214,7 +1630,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         {/* Chart - no padding, full width */}
         <div className="p-4 w-full">
             <div 
-              className="h-[180px] relative w-full" 
+              className="h-[180px] relative w-full focus:outline-none focus-visible:outline-none" 
               tabIndex={-1}
               style={{ 
                 width: '100%',
@@ -1222,6 +1638,21 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                 maxWidth: '100%',
                 outline: 'none',
                 WebkitTapHighlightColor: 'transparent',
+              }}
+              onMouseDown={(e) => {
+                // Prevent focus on mouse click
+                e.preventDefault();
+                e.currentTarget.blur();
+                if (e.target instanceof HTMLElement) {
+                  e.target.blur();
+                }
+              }}
+              onClick={(e) => {
+                // Prevent focus on click
+                e.currentTarget.blur();
+                if (e.target instanceof HTMLElement) {
+                  e.target.blur();
+                }
               }}
               onTouchStart={(e) => {
                 // Prevent focus on touch
@@ -1231,10 +1662,10 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                 }
               }}
             >
-              {isLoading ? (
+              {isLoading || !valueAndPnlReady ? (
                 <div className="absolute inset-0 flex items-start justify-center pt-10 z-10 px-4 md:px-6">
-                  <div className="inline-flex items-center gap-1.5 text-white text-xs font-medium">
-                    <Spinner className="w-3.5 h-3.5" />
+                  <div className="inline-flex items-center gap-1 text-white text-xs font-medium">
+                    <Spinner className="w-8 h-8" />
                     <span>Loading portfolio data...</span>
                   </div>
                 </div>

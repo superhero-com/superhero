@@ -4,7 +4,6 @@ import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import moment from 'moment';
 import { SuperheroApi } from '@/api/backend';
 import { useCurrencies } from '@/hooks/useCurrencies';
-import { usePortfolioValue } from '@/hooks/usePortfolioValue';
 import { Decimal } from '@/libs/decimal';
 import { Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -721,13 +720,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     };
   }, [useTouchPopover, tooltipOpen]);
 
-  // Fetch current portfolio value separately
-  const { value: currentPortfolioValue } = usePortfolioValue({
-    address,
-    convertTo: convertTo as any,
-    enabled: !!address,
-  });
-
   // Calculate date range for the selected time range
   const dateRange = useMemo(() => {
     const range = TIME_RANGES[selectedTimeRange];
@@ -817,6 +809,28 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
+
+  // Extract current portfolio value from the latest point in portfolioData
+  // This ensures consistency between hover and non-hover states
+  const currentPortfolioValue = useMemo(() => {
+    if (!portfolioData || portfolioData.length === 0) return null;
+    
+    const latestSnapshot = portfolioData[portfolioData.length - 1];
+    if (!latestSnapshot) return null;
+    
+    try {
+      if (convertTo === 'ae') {
+        return Decimal.from(latestSnapshot.total_value_ae);
+      } else {
+        if (latestSnapshot.total_value_usd != null) {
+          return Decimal.from(latestSnapshot.total_value_usd);
+        }
+        return Decimal.from(latestSnapshot.total_value_ae);
+      }
+    } catch {
+      return null;
+    }
+  }, [portfolioData, convertTo]);
 
   // Fetch PNL data for current timeframe
   const {
@@ -1053,13 +1067,23 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     });
   }, [pnlData, isPnlLoading, selectedTimeRange, address, convertTo, queryClient]);
 
+  // Check if both portfolio value and PNL are ready to display together
+  const bothReady = useMemo(() => {
+    // If hovering, show immediately (hover data comes from portfolioData which is already loaded)
+    if (hoveredPrice) return true;
+    
+    // Otherwise, wait for both portfolio data and PNL to be ready
+    return !isLoading && !isPnlLoading && portfolioData && portfolioData.length > 0 && currentPortfolioValue !== null && currentPortfolioValue !== undefined;
+  }, [hoveredPrice, isLoading, isPnlLoading, portfolioData, currentPortfolioValue]);
+
   // Calculate display value
   const displayValue = useMemo(() => {
     if (hoveredPrice) {
       return hoveredPrice.price;
     }
     
-    if (currentPortfolioValue) {
+    // Only show portfolio value if both are ready (or if hovering)
+    if (bothReady && currentPortfolioValue) {
       try {
         return typeof currentPortfolioValue.toNumber === 'function' 
           ? currentPortfolioValue.toNumber()
@@ -1072,7 +1096,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     }
     
     return null;
-  }, [hoveredPrice, currentPortfolioValue]);
+  }, [hoveredPrice, currentPortfolioValue, bothReady]);
 
   // Animate value when displayValue changes
   useEffect(() => {
@@ -1184,25 +1208,55 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           // Only add/update if the last point is in the past (not at or after current time)
           // This prevents creating future data points
           if (!lastPoint || lastPoint.time < nowUnix) {
-          if (lastPoint && Math.abs(lastPoint.value - currentValue) < 0.000001) {
-              // Same value, update timestamp to current time
-            const timeDiff = nowUnix - lastPoint.time;
-            if (timeDiff > 300) {
-              data[data.length - 1] = {
-                ...lastPoint,
+            if (lastPoint) {
+              const valueDiff = Math.abs(lastPoint.value - currentValue);
+              const valueDiffPercent = lastPoint.value > 0 ? (valueDiff / lastPoint.value) * 100 : 0;
+              
+              // For daily intervals (1M, ALL), be more conservative:
+              // Only add a new point if value changed significantly (> 0.1% or > 1 AE)
+              // Otherwise, just update the timestamp to keep the line flat
+              const isDailyInterval = dateRange.interval >= 86400; // Daily or longer intervals
+              const significantChange = valueDiffPercent > 0.1 || valueDiff > 1; // More than 0.1% or 1 AE change
+              
+              if (valueDiff < 0.000001) {
+                // Same value (within floating point precision), update timestamp
+                const timeDiff = nowUnix - lastPoint.time;
+                if (timeDiff > 300) {
+                  data[data.length - 1] = {
+                    ...lastPoint,
+                    time: nowUnix,
+                    timestamp: nowUnix,
+                    date: moment.unix(nowUnix).toDate(),
+                  };
+                }
+              } else if (isDailyInterval && !significantChange) {
+                // Daily interval with insignificant change - update timestamp to keep it flat
+                const timeDiff = nowUnix - lastPoint.time;
+                if (timeDiff > 300) {
+                  data[data.length - 1] = {
+                    ...lastPoint,
+                    time: nowUnix,
+                    timestamp: nowUnix,
+                    date: moment.unix(nowUnix).toDate(),
+                  };
+                }
+              } else {
+                // Significant change or non-daily interval - add new point
+                data.push({
+                  time: nowUnix,
+                  timestamp: nowUnix,
+                  value: currentValue,
+                  date: moment.unix(nowUnix).toDate(),
+                });
+              }
+            } else {
+              // No last point, add current value
+              data.push({
                 time: nowUnix,
                 timestamp: nowUnix,
-                date: moment.unix(nowUnix).toDate(),
-              };
-            }
-            } else {
-              // Different value, add new point with current time
-            data.push({
-              time: nowUnix,
-              timestamp: nowUnix,
                 value: currentValue,
-              date: moment.unix(nowUnix).toDate(),
-            });
+                date: moment.unix(nowUnix).toDate(),
+              });
             }
           }
         }
@@ -1212,7 +1266,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     }
 
     return data.sort((a, b) => a.time - b.time);
-  }, [portfolioData, convertTo, currentPortfolioValue]);
+  }, [portfolioData, convertTo, currentPortfolioValue, dateRange]);
 
   if (isError) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -1440,7 +1494,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                       )}
                     </span>
                   </>
-                ) : pnlData ? (
+                ) : bothReady && pnlData ? (
                   <>
                     <span className="text-white/60">Profit/Loss:</span>
                     <span className={`font-semibold ${

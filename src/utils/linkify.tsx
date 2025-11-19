@@ -13,7 +13,11 @@ const HASHTAG_REGEX = /#([A-Za-z0-9-]{1,50})/g;
 
 export function linkify(text: string, options?: { knownChainNames?: Set<string> }): React.ReactNode[] {
   if (!text) return [];
-  const raw = String(text);
+  let raw = String(text);
+  
+  // Handle escaped newlines (\\n) - convert them to actual newlines
+  // This handles cases where content is stored with escaped newline characters
+  raw = raw.replace(/\\n/g, '\n');
 
   // Pass 1: Identify AENS mentions and turn them into profile links
   const aensLinked: React.ReactNode[] = [];

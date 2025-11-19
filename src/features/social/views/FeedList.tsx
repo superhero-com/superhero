@@ -1263,7 +1263,17 @@ export default function FeedList({
     post: any,
     isPopularFeed: boolean
   ) => {
-    queryClient.setQueryData(queryKey, (old: any) => {
+    // Update the query cache - React Query will automatically update the query data
+    const updatedData = queryClient.setQueryData(queryKey, (old: any) => {
+      if (process.env.NODE_ENV === 'development' && isPopularFeed) {
+        console.log('[Optimistic Post] setQueryData called:', {
+          queryKey,
+          postId: post.id,
+          hasOldData: !!old,
+          oldPagesCount: old?.pages?.length || 0,
+          firstPageItemsCount: old?.pages?.[0]?.items?.length || 0,
+        });
+      }
       if (!old || !old.pages || old.pages.length === 0) {
         // If no data exists, create initial structure
         return {
@@ -1294,7 +1304,7 @@ export default function FeedList({
         return old; // Post already exists, don't add again
       }
 
-      // Add post to the first page
+      // Add post to the first page at the very beginning
       const firstPage = old.pages[0] || { items: [], meta: {} };
       const newFirstPage = {
         ...firstPage,
@@ -1308,14 +1318,35 @@ export default function FeedList({
         },
       };
 
-      return {
+      const result = {
         ...old,
         pages: [newFirstPage, ...old.pages.slice(1)],
       };
+      
+      if (process.env.NODE_ENV === 'development' && isPopularFeed) {
+        console.log('[Optimistic Post] Updated data:', {
+          newFirstPageItemsCount: newFirstPage.items.length,
+          firstItemId: newFirstPage.items[0]?.id,
+          isOptimistic: newFirstPage.items[0]?._optimistic,
+        });
+      }
+      
+      return result;
     });
 
     if (isPopularFeed) {
       optimisticPopularPostIdsRef.current.set(String(post.id), Date.now());
+      
+      // Verify the data was set correctly
+      if (process.env.NODE_ENV === 'development') {
+        const cachedData = queryClient.getQueryData(queryKey);
+        console.log('[Optimistic Post] Cache after setQueryData:', {
+          hasCachedData: !!cachedData,
+          cachedPagesCount: (cachedData as any)?.pages?.length || 0,
+          firstPageItemsCount: (cachedData as any)?.pages?.[0]?.items?.length || 0,
+          firstItemId: (cachedData as any)?.pages?.[0]?.items?.[0]?.id,
+        });
+      }
     }
   }, [queryClient]);
 
@@ -1613,8 +1644,17 @@ export default function FeedList({
 
             if (sortBy === "hot") {
               // Optimistically add to popular feed
+              // Ensure we're using the exact same query key as the useInfiniteQuery
+              const popularQueryKey = ["popular-posts", { limit: 10, window: popularWindow }];
+              if (process.env.NODE_ENV === 'development') {
+                console.log('[Optimistic Post] Adding to popular feed:', {
+                  postId: createdPost.id,
+                  queryKey: popularQueryKey,
+                  popularWindow,
+                });
+              }
               optimisticallyAddPostToFeed(
-                ["popular-posts", { limit: 10, window: popularWindow }],
+                popularQueryKey,
                 createdPost,
                 true
               );

@@ -23,7 +23,7 @@ export class DexService {
         limit,
         page,
     }: {
-        orderBy?: 'pairs_count' | 'name' | 'symbol' | 'created_at' | 'price' | 'tvl' | '24hchange' | '24hvolume' | '7dchange' | '7dvolume',
+        orderBy?: 'pairs_count' | 'name' | 'symbol' | 'created_at' | 'price' | 'tvl' | '24hchange' | '24hvolume' | '7dchange' | '7dvolume' | '30dchange' | '30dvolume',
         orderDirection?: 'ASC' | 'DESC',
         search?: string,
         limit?: number,
@@ -82,6 +82,42 @@ export class DexService {
             url: '/api/dex/tokens/{address}/price',
             path: {
                 'address': address,
+            },
+        });
+    }
+    /**
+     * Get comprehensive token price analysis
+     * Get detailed price analysis including liquidity-weighted pricing, confidence metrics, and all possible paths
+     * @returns any Comprehensive price analysis with liquidity weighting
+     * @throws ApiError
+     */
+    public static getTokenPriceWithLiquidityAnalysis({
+        address,
+        baseToken,
+        debug,
+    }: {
+        /**
+         * Token contract address
+         */
+        address: string,
+        /**
+         * Base token for price calculation (default: WAE)
+         */
+        baseToken?: string,
+        /**
+         * Include detailed path analysis
+         */
+        debug?: boolean,
+    }): CancelablePromise<Record<string, any>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/dex/tokens/{address}/price/analysis',
+            path: {
+                'address': address,
+            },
+            query: {
+                'base_token': baseToken,
+                'debug': debug,
             },
         });
     }

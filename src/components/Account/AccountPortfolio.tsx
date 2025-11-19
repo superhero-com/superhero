@@ -908,7 +908,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           currentValue = currentPortfolioSnapshot.total_value_usd ?? currentPortfolioSnapshot.total_value_ae;
         }
 
-          if (currentValue !== null && !isNaN(currentValue) && isFinite(currentValue)) {
+        if (currentValue !== null && !isNaN(currentValue) && isFinite(currentValue)) {
             const lastPoint = data.length > 0 ? data[data.length - 1] : null;
             
             // Only add/update if the last point is in the past (not at or after current time)
@@ -979,7 +979,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         } catch (error) {
           console.warn('Failed to add current portfolio value to chart:', error);
         }
-      }
     }
 
     return data.sort((a, b) => a.time - b.time);

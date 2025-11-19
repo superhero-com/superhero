@@ -69,12 +69,14 @@ export const AddressAvatarWithChainNameFeed = memo(({
         return () => window.clearTimeout(id);
     }, [hover, isHoverEnabled]);
 
+    // Start loading data immediately when hover starts (not when card becomes visible)
+    // This way data is loading/loaded by the time the 300ms delay expires
     useEffect(() => {
         if (!address) return;
-        if (showBalance || visible) {
+        if (showBalance || hover) {
             loadAccountData();
         }
-    }, [address, showBalance, visible]);
+    }, [address, showBalance, hover, loadAccountData]);
 
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault();

@@ -1253,15 +1253,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     return currentPortfolioValue !== null && currentPortfolioValue !== undefined && pnlData !== null && !isPnlLoading;
   }, [hoveredPrice, currentPortfolioValue, pnlData, isPnlLoading]);
 
-  // Check if both portfolio value and PNL are ready to display together
-  const bothReady = useMemo(() => {
-    // If hovering, show immediately (hover data comes from portfolioData which is already loaded)
-    if (hoveredPrice) return true;
-    
-    // Otherwise, wait for both portfolio data and PNL to be ready
-    return !isLoading && !isPnlLoading && portfolioData && portfolioData.length > 0 && currentPortfolioValue !== null && currentPortfolioValue !== undefined;
-  }, [hoveredPrice, isLoading, isPnlLoading, portfolioData, currentPortfolioValue]);
-
   // Calculate display value - show as soon as value and PNL are ready (don't wait for chart)
   const displayValue = useMemo(() => {
     if (hoveredPrice) {

@@ -744,7 +744,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
   // Fetch portfolio history - simple useQuery with stable cache key
   const {
-    data: portfolioData,
+    data: rawPortfolioData,
     isLoading,
     error,
     isError,
@@ -811,9 +811,16 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       }
       
       // Convert map values back to array and sort
-      return Array.from(periodMap.values()).sort((a, b) => 
+      const filtered = Array.from(periodMap.values()).sort((a, b) => 
         moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf()
       );
+      
+      // Store raw data for current value extraction (before filtering)
+      // This ensures consistency across all timeframes
+      return {
+        filtered,
+        raw: sorted, // Keep raw data for current value extraction
+      };
     },
     enabled: !!address,
     staleTime: 5 * 60 * 1000, // 5 minutes - data is fresh for 5 minutes
@@ -823,6 +830,25 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
+
+  // Extract portfolioData and rawData from query result
+  const portfolioData = useMemo(() => {
+    if (!rawPortfolioData) return undefined;
+    // Handle both old format (array) and new format (object with filtered/raw)
+    if (Array.isArray(rawPortfolioData)) {
+      return rawPortfolioData;
+    }
+    return rawPortfolioData.filtered;
+  }, [rawPortfolioData]);
+  
+  const rawData = useMemo(() => {
+    if (!rawPortfolioData) return undefined;
+    // Handle both old format (array) and new format (object with filtered/raw)
+    if (Array.isArray(rawPortfolioData)) {
+      return rawPortfolioData;
+    }
+    return rawPortfolioData.raw;
+  }, [rawPortfolioData]);
 
   // Prepare chart data for Recharts first (needed for currentPortfolioValue extraction)
   const rechartsData = useMemo(() => {
@@ -860,10 +886,11 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       })
       .filter((item): item is { time: number; timestamp: number; value: number; date: Date } => item !== null);
 
-    // Add current portfolio value from the latest snapshot in portfolioData
-    // This ensures we use the actual current value, not a potentially outdated chart point
-    if (portfolioData && portfolioData.length > 0) {
-      const latestSnapshot = portfolioData[portfolioData.length - 1];
+    // Add current portfolio value from the latest snapshot in rawData (before filtering)
+    // This ensures consistency across all timeframes by always using the actual latest snapshot
+    // regardless of how filtering groups snapshots by period
+    if (rawData && rawData.length > 0) {
+      const latestSnapshot = rawData[rawData.length - 1];
       if (latestSnapshot) {
         try {
           let currentValue: number | null = null;
@@ -948,7 +975,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     }
 
     return data.sort((a, b) => a.time - b.time);
-  }, [portfolioData, convertTo, dateRange]);
+  }, [portfolioData, rawData, convertTo, dateRange]);
 
   // Extract current portfolio value from the latest point in rechartsData
   // This ensures consistency between hover and non-hover states across all timeframes

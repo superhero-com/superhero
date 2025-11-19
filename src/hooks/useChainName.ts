@@ -27,7 +27,6 @@ let activeRequestCount = 0;
 // This allows us to check addresses without names more frequently
 const noNameCheckTimestamps = new Map<string, number>();
 const NO_NAME_REFRESH_INTERVAL = 1000 * 60 * 5; // 5 minutes - check addresses without names more often
-const HAS_NAME_REFRESH_INTERVAL = 1000 * 60 * 60 * 24; // 24 hours - addresses with names rarely change
 
 async function fetchChainNameFromMiddleware(accountAddress: string): Promise<string | null> {
     // If there's already a pending request for this address, return it

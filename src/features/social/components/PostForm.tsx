@@ -349,55 +349,81 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       );
 
       if (isPost) {
+        const newPostId = `${decodedResult}_v3`;
+        
+        // Create optimistic post object immediately (even before API call)
+        // This ensures the post appears instantly even if backend isn't ready yet
+        const optimisticPost: any = {
+          id: newPostId,
+          content: trimmed,
+          sender_address: activeAccount,
+          media: mediaUrls,
+          total_comments: 0,
+          created_at: new Date().toISOString(),
+          tx_hash: decodedResult,
+          type: 'post_without_tip',
+          topics: requiredHashtag ? [requiredHashtag.toLowerCase()] : [],
+        };
+        
+        let created: any = optimisticPost;
+        
         try {
-          const created = await PostsService.getById({ id: `${decodedResult}_v3` });
-          
-          // Optimistically prepend the new post to the latest feed cache so it appears immediately
-          // Update all relevant query keys for the latest feed
-          const updateLatestFeedCache = (queryKey: any[]) => {
-            queryClient.setQueryData(queryKey, (old: any) => {
-              if (!old || !old.pages || !Array.isArray(old.pages)) {
-                return {
-                  pages: [{ items: [created as any], meta: { currentPage: 1, totalPages: 1 } }],
-                  pageParams: [1],
-                };
-              }
-              const firstPage = old.pages[0] || { items: [], meta: old.pages[0]?.meta || {} };
-              const updatedFirstPage = {
-                ...firstPage,
-                items: [created as any, ...(firstPage.items || [])],
-              };
-              return {
-                ...old,
-                pages: [updatedFirstPage, ...old.pages.slice(1)],
-              };
-            });
-          };
-          
-          // Update latest feed queries (with and without search/filter)
-          updateLatestFeedCache(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }]);
-          
-          // Also update any active latest feed queries (they may have different search/filter params)
-          queryClient.getQueryCache().findAll({ queryKey: ["posts"], exact: false }).forEach((query) => {
-            const key = query.queryKey as any[];
-            if (key.length >= 2 && key[1]?.sortBy === "latest") {
-              updateLatestFeedCache(key);
-            }
-          });
-          
-          // Optimistically prepend the new post to the topic feed cache so it appears immediately
-          if (requiredHashtag && !requiredMissing) {
-            const topicKey = ["topic-by-name", (requiredHashtag || '').toLowerCase()];
-            queryClient.setQueryData(topicKey, (old: any) => {
-              const prevPosts = Array.isArray(old?.posts) ? old.posts : [];
-              return {
-                ...(old || {}),
-                posts: [created as any, ...prevPosts],
-                post_count: typeof old?.post_count === 'number' ? old.post_count + 1 : old?.post_count,
-              };
-            });
+          // Try to fetch the actual post from backend, but use optimistic one if it fails
+          const fetchedPost = await PostsService.getById({ id: newPostId });
+          created = fetchedPost;
+        } catch (error) {
+          // Backend might not have processed it yet (404), use optimistic post
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[PostForm] Backend not ready yet, using optimistic post:', error);
           }
-        } catch { }
+          // Continue with optimisticPost
+        }
+        
+        // Optimistically prepend the new post to the latest feed cache so it appears immediately
+        // Update all relevant query keys for the latest feed
+        const updateLatestFeedCache = (queryKey: any[]) => {
+          queryClient.setQueryData(queryKey, (old: any) => {
+            if (!old || !old.pages || !Array.isArray(old.pages)) {
+              return {
+                pages: [{ items: [created as any], meta: { currentPage: 1, totalPages: 1 } }],
+                pageParams: [1],
+              };
+            }
+            const firstPage = old.pages[0] || { items: [], meta: old.pages[0]?.meta || {} };
+            const updatedFirstPage = {
+              ...firstPage,
+              items: [created as any, ...(firstPage.items || [])],
+            };
+            return {
+              ...old,
+              pages: [updatedFirstPage, ...old.pages.slice(1)],
+            };
+          });
+        };
+        
+        // Update latest feed queries (with and without search/filter)
+        updateLatestFeedCache(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }]);
+        
+        // Also update any active latest feed queries (they may have different search/filter params)
+        queryClient.getQueryCache().findAll({ queryKey: ["posts"], exact: false }).forEach((query) => {
+          const key = query.queryKey as any[];
+          if (key.length >= 2 && key[1]?.sortBy === "latest") {
+            updateLatestFeedCache(key);
+          }
+        });
+        
+        // Optimistically prepend the new post to the topic feed cache so it appears immediately
+        if (requiredHashtag && !requiredMissing) {
+          const topicKey = ["topic-by-name", (requiredHashtag || '').toLowerCase()];
+          queryClient.setQueryData(topicKey, (old: any) => {
+            const prevPosts = Array.isArray(old?.posts) ? old.posts : [];
+            return {
+              ...(old || {}),
+              posts: [created as any, ...prevPosts],
+              post_count: typeof old?.post_count === 'number' ? old.post_count + 1 : old?.post_count,
+            };
+          });
+        }
       } else if (postId) {
         // For replies: optimistically show the new reply immediately
         // Normalize postId the same way CommentItem does to ensure cache key matches

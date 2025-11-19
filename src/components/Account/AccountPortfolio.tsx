@@ -875,14 +875,23 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                 const significantChange = valueDiffPercent > 0.1 || valueDiff > 1; // More than 0.1% or 1 AE change
                 
                 if (valueDiff < 0.000001) {
-                  // Same value (within floating point precision), update timestamp
+                  // Same value (within floating point precision), always update value to current
+                  // This ensures consistency across all timeframes, even if timestamp is recent
                   const timeDiff = nowUnix - lastPoint.time;
                   if (timeDiff > 300) {
+                    // Update timestamp and value if enough time has passed
                     data[data.length - 1] = {
                       ...lastPoint,
+                      value: currentValue, // Update to current value to ensure consistency
                       time: nowUnix,
                       timestamp: nowUnix,
                       date: moment.unix(nowUnix).toDate(),
+                    };
+                  } else {
+                    // Even if timestamp is recent, update value to ensure consistency
+                    data[data.length - 1] = {
+                      ...lastPoint,
+                      value: currentValue, // Always use current value for consistency
                     };
                   }
                 } else if (isDailyInterval && !significantChange) {

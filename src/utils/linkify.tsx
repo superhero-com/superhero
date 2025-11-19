@@ -235,7 +235,6 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
     lines.forEach((line, lineIdx) => {
       const isLastLine = lineIdx === lines.length - 1;
       const isTrailingEmptyLine = isLastLine && line.length === 0;
-      const isCurrentLineEmpty = line.length === 0;
       
       if (line.length > 0) {
         // Non-empty line: add <br /> before it if there was a previous line

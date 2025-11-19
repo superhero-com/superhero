@@ -32,13 +32,18 @@ export default function FeedList({
   const navigate = useNavigate();
   const location = useLocation();
   const urlQuery = useUrlQuery();
+  const prevLocationRef = useRef(location.pathname);
   const { chainNames } = useWallet();
   const queryClient = useQueryClient();
   const ACTIVITY_PAGE_SIZE = 50;
   const createPostRef = useRef<CreatePostRef>(null);
   
-  // Track optimistic post IDs added to popular feed
-  const optimisticPopularPostIdsRef = useRef<Set<string>>(new Set());
+  // Track optimistic post IDs and their timestamps added to popular feed
+  // Map<postId, timestamp>
+  const optimisticPopularPostIdsRef = useRef<Map<string, number>>(new Map());
+  
+  // TTL for optimistic posts: 2 minutes
+  const OPTIMISTIC_POST_TTL_MS = 120000;
   
   // Only render homepage SEO meta when actually on the homepage
   const isHomepage = location.pathname === "/";
@@ -1310,7 +1315,7 @@ export default function FeedList({
     });
 
     if (isPopularFeed) {
-      optimisticPopularPostIdsRef.current.add(String(post.id));
+      optimisticPopularPostIdsRef.current.set(String(post.id), Date.now());
     }
   }, [queryClient]);
 
@@ -1358,6 +1363,222 @@ export default function FeedList({
       };
     });
   }, [queryClient]);
+
+  // Clean up optimistic posts whenever popularData changes (e.g., from automatic refetches)
+  // Only clean up posts older than 2 minutes
+  useEffect(() => {
+    if (sortBy !== "hot" || !popularData?.pages || optimisticPopularPostIdsRef.current.size === 0) {
+      return;
+    }
+
+    const now = Date.now();
+    const postsToCleanup = new Set<string>();
+
+    // Check which optimistic posts are older than 2 minutes
+    optimisticPopularPostIdsRef.current.forEach((timestamp, postId) => {
+      if (now - timestamp > OPTIMISTIC_POST_TTL_MS) {
+        postsToCleanup.add(postId);
+      }
+    });
+
+    // If no posts are old enough to clean up, skip
+    if (postsToCleanup.size === 0) {
+      return;
+    }
+
+    // Collect all post IDs from API response (excluding optimistic ones)
+    const apiPostIds = new Set<string>();
+    popularData.pages.forEach((page: any) => {
+      if (page?.items) {
+        page.items.forEach((item: any) => {
+          if (item?.id && !item._optimistic) {
+            apiPostIds.add(String(item.id));
+          }
+        });
+      }
+    });
+
+    // Only clean up posts that are old enough AND not in API response
+    const postsToRemove = Array.from(postsToCleanup).filter(
+      (postId) => !apiPostIds.has(postId)
+    );
+
+    if (postsToRemove.length > 0) {
+      // Clean up specific posts that are old and not in API
+      queryClient.setQueryData(
+        ["popular-posts", { limit: 10, window: popularWindow }],
+        (old: any) => {
+          if (!old || !old.pages) return old;
+
+          const cleanedPages = old.pages.map((page: any) => {
+            if (!page?.items) return page;
+
+            const cleanedItems = page.items.filter((item: any) => {
+              const postId = String(item.id);
+              // Keep post if it's not in the removal list
+              return !postsToRemove.includes(postId);
+            });
+
+            return {
+              ...page,
+              items: cleanedItems,
+              meta: {
+                ...page.meta,
+                itemCount: cleanedItems.length,
+              },
+            };
+          }).filter((page: any) => page.items && page.items.length > 0);
+
+          return {
+            ...old,
+            pages: cleanedPages,
+          };
+        }
+      );
+
+      // Remove from tracking map
+      postsToRemove.forEach((postId) => {
+        optimisticPopularPostIdsRef.current.delete(postId);
+      });
+    }
+
+    // Also remove _optimistic flag from posts that are in API response (they're now real)
+    const postsInApi = Array.from(optimisticPopularPostIdsRef.current.keys()).filter(
+      (postId) => apiPostIds.has(postId)
+    );
+
+    if (postsInApi.length > 0) {
+      queryClient.setQueryData(
+        ["popular-posts", { limit: 10, window: popularWindow }],
+        (old: any) => {
+          if (!old || !old.pages) return old;
+
+          const cleanedPages = old.pages.map((page: any) => {
+            if (!page?.items) return page;
+
+            const cleanedItems = page.items.map((item: any) => {
+              // Remove _optimistic flag if post is in API response
+              if (item._optimistic && apiPostIds.has(String(item.id))) {
+                const { _optimistic, ...cleanItem } = item;
+                return cleanItem;
+              }
+              return item;
+            });
+
+            return {
+              ...page,
+              items: cleanedItems,
+            };
+          });
+
+          return {
+            ...old,
+            pages: cleanedPages,
+          };
+        }
+      );
+
+      // Remove from tracking map since they're now real posts
+      postsInApi.forEach((postId) => {
+        optimisticPopularPostIdsRef.current.delete(postId);
+      });
+    }
+  }, [popularData, sortBy, popularWindow, queryClient]);
+
+  // Handle page navigation/reload - clean up all optimistic posts
+  useEffect(() => {
+    // Clean up on route change
+    if (prevLocationRef.current !== location.pathname) {
+      prevLocationRef.current = location.pathname;
+      
+      // Clean up all optimistic posts from cache
+      if (optimisticPopularPostIdsRef.current.size > 0) {
+        const optimisticPostIds = Array.from(optimisticPopularPostIdsRef.current.keys());
+        
+        queryClient.setQueryData(
+          ["popular-posts", { limit: 10, window: popularWindow }],
+          (old: any) => {
+            if (!old || !old.pages) return old;
+
+            const cleanedPages = old.pages.map((page: any) => {
+              if (!page?.items) return page;
+
+              const cleanedItems = page.items.filter((item: any) => {
+                const postId = String(item.id);
+                // Remove all optimistic posts on navigation
+                return !optimisticPostIds.includes(postId);
+              });
+
+              return {
+                ...page,
+                items: cleanedItems,
+                meta: {
+                  ...page.meta,
+                  itemCount: cleanedItems.length,
+                },
+              };
+            }).filter((page: any) => page.items && page.items.length > 0);
+
+            return {
+              ...old,
+              pages: cleanedPages,
+            };
+          }
+        );
+
+        // Clear tracking map
+        optimisticPopularPostIdsRef.current.clear();
+      }
+    }
+  }, [location.pathname, popularWindow, queryClient]);
+
+  // Handle page reload/unload - clean up all optimistic posts
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Clean up all optimistic posts on page reload
+      if (optimisticPopularPostIdsRef.current.size > 0) {
+        const optimisticPostIds = Array.from(optimisticPopularPostIdsRef.current.keys());
+        
+        queryClient.setQueryData(
+          ["popular-posts", { limit: 10, window: popularWindow }],
+          (old: any) => {
+            if (!old || !old.pages) return old;
+
+            const cleanedPages = old.pages.map((page: any) => {
+              if (!page?.items) return page;
+
+              const cleanedItems = page.items.filter((item: any) => {
+                const postId = String(item.id);
+                return !optimisticPostIds.includes(postId);
+              });
+
+              return {
+                ...page,
+                items: cleanedItems,
+                meta: {
+                  ...page.meta,
+                  itemCount: cleanedItems.length,
+                },
+              };
+            }).filter((page: any) => page.items && page.items.length > 0);
+
+            return {
+              ...old,
+              pages: cleanedPages,
+            };
+          }
+        );
+
+        optimisticPopularPostIdsRef.current.clear();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [popularWindow, queryClient]);
 
   const content = (
     <div className="w-full">
@@ -1407,31 +1628,8 @@ export default function FeedList({
                 false
               );
               
-              // Refetch popular feed - this will trigger cleanup of optimistic posts not in response
-              const refetchResult = await refetchPopular();
-              
-              // After refetch, clean up optimistic posts that aren't in the API response
-              const apiPostIds = new Set<string>();
-              if (refetchResult.data?.pages) {
-                refetchResult.data.pages.forEach((page: any) => {
-                  if (page?.items) {
-                    page.items.forEach((item: any) => {
-                      if (item?.id && !item._optimistic) {
-                        apiPostIds.add(String(item.id));
-                      }
-                    });
-                  }
-                });
-              }
-              
-              // Remove optimistic posts that aren't in API response from popular feed
-              cleanupOptimisticPosts(
-                ["popular-posts", { limit: 10, window: popularWindow }],
-                apiPostIds
-              );
-              
-              // Remove from tracking set
-              optimisticPopularPostIdsRef.current.delete(String(createdPost.id));
+              // Refetch popular feed (cleanup will happen automatically after 2 minutes via useEffect)
+              await refetchPopular();
             } else {
               // Optimistically add to latest feed
               optimisticallyAddPostToFeed(

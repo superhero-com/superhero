@@ -174,9 +174,14 @@ export function useAddLiquidity() {
         }
       }
 
-      if (ain && bin && info.totalSupply && info.totalSupply > 0n) {
+      if (ain && bin && info.totalSupply && info.totalSupply > 0n && !reserveARaw.isZero() && !reserveBRaw.isZero()) {
         const totalSupply = new BigNumber(info.totalSupply.toString());
-        const lpMint = ain.plus(bin).div(2);
+        // For constant product AMM, LP tokens = totalSupply * min(amountA/reserveA, amountB/reserveB)
+        // Since we're adding proportional amounts, we can use either ratio
+        const lpMintFromA = totalSupply.multipliedBy(ain).dividedBy(reserveARaw);
+        const lpMintFromB = totalSupply.multipliedBy(bin).dividedBy(reserveBRaw);
+        // Use the minimum to ensure we don't overestimate (matches on-chain calculation)
+        const lpMint = BigNumber.min(lpMintFromA, lpMintFromB);
         sharePct = lpMint.div(totalSupply).times(100).toFixed(8);
         lpMintEstimate = fromAettos(lpMint.toString(), 18);
       }

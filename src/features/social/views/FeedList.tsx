@@ -1786,9 +1786,8 @@ export default function FeedList({
                 false
               );
               
-              // Don't refetch immediately - let the optimistic post stay visible at the top
-              // Automatic refetches (window focus, etc.) will handle updates
-              // Cleanup will happen automatically after 2 minutes via useEffect
+              // Refetch in background to get real data - optimistic post stays visible via structuralSharing
+              refetchPopular();
             } else {
               // Optimistically add to latest feed
               optimisticallyAddPostToFeed(

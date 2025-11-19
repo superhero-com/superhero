@@ -220,11 +220,11 @@ export default function InviteAndEarnCard({
                     {t('creatingInvites', { ns: 'common' })}
                   </>
                 ) : (
-                  t('generateInviteLinks', { ns: 'common' })
+                  t('buttons.generateInviteLinks', { ns: 'common' })
                 )}
               </button>
             ) : (
-              <WalletConnectBtn label={t('connectWalletToGenerate', { ns: 'common' })} className="text-sm" />
+              <WalletConnectBtn label={t('buttons.connectWalletToGenerate', { ns: 'common' })} className="text-sm" />
             )}
           </form>
         </div>

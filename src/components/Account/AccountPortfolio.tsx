@@ -74,6 +74,8 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const isHorizontalDragRef = useRef<boolean | null>(null);
   const DRAG_THRESHOLD = 10; // pixels
+  const rafRef = useRef<number | null>(null);
+  const pendingXRef = useRef<number | null>(null);
 
   // Use native event listeners to allow preventDefault
   useEffect(() => {
@@ -189,73 +191,49 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
                 
                 // Sample the fill area path to find the Y coordinate at this X
                 // The top edge of the fill area corresponds to the data line
+                // Optimized: Use binary search instead of exhaustive sampling
                 const pathLength = fillPath.getTotalLength();
                 let bestY = fillBBox.y + fillBBox.height; // Default to bottom
+                
+                // Binary search for the point closest to target X
+                let low = 0;
+                let high = pathLength;
                 let bestLength = 0;
+                const tolerance = 1.0; // pixels - slightly relaxed for performance
                 
-                // Find the point(s) at this X coordinate
-                // Then find the minimum Y among those points (top edge)
-                const tolerance = 0.5; // pixels
-                
-                // First pass: find all points close to target X and track minimum Y
-                const sampleCount = 1000; // More samples for better accuracy
-                for (let i = 0; i <= sampleCount; i++) {
-                  const length = (i / sampleCount) * pathLength;
-                  const pathPoint = fillPath.getPointAtLength(length);
+                // Binary search with fewer iterations for better performance
+                for (let iteration = 0; iteration < 30; iteration++) {
+                  const mid = (low + high) / 2;
+                  const pathPoint = fillPath.getPointAtLength(mid);
                   const xDistance = Math.abs(pathPoint.x - clampedRelativeX);
                   
-                  // If this point is very close to our X coordinate
-                  if (xDistance < tolerance) {
-                    // Track the topmost point (minimum Y)
-                    if (pathPoint.y < bestY) {
-                      bestY = pathPoint.y;
-                      bestLength = length;
-                    }
+                  if (xDistance < tolerance && pathPoint.y < bestY) {
+                    bestY = pathPoint.y;
+                    bestLength = mid;
                   }
+                  
+                  if (pathPoint.x < clampedRelativeX) {
+                    low = mid;
+                  } else {
+                    high = mid;
+                  }
+                  
+                  if (high - low < 0.1) break; // Early exit if range is small enough
                 }
                 
-                // If we found a point, refine around it
-                if (bestY < fillBBox.y + fillBBox.height) {
-                  // Refine in a small range around bestLength
-                  const refineRange = pathLength * 0.02; // 2% of path
+                // Quick refinement around best point (reduced iterations)
+                if (bestLength > 0) {
+                  const refineRange = pathLength * 0.01; // 1% of path
                   const refineStart = Math.max(0, bestLength - refineRange);
                   const refineEnd = Math.min(pathLength, bestLength + refineRange);
                   
-                  // Sample more densely in this range
-                  for (let i = 0; i <= 200; i++) {
-                    const length = refineStart + (refineEnd - refineStart) * (i / 200);
+                  // Reduced from 200 to 50 iterations
+                  for (let i = 0; i <= 50; i++) {
+                    const length = refineStart + (refineEnd - refineStart) * (i / 50);
                     const pathPoint = fillPath.getPointAtLength(length);
                     const xDistance = Math.abs(pathPoint.x - clampedRelativeX);
                     
-                    // Only consider points very close to target X
                     if (xDistance < tolerance && pathPoint.y < bestY) {
-                      bestY = pathPoint.y;
-                      bestLength = length;
-                    }
-                  }
-                  
-                  // Final ultra-fine refinement
-                  const finalRefineRange = pathLength * 0.005; // 0.5% of path
-                  const finalRefineStart = Math.max(0, bestLength - finalRefineRange);
-                  const finalRefineEnd = Math.min(pathLength, bestLength + finalRefineRange);
-                  
-                  for (let i = 0; i <= 100; i++) {
-                    const length = finalRefineStart + (finalRefineEnd - finalRefineStart) * (i / 100);
-                    const pathPoint = fillPath.getPointAtLength(length);
-                    const xDistance = Math.abs(pathPoint.x - clampedRelativeX);
-                    
-                    if (xDistance < tolerance * 0.5 && pathPoint.y < bestY) {
-                      bestY = pathPoint.y;
-                    }
-                  }
-                } else {
-                  // Fallback: if we didn't find a close match, use a wider tolerance
-                  for (let i = 0; i <= sampleCount; i++) {
-                    const length = (i / sampleCount) * pathLength;
-                    const pathPoint = fillPath.getPointAtLength(length);
-                    const xDistance = Math.abs(pathPoint.x - clampedRelativeX);
-                    
-                    if (xDistance < 10 && pathPoint.y < bestY) {
                       bestY = pathPoint.y;
                     }
                   }
@@ -295,14 +273,15 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               const clampedRelativeX = Math.max(pathStartX, Math.min(pathEndX, relativeX));
 
               // Binary search for the point closest to our X coordinate
+              // Optimized: Reduced iterations for better performance
               let low = 0;
               let high = pathLength;
               let bestPoint = { x: 0, y: 0 };
               let minDistance = Infinity;
-              const tolerance = 0.1; // pixels
+              const tolerance = 0.5; // pixels - slightly relaxed for performance
               
-              // Binary search with refinement
-              for (let iteration = 0; iteration < 50; iteration++) {
+              // Binary search with fewer iterations
+              for (let iteration = 0; iteration < 30; iteration++) {
                 const mid = (low + high) / 2;
                 const pathPoint = strokePath.getPointAtLength(mid);
                 const distance = pathPoint.x - clampedRelativeX;
@@ -321,9 +300,11 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
                 } else {
                   low = mid;
                 }
+                
+                if (high - low < 0.1) break; // Early exit if range is small enough
               }
               
-              // Final refinement: check points around the best point
+              // Final refinement: check points around the best point (reduced iterations)
               const refinePercent = 0.01; // 1% of path
               const refineRange = pathLength * refinePercent;
               const refineLengthStart = Math.max(0, 
@@ -333,9 +314,10 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
                 (bestPoint.x - pathStartX) / pathBBox.width * pathLength + refineRange
               );
               
-              for (let i = 0; i <= 100; i++) {
+              // Reduced from 100 to 30 iterations
+              for (let i = 0; i <= 30; i++) {
                 const length = Math.max(0, Math.min(pathLength, 
-                  refineLengthStart + (refineLengthEnd - refineLengthStart) * (i / 100)
+                  refineLengthStart + (refineLengthEnd - refineLengthStart) * (i / 30)
                 ));
                 const pathPoint = strokePath.getPointAtLength(length);
                 const distance = Math.abs(pathPoint.x - clampedRelativeX);
@@ -435,11 +417,24 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
       // Keep crosshair visible after drag ends
     };
 
-    // Mouse hover support for desktop
+    // Mouse hover support for desktop - throttled with requestAnimationFrame
     const handleMouseMove = (e: MouseEvent) => {
       const rect = container.getBoundingClientRect();
       const x = e.clientX - rect.left;
-      updateCrosshair(x);
+      
+      // Store the latest mouse position
+      pendingXRef.current = x;
+      
+      // Throttle updates using requestAnimationFrame
+      if (rafRef.current === null) {
+        rafRef.current = requestAnimationFrame(() => {
+          if (pendingXRef.current !== null) {
+            updateCrosshair(pendingXRef.current);
+            pendingXRef.current = null;
+          }
+          rafRef.current = null;
+        });
+      }
     };
 
     const handleMouseLeave = () => {
@@ -462,6 +457,13 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
       container.removeEventListener('touchend', handleTouchEnd);
       container.removeEventListener('mousemove', handleMouseMove);
       container.removeEventListener('mouseleave', handleMouseLeave);
+      
+      // Cancel any pending animation frame
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      pendingXRef.current = null;
     };
   }, [data, onHover]); // Re-run if data or onHover changes
 

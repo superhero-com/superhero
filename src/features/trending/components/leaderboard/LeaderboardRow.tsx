@@ -13,9 +13,12 @@ export function LeaderboardRow({
   item,
   timeframeLabel,
 }: LeaderboardRowProps) {
-  const roiPct = item.roi_pct;
-  const gainPercentage =
-    typeof roiPct === "number" ? roiPct : 0;
+  const roiRaw = item.roi_pct;
+  const roiPct =
+    roiRaw === null || roiRaw === undefined
+      ? NaN
+      : Number(roiRaw);
+  const hasRoi = !Number.isNaN(roiPct);
 
   const pnlUsd = Number(item.pnl_usd ?? 0);
 
@@ -42,16 +45,16 @@ export function LeaderboardRow({
       <div className="flex flex-col items-end gap-1">
         <div
           className={`text-sm font-semibold ${
-            gainPercentage > 0
+            !hasRoi
+              ? "text-white/40"
+              : roiPct > 0
               ? "text-emerald-400"
-              : gainPercentage < 0
+              : roiPct < 0
               ? "text-red-400"
               : "text-white/70"
           }`}
         >
-          {typeof roiPct === "number"
-            ? `${gainPercentage.toFixed(2)}%`
-            : "--"}
+          {hasRoi ? `${roiPct.toFixed(2)}%` : "--"}
         </div>
         <div className="text-[11px] text-white/50">
           {timeframeLabel} ROI

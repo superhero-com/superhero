@@ -27,7 +27,11 @@ export function LeaderboardCard({
       ? NaN
       : Number(roiPctRaw);
   const aumUsd = Number(item.aum_usd || 0);
-  const mddPct = Number(item.mdd_pct || 0);
+  const mddPctRaw = item.mdd_pct;
+  const mddPct =
+    mddPctRaw === null || mddPctRaw === undefined
+      ? NaN
+      : Number(mddPctRaw);
   const buyTrades = Number(item.buy_count || 0);
   const sellTrades = Number(item.sell_count || 0);
   const createdTokens = Number(item.created_tokens_count || 0);

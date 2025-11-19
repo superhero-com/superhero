@@ -20,7 +20,11 @@ export function LeaderboardCard({
   const navigate = useNavigate();
 
   const pnlUsd = Number(item.pnl_usd || 0);
-  const roiPct = Number(item.roi_pct || 0);
+  const roiPctRaw = item.roi_pct;
+  const roiPct =
+    roiPctRaw === null || roiPctRaw === undefined
+      ? NaN
+      : Number(roiPctRaw);
   const aumUsd = Number(item.aum_usd || 0);
   const mddPct = Number(item.mdd_pct || 0);
   const buyTrades = Number(item.buy_count || 0);
@@ -102,12 +106,38 @@ export function LeaderboardCard({
           <span className="text-[11px] uppercase tracking-wide text-white/50">
             {timeframeLabel} Days PnL (USD)
           </span>
-          <span className="text-2xl font-semibold text-emerald-400">
-            ${formatNumber(pnlUsd, 2)}
+          <span
+            className={`text-2xl font-semibold ${
+              pnlUsd < 0
+                ? "text-red-400"
+                : pnlUsd > 0
+                ? "text-emerald-400"
+                : "text-white"
+            }`}
+          >
+            {pnlUsd < 0 ? "-$" : "$"}
+            {Math.abs(pnlUsd).toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </span>
-          <span className="text-[11px] text-emerald-300">
+          <span
+            className={`text-[11px] ${
+              isNaN(roiPct)
+                ? "text-white/40"
+                : roiPct < 0
+                ? "text-red-300"
+                : roiPct > 0
+                ? "text-emerald-300"
+                : "text-white/70"
+            }`}
+          >
             {timeframeLabel} Days ROI{" "}
-            {isNaN(roiPct) ? "--" : `+${roiPct.toFixed(2)}%`}
+            {isNaN(roiPct)
+              ? "--"
+              : `${roiPct > 0 ? "+" : roiPct < 0 ? "-" : ""}${Math.abs(
+                  roiPct
+                ).toFixed(2)}%`}
           </span>
         </div>
         {/* Portfolio value sparkline */}

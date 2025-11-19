@@ -10,6 +10,8 @@ import {
   fetchLeaderboard,
   type LeaderboardMetric,
   type LeaderboardTimeframe,
+  type PaginatedResponse,
+  type LeaderboardItem,
 } from "../api/leaderboard";
 import {
   LEADERBOARD_TIMEFRAME_OPTIONS,
@@ -20,7 +22,6 @@ import Spinner from "@/components/Spinner";
 export default function LeaderboardView() {
   const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>("7d");
   const [metric, setMetric] = useState<LeaderboardMetric>("pnl");
-  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
   const timeframeOption = LEADERBOARD_TIMEFRAME_OPTIONS.find(
@@ -38,7 +39,7 @@ export default function LeaderboardView() {
     isError,
     refetch,
     isFetching,
-  } = useQuery({
+  } = useQuery<PaginatedResponse<LeaderboardItem>>({
     queryKey: ["leaderboard", timeframe, metric, page],
     queryFn: () =>
       fetchLeaderboard({
@@ -48,7 +49,6 @@ export default function LeaderboardView() {
         limit: 15,
       }),
     staleTime: 1000 * 60,
-    keepPreviousData: true,
   });
 
   const items = data?.items ?? [];
@@ -73,27 +73,28 @@ export default function LeaderboardView() {
         canonicalPath="/trends/leaderboard"
       />
 
-      <div className="flex flex-col gap-3 mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-white">
-          Trading Leaderboard
-        </h1>
-        <p className="text-sm sm:text-base text-white/70 max-w-2xl">
-          Explore the top performing trading assets on Superhero. Filter by
-          timeframe and performance metrics to discover opportunities. This
-          leaderboard is read-only and does not offer copy trading.
-        </p>
-      </div>
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-white">
+              Trading Leaderboard
+            </h1>
+            <p className="mt-1 text-sm sm:text-base text-white/70 max-w-2xl">
+              Discover the most active Superhero traders ranked by on-chain performance.
+              Increase your trading volume, consistency, and trend ownership to climb the board and turn your wallet into a public track record.
+            </p>
+          </div>
 
-      <div className="flex flex-col gap-4">
-        {/* Filters */}
-        <LeaderboardFilters
-          timeframe={timeframe}
-          metric={metric}
-          search={search}
-          onTimeframeChange={handleTimeframeChange}
-          onMetricChange={handleMetricChange}
-          onSearchChange={setSearch}
-        />
+          {/* Filters */}
+          <div className="w-full md:w-auto">
+            <LeaderboardFilters
+              timeframe={timeframe}
+              metric={metric}
+              onTimeframeChange={handleTimeframeChange}
+              onMetricChange={handleMetricChange}
+            />
+          </div>
+        </div>
 
         {/* Error state */}
         {isError && (
@@ -130,10 +131,10 @@ export default function LeaderboardView() {
                 <Spinner className="w-6 h-6 text-white/40" />
               </div>
               <p className="text-sm text-white/60">
-                No assets found for the selected filters.
+                No traders found for the selected filters.
               </p>
               <p className="text-xs text-white/40 mt-1">
-                Try adjusting the timeframe, metric, or search query.
+                Try adjusting the timeframe or performance metric.
               </p>
             </div>
           )}

@@ -1271,9 +1271,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     // Show portfolio value as soon as value and PNL are ready (don't wait for chart)
     if (valueAndPnlReady && currentPortfolioValue) {
       try {
-        return typeof currentPortfolioValue.toNumber === 'function' 
-          ? currentPortfolioValue.toNumber()
-          : typeof currentPortfolioValue === 'number'
+        // Convert Decimal to number for display
+        return typeof currentPortfolioValue === 'number'
           ? currentPortfolioValue
           : Number(currentPortfolioValue);
       } catch {

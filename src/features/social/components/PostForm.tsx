@@ -461,6 +461,89 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
             };
           });
         }
+        
+        // Poll backend until post is confirmed or max retries reached
+        // Backend needs time to process blockchain transaction and update database
+        const maxRetries = 18; // Try for up to ~59 seconds (5s initial + 18 retries * 3 seconds)
+        const retryInterval = 3000; // 3 seconds between retries
+        
+        const pollForPost = (attempt: number = 0) => {
+          // Stop polling if component is unmounted
+          if (!isMountedRef.current) {
+            return;
+          }
+          
+          if (attempt >= maxRetries) {
+            // Final attempt after max retries - invalidate and refetch latest feed queries
+            if (isMountedRef.current) {
+              queryClient.invalidateQueries({ queryKey: ["posts"], exact: false });
+              queryClient.refetchQueries({ 
+                queryKey: ["posts"],
+                type: 'active',
+              });
+              // Also invalidate topic feed if applicable
+              if (requiredHashtag && !requiredMissing) {
+                queryClient.invalidateQueries({ queryKey: ["topic-by-name", (requiredHashtag || '').toLowerCase()] });
+              }
+            }
+            return;
+          }
+          
+          const timeoutId = setTimeout(() => {
+            // Remove timeout ID from tracking set
+            timeoutRefs.current.delete(timeoutId);
+            
+            // Stop if component unmounted
+            if (!isMountedRef.current) {
+              return;
+            }
+            
+            // Try to fetch the post from backend
+            PostsService.getById({ id: newPostId })
+              .then(() => {
+                // Post found - invalidate and refetch queries to get fresh data
+                if (isMountedRef.current) {
+                  queryClient.invalidateQueries({ queryKey: ["posts"], exact: false });
+                  queryClient.refetchQueries({ 
+                    queryKey: ["posts"],
+                    type: 'active',
+                  });
+                  // Also invalidate topic feed if applicable
+                  if (requiredHashtag && !requiredMissing) {
+                    queryClient.invalidateQueries({ queryKey: ["topic-by-name", (requiredHashtag || '').toLowerCase()] });
+                    queryClient.refetchQueries({ 
+                      queryKey: ["topic-by-name", (requiredHashtag || '').toLowerCase()],
+                      type: 'active',
+                    });
+                  }
+                }
+                // Post found, stop polling
+              })
+              .catch(() => {
+                // Post not found yet, continue polling
+                if (isMountedRef.current) {
+                  pollForPost(attempt + 1);
+                }
+              });
+          }, retryInterval);
+          
+          // Track timeout ID for cleanup
+          timeoutRefs.current.add(timeoutId);
+        };
+        
+        // Start polling after initial delay to give backend time to start processing
+        const initialTimeoutId = setTimeout(() => {
+          // Remove timeout ID from tracking set
+          timeoutRefs.current.delete(initialTimeoutId);
+          
+          // Only start polling if component is still mounted
+          if (isMountedRef.current) {
+            pollForPost(0);
+          }
+        }, 5000); // 5 second initial delay before first poll
+        
+        // Track initial timeout ID for cleanup
+        timeoutRefs.current.add(initialTimeoutId);
       } else if (postId) {
         // For replies: optimistically show the new reply immediately
         // Normalize postId the same way CommentItem does to ensure cache key matches

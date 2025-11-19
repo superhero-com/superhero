@@ -467,7 +467,19 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
           // CRITICAL: Update ALL active query keys FIRST, using their exact key format
           // This ensures we catch DirectReplies and other components that use the raw ID
           const updatedKeys = new Set<string>();
-          queryClient.getQueryCache().findAll({ queryKey: ["post-comments"], exact: false }).forEach((query) => {
+          const allPostCommentQueries = queryClient.getQueryCache().findAll({ queryKey: ["post-comments"], exact: false });
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[PostForm] Updating replies cache:', {
+              postId,
+              normalizedPostId,
+              newReplyId,
+              foundQueries: allPostCommentQueries.length,
+              queryKeys: allPostCommentQueries.map(q => q.queryKey),
+            });
+          }
+          
+          allPostCommentQueries.forEach((query) => {
             const key = query.queryKey as any[];
             const queryPostId = key[1];
             // Match using normalized comparison
@@ -477,8 +489,14 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                 updatedKeys.add(keyStr);
                 if (key[2] === "infinite") {
                   updateInfiniteQuery(key);
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log('[PostForm] Updated infinite query:', key);
+                  }
                 } else {
                   updateArrayQuery(key);
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log('[PostForm] Updated array query:', key);
+                  }
                 }
               }
             }

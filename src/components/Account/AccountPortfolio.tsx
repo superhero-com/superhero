@@ -772,26 +772,40 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       // Group snapshots by their interval period and take the latest one in each period
       const intervalSeconds = dateRange.interval;
       const periodMap = new Map<number, PortfolioSnapshot>();
+      const nowUnix = moment().unix();
       
       for (const snapshot of sorted) {
         const timestamp = moment(snapshot.timestamp).unix();
         // Calculate which interval period this timestamp belongs to
         const periodStart = Math.floor(timestamp / intervalSeconds) * intervalSeconds;
         
-        // If we already have a snapshot for this period, keep the one closest to the period start
-        // (or the latest one if they're equally close)
+        // Check if this is the last period (current period)
+        const currentPeriodStart = Math.floor(nowUnix / intervalSeconds) * intervalSeconds;
+        const isLastPeriod = periodStart === currentPeriodStart;
+        
         const existing = periodMap.get(periodStart);
         if (!existing) {
           periodMap.set(periodStart, snapshot);
         } else {
-          const existingTime = moment(existing.timestamp).unix();
-          const existingDistance = Math.abs(existingTime - periodStart);
-          const currentDistance = Math.abs(timestamp - periodStart);
-          
-          // Keep the one closer to the period start, or the later one if equidistant
-          if (currentDistance < existingDistance || 
-              (currentDistance === existingDistance && timestamp > existingTime)) {
-            periodMap.set(periodStart, snapshot);
+          if (isLastPeriod) {
+            // For the last period (current period), always keep the latest snapshot
+            // This ensures we use the most recent value for consistency across timeframes
+            const existingTime = moment(existing.timestamp).unix();
+            if (timestamp > existingTime) {
+              periodMap.set(periodStart, snapshot);
+            }
+          } else {
+            // For other periods, keep the one closest to the period start
+            // (or the latest one if they're equally close)
+            const existingTime = moment(existing.timestamp).unix();
+            const existingDistance = Math.abs(existingTime - periodStart);
+            const currentDistance = Math.abs(timestamp - periodStart);
+            
+            // Keep the one closer to the period start, or the later one if equidistant
+            if (currentDistance < existingDistance || 
+                (currentDistance === existingDistance && timestamp > existingTime)) {
+              periodMap.set(periodStart, snapshot);
+            }
           }
         }
       }

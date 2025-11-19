@@ -36,6 +36,8 @@ export default function FeedList({
   const queryClient = useQueryClient();
   const ACTIVITY_PAGE_SIZE = 50;
   const createPostRef = useRef<CreatePostRef>(null);
+  // Use ref to track current sortBy to avoid stale closure in callbacks
+  const sortByRef = useRef(sortBy);
   
   // Only render homepage SEO meta when actually on the homepage
   const isHomepage = location.pathname === "/";
@@ -94,6 +96,11 @@ export default function FeedList({
   const filterBy = urlQuery.get("filterBy") || "all";
   const initialWindow = (urlQuery.get("window") as '24h'|'7d'|'all' | null) || '24h';
   const shouldAutoFocusPost = urlQuery.get("post") === "new";
+
+  // Keep sortByRef in sync with sortBy to avoid stale closures in callbacks
+  useEffect(() => {
+    sortByRef.current = sortBy;
+  }, [sortBy]);
 
   const [localSearch, setLocalSearch] = useState(search);
   const [popularWindow, setPopularWindow] = useState<'24h'|'7d'|'all'>(initialWindow);
@@ -1270,7 +1277,10 @@ export default function FeedList({
         <CreatePost
           ref={createPostRef}
           onSuccess={() => {
-            if (sortBy === "hot") {
+            // Use ref to get current sortBy value instead of closure value
+            // This ensures we refetch the correct feed even if onPostCreated changed sortBy first
+            const currentSortBy = sortByRef.current;
+            if (currentSortBy === "hot") {
               refetchPopular();
             } else {
               refetchLatest();
@@ -1280,6 +1290,8 @@ export default function FeedList({
             // Switch to latest tab if user is on popular tab when posting
             if (sortBy === "hot") {
               handleSortChange("latest");
+              // Update ref immediately so onSuccess callback sees the new value
+              sortByRef.current = "latest";
             }
           }}
           autoFocus={shouldAutoFocusPost}

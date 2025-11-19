@@ -168,6 +168,7 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
 
   // Pass 4: Handle line breaks - split by \n and insert <br /> elements
   const withLineBreaks: React.ReactNode[] = [];
+  let brKeyCounter = 0; // Counter to ensure unique keys for <br /> elements
   finalParts.forEach((node, idx) => {
     if (typeof node !== 'string') {
       withLineBreaks.push(node);
@@ -178,10 +179,14 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
     lines.forEach((line, lineIdx) => {
       if (lineIdx > 0) {
         // Insert <br /> before each line except the first
-        withLineBreaks.push(<br key={`br-${idx}-${lineIdx}`} />);
+        withLineBreaks.push(<br key={`br-${idx}-${lineIdx}-${brKeyCounter++}`} />);
       }
       if (line.length > 0) {
         withLineBreaks.push(line);
+      } else if (lineIdx > 0) {
+        // Preserve empty lines for paragraph breaks (but not the first empty line)
+        // Use non-breaking space to maintain visual spacing
+        withLineBreaks.push('\u00A0');
       }
     });
   });

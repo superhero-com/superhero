@@ -444,6 +444,11 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
           const topicKey = ["topic-by-name", (requiredHashtag || '').toLowerCase()];
           queryClient.setQueryData(topicKey, (old: any) => {
             const prevPosts = Array.isArray(old?.posts) ? old.posts : [];
+            // Check if post already exists to prevent duplicates
+            const exists = prevPosts.some((p: any) => p?.id === created?.id || p?.tx_hash === created?.tx_hash);
+            if (exists) {
+              return old;
+            }
             return {
               ...(old || {}),
               posts: [created as any, ...prevPosts],

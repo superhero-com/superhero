@@ -75,14 +75,14 @@ export default function LeaderboardView() {
       />
 
       <div className="flex flex-col gap-4 mb-6">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-white">
+            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
               Trading Leaderboard
             </h1>
-            <p className="mt-1 text-sm sm:text-base text-white/70 max-w-2xl">
+            <p className="mt-2 text-sm md:text-base leading-relaxed text-white/70 max-w-2xl">
               Discover the most active Superhero traders ranked by on-chain performance.
-              Increase your trading volume, consistency, and trend ownership to climb the board and turn your wallet into a public track record.
+              Increase your trading volume, consistency, and trend ownership to climb the board and turn your wallet into a public on-chain track record.
             </p>
           </div>
 

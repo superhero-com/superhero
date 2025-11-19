@@ -832,7 +832,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     refetchOnReconnect: true,
   });
 
-  // Extract portfolioData and rawData from query result
+  // Extract portfolioData from query result
   const portfolioData = useMemo(() => {
     if (!rawPortfolioData) return undefined;
     // Handle both old format (array) and new format (object with filtered/raw)
@@ -841,19 +841,10 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     }
     return rawPortfolioData.filtered;
   }, [rawPortfolioData]);
-  
-  const rawData = useMemo(() => {
-    if (!rawPortfolioData) return undefined;
-    // Handle both old format (array) and new format (object with filtered/raw)
-    if (Array.isArray(rawPortfolioData)) {
-      return rawPortfolioData;
-    }
-    return rawPortfolioData.raw;
-  }, [rawPortfolioData]);
 
   // Fetch current portfolio value independently of timeframe
   // This ensures consistency across all timeframes by always using the same current value source
-  const { data: currentPortfolioSnapshot, isLoading: isCurrentValueLoading } = usePortfolioValue({
+  const { data: currentPortfolioSnapshot } = usePortfolioValue({
     address,
     convertTo: convertTo as any,
     enabled: !!address,

@@ -4,6 +4,7 @@ import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import moment from 'moment';
 import { SuperheroApi } from '@/api/backend';
 import { useCurrencies } from '@/hooks/useCurrencies';
+import { usePortfolioValue } from '@/hooks/usePortfolioValue';
 import { Decimal } from '@/libs/decimal';
 import { Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -889,8 +890,17 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     // Add current portfolio value from the latest snapshot in rawData (before filtering)
     // This ensures consistency across all timeframes by always using the actual latest snapshot
     // regardless of how filtering groups snapshots by period
+    // IMPORTANT: Use the absolute latest snapshot by timestamp, not just the last one in the array
+    // This handles cases where snapshots might not be perfectly sorted or where different timeframes
+    // have different snapshot sets
     if (rawData && rawData.length > 0) {
-      const latestSnapshot = rawData[rawData.length - 1];
+      // Find the absolute latest snapshot by timestamp (not just array position)
+      const latestSnapshot = rawData.reduce((latest, snapshot) => {
+        const snapshotTime = moment(snapshot.timestamp).valueOf();
+        const latestTime = moment(latest.timestamp).valueOf();
+        return snapshotTime > latestTime ? snapshot : latest;
+      }, rawData[0]);
+      
       if (latestSnapshot) {
         try {
           let currentValue: number | null = null;
@@ -977,20 +987,31 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     return data.sort((a, b) => a.time - b.time);
   }, [portfolioData, rawData, convertTo, dateRange]);
 
-  // Extract current portfolio value from the latest point in rechartsData
-  // This ensures consistency between hover and non-hover states across all timeframes
+  // Fetch current portfolio value independently of timeframe
+  // This ensures consistency across all timeframes by always using the same current value source
+  const { data: currentPortfolioSnapshot } = usePortfolioValue({
+    address,
+    convertTo: convertTo as any,
+    enabled: !!address,
+    staleTime: 30_000, // 30 seconds
+    refetchInterval: 60_000, // 1 minute
+  });
+
+  // Extract current portfolio value from the independent query
+  // This ensures consistency across all timeframes
   const currentPortfolioValue = useMemo(() => {
-    if (!rechartsData || rechartsData.length === 0) return null;
-    
-    const latestPoint = rechartsData[rechartsData.length - 1];
-    if (!latestPoint) return null;
+    if (!currentPortfolioSnapshot) return null;
     
     try {
-      return Decimal.from(latestPoint.value);
+      if (convertTo === 'ae') {
+        return Decimal.from(currentPortfolioSnapshot.total_value_ae);
+      } else {
+        return Decimal.from(currentPortfolioSnapshot.total_value_usd ?? currentPortfolioSnapshot.total_value_ae);
+      }
     } catch {
       return null;
     }
-  }, [rechartsData]);
+  }, [currentPortfolioSnapshot, convertTo]);
 
   // Fetch PNL data for current timeframe
   const {

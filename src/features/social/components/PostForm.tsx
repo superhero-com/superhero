@@ -664,8 +664,9 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
             return old;
           });
           
-          // Only update postId query if it's different from normalizedPostId
-          if (normalizeId(postId) !== normalizedParentId) {
+          // Only update postId query if it's different from normalizedPostId (as strings)
+          // Compare original strings, not normalized versions, since normalization is idempotent
+          if (postId !== normalizedPostId) {
             queryClient.setQueryData(["post", postId], (old: any) => {
               if (old && matchesParentId(old.id)) {
                 return { ...old, total_comments: (old.total_comments || 0) + 1 };

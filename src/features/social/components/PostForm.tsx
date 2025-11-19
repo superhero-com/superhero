@@ -381,7 +381,15 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         
         // Optimistically prepend the new post to the latest feed cache so it appears immediately
         // Update all relevant query keys for the latest feed
+        const updatedKeys = new Set<string>();
         const updateLatestFeedCache = (queryKey: any[]) => {
+          const keyStr = JSON.stringify(queryKey);
+          // Skip if we've already updated this key to avoid duplicates
+          if (updatedKeys.has(keyStr)) {
+            return;
+          }
+          updatedKeys.add(keyStr);
+          
           queryClient.setQueryData(queryKey, (old: any) => {
             if (!old || !old.pages || !Array.isArray(old.pages)) {
               return {
@@ -390,9 +398,17 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
               };
             }
             const firstPage = old.pages[0] || { items: [], meta: old.pages[0]?.meta || {} };
+            const existingItems = firstPage.items || [];
+            // Check if post already exists to prevent duplicates
+            const postAlreadyExists = existingItems.some((item: any) => 
+              item?.id === created?.id || item?.tx_hash === created?.tx_hash
+            );
+            if (postAlreadyExists) {
+              return old;
+            }
             const updatedFirstPage = {
               ...firstPage,
-              items: [created as any, ...(firstPage.items || [])],
+              items: [created as any, ...existingItems],
             };
             return {
               ...old,

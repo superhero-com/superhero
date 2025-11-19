@@ -1485,11 +1485,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                       )}
                     </span>
                   </>
-                ) : isPnlLoading ? (
-                  <>
-                    <Spinner className="w-3 h-3" />
-                    <span>Loading Profit/Loss...</span>
-                  </>
                 ) : null}
               </div>
               

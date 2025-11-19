@@ -607,20 +607,22 @@ export default function FeedList({
   // This enables the query immediately if we have less than 10 popular posts
   const queryEnabledWithEnoughPosts = sortBy === "hot" && (popularExhausted || !hasEnoughPopularPosts);
 
-  // Debug log for latestDataForHot query state (after popularList and hasEnoughPopularPosts are computed)
-  if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
-    console.log('🔍 [DEBUG] latestDataForHot query state:', {
+  // Debug log for latestDataForHot query state (moved to useEffect to prevent render spam)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
+      console.log('🔍 [DEBUG] latestDataForHot query state:', {
         queryEnabledWithEnoughPosts,
         sortBy,
         popularExhausted,
         hasEnoughPopularPosts,
         popularListLength: popularList.length,
-      popularPostIdsSize: popularPostIds.size,
-      latestDataForHotPages: latestDataForHot?.pages?.length || 0,
-      hasMoreLatestForHot,
-      fetchingMoreLatestForHot,
-    });
-  }
+        popularPostIdsSize: popularPostIds.size,
+        latestDataForHotPages: latestDataForHot?.pages?.length || 0,
+        hasMoreLatestForHot,
+        fetchingMoreLatestForHot,
+      });
+    }
+  }, [sortBy, queryEnabledWithEnoughPosts, popularExhausted, hasEnoughPopularPosts, popularList.length, popularPostIds.size, latestDataForHot?.pages?.length, hasMoreLatestForHot, fetchingMoreLatestForHot]);
 
   // Latest posts for hot feed (filtered to exclude popular ones)
   const latestListForHot = useMemo(() => {
@@ -635,14 +637,15 @@ export default function FeedList({
       return true;
     });
     
-    if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
-      console.log('🔍 [DEBUG] latestListForHot computed:', {
-        pagesCount: latestDataForHot.pages.length,
-        allItemsCount: allItems.length,
-        filteredCount: filtered.length,
-        popularPostIdsSize: popularPostIds.size,
-      });
-    }
+    // Debug log removed to reduce console spam - uncomment if needed for debugging
+    // if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
+    //   console.log('🔍 [DEBUG] latestListForHot computed:', {
+    //     pagesCount: latestDataForHot.pages.length,
+    //     allItemsCount: allItems.length,
+    //     filteredCount: filtered.length,
+    //     popularPostIdsSize: popularPostIds.size,
+    //   });
+    // }
     
     return filtered;
   }, [latestDataForHot, popularPostIds, sortBy]);
@@ -731,13 +734,14 @@ export default function FeedList({
     if (sortBy === "hot") {
       // For hot: popular posts first, then latest posts (filtered to exclude popular ones)
       const combined = [...popularList, ...latestListForHot];
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔍 [DEBUG] combinedList for hot:', {
-          popularListCount: popularList.length,
-          latestListForHotCount: latestListForHot.length,
-          combinedCount: combined.length,
-        });
-      }
+      // Debug log removed to reduce console spam - uncomment if needed for debugging
+      // if (process.env.NODE_ENV === 'development') {
+      //   console.log('🔍 [DEBUG] combinedList for hot:', {
+      //     popularListCount: popularList.length,
+      //     latestListForHotCount: latestListForHot.length,
+      //     combinedCount: combined.length,
+      //   });
+      // }
       return combined;
     }
     
@@ -792,12 +796,13 @@ export default function FeedList({
   const filteredAndSortedList = useMemo(() => {
     let filtered = [...combinedList];
     
-    if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
-      console.log('🔍 [DEBUG] filteredAndSortedList computed:', {
-        combinedListCount: combinedList.length,
-        filteredCountBefore: filtered.length,
-      });
-    }
+    // Debug logs removed to reduce console spam - uncomment if needed for debugging
+    // if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
+    //   console.log('🔍 [DEBUG] filteredAndSortedList computed:', {
+    //     combinedListCount: combinedList.length,
+    //     filteredCountBefore: filtered.length,
+    //   });
+    // }
 
     if (localSearch.trim()) {
       const searchTerm = localSearch.toLowerCase();
@@ -814,20 +819,22 @@ export default function FeedList({
           (chainNames?.[item.sender_address] &&
             chainNames[item.sender_address].toLowerCase().includes(searchTerm))
       );
-      if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
-        console.log('🔍 [DEBUG] filteredAndSortedList after search filter:', {
-          beforeFilter,
-          afterFilter: filtered.length,
-          searchTerm: localSearch,
-        });
-      }
+      // Debug log removed to reduce console spam
+      // if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
+      //   console.log('🔍 [DEBUG] filteredAndSortedList after search filter:', {
+      //     beforeFilter,
+      //     afterFilter: filtered.length,
+      //     searchTerm: localSearch,
+      //   });
+      // }
     }
     
-    if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
-      console.log('🔍 [DEBUG] filteredAndSortedList final:', {
-        finalCount: filtered.length,
-      });
-    }
+    // Debug log removed to reduce console spam
+    // if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
+    //   console.log('🔍 [DEBUG] filteredAndSortedList final:', {
+    //     finalCount: filtered.length,
+    //   });
+    // }
 
     if (filterBy === "withMedia") {
       filtered = filtered.filter(
@@ -1118,25 +1125,27 @@ export default function FeedList({
       }
       return;
     }
-    if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
-      console.log('[Popular Feed] Setting up intersection observer:', {
-        hasMorePopular,
-        fetchingMorePopular,
-        popularExhausted,
-        hasMoreLatestForHot,
-        fetchingMoreLatestForHot,
-        sentinelExists: !!sentinel,
-      });
-    }
+    // Debug log removed to reduce console spam - uncomment if needed for debugging
+    // if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
+    //   console.log('[Popular Feed] Setting up intersection observer:', {
+    //     hasMorePopular,
+    //     fetchingMorePopular,
+    //     popularExhausted,
+    //     hasMoreLatestForHot,
+    //     fetchingMoreLatestForHot,
+    //     sentinelExists: !!sentinel,
+    //   });
+    // }
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
       if (!entry.isIntersecting || fetchingRef.current) {
-        if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
-          console.log('[Popular Feed] Intersection observer: not triggering', {
-            isIntersecting: entry.isIntersecting,
-            fetchingRef: fetchingRef.current,
-          });
-        }
+        // Debug log removed to reduce console spam
+        // if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
+        //   console.log('[Popular Feed] Intersection observer: not triggering', {
+        //     isIntersecting: entry.isIntersecting,
+        //     fetchingRef: fetchingRef.current,
+        //   });
+        // }
         return;
       }
       
@@ -1151,53 +1160,60 @@ export default function FeedList({
       if (sortBy === "hot") {
         const lastPage = popularData?.pages?.[popularData.pages.length - 1];
         const manualHasMore = lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && lastPage.meta.currentPage < lastPage.meta.totalPages;
-        if (process.env.NODE_ENV === 'development') {
-          console.log('🔍 [DEBUG] Intersection Observer TRIGGERED:', {
-            hasMorePopular,
-            fetchingMorePopular,
-            popularExhausted,
-            hasMoreLatestForHot,
-            fetchingMoreLatestForHot,
-            lastPageMeta: lastPage?.meta,
-            manualHasMore,
-            popularPagesCount: popularData?.pages?.length || 0,
-            latestPagesCount: latestDataForHot?.pages?.length || 0,
-            queryEnabledWithEnoughPosts,
-          });
-        }
+        // Debug logs removed to reduce console spam - uncomment if needed for debugging
+        // if (process.env.NODE_ENV === 'development') {
+        //   console.log('🔍 [DEBUG] Intersection Observer TRIGGERED:', {
+        //     hasMorePopular,
+        //     fetchingMorePopular,
+        //     popularExhausted,
+        //     hasMoreLatestForHot,
+        //     fetchingMoreLatestForHot,
+        //     lastPageMeta: lastPage?.meta,
+        //     manualHasMore,
+        //     popularPagesCount: popularData?.pages?.length || 0,
+        //     latestPagesCount: latestDataForHot?.pages?.length || 0,
+        //     queryEnabledWithEnoughPosts,
+        //   });
+        // }
         // If popular posts are exhausted or we don't have enough, fetch latest posts (prioritize this)
         if ((popularExhausted || !hasEnoughPopularPosts) && queryEnabledWithEnoughPosts) {
           // Only fetch if query is enabled, not currently fetching, and there are more pages
           if (hasMoreLatestForHot && !fetchingMoreLatestForHot) {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('🔍 [DEBUG] Intersection Observer - FETCHING latest posts');
-            }
+            // Debug log removed to reduce console spam
+            // if (process.env.NODE_ENV === 'development') {
+            //   console.log('🔍 [DEBUG] Intersection Observer - FETCHING latest posts');
+            // }
             tasks.push(fetchNextLatestForHot());
-          } else if (process.env.NODE_ENV === 'development') {
-            console.log('🔍 [DEBUG] Intersection Observer - NOT fetching latest posts:', {
-              hasMoreLatestForHot,
-              fetchingMoreLatestForHot,
-              queryEnabledWithEnoughPosts,
-            });
           }
+          // Debug log removed to reduce console spam
+          // else if (process.env.NODE_ENV === 'development') {
+          //   console.log('🔍 [DEBUG] Intersection Observer - NOT fetching latest posts:', {
+          //     hasMoreLatestForHot,
+          //     fetchingMoreLatestForHot,
+          //     queryEnabledWithEnoughPosts,
+          //   });
+          // }
         } else if (!popularExhausted && hasEnoughPopularPosts && (hasMorePopular || manualHasMore) && !fetchingMorePopular) {
           // Try to fetch popular posts if there are more and we have enough already
-          if (process.env.NODE_ENV === 'development') {
-            console.log('🔍 [DEBUG] Intersection Observer - FETCHING popular posts');
-          }
+          // Debug log removed to reduce console spam
+          // if (process.env.NODE_ENV === 'development') {
+          //   console.log('🔍 [DEBUG] Intersection Observer - FETCHING popular posts');
+          // }
           tasks.push(fetchNextPopular());
-        } else if (process.env.NODE_ENV === 'development') {
-          console.log('🔍 [DEBUG] Intersection Observer - NOT fetching (no conditions met):', {
-            popularExhausted,
-            hasEnoughPopularPosts,
-            queryEnabledWithEnoughPosts,
-            hasMorePopular,
-            manualHasMore,
-            fetchingMorePopular,
-            hasMoreLatestForHot,
-            fetchingMoreLatestForHot,
-          });
         }
+        // Debug log removed to reduce console spam
+        // else if (process.env.NODE_ENV === 'development') {
+        //   console.log('🔍 [DEBUG] Intersection Observer - NOT fetching (no conditions met):', {
+        //     popularExhausted,
+        //     hasEnoughPopularPosts,
+        //     queryEnabledWithEnoughPosts,
+        //     hasMorePopular,
+        //     manualHasMore,
+        //     fetchingMorePopular,
+        //     hasMoreLatestForHot,
+        //     fetchingMoreLatestForHot,
+        //   });
+        // }
       } else {
         if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
         if (hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
@@ -1292,11 +1308,12 @@ export default function FeedList({
         {/* Hot: render popular posts (which seamlessly includes recent posts after popular posts are exhausted) */}
         {sortBy === "hot" && (popularData?.pages.length > 0 || latestDataForHot?.pages.length > 0) && (
           <>
-            {process.env.NODE_ENV === 'development' && console.log('🔍 [DEBUG] Rendering hot feed:', {
+            {/* Debug log removed to reduce console spam */}
+            {/* {process.env.NODE_ENV === 'development' && console.log('🔍 [DEBUG] Rendering hot feed:', {
               filteredAndSortedListLength: filteredAndSortedList.length,
               popularDataPages: popularData?.pages?.length || 0,
               latestDataForHotPages: latestDataForHot?.pages?.length || 0,
-            })}
+            })} */}
             {filteredAndSortedList.map((item) => (
               <ReplyToFeedItem
                 key={item.id}
@@ -1326,53 +1343,60 @@ export default function FeedList({
                   if (sortBy === "hot") {
                     const lastPage = popularData?.pages?.[popularData.pages.length - 1];
                     const manualHasMore = lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && lastPage.meta.currentPage < lastPage.meta.totalPages;
-                    if (process.env.NODE_ENV === 'development') {
-                      console.log('🔍 [DEBUG] Load More Button CLICKED:', {
-                        hasMorePopular,
-                        fetchingMorePopular,
-                        popularExhausted,
-                        hasMoreLatestForHot,
-                        fetchingMoreLatestForHot,
-                        lastPageMeta: lastPage?.meta,
-                        manualHasMore,
-                        popularPagesCount: popularData?.pages?.length || 0,
-                        latestPagesCount: latestDataForHot?.pages?.length || 0,
-                        queryEnabledWithEnoughPosts,
-                      });
-                    }
+                    // Debug logs removed to reduce console spam - uncomment if needed for debugging
+                    // if (process.env.NODE_ENV === 'development') {
+                    //   console.log('🔍 [DEBUG] Load More Button CLICKED:', {
+                    //     hasMorePopular,
+                    //     fetchingMorePopular,
+                    //     popularExhausted,
+                    //     hasMoreLatestForHot,
+                    //     fetchingMoreLatestForHot,
+                    //     lastPageMeta: lastPage?.meta,
+                    //     manualHasMore,
+                    //     popularPagesCount: popularData?.pages?.length || 0,
+                    //     latestPagesCount: latestDataForHot?.pages?.length || 0,
+                    //     queryEnabledWithEnoughPosts,
+                    //   });
+                    // }
                     // If popular posts are exhausted or we don't have enough, fetch latest posts (prioritize this)
                     if ((popularExhausted || !hasEnoughPopularPosts) && queryEnabledWithEnoughPosts) {
                       // Only fetch if query is enabled, not currently fetching, and there are more pages
                       if (hasMoreLatestForHot && !fetchingMoreLatestForHot) {
-                        if (process.env.NODE_ENV === 'development') {
-                          console.log('🔍 [DEBUG] Load More Button - FETCHING latest posts');
-                        }
+                        // Debug log removed to reduce console spam
+                        // if (process.env.NODE_ENV === 'development') {
+                        //   console.log('🔍 [DEBUG] Load More Button - FETCHING latest posts');
+                        // }
                         await fetchNextLatestForHot();
-                      } else if (process.env.NODE_ENV === 'development') {
-                        console.log('🔍 [DEBUG] Load More Button - NOT fetching latest posts:', {
-                          hasMoreLatestForHot,
-                          fetchingMoreLatestForHot,
-                          queryEnabledWithEnoughPosts,
-                        });
                       }
+                      // Debug log removed to reduce console spam
+                      // else if (process.env.NODE_ENV === 'development') {
+                      //   console.log('🔍 [DEBUG] Load More Button - NOT fetching latest posts:', {
+                      //     hasMoreLatestForHot,
+                      //     fetchingMoreLatestForHot,
+                      //     queryEnabledWithEnoughPosts,
+                      //   });
+                      // }
                     } else if (!popularExhausted && hasEnoughPopularPosts && (hasMorePopular || manualHasMore) && !fetchingMorePopular) {
                       // Try to fetch popular posts if there are more and we have enough already
-                      if (process.env.NODE_ENV === 'development') {
-                        console.log('🔍 [DEBUG] Load More Button - FETCHING popular posts');
-                      }
+                      // Debug log removed to reduce console spam
+                      // if (process.env.NODE_ENV === 'development') {
+                      //   console.log('🔍 [DEBUG] Load More Button - FETCHING popular posts');
+                      // }
                       await fetchNextPopular();
-                    } else if (process.env.NODE_ENV === 'development') {
-                      console.log('🔍 [DEBUG] Load More Button - NOT fetching:', {
-                        popularExhausted,
-                        hasEnoughPopularPosts,
-                        queryEnabledWithEnoughPosts,
-                        hasMorePopular,
-                        manualHasMore,
-                        fetchingMorePopular,
-                        hasMoreLatestForHot,
-                        fetchingMoreLatestForHot,
-                      });
                     }
+                    // Debug log removed to reduce console spam
+                    // else if (process.env.NODE_ENV === 'development') {
+                    //   console.log('🔍 [DEBUG] Load More Button - NOT fetching:', {
+                    //     popularExhausted,
+                    //     hasEnoughPopularPosts,
+                    //     queryEnabledWithEnoughPosts,
+                    //     hasMorePopular,
+                    //     manualHasMore,
+                    //     fetchingMorePopular,
+                    //     hasMoreLatestForHot,
+                    //     fetchingMoreLatestForHot,
+                    //   });
+                    // }
                     return;
                   }
                   const tasks: Promise<any>[] = [];

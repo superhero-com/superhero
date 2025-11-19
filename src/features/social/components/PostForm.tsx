@@ -606,10 +606,18 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         
         // Optimistically update parent post's comment count
         // Update parent post in cache if it exists (for both normalized and original formats)
-        // Helper to check if two IDs match (handles both normalized and non-normalized)
-        const idsMatchForCommentCount = (id1: string, id2: string): boolean => {
-          const normalize = (id: string) => String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`;
-          return normalize(id1) === normalize(id2) || id1 === id2;
+        // Helper to normalize IDs consistently
+        const normalizeId = (id: string): string => {
+          return String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`;
+        };
+        
+        // Normalize parent ID once to use consistently (both normalizedPostId and postId should normalize to the same value)
+        const normalizedParentId = normalizeId(normalizedPostId);
+        
+        // Helper to check if an ID matches the parent (handles both normalized and non-normalized)
+        const matchesParentId = (id: string | undefined): boolean => {
+          if (!id) return false;
+          return normalizeId(id) === normalizedParentId;
         };
         
         const updateParentPostCommentCount = () => {
@@ -623,7 +631,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                 pages: old.pages.map((p: any) => ({
                   ...p,
                   items: p.items?.map((i: any) => 
-                    (idsMatchForCommentCount(i?.id, normalizedPostId) || idsMatchForCommentCount(i?.id, postId))
+                    matchesParentId(i?.id)
                       ? { ...i, total_comments: (i.total_comments || 0) + 1 }
                       : i
                   ) || [],
@@ -634,16 +642,16 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
           
           // Also check single post queries for both formats
           queryClient.setQueryData(["post", normalizedPostId], (old: any) => {
-            if (old && (idsMatchForCommentCount(old.id, normalizedPostId) || idsMatchForCommentCount(old.id, postId))) {
+            if (old && matchesParentId(old.id)) {
               return { ...old, total_comments: (old.total_comments || 0) + 1 };
             }
             return old;
           });
           
           // Only update postId query if it's different from normalizedPostId
-          if (!idsMatchForCommentCount(postId, normalizedPostId)) {
+          if (normalizeId(postId) !== normalizedParentId) {
             queryClient.setQueryData(["post", postId], (old: any) => {
-              if (old && (idsMatchForCommentCount(old.id, normalizedPostId) || idsMatchForCommentCount(old.id, postId))) {
+              if (old && matchesParentId(old.id)) {
                 return { ...old, total_comments: (old.total_comments || 0) + 1 };
               }
               return old;

@@ -217,7 +217,7 @@ export default function InviteAndEarnCard({
                 {generatingInviteLink ? (
                   <>
                     <Spinner className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6" />
-                    {t('creatingInvites', { ns: 'common' })}
+                    {t('buttons.creatingInvites', { ns: 'common' })}
                   </>
                 ) : (
                   t('buttons.generateInviteLinks', { ns: 'common' })

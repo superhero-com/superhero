@@ -16,7 +16,7 @@ import { GifSelectorDialog } from "./GifSelectorDialog";
 interface PostFormProps {
   // Common props
   onClose?: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (createdPost?: any) => void;
   className?: string;
   onTextChange?: (text: string) => void;
 
@@ -361,7 +361,12 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
               };
             });
           }
-        } catch { }
+          // Call onSuccess with the created post
+          onSuccess?.(created as any);
+        } catch { 
+          // Still call onSuccess even if fetching fails
+          onSuccess?.();
+        }
       } else if (postId) {
         // For replies: optimistically show the new reply immediately
         // Normalize postId the same way CommentItem does to ensure cache key matches
@@ -512,7 +517,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       // Reset after success
       setText(initialText || "");
       setMediaUrls([]);
-      onSuccess?.();
+      // Note: onSuccess is called above for posts with the created post, and onCommentAdded is called for comments
       // Also refetch any topic feeds related to this hashtag so other viewers update quickly
       try {
         if (requiredHashtag) {

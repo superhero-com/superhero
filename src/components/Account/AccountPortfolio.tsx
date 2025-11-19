@@ -465,14 +465,41 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
     };
   }, [data, onHover]); // Re-run if data or onHover changes
 
+  // Prevent SVG elements from receiving focus
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const disableSVGFocus = () => {
+      const svg = container.querySelector('svg');
+      if (svg) {
+        svg.setAttribute('tabindex', '-1');
+        svg.setAttribute('focusable', 'false');
+        // Disable focus on all SVG child elements
+        const svgElements = svg.querySelectorAll('*');
+        svgElements.forEach((el) => {
+          el.setAttribute('tabindex', '-1');
+          el.setAttribute('focusable', 'false');
+        });
+      }
+    };
+
+    // Run immediately and after a short delay to catch dynamically rendered SVG
+    disableSVGFocus();
+    const timeout = setTimeout(disableSVGFocus, 100);
+
+    return () => clearTimeout(timeout);
+  }, [data]);
+
   return (
       <div
       ref={containerRef}
-      className="w-full h-[180px] relative"
+      className="w-full h-[180px] relative focus:outline-none focus-visible:outline-none"
         style={{ 
           touchAction: 'pan-y', 
           width: '100%', 
-          height: '180px', 
+          height: '180px',
+          outline: 'none',
         }}
       >
       {data.length > 0 && (
@@ -1478,7 +1505,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         {/* Chart - no padding, full width */}
         <div className="p-4 w-full">
             <div 
-              className="h-[180px] relative w-full" 
+              className="h-[180px] relative w-full focus:outline-none focus-visible:outline-none" 
               tabIndex={-1}
               style={{ 
                 width: '100%',
@@ -1486,6 +1513,21 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                 maxWidth: '100%',
                 outline: 'none',
                 WebkitTapHighlightColor: 'transparent',
+              }}
+              onMouseDown={(e) => {
+                // Prevent focus on mouse click
+                e.preventDefault();
+                e.currentTarget.blur();
+                if (e.target instanceof HTMLElement) {
+                  e.target.blur();
+                }
+              }}
+              onClick={(e) => {
+                // Prevent focus on click
+                e.currentTarget.blur();
+                if (e.target instanceof HTMLElement) {
+                  e.target.blur();
+                }
               }}
               onTouchStart={(e) => {
                 // Prevent focus on touch

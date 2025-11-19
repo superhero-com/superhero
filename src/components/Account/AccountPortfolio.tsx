@@ -1243,6 +1243,16 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     });
   }, [pnlData, isPnlLoading, selectedTimeRange, address, convertTo, queryClient]);
 
+  // Check if portfolio value and PNL are ready (independent of chart data)
+  // This allows portfolio value + PNL to show before the chart loads
+  const valueAndPnlReady = useMemo(() => {
+    // If hovering, show immediately (hover data comes from portfolioData which is already loaded)
+    if (hoveredPrice) return true;
+    
+    // Portfolio value and PNL are ready when we have both, regardless of chart data
+    return currentPortfolioValue !== null && currentPortfolioValue !== undefined && pnlData !== null && !isPnlLoading;
+  }, [hoveredPrice, currentPortfolioValue, pnlData, isPnlLoading]);
+
   // Check if both portfolio value and PNL are ready to display together
   const bothReady = useMemo(() => {
     // If hovering, show immediately (hover data comes from portfolioData which is already loaded)
@@ -1252,14 +1262,14 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     return !isLoading && !isPnlLoading && portfolioData && portfolioData.length > 0 && currentPortfolioValue !== null && currentPortfolioValue !== undefined;
   }, [hoveredPrice, isLoading, isPnlLoading, portfolioData, currentPortfolioValue]);
 
-  // Calculate display value
+  // Calculate display value - show as soon as value and PNL are ready (don't wait for chart)
   const displayValue = useMemo(() => {
     if (hoveredPrice) {
       return hoveredPrice.price;
     }
     
-    // Only show portfolio value if both are ready (or if hovering)
-    if (bothReady && currentPortfolioValue) {
+    // Show portfolio value as soon as value and PNL are ready (don't wait for chart)
+    if (valueAndPnlReady && currentPortfolioValue) {
       try {
         return typeof currentPortfolioValue.toNumber === 'function' 
           ? currentPortfolioValue.toNumber()
@@ -1272,7 +1282,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     }
     
     return null;
-  }, [hoveredPrice, currentPortfolioValue, bothReady]);
+  }, [hoveredPrice, currentPortfolioValue, valueAndPnlReady]);
 
   // Animate value when displayValue changes
   useEffect(() => {
@@ -1559,7 +1569,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                       )}
                     </span>
                   </>
-                ) : bothReady && pnlData ? (
+                ) : valueAndPnlReady && pnlData ? (
                   <>
                     <span className="text-white/60">Profit/Loss:</span>
                     <span className={`font-semibold ${

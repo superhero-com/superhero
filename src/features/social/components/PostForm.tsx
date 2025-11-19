@@ -406,14 +406,38 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         };
         const normalizedPostId = normalizePostIdV3(postId);
         const newReplyId = `${String(decodedResult).replace(/_v3$/,'')}_v3`;
-        let newReply: any = null;
+        
+        // Create optimistic reply object immediately (even before API call)
+        // This ensures the reply appears instantly even if backend isn't ready yet
+        const optimisticReply: any = {
+          id: newReplyId,
+          content: trimmed,
+          sender_address: activeAccount,
+          media: mediaUrls,
+          total_comments: 0,
+          created_at: new Date().toISOString(),
+          tx_hash: decodedResult,
+          type: 'post_without_tip',
+          topics: [],
+        };
+        
+        let newReply: any = optimisticReply;
         
         try {
-          newReply = await PostsService.getById({ id: newReplyId });
-          
-          // Helper function to update infinite query format
-          // Replies are ordered ASC (oldest first), so new replies go at the bottom (last page)
-          const updateInfiniteQuery = (queryKey: any[]) => {
+          // Try to fetch the actual reply from backend, but use optimistic one if it fails
+          const fetchedReply = await PostsService.getById({ id: newReplyId });
+          newReply = fetchedReply;
+        } catch (error) {
+          // Backend might not have processed it yet (404), use optimistic reply
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[PostForm] Backend not ready yet, using optimistic reply:', error);
+          }
+          // Continue with optimisticReply
+        }
+        
+        // Helper function to update infinite query format
+        // Replies are ordered ASC (oldest first), so new replies go at the bottom (last page)
+        const updateInfiniteQuery = (queryKey: any[]) => {
             queryClient.setQueryData(queryKey, (old: any) => {
               if (!old || !old.pages || !Array.isArray(old.pages)) {
                 return {
@@ -445,9 +469,9 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
             });
           };
           
-          // Helper function to update array query format
-          // Replies are ordered ASC (oldest first), so new replies go at the bottom
-          const updateArrayQuery = (queryKey: any[]) => {
+        // Helper function to update array query format
+        // Replies are ordered ASC (oldest first), so new replies go at the bottom
+        const updateArrayQuery = (queryKey: any[]) => {
             queryClient.setQueryData(queryKey, (old: any) => {
               if (!Array.isArray(old)) return [newReply];
               // Check if reply already exists to avoid duplicates
@@ -458,131 +482,130 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
             });
           };
           
-          // Helper to check if two IDs match (handles both normalized and non-normalized)
-          const idsMatch = (id1: string, id2: string): boolean => {
+        // Helper to check if two IDs match (handles both normalized and non-normalized)
+        const idsMatch = (id1: string, id2: string): boolean => {
             const normalize = (id: string) => String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`;
             return normalize(id1) === normalize(id2) || id1 === id2;
           };
           
-          // CRITICAL: Update ALL active query keys FIRST, using their exact key format
-          // This ensures we catch DirectReplies and other components that use the raw ID
-          const updatedKeys = new Set<string>();
-          const allPostCommentQueries = queryClient.getQueryCache().findAll({ queryKey: ["post-comments"], exact: false });
-          
-          if (process.env.NODE_ENV === 'development') {
-            console.log('[PostForm] Updating replies cache:', {
-              postId,
-              normalizedPostId,
-              newReplyId,
-              foundQueries: allPostCommentQueries.length,
-              queryKeys: allPostCommentQueries.map(q => q.queryKey),
-            });
-          }
-          
-          allPostCommentQueries.forEach((query) => {
-            const key = query.queryKey as any[];
-            const queryPostId = key[1];
-            // Match using normalized comparison
-            if (idsMatch(queryPostId, normalizedPostId) || idsMatch(queryPostId, postId)) {
-              const keyStr = JSON.stringify(key);
-              if (!updatedKeys.has(keyStr)) {
-                updatedKeys.add(keyStr);
-                if (key[2] === "infinite") {
-                  updateInfiniteQuery(key);
-                  if (process.env.NODE_ENV === 'development') {
-                    console.log('[PostForm] Updated infinite query:', key);
-                  }
-                } else {
-                  updateArrayQuery(key);
-                  if (process.env.NODE_ENV === 'development') {
-                    console.log('[PostForm] Updated array query:', key);
-                  }
-                }
-              }
-            }
+        // CRITICAL: Update ALL active query keys FIRST, using their exact key format
+        // This ensures we catch DirectReplies and other components that use the raw ID
+        const updatedKeys = new Set<string>();
+        const allPostCommentQueries = queryClient.getQueryCache().findAll({ queryKey: ["post-comments"], exact: false });
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[PostForm] Updating replies cache:', {
+            postId,
+            normalizedPostId,
+            newReplyId,
+            foundQueries: allPostCommentQueries.length,
+            queryKeys: allPostCommentQueries.map(q => q.queryKey),
           });
-          
-          // Update ALL active comment-replies query keys
-          queryClient.getQueryCache().findAll({ queryKey: ["comment-replies"], exact: false }).forEach((query) => {
-            const key = query.queryKey as any[];
-            const queryPostId = key[1];
-            if (idsMatch(queryPostId, normalizedPostId) || idsMatch(queryPostId, postId)) {
-              const keyStr = JSON.stringify(key);
-              if (!updatedKeys.has(keyStr)) {
-                updatedKeys.add(keyStr);
-                updateArrayQuery(key);
-              }
-            }
-          });
-          
-          // Also explicitly update common key formats as fallback (even if query doesn't exist yet)
-          // This ensures the reply appears immediately when the component mounts
-          const fallbackKeys = [
-            ["post-comments", normalizedPostId, "infinite"],
-            ["post-comments", normalizedPostId],
-            ["comment-replies", normalizedPostId],
-            ["post-comments", postId, "infinite"],
-            ["post-comments", postId],
-            ["comment-replies", postId],
-          ];
-          
-          fallbackKeys.forEach((key) => {
+        }
+        
+        allPostCommentQueries.forEach((query) => {
+          const key = query.queryKey as any[];
+          const queryPostId = key[1];
+          // Match using normalized comparison
+          if (idsMatch(queryPostId, normalizedPostId) || idsMatch(queryPostId, postId)) {
             const keyStr = JSON.stringify(key);
             if (!updatedKeys.has(keyStr)) {
               updatedKeys.add(keyStr);
               if (key[2] === "infinite") {
                 updateInfiniteQuery(key);
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('[PostForm] Updated infinite query:', key);
+                }
               } else {
                 updateArrayQuery(key);
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('[PostForm] Updated array query:', key);
+                }
               }
             }
+          }
+        });
+        
+        // Update ALL active comment-replies query keys
+        queryClient.getQueryCache().findAll({ queryKey: ["comment-replies"], exact: false }).forEach((query) => {
+          const key = query.queryKey as any[];
+          const queryPostId = key[1];
+          if (idsMatch(queryPostId, normalizedPostId) || idsMatch(queryPostId, postId)) {
+            const keyStr = JSON.stringify(key);
+            if (!updatedKeys.has(keyStr)) {
+              updatedKeys.add(keyStr);
+              updateArrayQuery(key);
+            }
+          }
+        });
+        
+        // Also explicitly update common key formats as fallback (even if query doesn't exist yet)
+        // This ensures the reply appears immediately when the component mounts
+        const fallbackKeys = [
+          ["post-comments", normalizedPostId, "infinite"],
+          ["post-comments", normalizedPostId],
+          ["comment-replies", normalizedPostId],
+          ["post-comments", postId, "infinite"],
+          ["post-comments", postId],
+          ["comment-replies", postId],
+        ];
+        
+        fallbackKeys.forEach((key) => {
+          const keyStr = JSON.stringify(key);
+          if (!updatedKeys.has(keyStr)) {
+            updatedKeys.add(keyStr);
+            if (key[2] === "infinite") {
+              updateInfiniteQuery(key);
+            } else {
+              updateArrayQuery(key);
+            }
+          }
+        });
+        
+        // Optimistically update parent post's comment count
+        // Update parent post in cache if it exists (for both normalized and original formats)
+        const updateParentPostCommentCount = (parentId: string) => {
+          // Update all post queries that might contain the parent post
+          queryClient.getQueryCache().findAll({ queryKey: ["posts"], exact: false }).forEach((query) => {
+            const key = query.queryKey as any[];
+            queryClient.setQueryData(key, (old: any) => {
+              if (!old || !old.pages) return old;
+              return {
+                ...old,
+                pages: old.pages.map((p: any) => ({
+                  ...p,
+                  items: p.items?.map((i: any) => 
+                    (i?.id === parentId || i?.id === normalizedPostId || i?.id === postId)
+                      ? { ...i, total_comments: (i.total_comments || 0) + 1 }
+                      : i
+                  ) || [],
+                })),
+              };
+            });
           });
           
-          // Optimistically update parent post's comment count
-          // Update parent post in cache if it exists (for both normalized and original formats)
-          const updateParentPostCommentCount = (parentId: string) => {
-            // Update all post queries that might contain the parent post
-            queryClient.getQueryCache().findAll({ queryKey: ["posts"], exact: false }).forEach((query) => {
-              const key = query.queryKey as any[];
-              queryClient.setQueryData(key, (old: any) => {
-                if (!old || !old.pages) return old;
-                return {
-                  ...old,
-                  pages: old.pages.map((p: any) => ({
-                    ...p,
-                    items: p.items?.map((i: any) => 
-                      (i?.id === parentId || i?.id === normalizedPostId || i?.id === postId)
-                        ? { ...i, total_comments: (i.total_comments || 0) + 1 }
-                        : i
-                    ) || [],
-                  })),
-                };
-              });
-            });
-            
-            // Also check single post queries
-            queryClient.setQueryData(["post", parentId], (old: any) => {
-              if (old && (old.id === parentId || old.id === normalizedPostId || old.id === postId)) {
-                return { ...old, total_comments: (old.total_comments || 0) + 1 };
-              }
-              return old;
-            });
-            
-            queryClient.setQueryData(["post", normalizedPostId], (old: any) => {
-              if (old && (old.id === normalizedPostId || old.id === postId)) {
-                return { ...old, total_comments: (old.total_comments || 0) + 1 };
-              }
-              return old;
-            });
-          };
+          // Also check single post queries
+          queryClient.setQueryData(["post", parentId], (old: any) => {
+            if (old && (old.id === parentId || old.id === normalizedPostId || old.id === postId)) {
+              return { ...old, total_comments: (old.total_comments || 0) + 1 };
+            }
+            return old;
+          });
           
-          // Update parent post comment count optimistically
-          updateParentPostCommentCount(normalizedPostId);
-          updateParentPostCommentCount(postId);
-          
-          // Invalidate descendant count queries so they refetch with the new reply
-          queryClient.invalidateQueries({ queryKey: ["post-desc-count"], exact: false });
-        } catch {}
+          queryClient.setQueryData(["post", normalizedPostId], (old: any) => {
+            if (old && (old.id === normalizedPostId || old.id === postId)) {
+              return { ...old, total_comments: (old.total_comments || 0) + 1 };
+            }
+            return old;
+          });
+        };
+        
+        // Update parent post comment count optimistically
+        updateParentPostCommentCount(normalizedPostId);
+        updateParentPostCommentCount(postId);
+        
+        // Invalidate descendant count queries so they refetch with the new reply
+        queryClient.invalidateQueries({ queryKey: ["post-desc-count"], exact: false });
         
         // Poll backend until comment is confirmed or max retries reached
         // Backend needs time to process blockchain transaction and update database

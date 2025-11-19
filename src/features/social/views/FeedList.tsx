@@ -37,7 +37,8 @@ export default function FeedList({
   const ACTIVITY_PAGE_SIZE = 50;
   const createPostRef = useRef<CreatePostRef>(null);
   // Use ref to track current sortBy to avoid stale closure in callbacks
-  const sortByRef = useRef(sortBy);
+  // Initialize with default value since sortBy isn't defined yet
+  const sortByRef = useRef<string>("hot");
   
   // Only render homepage SEO meta when actually on the homepage
   const isHomepage = location.pathname === "/";

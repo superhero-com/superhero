@@ -22,9 +22,12 @@ export function formatNumber(num: number | string | undefined, decimals = 2) {
 
   let formatted: string;
 
-  // Preserve "< 0.01" only for very small positive values.
-  if (value < 0.01 && !negative) {
-    return '< 0.01';
+  // Handle very small magnitudes symmetrically for positive/negative values.
+  // For |n| < 10^-decimals, show as "< threshold" or ">-threshold" instead of 0.00 / -0.00.
+  const threshold = Math.pow(10, -decimals);
+  const thresholdStr = threshold.toFixed(decimals);
+  if (value < threshold) {
+    return negative ? `>-${thresholdStr}` : `< ${thresholdStr}`;
   }
 
   if (value < 1000) {

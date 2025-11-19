@@ -417,16 +417,27 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
           });
         };
         
-        // Update latest feed queries (with and without search/filter)
-        updateLatestFeedCache(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }]);
+        // First, collect all active latest feed queries to avoid duplicate updates
+        const activeLatestQueries = queryClient.getQueryCache()
+          .findAll({ queryKey: ["posts"], exact: false })
+          .filter((query) => {
+            const key = query.queryKey as any[];
+            return key.length >= 2 && key[1]?.sortBy === "latest";
+          })
+          .map((query) => query.queryKey as any[]);
         
-        // Also update any active latest feed queries (they may have different search/filter params)
-        queryClient.getQueryCache().findAll({ queryKey: ["posts"], exact: false }).forEach((query) => {
-          const key = query.queryKey as any[];
-          if (key.length >= 2 && key[1]?.sortBy === "latest") {
-            updateLatestFeedCache(key);
-          }
+        // Update all active latest feed queries found in cache
+        activeLatestQueries.forEach((key) => {
+          updateLatestFeedCache(key);
         });
+        
+        // Also update the default latest feed query if it wasn't already updated
+        // This ensures the query is updated even if it doesn't exist in cache yet
+        const defaultKey: any[] = ["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }];
+        const defaultKeyStr = JSON.stringify(defaultKey);
+        if (!updatedKeys.has(defaultKeyStr)) {
+          updateLatestFeedCache(defaultKey);
+        }
         
         // Optimistically prepend the new post to the topic feed cache so it appears immediately
         if (requiredHashtag && !requiredMissing) {

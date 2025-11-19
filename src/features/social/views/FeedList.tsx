@@ -425,6 +425,10 @@ export default function FeedList({
       return nextPage;
     },
     initialPageParam: 1,
+    // Show cached data immediately, refetch in background
+    staleTime: 10000, // Consider data fresh for 10 seconds
+    refetchOnMount: false, // Don't block on refetch - show cached data immediately
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
   // Track popular post IDs to filter them out from latest posts

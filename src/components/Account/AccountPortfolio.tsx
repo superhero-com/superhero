@@ -810,27 +810,137 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     refetchOnReconnect: true,
   });
 
-  // Extract current portfolio value from the latest point in portfolioData
-  // This ensures consistency between hover and non-hover states
-  const currentPortfolioValue = useMemo(() => {
-    if (!portfolioData || portfolioData.length === 0) return null;
+  // Prepare chart data for Recharts first (needed for currentPortfolioValue extraction)
+  const rechartsData = useMemo(() => {
+    if (!portfolioData || portfolioData.length === 0) return [];
     
-    const latestSnapshot = portfolioData[portfolioData.length - 1];
-    if (!latestSnapshot) return null;
+    const nowUnix = moment.utc().unix();
+    
+    const data = portfolioData
+          .map((snapshot) => {
+            const timestamp = moment(snapshot.timestamp).unix();
+        
+        // Filter out any future data points
+        if (timestamp > nowUnix) {
+                return null;
+        }
+        
+        let value: number | null = null;
+        
+        if (convertTo === 'ae') {
+          value = snapshot.total_value_ae;
+        } else {
+          if (snapshot.total_value_usd != null) {
+            value = snapshot.total_value_usd;
+          } else {
+            return null;
+          }
+        }
+        
+        return {
+          time: timestamp,
+          timestamp: timestamp,
+          value: value as number,
+          date: moment(snapshot.timestamp).toDate(),
+        };
+      })
+      .filter((item): item is { time: number; timestamp: number; value: number; date: Date } => item !== null);
+
+    // Add current portfolio value from the latest snapshot in portfolioData
+    // This ensures we use the actual current value, not a potentially outdated chart point
+    if (portfolioData && portfolioData.length > 0) {
+      const latestSnapshot = portfolioData[portfolioData.length - 1];
+      if (latestSnapshot) {
+        try {
+          let currentValue: number | null = null;
+          if (convertTo === 'ae') {
+            currentValue = latestSnapshot.total_value_ae;
+          } else {
+            currentValue = latestSnapshot.total_value_usd ?? latestSnapshot.total_value_ae;
+          }
+
+          if (currentValue !== null && !isNaN(currentValue) && isFinite(currentValue)) {
+            const lastPoint = data.length > 0 ? data[data.length - 1] : null;
+            
+            // Only add/update if the last point is in the past (not at or after current time)
+            if (!lastPoint || lastPoint.time < nowUnix) {
+              if (lastPoint) {
+                const valueDiff = Math.abs(lastPoint.value - currentValue);
+                const valueDiffPercent = lastPoint.value > 0 ? (valueDiff / lastPoint.value) * 100 : 0;
+                
+                // For daily intervals (1M, ALL), be more conservative:
+                // Only add a new point if value changed significantly (> 0.1% or > 1 AE)
+                // Otherwise, just update the timestamp to keep the line flat
+                const isDailyInterval = dateRange.interval >= 86400; // Daily or longer intervals
+                const significantChange = valueDiffPercent > 0.1 || valueDiff > 1; // More than 0.1% or 1 AE change
+                
+                if (valueDiff < 0.000001) {
+                  // Same value (within floating point precision), update timestamp
+                  const timeDiff = nowUnix - lastPoint.time;
+                  if (timeDiff > 300) {
+                    data[data.length - 1] = {
+                      ...lastPoint,
+                      time: nowUnix,
+                      timestamp: nowUnix,
+                      date: moment.unix(nowUnix).toDate(),
+                    };
+                  }
+                } else if (isDailyInterval && !significantChange) {
+                  // Daily interval with insignificant change - update timestamp AND value to current
+                  // This ensures the displayed value matches the actual current value
+                  const timeDiff = nowUnix - lastPoint.time;
+                  if (timeDiff > 300) {
+                    data[data.length - 1] = {
+                      ...lastPoint,
+                      value: currentValue, // Update to current value to ensure consistency
+                      time: nowUnix,
+                      timestamp: nowUnix,
+                      date: moment.unix(nowUnix).toDate(),
+                    };
+                  }
+                } else {
+                  // Significant change or non-daily interval - add new point
+                  data.push({
+                    time: nowUnix,
+                    timestamp: nowUnix,
+                    value: currentValue,
+                    date: moment.unix(nowUnix).toDate(),
+                  });
+                }
+              } else {
+                // No last point, add current value
+                data.push({
+                  time: nowUnix,
+                  timestamp: nowUnix,
+                  value: currentValue,
+                  date: moment.unix(nowUnix).toDate(),
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.warn('Failed to add current portfolio value to chart:', error);
+        }
+      }
+    }
+
+    return data.sort((a, b) => a.time - b.time);
+  }, [portfolioData, convertTo, dateRange]);
+
+  // Extract current portfolio value from the latest point in rechartsData
+  // This ensures consistency between hover and non-hover states across all timeframes
+  const currentPortfolioValue = useMemo(() => {
+    if (!rechartsData || rechartsData.length === 0) return null;
+    
+    const latestPoint = rechartsData[rechartsData.length - 1];
+    if (!latestPoint) return null;
     
     try {
-      if (convertTo === 'ae') {
-        return Decimal.from(latestSnapshot.total_value_ae);
-      } else {
-        if (latestSnapshot.total_value_usd != null) {
-          return Decimal.from(latestSnapshot.total_value_usd);
-        }
-        return Decimal.from(latestSnapshot.total_value_ae);
-      }
+      return Decimal.from(latestPoint.value);
     } catch {
       return null;
     }
-  }, [portfolioData, convertTo]);
+  }, [rechartsData]);
 
   // Fetch PNL data for current timeframe
   const {
@@ -1156,117 +1266,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       }
     };
   }, [displayValue]);
-
-  // Prepare chart data for Recharts
-  const rechartsData = useMemo(() => {
-    if (!portfolioData || portfolioData.length === 0) return [];
-    
-    const nowUnix = moment.utc().unix();
-    
-    const data = portfolioData
-          .map((snapshot) => {
-            const timestamp = moment(snapshot.timestamp).unix();
-        
-        // Filter out any future data points
-        if (timestamp > nowUnix) {
-                return null;
-        }
-        
-        let value: number | null = null;
-        
-        if (convertTo === 'ae') {
-          value = snapshot.total_value_ae;
-        } else {
-          if (snapshot.total_value_usd != null) {
-            value = snapshot.total_value_usd;
-          } else {
-            return null;
-          }
-        }
-        
-        return {
-          time: timestamp,
-          timestamp: timestamp,
-          value: value as number,
-          date: moment(snapshot.timestamp).toDate(),
-        };
-      })
-      .filter((item): item is { time: number; timestamp: number; value: number; date: Date } => item !== null);
-
-    // Add current portfolio value, but don't create a future point
-    if (currentPortfolioValue !== null && currentPortfolioValue !== undefined) {
-      try {
-        const currentValue = typeof currentPortfolioValue.toNumber === 'function' 
-          ? currentPortfolioValue.toNumber()
-          : typeof currentPortfolioValue === 'number'
-          ? currentPortfolioValue
-          : Number(currentPortfolioValue);
-
-        if (!isNaN(currentValue) && isFinite(currentValue)) {
-          const lastPoint = data.length > 0 ? data[data.length - 1] : null;
-          
-          // Only add/update if the last point is in the past (not at or after current time)
-          // This prevents creating future data points
-          if (!lastPoint || lastPoint.time < nowUnix) {
-            if (lastPoint) {
-              const valueDiff = Math.abs(lastPoint.value - currentValue);
-              const valueDiffPercent = lastPoint.value > 0 ? (valueDiff / lastPoint.value) * 100 : 0;
-              
-              // For daily intervals (1M, ALL), be more conservative:
-              // Only add a new point if value changed significantly (> 0.1% or > 1 AE)
-              // Otherwise, just update the timestamp to keep the line flat
-              const isDailyInterval = dateRange.interval >= 86400; // Daily or longer intervals
-              const significantChange = valueDiffPercent > 0.1 || valueDiff > 1; // More than 0.1% or 1 AE change
-              
-              if (valueDiff < 0.000001) {
-                // Same value (within floating point precision), update timestamp
-                const timeDiff = nowUnix - lastPoint.time;
-                if (timeDiff > 300) {
-                  data[data.length - 1] = {
-                    ...lastPoint,
-                    time: nowUnix,
-                    timestamp: nowUnix,
-                    date: moment.unix(nowUnix).toDate(),
-                  };
-                }
-              } else if (isDailyInterval && !significantChange) {
-                // Daily interval with insignificant change - update timestamp to keep it flat
-                const timeDiff = nowUnix - lastPoint.time;
-                if (timeDiff > 300) {
-                  data[data.length - 1] = {
-                    ...lastPoint,
-                    time: nowUnix,
-                    timestamp: nowUnix,
-                    date: moment.unix(nowUnix).toDate(),
-                  };
-                }
-              } else {
-                // Significant change or non-daily interval - add new point
-                data.push({
-                  time: nowUnix,
-                  timestamp: nowUnix,
-                  value: currentValue,
-                  date: moment.unix(nowUnix).toDate(),
-                });
-              }
-            } else {
-              // No last point, add current value
-              data.push({
-                time: nowUnix,
-                timestamp: nowUnix,
-                value: currentValue,
-                date: moment.unix(nowUnix).toDate(),
-              });
-            }
-          }
-        }
-      } catch (error) {
-        console.warn('Failed to add current portfolio value to chart:', error);
-      }
-    }
-
-    return data.sort((a, b) => a.time - b.time);
-  }, [portfolioData, convertTo, currentPortfolioValue, dateRange]);
 
   if (isError) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

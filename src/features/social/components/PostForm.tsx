@@ -347,6 +347,29 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       );
 
       if (isPost) {
+        // Extract topics from content (hashtags)
+        const topicRegex = /#(\w+)/g;
+        const topics: string[] = [];
+        let match;
+        while ((match = topicRegex.exec(trimmed)) !== null) {
+          topics.push(match[1].toLowerCase());
+        }
+        
+        // Create optimistic post object
+        const optimisticPost: any = {
+          id: `${decodedResult}_v3`,
+          content: trimmed,
+          topics: topics,
+          media: postMedia || [],
+          sender_address: activeAccount?.address || '',
+          contract_address: CONFIG.CONTRACT_V3_ADDRESS || '',
+          type: 'post_without_tip',
+          tx_hash: '', // Will be filled when backend processes
+          tx_args: [],
+          total_comments: 0,
+          created_at: new Date().toISOString(),
+        };
+        
         try {
           const created = await PostsService.getById({ id: `${decodedResult}_v3` });
           // Optimistically prepend the new post to the topic feed cache so it appears immediately
@@ -364,8 +387,21 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
           // Call onSuccess with the created post
           onSuccess?.(created as any);
         } catch { 
-          // Still call onSuccess even if fetching fails
-          onSuccess?.();
+          // If fetching fails (e.g., backend hasn't processed yet), use optimistic post
+          // Optimistically prepend the new post to the topic feed cache so it appears immediately
+          if (requiredHashtag && !requiredMissing) {
+            const topicKey = ["topic-by-name", (requiredHashtag || '').toLowerCase()];
+            queryClient.setQueryData(topicKey, (old: any) => {
+              const prevPosts = Array.isArray(old?.posts) ? old.posts : [];
+              return {
+                ...(old || {}),
+                posts: [optimisticPost, ...prevPosts],
+                post_count: typeof old?.post_count === 'number' ? old.post_count + 1 : old?.post_count,
+              };
+            });
+          }
+          // Call onSuccess with the optimistic post
+          onSuccess?.(optimisticPost);
         }
       } else if (postId) {
         // For replies: optimistically show the new reply immediately

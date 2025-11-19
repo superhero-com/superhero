@@ -887,28 +887,16 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       })
       .filter((item): item is { time: number; timestamp: number; value: number; date: Date } => item !== null);
 
-    // Add current portfolio value from the latest snapshot in rawData (before filtering)
-    // This ensures consistency across all timeframes by always using the actual latest snapshot
-    // regardless of how filtering groups snapshots by period
-    // IMPORTANT: Use the absolute latest snapshot by timestamp, not just the last one in the array
-    // This handles cases where snapshots might not be perfectly sorted or where different timeframes
-    // have different snapshot sets
-    if (rawData && rawData.length > 0) {
-      // Find the absolute latest snapshot by timestamp (not just array position)
-      const latestSnapshot = rawData.reduce((latest, snapshot) => {
-        const snapshotTime = moment(snapshot.timestamp).valueOf();
-        const latestTime = moment(latest.timestamp).valueOf();
-        return snapshotTime > latestTime ? snapshot : latest;
-      }, rawData[0]);
-      
-      if (latestSnapshot) {
-        try {
-          let currentValue: number | null = null;
-          if (convertTo === 'ae') {
-            currentValue = latestSnapshot.total_value_ae;
-          } else {
-            currentValue = latestSnapshot.total_value_usd ?? latestSnapshot.total_value_ae;
-          }
+    // Add current portfolio value from the independent query (usePortfolioValue)
+    // This ensures consistency across all timeframes by always using the same current value source
+    if (currentPortfolioSnapshot) {
+      try {
+        let currentValue: number | null = null;
+        if (convertTo === 'ae') {
+          currentValue = currentPortfolioSnapshot.total_value_ae;
+        } else {
+          currentValue = currentPortfolioSnapshot.total_value_usd ?? currentPortfolioSnapshot.total_value_ae;
+        }
 
           if (currentValue !== null && !isNaN(currentValue) && isFinite(currentValue)) {
             const lastPoint = data.length > 0 ? data[data.length - 1] : null;
@@ -985,7 +973,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     }
 
     return data.sort((a, b) => a.time - b.time);
-  }, [portfolioData, rawData, convertTo, dateRange]);
+  }, [portfolioData, currentPortfolioSnapshot, convertTo, dateRange]);
 
   // Fetch current portfolio value independently of timeframe
   // This ensures consistency across all timeframes by always using the same current value source

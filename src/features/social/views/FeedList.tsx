@@ -369,16 +369,40 @@ export default function FeedList({
           pageParam,
           response,
           meta: response?.meta,
+          hasItems: !!response?.items,
+          itemsLength: response?.items?.length || 0,
+          hasPages: !!response?.pages,
+          pagesLength: response?.pages?.length || 0,
         });
       }
       return response as PostApiResponse;
     },
     // Merge optimistic posts with API response
     structuralSharing: (oldData, newData) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Popular Feed] structuralSharing called:', {
+          hasOldData: !!oldData,
+          oldDataPages: oldData?.pages?.length || 0,
+          hasNewData: !!newData,
+          newDataPages: newData?.pages?.length || 0,
+          newDataFirstPageItems: newData?.pages?.[0]?.items?.length || 0,
+        });
+      }
+      
       // If no old data, just return new data (first load)
-      if (!oldData) return newData;
+      if (!oldData) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Popular Feed] structuralSharing: No old data, returning new data');
+        }
+        return newData;
+      }
       // If no new data, return old data (shouldn't happen, but be safe)
-      if (!newData) return oldData;
+      if (!newData) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Popular Feed] structuralSharing: No new data, returning old data');
+        }
+        return oldData;
+      }
       
       // Preserve optimistic posts from old data
       const optimisticPosts: any[] = [];

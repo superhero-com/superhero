@@ -46,6 +46,14 @@ export function LeaderboardCard({
     };
   }, [hasSparkline, sparkline]);
 
+  const gradientId = useMemo(
+    () =>
+      `leaderboardPortfolioFill-${(item.address || "")
+        .toString()
+        .replace(/[^a-zA-Z0-9_-]/g, "")}`,
+    [item.address]
+  );
+
   const buildSparklinePaths = (
     data: [number, number][],
     width: number,
@@ -173,7 +181,7 @@ export function LeaderboardCard({
                   >
                     <defs>
                       <linearGradient
-                        id="leaderboardPortfolioFill"
+                        id={gradientId}
                         x1="0"
                         y1="0"
                         x2="0"
@@ -191,7 +199,7 @@ export function LeaderboardCard({
                     </defs>
                     <path
                       d={area}
-                      fill="url(#leaderboardPortfolioFill)"
+                      fill={`url(#${gradientId})`}
                       stroke="none"
                     />
                     <path

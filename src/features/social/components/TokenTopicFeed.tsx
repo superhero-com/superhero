@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo } from "react";
-import { Backend } from "../../../api/backend";
 import { useQuery } from "@tanstack/react-query";
 import ReplyToFeedItem from "./ReplyToFeedItem";
 import { PostsService } from "../../../api/generated";
@@ -50,31 +49,12 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
     queryFn: () => SuperheroApi.getTopicByName(baseName) as Promise<any>,
     refetchInterval: 120 * 1000,
   });
+
   const altPosts: any[] = useMemo(() => {
     const items: any[] = Array.isArray((dataOriginal as any)?.posts) ? (dataOriginal as any).posts : [];
     return items.slice().sort((a: any, b: any) => new Date(b?.created_at || 0).getTime() - new Date(a?.created_at || 0).getTime());
   }, [dataOriginal]);
 
-  // Fallback: if Trendminer has no posts for this topic, search the on-chain feed by hashtag
-  const { data: fallbackFeed, refetch: refetchFallback, isFetching: isFetchingFallback } = useQuery({
-    queryKey: ["fallback-feed-hashtag", lookup],
-    enabled: !hasFilteredPosts && Boolean(baseName),
-    queryFn: async () => {
-      // Page 1, newest first; include posts (v3). Search supports substring match server-side.
-      const res = await Backend.getFeed(1, "new", null, lookup);
-      return res;
-    },
-    refetchInterval: 120 * 1000,
-  });
-
-  const fallbackPosts: any[] = useMemo(() => {
-    if (!fallbackFeed || hasFilteredPosts) return [];
-    const regex = new RegExp(`(^|[^A-Za-z0-9_])${escapeRegExp(lookup)}(?![A-Za-z0-9_])`, "i");
-    const items = Array.isArray((fallbackFeed as any)?.results || (fallbackFeed as any)?.items)
-      ? ((fallbackFeed as any).results || (fallbackFeed as any).items)
-      : [];
-    return items.filter((p: any) => regex.test(String(p?.text || p?.title || "")));
-  }, [fallbackFeed, lookup, hasFilteredPosts]);
 
   // Include replies that reference the hashtag in their content or topics
   const { data: repliesSearch, isFetching: isFetchingReplies, refetch: refetchReplies } = useQuery({
@@ -98,12 +78,7 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
     const altPostsFiltered = altPosts.filter((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || '')));
     // fallbackPosts already filtered at line 66, but use consistent field priority to avoid excluding valid posts
     // Check all fields (text || title || content) to match the initial filter's priority
-    const fallbackFiltered = fallbackPosts.filter((p: any) => {
-      const searchText = String(p?.text || p?.title || p?.content || '');
-      return hashtagRegex.test(searchText);
-    });
-
-    const merged = [...postsFiltered, ...altPostsFiltered, ...replyMatches, ...fallbackFiltered];
+    const merged = [...postsFiltered, ...altPostsFiltered, ...replyMatches];
     const byKey = new Map<string, any>();
     for (const p of merged) {
       const key = String((p as any)?.id ?? (p as any)?.slug ?? '');
@@ -115,7 +90,7 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     }).slice(0, MAX_POSTS);
-  }, [posts, altPosts, replyMatches, fallbackPosts, hashtagRegex]);
+  }, [posts, altPosts, replyMatches, hashtagRegex]);
 
   useEffect(() => {
     // initial refetch safety if needed
@@ -175,7 +150,21 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
         />
       ))}
       <div className="text-center mt-1.5">
-        <AeButton onClick={() => { refetch(); refetchReplies(); if (displayPosts.length === 0) { refetchOriginal(); refetchFallback(); } }} disabled={isFetching || isFetchingOriginal || isFetchingFallback || isFetchingReplies} loading={isFetching || isFetchingOriginal || isFetchingFallback || isFetchingReplies} variant="ghost" size="medium" className="min-w-24">
+        <AeButton onClick={
+          () => {
+            refetch();
+            refetchReplies();
+            if (displayPosts.length === 0) {
+              refetchOriginal();
+              }
+            }
+          } 
+          disabled={isFetching || isFetchingOriginal  || isFetchingReplies}
+          loading={isFetching || isFetchingOriginal || isFetchingReplies}
+          variant="ghost"
+          size="medium"
+          className="min-w-24"
+        >
           {(isFetching || isFetchingReplies) ? 'Loading…' : 'Refresh'}
         </AeButton>
       </div>

@@ -7,21 +7,23 @@ import { useAtomValue } from "jotai";
 import { performanceChartTimeframeAtom } from "@/features/trending/atoms";
 import PerformanceTimeframeSelector from "@/features/trending/components/PerformanceTimeframeSelector";
 import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
+import Spinner from "@/components/Spinner";
+import { Decimal } from "@/libs/decimal";
 
 interface TokenListCardsProps {
   tokens: DexTokenDto[];
   sort: {
     key:
-      | "pairs_count"
-      | "name"
-      | "symbol"
-      | "created_at"
-      | "price"
-      | "tvl"
-      | "24hchange"
-      | "24hvolume"
-      | "7dchange"
-      | "7dvolume";
+    | "pairs_count"
+    | "name"
+    | "symbol"
+    | "created_at"
+    | "price"
+    | "tvl"
+    | "24hchange"
+    | "24hvolume"
+    | "7dchange"
+    | "7dvolume";
     asc: boolean;
   };
   onSortChange: (
@@ -93,7 +95,7 @@ export function TokenListCards({
     return (
       <div className="text-center p-[60px] bg-white/[0.02] border border-white/10 rounded-2xl backdrop-blur-[10px]">
         <div className="inline-flex items-center gap-3 text-gray-300 text-base font-medium">
-          <div className="w-5 h-5 border-2 border-green-500/30 border-t-green-500 rounded-full animate-spin"></div>
+          <Spinner className="w-5 h-5" />
           Loading tokens...
         </div>
       </div>
@@ -132,18 +134,17 @@ export function TokenListCards({
 
               <button
                 onClick={() => handleSort(sort.key)}
-                className={`px-2 py-[6px] rounded-md border border-white/10 cursor-pointer backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-7 h-7 flex items-center justify-center outline-none hover:-translate-y-px hover:scale-105 ${
-                  sort.asc 
-                    ? "bg-green-500 text-white" 
+                className={`px-2 py-[6px] rounded-md border border-white/10 cursor-pointer backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-7 h-7 flex items-center justify-center outline-none hover:-translate-y-px hover:scale-105 ${sort.asc
+                    ? "bg-green-500 text-white"
                     : "bg-white/10 text-white hover:bg-green-500 hover:text-white"
-                }`}
+                  }`}
                 title={sort.asc ? "Sort Ascending" : "Sort Descending"}
               >
                 {sort.asc ? "↑" : "↓"}
               </button>
             </div>
             <div className="flex items-center justify-center w-auto flex-shrink-0">
-            <PerformanceTimeframeSelector />
+              <PerformanceTimeframeSelector />
             </div>
           </div>
 
@@ -226,7 +227,7 @@ export function TokenListCards({
                     Price
                   </div>
                   <div className="text-sm text-white font-semibold">
-                  <PriceDataFormatter priceData={token.price} bignumber />
+                    <PriceDataFormatter priceData={token.price} />
                   </div>
                 </div>
 
@@ -236,7 +237,7 @@ export function TokenListCards({
                     TVL
                   </div>
                   <div className="text-sm text-white font-semibold">
-                  <PriceDataFormatter priceData={token.summary.total_volume} bignumber />
+                    <PriceDataFormatter priceData={token.summary?.total_volume} />
                   </div>
                 </div>
 
@@ -245,18 +246,30 @@ export function TokenListCards({
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
                     {timeBase} Change
                   </div>
-                  <div className="text-sm font-semibold">
-                  <PriceDataFormatter priceData={token.summary.change[timeBase].volume} bignumber />
+                  <div className={`text-sm font-semibold ${
+                    token.summary?.change?.[timeBase]?.percentage && 
+                    Number(token.summary.change[timeBase].percentage) >= 0 
+                      ? "text-green-400" 
+                      : "text-red-400"
+                  }`}>
+                    {token.summary?.change?.[timeBase]?.percentage ? (
+                      <>
+                        {Number(token.summary.change[timeBase].percentage) >= 0 ? "+" : ""}
+                        {Decimal.from(token.summary.change[timeBase].percentage).prettify(2)}%
+                      </>
+                    ) : (
+                      "-"
+                    )}
                   </div>
                 </div>
 
                 {/* 24h Volume */}
                 <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
-                  {timeBase} Volume
+                    {timeBase} Volume
                   </div>
                   <div className="text-sm text-white font-semibold">
-                  <PriceDataFormatter priceData={token.summary.change[timeBase].volume} bignumber />
+                    <PriceDataFormatter priceData={token.summary?.change?.[timeBase]?.volume} />
                   </div>
                 </div>
               </div>

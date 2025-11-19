@@ -4,6 +4,7 @@ import TrendCloudVisx from './TrendCloudVisx';
 import MobileCard from '../../components/MobileCard';
 import MobileInput from '../../components/MobileInput';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
+import Spinner from '@/components/Spinner';
 
 type TrendingTag = { tag: string; score: number; source?: string };
 
@@ -525,7 +526,7 @@ export default function TrendCloud() {
       {/* Loading and Error States */}
       {loading && (
         <div className="trend-cloud-loading">
-          <div className="loading-spinner" />
+          <Spinner className="w-8 h-8 mb-4" />
           <span>Loading trends...</span>
         </div>
       )}

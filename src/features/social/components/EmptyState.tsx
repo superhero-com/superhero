@@ -53,7 +53,7 @@ const EmptyState = memo(({ type, error, hasSearch, onRetry }: EmptyStateProps) =
   };
 
   return (
-    <AeCard variant="glass" className="mx-auto max-w-md">
+    <AeCard variant="glass" className="mx-auto max-w-md mt-4">
       <AeCardContent className="flex flex-col items-center text-center p-8 space-y-4">
         <div className="text-4xl opacity-60">{getIcon()}</div>
         <div>

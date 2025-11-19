@@ -10,6 +10,7 @@ import { toAe } from "@/utils/bondingCurve";
 import { LivePriceFormatter } from "@/features/shared/components";
 import AddressChip from "@/components/AddressChip";
 import { TokenLineChart } from "@/features/trending/components/TokenLineChart";
+import Spinner from "@/components/Spinner";
 
 type SelectOptions<T> = Array<{
   title: string;
@@ -278,7 +279,7 @@ export default function Daos() {
                 <a
                   className="text-xs opacity-95 text-white no-underline px-3 py-2 rounded-xl border-0 bg-white/5 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all duration-150"
                   href={`/trends/tokens/${encodeURIComponent(
-                    t.sale_address || t.address
+                    t.name
                   )}`}
                 >
                   View token
@@ -318,7 +319,7 @@ export default function Daos() {
           >
             {isFetching ? (
               <div className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <Spinner className="w-4 h-4" />
                 Loading...
               </div>
             ) : (

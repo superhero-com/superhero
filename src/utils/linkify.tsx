@@ -13,7 +13,41 @@ const HASHTAG_REGEX = /#([A-Za-z0-9-]{1,50})/g;
 
 export function linkify(text: string, options?: { knownChainNames?: Set<string> }): React.ReactNode[] {
   if (!text) return [];
-  const raw = String(text);
+  let raw = String(text);
+  
+  // Decode HTML entities first (in case content is HTML-encoded)
+  // Use a safe method that works in both browser and SSR contexts
+  const decodeHtmlEntities = (str: string): string => {
+    if (typeof document !== 'undefined') {
+      const textarea = document.createElement('textarea');
+      textarea.innerHTML = str;
+      return textarea.value;
+    }
+    // Fallback for SSR: decode common entities manually
+    return str
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&#10;|&#xA;|&#x0A;/gi, '\n');
+  };
+  raw = decodeHtmlEntities(raw);
+  
+  // Handle various newline representations and convert them to actual newlines
+  // This handles cases where content is stored with escaped or encoded newline characters
+  // Process in order from most specific to least specific
+  
+  // 1. Double-escaped: \\\\n -> \n (handle double escaping first)
+  raw = raw.replace(/\\\\n/g, '\n');
+  // 2. Escaped newlines: \\n -> \n
+  raw = raw.replace(/\\n/g, '\n');
+  // 3. HTML entity newlines: &#10; or &#xA; or &#x0A; -> \n (in case decodeHtmlEntities didn't catch them)
+  raw = raw.replace(/&#10;|&#xA;|&#x0A;/gi, '\n');
+  // 4. Carriage return + newline: \r\n -> \n
+  raw = raw.replace(/\r\n/g, '\n');
+  // 5. Carriage return alone: \r -> \n
+  raw = raw.replace(/\r/g, '\n');
 
   // Pass 1: Identify AENS mentions and turn them into profile links
   const aensLinked: React.ReactNode[] = [];
@@ -166,7 +200,71 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
     if (last < segment.length) finalParts.push(segment.slice(last));
   });
 
-  return finalParts;
+  // Pass 4: Handle line breaks - split by \n and insert <br /> elements
+  // Multiple consecutive line breaks collapse to a single line break
+  const withLineBreaks: React.ReactNode[] = [];
+  let brKeyCounter = 0; // Counter to ensure unique keys for <br /> elements
+  let previousNodeWasNonString = false; // Track if previous node was a React element (link, etc.)
+  
+  finalParts.forEach((node, idx) => {
+    if (typeof node !== 'string') {
+      // Non-string node (link, etc.) - push it and mark that we had a non-string
+      withLineBreaks.push(node);
+      previousNodeWasNonString = true;
+      return;
+    }
+    
+    const segment = node as string;
+    // Ensure we have actual newline characters for splitting
+    // Split on newline, but also handle cases where newlines might be encoded differently
+    const normalizedSegment = segment
+      .replace(/\\n/g, '\n')  // Convert escaped newlines
+      .replace(/\r\n/g, '\n') // Normalize Windows line endings
+      .replace(/\r/g, '\n');   // Normalize Mac line endings
+    const lines = normalizedSegment.split('\n');
+    let previousLineWasEmpty = false;
+    
+    // If this segment starts with a newline and previous node was non-string, add <br />
+    if (lines.length > 1 && lines[0].length === 0 && previousNodeWasNonString) {
+      withLineBreaks.push(<br key={`br-${idx}-start-${brKeyCounter++}`} />);
+      previousLineWasEmpty = true;
+      // Remove the empty first line since we've handled it
+      lines.shift();
+    }
+    
+    lines.forEach((line, lineIdx) => {
+      const isLastLine = lineIdx === lines.length - 1;
+      const isTrailingEmptyLine = isLastLine && line.length === 0;
+      
+      if (line.length > 0) {
+        // Non-empty line: add <br /> before it if there was a previous line
+        // (but skip if previous line was empty, as we already handled that)
+        if (lineIdx > 0 && !previousLineWasEmpty) {
+          withLineBreaks.push(<br key={`br-${idx}-${lineIdx}-${brKeyCounter++}`} />);
+        }
+        withLineBreaks.push(line);
+        previousLineWasEmpty = false;
+        previousNodeWasNonString = false; // Reset since we're now processing text
+      } else if (lineIdx > 0 && !isTrailingEmptyLine) {
+        // Empty line: only add <br /> if previous line wasn't empty (collapse consecutive breaks)
+        if (!previousLineWasEmpty) {
+          withLineBreaks.push(<br key={`br-${idx}-${lineIdx}-${brKeyCounter++}`} />);
+          previousLineWasEmpty = true;
+        }
+        // Skip adding anything for consecutive empty lines (they're collapsed)
+      } else {
+        // First line is empty and trailing - just mark it as empty (don't add anything)
+        previousLineWasEmpty = true;
+      }
+    });
+    
+    // If segment ends with newline, mark that next segment should add <br />
+    if (normalizedSegment.endsWith('\n') && lines[lines.length - 1].length === 0) {
+      previousNodeWasNonString = false; // Actually, this is text ending with newline
+    }
+  });
+
+  return withLineBreaks;
 }
 
 export function formatUrl(url: string): string {

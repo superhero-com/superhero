@@ -228,7 +228,11 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
             {/* Right-side block above handles on-chain link; remove duplicate area */}
             <div className="ml-0 md:ml-0 md:pl-0 md:mt-2 relative">
               <div className="text-[14px] md:text-[15px] text-foreground leading-snug">
-              {linkify(item.content, { knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) })}
+              {linkify(
+                item.content || 
+                (Array.isArray((item as any)?.tx_args) && (item as any).tx_args[0]?.value ? String((item as any).tx_args[0].value) : ''),
+                { knownChainNames: new Set(Object.values(chainNames || {}).map(n => n?.toLowerCase())) }
+              )}
             </div>
 
 {(() => {

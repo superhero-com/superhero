@@ -9,6 +9,7 @@ import AddressChip from "../AddressChip";
 import TokenPriceFormatter from "@/features/shared/components/TokenPriceFormatter";
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
+import Spinner from "@/components/Spinner";
 
 // Pagination response interface
 interface PaginatedHoldersResponse {
@@ -154,7 +155,12 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
                   <div className="md:hidden text-xs text-white/60 mr-2 min-w-[60px]">
                     Account:
                   </div>
-                  <AddressAvatarWithChainName address={holder.address} />
+                  <AddressAvatarWithChainName
+                    address={holder.address}
+                    // Ensure very long names (e.g. long .chain names) wrap
+                    // instead of overflowing into the balance column.
+                    contentClassName="break-all max-w-full"
+                  />
                 </div>
 
                 {/* Balance */}
@@ -214,7 +220,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
         {/* Loading State */}
         {isFetching && !holders.length && (
           <div className="flex items-center justify-center py-12">
-            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            <Spinner className="w-6 h-6" />
           </div>
         )}
 

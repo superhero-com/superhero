@@ -8,6 +8,7 @@ import { useInvitations } from "../../hooks/useInvitations";
 import WalletConnectBtn from "../../../../components/WalletConnectBtn";
 import CopyText from "../../../../components/ui/CopyText";
 import { AeButton } from "../../../../components/ui/ae-button";
+import Spinner from "../../../../components/Spinner";
 import { Alert, AlertDescription } from "../../../../components/ui/alert";
 import { Checkbox } from "../../../../components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../../../components/ui/dialog";
@@ -215,15 +216,15 @@ export default function InviteAndEarnCard({
               >
                 {generatingInviteLink ? (
                   <>
-                    <div className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 border-2 border-transparent border-t-current rounded-full animate-spin"></div>
-                    {t('creatingInvites', { ns: 'common' })}
+                    <Spinner className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6" />
+                    {t('buttons.creatingInvites', { ns: 'common' })}
                   </>
                 ) : (
-                  t('generateInviteLinks', { ns: 'common' })
+                  t('buttons.generateInviteLinks', { ns: 'common' })
                 )}
               </button>
             ) : (
-              <WalletConnectBtn label={t('connectWalletToGenerate', { ns: 'common' })} className="text-sm" />
+              <WalletConnectBtn label={t('buttons.connectWalletToGenerate', { ns: 'common' })} className="text-sm" />
             )}
           </form>
         </div>

@@ -40,6 +40,14 @@ export default function DexExploreTokens() {
       setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
     } else {
       // New key, reset to DESC
+      const was30dSort = sort.startsWith('30d');
+      const is30dSort = key.startsWith('30d');
+      
+      // Reset page when switching between 30d and non-30d sorting
+      if (was30dSort !== is30dSort) {
+        setPage(1);
+      }
+      
       setSort(key);
       setSortDirection("DESC");
     }
@@ -49,26 +57,38 @@ export default function DexExploreTokens() {
   const backendSupportsSort = !sort.startsWith('30d');
   const backendSort = backendSupportsSort ? sort : 'pairs_count'; // Fallback to pairs_count if backend doesn't support 30d
 
+  // When sorting by 30d options, we need to fetch all tokens for client-side sorting
+  // Otherwise, use normal pagination
+  const needsClientSideSorting = !backendSupportsSort;
+  const fetchLimit = needsClientSideSorting ? 10000 : limit; // Fetch all tokens when client-side sorting
+  const fetchPage = needsClientSideSorting ? 1 : page; // Always fetch page 1 when client-side sorting
+
   const { data, isLoading } = useQuery({
     queryFn: async () => {
       const result = await DexService.listAllDexTokens({
-        page: page,
-        limit: limit,
+        page: fetchPage,
+        limit: fetchLimit,
         orderBy: backendSort as any,
         orderDirection: sortDirection,
         search: search,
       });
       return result as unknown as PaginatedResponse<any>;
     },
-    queryKey: ["DexService.listAllDexTokens", backendSort, sortDirection, page, limit, search],
+    queryKey: ["DexService.listAllDexTokens", backendSort, sortDirection, fetchPage, fetchLimit, search],
   });
 
-  // Client-side sorting for 30d options if backend doesn't support them
+  // Client-side sorting and pagination for 30d options if backend doesn't support them
   const sortedData = useMemo(() => {
-    if (!data?.items || backendSupportsSort) {
+    if (!data?.items) {
       return data;
     }
 
+    // If backend supports the sort, return data as-is
+    if (backendSupportsSort) {
+      return data;
+    }
+
+    // Client-side sorting for 30d options
     const sortedItems = [...data.items].sort((a, b) => {
       const getVolume = (token: any, period: string) => {
         const volumeData = token.summary?.change?.[period]?.volume;
@@ -105,11 +125,22 @@ export default function DexExploreTokens() {
       return sortDirection === 'DESC' ? -comparison : comparison;
     });
 
+    // Client-side pagination
+    const totalItems = sortedItems.length;
+    const totalPages = Math.ceil(totalItems / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedItems = sortedItems.slice(startIndex, endIndex);
+
     return {
-      ...data,
-      items: sortedItems,
+      items: paginatedItems,
+      meta: {
+        totalItems,
+        totalPages,
+        currentPage: page,
+      },
     };
-  }, [data, sort, sortDirection, backendSupportsSort]);
+  }, [data, sort, sortDirection, backendSupportsSort, page, limit]);
 
   return (
     <div className="p-0 mx-auto md:pt-0">

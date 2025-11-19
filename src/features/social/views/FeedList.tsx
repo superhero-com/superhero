@@ -37,6 +37,9 @@ export default function FeedList({
   const ACTIVITY_PAGE_SIZE = 50;
   const createPostRef = useRef<CreatePostRef>(null);
   
+  // Track optimistic post IDs added to popular feed
+  const optimisticPopularPostIdsRef = useRef<Set<string>>(new Set());
+  
   // Only render homepage SEO meta when actually on the homepage
   const isHomepage = location.pathname === "/";
 
@@ -1249,6 +1252,113 @@ export default function FeedList({
     latestDataForHot, // Add latestDataForHot to dependencies
   ]);
 
+  // Helper function to optimistically add post to a feed
+  const optimisticallyAddPostToFeed = useCallback((
+    queryKey: any[],
+    post: any,
+    isPopularFeed: boolean
+  ) => {
+    queryClient.setQueryData(queryKey, (old: any) => {
+      if (!old || !old.pages || old.pages.length === 0) {
+        // If no data exists, create initial structure
+        return {
+          pages: [{
+            items: [{ ...post, _optimistic: true }],
+            meta: {
+              itemCount: 1,
+              totalItems: 1,
+              totalPages: 1,
+              currentPage: 1,
+            }
+          }],
+          pageParams: [1],
+        };
+      }
+
+      // Check if post already exists
+      const existingPostIds = new Set<string>();
+      old.pages.forEach((page: any) => {
+        if (page?.items) {
+          page.items.forEach((item: any) => {
+            if (item?.id) existingPostIds.add(String(item.id));
+          });
+        }
+      });
+
+      if (existingPostIds.has(String(post.id))) {
+        return old; // Post already exists, don't add again
+      }
+
+      // Add post to the first page
+      const firstPage = old.pages[0] || { items: [], meta: {} };
+      const newFirstPage = {
+        ...firstPage,
+        items: [{ ...post, _optimistic: true }, ...(firstPage.items || [])],
+        meta: {
+          ...firstPage.meta,
+          itemCount: (firstPage.items?.length || 0) + 1,
+          totalItems: firstPage.meta?.totalItems 
+            ? firstPage.meta.totalItems + 1 
+            : undefined,
+        },
+      };
+
+      return {
+        ...old,
+        pages: [newFirstPage, ...old.pages.slice(1)],
+      };
+    });
+
+    if (isPopularFeed) {
+      optimisticPopularPostIdsRef.current.add(String(post.id));
+    }
+  }, [queryClient]);
+
+  // Helper function to remove optimistic posts that aren't in API response
+  // Also removes _optimistic flag from posts that are in API response
+  const cleanupOptimisticPosts = useCallback((queryKey: any[], apiPostIds: Set<string>) => {
+    queryClient.setQueryData(queryKey, (old: any) => {
+      if (!old || !old.pages) return old;
+
+      const cleanedPages = old.pages.map((page: any) => {
+        if (!page?.items) return page;
+        
+        const cleanedItems = page.items
+          .filter((item: any) => {
+            const isOptimistic = item._optimistic === true;
+            const postId = String(item.id);
+            
+            // Keep post if:
+            // 1. It's not optimistic, OR
+            // 2. It's optimistic but exists in API response
+            return !isOptimistic || apiPostIds.has(postId);
+          })
+          .map((item: any) => {
+            // Remove _optimistic flag if post is in API response (it's now real)
+            if (item._optimistic && apiPostIds.has(String(item.id))) {
+              const { _optimistic, ...cleanItem } = item;
+              return cleanItem;
+            }
+            return item;
+          });
+
+        return {
+          ...page,
+          items: cleanedItems,
+          meta: {
+            ...page.meta,
+            itemCount: cleanedItems.length,
+          },
+        };
+      }).filter((page: any) => page.items && page.items.length > 0);
+
+      return {
+        ...old,
+        pages: cleanedPages,
+      };
+    });
+  }, [queryClient]);
+
   const content = (
     <div className="w-full">
       {isHomepage && (
@@ -1269,10 +1379,68 @@ export default function FeedList({
       <div>
         <CreatePost
           ref={createPostRef}
-          onSuccess={() => {
+          onSuccess={async (createdPost) => {
+            if (!createdPost) {
+              // Fallback: just refetch if we don't have the post
+              if (sortBy === "hot") {
+                refetchPopular();
+              } else {
+                refetchLatest();
+              }
+              return;
+            }
+
             if (sortBy === "hot") {
-              refetchPopular();
+              // Optimistically add to popular feed
+              optimisticallyAddPostToFeed(
+                ["popular-posts", { limit: 10, window: popularWindow }],
+                createdPost,
+                true
+              );
+              
+              // Also optimistically add to latest feed for hot (used after popular posts are exhausted)
+              // Get current popular post IDs to exclude from latest feed
+              const currentPopularIds = Array.from(popularPostIds).sort().join(',');
+              optimisticallyAddPostToFeed(
+                ["latest-posts-for-hot", { limit: 10, window: popularWindow, excludeIds: currentPopularIds }],
+                createdPost,
+                false
+              );
+              
+              // Refetch popular feed - this will trigger cleanup of optimistic posts not in response
+              const refetchResult = await refetchPopular();
+              
+              // After refetch, clean up optimistic posts that aren't in the API response
+              const apiPostIds = new Set<string>();
+              if (refetchResult.data?.pages) {
+                refetchResult.data.pages.forEach((page: any) => {
+                  if (page?.items) {
+                    page.items.forEach((item: any) => {
+                      if (item?.id && !item._optimistic) {
+                        apiPostIds.add(String(item.id));
+                      }
+                    });
+                  }
+                });
+              }
+              
+              // Remove optimistic posts that aren't in API response from popular feed
+              cleanupOptimisticPosts(
+                ["popular-posts", { limit: 10, window: popularWindow }],
+                apiPostIds
+              );
+              
+              // Remove from tracking set
+              optimisticPopularPostIdsRef.current.delete(String(createdPost.id));
             } else {
+              // Optimistically add to latest feed
+              optimisticallyAddPostToFeed(
+                ["posts", { limit: 10, sortBy, search: localSearch, filterBy }],
+                createdPost,
+                false
+              );
+              
+              // For latest feed, just refetch to ensure consistency
               refetchLatest();
             }
           }}

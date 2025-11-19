@@ -22,6 +22,7 @@ interface PostFormProps {
 
   // Post-specific props
   isPost?: boolean;
+  onPostCreated?: () => void; // Callback when a new post is created (for tab switching, etc.)
 
   // Comment-specific props
   postId?: string;
@@ -88,6 +89,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     isPost = true,
     postId,
     onCommentAdded,
+    onPostCreated,
     placeholder,
     initialText,
     requiredHashtag,
@@ -349,6 +351,40 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       if (isPost) {
         try {
           const created = await PostsService.getById({ id: `${decodedResult}_v3` });
+          
+          // Optimistically prepend the new post to the latest feed cache so it appears immediately
+          // Update all relevant query keys for the latest feed
+          const updateLatestFeedCache = (queryKey: any[]) => {
+            queryClient.setQueryData(queryKey, (old: any) => {
+              if (!old || !old.pages || !Array.isArray(old.pages)) {
+                return {
+                  pages: [{ items: [created as any], meta: { currentPage: 1, totalPages: 1 } }],
+                  pageParams: [1],
+                };
+              }
+              const firstPage = old.pages[0] || { items: [], meta: old.pages[0]?.meta || {} };
+              const updatedFirstPage = {
+                ...firstPage,
+                items: [created as any, ...(firstPage.items || [])],
+              };
+              return {
+                ...old,
+                pages: [updatedFirstPage, ...old.pages.slice(1)],
+              };
+            });
+          };
+          
+          // Update latest feed queries (with and without search/filter)
+          updateLatestFeedCache(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }]);
+          
+          // Also update any active latest feed queries (they may have different search/filter params)
+          queryClient.getQueryCache().findAll({ queryKey: ["posts"], exact: false }).forEach((query) => {
+            const key = query.queryKey as any[];
+            if (key.length >= 2 && key[1]?.sortBy === "latest") {
+              updateLatestFeedCache(key);
+            }
+          });
+          
           // Optimistically prepend the new post to the topic feed cache so it appears immediately
           if (requiredHashtag && !requiredMissing) {
             const topicKey = ["topic-by-name", (requiredHashtag || '').toLowerCase()];
@@ -512,6 +548,12 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       // Reset after success
       setText(initialText || "");
       setMediaUrls([]);
+      
+      // Call onPostCreated callback if this is a new post (for tab switching, etc.)
+      if (isPost) {
+        onPostCreated?.();
+      }
+      
       onSuccess?.();
       // Also refetch any topic feeds related to this hashtag so other viewers update quickly
       try {

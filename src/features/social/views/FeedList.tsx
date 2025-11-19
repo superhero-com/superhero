@@ -1276,6 +1276,12 @@ export default function FeedList({
               refetchLatest();
             }
           }}
+          onPostCreated={() => {
+            // Switch to latest tab if user is on popular tab when posting
+            if (sortBy === "hot") {
+              handleSortChange("latest");
+            }
+          }}
           autoFocus={shouldAutoFocusPost}
         />
         {/* Sort controls rendered once; styles adapt per breakpoint */}

@@ -1628,8 +1628,9 @@ export default function FeedList({
                 false
               );
               
-              // Refetch popular feed (cleanup will happen automatically after 2 minutes via useEffect)
-              await refetchPopular();
+              // Don't refetch immediately - let the optimistic post stay visible at the top
+              // Automatic refetches (window focus, etc.) will handle updates
+              // Cleanup will happen automatically after 2 minutes via useEffect
             } else {
               // Optimistically add to latest feed
               optimisticallyAddPostToFeed(

@@ -166,7 +166,27 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
     if (last < segment.length) finalParts.push(segment.slice(last));
   });
 
-  return finalParts;
+  // Pass 4: Handle line breaks - split by \n and insert <br /> elements
+  const withLineBreaks: React.ReactNode[] = [];
+  finalParts.forEach((node, idx) => {
+    if (typeof node !== 'string') {
+      withLineBreaks.push(node);
+      return;
+    }
+    const segment = node as string;
+    const lines = segment.split('\n');
+    lines.forEach((line, lineIdx) => {
+      if (lineIdx > 0) {
+        // Insert <br /> before each line except the first
+        withLineBreaks.push(<br key={`br-${idx}-${lineIdx}`} />);
+      }
+      if (line.length > 0) {
+        withLineBreaks.push(line);
+      }
+    });
+  });
+
+  return withLineBreaks;
 }
 
 export function formatUrl(url: string): string {

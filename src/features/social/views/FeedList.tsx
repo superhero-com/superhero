@@ -148,7 +148,6 @@ export default function FeedList({
   const {
     data: activitiesPages,
     isLoading: activitiesLoading,
-    isFetching: activitiesFetching,
     isSuccess: activitiesSuccess,
     fetchNextPage: fetchNextActivities,
     hasNextPage: hasMoreActivities,
@@ -226,8 +225,6 @@ export default function FeedList({
   const {
     data: latestData,
     isLoading: latestLoading,
-    isFetching: latestFetching,
-    isSuccess: latestSuccess,
     error: latestError,
     fetchNextPage: fetchNextLatest,
     hasNextPage: hasMoreLatest,
@@ -506,8 +503,6 @@ export default function FeedList({
   
   const {
     data: latestDataForHot,
-    isLoading: latestLoadingForHot,
-    error: latestErrorForHot,
     fetchNextPage: fetchNextLatestForHot,
     hasNextPage: hasMoreLatestForHot,
     isFetchingNextPage: fetchingMoreLatestForHot,

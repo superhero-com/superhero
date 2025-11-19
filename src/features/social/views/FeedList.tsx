@@ -814,7 +814,6 @@ export default function FeedList({
 
     if (localSearch.trim()) {
       const searchTerm = localSearch.toLowerCase();
-      const beforeFilter = filtered.length;
       filtered = filtered.filter(
         (item) =>
           (item.content && item.content.toLowerCase().includes(searchTerm)) ||
@@ -827,14 +826,6 @@ export default function FeedList({
           (chainNames?.[item.sender_address] &&
             chainNames[item.sender_address].toLowerCase().includes(searchTerm))
       );
-      // Debug log removed to reduce console spam
-      // if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
-      //   console.log('🔍 [DEBUG] filteredAndSortedList after search filter:', {
-      //     beforeFilter,
-      //     afterFilter: filtered.length,
-      //     searchTerm: localSearch,
-      //   });
-      // }
     }
     
     // Debug log removed to reduce console spam

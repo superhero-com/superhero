@@ -17,7 +17,8 @@ export const SuperheroApi = {
     
     if (!init?.signal && typeof AbortController !== 'undefined') {
       timeoutController = new AbortController();
-      timeoutId = setTimeout(() => timeoutController!.abort(), 30000); // 30 second timeout
+      // Increased timeout to 90 seconds for portfolio data queries that process large date ranges
+      timeoutId = setTimeout(() => timeoutController!.abort(), 90000); // 90 second timeout
     }
     
     try {

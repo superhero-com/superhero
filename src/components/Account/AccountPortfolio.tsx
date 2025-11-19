@@ -1664,8 +1664,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             >
               {isLoading || !valueAndPnlReady ? (
                 <div className="absolute inset-0 flex items-start justify-center pt-10 z-10 px-4 md:px-6">
-                  <div className="inline-flex items-center gap-1.5 text-white text-xs font-medium">
-                    <Spinner className="w-3.5 h-3.5" />
+                  <div className="inline-flex items-center gap-1 text-white text-xs font-medium">
+                    <Spinner className="w-8 h-8" />
                     <span>Loading portfolio data...</span>
                   </div>
                 </div>

@@ -253,7 +253,8 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
           previousLineWasEmpty = true;
         }
         // Skip adding anything for consecutive empty lines (they're collapsed)
-      } else if (isCurrentLineEmpty) {
+      } else {
+        // First line is empty and trailing - just mark it as empty (don't add anything)
         previousLineWasEmpty = true;
       }
     });

@@ -148,7 +148,6 @@ export default function FeedList({
   const {
     data: activitiesPages,
     isLoading: activitiesLoading,
-    isSuccess: activitiesSuccess,
     fetchNextPage: fetchNextActivities,
     hasNextPage: hasMoreActivities,
     isFetchingNextPage: fetchingMoreActivities,

@@ -322,7 +322,17 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     // Do not auto-append the required hashtag; the Post button is disabled until present
     const trimmed = text.trim();
     if (!trimmed) return;
-    if (!activeAccount) return;
+    // Ensure we have both activeAccount and a valid address
+    const accountAddress = activeAccount?.address;
+    if (!activeAccount || !accountAddress || accountAddress.trim() === '') {
+      console.error('[PostForm] Cannot submit: activeAccount or address missing', { 
+        hasActiveAccount: !!activeAccount,
+        hasAddress: !!accountAddress,
+        addressValue: accountAddress
+      });
+      setIsSubmitting(false);
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -356,16 +366,13 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         }
         
         // Create optimistic post object
-        // Ensure we have an address - should be guaranteed by the check above, but be defensive
-        if (!activeAccount?.address) {
-          throw new Error('Active account address is required');
-        }
+        // accountAddress is guaranteed by the check above
         const optimisticPost: any = {
           id: `${decodedResult}_v3`,
           content: trimmed,
           topics: topics,
           media: postMedia || [],
-          sender_address: activeAccount.address,
+          sender_address: accountAddress,
           contract_address: CONFIG.CONTRACT_V3_ADDRESS || '',
           type: 'post_without_tip',
           tx_hash: '', // Will be filled when backend processes
@@ -389,7 +396,17 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
             });
           }
           // Call onSuccess with the created post
-          onSuccess?.(created as any);
+          try {
+            await onSuccess?.(created as any);
+            // Clear form immediately after onSuccess succeeds
+            setText(initialText || "");
+            setMediaUrls([]);
+          } catch (error) {
+            console.error('[PostForm] Error in onSuccess callback:', error);
+            // Still clear form even if onSuccess fails
+            setText(initialText || "");
+            setMediaUrls([]);
+          }
         } catch { 
           // If fetching fails (e.g., backend hasn't processed yet), use optimistic post
           // Optimistically prepend the new post to the topic feed cache so it appears immediately
@@ -405,7 +422,17 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
             });
           }
           // Call onSuccess with the optimistic post
-          onSuccess?.(optimisticPost);
+          try {
+            await onSuccess?.(optimisticPost);
+            // Clear form immediately after onSuccess succeeds
+            setText(initialText || "");
+            setMediaUrls([]);
+          } catch (error) {
+            console.error('[PostForm] Error in onSuccess callback:', error);
+            // Still clear form even if onSuccess fails
+            setText(initialText || "");
+            setMediaUrls([]);
+          }
         }
       } else if (postId) {
         // For replies: optimistically show the new reply immediately
@@ -554,16 +581,25 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         onCommentAdded?.();
       }
 
-      // Reset after success
-      setText(initialText || "");
-      setMediaUrls([]);
-      // Note: onSuccess is called above for posts with the created post, and onCommentAdded is called for comments
+      // Note: Form is cleared above after onSuccess for posts
+      // For comments, form clearing happens below
       // Also refetch any topic feeds related to this hashtag so other viewers update quickly
       try {
         if (requiredHashtag) {
           queryClient.invalidateQueries({ queryKey: ["topic-by-name"] });
         }
       } catch {}
+      
+      // For comments, clear form here
+      if (!isPost && postId) {
+        setText(initialText || "");
+        setMediaUrls([]);
+      }
+    } catch (error) {
+      // If there's an error, still clear the form
+      console.error('[PostForm] Error submitting post:', error);
+      setText(initialText || "");
+      setMediaUrls([]);
     } finally {
       setIsSubmitting(false);
     }

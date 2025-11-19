@@ -1402,14 +1402,21 @@ export default function FeedList({
       
       // Update the optimistic post in cache with real data, but keep _optimistic flag
       queryClient.setQueryData(queryKey, (old: any) => {
-        if (!old || !old.pages) return old;
+        if (!old || !old.pages) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[Optimistic Post] Cache structure not found when updating:', { queryKey, postId });
+          }
+          return old;
+        }
         
+        let found = false;
         const updatedPages = old.pages.map((page: any) => {
           if (!page?.items) return page;
           
           const updatedItems = page.items.map((item: any) => {
             // If this is the optimistic post, update it with real data but keep _optimistic flag
             if (item._optimistic && String(item.id) === String(postId)) {
+              found = true;
               return {
                 ...realPost,
                 _optimistic: true, // Keep the optimistic flag
@@ -1423,6 +1430,10 @@ export default function FeedList({
             items: updatedItems,
           };
         });
+        
+        if (!found && process.env.NODE_ENV === 'development') {
+          console.warn('[Optimistic Post] Post not found in cache when updating:', { queryKey, postId, pagesCount: old.pages.length });
+        }
         
         return {
           ...old,
@@ -1843,7 +1854,19 @@ export default function FeedList({
         <CreatePost
           ref={createPostRef}
           onSuccess={async (createdPost) => {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[FeedList] onSuccess called:', { 
+                hasPost: !!createdPost, 
+                postId: createdPost?.id, 
+                sortBy,
+                popularWindow 
+              });
+            }
+            
             if (!createdPost) {
+              if (process.env.NODE_ENV === 'development') {
+                console.warn('[FeedList] onSuccess called without post, refetching');
+              }
               // Fallback: just refetch if we don't have the post
               if (sortBy === "hot") {
                 refetchPopular();
@@ -1862,13 +1885,26 @@ export default function FeedList({
                   postId: createdPost.id,
                   queryKey: popularQueryKey,
                   popularWindow,
+                  postData: {
+                    id: createdPost.id,
+                    content: createdPost.content,
+                    sender_address: createdPost.sender_address,
+                  }
                 });
               }
-              optimisticallyAddPostToFeed(
-                popularQueryKey,
-                createdPost,
-                true
-              );
+              
+              try {
+                optimisticallyAddPostToFeed(
+                  popularQueryKey,
+                  createdPost,
+                  true
+                );
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('[Optimistic Post] Successfully added to popular feed');
+                }
+              } catch (error) {
+                console.error('[Optimistic Post] Error adding to popular feed:', error);
+              }
               
               // Also optimistically add to latest feed for hot (used after popular posts are exhausted)
               // Get current popular post IDs to exclude from latest feed

@@ -17,7 +17,6 @@ import {
   LEADERBOARD_TIMEFRAME_OPTIONS,
   LEADERBOARD_METRIC_OPTIONS,
 } from "../constants/leaderboard";
-import Spinner from "@/components/Spinner";
 
 export default function LeaderboardView() {
   const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>("7d");
@@ -128,9 +127,6 @@ export default function LeaderboardView() {
           {/* Empty state */}
           {!isLoading && !isFetching && items.length === 0 && !isError && (
             <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-              <div className="mb-1">
-                <Spinner className="w-6 h-6 text-white/40" />
-              </div>
               <h2 className="text-base font-semibold text-white">
                 No top traders for this view yet
               </h2>

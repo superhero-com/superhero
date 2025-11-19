@@ -458,37 +458,28 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
             });
           };
           
-          // Update infinite replies list (normalized key)
-          updateInfiniteQuery(["post-comments", normalizedPostId, "infinite"]);
-          
-          // Update non-infinite comments list (normalized key)
-          updateArrayQuery(["post-comments", normalizedPostId]);
-          
-          // Update nested comment replies list (normalized key)
-          updateArrayQuery(["comment-replies", normalizedPostId]);
-          
-          // Also update with original postId format for backward compatibility
-          updateInfiniteQuery(["post-comments", postId, "infinite"]);
-          updateArrayQuery(["post-comments", postId]);
-          updateArrayQuery(["comment-replies", postId]);
-          
           // Helper to check if two IDs match (handles both normalized and non-normalized)
           const idsMatch = (id1: string, id2: string): boolean => {
             const normalize = (id: string) => String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`;
             return normalize(id1) === normalize(id2) || id1 === id2;
           };
           
-          // Update ALL active query keys that match the pattern (similar to posts)
-          // This ensures we catch any variations of the query key
+          // CRITICAL: Update ALL active query keys FIRST, using their exact key format
+          // This ensures we catch DirectReplies and other components that use the raw ID
+          const updatedKeys = new Set<string>();
           queryClient.getQueryCache().findAll({ queryKey: ["post-comments"], exact: false }).forEach((query) => {
             const key = query.queryKey as any[];
-            // Check if this query is for the parent post (normalized or original format)
             const queryPostId = key[1];
+            // Match using normalized comparison
             if (idsMatch(queryPostId, normalizedPostId) || idsMatch(queryPostId, postId)) {
-              if (key[2] === "infinite") {
-                updateInfiniteQuery(key);
-              } else {
-                updateArrayQuery(key);
+              const keyStr = JSON.stringify(key);
+              if (!updatedKeys.has(keyStr)) {
+                updatedKeys.add(keyStr);
+                if (key[2] === "infinite") {
+                  updateInfiniteQuery(key);
+                } else {
+                  updateArrayQuery(key);
+                }
               }
             }
           });
@@ -498,7 +489,34 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
             const key = query.queryKey as any[];
             const queryPostId = key[1];
             if (idsMatch(queryPostId, normalizedPostId) || idsMatch(queryPostId, postId)) {
-              updateArrayQuery(key);
+              const keyStr = JSON.stringify(key);
+              if (!updatedKeys.has(keyStr)) {
+                updatedKeys.add(keyStr);
+                updateArrayQuery(key);
+              }
+            }
+          });
+          
+          // Also explicitly update common key formats as fallback (even if query doesn't exist yet)
+          // This ensures the reply appears immediately when the component mounts
+          const fallbackKeys = [
+            ["post-comments", normalizedPostId, "infinite"],
+            ["post-comments", normalizedPostId],
+            ["comment-replies", normalizedPostId],
+            ["post-comments", postId, "infinite"],
+            ["post-comments", postId],
+            ["comment-replies", postId],
+          ];
+          
+          fallbackKeys.forEach((key) => {
+            const keyStr = JSON.stringify(key);
+            if (!updatedKeys.has(keyStr)) {
+              updatedKeys.add(keyStr);
+              if (key[2] === "infinite") {
+                updateInfiniteQuery(key);
+              } else {
+                updateArrayQuery(key);
+              }
             }
           });
           

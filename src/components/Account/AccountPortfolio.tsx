@@ -853,7 +853,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
   // Fetch current portfolio value independently of timeframe
   // This ensures consistency across all timeframes by always using the same current value source
-  const { data: currentPortfolioSnapshot } = usePortfolioValue({
+  const { data: currentPortfolioSnapshot, isLoading: isCurrentValueLoading } = usePortfolioValue({
     address,
     convertTo: convertTo as any,
     enabled: !!address,
@@ -1662,7 +1662,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                 }
               }}
             >
-              {isLoading ? (
+              {isLoading || !valueAndPnlReady ? (
                 <div className="absolute inset-0 flex items-start justify-center pt-10 z-10 px-4 md:px-6">
                   <div className="inline-flex items-center gap-1.5 text-white text-xs font-medium">
                     <Spinner className="w-3.5 h-3.5" />

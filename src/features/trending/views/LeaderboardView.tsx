@@ -152,7 +152,7 @@ export default function LeaderboardView() {
           {/* Data */}
           {items.length > 0 && (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                 {items.map((item, index) => (
                   <LeaderboardCard
                     key={item.address}

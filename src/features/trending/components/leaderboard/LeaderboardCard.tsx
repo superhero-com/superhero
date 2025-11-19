@@ -93,11 +93,11 @@ export function LeaderboardCard({
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4 rounded-2xl border border-white/10 bg-[#050712] backdrop-blur-[18px] shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+    <div className="flex flex-col gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl border border-white/10 bg-[#050712] backdrop-blur-[18px] shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
       {/* Header: rank + trader identity */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center text-xs text-white/80">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/[0.06] flex items-center justify-center text-[11px] sm:text-xs text-white/80">
             #{rank}
           </div>
           <AddressAvatarWithChainName
@@ -113,12 +113,12 @@ export function LeaderboardCard({
 
       {/* Main metrics row */}
       <div className="flex items-stretch gap-3 sm:gap-4">
-        <div className="flex flex-col gap-1">
-          <span className="text-[11px] uppercase tracking-wide text-white/50">
+        <div className="flex flex-col gap-1.5 sm:gap-1">
+          <span className="text-[10px] sm:text-[11px] uppercase tracking-wide text-white/50">
             {timeframeLabel} Days PnL (USD)
           </span>
           <span
-            className={`text-2xl font-semibold ${
+            className={`text-xl sm:text-2xl font-semibold ${
               pnlUsd < 0
                 ? "text-red-400"
                 : pnlUsd > 0
@@ -133,7 +133,7 @@ export function LeaderboardCard({
             })}
           </span>
           <span
-            className={`text-[11px] ${
+            className={`text-[10px] sm:text-[11px] ${
               isNaN(roiPct)
                 ? "text-white/40"
                 : roiPct < 0
@@ -224,7 +224,7 @@ export function LeaderboardCard({
       </div>
 
       {/* Secondary stats row */}
-      <div className="grid grid-cols-3 gap-3 text-[11px] text-white/60">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 text-[10px] sm:text-[11px] text-white/60 mt-1 sm:mt-0">
         <div className="flex flex-col gap-1">
           <span className="uppercase tracking-wide">AUM</span>
           <span className="text-xs font-mono text-white">
@@ -248,7 +248,7 @@ export function LeaderboardCard({
       </div>
 
       {/* Additional breakdown */}
-      <div className="flex items-center justify-between text-[11px] text-white/55">
+      <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-white/55 mt-1">
         <span>
           Buys:{" "}
           <span className="text-emerald-300 font-mono">

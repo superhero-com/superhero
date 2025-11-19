@@ -904,7 +904,7 @@ export default function FeedList({
       </div>
 
       {/* Load more button (desktop) */}
-      {!initialLoading && (
+      {!initialLoading && !latestError && !popularError && (
         <>
           {/* Desktop: explicit load more button */}
           {showLoadMore && (

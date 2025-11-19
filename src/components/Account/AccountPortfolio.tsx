@@ -1369,26 +1369,44 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                 {hoveredPrice && hoverPnlData ? (
                   <>
                     <span className="text-white/60">Profit/Loss:</span>
-                    <span className={`font-semibold ${hoverPnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    <span className={`font-semibold ${
+                      hoverPnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] === 0 
+                        ? 'text-white/60' 
+                        : hoverPnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] >= 0 
+                        ? 'text-green-400' 
+                        : 'text-red-400'
+                    }`}>
                       {convertTo === 'ae' ? (
                         <>
-                          {hoverPnlData.gain.ae >= 0 ? '+' : ''}
-                          {hoverPnlData.gain.ae >= 1 
-                            ? hoverPnlData.gain.ae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                            : Decimal.from(hoverPnlData.gain.ae).prettify()}
-                          {' AE '}
-                          <span className="text-white/60">
-                            ({hoverPnlData.percentage >= 0 ? '+' : ''}{hoverPnlData.percentage.toFixed(2)}%)
-                          </span>
+                          {hoverPnlData.gain.ae === 0 ? (
+                            <>0 AE</>
+                          ) : (
+                            <>
+                              {hoverPnlData.gain.ae >= 0 ? '+' : ''}
+                              {hoverPnlData.gain.ae >= 1 
+                                ? hoverPnlData.gain.ae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                : Decimal.from(hoverPnlData.gain.ae).prettify()}
+                              {' AE '}
+                              <span className="text-white/60">
+                                ({hoverPnlData.percentage >= 0 ? '+' : ''}{hoverPnlData.percentage.toFixed(2)}%)
+                              </span>
+                            </>
+                          )}
                         </>
                       ) : (
                         <>
-                          {hoverPnlData.gain.usd >= 0 ? '+' : ''}
-                          {hoverPnlData.gain.usd.toLocaleString('en-US', { style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          {' '}
-                          <span className="text-white/60">
-                            ({hoverPnlData.percentage >= 0 ? '+' : ''}{hoverPnlData.percentage.toFixed(2)}%)
-                          </span>
+                          {hoverPnlData.gain.usd === 0 ? (
+                            <>{hoverPnlData.gain.usd.toLocaleString('en-US', { style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>
+                          ) : (
+                            <>
+                              {hoverPnlData.gain.usd >= 0 ? '+' : ''}
+                              {hoverPnlData.gain.usd.toLocaleString('en-US', { style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              {' '}
+                              <span className="text-white/60">
+                                ({hoverPnlData.percentage >= 0 ? '+' : ''}{hoverPnlData.percentage.toFixed(2)}%)
+                              </span>
+                            </>
+                          )}
                         </>
                       )}
                     </span>
@@ -1396,26 +1414,44 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                 ) : pnlData ? (
                   <>
                     <span className="text-white/60">Profit/Loss:</span>
-                    <span className={`font-semibold ${pnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    <span className={`font-semibold ${
+                      pnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] === 0 
+                        ? 'text-white/60' 
+                        : pnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] >= 0 
+                        ? 'text-green-400' 
+                        : 'text-red-400'
+                    }`}>
                       {convertTo === 'ae' ? (
                         <>
-                          {pnlData.gain.ae >= 0 ? '+' : ''}
-                          {pnlData.gain.ae >= 1 
-                            ? pnlData.gain.ae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                            : Decimal.from(pnlData.gain.ae).prettify()}
-                          {' AE '}
-                          <span className="text-white/60">
-                            ({pnlData.percentage >= 0 ? '+' : ''}{pnlData.percentage.toFixed(2)}%)
-                          </span>
+                          {pnlData.gain.ae === 0 ? (
+                            <>0 AE</>
+                          ) : (
+                            <>
+                              {pnlData.gain.ae >= 0 ? '+' : ''}
+                              {pnlData.gain.ae >= 1 
+                                ? pnlData.gain.ae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                : Decimal.from(pnlData.gain.ae).prettify()}
+                              {' AE '}
+                              <span className="text-white/60">
+                                ({pnlData.percentage >= 0 ? '+' : ''}{pnlData.percentage.toFixed(2)}%)
+                              </span>
+                            </>
+                          )}
                         </>
                       ) : (
                         <>
-                          {pnlData.gain.usd >= 0 ? '+' : ''}
-                          {pnlData.gain.usd.toLocaleString('en-US', { style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          {' '}
-                          <span className="text-white/60">
-                            ({pnlData.percentage >= 0 ? '+' : ''}{pnlData.percentage.toFixed(2)}%)
-                          </span>
+                          {pnlData.gain.usd === 0 ? (
+                            <>{pnlData.gain.usd.toLocaleString('en-US', { style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>
+                          ) : (
+                            <>
+                              {pnlData.gain.usd >= 0 ? '+' : ''}
+                              {pnlData.gain.usd.toLocaleString('en-US', { style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              {' '}
+                              <span className="text-white/60">
+                                ({pnlData.percentage >= 0 ? '+' : ''}{pnlData.percentage.toFixed(2)}%)
+                              </span>
+                            </>
+                          )}
                         </>
                       )}
                     </span>

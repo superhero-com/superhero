@@ -15,9 +15,39 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
   if (!text) return [];
   let raw = String(text);
   
-  // Handle escaped newlines (\\n) - convert them to actual newlines
-  // This handles cases where content is stored with escaped newline characters
+  // Decode HTML entities first (in case content is HTML-encoded)
+  // Use a safe method that works in both browser and SSR contexts
+  const decodeHtmlEntities = (str: string): string => {
+    if (typeof document !== 'undefined') {
+      const textarea = document.createElement('textarea');
+      textarea.innerHTML = str;
+      return textarea.value;
+    }
+    // Fallback for SSR: decode common entities manually
+    return str
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&#10;|&#xA;|&#x0A;/gi, '\n');
+  };
+  raw = decodeHtmlEntities(raw);
+  
+  // Handle various newline representations and convert them to actual newlines
+  // This handles cases where content is stored with escaped or encoded newline characters
+  // Process in order from most specific to least specific
+  
+  // 1. Double-escaped: \\\\n -> \n (handle double escaping first)
+  raw = raw.replace(/\\\\n/g, '\n');
+  // 2. Escaped newlines: \\n -> \n
   raw = raw.replace(/\\n/g, '\n');
+  // 3. HTML entity newlines: &#10; or &#xA; or &#x0A; -> \n (in case decodeHtmlEntities didn't catch them)
+  raw = raw.replace(/&#10;|&#xA;|&#x0A;/gi, '\n');
+  // 4. Carriage return + newline: \r\n -> \n
+  raw = raw.replace(/\r\n/g, '\n');
+  // 5. Carriage return alone: \r -> \n
+  raw = raw.replace(/\r/g, '\n');
 
   // Pass 1: Identify AENS mentions and turn them into profile links
   const aensLinked: React.ReactNode[] = [];
@@ -180,7 +210,13 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
       return;
     }
     const segment = node as string;
-    const lines = segment.split('\n');
+    // Ensure we have actual newline characters for splitting
+    // Split on newline, but also handle cases where newlines might be encoded differently
+    const normalizedSegment = segment
+      .replace(/\\n/g, '\n')  // Convert escaped newlines
+      .replace(/\r\n/g, '\n') // Normalize Windows line endings
+      .replace(/\r/g, '\n');   // Normalize Mac line endings
+    const lines = normalizedSegment.split('\n');
     let previousLineWasEmpty = false;
     lines.forEach((line, lineIdx) => {
       const isLastLine = lineIdx === lines.length - 1;

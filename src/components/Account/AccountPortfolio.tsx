@@ -948,12 +948,20 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                   // This ensures the displayed value matches the actual current value
                   const timeDiff = nowUnix - lastPoint.time;
                   if (timeDiff > 300) {
+                    // Update timestamp and value if enough time has passed
                     data[data.length - 1] = {
                       ...lastPoint,
                       value: currentValue, // Update to current value to ensure consistency
                       time: nowUnix,
                       timestamp: nowUnix,
                       date: moment.unix(nowUnix).toDate(),
+                    };
+                  } else {
+                    // Even if timestamp is recent, update value to ensure consistency
+                    // This prevents the displayed value from lagging behind the actual current value
+                    data[data.length - 1] = {
+                      ...lastPoint,
+                      value: currentValue, // Always use current value for consistency
                     };
                   }
                 } else {

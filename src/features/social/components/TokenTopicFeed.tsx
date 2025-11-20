@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ReplyToFeedItem from "./ReplyToFeedItem";
+import PostSkeleton from "./PostSkeleton";
 import { PostsService } from "../../../api/generated";
 import AeButton from "../../../components/AeButton";
 import { SuperheroApi } from "../../../api/backend";
@@ -192,8 +193,16 @@ export default function TokenTopicFeed({
   if (isLoading) {
     return (
       <div className="grid gap-2">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="bg-white/[0.02] border border-white/10 rounded-xl p-4 h-20 animate-pulse" />
+        <div className="flex items-center justify-between mb-1 px-1 md:px-0">
+          <h4 className="m-0 text-white/80 text-sm md:text-[15px] font-medium">
+            Loading posts for {displayTag || `#${baseName.toUpperCase()}`}
+          </h4>
+          <div className="text-[11px] text-white/55 hidden md:block">
+            Fetching latest posts...
+          </div>
+        </div>
+        {Array.from({ length: 2 }).map((_, i) => (
+          <PostSkeleton key={i} />
         ))}
       </div>
     );

@@ -4,8 +4,47 @@ import ReplyToFeedItem from "./ReplyToFeedItem";
 import { PostsService } from "../../../api/generated";
 import AeButton from "../../../components/AeButton";
 import { SuperheroApi } from "../../../api/backend";
+import { TokensService } from "../../../api/generated/services/TokensService";
+import type { TokenHolderDto } from "../../../api/generated/models/TokenHolderDto";
+import { Decimal } from "@/libs/decimal";
 
-export default function TokenTopicFeed({ topicName, showHeader = false, displayTokenName, showEmptyMessage = false }: { topicName: string; showHeader?: boolean; displayTokenName?: string; showEmptyMessage?: boolean }) {
+type TokenTopicFeedProps = {
+  topicName: string;
+  showHeader?: boolean;
+  displayTokenName?: string;
+  showEmptyMessage?: boolean;
+  /**
+   * Optional token sale address for the Trend token associated with this topic.
+   * When provided, we'll load holders and enable:
+   * - default \"holders only\" filtering (when holdersOnly is true)
+   * - per-post holder indicator + balance
+   */
+  tokenSaleAddress?: string;
+  /**
+   * Decimals for the Trend token (used to prettify holder balances).
+   */
+  tokenDecimals?: number;
+  /**
+   * Display symbol/name for the Trend token, e.g. \"TOKEN\".
+   */
+  tokenSymbol?: string;
+  /**
+   * When true, limit posts to authors that hold the token.
+   * This should be controlled by the parent (token page), but defaults to true.
+   */
+  holdersOnly?: boolean;
+};
+
+export default function TokenTopicFeed({
+  topicName,
+  showHeader = false,
+  displayTokenName,
+  showEmptyMessage = false,
+  tokenSaleAddress,
+  tokenDecimals,
+  tokenSymbol,
+  holdersOnly = true,
+}: TokenTopicFeedProps) {
   const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const baseName = useMemo(() => String(topicName || '').replace(/^#/, ''), [topicName]);
   const lookup = useMemo(() => `#${baseName.toLowerCase()}`, [baseName]);
@@ -36,6 +75,44 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
   const hashtagRegex = useMemo(() => {
     return new RegExp(`(^|[^A-Za-z0-9_])#${escapeRegExp(baseName)}(?![A-Za-z0-9_])`, 'i');
   }, [baseName]);
+
+  // Optional: load holders for this Trend token so we can:
+  // - filter posts to token holders only
+  // - show holder balance badge on each item
+  const { data: holdersResponse } = useQuery({
+    queryKey: ["TokensService.listTokenHolders-for-topic-feed", tokenSaleAddress],
+    enabled: !!tokenSaleAddress,
+    queryFn: async () => {
+      if (!tokenSaleAddress) {
+        return { items: [] as TokenHolderDto[] };
+      }
+      const response = await TokensService.listTokenHolders({
+        address: tokenSaleAddress,
+        // Large page size to cover most holders, but still bounded
+        limit: 500,
+        page: 1,
+      }) as unknown as { items: TokenHolderDto[] };
+      if (Array.isArray((response as any)?.items)) return response;
+      if (Array.isArray(response as any)) {
+        return { items: response as any as TokenHolderDto[] };
+      }
+      return { items: [] as TokenHolderDto[] };
+    },
+    staleTime: 60 * 1000,
+    refetchInterval: 2 * 60 * 1000,
+  });
+
+  const holdersByAddress = useMemo(() => {
+    const map = new Map<string, TokenHolderDto>();
+    const items: TokenHolderDto[] = Array.isArray((holdersResponse as any)?.items)
+      ? (holdersResponse as any).items
+      : [];
+    for (const h of items) {
+      if (!h?.address) continue;
+      map.set(String(h.address).toLowerCase(), h);
+    }
+    return map;
+  }, [holdersResponse]);
 
   // Check if any posts match the hashtag filter (not just if posts exist)
   const hasFilteredPosts = useMemo(() => {
@@ -85,12 +162,28 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
       if (!key) continue;
       if (!byKey.has(key)) byKey.set(key, p);
     }
-    return Array.from(byKey.values()).sort((a: any, b: any) => {
+    let deduped = Array.from(byKey.values()).sort((a: any, b: any) => {
       const at = new Date(a?.created_at || 0).getTime();
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     }).slice(0, MAX_POSTS);
-  }, [posts, altPosts, replyMatches, hashtagRegex]);
+
+    // Optional: limit to token holders only (when enabled and we have holder data)
+    if (holdersOnly && tokenSaleAddress) {
+      deduped = deduped.filter((p: any) => {
+        const addr = String(p?.sender_address || "").toLowerCase();
+        const holder = holdersByAddress.get(addr);
+        if (!holder) return false;
+        try {
+          return Decimal.from(holder.balance || "0").gt("0");
+        } catch {
+          return false;
+        }
+      });
+    }
+
+    return deduped;
+  }, [posts, altPosts, replyMatches, hashtagRegex, holdersOnly, tokenSaleAddress, holdersByAddress]);
 
   useEffect(() => {
     // initial refetch safety if needed
@@ -132,23 +225,50 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
       {displayPosts.length === 0 && showEmptyMessage && (
         <div className="text-white/60 text-sm">Be the first to speak about {displayTag}.</div>
       )}
-      {displayPosts.map((item: any) => (
-        <ReplyToFeedItem
-          key={item.id}
-          item={item}
-          commentCount={item.total_comments ?? 0}
-          allowInlineRepliesToggle={false}
-          onOpenPost={(id: string) => {
+      {displayPosts.map((item: any) => {
+        let tokenHolderLabel: string | undefined;
+        if (tokenSaleAddress) {
+          const addr = String(item?.sender_address || "").toLowerCase();
+          const holder = holdersByAddress.get(addr);
+          if (holder && holder.balance) {
             try {
-              const cleanId = String(id || item.id).replace(/_v3$/, "");
-              const target = (item as any)?.slug || cleanId;
-              window.location.assign(`/post/${target}`);
+              const decimals = typeof tokenDecimals === "number" && Number.isFinite(tokenDecimals)
+                ? tokenDecimals
+                : 18;
+              const pretty = Decimal.from(holder.balance).div(10 ** decimals).prettify();
+              const symbolBase =
+                (displayTokenName || tokenSymbol || baseName || "").toString().replace(/^#/, "");
+              const symbol = symbolBase ? ` ${symbolBase}` : "";
+              tokenHolderLabel = `${pretty}${symbol}`;
             } catch {
-              // no-op
+              // Fallback: show raw balance if Decimal parsing fails
+              const symbolBase =
+                (displayTokenName || tokenSymbol || baseName || "").toString().replace(/^#/, "");
+              const symbol = symbolBase ? ` ${symbolBase}` : "";
+              tokenHolderLabel = `${holder.balance}${symbol}`;
             }
-          }}
-        />
-      ))}
+          }
+        }
+
+        return (
+          <ReplyToFeedItem
+            key={item.id}
+            item={item}
+            commentCount={item.total_comments ?? 0}
+            allowInlineRepliesToggle={false}
+            tokenHolderLabel={tokenHolderLabel}
+            onOpenPost={(id: string) => {
+              try {
+                const cleanId = String(id || item.id).replace(/_v3$/, "");
+                const target = (item as any)?.slug || cleanId;
+                window.location.assign(`/post/${target}`);
+              } catch {
+                // no-op
+              }
+            }}
+          />
+        );
+      })}
       <div className="text-center mt-1.5">
         <AeButton onClick={
           () => {

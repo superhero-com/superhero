@@ -62,6 +62,7 @@ export default function TokenSaleDetails() {
   const [performance, setPerformance] = useState<any | null>(null);
   const [pendingLastsLong, setPendingLastsLong] = useState(false);
   const { ownedTokens } = useOwnedTokens();
+  const [holdersOnly, setHoldersOnly] = useState(true);
 
   // Ensure token page starts at top on mount
   useEffect(() => {
@@ -455,14 +456,44 @@ export default function TokenSaleDetails() {
 
             {activeTab === TAB_CHAT && (
               <div className="grid gap-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="m-0 text-white/90 font-semibold">Posts for #{String(token.name || token.symbol || '').toUpperCase()}</h3>
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <h3 className="m-0 text-white/90 font-semibold">
+                    Posts for #{String(token.name || token.symbol || '').toUpperCase()}
+                  </h3>
+                  <div className="inline-flex items-center gap-1 rounded-full bg-white/5 border border-white/15 p-0.5 text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => setHoldersOnly(true)}
+                      className={`px-2.5 py-1 rounded-full font-semibold transition-colors ${
+                        holdersOnly
+                          ? "bg-gradient-to-r from-emerald-400 to-teal-500 text-black shadow-sm"
+                          : "bg-transparent text-white/65 hover:text-white"
+                      }`}
+                    >
+                      Holders only
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHoldersOnly(false)}
+                      className={`px-2.5 py-1 rounded-full font-semibold transition-colors ${
+                        !holdersOnly
+                          ? "bg-white text-black shadow-sm"
+                          : "bg-transparent text-white/65 hover:text-white"
+                      }`}
+                    >
+                      All posts
+                    </button>
+                  </div>
                 </div>
                 <TokenTopicComposer tokenName={(token.name || token.symbol || '').toString()} />
                 <TokenTopicFeed
                   topicName={`#${String(token.name || token.symbol || '').toLowerCase()}`}
                   displayTokenName={(token.name || token.symbol || '').toString()}
                   showEmptyMessage={false}
+                  tokenSaleAddress={String((token as any).sale_address || (token as any).address || (token as any).token_address || '')}
+                  tokenDecimals={Number((token as any).decimals ?? 18)}
+                  tokenSymbol={String(token.symbol || token.name || '').toString()}
+                  holdersOnly={holdersOnly}
                 />
               </div>
             )}

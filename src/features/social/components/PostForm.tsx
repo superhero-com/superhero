@@ -428,8 +428,13 @@ const PostForm = forwardRef(
 
     // Push final feed entry after registration with on-chain data
     try {
-      const ov = await GovernanceApi.getPollOverview(createdAddress as any);
-      const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
+      const pollWithVotes = await GovernanceApi.getPollWithVotes(createdAddress as any);
+      const pollData = pollWithVotes?.poll;
+      const voteOptionsArray = pollData?.vote_options || [];
+      const optsRec = voteOptionsArray.reduce((acc: Record<string, string>, opt: { key: number; val: string }) => {
+        acc[String(opt.key)] = opt.val;
+        return acc;
+      }, {} as Record<string, string>);
       const optionsArr = Object.entries(optsRec).map(([k, v]) => ({ id: Number(k), label: String(v) }));
       // Dispatch the same custom event used by plugin host
       const entry = {
@@ -441,8 +446,8 @@ const PostForm = forwardRef(
           title: question,
           description: undefined,
           author: activeAccount,
-          closeHeight: ov?.pollState?.close_height as any,
-          createHeight: ov?.pollState?.create_height as any,
+          closeHeight: pollData?.close_height as any,
+          createHeight: pollData?.create_height as any,
           options: optionsArr,
           totalVotes: 0,
           pending: false,
@@ -480,9 +485,14 @@ const PostForm = forwardRef(
       (async () => {
         for (const address of addresses) {
           try {
-            const ov = await GovernanceApi.getPollOverview(address as any);
-            if (!ov?.pollState) continue;
-            const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
+            const pollWithVotes = await GovernanceApi.getPollWithVotes(address as any);
+            const pollData = pollWithVotes?.poll;
+            if (!pollData) continue;
+            const voteOptionsArray = pollData?.vote_options || [];
+            const optsRec = voteOptionsArray.reduce((acc: Record<string, string>, opt: { key: number; val: string }) => {
+              acc[String(opt.key)] = opt.val;
+              return acc;
+            }, {} as Record<string, string>);
             const optionsArr = Object.entries(optsRec).map(([k, v]) => ({ id: Number(k), label: String(v) }));
             const entry = {
               id: `poll-created:${address}`,
@@ -490,11 +500,11 @@ const PostForm = forwardRef(
               createdAt: new Date().toISOString(),
               data: {
                 pollAddress: address,
-                title: ov?.pollState?.metadata?.title || '',
-                description: ov?.pollState?.metadata?.description || '',
-                author: undefined,
-                closeHeight: ov?.pollState?.close_height as any,
-                createHeight: ov?.pollState?.create_height as any,
+                title: pollData?.metadata?.title || '',
+                description: pollData?.metadata?.description || '',
+                author: pollData?.author as any,
+                closeHeight: pollData?.close_height as any,
+                createHeight: pollData?.create_height as any,
                 options: optionsArr,
                 totalVotes: 0,
                 pending: false,

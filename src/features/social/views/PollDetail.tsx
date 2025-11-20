@@ -46,31 +46,32 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
     return () => { cancelled = true; };
   }, [sdk]);
 
-  const rebuildFromOverview = useCallback((ov: any) => {
-    const md = ov?.pollState?.metadata || {};
+  const rebuildFromPollData = useCallback((pollWithVotes: any) => {
+    const poll = pollWithVotes?.poll;
+    if (!poll) return;
+    const md = poll?.metadata || {};
     setTitle(String(md.title || ''));
     setDescription(md.description ? String(md.description) : undefined);
-    setAuthor(ov?.pollState?.author);
-    setCloseHeight(ov?.pollState?.close_height);
-    setCreateHeight(ov?.pollState?.create_height);
+    setAuthor(poll?.author);
+    setCloseHeight(poll?.close_height);
+    setCreateHeight(poll?.create_height);
 
-    const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
-    const indexByLabel = new Map<string, number>(
-      Object.entries(optsRec).map(([idx, label]) => [String(label), Number(idx)])
-    );
-    const votesByIndex = new Map<number, number>();
-    const sfo = (ov?.stakesForOption || []) as Array<{ option: string; votes: unknown[] }>;
-    for (const row of sfo || []) {
-      const raw = (row as any).option;
-      const count = Array.isArray((row as any).votes) ? (row as any).votes.length : 0;
-      let optIndex: number | undefined;
-      const asNum = Number(raw);
-      if (!Number.isNaN(asNum)) optIndex = asNum; else optIndex = indexByLabel.get(String(raw));
-      if (typeof optIndex === 'number' && !Number.isNaN(optIndex)) votesByIndex.set(optIndex, count);
-    }
-    const nextOptions = Object.entries(optsRec).map(([k, v]) => ({ id: Number(k), label: String(v), votes: votesByIndex.get(Number(k)) ?? 0 }));
-    const nextTotal = typeof ov?.voteCount === 'number' && !Number.isNaN(ov.voteCount)
-      ? ov.voteCount
+    // Convert vote_options from array to Record
+    const voteOptionsArray = poll?.vote_options || [];
+    const optsRec = voteOptionsArray.reduce((acc: Record<string, string>, opt: { key: number; val: string }) => {
+      acc[String(opt.key)] = opt.val;
+      return acc;
+    }, {} as Record<string, string>);
+    
+    // Get votes per option from votes_count_by_option
+    const votesByOption = poll?.votes_count_by_option || {};
+    const nextOptions = Object.entries(optsRec).map(([k, v]) => ({
+      id: Number(k),
+      label: String(v),
+      votes: Number(votesByOption[k] || 0),
+    }));
+    const nextTotal = typeof poll?.votes_count === 'number' && !Number.isNaN(poll.votes_count)
+      ? poll.votes_count
       : nextOptions.reduce((acc, o) => acc + (o.votes || 0), 0);
     setOptions(nextOptions);
     setTotalVotes(nextTotal);
@@ -79,10 +80,36 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
   const refreshMyVote = useCallback(async () => {
     try {
       if (!activeAccount || !pollAddress) { setMyVote(null); return; }
-      const ov = await GovernanceApi.getPollOverview(pollAddress as any);
-      const votesMap = (ov?.pollState?.votes || {}) as Record<string, number>;
-      const v = votesMap[activeAccount as string];
-      setMyVote(typeof v === 'number' ? v : null);
+      const pollWithVotes = await GovernanceApi.getPollWithVotes(pollAddress as any);
+      // Find the latest vote for the active account
+      const accountVotes = (pollWithVotes?.votes || [])
+        .filter((v: any) => {
+          const voter = v.data?.voter || v.data?.governance?.data?.voter;
+          return voter === activeAccount;
+        })
+        .sort((a: any, b: any) => {
+          if (b.block_height !== a.block_height) return b.block_height - a.block_height;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+      if (accountVotes.length > 0) {
+        const latestVote = accountVotes[0];
+        if (latestVote.function === 'revoke_vote') {
+          setMyVote(null);
+          return;
+        }
+        const option = latestVote.data?.option || latestVote.data?.governance?.data?.option;
+        const hasLaterRevoke = accountVotes.some((v: any) => {
+          if (v.function !== 'revoke_vote') return false;
+          if (v.block_height > latestVote.block_height) return true;
+          if (v.block_height === latestVote.block_height) {
+            return new Date(v.created_at).getTime() > new Date(latestVote.created_at).getTime();
+          }
+          return false;
+        });
+        setMyVote(hasLaterRevoke ? null : (typeof option === 'number' ? option : null));
+      } else {
+        setMyVote(null);
+      }
     } catch {
       // ignore
     }
@@ -96,13 +123,40 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
       setLoading(true);
       setError(null);
       try {
-        const ov = await GovernanceApi.getPollOverview(pollAddress as any);
+        const pollWithVotes = await GovernanceApi.getPollWithVotes(pollAddress as any);
         if (cancelled) return;
-        rebuildFromOverview(ov);
+        rebuildFromPollData(pollWithVotes);
         // Also resolve my vote
-        const votesMap = (ov?.pollState?.votes || {}) as Record<string, number>;
-        const v = votesMap[activeAccount as string];
-        setMyVote(typeof v === 'number' ? v : null);
+        if (activeAccount) {
+          const accountVotes = (pollWithVotes?.votes || [])
+            .filter((v: any) => {
+              const voter = v.data?.voter || v.data?.governance?.data?.voter;
+              return voter === activeAccount;
+            })
+            .sort((a: any, b: any) => {
+              if (b.block_height !== a.block_height) return b.block_height - a.block_height;
+              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            });
+          if (accountVotes.length > 0) {
+            const latestVote = accountVotes[0];
+            if (latestVote.function !== 'revoke_vote') {
+              const option = latestVote.data?.option || latestVote.data?.governance?.data?.option;
+              const hasLaterRevoke = pollWithVotes.votes.some((v: any) => {
+                if (v.function !== 'revoke_vote') return false;
+                if (v.block_height > latestVote.block_height) return true;
+                if (v.block_height === latestVote.block_height) {
+                  return new Date(v.created_at).getTime() > new Date(latestVote.created_at).getTime();
+                }
+                return false;
+              });
+              setMyVote(hasLaterRevoke ? null : (typeof option === 'number' ? option : null));
+            } else {
+              setMyVote(null);
+            }
+          } else {
+            setMyVote(null);
+          }
+        }
       } catch (e: any) {
         if (!cancelled) setError(e?.message || 'Failed to load poll');
       } finally {
@@ -110,7 +164,7 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
       }
     })();
     return () => { cancelled = true; };
-  }, [pollAddress, activeAccount, rebuildFromOverview]);
+  }, [pollAddress, activeAccount, rebuildFromPollData]);
 
   // Ensure detail page scrolls to top when opened
   useEffect(() => {
@@ -188,15 +242,15 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
       setTotalVotes((curr) => (prev == null ? (curr ?? 0) + 1 : curr));
       try { await GovernanceApi.submitContractEvent('Vote', pollAddress as any); } catch {}
       try {
-        const ov = await GovernanceApi.getPollOverview(pollAddress as any);
-        rebuildFromOverview(ov);
+        const pollWithVotes = await GovernanceApi.getPollWithVotes(pollAddress as any);
+        rebuildFromPollData(pollWithVotes);
       } catch {}
       window.setTimeout(() => { refreshMyVote(); }, 2000);
     } finally {
       setVoting(false);
       setPendingOption(null);
     }
-  }, [sdk, voting, pollAddress, myVote, rebuildFromOverview, refreshMyVote]);
+  }, [sdk, voting, pollAddress, myVote, rebuildFromPollData, refreshMyVote]);
 
   const revokeVote = useCallback(async () => {
     if (!sdk || voting || !pollAddress) return;
@@ -217,8 +271,8 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
       }
       try { await GovernanceApi.submitContractEvent('RevokeVote', pollAddress as any); } catch {}
       try {
-        const ov = await GovernanceApi.getPollOverview(pollAddress as any);
-        rebuildFromOverview(ov);
+        const pollWithVotes = await GovernanceApi.getPollWithVotes(pollAddress as any);
+        rebuildFromPollData(pollWithVotes);
       } catch {}
       window.setTimeout(() => { refreshMyVote(); }, 2000);
     } finally {

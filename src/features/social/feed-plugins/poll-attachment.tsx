@@ -190,8 +190,13 @@ export const pollAttachmentSpec: ComposerAttachmentSpec = {
         ctx.cacheLink?.(String(post.id), 'poll:ct', { address: createdAddress });
         // push feed entry for immediate visibility
         try {
-          const ov = await GovernanceApi.getPollOverview(createdAddress as any);
-          const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
+          const pollWithVotes = await GovernanceApi.getPollWithVotes(createdAddress as any);
+          const pollData = pollWithVotes?.poll;
+          const voteOptionsArray = pollData?.vote_options || [];
+          const optsRec = voteOptionsArray.reduce((acc: Record<string, string>, opt: { key: number; val: string }) => {
+            acc[String(opt.key)] = opt.val;
+            return acc;
+          }, {} as Record<string, string>);
           const optionsArr = Object.entries(optsRec).map(([k, v]) => ({ id: Number(k), label: String(v) }));
           ctx.pushFeedEntry?.('poll-created', {
             id: `poll-created:${createdAddress}`,
@@ -202,8 +207,8 @@ export const pollAttachmentSpec: ComposerAttachmentSpec = {
               title: post.text,
               description: undefined,
               author: undefined,
-              closeHeight: ov?.pollState?.close_height as any,
-              createHeight: ov?.pollState?.create_height as any,
+              closeHeight: pollData?.close_height as any,
+              createHeight: pollData?.create_height as any,
               options: optionsArr,
               totalVotes: 0,
             }
@@ -251,16 +256,21 @@ export function InlinePoll({ postId }: { postId: string }) {
   if (state.kind === 'poll:ct') {
     const address = state?.payload?.address as Encoded.ContractAddress;
     // We rely on PollCreatedCard to present; fetch overview
-    const [ov, setOv] = useState<any>(null);
+    const [pollWithVotes, setPollWithVotes] = useState<any>(null);
     useEffect(() => {
       (async () => {
-        try { setOv(await GovernanceApi.getPollOverview(address as any)); } catch {}
+        try { setPollWithVotes(await GovernanceApi.getPollWithVotes(address as any)); } catch {}
       })();
     }, [address]);
-    if (!ov) return (
+    if (!pollWithVotes) return (
       <div className="mt-3 bg-white/[0.04] border border-white/15 rounded-xl p-3 text-[13px] text-white/80">Loading poll…</div>
     );
-    const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
+    const pollData = pollWithVotes?.poll;
+    const voteOptionsArray = pollData?.vote_options || [];
+    const optsRec = voteOptionsArray.reduce((acc: Record<string, string>, opt: { key: number; val: string }) => {
+      acc[String(opt.key)] = opt.val;
+      return acc;
+    }, {} as Record<string, string>);
     const options = Object.entries(optsRec).map(([k, v]) => ({ id: Number(k), label: String(v), votes: 0 }));
     return (
       <div className="mt-3">

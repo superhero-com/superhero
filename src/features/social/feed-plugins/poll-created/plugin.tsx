@@ -37,30 +37,25 @@ export function registerPollCreatedPlugin() {
     kind: 'poll-created',
     // Remove composer action; poll is now an attachment surfaced in the toolbar
     async fetchPage(page: number) {
-      // single first page for now
-      if (page && page > 1) {
-        return { entries: [], nextPage: undefined } as FeedPage<PollCreatedEntryData>;
-      }
-      // Fetch both open and closed polls
-      const [openPolls, closedPolls] = await Promise.all([
-        GovernanceApi.getPollOrdering(false),
-        GovernanceApi.getPollOrdering(true),
-      ]);
-      // Combine all polls
-      const allPolls = [...(openPolls?.data || []), ...(closedPolls?.data || [])];
+      // Fetch polls from new API endpoint
+      // Use a large limit to get all polls, or implement pagination later
+      const limit = 1000;
+      const pollsResponse = await GovernanceApi.getAllPolls(page, limit);
+      const allPolls = pollsResponse?.items || [];
       const entries: FeedEntry<PollCreatedEntryData>[] = [];
-      // First pass to collect create heights
-      const overviews = await Promise.all(
-        allPolls.map(async (p) => {
+      // Fetch detailed poll data with votes for each poll
+      const pollsWithVotes = await Promise.all(
+        allPolls.map(async (poll) => {
+          if (!poll.poll_address) return undefined;
           try {
-            const ov = await GovernanceApi.getPollOverview(p.poll);
-            return { p, ov };
+            const pollWithVotes = await GovernanceApi.getPollWithVotes(poll.poll_address);
+            return { poll, pollWithVotes };
           } catch {
             return undefined as any;
           }
         })
       );
-      const valid = overviews.filter(Boolean) as { p: any; ov: any }[];
+      const valid = pollsWithVotes.filter(Boolean) as { poll: any; pollWithVotes: any }[];
       // Resolve exact creation time from MDW by fetching contract_create tx for each poll
       const mdwBase = CONFIG.MIDDLEWARE_URL.replace(/\/$/, '');
       async function fetchCreationInfo(ct: string): Promise<{ time: string | null; hash?: string | null }> {
@@ -98,54 +93,45 @@ export function registerPollCreatedPlugin() {
       }
 
       for (let i = 0; i < valid.length; i += 1) {
-        const { p, ov } = valid[i];
-        const meta = ov?.pollState?.metadata || ({} as any);
-        const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
-        // Build votes per option index using overview.stakesForOption[].option
-        // The backend may return either index or label; try both, prefer index.
-        const indexByLabel = new Map<string, number>(
-          Object.entries(optsRec).map(([idx, label]) => [String(label), Number(idx)])
-        );
-        const votesByIndex = new Map<number, number>();
-        const sfo = (ov?.stakesForOption || []) as Array<{ option: string; votes: unknown[] }>;
-        for (const row of sfo) {
-          const raw = (row as any).option;
-          const count = Array.isArray((row as any).votes) ? (row as any).votes.length : 0;
-          let optIndex: number | undefined;
-          const asNum = Number(raw);
-          if (!Number.isNaN(asNum)) {
-            optIndex = asNum;
-          } else {
-            optIndex = indexByLabel.get(String(raw));
-          }
-          if (typeof optIndex === 'number' && !Number.isNaN(optIndex)) {
-            votesByIndex.set(optIndex, count);
-          }
-        }
+        const { poll, pollWithVotes } = valid[i];
+        const pollData = pollWithVotes?.poll || poll;
+        const meta = pollData?.metadata || ({} as any);
+        // Convert vote_options from array of {key, val} to Record<string, string>
+        const voteOptionsArray = pollData?.vote_options || [];
+        const optsRec = voteOptionsArray.reduce((acc: Record<string, string>, opt: { key: number; val: string }) => {
+          acc[String(opt.key)] = opt.val;
+          return acc;
+        }, {} as Record<string, string>);
+        // Get votes per option from votes_count_by_option
+        const votesByOption = pollData?.votes_count_by_option || {};
         const options = Object.entries(optsRec).map(([k, v]) => ({
           id: Number(k),
           label: String(v),
-          votes: votesByIndex.get(Number(k)) ?? 0,
+          votes: Number(votesByOption[k] || 0),
         }));
-        const totalVotes = typeof ov?.voteCount === 'number' && !Number.isNaN(ov.voteCount)
-          ? ov.voteCount
+        const totalVotes = typeof pollData?.votes_count === 'number' && !Number.isNaN(pollData.votes_count)
+          ? pollData.votes_count
           : options.reduce((acc, o) => acc + (o.votes || 0), 0);
-        const ctInfo = await fetchCreationInfo(p.poll as any);
-        const createdAt = ctInfo.time || new Date().toISOString();
+        const pollAddress = pollData.poll_address || poll.poll_address;
+        const ctInfo = await fetchCreationInfo(pollAddress);
+        // Use created_at from API if available, otherwise fall back to MDW lookup
+        const createdAt = pollData.created_at 
+          ? new Date(pollData.created_at).toISOString()
+          : (ctInfo.time || new Date().toISOString());
         const entry = adaptPollToEntry(
-          p.poll as any,
+          pollAddress as any,
           {
             title: meta?.title || 'Untitled poll',
             description: meta?.description || undefined,
-            author: ov?.pollState?.author as any,
-            closeHeight: ov?.pollState?.close_height as any,
-            createHeight: ov?.pollState?.create_height as any,
+            author: pollData?.author as any,
+            closeHeight: pollData?.close_height as any,
+            createHeight: pollData?.create_height as any,
             options,
             totalVotes,
           },
           createdAt
         );
-        (entry as any).data.txHash = ctInfo.hash || undefined;
+        (entry as any).data.txHash = pollData.hash || ctInfo.hash || undefined;
         entries.push(entry);
       }
       // Sort by creation time, newest first
@@ -167,10 +153,43 @@ export function registerPollCreatedPlugin() {
       const refreshMyVote = useCallback(async () => {
         try {
           if (!activeAccount) { setMyVote(null); return; }
-          const ov = await GovernanceApi.getPollOverview(pollAddress as any);
-          const votesMap = (ov?.pollState?.votes || {}) as Record<string, number>;
-          const v = votesMap[activeAccount as string];
-          setMyVote(typeof v === 'number' ? v : null);
+          const pollWithVotes = await GovernanceApi.getPollWithVotes(pollAddress as any);
+          // Find the latest vote for the active account from the votes array
+          // The data field contains the governance data directly (voter, option, poll_address)
+          const accountVotes = (pollWithVotes?.votes || [])
+            .filter((v: any) => {
+              const voter = v.data?.voter || v.data?.governance?.data?.voter;
+              return voter === activeAccount;
+            })
+            .sort((a: any, b: any) => {
+              // Sort by block_height and created_at descending to get latest first
+              if (b.block_height !== a.block_height) return b.block_height - a.block_height;
+              const aTime = new Date(a.created_at).getTime();
+              const bTime = new Date(b.created_at).getTime();
+              return bTime - aTime;
+            });
+          if (accountVotes.length > 0) {
+            const latestVote = accountVotes[0];
+            // Check if the latest action was a revoke
+            if (latestVote.function === 'revoke_vote') {
+              setMyVote(null);
+              return;
+            }
+            // Get the option from the vote data
+            const option = latestVote.data?.option || latestVote.data?.governance?.data?.option;
+            // Check if this vote was revoked by a later revoke_vote transaction
+            const hasLaterRevoke = accountVotes.some((v: any) => {
+              if (v.function !== 'revoke_vote') return false;
+              if (v.block_height > latestVote.block_height) return true;
+              if (v.block_height === latestVote.block_height) {
+                return new Date(v.created_at).getTime() > new Date(latestVote.created_at).getTime();
+              }
+              return false;
+            });
+            setMyVote(hasLaterRevoke ? null : (typeof option === 'number' ? option : null));
+          } else {
+            setMyVote(null);
+          }
         } catch {
           // ignore
         }
@@ -178,24 +197,24 @@ export function registerPollCreatedPlugin() {
 
       useEffect(() => { refreshMyVote(); }, [refreshMyVote]);
 
-      const rebuildFromOverview = useCallback((ov: any) => {
-        const optsRec = (ov?.pollState?.vote_options || {}) as Record<string, string>;
-        const indexByLabel = new Map<string, number>(
-          Object.entries(optsRec).map(([idx, label]) => [String(label), Number(idx)])
-        );
-        const votesByIndex = new Map<number, number>();
-        const sfo = (ov?.stakesForOption || []) as Array<{ option: string; votes: unknown[] }>;
-        for (const row of sfo || []) {
-          const raw = (row as any).option;
-          const count = Array.isArray((row as any).votes) ? (row as any).votes.length : 0;
-          let optIndex: number | undefined;
-          const asNum = Number(raw);
-          if (!Number.isNaN(asNum)) optIndex = asNum; else optIndex = indexByLabel.get(String(raw));
-          if (typeof optIndex === 'number' && !Number.isNaN(optIndex)) votesByIndex.set(optIndex, count);
-        }
-        const nextOptions = Object.entries(optsRec).map(([k, v]) => ({ id: Number(k), label: String(v), votes: votesByIndex.get(Number(k)) ?? 0 }));
-        const nextTotal = typeof ov?.voteCount === 'number' && !Number.isNaN(ov.voteCount)
-          ? ov.voteCount
+      const rebuildFromPollData = useCallback((pollWithVotes: any) => {
+        const pollData = pollWithVotes?.poll;
+        if (!pollData) return;
+        // Convert vote_options from array of {key, val} to Record<string, string>
+        const voteOptionsArray = pollData?.vote_options || [];
+        const optsRec = voteOptionsArray.reduce((acc: Record<string, string>, opt: { key: number; val: string }) => {
+          acc[String(opt.key)] = opt.val;
+          return acc;
+        }, {} as Record<string, string>);
+        // Get votes per option from votes_count_by_option
+        const votesByOption = pollData?.votes_count_by_option || {};
+        const nextOptions = Object.entries(optsRec).map(([k, v]) => ({
+          id: Number(k),
+          label: String(v),
+          votes: Number(votesByOption[k] || 0),
+        }));
+        const nextTotal = typeof pollData?.votes_count === 'number' && !Number.isNaN(pollData.votes_count)
+          ? pollData.votes_count
           : nextOptions.reduce((acc, o) => acc + (o.votes || 0), 0);
         setDisplayOptions(nextOptions);
         setDisplayTotalVotes(nextTotal);
@@ -250,8 +269,8 @@ export function registerPollCreatedPlugin() {
           // Notify governance backend to speed up cache updates
           try { await GovernanceApi.submitContractEvent("Vote", pollAddress as any); } catch {}
           try {
-            const ov = await GovernanceApi.getPollOverview(pollAddress as any);
-            rebuildFromOverview(ov);
+            const pollWithVotes = await GovernanceApi.getPollWithVotes(pollAddress as any);
+            rebuildFromPollData(pollWithVotes);
           } catch {}
           window.setTimeout(() => { refreshMyVote(); }, 2000);
         } finally {
@@ -279,8 +298,8 @@ export function registerPollCreatedPlugin() {
           }
           try { await GovernanceApi.submitContractEvent("RevokeVote", pollAddress as any); } catch {}
           try {
-            const ov = await GovernanceApi.getPollOverview(pollAddress as any);
-            rebuildFromOverview(ov);
+            const pollWithVotes = await GovernanceApi.getPollWithVotes(pollAddress as any);
+            rebuildFromPollData(pollWithVotes);
           } catch {}
           window.setTimeout(() => { refreshMyVote(); }, 2000);
         } finally {

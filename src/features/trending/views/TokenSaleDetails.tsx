@@ -124,7 +124,17 @@ export default function TokenSaleDetails() {
 
   // Derived states
   const isTokenPending = isTokenNewlyCreated && !token?.sale_address;
-  const isMobile = window.innerWidth < 768;
+  const [isMobile, setIsMobile] = useState<boolean>(() => window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   // Share URL
   const shareUrl = useMemo(() => {
@@ -137,7 +147,7 @@ export default function TokenSaleDetails() {
     return token && ownedTokens
       ? ownedTokens.some((it: any) => it.id === token.id)
       : false;
-  }, [activeAccount, token]);
+  }, [activeAccount, token, ownedTokens]);
 
   // Render error state (token not found)
   if (isError && !isTokenNewlyCreated) {
@@ -489,11 +499,12 @@ export default function TokenSaleDetails() {
                 <TokenTopicFeed
                   topicName={`#${String(token.name || token.symbol || '').toLowerCase()}`}
                   displayTokenName={(token.name || token.symbol || '').toString()}
-                  showEmptyMessage={false}
+                  showEmptyMessage
                   tokenSaleAddress={String((token as any).sale_address || (token as any).address || (token as any).token_address || '')}
                   tokenDecimals={Number((token as any).decimals ?? 18)}
                   tokenSymbol={String(token.symbol || token.name || '').toString()}
                   holdersOnly={holdersOnly}
+                  onAutoDisableHoldersOnly={() => setHoldersOnly(false)}
                 />
               </div>
             )}

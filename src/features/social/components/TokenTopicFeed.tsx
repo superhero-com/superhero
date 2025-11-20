@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ReplyToFeedItem from "./ReplyToFeedItem";
 import PostSkeleton from "./PostSkeleton";
@@ -34,6 +34,12 @@ type TokenTopicFeedProps = {
    * This should be controlled by the parent (token page), but defaults to true.
    */
   holdersOnly?: boolean;
+  /**
+   * Optional callback used on Trend token pages: when the holders-only filter
+   * results in zero posts but there are non-holder posts available, we'll
+   * auto-switch to "all posts" and call this so the parent can update its UI.
+   */
+  onAutoDisableHoldersOnly?: () => void;
 };
 
 export default function TokenTopicFeed({
@@ -45,7 +51,9 @@ export default function TokenTopicFeed({
   tokenDecimals,
   tokenSymbol,
   holdersOnly = true,
+  onAutoDisableHoldersOnly,
 }: TokenTopicFeedProps) {
+  const [autoSwitchedFromHolders, setAutoSwitchedFromHolders] = useState(false);
   const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const baseName = useMemo(() => String(topicName || '').replace(/^#/, ''), [topicName]);
   const lookup = useMemo(() => `#${baseName.toLowerCase()}`, [baseName]);
@@ -64,13 +72,6 @@ export default function TokenTopicFeed({
 
   const posts: any[] = Array.isArray((data as any)?.posts) ? (data as any).posts : [];
   const postCount: number | undefined = typeof (data as any)?.post_count === 'number' ? (data as any).post_count : undefined;
-  const sortedPosts = useMemo(() => {
-    return posts.slice().sort((a: any, b: any) => {
-      const at = new Date(a?.created_at || 0).getTime();
-      const bt = new Date(b?.created_at || 0).getTime();
-      return bt - at; // newest first
-    });
-  }, [posts]);
 
   // Build a unified hashtag regex early to check if posts match the filter
   const hashtagRegex = useMemo(() => {
@@ -151,11 +152,13 @@ export default function TokenTopicFeed({
   const MAX_POSTS = 200;
 
   // Merge all sources, ensure uniq (by id/slug) and newest-first sorting
-  const displayPosts: any[] = useMemo(() => {
-    const postsFiltered = posts.filter((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || '')));
-    const altPostsFiltered = altPosts.filter((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || '')));
-    // fallbackPosts already filtered at line 66, but use consistent field priority to avoid excluding valid posts
-    // Check all fields (text || title || content) to match the initial filter's priority
+  const allPosts: any[] = useMemo(() => {
+    const postsFiltered = posts.filter((p: any) =>
+      hashtagRegex.test(String(p?.content || p?.text || p?.title || ''))
+    );
+    const altPostsFiltered = altPosts.filter((p: any) =>
+      hashtagRegex.test(String(p?.content || p?.text || p?.title || ''))
+    );
     const merged = [...postsFiltered, ...altPostsFiltered, ...replyMatches];
     const byKey = new Map<string, any>();
     for (const p of merged) {
@@ -163,28 +166,50 @@ export default function TokenTopicFeed({
       if (!key) continue;
       if (!byKey.has(key)) byKey.set(key, p);
     }
-    let deduped = Array.from(byKey.values()).sort((a: any, b: any) => {
+    return Array.from(byKey.values()).sort((a: any, b: any) => {
       const at = new Date(a?.created_at || 0).getTime();
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     }).slice(0, MAX_POSTS);
+  }, [posts, altPosts, replyMatches, hashtagRegex]);
 
-    // Optional: limit to token holders only (when enabled and we have holder data)
+  // Subset of posts authored by token holders with a positive balance
+  const holderPosts: any[] = useMemo(() => {
+    if (!tokenSaleAddress) return [];
+    return allPosts.filter((p: any) => {
+      const addr = String(p?.sender_address || "").toLowerCase();
+      const holder = holdersByAddress.get(addr);
+      if (!holder) return false;
+      try {
+        return Decimal.from(holder.balance || "0").gt("0");
+      } catch {
+        return false;
+      }
+    });
+  }, [allPosts, tokenSaleAddress, holdersByAddress]);
+
+  // Final list based on holders filter
+  const displayPosts: any[] = useMemo(() => {
     if (holdersOnly && tokenSaleAddress) {
-      deduped = deduped.filter((p: any) => {
-        const addr = String(p?.sender_address || "").toLowerCase();
-        const holder = holdersByAddress.get(addr);
-        if (!holder) return false;
-        try {
-          return Decimal.from(holder.balance || "0").gt("0");
-        } catch {
-          return false;
-        }
-      });
+      return holderPosts;
     }
+    return allPosts;
+  }, [holdersOnly, tokenSaleAddress, holderPosts, allPosts]);
 
-    return deduped;
-  }, [posts, altPosts, replyMatches, hashtagRegex, holdersOnly, tokenSaleAddress, holdersByAddress]);
+  // If holders-only yields no posts but there are regular posts, automatically
+  // switch to "all posts" and surface a small info banner.
+  useEffect(() => {
+    if (!holdersOnly || !tokenSaleAddress || autoSwitchedFromHolders) return;
+    if (allPosts.length > 0 && holderPosts.length === 0 && onAutoDisableHoldersOnly) {
+      setAutoSwitchedFromHolders(true);
+      onAutoDisableHoldersOnly();
+    }
+  }, [holdersOnly, tokenSaleAddress, allPosts, holderPosts, onAutoDisableHoldersOnly, autoSwitchedFromHolders]);
+
+  // Reset auto-switch banner state when topic or token context changes
+  useEffect(() => {
+    setAutoSwitchedFromHolders(false);
+  }, [topicName, tokenSaleAddress]);
 
   useEffect(() => {
     // initial refetch safety if needed
@@ -231,8 +256,57 @@ export default function TokenTopicFeed({
           )}
         </div>
       )}
-      {displayPosts.length === 0 && showEmptyMessage && (
-        <div className="text-white/60 text-sm">Be the first to speak about {displayTag}.</div>
+
+      {/* Info banner when user explicitly selects "Holders only" but there are no holder posts */}
+      {holdersOnly && tokenSaleAddress && allPosts.length > 0 && holderPosts.length === 0 && (
+        <div className="mt-1.5 mb-1 mx-1 md:mx-0 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-3 md:px-4 py-2.5 text-xs text-emerald-100 flex items-start gap-2">
+          <span className="text-[14px] pt-0.5" aria-hidden="true">🏅</span>
+          <div className="text-left">
+            <div className="font-semibold text-emerald-100">
+              No posts from token holders yet.
+            </div>
+            <div className="mt-0.5 text-emerald-100/90 text-[11px] sm:text-xs leading-snug">
+              If you hold this token, create a post with{" "}
+              <span className="font-semibold text-emerald-100 underline decoration-emerald-300/60 decoration-dashed underline-offset-2">
+                {displayTag}
+              </span>{" "}
+              to appear here.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Info banner when holders-only had no matches and we auto-switched to all posts */}
+      {autoSwitchedFromHolders && !holdersOnly && allPosts.length > 0 && holderPosts.length === 0 && (
+        <div className="mt-1.5 mb-1 mx-1 md:mx-0 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-3 md:px-4 py-2.5 text-xs text-emerald-100 flex items-start gap-2">
+          <span className="text-[14px] pt-0.5" aria-hidden="true">ℹ️</span>
+          <div className="text-left">
+            <div className="font-semibold text-emerald-100">
+              No posts from token holders yet.
+            </div>
+            <div className="mt-0.5 text-emerald-100/90 text-[11px] sm:text-xs leading-snug">
+              Showing all posts for{" "}
+              <span className="font-semibold text-emerald-100">
+                {displayTag}
+              </span>{" "}
+              while we wait for holders to join the conversation.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Empty state when there are no posts at all for this trend */}
+      {showEmptyMessage && allPosts.length === 0 && displayPosts.length === 0 && (
+        <div className="mt-1 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-5 text-center">
+          <div className="text-2xl mb-1" aria-hidden="true">🗯️</div>
+          <div className="font-semibold text-white/85 mb-1 text-sm md:text-[15px]">
+            No posts for {displayTag}
+          </div>
+          <div className="text-xs text-white/60 max-w-md mx-auto">
+            Be the first to start a conversation — create a post that includes{" "}
+            <span className="font-medium text-white/80">{displayTag}</span> in the text.
+          </div>
+        </div>
       )}
       {displayPosts.map((item: any) => {
         let tokenHolderLabel: string | undefined;
@@ -279,22 +353,21 @@ export default function TokenTopicFeed({
         );
       })}
       <div className="text-center mt-1.5">
-        <AeButton onClick={
-          () => {
+        <AeButton
+          onClick={() => {
             refetch();
             refetchReplies();
             if (displayPosts.length === 0) {
               refetchOriginal();
-              }
             }
-          } 
-          disabled={isFetching || isFetchingOriginal  || isFetchingReplies}
+          }}
+          disabled={isFetching || isFetchingOriginal || isFetchingReplies}
           loading={isFetching || isFetchingOriginal || isFetchingReplies}
           variant="ghost"
           size="medium"
           className="min-w-24"
         >
-          {(isFetching || isFetchingReplies) ? 'Loading…' : 'Refresh'}
+          {(isFetching || isFetchingOriginal || isFetchingReplies) ? "Loading…" : "Refresh"}
         </AeButton>
       </div>
     </div>

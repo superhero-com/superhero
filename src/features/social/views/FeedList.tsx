@@ -662,7 +662,6 @@ export default function FeedList({
     [popularData]
   );
 
-<<<<<<< HEAD
   // Plugin-driven entries (includes poll-created via its fetchPage)
   const pluginEntries = usePluginEntries(getAllPlugins(), sortBy !== "hot");
 

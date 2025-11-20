@@ -1,5 +1,5 @@
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, useCallback } from "react";
+import React, { useEffect, useImperativeHandle, useMemo, useRef, useState, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
 import AeButton from "../../../components/AeButton";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
@@ -86,7 +86,17 @@ const PROMPTS: string[] = [
   "Teach us something in 1 line. 🧠",
 ];
 
-const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => void }, PostFormProps>((props, ref) => {
+type FocusOptions = {
+  immediate?: boolean;
+  preventScroll?: boolean;
+  scroll?: 'none' | 'start' | 'center';
+};
+
+type PostFormRef = {
+  focus: (opts?: FocusOptions) => void;
+};
+
+const PostForm = React.forwardRef<PostFormRef, PostFormProps>((props, ref) => {
   const { t } = useTranslation('forms');
   const { t: tSocial } = useTranslation('social');
   const {
@@ -113,7 +123,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   const queryClient = useQueryClient();
 
   useImperativeHandle(ref, () => ({
-    focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => {
+    focus: (opts?: FocusOptions) => {
       const run = () => {
         if (!textareaRef.current) return;
         try {

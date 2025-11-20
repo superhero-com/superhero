@@ -279,7 +279,7 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
       setVoting(false);
       setPendingOption(null);
     }
-  }, [sdk, voting, pollAddress, myVote, rebuildFromOverview, refreshMyVote]);
+  }, [sdk, voting, pollAddress, myVote, rebuildFromPollData, refreshMyVote]);
 
   const content = (
     <div className="w-full p-0">

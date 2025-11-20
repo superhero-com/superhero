@@ -2,7 +2,6 @@ import { PriceDataFormatter } from "@/features/shared/components";
 import { useMemo } from "react";
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import { TokenLineChart } from "./TokenLineChart";
-import TokenMobileCard from "./TokenMobileCard";
 
 
 interface TokenListTableRowProps {
@@ -41,22 +40,65 @@ export default function TokenListTableRow({
 
   const collectionRank = useCollectionRank ? (token as any).collection_rank : rank;
 
+  const saleAddress = useMemo(() => token.sale_address || tokenAddress, [token.sale_address, tokenAddress]);
+
   // Show mobile card on screens smaller than 960px
   return (
     <>
-      {/* Mobile card for small screens */}
-      <tr className="mobile-only-card md:hidden">
-        <td colSpan={8} className="p-0">
-          <TokenMobileCard
-            token={token}
-            useCollectionRank={useCollectionRank}
-            showCollectionColumn={showCollectionColumn}
-            rank={rank}
+      {/* Mobile compact two-row layout */}
+      <tr className="mobile-only-card md:hidden relative">
+        <td className="cell-fake" />
+        {/* Rank */}
+        <td className="pl-3 pr-3 py-1 align-middle text-white/60 text-[11px] font-semibold text-center">
+          {collectionRank}
+        </td>
+        {/* Content cell spans remaining columns: Row 1 name, Row 2 mc/price/24h */}
+        <td className="pl-2 py-1 pr-3 align-middle relative" colSpan={3}>
+          {/* Row 1: full name (wrap allowed) */}
+          <div className="text-[14px] font-bold text-white leading-5 whitespace-nowrap overflow-hidden text-ellipsis">
+            <span className="text-white/60 text-[.85em] mr-0.5 align-baseline">#</span>
+            <span>{token.symbol || token.name}</span>
+          </div>
+          {/* Row 2: left = MC, right = Price + 24h */}
+          <div className="flex items-center justify-between gap-3 pt-0">
+            <div className="only-fiat mobile-market-cap text-[11px] text-white/60 leading-4 font-medium">
+              <PriceDataFormatter
+                bignumber
+                watchPrice={false}
+                className=""
+                priceData={token.market_cap_data}
+              />
+            </div>
+            <div className="flex items-center gap-4 shrink-0">
+            <div className="only-fiat text-[13px] text-white font-semibold text-right tabular-nums min-w-[72px]">
+                <PriceDataFormatter
+                  watchPrice={false}
+                  hideFiatPrice
+                  className="text-white"
+                  priceData={token.price_data}
+                />
+              </div>
+            <div className="flex justify-end">
+              {saleAddress && (
+                <TokenLineChart
+                  saleAddress={saleAddress}
+                  height={26}
+                  hideTimeframe={true}
+                  className="w-[72px]"
+                />
+              )}
+            </div>
+            </div>
+          </div>
+          <a
+            href={`/trending/tokens/${encodeURIComponent(token.name || token.address)}`}
+            className="absolute inset-0 z-10"
+            aria-label={`View details for ${token.name || token.symbol}`}
           />
         </td>
       </tr>
 
-      {/* Desktop table row for larger screens */}
+      {/* Desktop table row for larger screens (including tablets) */}
       <tr className="bctsl-token-list-table-row rounded-xl relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hidden md:table-row">
         {/* Fake cell to match header structure */}
         <td className="cell-fake"></td>
@@ -86,7 +128,7 @@ export default function TokenListTableRow({
         )}
 
         {/* Price */}
-        <td className="cell cell-price px-1 px-lg-3 text-md-right">
+        <td className="cell cell-price px-1 px-lg-3 text-left text-md-right">
           <div className="flex align-center md:block">
             <div className="mobile-label block md:hidden text-white/60 w-16">Price:</div>
             <div className="bg-gradient-to-r  text-sm from-yellow-400 to-cyan-500 bg-clip-text text-transparent">
@@ -193,43 +235,36 @@ export default function TokenListTableRow({
         }
 
         /* Mobile responsive styles */
-        @media screen and (max-width: 960px) {
+        @media screen and (max-width: 767px) {
+          /* Hide AE price, show only fiat for market cap on mobile */
+          .mobile-market-cap .price {
+            display: none;
+          }
+          
           .bctsl-token-list-table-row {
             display: grid;
-            grid-template-columns: 42px 5fr 2fr;
-            grid-template-rows: 1fr 10px 10px;
+            grid-template-columns: 42px 1fr 1fr 1fr; /* rank + 3 cols */
+            grid-template-rows: auto auto; /* row1: name, row2: mc/price/24h */
             grid-template-areas:
-              'rank name       chart'
-              'rank price      chart'
-              'rank market-cap chart';
-            margin-top: 4px;
-            padding-block: 8px;
-            margin: 0.5rem 0;
+              'rank name       name      name'
+              'rank market-cap price     chart';
+            margin-top: 0;
+            padding-block: 6px;
+            margin: 0;
           }
 
           .cell-rank {
             grid-area: rank;
             padding-top: 4px;
-            font-size: 10px;
+            font-size: 16px;
             font-weight: normal;
             letter-spacing: -0.1em;
           }
 
-          .cell-name {
-            grid-area: name;
-          }
-
-          .cell-price {
-            grid-area: price;
-          }
-
-          .cell-market-cap {
-            grid-area: market-cap;
-          }
-
-          .cell-chart {
-            grid-area: chart;
-          }
+          .cell-name { grid-area: name; }
+          .cell-market-cap { grid-area: market-cap; }
+          .cell-price { grid-area: price; align-self: start; }
+          .cell-chart { grid-area: chart; align-self: start; }
 
           .cell-collection,
           .cell-holders {

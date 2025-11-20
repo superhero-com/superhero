@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { TrendminerApi } from '../../api/backend';
+import { SuperheroApi } from '../../api/backend';
 import './TrendingPillsCarousel.scss';
 
 type TrendingTag = {
@@ -102,7 +102,7 @@ export default function TrendingPillsCarousel() {
       setLoading(true);
       setError(null);
       try {
-        const resp = await TrendminerApi.listTrendingTags({
+        const resp = await SuperheroApi.listTrendingTags({
           orderBy: 'score',
           orderDirection: 'DESC',
           limit: 50

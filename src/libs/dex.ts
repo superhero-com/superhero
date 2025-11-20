@@ -10,13 +10,13 @@ export const DEX_ADDRESSES = {
 
 // Use deployment ACIs from external dex-contracts to match sdk expectations
 // @ts-ignore
-import RouterAci from 'dex-contracts-v2/build/AedexV2Router.aci.json';
+import RouterAci from 'dex-contracts-v2/deployment/aci/AedexV2Router.aci.json';
 // @ts-ignore
-import FactoryAci from 'dex-contracts-v2/build/AedexV2Factory.aci.json';
+import FactoryAci from 'dex-contracts-v2/deployment/aci/AedexV2Factory.aci.json';
 // @ts-ignore
-import PairAci from 'dex-contracts-v2/build/AedexV2Pair.aci.json';
+import PairAci from 'dex-contracts-v2/deployment/aci/AedexV2Pair.aci.json';
 // @ts-ignore
-import Aex9Aci from 'dex-contracts-v2/build/FungibleTokenFull.aci.json';
+import Aex9Aci from 'dex-contracts-v2/deployment/aci/FungibleTokenFull.aci.json';
 
 // Minimal ACIs (only the entrypoints we use)
 const RouterContract = {

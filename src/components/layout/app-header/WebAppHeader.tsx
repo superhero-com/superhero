@@ -12,6 +12,7 @@ export default function WebAppHeader() {
   const { pathname } = useLocation();
   const navigationItems = useMemo(() => getNavigationItems(tNav), [tNav]);
   const isDaoPath = pathname.startsWith('/trends/dao') || pathname.startsWith('/trends/daos');
+  
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const themeValue = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
     return themeValue;

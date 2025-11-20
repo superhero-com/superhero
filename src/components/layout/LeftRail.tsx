@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { TrendminerApi } from "../../api/backend";
+import { SuperheroApi } from "../../api/backend";
 import { useAeSdk } from "../../hooks";
 import WebSocketClient from "../../libs/WebSocketClient";
 
@@ -95,17 +95,17 @@ export default function LeftRail() {
     async function loadTrendingData() {
       try {
         const [tagsResp, tokensResp, statsResp] = await Promise.all([
-          TrendminerApi.listTrendingTags({
+          SuperheroApi.listTrendingTags({
             orderBy: "score",
             orderDirection: "DESC",
             limit: 10,
           }),
-          TrendminerApi.listTokens({
+          SuperheroApi.listTokens({
             orderBy: "market_cap",
             orderDirection: "DESC",
             limit: 5,
           }),
-          TrendminerApi.fetchJson("/api/analytics/past-24-hours"),
+          SuperheroApi.fetchJson("/api/analytics/past-24-hours"),
         ]);
 
         if (!cancelled) {
@@ -161,8 +161,8 @@ export default function LeftRail() {
     async function loadLiveTransactions() {
       try {
         const [txResp, createdResp] = await Promise.all([
-          TrendminerApi.fetchJson("/api/transactions?limit=5"),
-          TrendminerApi.fetchJson(
+          SuperheroApi.fetchJson("/api/transactions?limit=5"),
+          SuperheroApi.fetchJson(
             "/api/tokens?order_by=created_at&order_direction=DESC&limit=3"
           ),
         ]);
@@ -332,7 +332,7 @@ export default function LeftRail() {
   return (
       <div className="scrollbar-thin scrollbar-track-white/[0.02] scrollbar-thumb-gradient-to-r scrollbar-thumb-from-[rgba(0,255,157,0.6)] scrollbar-thumb-via-pink-500/60 scrollbar-thumb-to-[rgba(0,255,157,0.6)] scrollbar-thumb-rounded-[10px] scrollbar-thumb-border scrollbar-thumb-border-white/10 hover:scrollbar-thumb-from-[rgba(0,255,157,0.8)] hover:scrollbar-thumb-via-pink-500/80 hover:scrollbar-thumb-to-[rgba(0,255,157,0.8)]">
       {/* Enhanced Quick Stats Dashboard */}
-      <div className="bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/[0.15] shadow-[0_8px_32px_rgba(0,0,0,0.3),0_4px_16px_rgba(0,255,157,0.1)] backdrop-blur-[20px] rounded-[20px] p-5 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden hover:-translate-y-1.5 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4),0_12px_32px_rgba(0,255,157,0.2)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-[var(--neon-teal)] before:to-transparent before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 mb-4">
+      <div className="bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/[0.15] shadow-[0_8px_32px_rgba(0,0,0,0.3)] backdrop-blur-[20px] rounded-[20px] p-5 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden hover:-translate-y-1.5 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-[var(--neon-teal)] before:to-transparent before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 mb-4">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
             📊
@@ -407,7 +407,7 @@ export default function LeftRail() {
 
           {marketStats && (
             <div className="grid grid-cols-2 gap-2 mt-2">
-              <div className="py-2 px-3 bg-teal-500/10 rounded-lg border border-teal-500/20 text-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(78,205,196,0.2)]">
+              <div className="py-2 px-3 bg-teal-500/10 rounded-lg border border-teal-500/20 text-center transition-all duration-300 hover:-translate-y-0.5">
                 <div className="text-[10px] text-[var(--neon-teal)] font-semibold">
                   Market Cap
                 </div>
@@ -415,7 +415,7 @@ export default function LeftRail() {
                   {formatMarketCap(marketStats.total_market_cap_sum || 0)}
                 </div>
               </div>
-              <div className="py-2 px-3 bg-pink-500/10 rounded-lg border border-pink-500/20 text-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(255,107,107,0.2)]">
+              <div className="py-2 px-3 bg-pink-500/10 rounded-lg border border-pink-500/20 text-center transition-all duration-300 hover:-translate-y-0.5">
                 <div className="text-[10px] text-[var(--neon-pink)] font-semibold">
                   Total Tokens
                 </div>
@@ -663,10 +663,6 @@ export default function LeftRail() {
             50% { opacity: 0.5; }
           }
           
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
           
           @keyframes slideIn {
             from { 
@@ -679,12 +675,7 @@ export default function LeftRail() {
             }
           }
           
-          .genz-spinner {
-            border: 2px solid rgba(255,255,255,0.1);
-            border-top: 2px solid var(--neon-teal);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-          }
+          // Spinner styles removed - use Spinner component instead
         `,
         }}
       />

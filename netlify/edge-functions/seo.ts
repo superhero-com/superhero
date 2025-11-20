@@ -57,7 +57,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
   // Root
   if (pathname === '/' || pathname === '') {
     return {
-      title: 'Superhero – Crypto Social Network: Posts, Tokens, Governance',
+      title: 'Superhero.com – The All‑in‑One Social + Crypto App',
       description: 'Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.',
       canonical: `${fullUrl.origin}/`,
       ogImage: `${fullUrl.origin}/og-default.png`,
@@ -70,23 +70,60 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
     };
   }
 
-  // Post detail: /post/:postId
+  // Trends page
+  if (pathname === '/trends' || pathname === '/trends/tokens') {
+    return {
+      title: 'Superhero.com – Tokenize Trends. Own the Hype. Build Communities.',
+      description: 'Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero.',
+      canonical: `${fullUrl.origin}/trends/tokens`,
+      ogImage: `${fullUrl.origin}/og-default.png`,
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Superhero',
+        url: `${fullUrl.origin}/trends/tokens`,
+      },
+    };
+  }
+
+  // Post detail: /post/:segment (slug or id)
   const postMatch = pathname.match(/^\/post\/([^/]+)/);
   if (postMatch) {
-    const postId = postMatch[1];
-    const id = postId.endsWith('_v3') ? postId : `${postId}_v3`;
-    const apiUrl = `${API_BASE.replace(/\/$/, '')}/api/posts/${encodeURIComponent(id)}`;
+    const segment = postMatch[1];
+    const baseApi = API_BASE.replace(/\/$/, '');
+    async function fetchPostBySegment(seg: string): Promise<any | null> {
+      const url = `${baseApi}/api/posts/${encodeURIComponent(seg)}`;
+      const r = await fetch(url, { headers: { accept: 'application/json' } });
+      if (r.ok) return r.json();
+      return null;
+    }
     try {
-      const r = await fetch(apiUrl, { headers: { accept: 'application/json' } });
-      if (r.ok) {
-        const data: any = await r.json();
+      // Try direct by segment (works for slug or id)
+      let data: any | null = await fetchPostBySegment(segment);
+      // If not found and bare numeric id, try with _v3
+      if (!data && /^\d+$/.test(segment)) {
+        data = await fetchPostBySegment(`${segment}_v3`);
+      }
+      // If still not found, try search by slug/content and refetch by id
+      if (!data) {
+        const searchUrl = `${baseApi}/api/posts?search=${encodeURIComponent(segment)}&limit=1&page=1`;
+        const sr = await fetch(searchUrl, { headers: { accept: 'application/json' } });
+        if (sr.ok) {
+          const sdata: any = await sr.json();
+          const first = Array.isArray(sdata?.items) ? sdata.items[0] : null;
+          if (first?.id) {
+            data = await fetchPostBySegment(String(first.id));
+          }
+        }
+      }
+      if (data) {
         const raw: string = (data?.content || '').toString();
         const content: string = raw.replace(/\s+/g, ' ').trim();
         const media: string[] = Array.isArray(data?.media) ? data.media : [];
         return {
           title: `${truncate(content, 80) || 'Post'} – Superhero`,
           description: truncate(content, 200) || 'View post on Superhero, the crypto social network.',
-          canonical: `${fullUrl.origin}/post/${postId}`,
+          canonical: `${fullUrl.origin}/post/${data?.slug || segment}`,
           ogImage: absolutize(media[0], fullUrl.origin),
           ogType: 'article',
           jsonLd: {
@@ -110,7 +147,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
     } catch {}
     return {
       title: 'Post – Superhero',
-      canonical: `${fullUrl.origin}/post/${postId}`,
+      canonical: `${fullUrl.origin}/post/${segment}`,
       ogType: 'article',
     };
   }
@@ -165,7 +202,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
         const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
         const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo) as string | undefined, fullUrl.origin);
         return {
-          title: `${symbol} – Token on Superhero`,
+          title: `Buy #${symbol} on Superhero.com`,
           description: truncate(desc, 200),
           canonical: `${fullUrl.origin}/trends/tokens/${tokenName}`,
           ogImage: tokenImg || `${fullUrl.origin}/og-default.png`,
@@ -181,7 +218,7 @@ async function buildMeta(pathname: string, fullUrl: URL): Promise<Meta> {
       }
     } catch {}
     return {
-      title: `${address} – Token on Superhero`,
+      title: `Buy #${address} on Superhero.com`,
       canonical: `${fullUrl.origin}/trends/tokens/${tokenName}`,
       ogImage: `${fullUrl.origin}/og-default.png`,
     };

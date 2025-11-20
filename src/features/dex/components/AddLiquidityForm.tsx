@@ -18,6 +18,7 @@ import { useAccount, useDex } from "../../../hooks";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { usePool } from "../context/PoolProvider";
 import { TokenChip } from "@/components/TokenChip";
+import Spinner from "@/components/Spinner";
 
 export default function AddLiquidityForm() {
   const { t } = useTranslation('common');
@@ -500,7 +501,7 @@ export default function AddLiquidityForm() {
 
       {/* Plus Icon */}
       <div className="flex justify-center my-4 relative">
-        <div className="w-12 h-12 rounded-full bg-[#1161FE] border-2 border-white/10 text-white flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(17,97,254,0.3)] z-[2] relative hover:shadow-[0_8px_24px_rgba(17,97,254,0.4)] hover:-translate-y-0.5">
+        <div className="w-12 h-12 rounded-full bg-[#1161FE] border-2 border-white/10 text-white flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(17,97,254,0.3)] z-[2] relative hover:-translate-y-0.5">
           +
         </div>
       </div>
@@ -575,12 +576,12 @@ export default function AddLiquidityForm() {
           className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isAddDisabled
               ? "bg-white/10 cursor-not-allowed opacity-60"
-              : "bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
+              : "bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0"
           }`}
         >
           {state.loading ? (
             <div className="flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              <Spinner className="w-4 h-4" />
               Confirm in wallet…
             </div>
           ) : (

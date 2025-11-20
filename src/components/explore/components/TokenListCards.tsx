@@ -6,21 +6,24 @@ import { useMemo } from 'react';
 import { useAtomValue } from "jotai";
 import { performanceChartTimeframeAtom } from "@/features/trending/atoms";
 import PerformanceTimeframeSelector from "@/features/trending/components/PerformanceTimeframeSelector";
+import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
+import Spinner from "@/components/Spinner";
+import { Decimal } from "@/libs/decimal";
 
 interface TokenListCardsProps {
   tokens: DexTokenDto[];
   sort: {
     key:
-      | "pairs_count"
-      | "name"
-      | "symbol"
-      | "created_at"
-      | "price"
-      | "tvl"
-      | "24hchange"
-      | "24hvolume"
-      | "7dchange"
-      | "7dvolume";
+    | "pairs_count"
+    | "name"
+    | "symbol"
+    | "created_at"
+    | "price"
+    | "tvl"
+    | "24hchange"
+    | "24hvolume"
+    | "7dchange"
+    | "7dvolume";
     asc: boolean;
   };
   onSortChange: (
@@ -92,7 +95,7 @@ export function TokenListCards({
     return (
       <div className="text-center p-[60px] bg-white/[0.02] border border-white/10 rounded-2xl backdrop-blur-[10px]">
         <div className="inline-flex items-center gap-3 text-gray-300 text-base font-medium">
-          <div className="w-5 h-5 border-2 border-green-500/30 border-t-green-500 rounded-full animate-spin"></div>
+          <Spinner className="w-5 h-5" />
           Loading tokens...
         </div>
       </div>
@@ -111,43 +114,37 @@ export function TokenListCards({
             {/* Enhanced Dropdown Container */}
             <div className="relative flex items-center gap-[6px]">
               <div className="relative inline-block">
-                <select
-                  value={sort.key}
-                  onChange={(e) => handleSort(e.target.value as any)}
-                  className="appearance-none py-[6px] pr-7 pl-3 rounded-lg bg-white/10 text-white border border-white/10 backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[100px] focus:border-green-500 focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
+                <AppSelect
+                  value={sort.key as string}
+                  onValueChange={(v) => handleSort(v as any)}
+                  triggerClassName="appearance-none py-[6px] pr-7 pl-3 rounded-lg bg-white/10 text-white border border-white/10 backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[100px] focus:border-green-500 focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
                 >
-                  <option value="pairs_count">Pools</option>
-                  <option value="name">Name</option>
-                  <option value="symbol">Symbol</option>
-                  <option value="created_at">Created At</option>
-                  <option value="price">Price</option>
-                  <option value="tvl">TVL</option>
-                  <option value="24hchange">24h Change</option>
-                  <option value="24hvolume">24h Volume</option>
-                  <option value="7dchange">7d Change</option>
-                  <option value="7dvolume">7d Volume</option>
-                </select>
-
-                {/* Custom Dropdown Arrow */}
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300 text-xs font-semibold flex items-center justify-center w-4 h-4 bg-white/10 rounded transition-all duration-300">
-                  ▼
-                </div>
+                  <AppSelectItem value="pairs_count">Pools</AppSelectItem>
+                  <AppSelectItem value="name">Name</AppSelectItem>
+                  <AppSelectItem value="symbol">Symbol</AppSelectItem>
+                  <AppSelectItem value="created_at">Created At</AppSelectItem>
+                  <AppSelectItem value="price">Price</AppSelectItem>
+                  <AppSelectItem value="tvl">TVL</AppSelectItem>
+                  <AppSelectItem value="24hchange">24h Change</AppSelectItem>
+                  <AppSelectItem value="24hvolume">24h Volume</AppSelectItem>
+                  <AppSelectItem value="7dchange">7d Change</AppSelectItem>
+                  <AppSelectItem value="7dvolume">7d Volume</AppSelectItem>
+                </AppSelect>
               </div>
 
               <button
                 onClick={() => handleSort(sort.key)}
-                className={`px-2 py-[6px] rounded-md border border-white/10 cursor-pointer backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-7 h-7 flex items-center justify-center outline-none hover:-translate-y-px hover:scale-105 hover:shadow-[0_3px_8px_rgba(76,175,80,0.3)] ${
-                  sort.asc 
-                    ? "bg-green-500 text-white" 
+                className={`px-2 py-[6px] rounded-md border border-white/10 cursor-pointer backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-7 h-7 flex items-center justify-center outline-none hover:-translate-y-px hover:scale-105 ${sort.asc
+                    ? "bg-green-500 text-white"
                     : "bg-white/10 text-white hover:bg-green-500 hover:text-white"
-                }`}
+                  }`}
                 title={sort.asc ? "Sort Ascending" : "Sort Descending"}
               >
                 {sort.asc ? "↑" : "↓"}
               </button>
             </div>
             <div className="flex items-center justify-center w-auto flex-shrink-0">
-            <PerformanceTimeframeSelector />
+              <PerformanceTimeframeSelector />
             </div>
           </div>
 
@@ -230,7 +227,7 @@ export function TokenListCards({
                     Price
                   </div>
                   <div className="text-sm text-white font-semibold">
-                  <PriceDataFormatter priceData={token.price} bignumber />
+                    <PriceDataFormatter priceData={token.price} />
                   </div>
                 </div>
 
@@ -240,7 +237,7 @@ export function TokenListCards({
                     TVL
                   </div>
                   <div className="text-sm text-white font-semibold">
-                  <PriceDataFormatter priceData={token.summary.total_volume} bignumber />
+                    <PriceDataFormatter priceData={token.summary?.total_volume} />
                   </div>
                 </div>
 
@@ -249,18 +246,30 @@ export function TokenListCards({
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
                     {timeBase} Change
                   </div>
-                  <div className="text-sm font-semibold">
-                  <PriceDataFormatter priceData={token.summary.change[timeBase].volume} bignumber />
+                  <div className={`text-sm font-semibold ${
+                    token.summary?.change?.[timeBase]?.percentage && 
+                    Number(token.summary.change[timeBase].percentage) >= 0 
+                      ? "text-green-400" 
+                      : "text-red-400"
+                  }`}>
+                    {token.summary?.change?.[timeBase]?.percentage ? (
+                      <>
+                        {Number(token.summary.change[timeBase].percentage) >= 0 ? "+" : ""}
+                        {Decimal.from(token.summary.change[timeBase].percentage).prettify(2)}%
+                      </>
+                    ) : (
+                      "-"
+                    )}
                   </div>
                 </div>
 
                 {/* 24h Volume */}
                 <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
                   <div className="text-[11px] text-gray-300 font-medium mb-1 uppercase tracking-wider">
-                  {timeBase} Volume
+                    {timeBase} Volume
                   </div>
                   <div className="text-sm text-white font-semibold">
-                  <PriceDataFormatter priceData={token.summary.change[timeBase].volume} bignumber />
+                    <PriceDataFormatter priceData={token.summary?.change?.[timeBase]?.volume} />
                   </div>
                 </div>
               </div>

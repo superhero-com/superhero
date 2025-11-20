@@ -1,3 +1,4 @@
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useAppKitProvider } from '@reown/appkit/react';
 import BigNumber from 'bignumber.js';
 import { BrowserProvider, Eip1193Provider } from 'ethers';
@@ -25,6 +26,7 @@ import { useRecentActivities } from '@/hooks/useRecentActivities';
 import ConnectWalletButton from '@/components/ConnectWalletButton';
 import BridgeTokenSelector from './BridgeTokenSelector';
 import ConnectEthereumWallet from './ConnectEthereumWallet';
+import Spinner from '@/components/Spinner';
 import { BRIDGE_USAGE_INTERVAL_IN_HOURS, BridgeConstants } from '../constants';
 import { useBridge } from '../hooks/useBridge';
 import { useTokenBalances } from '../hooks/useTokenBalances';
@@ -1018,7 +1020,7 @@ export function AeEthBridge() {
                                     >
                                         {buttonBusy ? (
                                             <div className="flex items-center justify-center gap-2">
-                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                <Spinner className="w-4 h-4" />
                                                 {confirming
                                                     ? (confirmingMsg === 'Approving allowance' || confirmingMsg === 'Creating allowance' || confirmingMsg === 'Updating allowance'
                                                         ? t('bridge.approving')
@@ -1140,7 +1142,7 @@ export function AeEthBridge() {
                         <DialogFooter>
                             <button
                                 onClick={() => setBridgeActionSummary(null)}
-                                className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white font-bold uppercase tracking-wider transition-all duration-300 hover:shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5"
+                                className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white font-bold uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5"
                             >
                                 Close
                             </button>

@@ -12,6 +12,7 @@ import { Decimal } from "@/libs/decimal";
 import TokenTradeCard from "@/features/trending/components/TokenTradeCard";
 import TokenSummary from "@/features/bcl/components/TokenSummary";
 import TokenRanking from "@/features/trending/components/TokenRanking";
+import Spinner from "@/components/Spinner";
 
 export default function VoteView() {
   const { saleAddress, voteAddress, voteId } = useParams<{
@@ -77,7 +78,7 @@ export default function VoteView() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-20 w-20 border-b-2 border-blue-500 mx-auto"></div>
+          <Spinner className="w-20 h-20 mx-auto" />
           <div className="text-white/80 mt-4">Loading...</div>
         </div>
       </div>

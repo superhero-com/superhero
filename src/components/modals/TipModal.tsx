@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import { useAccount, useAeSdk } from "../../hooks";
 import { toAettos, fromAettos } from "../../libs/dex";
 import { Decimal } from "../../libs/decimal";
@@ -32,6 +32,21 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
+  
+  // Refs to track polling timers and component mount status
+  const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
+  const isMountedRef = useRef(true);
+  
+  // Cleanup effect to clear all timers on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      // Clear all pending timeouts
+      timeoutRefs.current.forEach(timeoutId => clearTimeout(timeoutId));
+      timeoutRefs.current.clear();
+    };
+  }, []);
 
   const insufficient = useMemo(() => {
     if (!amount) return false;
@@ -73,45 +88,148 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
       if (tipKey) {
         setTipStatus((s) => ({ ...s, [tipKey]: { status: 'success', updatedAt: Date.now() } }));
         // Ensure the button reflects the new total immediately by optimistically updating cache
-        const idV3 = postIdForKey;
+        // Normalize postId the same way usePostTipSummary does to ensure cache key matches
+        const normalizePostIdV3 = (postId: string): string => {
+          return String(postId).endsWith('_v3') ? String(postId) : `${postId}_v3`;
+        };
+        const idV3 = postIdForKey ? normalizePostIdV3(postIdForKey) : null;
         if (idV3) {
+          // Read the cache value ONCE before any optimistic updates to ensure accurate expectedTotal calculation
+          // This prevents issues when multiple tips are sent rapidly - each tip calculates expectedTotal
+          // based on the actual backend value, not an optimistically updated value from a previous tip
+          const currentCacheData = queryClient.getQueryData<{ totalTips?: string }>(['post-tip-summary', idV3]);
+          const baseTotal = currentCacheData?.totalTips != null ? Number(currentCacheData.totalTips) : 0;
+          const baseTotalNum = Number.isFinite(baseTotal) ? baseTotal : 0;
+          const delta = Number(amount);
+          const deltaNum = Number.isFinite(delta) ? delta : 0;
+          
+          // Calculate expectedTotal based on the base value (before optimistic update)
+          const expectedTotal = baseTotalNum + deltaNum;
+          
           // Optimistic bump: add the sent amount to current cached summary if present
-          try {
-            const current = queryClient.getQueryData<{ totalTips?: string }>(['post-tip-summary', idV3]);
-            const next = (() => {
-              const currentNum = current?.totalTips != null ? Number(current.totalTips) : 0;
-              const delta = Number(amount);
-              const sum = (Number.isFinite(currentNum) ? currentNum : 0) + (Number.isFinite(delta) ? delta : 0);
-              return { totalTips: String(sum) } as { totalTips?: string };
-            })();
-            queryClient.setQueryData(['post-tip-summary', idV3], next);
-          } catch {}
-          // Still revalidate from server to converge with canonical totals
-          queryClient.invalidateQueries({ queryKey: ['post-tip-summary', idV3] });
+          // This ensures immediate UI update before backend processes the transaction
+          // Using updater function ensures React Query properly detects the change
+          queryClient.setQueryData<{ totalTips?: string }>(['post-tip-summary', idV3], (old) => {
+            const currentNum = old?.totalTips != null ? Number(old.totalTips) : 0;
+            const sum = (Number.isFinite(currentNum) ? currentNum : 0) + deltaNum;
+            return { totalTips: String(sum) } as { totalTips?: string };
+          });
+          
+          // Poll backend until tip is confirmed or max retries reached
+          // Backend needs time to process blockchain transaction and update database
+          const maxRetries = 18; // Try for up to ~59 seconds (5s initial + 18 retries * 3 seconds)
+          const retryInterval = 3000; // 3 seconds between retries
+          
+          const pollForTip = (attempt: number = 0) => {
+            // Stop polling if component is unmounted
+            if (!isMountedRef.current) {
+              return;
+            }
+            
+            if (attempt >= maxRetries) {
+              // Final attempt after max retries
+              if (isMountedRef.current) {
+                queryClient.invalidateQueries({ queryKey: ['post-tip-summary', idV3] });
+                queryClient.refetchQueries({ 
+                  queryKey: ['post-tip-summary', idV3],
+                  type: 'active',
+                });
+              }
+              return;
+            }
+            
+            const timeoutId = setTimeout(() => {
+              // Remove timeout ID from tracking set
+              timeoutRefs.current.delete(timeoutId);
+              
+              // Stop if component unmounted
+              if (!isMountedRef.current) {
+                return;
+              }
+              
+              queryClient.invalidateQueries({ queryKey: ['post-tip-summary', idV3] });
+              queryClient.refetchQueries({ 
+                queryKey: ['post-tip-summary', idV3],
+                type: 'active',
+              }).then(() => {
+                // Stop if component unmounted
+                if (!isMountedRef.current) {
+                  return;
+                }
+                
+                // Check if backend has processed the tip
+                const current = queryClient.getQueryData<{ totalTips?: string }>(['post-tip-summary', idV3]);
+                const currentTotal = current?.totalTips != null ? Number(current.totalTips) : 0;
+                
+                // If backend total matches or exceeds expected, we're done
+                // Otherwise, keep polling
+                if (currentTotal >= expectedTotal) {
+                  // Backend has confirmed the tip
+                  return;
+                }
+                
+                // Continue polling
+                pollForTip(attempt + 1);
+              }).catch(() => {
+                // Stop if component unmounted
+                if (!isMountedRef.current) {
+                  return;
+                }
+                
+                // On error, continue polling
+                pollForTip(attempt + 1);
+              });
+            }, retryInterval);
+            
+            // Track timeout ID for cleanup
+            timeoutRefs.current.add(timeoutId);
+          };
+          
+          // Start polling after initial delay to give backend time to start processing
+          const initialTimeoutId = setTimeout(() => {
+            // Remove timeout ID from tracking set
+            timeoutRefs.current.delete(initialTimeoutId);
+            
+            // Only start polling if component is still mounted
+            if (isMountedRef.current) {
+              pollForTip(0);
+            }
+          }, 5000); // 5 second initial delay before first poll
+          
+          // Track initial timeout ID for cleanup
+          timeoutRefs.current.add(initialTimeoutId);
         }
         // Auto-reset success state after 2.5s
-        setTimeout(() => {
-          setTipStatus((s) => {
-            const current = s[tipKey];
-            if (!current || current.status !== 'success') return s;
-            const next = { ...s } as any;
-            delete next[tipKey];
-            return next;
-          });
+        const successResetTimeoutId = setTimeout(() => {
+          timeoutRefs.current.delete(successResetTimeoutId);
+          if (isMountedRef.current) {
+            setTipStatus((s) => {
+              const current = s[tipKey];
+              if (!current || current.status !== 'success') return s;
+              const next = { ...s } as any;
+              delete next[tipKey];
+              return next;
+            });
+          }
         }, 2500);
+        timeoutRefs.current.add(successResetTimeoutId);
       }
     } catch (e: any) {
       if (tipKey) {
         setTipStatus((s) => ({ ...s, [tipKey]: { status: 'error', updatedAt: Date.now() } }));
-        setTimeout(() => {
-          setTipStatus((s) => {
-            const current = s[tipKey];
-            if (!current || current.status !== 'error') return s;
-            const next = { ...s } as any;
-            delete next[tipKey];
-            return next;
-          });
+        const errorResetTimeoutId = setTimeout(() => {
+          timeoutRefs.current.delete(errorResetTimeoutId);
+          if (isMountedRef.current) {
+            setTipStatus((s) => {
+              const current = s[tipKey];
+              if (!current || current.status !== 'error') return s;
+              const next = { ...s } as any;
+              delete next[tipKey];
+              return next;
+            });
+          }
         }, 2500);
+        timeoutRefs.current.add(errorResetTimeoutId);
       }
     }
   }

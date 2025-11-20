@@ -2,6 +2,7 @@ import React from 'react';
 import { Decimal } from '../../../libs/decimal';
 import FractionFormatter, { FormattedFractionalPrice } from './FractionFormatter';
 import { formatFractionalPrice } from '@/utils/common';
+import Spinner from '../../../components/Spinner';
 
 interface SymbolPriceFormatterProps {
   aePrice: Decimal;
@@ -35,7 +36,7 @@ export default function SymbolPriceFormatter({
       )}
       <FractionFormatter fractionalPrice={formatFractionalPrice(aePrice)} />
       {priceLoading && (
-        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin ml-2" />
+        <Spinner className="w-4 h-4 ml-2" />
       )}
       {!hideSymbol && !priceLoading && (
         <span className="pl-1 ">{symbol}</span>

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SearchInput from '../../SearchInput';
 import { HeaderLogo, IconSearch } from '../../../icons';
@@ -27,6 +27,7 @@ export default function MobileAppHeader() {
   });
 
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const isOnFeed = pathname === '/';
   const { activeAccount } = useAeSdk();
   const { disconnectWallet, walletInfo } = useWalletConnect();
@@ -36,6 +37,12 @@ export default function MobileAppHeader() {
   const handleLogout = () => {
     disconnectWallet();
     try { window.location.reload(); } catch {}
+  };
+  const handleProfileClick = () => {
+    if (activeAccount) {
+      navigate(`/users/${activeAccount}`);
+      setShowOverlay(false);
+    }
   };
 
   const toggleTheme = useCallback(() => {
@@ -208,7 +215,10 @@ export default function MobileAppHeader() {
             <div className="py-4 px-6 border-b border-white/10 sm:py-3 sm:px-5">
               {activeAccount ? (
                 <div>
-                  <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleProfileClick}
+                    className="w-full flex items-center gap-3 hover:opacity-80 transition-opacity"
+                  >
                     <AddressAvatarWithChainName
                       isHoverEnabled={false}
                       address={activeAccount}
@@ -220,7 +230,7 @@ export default function MobileAppHeader() {
                       hideFallbackName={true}
                       contentClassName="px-2 pb-0"
                     />
-                  </div>
+                  </button>
                   <div className="mt-3">
                     <AeButton
                       onClick={handleLogout}
@@ -271,38 +281,24 @@ export default function MobileAppHeader() {
                 return (
                   <React.Fragment key={`nav-${item.id}`}>
                     {node}
-                    {Array.isArray((item as any).children) && (item as any).children.length > 0 && (
-                      <div className="ml-2 grid gap-2">
-                        {(item as any).children.map((child: any) => (
-                          <div key={child.id} className={`${baseBg} rounded-xl`}>
-                            <Link
-                              to={child.path}
-                              onClick={handleNavigationClick}
-                              className={`${commonClasses} bg-transparent`}
-                              style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}
-                            >
-                              <span className="text-lg sm:text-base">{child.label}</span>
-                            </Link>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {index === 1 && (
-                      <div className={`${baseBg} rounded-xl`}>
-                        <Link
-                          to="/defi/buy-ae-with-eth"
-                          onClick={handleNavigationClick}
-                          className={`${commonClasses} bg-transparent`}
-                          style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}
-                        >
-                          <span className="text-lg sm:text-base">{t('labels.buyAe')}</span>
-                        </Link>
-                      </div>
-                    )}
                   </React.Fragment>
                 );
               })}
             </nav>
+
+            {/* Buy AE button at the bottom */}
+            <div className="px-6 pb-4 sm:px-5 sm:pb-3">
+              <div className="bg-white/5 hover:bg-white/10 rounded-xl">
+                <Link
+                  to="/defi/buy-ae-with-eth"
+                  onClick={handleNavigationClick}
+                  className="w-full no-underline font-semibold transition-all duration-200 h-[56px] sm:h-[52px] rounded-xl text-white text-base flex items-center justify-center px-5 bg-transparent"
+                  style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}
+                >
+                  <span className="text-lg sm:text-base">{t('labels.buyAe')}</span>
+                </Link>
+              </div>
+            </div>
 
             {/* Footer from right rail inside mobile menu (compact) */}
             <div className="mt-auto pb-5 pt-2 px-3">

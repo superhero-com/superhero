@@ -1,6 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { useMemo, useState } from 'react';
 import { Asset, Direction } from '../types';
+import Spinner from '@/components/Spinner';
 
 interface BridgeTokenSelectorProps {
   label?: string;
@@ -80,14 +81,14 @@ export default function BridgeTokenSelector({
               }}
               className={`flex-1 max-w-[max(120px,100%)] py-2.5 px-4 rounded-xl border border-white/10 text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 ease-out flex items-center justify-center gap-2 normal-case ${disabled || loading
                 ? 'cursor-not-allowed opacity-50 bg-white/[0.05]'
-                : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(78,205,196,0.3)]'
+                : 'cursor-pointer hover:-translate-y-0.5'
                 } ${selected
                   ? 'bg-white/10 text-white border-[#4ecdc4]/30'
                   : 'bg-white/[0.05] text-white hover:bg-white/10'
                 }`}
             >
               {loading ? (
-                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <Spinner className="w-3.5 h-3.5" />
               ) : (
                 <>
                   {selected ? (

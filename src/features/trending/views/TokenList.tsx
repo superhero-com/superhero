@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import AeButton from "@/components/AeButton";
+import Head from "../../../seo/Head";
+import Spinner from "@/components/Spinner";
 
 
 type SelectOptions<T> = Array<{
@@ -184,6 +186,11 @@ export default function TokenList() {
 
   return (
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
+      <Head
+        title="Superhero.com – Tokenize Trends. Own the Hype. Build Communities."
+        description="Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero."
+        canonicalPath="/trends/tokens"
+      />
       <TrendminerBanner />
 
       <LatestTransactionsCarousel />
@@ -263,6 +270,9 @@ export default function TokenList() {
             orderBy={orderBy}
             orderDirection={finalOrderDirection}
             onSort={handleSort}
+            hasNextPage={hasNextPage}
+            isFetching={isFetching}
+            onLoadMore={() => fetchNextPage()}
           />
         </div>
 
@@ -283,7 +293,7 @@ export default function TokenList() {
           >
             {isFetching ? (
               <div className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <Spinner className="w-4 h-4" />
                 Loading...
               </div>
             ) : 'Load More'}

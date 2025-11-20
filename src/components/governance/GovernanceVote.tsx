@@ -4,7 +4,7 @@ import { Encoding, isAddressValid } from "@aeternity/aepp-sdk";
 import { useAccount, useAeSdk, useGovernance } from "@/hooks";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
+import Spinner from "@/components/Spinner";
 
 interface GovernanceVoteProps {
   pollId: string;
@@ -12,7 +12,6 @@ interface GovernanceVoteProps {
 export default function GovernanceVote({
   pollId,
 }: GovernanceVoteProps) {
-  const navigate = useNavigate();
   const { activeAccount } = useAeSdk();
   const { decimalBalance } = useAccount();
   const {
@@ -28,7 +27,7 @@ export default function GovernanceVote({
   const { data: delegation } = useDelegation();
   const { data: delegators = [] } = useDelegators();
   const pollAddress = isAddressValid(pollId, Encoding.ContractAddress) ? pollId : undefined;
-  if (!pollAddress) return null;
+  if (!pollAddress) throw new Error('Invalid poll address');
   const { data: poll } = usePoll(pollAddress);
 
   const { data: results } = usePollResults(pollAddress);
@@ -58,21 +57,7 @@ export default function GovernanceVote({
   };
   return (
     <div className="min-h-screen">
-      <div className="flex flex-col gap-6 max-w-6xl mx-auto">
-        {/* Back to polls button (outside the card) */}
-        <div className="flex items-center mb-2">
-          <AeButton
-            onClick={() => navigate('/voting')}
-            className="shrink-0 px-6 py-3 text-sm font-medium bg-white/5 backdrop-blur-2xl text-white border border-white/20 rounded-2xl transition-all hover:bg-white/10 hover:border-white/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/20"
-          >
-            <span className="flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to Polls
-            </span>
-          </AeButton>
-        </div>
+      <div className="flex flex-col gap-6 px-4 md:px-6 py-6 max-w-6xl mx-auto">
         {/* Enhanced Header */}
         <div className="relative mb-8">
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl blur-xl"></div>
@@ -81,7 +66,7 @@ export default function GovernanceVote({
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-2 h-8 bg-gradient-to-b from-pink-400 to-purple-400 rounded-full"></div>
-                  <h1 className="text-2xl md:text-4xl font-bold text-white">
+                  <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
                     {poll?.pollState.metadata.title || "Governance Poll"}
                   </h1>
                 </div>
@@ -105,7 +90,17 @@ export default function GovernanceVote({
                   </div>
                 )}
               </div>
-              {/* Back button moved above card */}
+              <AeButton
+                onClick={() => setActiveTab("polls")}
+                className="shrink-0 px-6 py-3 text-sm font-medium bg-white/5 backdrop-blur-2xl text-white border border-white/20 rounded-2xl transition-all hover:bg-white/10 hover:border-white/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/20"
+              >
+                <span className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to Polls
+                </span>
+              </AeButton>
             </div>
           </div>
         </div>
@@ -154,9 +149,7 @@ export default function GovernanceVote({
                               isSelected ? "bg-white/20" : "bg-white/5 group-hover:bg-white/10"
                             )}>
                               {isVotingThis ? (
-                                <svg className="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
+                                <Spinner className="w-6 h-6" />
                               ) : isSelected ? (
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

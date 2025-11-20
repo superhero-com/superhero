@@ -13,7 +13,7 @@ import "./styles/genz-components.scss";
 import "./styles/mobile-optimizations.scss";
 import AppHeader from "./components/layout/app-header";
 import { useSuperheroChainNames } from "./hooks/useChainName";
-const PostModal = React.lazy(() => import("./components/modals/PostModal"));
+
 const CookiesDialog = React.lazy(
   () => import("./components/modals/CookiesDialog")
 );
@@ -22,9 +22,6 @@ const TokenSelectModal = React.lazy(
 );
 const ImageGallery = React.lazy(
   () => import("./components/modals/ImageGallery")
-);
-const FeedItemMenu = React.lazy(
-  () => import("./components/modals/FeedItemMenu")
 );
 const AlertModal = React.lazy(() => import("./components/modals/AlertModal"));
 const TransactionConfirmModal = React.lazy(
@@ -93,6 +90,9 @@ export default function App() {
   const { initSdk, sdkInitialized, activeAccount } = useAeSdk();
   const { loadAccountData } = useAccount();
   const { checkWalletConnection } = useWalletConnect();
+  // Use a ref to store the latest loadAccountData to avoid dependency issues
+  const loadAccountDataRef = useRef(loadAccountData);
+  
   useEffect(() => {
     initSdk();
   }, []);
@@ -103,12 +103,18 @@ export default function App() {
     }
   }, [sdkInitialized]);
 
-  // setup intervals
+  // Keep the ref updated with the latest loadAccountData function
+  useEffect(() => {
+    loadAccountDataRef.current = loadAccountData;
+  }, [loadAccountData]);
+
+  // setup intervals for periodic data refresh
   useEffect(() => {
     if (!activeAccount) return;
-    loadAccountData();
+    // Note: Initial load is handled by useAccountBalances hook when account changes
+    // This interval is just for periodic refreshes
     const interval = setInterval(() => {
-      loadAccountData();
+      loadAccountDataRef.current();
     }, 10000);
     return () => clearInterval(interval);
   }, [activeAccount]);
@@ -124,11 +130,9 @@ export default function App() {
       <Suspense fallback={<div className="loading-fallback" />}>
         <ModalProvider
           registry={{
-            post: PostModal,
             "cookies-dialog": CookiesDialog,
             "token-select": TokenSelectModal,
             "image-gallery": ImageGallery,
-            "feed-item-menu": FeedItemMenu,
             alert: AlertModal,
             "transaction-confirm": TransactionConfirmModal,
             "connect-wallet": ConnectWalletModal,

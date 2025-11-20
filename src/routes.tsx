@@ -83,10 +83,9 @@ function NavigateTrendingAccount() {
   return <Navigate to={`/trends/accounts/${encodeURIComponent(address || "")}`} replace />;
 }
 
-// Redirect helper for legacy /voting/p/:id -> /voting/poll/:id
-function NavigateVotingPoll() {
-  const { id } = useParams();
-  return <Navigate to={`/voting/poll/${encodeURIComponent(id || "")}`} replace />;
+function NavigateUserProfile() {
+  const { address } = useParams();
+  return <Navigate to={`/users/${encodeURIComponent(address || "")}`} replace />;
 }
 
 // Export a function that builds routes dynamically, including plugin routes
@@ -96,9 +95,10 @@ export const getRoutes = (): RouteObject[] => [
     element: <SocialLayout />,
     children: [
       { index: true, element: <FeedList standalone={false} /> },
-      { path: "post/:postId", element: <PostDetail standalone={false} /> },
+      // Post routes - slug-based (also handles IDs, which will redirect in PostDetail)
+      { path: "post/:slug", element: <PostDetail standalone={false} /> },
       {
-        path: "post/:postId/comment/:id",
+        path: "post/:slug/comment/:id",
         element: <PostDetail standalone={false} />,
       },
       { path: "poll/:pollAddress", element: <PollDetail standalone={false} /> },
@@ -131,14 +131,16 @@ export const getRoutes = (): RouteObject[] => [
   { path: "/trending/dao/:saleAddress", element: <NavigateTrendingDao /> },
   { path: "/trending/dao/:saleAddress/vote/:voteId/:voteAddress", element: <NavigateTrendingVote /> },
   { path: "/trending/accounts/:address", element: <NavigateTrendingAccount /> },
-  // Kept for backward compatibility; redirecting into SocialLayout version
-  { path: "/users/:address", element: <UserProfile /> },
+  // Redirect /user/* to /users/* for consistency
+  {
+    path: "/user/:address",
+    element: <NavigateUserProfile />,
+  },
   { path: "/landing", element: <Landing /> },
   { path: "/meet/:room?", element: <Conference /> },
   { path: "/voting", element: <Governance /> },
-  { path: "/voting/poll/:id", element: <Governance /> },
-  { path: "/voting/p/:id", element: <NavigateVotingPoll /> },
-  { path: "/voting/account", element: <Navigate to="/voting" replace /> },
+  { path: "/voting/p/:id", element: <Governance /> },
+  { path: "/voting/account", element: <Governance /> },
   { path: "/voting/create", element: <Governance /> },
 
   // New DEX Routes with Layout

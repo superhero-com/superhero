@@ -9,6 +9,8 @@ import { toAe } from "@/utils/bondingCurve";
 import { LivePriceFormatter } from "@/features/shared/components";
 import AddressChip from "@/components/AddressChip";
 import { TokenLineChart } from "@/features/trending/components/TokenLineChart";
+import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
+import Spinner from "@/components/Spinner";
 
 type SelectOptions<T> = Array<{
   title: string;
@@ -135,21 +137,18 @@ export default function Daos() {
             onChange={(e) => setSearch(e.target.value)}
             className="px-4 py-2.5 rounded-2xl border border-white/20 bg-gradient-to-b from-white/8 to-white/4 text-white backdrop-blur-lg shadow-lg placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
           />
-          <select
-            className="px-3 py-2 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05]"
+          <AppSelect
             value={orderBy}
-            onChange={(e) => updateOrderBy(e.target.value as OrderByOption)}
+            onValueChange={(v) => updateOrderBy(v as OrderByOption)}
+            triggerClassName="px-3 py-2 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl text-sm focus:outline-none transition-all duration-300 hover:bg-white/[0.05]"
+            contentClassName="bg-gray-900 border-white/10"
           >
             {orderByOptions.map((option) => (
-              <option
-                key={option.value}
-                value={option.value}
-                className="bg-gray-900"
-              >
+              <AppSelectItem key={option.value} value={option.value}>
                 {option.title}
-              </option>
+              </AppSelectItem>
             ))}
-          </select>
+          </AppSelect>
         </div>
       </div>
 
@@ -315,12 +314,12 @@ export default function Daos() {
             className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
               isFetching
                 ? "bg-white/10 cursor-not-allowed opacity-60"
-                : "bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
+                : "bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0"
             }`}
           >
             {isFetching ? (
               <div className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <Spinner className="w-4 h-4" />
                 Loading...
               </div>
             ) : (

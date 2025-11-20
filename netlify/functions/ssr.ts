@@ -34,7 +34,7 @@ type Meta = {
 async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
   if (pathname === '/' || pathname === '') {
     return {
-      title: 'Superhero – Crypto Social Network: Posts, Tokens, Governance',
+      title: 'Superhero.com – The All‑in‑One Social + Crypto App',
       description: 'Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.',
       canonical: `${ORIGIN}/`,
       jsonLd: {
@@ -46,21 +46,54 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
     };
   }
 
+  // Trends page
+  if (pathname === '/trends' || pathname === '/trends/tokens') {
+    return {
+      title: 'Superhero.com – Tokenize Trends. Own the Hype. Build Communities.',
+      description: 'Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero.',
+      canonical: `${ORIGIN}/trends/tokens`,
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Superhero',
+        url: `${ORIGIN}/trends/tokens`,
+      },
+    };
+  }
+
   const postMatch = pathname.match(/^\/post\/([^/]+)/);
   if (postMatch) {
-    const postId = postMatch[1];
-    const id = postId.endsWith('_v3') ? postId : `${postId}_v3`;
-    const apiUrl = `${API_BASE.replace(/\/$/, '')}/api/posts/${encodeURIComponent(id)}`;
+    const segment = postMatch[1];
+    const baseApi = API_BASE.replace(/\/$/, '');
+    async function fetchPostBySegment(seg: string): Promise<any | null> {
+      const url = `${baseApi}/api/posts/${encodeURIComponent(seg)}`;
+      const r = await fetch(url, { headers: { accept: 'application/json' } });
+      if (r.ok) return r.json();
+      return null;
+    }
     try {
-      const r = await fetch(apiUrl, { headers: { accept: 'application/json' } });
-      if (r.ok) {
-        const data: any = await r.json();
+      let data: any | null = await fetchPostBySegment(segment);
+      if (!data && /^\d+$/.test(segment)) {
+        data = await fetchPostBySegment(`${segment}_v3`);
+      }
+      if (!data) {
+        const searchUrl = `${baseApi}/api/posts?search=${encodeURIComponent(segment)}&limit=1&page=1`;
+        const sr = await fetch(searchUrl, { headers: { accept: 'application/json' } });
+        if (sr.ok) {
+          const sdata: any = await sr.json();
+          const first = Array.isArray(sdata?.items) ? sdata.items[0] : null;
+          if (first?.id) {
+            data = await fetchPostBySegment(String(first.id));
+          }
+        }
+      }
+      if (data) {
         const content: string = (data?.content || '').toString();
         const media: string[] = Array.isArray(data?.media) ? data.media : [];
         return {
           title: `${truncate(content, 80) || 'Post'} – Superhero`,
           description: truncate(content, 160) || 'View post on Superhero, the crypto social network.',
-          canonical: `${ORIGIN}/post/${postId}`,
+          canonical: `${ORIGIN}/post/${data?.slug || segment}`,
           ogImage: media[0],
           jsonLd: {
             '@context': 'https://schema.org',
@@ -77,7 +110,7 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
         };
       }
     } catch {}
-    return { title: 'Post – Superhero', canonical: `${ORIGIN}/post/${postId}` };
+    return { title: 'Post – Superhero', canonical: `${ORIGIN}/post/${segment}` };
   }
 
   const userMatch = pathname.match(/^\/users\/([^/]+)/);
@@ -113,14 +146,14 @@ async function buildMeta(pathname: string, _fullUrl: URL): Promise<Meta> {
         const symbol = data?.symbol || data?.name || address;
         const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
         return {
-          title: `${symbol} – Token on Superhero`,
+          title: `Buy #${symbol} on Superhero.com`,
           description: truncate(desc, 160),
           canonical: `${ORIGIN}/trends/tokens/${tokenName}`,
           jsonLd: { '@context': 'https://schema.org', '@type': 'CryptoCurrency', name: data?.name || data?.symbol, symbol: data?.symbol, identifier: data?.address || data?.sale_address },
         };
       }
     } catch {}
-    return { title: `${address} – Token on Superhero`, canonical: `${ORIGIN}/trends/tokens/${tokenName}` };
+    return { title: `Buy #${address} on Superhero.com`, canonical: `${ORIGIN}/trends/tokens/${tokenName}` };
   }
 
   return { title: 'Superhero', canonical: `${ORIGIN}${pathname}` };

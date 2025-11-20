@@ -1,11 +1,12 @@
 import BigNumber from 'bignumber.js';
 import { useEffect, useMemo, useState } from 'react';
-import { TrendminerApi } from '../api/backend';
+import { SuperheroApi } from '../api/backend';
 import { DEX_ADDRESSES, ensureAllowanceForRouter, fromAettos, initDexContracts, subSlippage, toAettos } from '../libs/dex';
 import TradeCard from '../views/Trendminer/TradeCard';
 import AeButton from './AeButton';
 import MobileCard from './MobileCard';
 import MobileInput from './MobileInput';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 
 import { useAeSdk, useWalletConnect } from '../hooks';
 
@@ -37,7 +38,7 @@ export default function SwapCard() {
       setLoading(true);
       setError(null);
       try {
-        const res = await TrendminerApi.listTokens({ orderBy: 'market_cap', orderDirection: 'DESC', limit: 50 });
+        const res = await SuperheroApi.listTokens({ orderBy: 'market_cap', orderDirection: 'DESC', limit: 50 });
         const items = Array.isArray((res as any)?.data) ? (res as any).data : (res as any)?.items || res;
         if (!ignore) {
           setTokens(items || []);
@@ -294,22 +295,21 @@ export default function SwapCard() {
               onChange={(e) => setSearch(e.target.value)}
               className="w-full px-2.5 py-2 text-sm rounded-md border border-white/20 bg-white/5 text-white placeholder:text-white/50 focus:border-green-500 focus:outline-none transition-colors"
             />
-            <select
-              id="token-select"
-              name="token"
+            <AppSelect
               value={selected?.address || ''}
-              onChange={(e) => {
-                const next = tokens.find((t: any) => t.address === e.target.value);
+              onValueChange={(v) => {
+                const next = tokens.find((t: any) => t.address === v);
                 setSelected(next || null);
               }}
-              className="w-full px-2.5 py-2 text-sm rounded-md border border-white/20 bg-white/5 text-white focus:border-green-500 focus:outline-none transition-colors"
+              triggerClassName="w-full px-2.5 py-2 text-sm rounded-md border border-white/20 bg-white/5 text-white focus:outline-none transition-colors"
+              contentClassName="bg-gray-800 border-white/20"
             >
               {filtered.map((t: any) => (
-                <option key={t.address} value={t.address} className="bg-gray-800 text-white">
+                <AppSelectItem key={t.address} value={t.address}>
                   {(t.symbol || t.name || 'Token')} {t.symbol ? '' : ''}
-                </option>
+                </AppSelectItem>
               ))}
-            </select>
+            </AppSelect>
           </div>
 
           {loading && (

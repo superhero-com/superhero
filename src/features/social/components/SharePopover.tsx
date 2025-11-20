@@ -11,13 +11,14 @@ import { Share, Link as LinkIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type SharePopoverProps = {
-  postId?: string | number;
+  postId: string | number;
+  postSlug?: string;
   className?: string;
   urlOverride?: string; // when provided, share this URL instead of building a post URL
   label?: string; // copy context: 'post' (default) or custom like 'trend'
 };
 
-export default function SharePopover({ postId, className, urlOverride, label = "post" }: SharePopoverProps) {
+export default function SharePopover({ postId, postSlug, className, urlOverride, label = "post" }: SharePopoverProps) {
   const { t } = useTranslation('social');
   const shareLabel = label === 'post' ? t('sharePost') : t('shareComment');
   const url = useMemo(() => {
@@ -25,9 +26,9 @@ export default function SharePopover({ postId, className, urlOverride, label = "
       const isAbsolute = /^https?:\/\//i.test(urlOverride);
       return isAbsolute ? urlOverride : `${window.location.origin}${urlOverride.startsWith('/') ? '' : '/'}${urlOverride}`;
     }
-    const path = `/post/${String(postId ?? '').replace(/_v3$/, "")}`;
+    const path = `/post/${(postSlug || String(postId).replace(/_v3$/, ""))}`;
     return `${window.location.origin}${path}`;
-  }, [postId, urlOverride]);
+  }, [postId, postSlug, urlOverride]);
 
   return (
     <DropdownMenu>

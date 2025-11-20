@@ -10,7 +10,7 @@ import Spinner from '../../../components/Spinner';
 import VerifiedIcon from '../../../svg/verifiedUrl.svg?react';
 import NotVerifiedIcon from '../../../svg/notVerifiedUrl.svg?react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { TrendminerApi } from '../../../api/backend';
+import { SuperheroApi } from '../../../api/backend';
 import AeButton from '../../../components/AeButton';
 import ConnectWalletButton from '../../../components/ConnectWalletButton';
 import { Input } from '../../../components/ui/input';
@@ -21,6 +21,7 @@ import type {
   IAllowedNameChars,
   ICollectionData,
 } from '../../../utils/types';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 
 // Debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -268,7 +269,7 @@ export default function CreateTokenView() {
       setNameStatus('checking');
       const mySeq = ++nameCheckSeqRef.current;
       try {
-        const res = await TrendminerApi.listTokens({ limit: 5, search: trimmed });
+        const res = await SuperheroApi.listTokens({ limit: 5, search: trimmed });
         if (cancelled || mySeq !== nameCheckSeqRef.current) return;
         const items: any[] = res?.items || [];
         const exact = items.find((t: any) => t?.name === trimmed);
@@ -423,7 +424,7 @@ export default function CreateTokenView() {
       const message = error?.message || error?.reason || 'Unknown error';
       if (message.includes('NAME_ALREADY_REGISTERED')) {
         try {
-          const searchResult = await TrendminerApi.listTokens({
+          const searchResult = await SuperheroApi.listTokens({
             limit: 10,
             search: tokenName,
           });
@@ -520,17 +521,18 @@ export default function CreateTokenView() {
                         <label className="block text-sm font-medium text-white/80 mb-2">
                           Collection
                         </label>
-                        <select
+                        <AppSelect
                           value={collectionModel || ''}
-                          onChange={(e) => setCollectionModel(e.target.value as CollectionId)}
-                          className="w-full px-3 py-2 bg-transparent text-white border border-gray-600/50 rounded-lg focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all duration-200 autofill:bg-transparent"
+                          onValueChange={(v) => setCollectionModel(v as CollectionId)}
+                          triggerClassName="w-full px-3 py-2 bg-transparent text-white border border-gray-600/50 rounded-lg focus:outline-none transition-all duration-200 autofill:bg-transparent"
+                          contentClassName="bg-gray-900 border-gray-600/50"
                         >
                           {activeFactoryCollectionsArr.map((collection: any) => (
-                            <option key={collection.id} value={collection.id}>
+                            <AppSelectItem key={collection.id} value={collection.id}>
                               {collection.name}
-                            </option>
+                            </AppSelectItem>
                           ))}
-                        </select>
+                        </AppSelect>
                       </div>
                     )}
 

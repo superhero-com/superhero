@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { cn } from '../lib/utils';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 
 interface BaseMobileInputProps {
   label?: string;
@@ -12,11 +13,11 @@ interface BaseMobileInputProps {
   className?: string;
 }
 
-interface MobileInputProps extends BaseMobileInputProps, React.InputHTMLAttributes<HTMLInputElement> {
+interface MobileInputProps extends BaseMobileInputProps, Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   as?: 'input';
 }
 
-interface MobileSelectProps extends BaseMobileInputProps, React.SelectHTMLAttributes<HTMLSelectElement> {
+interface MobileSelectProps extends BaseMobileInputProps, Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'size'> {
   as: 'select';
   children: React.ReactNode;
 }
@@ -97,14 +98,21 @@ const MobileInput = forwardRef<HTMLInputElement | HTMLSelectElement, MobileInput
           )}
           
           {as === 'select' ? (
-            <select
-              ref={ref as React.Ref<HTMLSelectElement>}
-              id={inputId}
-              className={baseInputClasses}
-              {...(props as React.SelectHTMLAttributes<HTMLSelectElement>)}
+            <AppSelect
+              value={(props as React.SelectHTMLAttributes<HTMLSelectElement>).value as string | undefined}
+              onValueChange={(v) => (props as any).onChange?.({ target: { value: v } } as any)}
+              triggerClassName={baseInputClasses}
             >
-              {children}
-            </select>
+              {React.Children.map(children, (child) => {
+                if (!React.isValidElement(child)) return null;
+                const value = (child.props as any).value ?? (child.props as any).children;
+                return (
+                  <AppSelectItem key={value} value={String(value)}>
+                    {(child.props as any).children}
+                  </AppSelectItem>
+                );
+              })}
+            </AppSelect>
           ) : (
             <input
               ref={ref as React.Ref<HTMLInputElement>}

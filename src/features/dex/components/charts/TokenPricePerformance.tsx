@@ -3,6 +3,7 @@ import { createChart, IChartApi, ISeriesApi, LineData, HistogramData, ColorType,
 import AeButton from '../../../../components/AeButton';
 import { getGraph } from '../../../../libs/dexBackend';
 import { AeCard } from '../../../../components/ui/ae-card';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 
 interface ChartType {
   type: string;
@@ -42,6 +43,7 @@ export default function TokenPricePerformance({
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<any> | null>(null);
+  const touchHandlersCleanup = useRef<(() => void) | null>(null);
   
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<TimeFrame>(initialTimeFrame as TimeFrame);
   const [selectedChart, setSelectedChart] = useState<ChartType>(initialChart);
@@ -107,8 +109,82 @@ export default function TokenPricePerformance({
     handleResize(); // Initial resize
     window.addEventListener('resize', handleResize);
 
+    // Add touch handlers for mobile drag support
+    const container = chartContainerRef.current;
+    if (container) {
+      const handleTouchStart = (e: TouchEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!chart || !container) return;
+        
+        const touch = e.touches[0];
+        const rect = container.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        
+        try {
+          const time = chart.timeScale().coordinateToTime(x);
+          if (time !== null) {
+            chart.setCrosshairPosition(x, 0, { time: time as any });
+          }
+        } catch (error) {
+          console.warn('[TokenPricePerformance] Error setting crosshair on touchstart:', error);
+        }
+      };
+
+      const handleTouchMove = (e: TouchEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!chart || !container) return;
+        
+        const touch = e.touches[0];
+        const rect = container.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        
+        // Clamp x to chart bounds
+        const clampedX = Math.max(0, Math.min(x, rect.width));
+        
+        try {
+          const time = chart.timeScale().coordinateToTime(clampedX);
+          if (time !== null) {
+            chart.setCrosshairPosition(clampedX, 0, { time: time as any });
+          }
+        } catch (error) {
+          console.warn('[TokenPricePerformance] Error setting crosshair on touchmove:', error);
+        }
+      };
+
+      const handleTouchEnd = (e: TouchEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!chart) return;
+        
+        try {
+          chart.setCrosshairPosition(-1, -1, {});
+        } catch (error) {
+          console.warn('[TokenPricePerformance] Error clearing crosshair on touchend:', error);
+        }
+      };
+
+      container.addEventListener('touchstart', handleTouchStart, { passive: false });
+      container.addEventListener('touchmove', handleTouchMove, { passive: false });
+      container.addEventListener('touchend', handleTouchEnd, { passive: false });
+      container.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+      // Store cleanup function
+      touchHandlersCleanup.current = () => {
+        container.removeEventListener('touchstart', handleTouchStart);
+        container.removeEventListener('touchmove', handleTouchMove);
+        container.removeEventListener('touchend', handleTouchEnd);
+        container.removeEventListener('touchcancel', handleTouchEnd);
+      };
+    }
+
     return () => {
       window.removeEventListener('resize', handleResize);
+      if (touchHandlersCleanup.current) {
+        touchHandlersCleanup.current();
+        touchHandlersCleanup.current = null;
+      }
       if (seriesRef.current) {
         seriesRef.current = null;
       }
@@ -200,14 +276,6 @@ export default function TokenPricePerformance({
     }
 
     if (formattedData.length > 0) {
-      console.log('[TokenPricePerformance] Setting chart data:', {
-        originalLength: rawData.length,
-        filteredLength: formattedData.length,
-        firstTime: formattedData[0]?.time,
-        lastTime: formattedData[formattedData.length - 1]?.time,
-        sampleData: formattedData.slice(0, 3)
-      });
-      
       seriesRef.current.setData(formattedData);
       
       // Fit content
@@ -233,13 +301,6 @@ export default function TokenPricePerformance({
       }
 
       const result = await getGraph(options);
-
-      console.log("[TokenPricePerformance] getGraph result", JSON.stringify({
-        result,
-        options,
-        pairId,
-        tokenId,
-      }, null, 2));
       
       if (result) {
         setChartData({
@@ -295,25 +356,21 @@ export default function TokenPricePerformance({
             <label htmlFor="chart-select" className="sr-only">
               Select Chart Type
             </label>
-            <select
-              id="chart-select"
+            <AppSelect
               value={selectedChart.type}
-              onChange={(e) => {
-                const chartType = availableGraphTypes.find(c => c.type === e.target.value);
+              onValueChange={(v) => {
+                const chartType = availableGraphTypes.find(c => c.type === v);
                 if (chartType) handleChartTypeChange(chartType);
               }}
-              className="block bg-transparent text-foreground outline-0"
+              triggerClassName="block bg-transparent text-foreground outline-0"
+              contentClassName="bg-background border-border"
             >
               {availableGraphTypes.map((chartType) => (
-                <option 
-                  key={chartType.type} 
-                  value={chartType.type} 
-                  className="bg-background"
-                >
+                <AppSelectItem key={chartType.type} value={chartType.type}>
                   {chartType.text}
-                </option>
+                </AppSelectItem>
               ))}
-            </select>
+            </AppSelect>
           </div>
         </div>
       )}

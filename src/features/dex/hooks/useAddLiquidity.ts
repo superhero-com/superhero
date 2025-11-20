@@ -174,9 +174,14 @@ export function useAddLiquidity() {
         }
       }
 
-      if (ain && bin && info.totalSupply && info.totalSupply > 0n) {
+      if (ain && bin && info.totalSupply && info.totalSupply > 0n && !reserveARaw.isZero() && !reserveBRaw.isZero()) {
         const totalSupply = new BigNumber(info.totalSupply.toString());
-        const lpMint = ain.plus(bin).div(2);
+        // For constant product AMM, LP tokens = totalSupply * min(amountA/reserveA, amountB/reserveB)
+        // Since we're adding proportional amounts, we can use either ratio
+        const lpMintFromA = totalSupply.multipliedBy(ain).dividedBy(reserveARaw);
+        const lpMintFromB = totalSupply.multipliedBy(bin).dividedBy(reserveBRaw);
+        // Use the minimum to ensure we don't overestimate (matches on-chain calculation)
+        const lpMint = BigNumber.min(lpMintFromA, lpMintFromB);
         sharePct = lpMint.div(totalSupply).times(100).toFixed(8);
         lpMintEstimate = fromAettos(lpMint.toString(), 18);
       }
@@ -293,7 +298,7 @@ export function useAddLiquidity() {
           address,
           minimumLiquidity,
           BigInt(Date.now() + params.deadlineMins * 60 * 1000),
-          { amount: amountAeDesired.toString() }
+          { amount: amountAeDesired.toString(), omitUnknown: true }
         );
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       } else {
@@ -349,6 +354,7 @@ export function useAddLiquidity() {
           address,
           minimumLiquidity,
           BigInt(Date.now() + params.deadlineMins * 60 * 1000),
+          { omitUnknown: true }
         );
         console.log('[useAddLiquidity] add_liquidity res::', providedLiquidity);
         console.log('[useAddLiquidity] add_liquidity res::', res);
@@ -526,7 +532,8 @@ export function useAddLiquidity() {
           minTokenAmount,
           minAeAmount,
           address,
-          BigInt(Date.now() + params.deadlineMins * 60 * 1000)
+          BigInt(Date.now() + params.deadlineMins * 60 * 1000),
+          { omitUnknown: true }
         );
 
         console.log('[useAddLiquidity] remove_liquidity_ae res::', res);
@@ -574,7 +581,8 @@ export function useAddLiquidity() {
           minAmountA,
           minAmountB,
           address,
-          BigInt(Date.now() + params.deadlineMins * 60 * 1000)
+          BigInt(Date.now() + params.deadlineMins * 60 * 1000),
+          { omitUnknown: true }
         );
         
         console.log('[useAddLiquidity] remove_liquidity res::', res);

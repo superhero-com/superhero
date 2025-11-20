@@ -14,7 +14,7 @@ let indexHtml = fs.readFileSync(INDEX_HTML, 'utf8');
 function envInject(html) {
   // Simple env subst for window.__SUPERCONFIG__ placeholders like $BACKEND_URL
   const keys = [
-    'BACKEND_URL','SUPERHERO_API_URL','SUPERHERO_WS_URL','NODE_URL','WALLET_URL','MIDDLEWARE_URL','DEX_BACKEND_URL','MAINNET_DEX_BACKEND_URL','TESTNET_DEX_BACKEND_URL','CONTRACT_V1_ADDRESS','CONTRACT_V2_ADDRESS','CONTRACT_V3_ADDRESS','WORD_REGISTRY_ADDRESS','PROFILE_REGISTRY_ADDRESS','LANDING_ENABLED','WORDBAZAAR_ENABLED','JITSI_DOMAIN','GOVERNANCE_API_URL','GOVERNANCE_CONTRACT_ADDRESS','EXPLORER_URL','IMGUR_API_CLIENT_ID','GIPHY_API_KEY','UNFINISHED_FEATURES','COMMIT_HASH','BONDING_CURVE_18_DECIMALS_ADDRESS'
+    'BACKEND_URL','SUPERHERO_API_URL','SUPERHERO_WS_URL','NODE_URL','WALLET_URL','MIDDLEWARE_URL','DEX_BACKEND_URL','MAINNET_DEX_BACKEND_URL','TESTNET_DEX_BACKEND_URL','CONTRACT_V1_ADDRESS','CONTRACT_V2_ADDRESS','CONTRACT_V3_ADDRESS','WORD_REGISTRY_ADDRESS','PROFILE_REGISTRY_ADDRESS','LANDING_ENABLED','WORDBAZAAR_ENABLED','POPULAR_FEED_ENABLED','JITSI_DOMAIN','GOVERNANCE_API_URL','GOVERNANCE_CONTRACT_ADDRESS','EXPLORER_URL','IMGUR_API_CLIENT_ID','GIPHY_API_KEY','UNFINISHED_FEATURES','COMMIT_HASH','BONDING_CURVE_18_DECIMALS_ADDRESS'
   ];
   let out = html;
   for (const k of keys) {
@@ -33,9 +33,19 @@ async function buildMeta(pathname, origin){
   // Root
   if (pathname === '/' || pathname === '') {
     return {
-      title: 'Superhero – Crypto Social Network: Posts, Tokens, Governance',
+      title: 'Superhero.com – The All‑in‑One Social + Crypto App',
       description: 'Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network.',
       canonical: `${origin}/`,
+      ogImage: `${origin}/og-default.png`,
+    };
+  }
+
+  // Trends page
+  if (pathname === '/trends' || pathname === '/trends/tokens') {
+    return {
+      title: 'Superhero.com – Tokenize Trends. Own the Hype. Build Communities.',
+      description: 'Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero.',
+      canonical: `${origin}/trends/tokens`,
       ogImage: `${origin}/og-default.png`,
     };
   }
@@ -43,25 +53,40 @@ async function buildMeta(pathname, origin){
   // Post
   const pm = pathname.match(/^\/post\/([^/]+)/);
   if (pm) {
-    const postId = pm[1];
-    const id = postId.endsWith('_v3') ? postId : `${postId}_v3`;
+    const segment = pm[1];
+    const baseApi = API_BASE.replace(/\/$/, '');
+    async function fetchPostBySegment(seg){
+      const r = await fetch(`${baseApi}/api/posts/${encodeURIComponent(seg)}`, { headers: { accept: 'application/json' } });
+      if (r.ok) return r.json();
+      return null;
+    }
     try {
-      const r = await fetch(`${API_BASE.replace(/\/$/, '')}/api/posts/${encodeURIComponent(id)}`, { headers: { accept: 'application/json' } });
-      if (r.ok) {
-        const data = await r.json();
+      let data = await fetchPostBySegment(segment);
+      if (!data && /^\d+$/.test(segment)) {
+        data = await fetchPostBySegment(`${segment}_v3`);
+      }
+      if (!data) {
+        const sr = await fetch(`${baseApi}/api/posts?search=${encodeURIComponent(segment)}&limit=1&page=1`, { headers: { accept: 'application/json' } });
+        if (sr.ok) {
+          const sdata = await sr.json();
+          const first = Array.isArray(sdata?.items) ? sdata.items[0] : null;
+          if (first?.id) data = await fetchPostBySegment(String(first.id));
+        }
+      }
+      if (data) {
         const raw = String(data?.content || '');
         const content = raw.replace(/\s+/g,' ').trim();
         const media = Array.isArray(data?.media) ? data.media : [];
         return {
           title: `${truncate(content,80) || 'Post'} – Superhero`,
           description: truncate(content,200) || 'View post on Superhero, the crypto social network.',
-          canonical: `${origin}/post/${postId}`,
+          canonical: `${origin}/post/${data?.slug || segment}`,
           ogImage: absolutize(media[0], origin) || `${origin}/og-default.png`,
           ogType: 'article',
         };
       }
     } catch {}
-    return { title: 'Post – Superhero', canonical: `${origin}/post/${postId}`, ogImage: `${origin}/og-default.png`, ogType: 'article' };
+    return { title: 'Post – Superhero', canonical: `${origin}/post/${segment}`, ogImage: `${origin}/og-default.png`, ogType: 'article' };
   }
 
   // User
@@ -94,10 +119,10 @@ async function buildMeta(pathname, origin){
         const symbol = data?.symbol || data?.name || address;
         const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
         const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo), origin);
-        return { title: `${symbol} – Token on Superhero`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
+        return { title: `Buy #${symbol} on Superhero.com`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
       }
     } catch {}
-    return { title: `${address} – Token on Superhero`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };
+    return { title: `Buy #${address} on Superhero.com`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };
   }
 
   // Legacy token route: /trending/tokens/:name → canonical to /trends/tokens/:name
@@ -112,10 +137,10 @@ async function buildMeta(pathname, origin){
         const symbol = data?.symbol || data?.name || address;
         const desc = data?.metaInfo?.description || `Explore ${symbol} token, trades, holders and posts.`;
         const tokenImg = absolutize((data?.logo_url || data?.image_url || data?.logo), origin);
-        return { title: `${symbol} – Token on Superhero`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
+        return { title: `Buy #${symbol} on Superhero.com`, description: truncate(desc,200), canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: tokenImg || `${origin}/og-default.png` };
       }
     } catch {}
-    return { title: `${address} – Token on Superhero`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };
+    return { title: `Buy #${address} on Superhero.com`, canonical: `${origin}/trends/tokens/${tokenName}`, ogImage: `${origin}/og-default.png` };
   }
 
   // Trends accounts

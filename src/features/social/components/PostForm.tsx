@@ -30,6 +30,7 @@ interface PostFormProps {
 
   // Post-specific props
   isPost?: boolean;
+  onPostCreated?: () => void; // Callback when a new post is created (for tab switching, etc.)
 
   // Comment-specific props
   postId?: string;
@@ -96,6 +97,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     isPost = true,
     postId,
     onCommentAdded,
+    onPostCreated,
     placeholder,
     initialText,
     requiredHashtag,
@@ -146,8 +148,22 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiBtnRef = useRef<HTMLButtonElement>(null);
   const gifBtnRef = useRef<HTMLButtonElement>(null);
+  // Refs to track polling timers and component mount status
+  const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
+  const isMountedRef = useRef(true);
+  
+  // Shared ID normalization function - ensures consistent ID format across the component
+  const normalizeId = (id: string): string => {
+    return String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`;
+  };
   const [overlayComputed, setOverlayComputed] = useState<{ paddingTop: number; paddingRight: number; paddingBottom: number; paddingLeft: number; fontFamily: string; fontSize: string; fontWeight: string; lineHeight: string; letterSpacing: string; } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isDesktopViewport, setIsDesktopViewport] = useState(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return false;
+    }
+    return window.matchMedia('(min-width: 768px)').matches;
+  });
 
   // Plugin composer actions
   const host = usePluginHostCtx();
@@ -215,6 +231,17 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
 
   useEffect(() => {
     setPromptIndex(Math.floor(Math.random() * PROMPTS.length));
+  }, []);
+
+  // Cleanup effect to clear all timers on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      // Clear all pending timeouts
+      timeoutRefs.current.forEach(timeoutId => clearTimeout(timeoutId));
+      timeoutRefs.current.clear();
+    };
   }, []);
 
   // Do not auto-fill from initialText anymore; keep user input empty by default
@@ -291,22 +318,34 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     return () => document.removeEventListener("click", onDocClick);
   }, []);
 
-  const insertAtCursor = (value: string) => {
-    const el = textareaRef.current;
-    if (!el) {
-      setText((prev) => prev + value);
+  // Desktop: single-line height; Mobile: slightly taller for ergonomics
+  // Use useEffect to listen for window resize events instead of calling matchMedia on every render
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
       return;
     }
-    const start = el.selectionStart ?? el.value.length;
-    const end = el.selectionEnd ?? el.value.length;
-    const newValue = el.value.slice(0, start) + value + el.value.slice(end);
-    setText(newValue);
-    requestAnimationFrame(() => {
-      el.focus();
-      const pos = start + value.length;
-      el.setSelectionRange(pos, pos);
-    });
-  };
+
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    
+    // Set initial value
+    setIsDesktopViewport(mediaQuery.matches);
+
+    // Modern browsers support addEventListener on MediaQueryList
+    if (mediaQuery.addEventListener) {
+      const handleChange = (e: MediaQueryListEvent) => {
+        setIsDesktopViewport(e.matches);
+      };
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    } else {
+      // Fallback for older browsers (MediaQueryList type)
+      const legacyHandler = (mq: MediaQueryList) => {
+        setIsDesktopViewport(mq.matches);
+      };
+      mediaQuery.addListener(legacyHandler);
+      return () => mediaQuery.removeListener(legacyHandler);
+    }
+  }, []);
 
   const submitPoll = useCallback(async () => {
     // Gather inputs
@@ -607,11 +646,6 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     );
   }
 
-  // Desktop: single-line height; Mobile: slightly taller for ergonomics
-  const isDesktopViewport = typeof window !== 'undefined'
-    && typeof window.matchMedia === 'function'
-    && window.matchMedia('(min-width: 768px)').matches;
-  const isMobileViewport = typeof window !== 'undefined' && typeof window.matchMedia === 'function' && !window.matchMedia('(min-width: 768px)').matches;
   const singleRowMinHeight = overlayComputed ? `${overlayComputed.paddingTop + overlayComputed.paddingBottom + parseFloat(overlayComputed.lineHeight as any)}px` : '40px';
   const computedMinHeight = isDesktopViewport ? '52px' : '88px';
 
@@ -665,6 +699,615 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     const extra = ls * Math.max(prefix.length - 1, 0);
     return overlayComputed.paddingLeft + base + extra;
   }, [overlayComputed, textBeforeCaret]);
+
+  const insertAtCursor = (value: string) => {
+    const el = textareaRef.current;
+    if (!el) {
+      setText((prev) => prev + value);
+      return;
+    }
+    const start = el.selectionStart ?? el.value.length;
+    const end = el.selectionEnd ?? el.value.length;
+    const newValue = el.value.slice(0, start) + value + el.value.slice(end);
+    setText(newValue);
+    requestAnimationFrame(() => {
+      el.focus();
+      const pos = start + value.length;
+      el.setSelectionRange(pos, pos);
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // Do not auto-append the required hashtag; the Post button is disabled until present
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    if (!activeAccount) return;
+
+    setIsSubmitting(true);
+    try {
+      const contract = await sdk.initializeContract({
+        aci: TIPPING_V3_ACI as any,
+        address: CONFIG.CONTRACT_V3_ADDRESS as `ct_${string}`,
+      });
+
+      let postMedia: string[] = [];
+
+      if (isPost) {
+        // For posts, include media URLs
+        postMedia = [...mediaUrls];
+      } else if (postId) {
+
+        postMedia = [`comment:${postId}`, ...mediaUrls];
+      }
+
+      const { decodedResult } = await contract.post_without_tip(
+        trimmed,
+        postMedia
+      );
+
+      if (isPost) {
+        const newPostId = `${decodedResult}_v3`;
+        
+        // Create optimistic post object immediately (even before API call)
+        // This ensures the post appears instantly even if backend isn't ready yet
+        const optimisticPost: any = {
+          id: newPostId,
+          content: trimmed,
+          sender_address: activeAccount,
+          media: mediaUrls,
+          total_comments: 0,
+          created_at: new Date().toISOString(),
+          tx_hash: decodedResult,
+          type: 'post_without_tip',
+          topics: requiredHashtag ? [requiredHashtag.toLowerCase()] : [],
+        };
+        
+        let created: any = optimisticPost;
+        
+        try {
+          // Try to fetch the actual post from backend, but use optimistic one if it fails
+          const fetchedPost = await PostsService.getById({ id: newPostId });
+          created = fetchedPost;
+        } catch (error) {
+          // Backend might not have processed it yet (404), use optimistic post
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[PostForm] Backend not ready yet, using optimistic post:', error);
+          }
+          // Continue with optimisticPost
+        }
+        
+        // Optimistically prepend the new post to the latest feed cache so it appears immediately
+        // Update all relevant query keys for the latest feed
+        const updatedKeys = new Set<string>();
+        const updateLatestFeedCache = (queryKey: any[]) => {
+          const keyStr = JSON.stringify(queryKey);
+          // Skip if we've already updated this key to avoid duplicates
+          if (updatedKeys.has(keyStr)) {
+            return;
+          }
+          updatedKeys.add(keyStr);
+          
+          queryClient.setQueryData(queryKey, (old: any) => {
+            if (!old || !old.pages || !Array.isArray(old.pages)) {
+              return {
+                pages: [{ items: [created as any], meta: { currentPage: 1, totalPages: 1 } }],
+                pageParams: [1],
+              };
+            }
+            const firstPage = old.pages[0] || { items: [], meta: old.pages[0]?.meta || {} };
+            const existingItems = firstPage.items || [];
+            // Check if post already exists to prevent duplicates
+            const postAlreadyExists = existingItems.some((item: any) => 
+              item?.id === created?.id || item?.tx_hash === created?.tx_hash
+            );
+            if (postAlreadyExists) {
+              return old;
+            }
+            const updatedFirstPage = {
+              ...firstPage,
+              items: [created as any, ...existingItems],
+            };
+            return {
+              ...old,
+              pages: [updatedFirstPage, ...old.pages.slice(1)],
+            };
+          });
+        };
+        
+        // First, collect all active latest feed queries to avoid duplicate updates
+        const activeLatestQueries = queryClient.getQueryCache()
+          .findAll({ queryKey: ["posts"], exact: false })
+          .filter((query) => {
+            const key = query.queryKey as any[];
+            return key.length >= 2 && key[1]?.sortBy === "latest";
+          })
+          .map((query) => query.queryKey as any[]);
+        
+        // Update all active latest feed queries found in cache
+        activeLatestQueries.forEach((key) => {
+          updateLatestFeedCache(key);
+        });
+        
+        // Also update the default latest feed query if it wasn't already updated
+        // This ensures the query is updated even if it doesn't exist in cache yet
+        const defaultKey: any[] = ["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }];
+        const defaultKeyStr = JSON.stringify(defaultKey);
+        if (!updatedKeys.has(defaultKeyStr)) {
+          updateLatestFeedCache(defaultKey);
+        }
+        
+        // Optimistically prepend the new post to the topic feed cache so it appears immediately
+        if (requiredHashtag && !requiredMissing) {
+          const topicKey = ["topic-by-name", (requiredHashtag || '').toLowerCase()];
+          queryClient.setQueryData(topicKey, (old: any) => {
+            const prevPosts = Array.isArray(old?.posts) ? old.posts : [];
+            // Check if post already exists to prevent duplicates
+            const exists = prevPosts.some((p: any) => p?.id === created?.id || p?.tx_hash === created?.tx_hash);
+            if (exists) {
+              return old;
+            }
+            return {
+              ...(old || {}),
+              posts: [created as any, ...prevPosts],
+              post_count: typeof old?.post_count === 'number' ? old.post_count + 1 : old?.post_count,
+            };
+          });
+        }
+        
+        // Poll backend until post is confirmed or max retries reached
+        // Backend needs time to process blockchain transaction and update database
+        const maxRetries = 18; // Try for up to ~59 seconds (5s initial + 18 retries * 3 seconds)
+        const retryInterval = 3000; // 3 seconds between retries
+        
+        const pollForPost = (attempt: number = 0) => {
+          // Stop polling if component is unmounted
+          if (!isMountedRef.current) {
+            return;
+          }
+          
+          if (attempt >= maxRetries) {
+            // Final attempt after max retries - invalidate and refetch latest feed queries
+            if (isMountedRef.current) {
+              queryClient.invalidateQueries({ queryKey: ["posts"], exact: false });
+              queryClient.refetchQueries({ 
+                queryKey: ["posts"],
+                type: 'active',
+              });
+              // Also invalidate topic feed if applicable
+              if (requiredHashtag && !requiredMissing) {
+                queryClient.invalidateQueries({ queryKey: ["topic-by-name", (requiredHashtag || '').toLowerCase()] });
+              }
+            }
+            return;
+          }
+          
+          const timeoutId = setTimeout(() => {
+            // Remove timeout ID from tracking set
+            timeoutRefs.current.delete(timeoutId);
+            
+            // Stop if component unmounted
+            if (!isMountedRef.current) {
+              return;
+            }
+            
+            // Try to fetch the post from backend
+            PostsService.getById({ id: newPostId })
+              .then(() => {
+                // Post found - invalidate and refetch queries to get fresh data
+                if (isMountedRef.current) {
+                  queryClient.invalidateQueries({ queryKey: ["posts"], exact: false });
+                  queryClient.refetchQueries({ 
+                    queryKey: ["posts"],
+                    type: 'active',
+                  });
+                  // Also invalidate topic feed if applicable
+                  if (requiredHashtag && !requiredMissing) {
+                    queryClient.invalidateQueries({ queryKey: ["topic-by-name", (requiredHashtag || '').toLowerCase()] });
+                    queryClient.refetchQueries({ 
+                      queryKey: ["topic-by-name", (requiredHashtag || '').toLowerCase()],
+                      type: 'active',
+                    });
+                  }
+                }
+                // Post found, stop polling
+              })
+              .catch(() => {
+                // Post not found yet, continue polling
+                if (isMountedRef.current) {
+                  pollForPost(attempt + 1);
+                }
+              });
+          }, retryInterval);
+          
+          // Track timeout ID for cleanup
+          timeoutRefs.current.add(timeoutId);
+        };
+        
+        // Start polling after initial delay to give backend time to start processing
+        const initialTimeoutId = setTimeout(() => {
+          // Remove timeout ID from tracking set
+          timeoutRefs.current.delete(initialTimeoutId);
+          
+          // Only start polling if component is still mounted
+          if (isMountedRef.current) {
+            pollForPost(0);
+          }
+        }, 5000); // 5 second initial delay before first poll
+        
+        // Track initial timeout ID for cleanup
+        timeoutRefs.current.add(initialTimeoutId);
+      } else if (postId) {
+        // For replies: optimistically show the new reply immediately
+        // Normalize postId the same way CommentItem does to ensure cache key matches
+        const normalizedPostId = normalizeId(postId);
+        const newReplyId = `${String(decodedResult).replace(/_v3$/,'')}_v3`;
+        
+        // Create optimistic reply object immediately (even before API call)
+        // This ensures the reply appears instantly even if backend isn't ready yet
+        const optimisticReply: any = {
+          id: newReplyId,
+          content: trimmed,
+          sender_address: activeAccount,
+          media: mediaUrls,
+          total_comments: 0,
+          created_at: new Date().toISOString(),
+          tx_hash: decodedResult,
+          type: 'post_without_tip',
+          topics: [],
+        };
+        
+        let newReply: any = optimisticReply;
+        
+        try {
+          // Try to fetch the actual reply from backend, but use optimistic one if it fails
+          const fetchedReply = await PostsService.getById({ id: newReplyId });
+          newReply = fetchedReply;
+        } catch (error) {
+          // Backend might not have processed it yet (404), use optimistic reply
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[PostForm] Backend not ready yet, using optimistic reply:', error);
+          }
+          // Continue with optimisticReply
+        }
+        
+        // Helper function to update infinite query format
+        // Replies are ordered ASC (oldest first), so new replies go at the bottom (last page)
+        const updateInfiniteQuery = (queryKey: any[]) => {
+            queryClient.setQueryData(queryKey, (old: any) => {
+              if (!old || !old.pages || !Array.isArray(old.pages)) {
+                return {
+                  pageParams: [1],
+                  pages: [{ items: [newReply], meta: { currentPage: 1, totalPages: 1 } }],
+                };
+              }
+              // Check if reply already exists in any page to avoid duplicates
+              const exists = old.pages.some((page: any) => 
+                page?.items?.some((item: any) => item?.id === newReplyId)
+              );
+              if (exists) return old;
+              
+              // Append to the last page (newest items) since replies are ordered ASC
+              const lastPageIndex = old.pages.length - 1;
+              const lastPage = old.pages[lastPageIndex] || { items: [], meta: {} };
+              const updatedLastPage = {
+                ...lastPage,
+                items: [...(lastPage.items || []), newReply],
+              };
+              
+              return {
+                ...old,
+                pages: [
+                  ...old.pages.slice(0, lastPageIndex),
+                  updatedLastPage,
+                ],
+              };
+            });
+          };
+          
+        // Helper function to update array query format
+        // Replies are ordered ASC (oldest first), so new replies go at the bottom
+        const updateArrayQuery = (queryKey: any[]) => {
+            queryClient.setQueryData(queryKey, (old: any) => {
+              if (!Array.isArray(old)) return [newReply];
+              // Check if reply already exists to avoid duplicates
+              const exists = old.some((item: any) => item?.id === newReplyId);
+              if (exists) return old;
+              // Append to the end (bottom) since replies are ordered ASC
+              return [...old, newReply];
+            });
+          };
+          
+        // Helper to check if two IDs match (handles both normalized and non-normalized)
+        const idsMatch = (id1: string, id2: string): boolean => {
+            return normalizeId(id1) === normalizeId(id2) || id1 === id2;
+          };
+          
+        // CRITICAL: Update ALL active query keys FIRST, using their exact key format
+        // This ensures we catch DirectReplies and other components that use the raw ID
+        const updatedKeys = new Set<string>();
+        const allPostCommentQueries = queryClient.getQueryCache().findAll({ queryKey: ["post-comments"], exact: false });
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[PostForm] Updating replies cache:', {
+            postId,
+            normalizedPostId,
+            newReplyId,
+            foundQueries: allPostCommentQueries.length,
+            queryKeys: allPostCommentQueries.map(q => q.queryKey),
+          });
+        }
+        
+        allPostCommentQueries.forEach((query) => {
+          const key = query.queryKey as any[];
+          const queryPostId = key[1];
+          // Match using normalized comparison
+          if (idsMatch(queryPostId, normalizedPostId) || idsMatch(queryPostId, postId)) {
+            const keyStr = JSON.stringify(key);
+            if (!updatedKeys.has(keyStr)) {
+              updatedKeys.add(keyStr);
+              if (key[2] === "infinite") {
+                updateInfiniteQuery(key);
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('[PostForm] Updated infinite query:', key);
+                }
+              } else {
+                updateArrayQuery(key);
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('[PostForm] Updated array query:', key);
+                }
+              }
+            }
+          }
+        });
+        
+        // Update ALL active comment-replies query keys
+        queryClient.getQueryCache().findAll({ queryKey: ["comment-replies"], exact: false }).forEach((query) => {
+          const key = query.queryKey as any[];
+          const queryPostId = key[1];
+          if (idsMatch(queryPostId, normalizedPostId) || idsMatch(queryPostId, postId)) {
+            const keyStr = JSON.stringify(key);
+            if (!updatedKeys.has(keyStr)) {
+              updatedKeys.add(keyStr);
+              updateArrayQuery(key);
+            }
+          }
+        });
+        
+        // Also explicitly update common key formats as fallback (even if query doesn't exist yet)
+        // This ensures the reply appears immediately when the component mounts
+        const fallbackKeys = [
+          ["post-comments", normalizedPostId, "infinite"],
+          ["post-comments", normalizedPostId],
+          ["comment-replies", normalizedPostId],
+          ["post-comments", postId, "infinite"],
+          ["post-comments", postId],
+          ["comment-replies", postId],
+        ];
+        
+        fallbackKeys.forEach((key) => {
+          const keyStr = JSON.stringify(key);
+          if (!updatedKeys.has(keyStr)) {
+            updatedKeys.add(keyStr);
+            if (key[2] === "infinite") {
+              updateInfiniteQuery(key);
+            } else {
+              updateArrayQuery(key);
+            }
+          }
+        });
+        
+        // Optimistically update parent post's comment count
+        // Update parent post in cache if it exists (for both normalized and original formats)
+        // Normalize parent ID once to use consistently (both normalizedPostId and postId should normalize to the same value)
+        const normalizedParentId = normalizeId(normalizedPostId);
+        
+        // Helper to check if an ID matches the parent (handles both normalized and non-normalized)
+        const matchesParentId = (id: string | undefined): boolean => {
+          if (!id) return false;
+          return normalizeId(id) === normalizedParentId;
+        };
+        
+        const updateParentPostCommentCount = () => {
+          // Update all post queries that might contain the parent post
+          queryClient.getQueryCache().findAll({ queryKey: ["posts"], exact: false }).forEach((query) => {
+            const key = query.queryKey as any[];
+            queryClient.setQueryData(key, (old: any) => {
+              if (!old || !old.pages) return old;
+              return {
+                ...old,
+                pages: old.pages.map((p: any) => ({
+                  ...p,
+                  items: p.items?.map((i: any) => 
+                    matchesParentId(i?.id)
+                      ? { ...i, total_comments: (i.total_comments || 0) + 1 }
+                      : i
+                  ) || [],
+                })),
+              };
+            });
+          });
+          
+          // Also check single post queries for both formats
+          queryClient.setQueryData(["post", normalizedPostId], (old: any) => {
+            if (old && matchesParentId(old.id)) {
+              return { ...old, total_comments: (old.total_comments || 0) + 1 };
+            }
+            return old;
+          });
+          
+          // Only update postId query if it's different from normalizedPostId (as strings)
+          // Compare original strings, not normalized versions, since normalization is idempotent
+          if (postId !== normalizedPostId) {
+            queryClient.setQueryData(["post", postId], (old: any) => {
+              if (old && matchesParentId(old.id)) {
+                return { ...old, total_comments: (old.total_comments || 0) + 1 };
+              }
+              return old;
+            });
+          }
+        };
+        
+        // Update parent post comment count optimistically (only once to avoid double increment)
+        updateParentPostCommentCount();
+        
+        // Invalidate descendant count queries so they refetch with the new reply
+        queryClient.invalidateQueries({ queryKey: ["post-desc-count"], exact: false });
+        
+        // Poll backend until comment is confirmed or max retries reached
+        // Backend needs time to process blockchain transaction and update database
+        const maxRetries = 18; // Try for up to ~59 seconds (5s initial + 18 retries * 3 seconds)
+        const retryInterval = 3000; // 3 seconds between retries
+        
+        const pollForComment = (attempt: number = 0) => {
+          // Stop polling if component is unmounted
+          if (!isMountedRef.current) {
+            return;
+          }
+          
+          if (attempt >= maxRetries) {
+            // Final attempt after max retries
+            if (isMountedRef.current) {
+              queryClient.invalidateQueries({ queryKey: ["post-comments", normalizedPostId] });
+              queryClient.invalidateQueries({ queryKey: ["comment-replies", normalizedPostId] });
+              queryClient.refetchQueries({ 
+                queryKey: ["post-comments", normalizedPostId],
+                type: 'active',
+              });
+              queryClient.refetchQueries({ 
+                queryKey: ["comment-replies", normalizedPostId],
+                type: 'active',
+              });
+            }
+            return;
+          }
+          
+          const timeoutId = setTimeout(() => {
+            // Remove timeout ID from tracking set
+            timeoutRefs.current.delete(timeoutId);
+            
+            // Stop if component unmounted
+            if (!isMountedRef.current) {
+              return;
+            }
+            
+            queryClient.invalidateQueries({ queryKey: ["post-comments", normalizedPostId] });
+            queryClient.invalidateQueries({ queryKey: ["comment-replies", normalizedPostId] });
+            Promise.all([
+              queryClient.refetchQueries({ 
+                queryKey: ["post-comments", normalizedPostId],
+                type: 'active',
+              }),
+              queryClient.refetchQueries({ 
+                queryKey: ["comment-replies", normalizedPostId],
+                type: 'active',
+              })
+            ]).then(() => {
+              // Stop if component unmounted
+              if (!isMountedRef.current) {
+                return;
+              }
+              
+              // Check if backend has processed the comment by verifying it exists in the refetched list
+              const cachedComments = queryClient.getQueryData<any[]>(["comment-replies", normalizedPostId]);
+              const commentExists = cachedComments?.some((c: any) => c?.id === newReplyId);
+              
+              // If comment exists in backend response, we're done
+              // Otherwise, keep polling
+              if (commentExists) {
+                return;
+              }
+              
+              // Continue polling
+              pollForComment(attempt + 1);
+            }).catch(() => {
+              // Stop if component unmounted
+              if (!isMountedRef.current) {
+                return;
+              }
+              
+              // On error, continue polling
+              pollForComment(attempt + 1);
+            });
+          }, retryInterval);
+          
+          // Track timeout ID for cleanup
+          timeoutRefs.current.add(timeoutId);
+        };
+        
+        // Start polling after initial delay to give backend time to start processing
+        const initialTimeoutId = setTimeout(() => {
+          // Remove timeout ID from tracking set
+          timeoutRefs.current.delete(initialTimeoutId);
+          
+          // Only start polling if component is still mounted
+          if (isMountedRef.current) {
+            pollForComment(0);
+          }
+        }, 5000); // 5 second initial delay before first poll
+        
+        // Track initial timeout ID for cleanup
+        timeoutRefs.current.add(initialTimeoutId);
+        
+        onCommentAdded?.();
+      }
+
+      // Reset after success
+      setText(initialText || "");
+      setMediaUrls([]);
+      
+      // Call onPostCreated callback if this is a new post (for tab switching, etc.)
+      if (isPost) {
+        onPostCreated?.();
+      }
+      
+      onSuccess?.();
+      // Also refetch any topic feeds related to this hashtag so other viewers update quickly
+      try {
+        if (requiredHashtag) {
+          queryClient.invalidateQueries({ queryKey: ["topic-by-name"] });
+        }
+      } catch {}
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const removeMedia = (index: number) => {
+    setMediaUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Dynamic placeholder logic
+  let currentPlaceholder: string;
+  if (placeholder) {
+    currentPlaceholder = placeholder;
+  } else if (isPost) {
+    currentPlaceholder = activeAccount
+      ? PROMPTS[promptIndex]
+      : t('connectWalletToPost');
+  } else {
+    currentPlaceholder = activeAccount
+      ? t('writeReply')
+      : t('connectWalletToReply');
+  }
+
+  // If not connected and it's a reply, show simple message
+  if (!activeAccount && !isPost) {
+    return (
+      <div
+        className={`mx-auto mb-5 md:mb-4 ${className}`}
+      >
+        <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl">
+          <div className="text-center text-white/70">
+            <p className="text-sm">{t('pleaseConnectWalletToReply')}</p>
+          </div>
+          <div className="mt-3 flex justify-center">
+            <ConnectWalletButton block className="w-full md:w-auto" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

@@ -52,6 +52,9 @@ export const AddressAvatarWithChainName = memo(({
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const ref = useRef<HTMLDivElement | null>(null);
     const cardRef = useRef<HTMLDivElement | null>(null);
+    // Use a ref to store the latest loadAccountData to avoid duplicate calls
+    // Note: useAccountBalances already calls loadAccountData when selectedAccount changes
+    const loadAccountDataRef = useRef(loadAccountData);
 
     // Calculate position for hover card
     const updatePosition = () => {
@@ -75,13 +78,19 @@ export const AddressAvatarWithChainName = memo(({
         return () => window.clearTimeout(id);
     }, [hover, isHoverEnabled]);
 
-    // Load balances when needed (only when showing balance or when hover card is visible)
+    // Keep the ref updated with the latest loadAccountData function
+    useEffect(() => {
+        loadAccountDataRef.current = loadAccountData;
+    }, [loadAccountData]);
+
+    // Start loading data immediately when hover starts (not when card becomes visible)
+    // This way data is loading/loaded by the time the 300ms delay expires
     useEffect(() => {
         if (!address) return;
-        if (showBalance || visible) {
-            loadAccountData();
+        if (showBalance || hover) {
+            loadAccountDataRef.current();
         }
-    }, [address, showBalance, visible]);
+    }, [address, showBalance, hover]);
 
     // Handle click outside to close card
     useEffect(() => {
@@ -120,7 +129,10 @@ export const AddressAvatarWithChainName = memo(({
                     (() => {
                         const displayName = chainName || (!hideFallbackName ? 'Legend' : '');
                         return displayName ? (
-                            <span className="chain-name text-[14px] md:text-[15px] font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
+                            <span 
+                                className="chain-name text-[14px] md:text-[15px] font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent block truncate w-full"
+                                title={displayName}
+                            >
                                 {displayName}
                             </span>
                         ) : (
@@ -249,10 +261,20 @@ export const AddressAvatarWithChainName = memo(({
     );
 }, (prevProps, nextProps) => {
     // Custom comparison for better performance
-    return prevProps.address === nextProps.address &&
-        prevProps.size === nextProps.size &&
+    // Always return false if address changes to force re-render and reload balance
+    if (prevProps.address !== nextProps.address) {
+        return false;
+    }
+    return prevProps.size === nextProps.size &&
         prevProps.overlaySize === nextProps.overlaySize &&
+        prevProps.showPrimaryOnly === nextProps.showPrimaryOnly &&
+        prevProps.showAddressAndChainName === nextProps.showAddressAndChainName &&
+        prevProps.showBalance === nextProps.showBalance &&
         prevProps.truncateAddress === nextProps.truncateAddress &&
+        prevProps.className === nextProps.className &&
+        prevProps.isHoverEnabled === nextProps.isHoverEnabled &&
+        prevProps.avatarBackground === nextProps.avatarBackground &&
+        prevProps.hideFallbackName === nextProps.hideFallbackName &&
         prevProps.secondary === nextProps.secondary &&
         prevProps.contentClassName === nextProps.contentClassName;
 });

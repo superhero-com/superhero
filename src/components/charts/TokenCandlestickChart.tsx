@@ -63,6 +63,7 @@ export default function TokenCandlestickChart({
   const candlestickSeries = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const volumeSeries = useRef<ISeriesApi<"Histogram"> | null>(null);
   const marketCapSeries = useRef<ISeriesApi<"Histogram"> | null>(null);
+  const touchHandlersCleanup = useRef<(() => void) | null>(null);
 
   // Current price data for legend
   const [currentCandlePrice, setCurrentCandlePrice] = useState<CandlePrice | null>(null);
@@ -205,6 +206,76 @@ export default function TokenCandlestickChart({
           setCurrentCandleMarketCap(marketCapData?.value ?? 0);
         }
       });
+
+      // Add touch handlers for mobile drag support
+      const container = chartContainer.current;
+      if (container) {
+        const handleTouchStart = (e: TouchEvent) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!chartInstance || !container) return;
+          
+          const touch = e.touches[0];
+          const rect = container.getBoundingClientRect();
+          const x = touch.clientX - rect.left;
+          
+          try {
+            const time = chartInstance.timeScale().coordinateToTime(x);
+            if (time !== null) {
+              chartInstance.setCrosshairPosition(x, 0, { time: time as any });
+            }
+          } catch (error) {
+            console.warn('[TokenCandlestickChart] Error setting crosshair on touchstart:', error);
+          }
+        };
+
+        const handleTouchMove = (e: TouchEvent) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!chartInstance || !container) return;
+          
+          const touch = e.touches[0];
+          const rect = container.getBoundingClientRect();
+          const x = touch.clientX - rect.left;
+          
+          // Clamp x to chart bounds
+          const clampedX = Math.max(0, Math.min(x, rect.width));
+          
+          try {
+            const time = chartInstance.timeScale().coordinateToTime(clampedX);
+            if (time !== null) {
+              chartInstance.setCrosshairPosition(clampedX, 0, { time: time as any });
+            }
+          } catch (error) {
+            console.warn('[TokenCandlestickChart] Error setting crosshair on touchmove:', error);
+          }
+        };
+
+        const handleTouchEnd = (e: TouchEvent) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!chartInstance) return;
+          
+          try {
+            chartInstance.setCrosshairPosition(-1, -1, {});
+          } catch (error) {
+            console.warn('[TokenCandlestickChart] Error clearing crosshair on touchend:', error);
+          }
+        };
+
+        container.addEventListener('touchstart', handleTouchStart, { passive: false });
+        container.addEventListener('touchmove', handleTouchMove, { passive: false });
+        container.addEventListener('touchend', handleTouchEnd, { passive: false });
+        container.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+        // Store cleanup function
+        touchHandlersCleanup.current = () => {
+          container.removeEventListener('touchstart', handleTouchStart);
+          container.removeEventListener('touchmove', handleTouchMove);
+          container.removeEventListener('touchend', handleTouchEnd);
+          container.removeEventListener('touchcancel', handleTouchEnd);
+        };
+      }
 
       // Handle visible range changes for infinite loading
       chartInstance.timeScale().subscribeVisibleLogicalRangeChange(() => {
@@ -386,6 +457,16 @@ export default function TokenCandlestickChart({
       updateSeriesData(data.pages);
     }
   }, [data]);
+
+  // Cleanup touch handlers when component unmounts or chart changes
+  useEffect(() => {
+    return () => {
+      if (touchHandlersCleanup.current) {
+        touchHandlersCleanup.current();
+        touchHandlersCleanup.current = null;
+      }
+    };
+  }, [chart]);
 
   return (
     <div

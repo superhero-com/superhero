@@ -10,6 +10,7 @@ import { useAccount } from '../../hooks';
 import { Decimal } from '../../libs/decimal';
 import { DEX_ADDRESSES } from '../../libs/dex';
 import { cn } from '../../lib/utils';
+import Spinner from '../../components/Spinner';
 
 interface WrapUnwrapWidgetProps {
   className?: string;
@@ -290,12 +291,12 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
             "w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
             isExecuteDisabled
               ? "bg-white/10 cursor-not-allowed opacity-60"
-              : "bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
+              : "bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0"
           )}
         >
           {isLoading ? (
             <div className="flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              <Spinner className="w-4 h-4" />
               {mode === 'wrap' ? 'Wrapping…' : 'Unwrapping…'}
             </div>
           ) : (

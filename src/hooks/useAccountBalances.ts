@@ -1,14 +1,14 @@
 import { useAtom } from "jotai";
 import { aex9BalancesAtom, balanceAtom, chainNamesAtom } from "../atoms/walletAtoms";
 import { useAeSdk } from "./useAeSdk";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useCallback, useRef } from "react";
 import { Decimal } from "../libs/decimal";
 import { toAe } from "@aeternity/aepp-sdk";
 import { DEX_ADDRESSES, getTokenBalance } from "../libs/dex";
 import { BridgeConstants } from "@/features/ae-eth-bridge";
 
 export const useAccountBalances = (selectedAccount: string) => {
-    const { sdk } = useAeSdk();
+    const { sdk, activeAccount } = useAeSdk();
     const [chainNames] = useAtom(chainNamesAtom);
     const [_balance, setBalance] = useAtom(balanceAtom);
     const [_aex9Balances, setAex9Balances] = useAtom(aex9BalancesAtom);
@@ -18,47 +18,100 @@ export const useAccountBalances = (selectedAccount: string) => {
 
     const aex9Balances = useMemo(() => _aex9Balances[selectedAccount] || [], [_aex9Balances, selectedAccount]);
 
-    async function getAccountBalance() {
-        if (!selectedAccount) return;
-        const balance = await sdk?.getBalance(selectedAccount);
-        setBalance(prev => ({ ...prev, [selectedAccount]: balance }));
-    }
+    // Use refs to store stable references and avoid recreating callbacks
+    const sdkRef = useRef(sdk);
+    const selectedAccountRef = useRef(selectedAccount);
 
-    const _loadAex9DataFromMdw = async (url, items = []) => {
-        const fetchUrl = `${BridgeConstants.aeAPI}${url}`
-        const response = await fetch(fetchUrl);
-        const data = await response.json();
+    // Keep refs updated
+    useEffect(() => {
+        sdkRef.current = sdk;
+        selectedAccountRef.current = selectedAccount;
+    }, [sdk, selectedAccount]);
 
-        if (data.next) {
-            return _loadAex9DataFromMdw(items.concat(data.data));
+    const getAccountBalance = useCallback(async () => {
+        const account = selectedAccountRef.current;
+        if (!account || !sdkRef.current) return;
+        const balance = await sdkRef.current.getBalance(account as any);
+        // Convert balance to number if it's a string
+        const balanceNum = typeof balance === 'string' ? Number(balance) : balance;
+        setBalance(prev => ({ ...prev, [account]: balanceNum }));
+    }, [setBalance]);
+
+    const _loadAex9DataFromMdw = useCallback(async (url: string, items: any[] = []): Promise<any[]> => {
+        try {
+            // Check if url is already a full URL (absolute) or a relative path
+            const fetchUrl = url.startsWith('http://') || url.startsWith('https://') 
+                ? url 
+                : `${BridgeConstants.aeAPI}${url}`;
+            const response = await fetch(fetchUrl);
+            
+            if (!response.ok) {
+                console.warn(`Failed to fetch AEX9 balances: ${response.status} ${response.statusText}`);
+                return items;
+            }
+            
+            const data = await response.json();
+
+            if (data.next) {
+                return _loadAex9DataFromMdw(data.next, items.concat(data.data || []));
+            }
+            return items.concat(data.data || []);
+        } catch (error) {
+            console.error('Error loading AEX9 balances:', error);
+            return items;
         }
-        return items.concat(data.data);
-    }
-    async function loadAccountAex9Balances() {
-        const url = `/v2/aex9/account-balances/${selectedAccount}?limit=100`;
+    }, []);
+
+    const loadAccountAex9Balances = useCallback(async () => {
+        const account = selectedAccountRef.current;
+        if (!account) return;
+        const url = `/v2/aex9/account-balances/${account}?limit=100`;
 
         const balances = await _loadAex9DataFromMdw(url, []);
-        const waeBalances = await getTokenBalance(sdk, DEX_ADDRESSES.wae, selectedAccount);
-
-        const accountBalances = balances.concat({
-            contract_id: DEX_ADDRESSES.wae,
-            amount: waeBalances.toString(),
-            decimals: 18,
-            name: 'Wrapped AE',
-            symbol: 'WAE',
-        });
-        setAex9Balances(prev => ({
-            ...prev, [selectedAccount]: accountBalances
-        }));
-        return accountBalances;
-    }
-
-    async function loadAccountData() {
-        if (selectedAccount) {
-            getAccountBalance();
-            loadAccountAex9Balances();
+        
+        // Check if WAE is already in the middleware response
+        const hasWae = balances.some(b => b.contract_id === DEX_ADDRESSES.wae);
+        
+        // Only fetch WAE separately if it's not in the middleware response
+        // This eliminates an unnecessary blockchain call when WAE is already present
+        if (!hasWae) {
+            const waeBalances = await getTokenBalance(sdkRef.current, DEX_ADDRESSES.wae, account);
+            balances.push({
+                contract_id: DEX_ADDRESSES.wae,
+                amount: waeBalances.toString(),
+                decimals: 18,
+                name: 'Wrapped AE',
+                symbol: 'WAE',
+            });
         }
-    }
+        
+        setAex9Balances(prev => ({
+            ...prev, [account]: balances
+        }));
+        return balances;
+    }, [_loadAex9DataFromMdw, setAex9Balances]);
+
+    const loadAccountData = useCallback(async () => {
+        const account = selectedAccountRef.current;
+        if (account) {
+            await getAccountBalance();
+            await loadAccountAex9Balances();
+        }
+    }, [getAccountBalance, loadAccountAex9Balances]);
+
+    // Store loadAccountData in a ref to avoid including it in effect dependencies
+    const loadAccountDataRef = useRef(loadAccountData);
+    useEffect(() => {
+        loadAccountDataRef.current = loadAccountData;
+    }, [loadAccountData]);
+
+    // Automatically reload account data when the selected account changes
+    // Only depend on selectedAccount to avoid infinite loops
+    useEffect(() => {
+        if (selectedAccount) {
+            loadAccountDataRef.current();
+        }
+    }, [selectedAccount]);
 
     return {
         selectedAccount,

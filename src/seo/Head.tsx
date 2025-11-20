@@ -26,6 +26,22 @@ export function Head(props: HeadProps) {
     ? `${CANONICAL_ORIGIN}${canonicalPath.startsWith("/") ? "" : "/"}${canonicalPath}`
     : undefined;
 
+  // Helper function to ensure image URLs are absolute
+  const getAbsoluteImageUrl = (imageUrl?: string): string => {
+    if (!imageUrl) {
+      return `${CANONICAL_ORIGIN}/og-default.png`;
+    }
+    // If already absolute URL, return as is
+    if (/^https?:\/\//i.test(imageUrl)) {
+      return imageUrl;
+    }
+    // Convert relative path to absolute URL
+    const path = imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`;
+    return `${CANONICAL_ORIGIN}${path}`;
+  };
+
+  const ogImageUrl = getAbsoluteImageUrl(ogImage);
+
   const jsonLdArray = Array.isArray(jsonLd)
     ? jsonLd
     : jsonLd
@@ -48,7 +64,7 @@ export function Head(props: HeadProps) {
       ) : null}
       {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
       <meta property="og:site_name" content="Superhero" />
-      <meta property="og:image" content={ogImage || '/og-default.png'} />
+      <meta property="og:image" content={ogImageUrl} />
       <meta property="og:type" content="website" />
 
       {/* Twitter */}
@@ -57,7 +73,7 @@ export function Head(props: HeadProps) {
       {description ? (
         <meta name="twitter:description" content={description} />
       ) : null}
-      <meta name="twitter:image" content={ogImage || '/og-default.png'} />
+      <meta name="twitter:image" content={ogImageUrl} />
 
       {/* JSON-LD */}
       {jsonLdArray.map((schema, idx) => (

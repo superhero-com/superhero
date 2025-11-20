@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { TrendminerApi } from '../../api/backend';
+import { SuperheroApi } from '../../api/backend';
 import TrendCloudVisx from './TrendCloudVisx';
 import MobileCard from '../../components/MobileCard';
 import MobileInput from '../../components/MobileInput';
+import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
+import Spinner from '@/components/Spinner';
 
 type TrendingTag = { tag: string; score: number; source?: string };
 
@@ -71,7 +73,7 @@ export default function TrendCloud() {
       setLoading(true);
       setError(null);
       try {
-        const resp = await TrendminerApi.listTrendingTags({ orderBy: 'score', orderDirection: 'DESC', limit: 500, page: 1 });
+        const resp = await SuperheroApi.listTrendingTags({ orderBy: 'score', orderDirection: 'DESC', limit: 500, page: 1 });
         const items = Array.isArray(resp?.items) ? resp.items : (Array.isArray(resp) ? resp : []);
         const mapped: TrendingTag[] = items.map((it: any) => ({ tag: it.tag ?? it.name ?? '', score: Number(it.score ?? it.value ?? 0), source: it.source || it.platform || undefined }));
         if (!cancelled) setTags(mapped.filter((t) => t.tag));
@@ -91,7 +93,7 @@ export default function TrendCloud() {
     let cancelled = false;
     async function loadTokens() {
       try {
-        const resp = await TrendminerApi.listTokens({ orderBy: 'market_cap' as any, orderDirection: 'DESC', limit: 300, page: 1 });
+        const resp = await SuperheroApi.listTokens({ orderBy: 'market_cap' as any, orderDirection: 'DESC', limit: 300, page: 1 });
         const items: any[] = resp?.items ?? resp ?? [];
         if (!cancelled) setTokenItems(items.map((t) => ({ address: t.address, name: t.name, market_cap: Number(t.market_cap ?? 0), holders_count: Number(t.holders_count ?? 0), price: Number(t.price ?? 0) })));
       } catch {
@@ -283,16 +285,17 @@ export default function TrendCloud() {
               className="flex-1 min-w-48 w-full md:w-auto"
             />
             
-            <select 
-              value={sourceFilter} 
-              onChange={(e) => setSourceFilter(e.target.value)}
-              className="px-4 py-3 rounded-xl border border-white/20 bg-white text-black text-sm font-medium cursor-pointer transition-all duration-200 min-w-36 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
+            <AppSelect
+              value={sourceFilter}
+              onValueChange={(v) => setSourceFilter(v)}
+              triggerClassName="px-4 py-3 rounded-xl border border-white/20 bg-white text-black text-sm font-medium cursor-pointer transition-all duration-200 min-w-36 focus:outline-none"
+              contentClassName="bg-white text-black border-white/20"
             >
-              <option value="">All Sources</option>
+              <AppSelectItem value="">All Sources</AppSelectItem>
               {uniqueSources.map((s) => (
-                <option key={s} value={s}>{s}</option>
+                <AppSelectItem key={s} value={s}>{s}</AppSelectItem>
               ))}
-            </select>
+            </AppSelect>
           </div>
           
           <div className="flex gap-4 items-center flex-wrap">
@@ -387,67 +390,67 @@ export default function TrendCloud() {
             
             <div className="config-item">
               <label className="config-label">Scale Type</label>
-              <select 
-                value={scaleType} 
-                onChange={(e) => setScaleType(e.target.value as ScaleType)}
-                className="config-select"
+              <AppSelect
+                value={scaleType}
+                onValueChange={(v) => setScaleType(v as ScaleType)}
+                triggerClassName="config-select"
               >
-                <option value="linear">Linear</option>
-                <option value="sqrt">Sqrt</option>
-                <option value="log">Log</option>
-              </select>
+                <AppSelectItem value="linear">Linear</AppSelectItem>
+                <AppSelectItem value="sqrt">Sqrt</AppSelectItem>
+                <AppSelectItem value="log">Log</AppSelectItem>
+              </AppSelect>
             </div>
             
             <div className="config-item">
               <label className="config-label">Weighting</label>
-              <select 
-                value={weighting} 
-                onChange={(e) => setWeighting(e.target.value as any)}
-                className="config-select"
+              <AppSelect
+                value={weighting}
+                onValueChange={(v) => setWeighting(v as any)}
+                triggerClassName="config-select"
               >
-                <option value="score">Score</option>
-                <option value="log">log(score+1)</option>
-              </select>
+                <AppSelectItem value="score">Score</AppSelectItem>
+                <AppSelectItem value="log">log(score+1)</AppSelectItem>
+              </AppSelect>
             </div>
             
             <div className="config-item">
               <label className="config-label">Weight By</label>
-              <select 
-                value={weightSource} 
-                onChange={(e) => setWeightSource(e.target.value as WeightSource)}
-                className="config-select"
+              <AppSelect
+                value={weightSource}
+                onValueChange={(v) => setWeightSource(v as WeightSource)}
+                triggerClassName="config-select"
               >
-                <option value="market_cap">Market cap</option>
-                <option value="score">Trending score</option>
-              </select>
+                <AppSelectItem value="market_cap">Market cap</AppSelectItem>
+                <AppSelectItem value="score">Trending score</AppSelectItem>
+              </AppSelect>
             </div>
             
             <div className="config-item">
               <label className="config-label">Order</label>
-              <select 
-                value={order} 
-                onChange={(e) => setOrder(e.target.value as OrderType)}
-                className="config-select"
+              <AppSelect
+                value={order}
+                onValueChange={(v) => setOrder(v as OrderType)}
+                triggerClassName="config-select"
               >
-                <option value="score">Score</option>
-                <option value="alpha">Alphabetical</option>
-                <option value="random">Random</option>
-              </select>
+                <AppSelectItem value="score">Score</AppSelectItem>
+                <AppSelectItem value="alpha">Alphabetical</AppSelectItem>
+                <AppSelectItem value="random">Random</AppSelectItem>
+              </AppSelect>
             </div>
             
             <div className="config-item">
               <label className="config-label">Palette</label>
-              <select 
-                value={palette} 
-                onChange={(e) => setPalette(e.target.value as PaletteType)}
-                className="config-select"
+              <AppSelect
+                value={palette}
+                onValueChange={(v) => setPalette(v as PaletteType)}
+                triggerClassName="config-select"
               >
-                <option value="default">Default</option>
-                <option value="mono">Mono</option>
-                <option value="warm">Warm</option>
-                <option value="cool">Cool</option>
-                <option value="category10">Category10</option>
-              </select>
+                <AppSelectItem value="default">Default</AppSelectItem>
+                <AppSelectItem value="mono">Mono</AppSelectItem>
+                <AppSelectItem value="warm">Warm</AppSelectItem>
+                <AppSelectItem value="cool">Cool</AppSelectItem>
+                <AppSelectItem value="category10">Category10</AppSelectItem>
+              </AppSelect>
             </div>
             
             <div className="config-item">
@@ -467,29 +470,29 @@ export default function TrendCloud() {
             
             <div className="config-item">
               <label className="config-label">Text Case</label>
-              <select 
-                value={textCase} 
-                onChange={(e) => setTextCase(e.target.value as any)}
-                className="config-select"
+              <AppSelect
+                value={textCase}
+                onValueChange={(v) => setTextCase(v as any)}
+                triggerClassName="config-select"
               >
-                <option value="upper">UPPER</option>
-                <option value="capitalize">Capitalize</option>
-                <option value="lower">lower</option>
-              </select>
+                <AppSelectItem value="upper">UPPER</AppSelectItem>
+                <AppSelectItem value="capitalize">Capitalize</AppSelectItem>
+                <AppSelectItem value="lower">lower</AppSelectItem>
+              </AppSelect>
             </div>
             
             <div className="config-item">
               <label className="config-label">Rotations</label>
-              <select 
-                value={rotations} 
-                onChange={(e) => setRotations(Number(e.target.value))}
-                className="config-select"
+              <AppSelect
+                value={String(rotations)}
+                onValueChange={(v) => setRotations(Number(v))}
+                triggerClassName="config-select"
               >
-                <option value={0}>0</option>
-                <option value={1}>1</option>
-                <option value={3}>3</option>
-                <option value={5}>5</option>
-              </select>
+                <AppSelectItem value="0">0</AppSelectItem>
+                <AppSelectItem value="1">1</AppSelectItem>
+                <AppSelectItem value="3">3</AppSelectItem>
+                <AppSelectItem value="5">5</AppSelectItem>
+              </AppSelect>
             </div>
             
             <div className="config-item">
@@ -523,7 +526,7 @@ export default function TrendCloud() {
       {/* Loading and Error States */}
       {loading && (
         <div className="trend-cloud-loading">
-          <div className="loading-spinner" />
+          <Spinner className="w-8 h-8 mb-4" />
           <span>Loading trends...</span>
         </div>
       )}

@@ -51,8 +51,7 @@
 
 .genz-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.32),
-    0 8px 20px rgba(255, 107, 107, 0.16);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.32);
 }
 
 .genz-card:hover::before {
@@ -95,8 +94,7 @@
 
 .genz-btn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 40px rgba(255, 107, 107, 0.5),
-    0 8px 24px rgba(0, 255, 157, 0.4);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
 }
 
 .genz-btn:hover::before {
@@ -224,8 +222,7 @@
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4),
-      0 12px 32px rgba(255, 107, 107, 0.2);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   }
 }
 
@@ -398,26 +395,7 @@
   z-index: -1;
 }
 
-/* Loading Spinner */
-.genz-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid transparent;
-  border-top: 3px solid var(--neon-pink);
-  border-right: 3px solid var(--neon-teal);
-  border-bottom: 3px solid var(--neon-blue);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
+/* Loading Spinner - Use Spinner component instead */
 
 /* Pulse Animation */
 .genz-pulse {

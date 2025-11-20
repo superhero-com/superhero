@@ -7,6 +7,8 @@ import PriceDataFormatter from "@/features/shared/components/PriceDataFormatter"
 import { formatLongDate } from "@/utils/common";
 import { TX_FUNCTIONS } from "@/utils/constants";
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
+import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
+import Spinner from "@/components/Spinner";
 
 // Pagination response interface
 interface PaginatedTransactionsResponse {
@@ -313,7 +315,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
         {/* Loading State */}
         {isFetching && (
           <div className="flex items-center justify-center py-12">
-            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            <Spinner className="w-6 h-6" />
           </div>
         )}
 
@@ -352,24 +354,21 @@ export default function TokenTrades({ token }: TokenTradesProps) {
           <div className="flex items-center flex-col lg:flex-row justify-between text-sm text-white/60">
             <div className="flex items-center gap-2">
               <span>Show:</span>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value));
-                  setCurrentPage(1); // Reset to first page
+              <AppSelect
+                value={String(itemsPerPage)}
+                onValueChange={(v) => {
+                  setItemsPerPage(Number(v));
+                  setCurrentPage(1);
                 }}
-                className="px-2 py-1 rounded-lg bg-white/[0.05] border border-white/10 text-white text-sm focus:outline-none focus:border-[#4ecdc4] transition-colors"
+                triggerClassName="px-2 py-1 rounded-lg bg-white/[0.05] border border-white/10 text-white text-sm focus:outline-none transition-colors"
+                contentClassName="bg-gray-800 border-white/10"
               >
                 {[10, 20, 50, 100].map((option) => (
-                  <option
-                    key={option}
-                    value={option}
-                    className="bg-gray-800 text-white"
-                  >
+                  <AppSelectItem key={option} value={String(option)}>
                     {option}
-                  </option>
+                  </AppSelectItem>
                 ))}
-              </select>
+              </AppSelect>
               <span>items per page</span>
             </div>
             <div>

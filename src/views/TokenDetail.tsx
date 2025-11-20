@@ -1,5 +1,6 @@
 import { DexPairService, DexService } from "@/api/generated";
 import { PriceDataFormatter } from "@/features/shared/components";
+import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -7,6 +8,7 @@ import AeButton from "../components/AeButton";
 import { TokenPricePerformance } from "../features/dex/components";
 import { useAeSdk } from "../hooks";
 import { Decimal } from "../libs/decimal";
+import Spinner from "../components/Spinner";
 import { getPairsByTokenUsd, getTokenWithUsd } from "../libs/dexBackend";
 
 interface TokenData {
@@ -115,7 +117,7 @@ export default function TokenDetail() {
     return (
       <div className="max-w-[1200px] mx-auto p-5 flex justify-center items-center min-h-[400px]">
         <div className="text-center text-white/60 flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-[3px] border-white/10 border-t-purple-400 rounded-full animate-spin"></div>
+          <Spinner className="w-8 h-8" />
           Loading token details...
         </div>
       </div>
@@ -143,7 +145,7 @@ export default function TokenDetail() {
               {
                 !tokenDetails ? (
                   <div className="text-center text-white/60 flex flex-col items-center gap-4">
-                    <div className="w-8 h-8 border-[3px] border-white/10 border-t-purple-400 rounded-full animate-spin"></div>
+                    <Spinner className="w-8 h-8" />
                     Loading token details...
                   </div>
                 ) : (
@@ -269,7 +271,7 @@ export default function TokenDetail() {
                     gap: 6,
                   }}
                 >
-                  🏦 Total Value Locked
+                  🏦 Total Volume
                 </div>
                 <div
                   style={{
@@ -283,7 +285,6 @@ export default function TokenDetail() {
                   {/* ${Decimal.from(token?.tvlUsd || 0).prettify(2)} */}
                   <PriceDataFormatter
                     priceData={tokenDetails?.summary?.total_volume}
-                    bignumber
                   />
                 </div>
                 <div
@@ -312,24 +313,18 @@ export default function TokenDetail() {
               >
                 <div className="text-xs text-white/60 mb-2 font-semibold uppercase tracking-wide flex items-center justify-between gap-1.5">
                   📊 Volume
-                  <select
+                  <AppSelect
                     value={selectedPeriod}
-                    onChange={(e) =>
-                      setSelectedPeriod(e.target.value as "24h" | "7d" | "30d")
+                    onValueChange={(v) =>
+                      setSelectedPeriod(v as "24h" | "7d" | "30d")
                     }
-                    className="text-[10px] bg-white/10 border border-white/20 rounded px-2 py-1 text-white outline-none cursor-pointer hover:bg-white/20 transition-colors"
-                    style={{ colorScheme: "dark" }}
+                    triggerClassName="text-[10px] bg-white/10 border border-white/20 rounded px-2 py-1 text-white outline-none cursor-pointer hover:bg-white/20 transition-colors"
+                    contentClassName="bg-[#1a1a1a] border-white/20"
                   >
-                    <option value="24h" style={{ backgroundColor: "#1a1a1a" }}>
-                      24h
-                    </option>
-                    <option value="7d" style={{ backgroundColor: "#1a1a1a" }}>
-                      7d
-                    </option>
-                    <option value="30d" style={{ backgroundColor: "#1a1a1a" }}>
-                      30d
-                    </option>
-                  </select>
+                    <AppSelectItem value="24h">24h</AppSelectItem>
+                    <AppSelectItem value="7d">7d</AppSelectItem>
+                    <AppSelectItem value="30d">30d</AppSelectItem>
+                  </AppSelect>
                 </div>
                 <div
                   style={{
@@ -344,7 +339,6 @@ export default function TokenDetail() {
                     priceData={
                       tokenDetails?.summary?.change?.[selectedPeriod]?.volume
                     }
-                    bignumber
                   />
                 </div>
                 <div

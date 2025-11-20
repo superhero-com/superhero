@@ -17,7 +17,7 @@ const AeCard = React.forwardRef<
     glow: "bg-card border-border shadow-glow"
   }
   
-  const hoverClasses = hover ? "hover:-translate-y-1 hover:shadow-glow" : ""
+  const hoverClasses = hover ? "hover:-translate-y-1" : ""
   
   return (
     <div

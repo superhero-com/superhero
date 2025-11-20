@@ -1,24 +1,31 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import Head from "../seo/Head";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import AeButton from "../components/AeButton";
 import RightRail from "../components/layout/RightRail";
 import Shell from "../components/layout/Shell";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PostsService } from "../api/generated";
+import type { PostDto } from "../api/generated";
 import { AccountsService } from "../api/generated/services/AccountsService";
 import { AccountTokensService } from "../api/generated/services/AccountTokensService";
+import { TokensService } from "../api/generated/services/TokensService";
+import { TransactionsService } from "../api/generated/services/TransactionsService";
 import { PostApiResponse } from "../features/social/types";
 import "../features/social/views/FeedList.scss";
 import { useAccountBalances } from "../hooks/useAccountBalances";
 import { useAddressByChainName, useChainName } from "../hooks/useChainName";
+import { SuperheroApi } from "../api/backend";
 
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import AccountCreatedToken from "@/components/Account/AccountCreatedToken";
 import AccountFeed from "@/components/Account/AccountFeed";
+import Spinner from "@/components/Spinner";
 import AccountOwnedTokens from "@/components/Account/AccountOwnedTokens";
 import AccountTrades from "@/components/Account/AccountTrades";
+import AccountPortfolio from "@/components/Account/AccountPortfolio";
 import ProfileEditModal from "../components/modals/ProfileEditModal";
 import { CONFIG } from "../config";
 import { useModal } from "../hooks";
@@ -46,6 +53,7 @@ export default function UserProfile({
   const { chainName } = useChainName(effectiveAddress);
   const { getProfile, canEdit } = useProfile(effectiveAddress);
   const { openModal } = useModal();
+  const queryClient = useQueryClient();
 
   const { data, refetch: refetchPosts } = useQuery({
     queryKey: ["PostsService.listAll", address],
@@ -74,6 +82,10 @@ export default function UserProfile({
 
   const [profile, setProfile] = useState<any>(null);
   const [editOpen, setEditOpen] = useState(false);
+  // Optimistic bio state - updated immediately when bio is posted
+  const [optimisticBio, setOptimisticBio] = useState<string | null>(null);
+  // Loading indicator state for bio updates
+  const [isBioLoading, setIsBioLoading] = useState(false);
   
   // Get tab from URL search params, default to "feed"
   const tabFromUrl = searchParams.get("tab") as TabType;
@@ -94,6 +106,25 @@ export default function UserProfile({
       newSearchParams.set("tab", newTab);
     }
     setSearchParams(newSearchParams, { replace: true });
+    
+    // Scroll to tabs section after a brief delay to allow DOM update
+    setTimeout(() => {
+      const tabsSection = document.getElementById('profile-tabs-section');
+      if (tabsSection) {
+        // Get navbar height dynamically (header is sticky)
+        const header = document.querySelector('header') || document.querySelector('[class*="mobile-navigation"]');
+        const headerHeight = header ? header.getBoundingClientRect().height : 64; // Default to 64px (h-16)
+        
+        // Calculate scroll position accounting for navbar
+        const elementPosition = tabsSection.getBoundingClientRect().top + window.pageYOffset;
+        const offsetPosition = elementPosition - headerHeight - 8; // 8px extra spacing
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
   };
 
   // Sync tab state when URL changes (e.g., browser back/forward)
@@ -149,49 +180,227 @@ export default function UserProfile({
     return undefined;
   }, [posts]);
   const bioText =
-    (accountInfo?.bio || "").trim() ||
+    (optimisticBio || accountInfo?.bio || "").trim() ||
     latestBioPost?.content?.trim() ||
     profile?.biography;
 
   useEffect(() => {
     if (!effectiveAddress) return;
+    // Clear optimistic bio and loading state when address changes
+    setOptimisticBio(null);
+    setIsBioLoading(false);
     // Scroll to top whenever navigating to a user profile
     window.scrollTo(0, 0);
-    loadAccountData();
+    // Note: loadAccountData() is automatically called by useAccountBalances hook
+    // when effectiveAddress changes, so no manual call is needed here
     (async () => {
       const p = await getProfile();
       setProfile(p);
     })();
   }, [effectiveAddress]);
 
-  // Listen for bio post submissions to show a spinner and refetch until updated
+  // Prefetch all tab data in the background so switching tabs is instant
+  useEffect(() => {
+    if (!effectiveAddress) return;
+    
+    // Prefetch feed tab data (posts and activities)
+    queryClient.prefetchInfiniteQuery({
+      queryKey: ["profile-posts", effectiveAddress],
+      queryFn: ({ pageParam = 1 }) =>
+        PostsService.listAll({
+          accountAddress: effectiveAddress,
+          orderBy: "created_at",
+          orderDirection: "DESC",
+          limit: 10,
+          page: pageParam,
+        }) as any,
+      initialPageParam: 1,
+      getNextPageParam: (lastPage: any) => {
+        if (
+          lastPage?.meta?.currentPage &&
+          lastPage?.meta?.totalPages &&
+          lastPage.meta.currentPage < lastPage.meta.totalPages
+        ) {
+          return lastPage.meta.currentPage + 1;
+        }
+        return undefined;
+      },
+    });
+
+    queryClient.prefetchInfiniteQuery({
+      queryKey: ["profile-activities", effectiveAddress],
+      queryFn: async ({ pageParam = 1 }) => {
+        const resp = await SuperheroApi.listTokens({
+          creatorAddress: effectiveAddress,
+          orderBy: "created_at",
+          orderDirection: "DESC",
+          limit: 50,
+          page: pageParam as number,
+        }).catch(() => ({ items: [] }));
+        // Map token items to PostDto format to match AccountFeed.tsx query
+        const items = (resp?.items || []).map((payload: any): PostDto => {
+          const saleAddress: string = payload?.sale_address || payload?.address || "";
+          const name: string = payload?.token_name || payload?.name || "Unknown";
+          const createdAt: string = payload?.created_at || new Date().toISOString();
+          const encodedName = encodeURIComponent(name);
+          const id = `token-created:${encodedName}:${saleAddress}:${createdAt}_v3`;
+          return {
+            id,
+            tx_hash: payload?.tx_hash || "",
+            tx_args: [
+              { token_name: name },
+              { sale_address: saleAddress },
+              { kind: "token-created" },
+            ],
+            sender_address: payload?.creator_address || effectiveAddress || "",
+            contract_address: saleAddress || "",
+            type: "TOKEN_CREATED",
+            content: "",
+            topics: ["token:created", `token_name:${name}`, `#${name}`].filter(Boolean) as string[],
+            media: [],
+            total_comments: 0,
+            created_at: createdAt,
+          } as PostDto;
+        });
+        return items;
+      },
+      initialPageParam: 1,
+      getNextPageParam: (lastPage: any[], pages: any[][]) => 
+        (lastPage && lastPage.length === 50 ? pages.length + 1 : undefined),
+    });
+
+    // Prefetch owned tokens tab data
+    queryClient.prefetchQuery({
+      queryKey: ['DataTable', { page: 1, limit: 10 }, { address: effectiveAddress, orderBy: "balance", orderDirection: "DESC" }],
+      queryFn: () =>
+        AccountTokensService.listTokenHolders({
+          address: effectiveAddress,
+          orderBy: "balance",
+          orderDirection: "DESC",
+          limit: 10,
+          page: 1,
+        }) as unknown as Promise<{ items: any[]; meta?: any }>,
+      staleTime: 60_000,
+    });
+
+    // Prefetch created tokens tab data
+    queryClient.prefetchQuery({
+      queryKey: [
+        "TokensService.listAll",
+        "created",
+        effectiveAddress,
+        "market_cap",
+        "DESC",
+        1,
+        20,
+      ],
+      queryFn: () =>
+        TokensService.listAll({
+          creatorAddress: effectiveAddress,
+          orderBy: "market_cap",
+          orderDirection: "DESC",
+          limit: 20,
+          page: 1,
+        }) as unknown as Promise<{ items: any[]; meta?: any }>,
+      staleTime: 60_000,
+    });
+
+    // Prefetch transactions tab data
+    queryClient.prefetchQuery({
+      queryKey: ['DataTable', { page: 1, limit: 10 }, { accountAddress: effectiveAddress, includes: "token" }],
+      queryFn: () =>
+        TransactionsService.listTransactions({
+          accountAddress: effectiveAddress,
+          includes: "token",
+          limit: 10,
+          page: 1,
+        }) as unknown as Promise<{ items: any[]; meta?: any }>,
+      staleTime: 30_000,
+    });
+  }, [effectiveAddress, queryClient]);
+
+  // Listen for bio post submissions to optimistically update and then poll until backend confirms
   useEffect(() => {
     function handleBioPosted(e: Event) {
       try {
-        const detail = (e as CustomEvent).detail as { address?: string };
-        if (!detail?.address || detail.address !== effectiveAddress) return;
-        const el = document.getElementById("bio-loading-indicator");
-        if (el) el.classList.remove("hidden");
-        // Poll account endpoint briefly to pick up new bio
+        const detail = (e as CustomEvent).detail as { address?: string; bio?: string; txHash?: string };
+        if (!detail?.address) {
+          console.warn("[UserProfile] Bio post event missing address");
+          return;
+        }
+        // Normalize addresses for comparison (trim and lowercase)
+        const eventAddress = (detail.address || "").trim().toLowerCase();
+        const currentAddress = (effectiveAddress || "").trim().toLowerCase();
+        if (eventAddress !== currentAddress) {
+          console.log("[UserProfile] Bio post event for different address:", eventAddress, "current:", currentAddress);
+          return;
+        }
+        const submittedBio = (detail.bio || "").trim();
+        if (!submittedBio) {
+          console.warn("[UserProfile] Bio post event missing bio text");
+          return;
+        }
+        
+        console.log("[UserProfile] Received bio post event, updating optimistically:", submittedBio);
+        
+        // Update optimistic bio state immediately - this will make bio appear right away
+        setOptimisticBio(submittedBio);
+        setIsBioLoading(true);
+        
+        // Optimistically update the React Query cache immediately so bio appears right after wallet confirmation
+        const queryKey = ["AccountsService.getAccount", effectiveAddress];
+        queryClient.setQueryData(queryKey, (oldData: any) => {
+          if (oldData) {
+            return {
+              ...oldData,
+              bio: submittedBio,
+            };
+          }
+          // If no account info exists yet, create a minimal entry
+          return {
+            address: effectiveAddress,
+            bio: submittedBio,
+          };
+        });
+        
+        // Also update the profile state if it exists
+        if (profile) {
+          setProfile({ ...profile, biography: submittedBio });
+        }
+        
+        // Refetch posts to ensure the new bio post appears in the feed
+        refetchPosts();
+        
+        // Poll account endpoint to ensure backend has processed the transaction
         const start = Date.now();
         const interval = window.setInterval(async () => {
           await refetchAccount();
-          const latestBio = (accountInfo?.bio || "").trim();
-          if (latestBio) {
-            if (el) el.classList.add("hidden");
+          // Get fresh account info from React Query cache after refetch
+          const freshAccountInfo = queryClient.getQueryData<any>(queryKey);
+          const latestBio = (freshAccountInfo?.bio || "").trim();
+          // Check if bio matches what was submitted (for updates) or if bio exists (for new bios)
+          if (latestBio && (submittedBio ? latestBio === submittedBio : true)) {
+            // Clear optimistic bio once backend confirms - backend data will take over
+            setOptimisticBio(null);
+            setIsBioLoading(false);
             window.clearInterval(interval);
           }
           if (Date.now() - start > 15_000) {
-            // timeout after 15s
-            if (el) el.classList.add("hidden");
+            // timeout after 15s - keep optimistic bio but stop loading indicator
+            setIsBioLoading(false);
             window.clearInterval(interval);
           }
         }, 1500);
-      } catch { }
+      } catch (error) {
+        console.error("[UserProfile] Error handling bio post:", error);
+        // Clear optimistic bio and loading state on error
+        setOptimisticBio(null);
+        setIsBioLoading(false);
+      }
     }
     window.addEventListener("profile-bio-posted", handleBioPosted as any);
     return () => window.removeEventListener("profile-bio-posted", handleBioPosted as any);
-  }, [effectiveAddress, accountInfo?.bio]);
+  }, [effectiveAddress, refetchAccount, refetchPosts, queryClient, profile]);
 
   const content = (
     <div className="w-full">
@@ -207,7 +416,8 @@ export default function UserProfile({
           description: bioText || undefined,
         }}
       />
-      <div className="mb-4">
+      {/* Back button */}
+      <div className="mb-4 md:mb-6">
         <AeButton
           onClick={() => {
             const state = (window.history?.state as any) || {};
@@ -223,120 +433,156 @@ export default function UserProfile({
           ← Back
         </AeButton>
       </div>
-      {/* Profile header (banner + avatar + stats) */}
-      <div className="mb-5 md:mb-6 rounded-2xl overflow-visible md:overflow-hidden relative md:border md:border-white/10 md:bg-gradient-to-b md:from-white/10 md:to-white/5 md:backdrop-blur-xl">
-        {/* Banner (desktop only) */}
-        <div className="hidden md:block h-28 w-full bg-[radial-gradient(100%_60%_at_0%_0%,rgba(17,97,254,0.35),transparent_60%),radial-gradient(100%_60%_at_100%_0%,rgba(78,205,196,0.35),transparent_60%)]" />
 
-        {/* Avatar and main info */}
-        <div className="px-0 md:px-6 pb-0 md:pb-6 mt-0 md:-mt-12 relative z-10">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-start md:gap-4">
-            <div className="flex flex-col gap-2 min-w-0 md:flex-1">
-              {/* Row 1: avatar + identity */}
-              <div className="flex items-center gap-3 md:gap-4">
-                {/* Avatar */}
-                <div className="md:hidden shrink-0">
-                  <AddressAvatarWithChainName
-                    address={effectiveAddress}
-                    size={64}
-                    overlaySize={22}
-                    showAddressAndChainName={false}
-                    isHoverEnabled={true}
-                  />
-                </div>
-                <div className="hidden md:block shrink-0">
-                  <AddressAvatarWithChainName
-                    address={effectiveAddress}
-                    size={72}
-                    overlaySize={24}
-                    showAddressAndChainName={false}
-                    isHoverEnabled={true}
-                  />
-                </div>
-                {/* Identity */}
-                <div className="min-w-0 md:self-center">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent tracking-tight">{chainName || "Legend"}</span>
-                  </div>
-                  <div className="font-mono text-xs text-white/70 break-all mt-0 md:mt-2">{effectiveAddress}</div>
-                </div>
+      {/* Compact Profile Header */}
+      <div className="mb-4 md:mb-4">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+          {/* Avatar and Identity */}
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            <div className="relative shrink-0">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/30 to-teal-500/30 blur-lg opacity-50" />
+              <AddressAvatarWithChainName
+                address={effectiveAddress}
+                size={64}
+                overlaySize={22}
+                showAddressAndChainName={false}
+                isHoverEnabled={true}
+                className="relative"
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl md:text-2xl font-extrabold bg-gradient-to-r from-[var(--neon-teal)] via-teal-400 to-cyan-300 bg-clip-text text-transparent tracking-tight">
+                {chainName || "Legend"}
+              </h1>
+              <div className="font-mono text-xs text-white/60 mt-0.5 break-all">
+                {effectiveAddress}
               </div>
-              {/* Row 2: bio on its own line */}
               {bioText && (
-                <div className="mt-1 text-sm text-white whitespace-pre-wrap inline-flex items-center gap-2">
+                <div className="mt-2 text-sm text-white/80 leading-relaxed line-clamp-2">
                   <span>{bioText}</span>
-                  <span id="bio-loading-indicator" className="hidden w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  {isBioLoading && (
+                    <span className="ml-2 inline-block">
+                      <Spinner className="w-3 h-3" />
+                    </span>
+                  )}
                 </div>
               )}
             </div>
-            <div className="flex flex-row flex-wrap items-start gap-2 md:flex-col md:items-end md:gap-2 md:ml-auto md:self-start">
-              {canEdit ? (
-                <AeButton
-                  size="sm"
-                  variant="ghost"
-                  className="!border !border-solid !border-white/20 hover:!border-white/35"
-                  onClick={() => setEditOpen(true)}
-                >
-                  Edit Profile
-                </AeButton>
-              ) : null}
-              {!canEdit ? (
-                <AeButton
-                  onClick={() => openModal({ name: "tip", props: { toAddress: effectiveAddress } })}
-                  variant="ghost"
-                  size="sm"
-                  className="!border !border-solid !border-white/15 hover:!border-white/35 inline-flex items-center gap-2"
-                  title={t('titles.sendATip')}
-                >
-                  <IconDiamond className="w-4 h-4 text-[#1161FE]" />
-                  Tip
-                </AeButton>
-              ) : null}
-
-              {/* Explorer link */}
-              <AeButton
-                variant="ghost"
-                size="sm"
-                className="!border !border-solid !border-white/15 hover:!border-white/35 [&_svg]:!size-[0.9em]"
-                onClick={() => {
-                  const base = (CONFIG.EXPLORER_URL || "https://aescan.io").replace(/\/$/, "");
-                  const url = `${base}/accounts/${effectiveAddress}`;
-                  window.open(url, "_blank", "noopener,noreferrer");
-                }}
-                title={t('titles.openOnAescan')}
-              >
-                <span className="inline-flex items-center gap-2">
-                  <span>View on æScan</span>
-                  <IconLink className="w-[0.65em] h-[0.65em] opacity-80 align-middle" />
-                </span>
-              </AeButton>
-            </div>
           </div>
 
-          {/* Stats */}
-          <div className="mt-3 md:mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-            <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
-              <div className="text-[11px] uppercase tracking-wider text-white/60">AE Balance</div>
-              <div className="text-white font-bold mt-1">{decimalBalance ? `${decimalBalance.prettify()} AE` : "Loading..."}</div>
-            </div>
-            <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
-              <div className="text-[11px] uppercase tracking-wider text-white/60">Owned Trends</div>
-              <div className="text-white font-bold mt-1">{(ownedTokensResp as any)?.meta?.totalItems ?? (Array.isArray(aex9Balances) ? aex9Balances.length : 0)}</div>
-            </div>
-            <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
-              <div className="text-[11px] uppercase tracking-wider text-white/60">Created Trends</div>
-              <div className="text-white font-bold mt-1">{accountInfo?.total_created_tokens ?? 0}</div>
-            </div>
-            <div className="rounded-xl bg-white/[0.06] border border-white/10 p-3">
-              <div className="text-[11px] uppercase tracking-wider text-white/60">Posts</div>
-              <div className="text-white font-bold mt-1">{posts.length}</div>
-            </div>
+          {/* Action buttons */}
+          <div className="flex flex-row gap-2 shrink-0">
+            {canEdit ? (
+              <AeButton
+                size="sm"
+                variant="ghost"
+                className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all"
+                onClick={() => setEditOpen(true)}
+              >
+                {bioText ? t('buttons.editBio') : t('buttons.addBio')}
+              </AeButton>
+            ) : null}
+            {!canEdit ? (
+              <AeButton
+                onClick={() => openModal({ name: "tip", props: { toAddress: effectiveAddress } })}
+                variant="ghost"
+                size="sm"
+                className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all inline-flex items-center gap-2"
+                title={t('titles.sendATip')}
+              >
+                <IconDiamond className="w-4 h-4 text-white" />
+                Tip
+              </AeButton>
+            ) : null}
+            <AeButton
+              variant="ghost"
+              size="sm"
+              className="!border !border-solid !border-white/20 hover:!border-white/40 hover:bg-white/10 transition-all [&_svg]:!size-[0.9em]"
+              onClick={() => {
+                const base = (CONFIG.EXPLORER_URL || "https://aescan.io").replace(/\/$/, "");
+                const url = `${base}/accounts/${effectiveAddress}`;
+                window.open(url, "_blank", "noopener,noreferrer");
+              }}
+              title={t('titles.openOnAescan')}
+            >
+              <IconLink className="w-[0.65em] h-[0.65em] opacity-80 align-middle" />
+            </AeButton>
           </div>
         </div>
       </div>
 
+      {/* Portfolio Chart and Stats - Side by side on md+ */}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-4 md:gap-6 mb-4 md:mb-4">
+        {/* Portfolio Chart - Smaller on md+ */}
+        <div className="w-full -mt-4 -mb-6">
+          <AccountPortfolio address={effectiveAddress} />
+        </div>
+
+        {/* Stats Grid - Right column on md+, full width on mobile */}
+        <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5 md:gap-2.5">
+          <div className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all flex flex-col justify-center">
+            <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
+              AE Balance
+            </div>
+            <div className="text-base md:text-lg font-bold text-white">
+              {decimalBalance ? (() => {
+                try {
+                  const value = typeof decimalBalance.toNumber === 'function' 
+                    ? decimalBalance.toNumber()
+                    : typeof decimalBalance === 'number'
+                    ? decimalBalance
+                    : Number(decimalBalance);
+                  // If value is above 1 AE, show 2 decimals
+                  if (value >= 1) {
+                    return `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AE`;
+                  }
+                  // Otherwise use prettify for values below 1 AE
+                  return `${decimalBalance.prettify()} AE`;
+                } catch {
+                  // Fallback to prettify if conversion fails
+                  return `${decimalBalance.prettify()} AE`;
+                }
+              })() : "Loading..."}
+            </div>
+          </div>
+          <button
+            onClick={() => handleTabChange("owned")}
+            className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
+          >
+            <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
+              Owned Trends
+            </div>
+            <div className="text-base md:text-lg font-bold text-white">
+              {((ownedTokensResp as any)?.meta?.totalItems ?? (Array.isArray(aex9Balances) ? aex9Balances.length : 0)).toLocaleString()}
+            </div>
+          </button>
+          <button
+            onClick={() => handleTabChange("created")}
+            className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
+          >
+            <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
+              Created Trends
+            </div>
+            <div className="text-base md:text-lg font-bold text-white">
+              {(accountInfo?.total_created_tokens ?? 0).toLocaleString()}
+            </div>
+          </button>
+          <button
+            onClick={() => handleTabChange("feed")}
+            className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
+          >
+            <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
+              Posts
+            </div>
+            <div className="text-base md:text-lg font-bold text-white">
+              {posts.length.toLocaleString()}
+            </div>
+          </button>
+        </div>
+      </div>
+
       {/* Tabs - reuse main feed filter styles (mobile underline, desktop pills) */}
-      <div className="w-full mb-2">
+      <div id="profile-tabs-section" className="w-full mb-2">
         {/* Underline tabs with divider. Full-bleed on mobile; constrained on md+. */}
         <div>
           <div className="flex items-center justify-start gap-4 border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] overflow-x-auto whitespace-nowrap md:w-full md:mx-0 md:overflow-visible md:gap-10">
@@ -386,6 +632,7 @@ export default function UserProfile({
         onClose={() => {
           setEditOpen(false);
           refetchPosts();
+          refetchAccount(); // Refetch account info to get updated bio
           (async () => {
             const p = await getProfile();
             setProfile(p);
@@ -403,6 +650,7 @@ export default function UserProfile({
         onClose={() => {
           setEditOpen(false);
           refetchPosts();
+          refetchAccount(); // Refetch account info to get updated bio
           (async () => {
             const p = await getProfile();
             setProfile(p);

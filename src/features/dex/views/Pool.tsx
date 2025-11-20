@@ -5,6 +5,7 @@ import { useAccount } from '../../../hooks';
 import { AddLiquidityForm, LiquidityPositionCard, RemoveLiquidityForm } from '../components';
 import { PoolProvider, usePool } from '../context/PoolProvider';
 import { useLiquidityPositions } from '../hooks';
+import Spinner from '../../../components/Spinner';
 
 function PoolContent() {
   const navigate = useNavigate();
@@ -85,7 +86,7 @@ function PoolContent() {
                     Active Positions
                   </h3>
                   {loading && positions.length > 0 && (
-                    <div className="w-4 h-4 border-2 border-white/10 border-t-[#4ecdc4] rounded-full animate-spin"></div>
+                    <Spinner className="w-4 h-4" />
                   )}
                 </div>
                 <div className="flex gap-2">
@@ -100,7 +101,7 @@ function PoolContent() {
                     >
                       {loading ? (
                         <>
-                          <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          <Spinner className="w-3 h-3" />
                           Refreshing...
                         </>
                       ) : (
@@ -113,7 +114,7 @@ function PoolContent() {
 
               {loading && positions.length === 0 ? (
                 <div className="text-center py-10 text-white/60 flex flex-col items-center gap-4">
-                  <div className="w-8 h-8 border-3 border-white/10 border-t-[#4ecdc4] rounded-full animate-spin"></div>
+                  <Spinner className="w-8 h-8" />
                   Loading your positions...
                 </div>
               ) : error ? (
@@ -135,7 +136,7 @@ function PoolContent() {
                     <ConnectWalletButton
                       label="CONNECT WALLET"
                       variant="dex"
-                      className="px-6 py-3 rounded-xl border-none bg-[#1161FE] text-white text-sm font-semibold shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                      className="px-6 py-3 rounded-xl border-none bg-[#1161FE] text-white text-sm font-semibold shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
                     />
                   )}
                 </div>

@@ -26,7 +26,11 @@ export default function WalletOverviewCard({
 }: WalletOverviewCardProps) {
   const navigate = useNavigate();
   const { activeAccount, currentBlockHeight } = useAeSdk();
-  const { decimalBalance } = useAccountBalances(activeAccount);
+  const { decimalBalance, loadAccountData } = useAccountBalances(activeAccount);
+  
+  // Immediately reload balance when account changes
+  // Note: loadAccountData is already called by useAccountBalances when selectedAccount changes
+  // So we don't need to call it again here to avoid duplicate calls
 
   // Persisted expand/collapse state
   const [open, setOpen] = useState<boolean>(() =>
@@ -212,7 +216,7 @@ export default function WalletOverviewCard({
             <button
               type="button"
               className="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 bg-white/10 text-white hover:bg-white/20 border border-white/20"
-              onClick={() => window.open(`https://www.aescan.io/account/${activeAccount}`, '_blank')}
+              onClick={() => window.open(`https://www.aescan.io/accounts/${activeAccount}`, '_blank')}
             >
               🔗 Open on aeScan
             </button>

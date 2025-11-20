@@ -20,6 +20,7 @@ import { Decimal } from '../../../libs/decimal';
 import { useAccount, useDex } from '../../../hooks';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useQuery } from '@tanstack/react-query';
+import Spinner from '../../../components/Spinner';
 
 export interface SwapFormProps {
   onPairSelected?: (pair: PairDto) => void;
@@ -255,9 +256,14 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     }
 
     try {
+      // Use router's calculated amounts for execution (accounts for constant product formula)
+      // Display amounts (amountIn/amountOut) are ratio-based for correct pricing display
+      const executionAmountOut = routeInfo.routerAmountOut || amountOut;
+      const executionAmountIn = routeInfo.routerAmountIn || amountIn;
+      
       const txHash = await executeSwap({
-        amountIn,
-        amountOut,
+        amountIn: isExactIn ? amountIn : executionAmountIn,
+        amountOut: isExactIn ? executionAmountOut : amountOut,
         tokenIn,
         tokenOut,
         path: routeInfo.path,
@@ -335,9 +341,14 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     // 2. We have a valid input amount > 0
     // 3. We're not currently loading a quote
     // 4. We don't have a general error (which might be a different issue)
-    // 5. The output amount is 0 or empty after quoting
+    // 5. The output amount is 0 or empty after quoting OR liquidity is exceeded
     if (!tokenIn || !tokenOut || !amountIn || Number(amountIn) <= 0 || quoteLoading || error) {
       return false;
+    }
+
+    // Check if liquidity is exceeded
+    if (routeInfo.liquidityStatus?.exceedsLiquidity) {
+      return true;
     }
 
     // Check if we have a meaningful output amount
@@ -347,11 +358,12 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     const hasNoRoute = routeInfo.path.length === 0;
     
     return !hasValidOutput || hasNoRoute;
-  }, [tokenIn, tokenOut, amountIn, amountOut, quoteLoading, error, routeInfo.path.length]);
+  }, [tokenIn, tokenOut, amountIn, amountOut, quoteLoading, error, routeInfo.path.length, routeInfo.liquidityStatus]);
 
   const isSwapDisabled = useMemo(() => {
-    return swapLoading || !amountIn || Number(amountIn) <= 0 || Number(amountOut) <= 0 || !amountOut || !tokenIn || !tokenOut || hasInsufficientBalance || routeInfo.path.length === 0 || hasNoLiquidity;
-  }, [swapLoading, amountIn, amountOut, tokenIn, tokenOut, hasInsufficientBalance, routeInfo.path.length, hasNoLiquidity]);
+    const liquidityExceeded = routeInfo.liquidityStatus?.exceedsLiquidity === true;
+    return swapLoading || !amountIn || Number(amountIn) <= 0 || Number(amountOut) <= 0 || !amountOut || !tokenIn || !tokenOut || hasInsufficientBalance || routeInfo.path.length === 0 || hasNoLiquidity || liquidityExceeded;
+  }, [swapLoading, amountIn, amountOut, tokenIn, tokenOut, hasInsufficientBalance, routeInfo.path.length, hasNoLiquidity, routeInfo.liquidityStatus]);
 
   return (
     <div className="w-full sm:w-[480px] mx-auto bg-transparent border-0 p-0 relative overflow-hidden flex-shrink-0 sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
@@ -399,7 +411,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <button
           onClick={handleTokenSwap}
           disabled={swapLoading || !tokenIn || !tokenOut}
-          className="w-12 h-12 rounded-full border border-white/10 bg-white/[0.08] backdrop-blur-[10px] text-white cursor-pointer flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(0,0,0,0.25)] z-[2] relative hover:bg-white/[0.12] hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:-translate-y-0.5 hover:rotate-180 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:rotate-0"
+          className="w-12 h-12 rounded-full border border-white/10 bg-white/[0.08] backdrop-blur-[10px] text-white cursor-pointer flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(0,0,0,0.25)] z-[2] relative hover:bg-white/[0.12] hover:-translate-y-0.5 hover:rotate-180 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:rotate-0"
         >
           ⬇️
         </button>
@@ -433,6 +445,9 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         tokenIn={tokenIn}
         tokenOut={tokenOut}
         show={hasNoLiquidity}
+        exceedsLiquidity={routeInfo.liquidityStatus?.exceedsLiquidity}
+        maxAvailable={routeInfo.liquidityStatus?.maxAvailable}
+        pairAddress={routeInfo.liquidityStatus?.pairAddress}
       />
 
       {/* Swap Info Display */}
@@ -472,12 +487,12 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
           className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isSwapDisabled
               ? 'bg-white/10 cursor-not-allowed opacity-60'
-              : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0'
+              : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
           }`}
         >
           {swapLoading ? (
             <div className="flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              <Spinner className="w-4 h-4" />
               {t('swap.confirmInWallet')}
             </div>
           ) : t('swap.swapTokens')}
@@ -486,7 +501,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <ConnectWalletButton
           label={t('swap.connectWallet')}
           variant="dex"
-          className="text-sm w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:shadow-[0_12px_35px_rgba(17,97,254,0.5)] hover:-translate-y-0.5 active:translate-y-0"
+          className="text-sm w-full py-4 px-6 rounded-2xl border-none bg-[#1161FE] text-white text-base font-bold tracking-wider uppercase shadow-[0_8px_25px_rgba(17,97,254,0.4)] cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
           block
         />
       )}

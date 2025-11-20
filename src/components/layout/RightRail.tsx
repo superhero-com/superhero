@@ -1,93 +1,62 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
-import { Backend, TrendminerApi } from "../../api/backend";
+import { SuperheroApi } from "../../api/backend";
 import { useAccountBalances } from "../../hooks/useAccountBalances";
 import WalletOverviewCard from "@/components/wallet/WalletOverviewCard";
 import { useAeSdk } from "../../hooks/useAeSdk";
-import { useToast } from "../ToastProvider";
 import Sparkline from "../Trendminer/Sparkline";
 import { BuyAeWidget } from "../../features/ae-eth-buy";
 
 import { useWallet } from "../../hooks";
-interface SearchSuggestion {
-  type: "user" | "token" | "topic" | "post" | "dao" | "pool" | "transaction";
-  id: string;
-  title: string;
-  subtitle?: string;
-  icon: string;
-  relevance: number;
-  url?: string;
-}
-
-interface SearchFilter {
-  users: boolean;
-  tokens: boolean;
-  topics: boolean;
-  posts: boolean;
-  daos: boolean;
-  pools: boolean;
-  transactions: boolean;
-}
+import { useAddressByChainName } from "../../hooks/useChainName";
 
 export default function RightRail({
-  hideTrends = false,
   hidePriceSection = true,
 }: {
-  hideTrends?: boolean;
   hidePriceSection?: boolean;
 }) {
   const { t } = useTranslation('common');
-  const toast = useToast();
   const navigate = useNavigate();
-  const { currentBlockHeight, activeAccount } = useAeSdk();
-  const [trending, setTrending] = useState<Array<[string, any]>>([] as any);
-  const [prices, setPrices] = useState<any>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchSuggestions, setSearchSuggestions] = useState<
-    SearchSuggestion[]
-  >([]);
-  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
-  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const location = useLocation();
+  const params = useParams();
+  const { activeAccount } = useAeSdk();
+  
+  // Resolve chain name if present
+  const isChainName = params.address?.endsWith(".chain");
+  const { address: resolvedAddress } = useAddressByChainName(
+    isChainName ? params.address : undefined
+  );
+  const effectiveProfileAddress = isChainName && resolvedAddress 
+    ? resolvedAddress 
+    : (params.address as string | undefined);
+  
+  // Check if we're on the user's own profile page
+  const isOwnProfile = useMemo(() => {
+    const isProfilePage = location.pathname.startsWith('/users/');
+    if (!isProfilePage) return false;
+    if (!activeAccount || !effectiveProfileAddress) return false;
+    return effectiveProfileAddress === activeAccount;
+  }, [location.pathname, effectiveProfileAddress, activeAccount]);
+  const [prices, setPrices] = useState<any>(() => {
+    // Initialize from cache if available
+    try {
+      const cached = sessionStorage.getItem("ae_prices");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        // Check if cache is recent (less than 5 minutes old)
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 5 * 60 * 1000) {
+          return parsed.data;
+        }
+      }
+    } catch {
+      // Ignore cache errors
+    }
+    return null;
+  });
   const [selectedCurrency, setSelectedCurrency] = useState<
     "usd" | "eur" | "cny"
   >("usd");
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [savedSearches, setSavedSearches] = useState<string[]>([]);
-  const [searchFilters, setSearchFilters] = useState<SearchFilter>({
-    users: true,
-    tokens: true,
-    topics: true,
-    posts: true,
-    daos: true,
-    pools: true,
-    transactions: true,
-  });
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchDebounce, setSearchDebounce] = useState<NodeJS.Timeout | null>(
-    null
-  );
-  const [apiStatus, setApiStatus] = useState<{
-    backend: "online" | "offline" | "checking";
-    trending: "online" | "offline" | "checking";
-    dex: "online" | "offline" | "checking";
-  }>({
-    backend: "checking",
-    trending: "checking",
-    dex: "checking",
-  });
-
-  const suggestionsRef = useRef<HTMLDivElement>(null);
-  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
-  const [topTokens, setTopTokens] = useState<any[]>([]);
-  const [showLiveFeed, setShowLiveFeed] = useState(true);
-  const [liveTransactions, setLiveTransactions] = useState<any[]>([]);
-  const [priceAlerts, setPriceAlerts] = useState<
-    Array<{ token: string; price: number; change: number }>
-  >([]);
-
-  // Toggle visibility of Top Tokens, Live Activity, and Price Alerts sections
-  const SHOW_RIGHT_RAIL_EXTRAS = false;
 
   const [usdSpark, setUsdSpark] = useState<number[]>(() => {
     try {
@@ -112,25 +81,14 @@ export default function RightRail({
   });
 
   const address = useWallet().address;
-  const chainNames = useWallet().chainNames;
   const accountId = useMemo(
     () => activeAccount || address || "",
     [activeAccount, address]
   );
-  const { decimalBalance, loadAccountData } = useAccountBalances(accountId);
-  const balanceAe = useMemo(() => {
-    try {
-      return Number(decimalBalance?.toString?.() ?? 0);
-    } catch {
-      return 0;
-    }
-  }, [decimalBalance]);
+  useAccountBalances(accountId);
 
-  useEffect(() => {
-    if (accountId) {
-      loadAccountData();
-    }
-  }, [accountId]);
+  // Note: loadAccountData() is automatically called by useAccountBalances hook
+  // when accountId changes, so no manual call is needed here
 
   const formatPrice = (price: number, currency: string) => {
     const formatter = new Intl.NumberFormat("en-US", {
@@ -157,372 +115,204 @@ export default function RightRail({
     return "#94a3b8";
   };
 
-  // Online status tracking
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
-
-  // Enhanced search functionality with debouncing
-  const handleSearch = (query: string) => {
-    if (!query.trim()) return;
-
-    // Add to recent searches
-    setRecentSearches((prev) => {
-      const filtered = prev.filter((s) => s !== query);
-      return [query, ...filtered].slice(0.1);
-    });
-
-    // Navigate to search results with enhanced query
-    const searchParams = new URLSearchParams();
-    searchParams.set("search", query);
-
-    // Add filters to search params
-    Object.entries(searchFilters).forEach(([key, value]) => {
-      if (value) searchParams.set(`filter_${key}`, "true");
-    });
-
-    window.location.href = `/?${searchParams.toString()}`;
-  };
-
-  const handleSearchInputChange = async (value: string) => {
-    setSearchQuery(value);
-
-    // Clear previous debounce
-    if (searchDebounce) {
-      clearTimeout(searchDebounce);
-    }
-
-    if (value.length < 2) {
-      setSearchSuggestions([]);
-      setShowSearchSuggestions(false);
-      return;
-    }
-
-    // Debounce search to avoid too many API calls
-    const timeout = setTimeout(async () => {
-      await performSearch(value);
-    }, 300);
-
-    setSearchDebounce(timeout);
-  };
-
-  const performSearch = async (query: string) => {
-    setIsSearching(true);
-
-    try {
-      const suggestions: SearchSuggestion[] = [];
-      const searchTerm = query.toLowerCase();
-
-      // Parallel API calls for better performance
-      const searchPromises = [] as any[];
-
-      // Search tokens if filter is enabled
-      if (searchFilters.tokens) {
-        searchPromises.push(
-          TrendminerApi.listTokens({ search: query, limit: 5 }).catch(() => ({
-            items: [],
-          }))
-        );
-      }
-
-      // Search topics if filter is enabled
-      if (searchFilters.topics) {
-        searchPromises.push(Backend.getTopics().catch(() => []));
-      }
-
-      // Search DAOs if filter is enabled
-      if (searchFilters.daos) {
-        searchPromises.push(
-          TrendminerApi.listTokens({
-            search: query,
-            limit: 3,
-            collection: "all",
-          }).catch(() => ({ items: [] }))
-        );
-      }
-
-      // Search pools if filter is enabled
-      if (searchFilters.pools) {
-        searchPromises.push(
-          Backend.getFeed(1, "latest", null, query, true, false, false).catch(
-            () => ({ items: [] })
-          )
-        );
-      }
-
-      const results = await Promise.all(searchPromises);
-      let resultIndex = 0;
-
-      // Process user results
-      if (searchFilters.users && results[resultIndex]) {
-        const userResult = results[resultIndex];
-        if (userResult) {
-          suggestions.push({
-            type: "user",
-            id: query,
-            title: chainNames?.[query] || "User Profile",
-            subtitle: query,
-            icon: "👤",
-            relevance: 1.0,
-            url: `/profile/${query}`,
-          });
-        }
-        resultIndex++;
-      }
-
-      // Process token results
-      if (searchFilters.tokens && results[resultIndex]) {
-        const tokens = results[resultIndex]?.items || [];
-        tokens.forEach((token: any, index: number) => {
-          const relevance = calculateRelevance(
-            searchTerm,
-            token.name || token.symbol,
-            token.symbol
-          );
-          suggestions.push({
-            type: "token",
-            id: token.address,
-            title: token.name || token.symbol,
-            subtitle: `${token.symbol} • ${token.holders_count || 0} holders`,
-            icon: "💎",
-            relevance,
-            url: `/trends/tokens/${token.name || token.symbol}`,
-          });
-        });
-        resultIndex++;
-      }
-
-      // Process topic results
-      if (searchFilters.topics && results[resultIndex]) {
-        const topics = Array.isArray(results[resultIndex])
-          ? results[resultIndex]
-          : [];
-        topics.forEach((topic: any) => {
-          if (
-            Array.isArray(topic) &&
-            topic[0] &&
-            typeof topic[0] === "string" &&
-            topic[0].toLowerCase().includes(searchTerm)
-          ) {
-            const mentionCount = typeof topic[1] === "number" ? topic[1] : 0;
-            const relevance = calculateRelevance(searchTerm, topic[0]);
-            suggestions.push({
-              type: "topic",
-              id: topic[0],
-              title: topic[0],
-              subtitle: `${mentionCount} mentions`,
-              icon: "🏷️",
-              relevance,
-              url: `/trends?q=${encodeURIComponent(topic[0])}`,
-            });
-          }
-        });
-        resultIndex++;
-      }
-
-      // Process DAO results
-      if (searchFilters.daos && results[resultIndex]) {
-        const daos = results[resultIndex]?.items || [];
-        daos.forEach((dao: any) => {
-          const relevance = calculateRelevance(
-            searchTerm,
-            dao.name || dao.symbol
-          );
-          suggestions.push({
-            type: "dao",
-            id: dao.address,
-            title: dao.name || dao.symbol,
-            subtitle: `DAO • ${dao.members_count || 0} members`,
-            icon: "🏛️",
-            relevance,
-            url: `/trends/dao/${dao.address}`,
-          });
-        });
-        resultIndex++;
-      }
-
-      // Process pool results
-      if (searchFilters.pools && results[resultIndex]) {
-        const pools = results[resultIndex]?.items || [];
-        pools.slice(0, 3).forEach((pool: any) => {
-          const relevance = calculateRelevance(
-            searchTerm,
-            pool.title || pool.content
-          );
-          suggestions.push({
-            type: "pool",
-            id: pool.id || pool._id,
-            title: pool.title || "Pool Discussion",
-            subtitle: pool.author
-              ? `by ${chainNames?.[pool.author] || pool.author}`
-              : "Pool",
-            icon: "🏊",
-            relevance,
-            url: `/pool/${pool.id || pool._id}`,
-          });
-        });
-      }
-
-      // Sort by relevance and limit results
-      const sortedSuggestions = suggestions
-        .sort((a, b) => b.relevance - a.relevance)
-        .slice(0, 10);
-
-      setSearchSuggestions(sortedSuggestions);
-      setShowSearchSuggestions(true);
-    } catch (error) {
-      console.error("Failed to fetch search suggestions:", error);
-      toast.push(<>Search temporarily unavailable. Please try again.</>);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const calculateRelevance = (
-    searchTerm: string,
-    ...texts: string[]
-  ): number => {
-    let relevance = 0;
-    const term = searchTerm.toLowerCase();
-
-    texts.forEach((text) => {
-      const lowerText = text.toLowerCase();
-
-      // Exact match gets highest score
-      if (lowerText === term) relevance += 10;
-      // Starts with search term
-      else if (lowerText.startsWith(term)) relevance += 8;
-      // Contains search term
-      else if (lowerText.includes(term)) relevance += 5;
-      // Partial word match
-      else if (term.split(" ").some((word) => lowerText.includes(word)))
-        relevance += 3;
-    });
-
-    return relevance;
-  };
-
-  const handleSuggestionClick = (suggestion: SearchSuggestion) => {
-    setSearchQuery(suggestion.title);
-    setShowSearchSuggestions(false);
-
-    if (suggestion.url) {
-      window.location.href = suggestion.url;
-    } else {
-      handleSearch(suggestion.title);
-    }
-  };
-
-  const handleSaveSearch = () => {
-    if (!searchQuery.trim()) return;
-
-    setSavedSearches((prev) => {
-      const filtered = prev.filter((s) => s !== searchQuery);
-      return [searchQuery, ...filtered].slice(0, 5);
-    });
-
-    toast.push(<>Search "{searchQuery}" saved!</>);
-  };
-
-  const handleFilterToggle = (filter: keyof SearchFilter) => {
-    setSearchFilters((prev) => ({
-      ...prev,
-      [filter]: !prev[filter],
-    }));
-  };
-
-  const clearSearchHistory = () => {
-    setRecentSearches([]);
-    toast.push(<>Search history cleared!</>);
-  };
-
-  // Check API status
-  useEffect(() => {
-    const checkApiStatus = async () => {
-      // Check Backend API
-      try {
-        await Backend.getTopics();
-        setApiStatus((prev) => ({ ...prev, backend: "online" }));
-      } catch {
-        setApiStatus((prev) => ({ ...prev, backend: "offline" }));
-      }
-
-      // Check Trendminer API
-      try {
-        await TrendminerApi.listTrendingTags({ limit: 1 });
-        setApiStatus((prev) => ({ ...prev, trending: "online" }));
-      } catch {
-        setApiStatus((prev) => ({ ...prev, trending: "offline" }));
-      }
-
-      // Check DEX API (simulate)
-      try {
-        await Backend.getPrice();
-        setApiStatus((prev) => ({ ...prev, dex: "online" }));
-      } catch {
-        setApiStatus((prev) => ({ ...prev, dex: "offline" }));
-      }
-    };
-
-    checkApiStatus();
-    const interval = setInterval(checkApiStatus, 30000); // Check every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
-
   // Load data
   useEffect(() => {
-    Backend.getTopics()
-      .then((t) => {
-        try {
-          const list = Array.isArray(t) ? t : [];
-          const filtered = list.filter(
-            (row: any) =>
-              Array.isArray(row) &&
-              row[0] !== "#test" &&
-              typeof row[0] === "string" &&
-              typeof row[1] === "number"
-          );
-          setTrending(filtered);
-        } catch (error) {
-          console.error("Failed to process trending topics:", error);
-          setTrending([]);
-        }
-      })
-      .catch((error) => {
-        console.error("Failed to load trending topics:", error);
-        setTrending([]);
-      });
-
     async function loadPrice() {
       try {
-        const p = await Backend.getPrice();
-        const a = p?.aeternity || null;
-        setPrices(a);
-
-        if (a?.usd != null) {
-          setUsdSpark((prev) => {
-            const next = [...prev, Number(a.usd)].slice(-50);
-            sessionStorage.setItem("ae_spark_usd", JSON.stringify(next));
-            return next;
-          });
+        // Step 1: First, try to load today's daily price from historical data (fast, cached on backend)
+        // This gives us immediate price data without waiting for CoinGecko
+        // Only fetch the selected currency first for instant display
+        try {
+          const historicalData = await SuperheroApi.getHistoricalPrice(selectedCurrency, 1, 'daily');
+          if (historicalData && Array.isArray(historicalData) && historicalData.length > 0) {
+            // Get the latest price point (last item in array)
+            const latestPrice = historicalData[historicalData.length - 1];
+            if (Array.isArray(latestPrice) && latestPrice.length >= 2) {
+              const price = latestPrice[1];
+              
+              // Update prices immediately with quick data for selected currency
+              setPrices((prevPrices) => {
+                const quickPriceData: any = {
+                  usd: prevPrices?.usd ?? null,
+                  eur: prevPrices?.eur ?? null,
+                  cny: prevPrices?.cny ?? null,
+                  [selectedCurrency]: price,
+                };
+                
+                // Preserve existing market stats
+                quickPriceData.change24h = prevPrices?.change24h ?? null;
+                quickPriceData.marketCap = prevPrices?.marketCap ?? null;
+                quickPriceData.volume24h = prevPrices?.volume24h ?? null;
+                
+                return quickPriceData;
+              });
+            }
+          }
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn("Failed to load quick historical price:", error);
+          }
         }
 
-        if (a?.eur != null) {
-          setEurSpark((prev) => {
-            const next = [...prev, Number(a.eur)].slice(-50);
-            sessionStorage.setItem("ae_spark_eur", JSON.stringify(next));
-            return next;
-          });
+        // Step 2: Fetch current currency rates and market data asynchronously (may hit CoinGecko)
+        // This updates with the latest data in the background
+        const [ratesResult, marketDataResult] = await Promise.allSettled([
+          SuperheroApi.getCurrencyRates(),
+          SuperheroApi.getMarketData(selectedCurrency),
+        ]);
+
+        const rates = ratesResult.status === 'fulfilled' ? ratesResult.value : null;
+        const marketData = marketDataResult.status === 'fulfilled' ? marketDataResult.value : null;
+
+        // Log errors for failed requests
+        if (ratesResult.status === 'rejected') {
+          console.error("Failed to load currency rates:", ratesResult.reason);
+        } else if (ratesResult.status === 'fulfilled' && rates === null) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn("Currency rates API returned empty response");
+          }
         }
+        
+        if (marketDataResult.status === 'rejected') {
+          console.error("Failed to load market data:", marketDataResult.reason);
+        } else if (marketDataResult.status === 'fulfilled' && marketData === null) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn("Market data API returned empty response");
+          }
+        }
+
+        // Update sparklines whenever rates are available (regardless of marketData)
+        if (rates) {
+          if (rates.usd != null) {
+            setUsdSpark((prev) => {
+              const next = [...prev, Number(rates.usd)].slice(-50);
+              sessionStorage.setItem("ae_spark_usd", JSON.stringify(next));
+              return next;
+            });
+          }
+
+          if (rates.eur != null) {
+            setEurSpark((prev) => {
+              const next = [...prev, Number(rates.eur)].slice(-50);
+              sessionStorage.setItem("ae_spark_eur", JSON.stringify(next));
+              return next;
+            });
+          }
+        }
+
+        // Update price data, preserving existing market stats when marketData fails
+        // Use API rates if available, otherwise fallback to latest sparkline value
+        setPrices((prevPrices) => {
+          const priceData: any = {
+            usd: rates?.usd ?? null,
+            eur: rates?.eur ?? null,
+            cny: rates?.cny ?? null,
+          };
+
+          // Fallback to sparkline data if API rates are null but we have sparkline data
+          // Read from sessionStorage to get the most current values
+          if (!priceData.usd) {
+            try {
+              const usdSparkData = sessionStorage.getItem("ae_spark_usd");
+              if (usdSparkData) {
+                const usdSparkArray = JSON.parse(usdSparkData);
+                if (Array.isArray(usdSparkArray) && usdSparkArray.length > 0) {
+                  priceData.usd = usdSparkArray[usdSparkArray.length - 1];
+                }
+              }
+            } catch {
+              // Ignore errors reading sparkline data
+            }
+          }
+          
+          if (!priceData.eur) {
+            try {
+              const eurSparkData = sessionStorage.getItem("ae_spark_eur");
+              if (eurSparkData) {
+                const eurSparkArray = JSON.parse(eurSparkData);
+                if (Array.isArray(eurSparkArray) && eurSparkArray.length > 0) {
+                  priceData.eur = eurSparkArray[eurSparkArray.length - 1];
+                }
+              }
+            } catch {
+              // Ignore errors reading sparkline data
+            }
+          }
+
+          // Only update market stats if marketData is available
+          // Otherwise preserve existing values to prevent overwriting with null
+          if (marketData) {
+            priceData.change24h = marketData.priceChangePercentage24h || 
+                                  marketData.price_change_percentage_24h || 
+                                  null;
+            priceData.marketCap = marketData.marketCap || 
+                                 marketData.market_cap || 
+                                 null;
+            priceData.volume24h = marketData.totalVolume || 
+                                 marketData.total_volume || 
+                                 null;
+          } else {
+            // Preserve existing market stats when marketData fails
+            priceData.change24h = prevPrices?.change24h ?? null;
+            priceData.marketCap = prevPrices?.marketCap ?? null;
+            priceData.volume24h = prevPrices?.volume24h ?? null;
+          }
+
+          // Only update if we have at least one currency price
+          if (priceData.usd != null || priceData.eur != null || priceData.cny != null) {
+            // Cache the price data
+            try {
+              sessionStorage.setItem("ae_prices", JSON.stringify({
+                data: priceData,
+                timestamp: Date.now(),
+              }));
+            } catch {
+              // Ignore cache errors
+            }
+            return priceData;
+          }
+
+          // Return previous prices if no new data available
+          return prevPrices;
+        });
       } catch (error) {
         console.error("Failed to load price data:", error);
+        // On error, try to use cached data or sparkline fallback
+        setPrices((prevPrices) => {
+          if (prevPrices) return prevPrices;
+          
+          // Fallback to sparkline data if available
+          const fallbackData: any = {};
+          try {
+            const usdSparkData = sessionStorage.getItem("ae_spark_usd");
+            if (usdSparkData) {
+              const usdSparkArray = JSON.parse(usdSparkData);
+              if (Array.isArray(usdSparkArray) && usdSparkArray.length > 0) {
+                fallbackData.usd = usdSparkArray[usdSparkArray.length - 1];
+              }
+            }
+          } catch {
+            // Ignore errors
+          }
+          
+          try {
+            const eurSparkData = sessionStorage.getItem("ae_spark_eur");
+            if (eurSparkData) {
+              const eurSparkArray = JSON.parse(eurSparkData);
+              if (Array.isArray(eurSparkArray) && eurSparkArray.length > 0) {
+                fallbackData.eur = eurSparkArray[eurSparkArray.length - 1];
+              }
+            }
+          } catch {
+            // Ignore errors
+          }
+          
+          if (fallbackData.usd != null || fallbackData.eur != null) {
+            return fallbackData;
+          }
+          
+          return null;
+        });
       }
     }
 
@@ -531,151 +321,20 @@ export default function RightRail({
     return () => {
       window.clearInterval(t);
     };
-  }, []);
-
-  // Load saved searches from localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("saved_searches");
-      if (saved) {
-        setSavedSearches(JSON.parse(saved));
-      }
-    } catch (error) {
-      console.error("Failed to load saved searches:", error);
-    }
-  }, []);
-
-  // Save searches to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem("saved_searches", JSON.stringify(savedSearches));
-    } catch (error) {
-      console.error("Failed to save searches:", error);
-    }
-  }, [savedSearches]);
-
-  // Click outside to close suggestions
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        suggestionsRef.current &&
-        !suggestionsRef.current.contains(event.target as Node)
-      ) {
-        setShowSearchSuggestions(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Cleanup debounce on unmount
-  useEffect(() => {
-    return () => {
-      if (searchDebounce) {
-        clearTimeout(searchDebounce);
-      }
-    };
-  }, [searchDebounce]);
-
-  const topTrending = useMemo(() => trending.slice(0, 8), [trending]);
-
-  const handleQuickAction = (action: string) => {
-    switch (action) {
-      case "explore":
-        navigate("/pool/add-tokens");
-        break;
-      case "bridge":
-        navigate("/defi");
-        break;
-      case "nfts":
-        navigate("/trends");
-        break;
-      case "trending":
-        navigate("/trends");
-        break;
-      case "meet":
-        navigate("/meet");
-        break;
-      default:
-        break;
-    }
-  };
-
-  const handleTokenClick = (token: any) => {
-    if (token?.name) navigate(`/trends/tokens/${token.name}`);
-  };
-
-  // Simulate price alerts
-  useEffect(() => {
-    const alerts = [
-      { token: "AE", price: 0.15, change: 2.5 },
-      { token: "SUPER", price: 0.08, change: -1.2 },
-      { token: "MEME", price: 0.003, change: 15.7 },
-    ];
-    setPriceAlerts(alerts);
-  }, []);
-
-  // Load top tokens and live activity
-  useEffect(() => {
-    let cancelled = false;
-    async function loadData() {
-      try {
-        const [tokensResp, txResp, createdResp] = await Promise.all([
-          TrendminerApi.listTokens({
-            orderBy: "market_cap",
-            orderDirection: "DESC",
-            limit: 5,
-          }).catch(() => ({ items: [] })),
-          TrendminerApi.fetchJson("/api/transactions?limit=5").catch(() => ({
-            items: [],
-          })),
-          TrendminerApi.fetchJson(
-            "/api/tokens?order_by=created_at&order_direction=DESC&limit=3"
-          ).catch(() => ({ items: [] })),
-        ]);
-
-        if (cancelled) return;
-
-        const formattedTokens = (tokensResp?.items ?? []).map((token: any) => ({
-          address: token.address,
-          name: token.name || token.symbol || "Unknown",
-          symbol: token.symbol || token.name || "TKN",
-          price: token.price ? Number(token.price) : null,
-          market_cap: token.market_cap ? Number(token.market_cap) : 0,
-          holders_count: token.holders_count ? Number(token.holders_count) : 0,
-        }));
-        setTopTokens(formattedTokens);
-
-        const createdItems = (createdResp?.items ?? []).map((t: any) => ({
-          sale_address: t.sale_address || t.address || "",
-          token_name: t.name || "Unknown Token",
-          type: "CREATED",
-          created_at: t.created_at || new Date().toISOString(),
-        }));
-        const txItems = txResp?.items ?? [];
-        setLiveTransactions([...createdItems, ...txItems].slice(0, 8));
-      } catch (e) {
-        setTopTokens([]);
-        setLiveTransactions([]);
-      }
-    }
-    loadData();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }, [selectedCurrency]);
 
   return (
     <div id="right-rail-root" className="grid gap-4 h-fit min-w-0 scrollbar-thin scrollbar-track-white/[0.02] scrollbar-thumb-gradient-to-r scrollbar-thumb-from-pink-500/60 scrollbar-thumb-via-[rgba(0,255,157,0.6)] scrollbar-thumb-to-pink-500/60 scrollbar-thumb-rounded-[10px] scrollbar-thumb-border scrollbar-thumb-border-white/10 hover:scrollbar-thumb-from-pink-500/80 hover:scrollbar-thumb-via-[rgba(0,255,157,0.8)] hover:scrollbar-thumb-to-pink-500/80">
-      {/* Network & Wallet Overview */}
-      <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-[var(--border-gradient)] before:opacity-0 before:transition-opacity before:duration-300">
-        <WalletOverviewCard selectedCurrency={selectedCurrency} prices={prices} />
-      </div>
+      {/* Network & Wallet Overview - Hidden on own profile */}
+      {!isOwnProfile && (
+        <div className="bg-white/[0.03] border border-white/10 rounded-[20px] px-5 py-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
+          <WalletOverviewCard key={activeAccount} selectedCurrency={selectedCurrency} prices={prices} />
+        </div>
+      )}
 
       {/* Enhanced Price Section (hidden by default via hidePriceSection) */}
       {!hidePriceSection && (
-        <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-[var(--border-gradient)] before:opacity-0 before:transition-opacity before:duration-300">
+        <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
           <div className="flex items-center gap-3 mb-4">
             <span className="text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
               📈
@@ -780,299 +439,9 @@ export default function RightRail({
         </div>
       </div> */}
 
-      {/* Explore Trends Sidebar (replaced with Trending sidebar) */}
-
-      {/* Top Tokens */}
-      {SHOW_RIGHT_RAIL_EXTRAS && topTokens.length > 0 && (
-        <div className="genz-card" style={{ marginBottom: "16px" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              marginBottom: "16px",
-            }}
-          >
-            <span style={{ fontSize: "18px" }}>💎</span>
-            <h4
-              style={{
-                margin: 0,
-                color: "var(--neon-purple)",
-                fontSize: "16px",
-              }}
-            >
-              Top Tokens
-            </h4>
-          </div>
-          <div style={{ display: "grid", gap: "8px" }}>
-            {topTokens.slice(0, 4).map((token, index) => (
-              <div
-                key={token.address || index}
-                className="token-card"
-                style={{
-                  padding: "10px 12px",
-                  background: "rgba(255,255,255,0.03)",
-                  borderRadius: "10px",
-                  border: "1px solid rgba(255,255,255,0.05)",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                }}
-                onClick={() => handleTokenClick(token)}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.background =
-                    "rgba(255,255,255,0.08)";
-                  (e.currentTarget as HTMLDivElement).style.transform =
-                    "translateY(-2px)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.background =
-                    "rgba(255,255,255,0.03)";
-                  (e.currentTarget as HTMLDivElement).style.transform =
-                    "translateY(0)";
-                }}
-                title={`View ${token.name} details`}
-              >
-                <div
-                  style={{
-                    width: "24px",
-                    height: "24px",
-                    borderRadius: "50%",
-                    background: `hsl(${index * 60}, 70%, 60%)`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "10px",
-                    fontWeight: 700,
-                    color: "white",
-                  }}
-                >
-                  {token.symbol?.charAt(0) || token.name?.charAt(0) || "T"}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      color: "white",
-                      marginBottom: "2px",
-                    }}
-                  >
-                    {token.name}
-                  </div>
-                  <div style={{ fontSize: "9px", color: "#94a3b8" }}>
-                    {token.price && !isNaN(Number(token.price))
-                      ? `${Number(token.price).toFixed(6)} AE`
-                      : "N/A"}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    fontSize: "10px",
-                    color: "var(--neon-teal)",
-                    fontWeight: 600,
-                  }}
-                >
-                  #{index + 1}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Live Activity Feed */}
-      {SHOW_RIGHT_RAIL_EXTRAS && (
-      <div className="genz-card" style={{ marginBottom: "16px" }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            marginBottom: "16px",
-            cursor: "pointer",
-          }}
-          onClick={() => setShowLiveFeed(!showLiveFeed)}
-          title={t('titles.clickToToggleLiveFeed')}
-        >
-          <span style={{ fontSize: "18px" }}>📡</span>
-          <h4
-            style={{ margin: 0, color: "var(--neon-green)", fontSize: "16px" }}
-          >
-            Live Activity
-          </h4>
-          <span
-            style={{
-              fontSize: "12px",
-              color: "var(--neon-green)",
-              marginLeft: "auto",
-              transition: "transform 0.3s ease",
-              transform: showLiveFeed ? "rotate(180deg)" : "rotate(0deg)",
-            }}
-          >
-            ▼
-          </span>
-        </div>
-        <div
-          style={{
-            maxHeight: showLiveFeed ? "300px" : "0px",
-            overflow: "hidden",
-            transition: "max-height 0.3s ease",
-          }}
-        >
-          <div style={{ display: "grid", gap: "6px" }}>
-            {liveTransactions.map((tx, index) => (
-              <div
-                key={index}
-                className={`live-activity-item ${
-                  tx.type === "CREATED" ? "new-token" : ""
-                }`}
-                style={{
-                  padding: "8px 10px",
-                  background: "rgba(255,255,255,0.02)",
-                  borderRadius: "8px",
-                  border: "1px solid rgba(255,255,255,0.03)",
-                  fontSize: "10px",
-                  color: "#b8c5d6",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  animation: index === 0 ? "slideIn 0.5s ease" : "none",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: "12px",
-                    color:
-                      tx.type === "CREATED"
-                        ? "var(--neon-green)"
-                        : "var(--neon-blue)",
-                  }}
-                >
-                  {tx.type === "CREATED" ? "🆕" : "💱"}
-                </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: "10px",
-                      fontWeight: 600,
-                      color: "white",
-                    }}
-                  >
-                    {tx.token_name}
-                  </div>
-                  <div style={{ fontSize: "9px", color: "#94a3b8" }}>
-                    {tx.type === "CREATED" ? "Token Created" : "Transaction"}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    fontSize: "8px",
-                    color: "#64748b",
-                    fontFamily: "monospace",
-                  }}
-                >
-                  {new Date(tx.created_at).toLocaleTimeString("en-US", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      )}
-
-      {/* Price Alerts */}
-      {SHOW_RIGHT_RAIL_EXTRAS && priceAlerts.length > 0 && (
-        <div className="genz-card" style={{ marginBottom: "16px" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              marginBottom: "16px",
-            }}
-          >
-            <span style={{ fontSize: "18px" }}>📈</span>
-            <h4
-              style={{ margin: 0, color: "var(--neon-blue)", fontSize: "16px" }}
-            >
-              Price Alerts
-            </h4>
-          </div>
-          <div style={{ display: "grid", gap: "8px" }}>
-            {priceAlerts.map((alert, index) => (
-              <div
-                key={index}
-                className={`price-alert ${
-                  alert.change > 0 ? "positive" : "negative"
-                }`}
-                style={{
-                  padding: "10px 12px",
-                  background: "rgba(255,255,255,0.03)",
-                  borderRadius: "10px",
-                  border: "1px solid rgba(255,255,255,0.05)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                }}
-              >
-                <div
-                  style={{
-                    width: "20px",
-                    height: "20px",
-                    borderRadius: "50%",
-                    background:
-                      alert.change > 0
-                        ? "rgba(16, 185, 129, 0.2)"
-                        : "rgba(255, 107, 107, 0.2)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "10px",
-                  }}
-                >
-                  {alert.change > 0 ? "📈" : "📉"}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      color: "white",
-                    }}
-                  >
-                    {alert.token}
-                  </div>
-                  <div style={{ fontSize: "9px", color: "#94a3b8" }}>
-                    {Number(alert.price).toFixed(6)} AE
-                  </div>
-                </div>
-                <div
-                  style={{
-                    fontSize: "10px",
-                    color:
-                      alert.change > 0
-                        ? "var(--neon-green)"
-                        : "var(--neon-pink)",
-                    fontWeight: 600,
-                  }}
-                >
-                  {alert.change > 0 ? "+" : ""}
-                  {alert.change.toFixed(1)}%
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Quick Actions - moved to Right Rail bottom */}
-      <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
+      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-lg">⚡</span>
           <h4 className="m-0 text-white text-base font-bold">
@@ -1082,42 +451,42 @@ export default function RightRail({
 
         <div className="grid grid-cols-2 gap-2.5">
           <button
-            className="bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(236,72,153,0.35)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/trends/tokens')}
             title={t('titles.exploreTrends')}
           >
             🔍 Explore Trends
           </button>
           <button
-            className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(244,63,94,0.35)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/trends/create')}
             title={t('titles.tokenizeATrend')}
           >
             🚀 Tokenize a Trend
           </button>
           <button
-            className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(16,185,129,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/defi/swap')}
             title={t('titles.swapTokensOnDex')}
           >
             🔄 Swap Tokens
           </button>
           <button
-            className="bg-gradient-to-r from-sky-500 to-blue-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(59,130,246,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-sky-500 to-blue-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/defi/wrap')}
             title={t('titles.wrapOrUnwrapAe')}
           >
             📦 Wrap AE
           </button>
           <button
-            className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(59,130,246,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/defi/buy-ae-with-eth')}
             title={t('titles.buyAeWithEth')}
           >
             🌉 Buy AE with ETH
           </button>
           <button
-            className="bg-gradient-to-r from-amber-500 to-orange-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(245,158,11,0.3)] relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-amber-500 to-orange-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/defi/pool')}
             title={t('titles.provideLiquidityToPools')}
           >
@@ -1136,11 +505,9 @@ export default function RightRail({
       </div>
 
       {/* Buy AE with ETH widget (compact) */}
-      <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-[20px] rounded-[20px] p-4 shadow-none">
+      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none">
         <BuyAeWidget embedded={true} />
       </div>
-
-
     </div>
   );
 }

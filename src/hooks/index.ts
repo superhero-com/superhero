@@ -6,13 +6,13 @@ export * from './useWalletConnect';
 export { useWallet } from './useWallet';
 export { useModal } from './useModal';
 export { useDex } from './useDex';
-export { useBackend } from './useBackend';
 export { useCurrencies } from './useCurrencies';
 export { useGovernance } from './useGovernance';
 export { useRecentActivities } from './useRecentActivities';
 export { useTransactionStatus, useMultipleTransactionStatus } from './useTransactionStatus';
 export { useChart } from './useChart';
 export { useOwnedTokens } from './useOwnedTokens';
+export { usePortfolioValue } from './usePortfolioValue';
 
 // Re-export atoms for direct usage if needed
 export * from '../atoms/walletAtoms';

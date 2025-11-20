@@ -72,6 +72,8 @@ export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouse
       localStorage.setItem(DISMISS_KEY, expiresAt.toISOString());
     } catch {}
     setHidden(true);
+    // Dispatch custom event so parent components can react
+    window.dispatchEvent(new CustomEvent('heroBannerDismissed'));
   };
 
   const scrollPrev = useCallback(() => {

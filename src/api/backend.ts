@@ -1,17 +1,133 @@
 import { CONFIG } from '../config';
 
-// Trendminer API client
-export const TrendminerApi = {
+// Superhero API client
+export const SuperheroApi = {
   async fetchJson(path: string, init?: RequestInit) {
     const base = (CONFIG.SUPERHERO_API_URL || '').replace(/\/$/, '');
     if (!base) throw new Error('SUPERHERO_API_URL not configured');
     const url = `${base}${path.startsWith('/') ? '' : '/'}${path}`;
-    const res = await fetch(url, init);
-    if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      throw new Error(`Trendminer request failed: ${res.status} ${body || ''}`.trim());
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[SuperheroApi] Base URL: ${base}`);
+      console.log(`[SuperheroApi] Fetching: ${url}`);
     }
-    return res.json();
+    
+    // Create timeout controller if no signal provided
+    let timeoutController: AbortController | null = null;
+    let timeoutId: NodeJS.Timeout | null = null;
+    
+    if (!init?.signal && typeof AbortController !== 'undefined') {
+      timeoutController = new AbortController();
+      // Increased timeout to 90 seconds for portfolio data queries that process large date ranges
+      timeoutId = setTimeout(() => timeoutController!.abort(), 90000); // 90 second timeout
+    }
+    
+    try {
+      const res = await fetch(url, {
+        ...init,
+        signal: init?.signal || timeoutController?.signal,
+      });
+      
+      // Clear timeout if request succeeded
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
+      if (!res.ok) {
+        let errorMessage = `Request failed with status ${res.status}`;
+        try {
+          const body = await res.text();
+          if (body) {
+            // Try to parse as JSON for better error messages
+            try {
+              const json = JSON.parse(body);
+              errorMessage = json.message || json.error || errorMessage;
+            } catch {
+              errorMessage = body.length > 200 ? `${body.substring(0, 200)}...` : body;
+            }
+          }
+        } catch {
+          // If we can't read the body, use the status text
+          errorMessage = res.statusText || errorMessage;
+        }
+        
+        const error = new Error(`Superhero API error (${res.status}): ${errorMessage}`);
+        if (process.env.NODE_ENV === 'development') {
+          console.error(`[SuperheroApi] Error fetching ${url}:`, error);
+        }
+        throw error;
+      }
+      
+      // Check if response has content before trying to parse JSON
+      const contentType = res.headers.get('content-type');
+      const contentLength = res.headers.get('content-length');
+      
+      if (contentLength === '0' || (!contentType?.includes('application/json') && !contentType?.includes('text/json'))) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`[SuperheroApi] Unexpected response type for ${url}:`, {
+            contentType,
+            contentLength,
+            status: res.status,
+            statusText: res.statusText,
+          });
+        }
+        // Return null for empty responses instead of throwing
+        return null;
+      }
+      
+      const text = await res.text();
+      if (!text || text.trim().length === 0) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`[SuperheroApi] Empty response body for ${url}`);
+        }
+        return null;
+      }
+      
+      try {
+        return JSON.parse(text);
+      } catch (parseError) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error(`[SuperheroApi] Failed to parse JSON response from ${url}:`, {
+            text: text.substring(0, 200),
+            error: parseError,
+          });
+        }
+        throw new Error(`Invalid JSON response from ${url}: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+      }
+    } catch (err) {
+      // Clear timeout on error
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
+      // Enhanced error handling for network errors and timeouts
+      if (err instanceof Error) {
+        if (err.name === 'AbortError' || err.message.includes('aborted')) {
+          const timeoutError = new Error('Request timeout: The API request took too long. Please try again.');
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`[SuperheroApi] Request timeout for ${url}`);
+          }
+          throw timeoutError;
+        }
+        if (err instanceof TypeError && err.message.includes('fetch')) {
+          const networkError = new Error('Network error: Unable to connect to API. Please check your internet connection.');
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`[SuperheroApi] Network error fetching ${url}:`, err);
+          }
+          throw networkError;
+        }
+      }
+      // Re-throw if it's already our custom error or other errors
+      throw err;
+    }
+  },
+  // GET /api/posts/popular?window=all&page=1&limit=50
+  listPopularPosts(params: { window?: '24h'|'7d'|'all'; page?: number; limit?: number } = {}) {
+    const qp = new URLSearchParams();
+    if (params.window) qp.set('window', params.window);
+    if (params.page != null) qp.set('page', String(params.page));
+    if (params.limit != null) qp.set('limit', String(params.limit));
+    const query = qp.toString();
+    return this.fetchJson(`/api/posts/popular${query ? `?${query}` : ''}`);
   },
   // GET /api/tips/posts/{postId}/summary
   getPostTipSummary(postId: string) {
@@ -127,6 +243,17 @@ export const TrendminerApi = {
     const query = qp.toString();
     return this.fetchJson(`/api/tokens/${encodeURIComponent(address)}/history${query ? `?${query}` : ''}`);
   },
+  // Portfolio history
+  getAccountPortfolioHistory(address: string, params: { startDate?: string; endDate?: string; interval?: number; convertTo?: 'ae'|'usd'|'eur'|'aud'|'brl'|'cad'|'chf'|'gbp'|'xau'; include?: string } = {}) {
+    const qp = new URLSearchParams();
+    if (params.startDate) qp.set('startDate', params.startDate);
+    if (params.endDate) qp.set('endDate', params.endDate);
+    if (params.interval != null) qp.set('interval', String(params.interval));
+    if (params.convertTo) qp.set('convertTo', params.convertTo);
+    if (params.include) qp.set('include', params.include);
+    const query = qp.toString();
+    return this.fetchJson(`/api/accounts/${encodeURIComponent(address)}/portfolio/history${query ? `?${query}` : ''}`);
+  },
   // Accounts leaderboard and details
   listAccounts(params: { orderBy?: 'total_volume'|'total_tx_count'|'total_buy_tx_count'|'total_sell_tx_count'|'total_created_tokens'|'total_invitation_count'|'total_claimed_invitation_count'|'total_revoked_invitation_count'|'created_at'; orderDirection?: 'ASC'|'DESC'; limit?: number; page?: number } = {}) {
     const qp = new URLSearchParams();
@@ -156,6 +283,35 @@ export const TrendminerApi = {
     if (params.tokenSaleAddresses) qp.set('token_sale_addresses', (params.tokenSaleAddresses as any));
     return this.fetchJson(`/api/analytics/daily-market-cap-sum?${qp.toString()}`);
   },
+  // Coins endpoints
+  getCurrencyRates() {
+    return this.fetchJson('/api/coins/aeternity/rates');
+  },
+  getMarketData(currency: string = 'usd') {
+    const qp = new URLSearchParams();
+    if (currency) qp.set('currency', currency);
+    return this.fetchJson(`/api/coins/aeternity/market-data?${qp.toString()}`);
+  },
+  getHistoricalPrice(currency: string = 'usd', days: number = 1, interval: 'daily' | 'hourly' | 'minute' = 'daily') {
+    const qp = new URLSearchParams();
+    if (currency) qp.set('currency', currency);
+    if (days) qp.set('days', String(days));
+    if (interval) qp.set('interval', interval);
+    return this.fetchJson(`/api/coins/aeternity/history?${qp.toString()}`);
+  },
+  // Posts endpoints
+  listPosts(params: { limit?: number; page?: number; orderBy?: 'total_comments'|'created_at'; orderDirection?: 'ASC'|'DESC'; search?: string; accountAddress?: string; topics?: string } = {}) {
+    const qp = new URLSearchParams();
+    if (params.limit != null) qp.set('limit', String(params.limit));
+    if (params.page != null) qp.set('page', String(params.page));
+    if (params.orderBy) qp.set('order_by', params.orderBy);
+    if (params.orderDirection) qp.set('order_direction', params.orderDirection);
+    if (params.search) qp.set('search', params.search);
+    if (params.accountAddress) qp.set('account_address', params.accountAddress);
+    if (params.topics) qp.set('topics', params.topics);
+    const query = qp.toString();
+    return this.fetchJson(`/api/posts${query ? `?${query}` : ''}`);
+  },
 };
 
 const USE_MOCK = false; // Override to true to force mock in development
@@ -168,10 +324,16 @@ async function fetchJson(path: string, init?: RequestInit) {
     return mockFetch(path);
   }
   const url = base ? `${base}/${path}` : `/${path}`;
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[fetchJson] Fetching: ${url}`);
+  }
   const res = await fetch(url, init);
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new Error(`Request failed: ${res.status} ${body || ''}`.trim());
+    const error = new Error(`Request failed: ${res.status} ${body || ''}`.trim());
+    (error as any).url = url;
+    (error as any).status = res.status;
+    throw error;
   }
   return res.json();
 }
@@ -189,7 +351,7 @@ function mockFetch(path: string) {
   }
   if (path === 'payfortx/post') return Promise.resolve({ challenge: 'mock-challenge' });
   if (path === 'cache/price') return Promise.resolve({ aeternity: { usd: 0.25, eur: 0.23 } });
-  if (path === 'stats') return Promise.resolve({ totalTipsLength: 123, totalAmount: '1000000000000000000', sendersLength: 42 });
+  if (path === 'api/stats') return Promise.resolve({ totalTipsLength: 123, totalAmount: '1000000000000000000', sendersLength: 42 });
   if (path.startsWith('comment/api/tip/')) return Promise.resolve([]);
   if (path === 'verified') return Promise.resolve([]);
   if (path === 'static/wallet/graylist') return Promise.resolve([]);
@@ -201,132 +363,5 @@ function mockFetch(path: string) {
 
 // API function for new posts endpoint
 export async function fetchPosts(limit: number = 5) {
-  const response = await fetch(`https://api.superhero.com/api/posts?limit=${limit}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch posts: ${response.status}`);
-  }
-  return response.json();
+  return SuperheroApi.listPosts({ limit });
 }
-
-export const Backend = {
-  // New posts API
-  fetchPosts,
-  // Unified Post aliases (keeping legacy endpoints under the hood)
-  getPostById: (id: string) => fetchJson(`tips/single/${id}`),
-  getPostChildren: (postId: string) => fetchJson(`comment/api/tip/${encodeURIComponent(postId)}`),
-  // Attach a post to another post (tree replies). First call returns challenge; second submits signature.
-  sendPost: (address: string, body: any) => fetchJson('comment/api/', {
-    method: 'post',
-    body: JSON.stringify({ ...body, author: address }),
-    headers: { 'Content-Type': 'application/json' },
-  }),
-  getTipComments: (tipId: string) => fetchJson(`comment/api/tip/${encodeURIComponent(tipId)}`),
-  sendTipComment: (_: string, body: any) => fetchJson('comment/api/', {
-    method: 'post',
-    body: JSON.stringify(body),
-    headers: { 'Content-Type': 'application/json' },
-  }),
-  getUserComments: (address: string) => fetchJson(`comment/api/author/${address}`),
-  pinItem: (address: string, postParam: any) => fetchJson(`pin/${address}`, {
-    method: 'post',
-    body: JSON.stringify(postParam),
-    headers: { 'Content-Type': 'application/json' },
-  }),
-  unPinItem: (address: string, postParam: any) => fetchJson(`pin/${address}`, {
-    method: 'delete',
-    body: JSON.stringify(postParam),
-    headers: { 'Content-Type': 'application/json' },
-  }),
-  getPinnedItems: (address: string) => fetchJson(`pin/${address}`),
-  sendProfileData: (address: string, postParam: any) => fetchJson(`profile/${address}`, {
-    method: 'post',
-    body: postParam instanceof FormData ? postParam : JSON.stringify(postParam),
-    headers: postParam instanceof FormData ? undefined : { 'Content-Type': 'application/json' },
-  }),
-  setImage: (address: string, data: FormData) => fetchJson(`profile/${address}`, { method: 'post', body: data }),
-  // claimFromUrl removed
-  sendPostReport: (author: string, postParam: any) => fetchJson('blacklist/api/wallet', {
-    method: 'post',
-    body: JSON.stringify({ ...postParam, author }),
-    headers: { 'Content-Type': 'application/json' },
-  }),
-  getProfileImageUrl: (address: string) => `${CONFIG.BACKEND_URL}/profile/image/${address}`,
-  // Post detail
-  getTipById: (id: string) => fetchJson(`tips/single/${id}`),
-  getSenderStats: (address: string) => fetchJson(`stats/sender?address=${address}`),
-  getFeed: (
-    page: number,
-    ordering: string,
-    address: string | null = null,
-    search: string | null = null,
-    blacklist = true,
-    tips = true,
-    posts = true,
-  ) => {
-    let query = `?ordering=${ordering}&page=${page}`;
-    if (tips) query += '&contractVersion=v1&contractVersion=v2';
-    if (posts) query += '&contractVersion=v3';
-    if (address) query += `&address=${address}`;
-    if (search) query += `&search=${encodeURIComponent(search)}`;
-    query += `&blacklist=${blacklist}`;
-    return fetchJson(`tips${query}`);
-  },
-  addToken: (address: string) => fetchJson('tokenCache/addToken', {
-    method: 'post',
-    body: JSON.stringify({ address }),
-    headers: { 'Content-Type': 'application/json' },
-  }),
-  getTipStats: () => fetchJson('stats'),
-  getCacheChainNames: () => fetchJson('cache/chainnames'),
-  getPrice: () => fetchJson('cache/price'),
-  getTopics: () => fetchJson('tips/topics'),
-  getTokenInfo: () => fetchJson('tokenCache/tokenInfo'),
-  // WordBazaar-related endpoints (kept for compatibility with the original Vue app)
-  getWordRegistry: (ordering?: string, direction?: string, search?: string) => {
-    const qp = new URLSearchParams();
-    if (ordering) qp.set('ordering', ordering);
-    if (direction) qp.set('direction', direction);
-    if (search) qp.set('search', search);
-    // Match original behavior: if no V2 contract, return empty list without hitting server
-    return CONFIG.CONTRACT_V2_ADDRESS
-      ? fetchJson(`tokenCache/wordRegistry?${qp.toString()}`)
-      : Promise.resolve([]);
-  },
-  getWordSaleVotesDetails: (address: string) => fetchJson(`tokenCache/wordSaleVotesDetails/${address}`),
-  getWordSaleDetailsByToken: (address: string) => fetchJson(`tokenCache/wordSaleByToken/${address}`),
-  getWordSale: (address: string) => fetchJson(`tokenCache/wordSale/${address}`),
-  getPriceHistory: (address: string) => fetchJson(`tokenCache/priceHistory/${address}`),
-  getTokenBalances: (address: string) => fetchJson(`tokenCache/balances?address=${address}`),
-  // awaitTip / awaitRetip removed with tipping features
-  invalidateTokenCache: (token: string) => fetchJson(`cache/invalidate/token/${token}`),
-  invalidateWordSaleCache: (wordSale: string) => fetchJson(`cache/invalidate/wordSale/${wordSale}`),
-  invalidateWordRegistryCache: () => fetchJson('cache/invalidate/wordRegistry'),
-  invalidateWordSaleVotesCache: (wordSale: string) => fetchJson(`cache/invalidate/wordSaleVotes/${wordSale}`),
-  invalidateWordSaleVoteStateCache: (vote: string) => fetchJson(`cache/invalidate/wordSaleVoteState/${vote}`),
-  getTipPreviewUrl: (previewLink: string) => `${CONFIG.BACKEND_URL}${previewLink}`,
-  getCommentById: (id: string) => fetchJson(`comment/api/${id}`),
-  getVerifiedUrls: () => fetchJson('verified'),
-  getGrayListedUrls: () => fetchJson('static/wallet/graylist'),
-  getTipTraceBackend: (id: string) => fetchJson(`tracing/backend?id=${id}`),
-  getTipTraceBlockchain: (id: string) => fetchJson(`tracing/blockchain?id=${id}`),
-  // Await endpoints used by legacy flows
-  awaitTip: (id?: string | null) => fetchJson(`tips/await/tip/${id || 'v1'}`),
-  awaitRetip: (id?: string | null) => fetchJson(`tips/await/retip/${id || 'v1'}`),
-  getCookiesConsent: (address: string, query?: { challenge: string; signature: string }) =>
-    fetchJson(`consent/${address}${query ? `?challenge=${query.challenge}&signature=${query.signature}` : ''}`),
-  setCookiesConsent: (address: string, { scope, status }: { scope: string; status: boolean }) =>
-    fetchJson(`consent/${address}/${scope}`, {
-      method: 'post',
-      body: JSON.stringify({ status: status ? 'ALLOWED' : 'REJECTED' }),
-      headers: { 'Content-Type': 'application/json' },
-    }),
-  // Create a new top-level post (on-chain via challenge + signature). First call returns a challenge; second submits signature.
-  sendPostWithoutTip: (address: string, postParam: any) => fetchJson('payfortx/post', {
-    method: 'post',
-    body: JSON.stringify({ ...postParam, author: address }),
-    headers: { 'Content-Type': 'application/json' },
-  }),
-};
-
-
-

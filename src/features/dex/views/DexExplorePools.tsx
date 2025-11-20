@@ -8,6 +8,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { DexPairService, PairDto } from "../../../api/generated";
 import { TokenChip } from "../../../components/TokenChip";
 import PairLineChart from "../components/charts/PairLineChart";
+import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
 
 // Define the actual API response structure
 interface PaginatedResponse<T> {
@@ -96,18 +97,14 @@ export default function DexExplorePools() {
                 <div className="flex items-center justify-between md:justify-start gap-1.5">
                   {/* Sort Dropdown */}
                   <div className="relative">
-                    <select
+                    <AppSelect
                       value={sort}
-                      onChange={(e) => setSort(e.target.value as any)}
-                      className="appearance-none py-1.5 px-3 pr-7 rounded-lg bg-[var(--glass-bg)] text-[var(--standard-font-color)] border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[100px] focus:border-[var(--accent-color)] focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
+                      onValueChange={(v) => setSort(v as any)}
+                      triggerClassName="appearance-none py-1.5 px-3 pr-7 rounded-lg bg-[var(--glass-bg)] text-[var(--standard-font-color)] border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[100px] focus:border-[var(--accent-color)] focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
                     >
-                      <option value="transactions_count">Tx count</option>
-                      <option value="created_at">Created at</option>
-                    </select>
-                    {/* Custom Dropdown Arrow */}
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--light-font-color)] text-xs font-semibold flex items-center justify-center w-4 h-4 bg-white/10 rounded transition-all duration-300">
-                      ▼
-                    </div>
+                      <AppSelectItem value="transactions_count">Tx count</AppSelectItem>
+                      <AppSelectItem value="created_at">Created at</AppSelectItem>
+                    </AppSelect>
                   </div>
 
                   {/* Sort Direction Button */}
@@ -115,7 +112,7 @@ export default function DexExplorePools() {
                     onClick={() =>
                       setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC")
                     }
-                    className={`py-1.5 px-2 rounded-md border border-[var(--glass-border)] backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-[28px] h-7 flex items-center justify-center outline-none hover:scale-105 hover:shadow-[0_3px_8px_rgba(76,175,80,0.3)] active:scale-95 ${sortDirection === "ASC"
+                    className={`py-1.5 px-2 rounded-md border border-[var(--glass-border)] backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-[28px] h-7 flex items-center justify-center outline-none hover:scale-105 active:scale-95 ${sortDirection === "ASC"
                       ? "bg-[var(--accent-color)] text-white"
                       : "bg-[var(--glass-bg)] text-[var(--standard-font-color)] hover:bg-[var(--accent-color)] hover:text-white"
                       }`}
@@ -134,21 +131,18 @@ export default function DexExplorePools() {
                       Show:
                     </span>
                     <div className="relative">
-                      <select
-                        value={limit}
-                        onChange={(e) => {
-                          setLimit(Number(e.target.value));
+                      <AppSelect
+                        value={String(limit)}
+                        onValueChange={(v) => {
+                          setLimit(Number(v));
                           setPage(1);
                         }}
-                        className="appearance-none py-1.5 px-3 pr-7 rounded-lg bg-[var(--glass-bg)] text-[var(--standard-font-color)] border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[70px] focus:border-[var(--accent-color)] focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
+                        triggerClassName="appearance-none py-1.5 px-3 pr-7 rounded-lg bg-[var(--glass-bg)] text-[var(--standard-font-color)] border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[70px] focus:border-[var(--accent-color)] focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
                       >
-                        <option value={10}>10</option>
-                        <option value={50}>50</option>
-                        <option value={100}>100</option>
-                      </select>
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--light-font-color)] text-xs font-semibold flex items-center justify-center w-4 h-4 bg-white/10 rounded transition-all duration-300">
-                        ▼
-                      </div>
+                        <AppSelectItem value="10">10</AppSelectItem>
+                        <AppSelectItem value="50">50</AppSelectItem>
+                        <AppSelectItem value="100">100</AppSelectItem>
+                      </AppSelect>
                     </div>
                   </div>
                 </div>
@@ -188,21 +182,18 @@ export default function DexExplorePools() {
                       Show:
                     </span>
                     <div className="relative">
-                      <select
-                        value={limit}
-                        onChange={(e) => {
-                          setLimit(Number(e.target.value));
+                      <AppSelect
+                        value={String(limit)}
+                        onValueChange={(v) => {
+                          setLimit(Number(v));
                           setPage(1);
                         }}
-                        className="appearance-none py-1.5 px-3 pr-7 rounded-lg bg-[var(--glass-bg)] text-[var(--standard-font-color)] border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[70px] focus:border-[var(--accent-color)] focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
+                        triggerClassName="appearance-none py-1.5 px-3 pr-7 rounded-lg bg-[var(--glass-bg)] text-[var(--standard-font-color)] border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium cursor-pointer transition-all duration-300 outline-none min-w-[70px] focus:border-[var(--accent-color)] focus:shadow-[0_0_0_2px_rgba(76,175,80,0.1)]"
                       >
-                        <option value={10}>10</option>
-                        <option value={50}>50</option>
-                        <option value={100}>100</option>
-                      </select>
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--light-font-color)] text-xs font-semibold flex items-center justify-center w-4 h-4 bg-white/10 rounded transition-all duration-300">
-                        ▼
-                      </div>
+                        <AppSelectItem value="10">10</AppSelectItem>
+                        <AppSelectItem value="50">50</AppSelectItem>
+                        <AppSelectItem value="100">100</AppSelectItem>
+                      </AppSelect>
                     </div>
                   </div>
 
@@ -282,7 +273,7 @@ export default function DexExplorePools() {
                           TVL (USD)
                         </div>
                         <div className="text-sm text-[var(--standard-font-color)] font-semibold">
-                          <PriceDataFormatter priceData={pair.summary?.total_volume} bignumber />
+                          <PriceDataFormatter priceData={pair.summary?.total_volume} />
                         </div>
                       </div>
                       <div className="bg-white/[0.03] p-3 rounded-lg border border-white/5">
@@ -290,7 +281,7 @@ export default function DexExplorePools() {
                           Volume{" "}
                         </div>
                         <div className="text-sm text-[var(--standard-font-color)] font-semibold">
-                          <PriceDataFormatter priceData={pair.summary.change[timeBase].volume} bignumber />
+                          <PriceDataFormatter priceData={pair.summary.change[timeBase].volume} />
                         </div>
                       </div>
                     </div>

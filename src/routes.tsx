@@ -28,7 +28,6 @@ const PollDetail = lazy(() => import("./features/social/views/PollDetail"));
 const UserProfile = lazy(() => import("./views/UserProfile"));
 const Landing = lazy(() => import("./views/Landing"));
 const Conference = lazy(() => import("./views/Conference"));
-const Governance = lazy(() => import("./views/Governance"));
 const Terms = lazy(() => import("./views/Terms"));
 const Privacy = lazy(() => import("./views/Privacy"));
 const FAQ = lazy(() => import("./views/FAQ"));
@@ -138,10 +137,6 @@ export const getRoutes = (): RouteObject[] => [
   },
   { path: "/landing", element: <Landing /> },
   { path: "/meet/:room?", element: <Conference /> },
-  { path: "/voting", element: <Governance /> },
-  { path: "/voting/p/:id", element: <Governance /> },
-  { path: "/voting/account", element: <Governance /> },
-  { path: "/voting/create", element: <Governance /> },
 
   // New DEX Routes with Layout
   {

@@ -7,7 +7,7 @@ import AeButton from '@/components/AeButton';
 import PollCreatedCard from '@/features/social/feed-plugins/poll-created/PollCreatedCard';
 import { GovernanceApi } from '@/api/governance';
 import { CONFIG } from '@/config';
-import { useAeSdk } from '@/hooks/useAeSdk';
+import { useAeSdk, useModal } from '@/hooks';
 
 type PollDetailProps = { standalone?: boolean };
 
@@ -15,6 +15,7 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
   const { pollAddress } = useParams();
   const navigate = useNavigate();
   const { sdk, activeAccount } = useAeSdk() as any;
+  const { openModal } = useModal();
 
   const [currentHeight, setCurrentHeight] = useState<number | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(true);
@@ -216,6 +217,13 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
   const submitVote = useCallback(async (opt: number) => {
     if (!sdk || voting || !pollAddress) return;
     if (myVote === opt) return;
+    
+    // Check if wallet is connected, if not, open connect wallet modal
+    if (!activeAccount) {
+      openModal({ name: 'connect-wallet' });
+      return;
+    }
+    
     try {
       setVoting(true);
       setPendingOption(opt);
@@ -250,10 +258,17 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
       setVoting(false);
       setPendingOption(null);
     }
-  }, [sdk, voting, pollAddress, myVote, rebuildFromPollData, refreshMyVote]);
+  }, [sdk, voting, pollAddress, myVote, activeAccount, openModal, rebuildFromPollData, refreshMyVote]);
 
   const revokeVote = useCallback(async () => {
     if (!sdk || voting || !pollAddress) return;
+    
+    // Check if wallet is connected, if not, open connect wallet modal
+    if (!activeAccount) {
+      openModal({ name: 'connect-wallet' });
+      return;
+    }
+    
     try {
       setVoting(true);
       setPendingOption(myVote);
@@ -279,7 +294,7 @@ export default function PollDetail({ standalone = true }: PollDetailProps = {}) 
       setVoting(false);
       setPendingOption(null);
     }
-  }, [sdk, voting, pollAddress, myVote, rebuildFromPollData, refreshMyVote]);
+  }, [sdk, voting, pollAddress, myVote, activeAccount, openModal, rebuildFromPollData, refreshMyVote]);
 
   const content = (
     <div className="w-full p-0">

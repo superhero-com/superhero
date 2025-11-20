@@ -3,7 +3,7 @@ import type { FeedEntry, FeedPage } from '../types';
 import { registerPlugin } from '../registry';
 import PollCreatedCard from './PollCreatedCard';
 import type { Encoded } from '@aeternity/aepp-sdk';
-import { useAeSdk } from '@/hooks/useAeSdk';
+import { useAeSdk, useModal } from '@/hooks';
 import { GovernanceApi } from '@/api/governance';
 import { CONFIG } from '@/config';
 
@@ -145,6 +145,7 @@ export function registerPollCreatedPlugin() {
     Render: ({ entry, onOpen }: { entry: FeedEntry<PollCreatedEntryData>; onOpen?: (id: string) => void }) => {
       const { pollAddress, title, description, author, closeHeight, createHeight, options, totalVotes } = entry.data;
       const { sdk, activeAccount } = useAeSdk() as any;
+      const { openModal } = useModal();
       const [voting, setVoting] = useState(false);
       const [pendingOption, setPendingOption] = useState<number | null>(null);
       const [myVote, setMyVote] = useState<number | null>(null);
@@ -240,6 +241,13 @@ export function registerPollCreatedPlugin() {
       const submitVote = async (opt: number) => {
         if (!sdk || voting) return;
         if (myVote === opt) return; // no-op if selecting the same option
+        
+        // Check if wallet is connected, if not, open connect wallet modal
+        if (!activeAccount) {
+          openModal({ name: 'connect-wallet' });
+          return;
+        }
+        
         try {
           setVoting(true);
           setPendingOption(opt);
@@ -280,6 +288,13 @@ export function registerPollCreatedPlugin() {
       };
       const revokeVote = async () => {
         if (!sdk || voting) return;
+        
+        // Check if wallet is connected, if not, open connect wallet modal
+        if (!activeAccount) {
+          openModal({ name: 'connect-wallet' });
+          return;
+        }
+        
         try {
           setVoting(true);
           setPendingOption(myVote);

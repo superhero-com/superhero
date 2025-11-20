@@ -1,5 +1,5 @@
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import React, { useEffect, useImperativeHandle, useMemo, useRef, useState, useCallback } from "react";
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
 import AeButton from "../../../components/AeButton";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
@@ -96,9 +96,10 @@ type PostFormRef = {
   focus: (opts?: FocusOptions) => void;
 };
 
-const PostForm = React.forwardRef<PostFormRef, PostFormProps>((props, ref) => {
-  const { t } = useTranslation('forms');
-  const { t: tSocial } = useTranslation('social');
+const PostForm = forwardRef(
+  (props: PostFormProps, ref: React.ForwardedRef<PostFormRef>) => {
+    const { t } = useTranslation('forms');
+    const { t: tSocial } = useTranslation('social');
   const {
     onClose,
     onSuccess,
@@ -349,11 +350,11 @@ const PostForm = React.forwardRef<PostFormRef, PostFormProps>((props, ref) => {
       return () => mediaQuery.removeEventListener('change', handleChange);
     } else {
       // Fallback for older browsers (MediaQueryList type)
-      const legacyHandler = (mq: MediaQueryList) => {
-        setIsDesktopViewport(mq.matches);
+      const legacyHandler = (ev: MediaQueryListEvent | MediaQueryList) => {
+        setIsDesktopViewport((ev as MediaQueryListEvent).matches ?? (ev as MediaQueryList).matches);
       };
-      mediaQuery.addListener(legacyHandler);
-      return () => mediaQuery.removeListener(legacyHandler);
+      (mediaQuery as any).addListener(legacyHandler);
+      return () => (mediaQuery as any).removeListener(legacyHandler);
     }
   }, []);
 
@@ -512,105 +513,6 @@ const PostForm = React.forwardRef<PostFormRef, PostFormProps>((props, ref) => {
     } catch {}
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Do not auto-append the required hashtag; the Post button is disabled until present
-    const trimmed = text.trim();
-    if (!trimmed) return;
-    if (!activeAccount) return;
-
-    setIsSubmitting(true);
-    try {
-      // If Poll panel is active, submit on-chain poll instead of a standard post
-      if (activeAttachmentId === 'poll') {
-        await submitPoll();
-        setIsSubmitting(false);
-        return;
-      }
-
-      const contract = await sdk.initializeContract({
-        aci: TIPPING_V3_ACI as any,
-        address: CONFIG.CONTRACT_V3_ADDRESS as `ct_${string}`,
-      });
-
-      let postMedia: string[] = [];
-
-      if (isPost) {
-        // For posts, include media URLs
-        postMedia = [...mediaUrls];
-      } else if (postId) {
-
-        postMedia = [`comment:${postId}`, ...mediaUrls];
-      }
-
-      const { decodedResult } = await contract.post_without_tip(
-        trimmed,
-        postMedia
-      );
-
-      if (isPost) {
-        try {
-          const created = await PostsService.getById({ id: `${decodedResult}_v3` });
-          // Optimistically prepend the new post to the topic feed cache so it appears immediately
-          if (requiredHashtag && !requiredMissing) {
-            const topicKey = ["topic-by-name", (requiredHashtag || '').toLowerCase()];
-            queryClient.setQueryData(topicKey, (old: any) => {
-              const prevPosts = Array.isArray(old?.posts) ? old.posts : [];
-              return {
-                ...(old || {}),
-                posts: [created as any, ...prevPosts],
-                post_count: typeof old?.post_count === 'number' ? old.post_count + 1 : old?.post_count,
-              };
-            });
-          }
-        } catch { }
-      } else if (postId) {
-        // For replies: optimistically show the new reply immediately
-        try {
-          const newReply = await PostsService.getById({ id: `${String(decodedResult).replace(/_v3$/,'')}_v3` });
-          // Update infinite replies list if present
-          queryClient.setQueryData(["post-comments", postId, "infinite"], (old: any) => {
-            if (!old) {
-              return {
-                pageParams: [1],
-                pages: [ { items: [newReply], meta: { currentPage: 1, totalPages: 1 } } ],
-              };
-            }
-            const firstPage = old.pages?.[0] || { items: [], meta: old.pages?.[0]?.meta };
-            const nextFirst = { ...firstPage, items: [newReply, ...(firstPage.items || [])] };
-            return { ...old, pages: [nextFirst, ...old.pages.slice(1)] };
-          });
-          // Update non-infinite comments list if present
-          queryClient.setQueryData(["post-comments", postId], (old: any) => {
-            if (!Array.isArray(old)) return [newReply];
-            return [newReply, ...old];
-          });
-          // Update nested comment replies list if present (used in CommentItem)
-          queryClient.setQueryData(["comment-replies", postId], (old: any) => {
-            if (!Array.isArray(old)) return [newReply];
-            return [newReply, ...old];
-          });
-        } catch {}
-        // Also trigger a refetch in the background to pick up any server-side changes
-        queryClient.refetchQueries({ queryKey: ["post-comments", postId] });
-        onCommentAdded?.();
-      }
-
-      // Reset after success
-      setText(initialText || "");
-      setMediaUrls([]);
-      onSuccess?.();
-      // Also refetch any topic feeds related to this hashtag so other viewers update quickly
-      try {
-        if (requiredHashtag) {
-          queryClient.invalidateQueries({ queryKey: ["topic-by-name"] });
-        }
-      } catch {}
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const removeMedia = (index: number) => {
     setMediaUrls((prev) => prev.filter((_, i) => i !== index));
   };
@@ -736,6 +638,13 @@ const PostForm = React.forwardRef<PostFormRef, PostFormProps>((props, ref) => {
 
     setIsSubmitting(true);
     try {
+      // If Poll panel is active, submit on-chain poll instead of a standard post
+      if (activeAttachmentId === 'poll') {
+        await submitPoll();
+        setIsSubmitting(false);
+        return;
+      }
+
       const contract = await sdk.initializeContract({
         aci: TIPPING_V3_ACI as any,
         address: CONFIG.CONTRACT_V3_ADDRESS as `ct_${string}`,
@@ -1283,24 +1192,6 @@ const PostForm = React.forwardRef<PostFormRef, PostFormProps>((props, ref) => {
     }
   };
 
-  const removeMedia = (index: number) => {
-    setMediaUrls((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  // Dynamic placeholder logic
-  let currentPlaceholder: string;
-  if (placeholder) {
-    currentPlaceholder = placeholder;
-  } else if (isPost) {
-    currentPlaceholder = activeAccount
-      ? PROMPTS[promptIndex]
-      : t('connectWalletToPost');
-  } else {
-    currentPlaceholder = activeAccount
-      ? t('writeReply')
-      : t('connectWalletToReply');
-  }
-
   // If not connected and it's a reply, show simple message
   if (!activeAccount && !isPost) {
     return (
@@ -1696,7 +1587,8 @@ const PostForm = React.forwardRef<PostFormRef, PostFormProps>((props, ref) => {
       </div>
     </div>
   );
-});
+  }
+) as React.ForwardRefExoticComponent<PostFormProps & React.RefAttributes<PostFormRef>>;
 
 PostForm.displayName = 'PostForm';
 

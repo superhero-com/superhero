@@ -664,6 +664,7 @@ export function AeEthBridge() {
             );
         }
 
+        let userActionTimeout: ReturnType<typeof setTimeout> | undefined;
         try {
             let action_type = BRIDGE_TOKEN_ACTION_TYPE;
             let ae_amount = BigInt(0);
@@ -732,7 +733,7 @@ export function AeEthBridge() {
             setBridgeStep('bridge');
 
             // Similar hint on æternity side if confirmation takes unusually long
-            const userActionTimeout = setTimeout(() => {
+            userActionTimeout = setTimeout(() => {
                 setConfirmingMsg(t('bridge.waitingForUserOrNetwork'));
             }, 20000);
 
@@ -780,6 +781,9 @@ export function AeEthBridge() {
 
             showSnackMessage(errorMsg);
         } finally {
+            if (userActionTimeout) {
+                clearTimeout(userActionTimeout);
+            }
             setConfirming(false);
             setBridgeStep('idle');
             setConfirmingMsg('');
@@ -1122,21 +1126,21 @@ export function AeEthBridge() {
 
                             <div className="bg-white/[0.05] border border-white/10 rounded-xl p-3 space-y-2">
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-white/60">{t('bridge.direction')}</span>
+                                    <span className="text-white/60">{t('bridge.directionLabel')}</span>
                                     <span className="text-white font-semibold">
                                         {isBridgeActionFromAeternity ? t('bridge.bridgeDirection.aeternityToEthereum') : t('bridge.bridgeDirection.ethereumToAeternity')}
                                     </span>
                                 </div>
 
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-white/60">{t('bridge.amount')}</span>
+                                    <span className="text-white/60">{t('bridge.amountLabel')}</span>
                                     <span className="text-white font-semibold">
                                         {bridgeActionSummary?.amount} {bridgeActionSummary?.asset.symbol}
                                     </span>
                                 </div>
 
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-white/60">{t('bridge.destination')}</span>
+                                    <span className="text-white/60">{t('bridge.destinationLabel')}</span>
                                     <span className="text-white text-xs font-mono truncate max-w-[200px]">
                                         {bridgeActionSummary?.destination}
                                     </span>

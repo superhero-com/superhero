@@ -318,14 +318,17 @@ export default function TokenTopicFeed({
           const holder = holdersByAddress.get(addr);
           if (holder && holder.balance) {
             try {
-              const decimals = typeof tokenDecimals === "number" && Number.isFinite(tokenDecimals)
-                ? tokenDecimals
-                : 18;
-              const pretty = Decimal.from(holder.balance).div(10 ** decimals).prettify();
-              const symbolBase =
-                (displayTokenName || tokenSymbol || baseName || "").toString().replace(/^#/, "");
-              const symbol = symbolBase ? ` ${symbolBase}` : "";
-              tokenHolderLabel = `${pretty}${symbol}`;
+              const balanceDecimal = Decimal.from(holder.balance || "0");
+              if (balanceDecimal.gt("0")) {
+                const decimals = typeof tokenDecimals === "number" && Number.isFinite(tokenDecimals)
+                  ? tokenDecimals
+                  : 18;
+                const pretty = balanceDecimal.div(10 ** decimals).prettify();
+                const symbolBase =
+                  (displayTokenName || tokenSymbol || baseName || "").toString().replace(/^#/, "");
+                const symbol = symbolBase ? ` ${symbolBase}` : "";
+                tokenHolderLabel = `${pretty}${symbol}`;
+              }
             } catch {
               // Fallback: show raw balance if Decimal parsing fails
               const symbolBase =

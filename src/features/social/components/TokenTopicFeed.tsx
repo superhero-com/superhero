@@ -81,7 +81,7 @@ export default function TokenTopicFeed({
   // Optional: load holders for this Trend token so we can:
   // - filter posts to token holders only
   // - show holder balance badge on each item
-  const { data: holdersResponse } = useQuery({
+  const { data: holdersResponse, isFetching: isFetchingHolders } = useQuery({
     queryKey: ["TokensService.listTokenHolders-for-topic-feed", tokenSaleAddress],
     enabled: !!tokenSaleAddress,
     queryFn: async () => {
@@ -200,11 +200,14 @@ export default function TokenTopicFeed({
   // switch to "all posts" and surface a small info banner.
   useEffect(() => {
     if (!holdersOnly || !tokenSaleAddress || autoSwitchedFromHolders) return;
+    // Wait until holders have been fetched at least once so we don't
+    // prematurely switch to "All posts" before we know if holders exist.
+    if (isFetchingHolders) return;
     if (allPosts.length > 0 && holderPosts.length === 0 && onAutoDisableHoldersOnly) {
       setAutoSwitchedFromHolders(true);
       onAutoDisableHoldersOnly();
     }
-  }, [holdersOnly, tokenSaleAddress, allPosts, holderPosts, onAutoDisableHoldersOnly, autoSwitchedFromHolders]);
+  }, [holdersOnly, tokenSaleAddress, allPosts, holderPosts, onAutoDisableHoldersOnly, autoSwitchedFromHolders, isFetchingHolders]);
 
   // Reset auto-switch banner state when topic or token context changes
   useEffect(() => {

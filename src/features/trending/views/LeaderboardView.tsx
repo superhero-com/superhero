@@ -46,6 +46,7 @@ export default function LeaderboardView() {
         metric,
         page,
         limit: 15,
+        sortDir: metric === "mdd" ? "ASC" : "DESC",
       }),
     staleTime: 60 * 1000, // cache results per window/metric for 1 minute
     gcTime: 5 * 60 * 1000, // keep cached windows around for 5 minutes

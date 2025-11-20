@@ -36,6 +36,7 @@ export interface LeaderboardQueryParams {
   metric: LeaderboardMetric;
   page?: number;
   limit?: number;
+  sortDir?: "ASC" | "DESC";
 }
 
 function mapTimeframeToWindow(timeframe: LeaderboardTimeframe): string {
@@ -65,7 +66,7 @@ function mapTimeframeToPoints(timeframe: LeaderboardTimeframe): number {
 export async function fetchLeaderboard(
   params: LeaderboardQueryParams
 ): Promise<PaginatedResponse<LeaderboardItem>> {
-  const { timeframe, metric, page = 1, limit = 20 } = params;
+  const { timeframe, metric, page = 1, limit = 20, sortDir = "DESC" } = params;
 
   const windowParam = mapTimeframeToWindow(timeframe);
   const points = mapTimeframeToPoints(timeframe);
@@ -73,7 +74,7 @@ export async function fetchLeaderboard(
   const searchParams = new URLSearchParams();
   searchParams.set("window", windowParam);
   searchParams.set("sortBy", metric);
-  searchParams.set("sortDir", "DESC");
+  searchParams.set("sortDir", sortDir);
   searchParams.set("page", String(page));
   searchParams.set("limit", String(limit));
   searchParams.set("points", String(points));

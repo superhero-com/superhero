@@ -30,9 +30,9 @@ function checkFile(filePath) {
   const fileDir = dirname(filePath);
   const relativePath = filePath.replace(docsDir + '/', '');
   
-  // Check for localhost URLs (should only be in LOCAL_SETUP.md or code examples)
+  // Check for localhost URLs (should only be in README.md or code examples)
   const localhostMatches = content.match(/http:\/\/localhost:\d+/g);
-  if (localhostMatches && !filePath.includes('LOCAL_SETUP.md') && !filePath.includes('configure-cursor.md')) {
+  if (localhostMatches && !filePath.includes('README.md') && !filePath.includes('configure-cursor.md')) {
     localhostMatches.forEach(match => {
       // Check if it's in a code block
       const lines = content.split('\n');

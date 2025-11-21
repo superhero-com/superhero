@@ -1,5 +1,5 @@
 ---
-title: Quickstart
+title: Quickstart & AI Prompt
 ---
 
 <Warning>
@@ -15,13 +15,13 @@ Configure Cursor with MCP access to this documentation for the best AI assistanc
 Use this copy‑paste bootstrap prompt in an AI IDE like [Cursor](https://www.cursor.com) or any editor with an agent. **Make sure you've configured MCP access** (see tip above) for optimal results. The prompt will guide the agent to ask for a short description first, then scaffold both repos and wire the plugin end‑to‑end on æternity testnet.
 
 ```text
-Goal: Build a Superhero plugin (contracts + Superhero plugin) on æternity testnet with robust Sophia/compiler hygiene and a clean UI integration.
+Goal: Build a complete Superhero plugin (contracts + frontend plugin + optional backend plugin) on æternity testnet with robust Sophia/compiler hygiene and a clean UI integration.
 
 Strict interaction rule
 - First, send exactly the question below and STOP. Do not proceed until I reply.
 - First message to send:
-  "Please describe in 1–2 sentences what you want the Superhero plugin to do (the core action, any write operations, and what users see)."
-- After I reply, proceed autonomously with the plan below. If I reply “default”, use the Crowdfunding example defined here.
+  "Please describe in 1–2 sentences what you want the Superhero plugin to do (the core action, any write operations, what users see, and whether you need backend processing for the popular feed)."
+- After I reply, proceed autonomously with the plan below. If I reply "default", use the Crowdfunding example defined here.
 
 Defaults
 - Network: testnet
@@ -36,13 +36,22 @@ Defaults
   - Address env: VITE_<CONTRACT_NAME>_CONTRACT
 - Secrets live in .env.* only; never print them.
 
-UI upstream for testing
+Project structure setup
+- Use the workspace setup script from Project Setup guide to create the complete structure:
+  - Clone Superhero UI: https://github.com/superhero-com/superhero.git
+  - Clone Superhero API: https://github.com/superhero-com/superhero-api.git (if backend plugin needed)
+  - Create contracts repo: <PLUGIN_ID>-contracts and initialize git
+  - Create workspace file: superhero.code-workspace
+- Or follow manual setup steps from Project Setup guide
+
+UI repository
 - Repo: https://github.com/superhero-com/superhero.git
-- Branch: feat/hackathon-tutorial
-- Clone:
-  git clone --branch feat/hackathon-tutorial --single-branch https://github.com/superhero-com/superhero.git ui
-  cd ui
-  git checkout -b feat/<PLUGIN_ID>
+- Create branch: feat/<PLUGIN_ID> in the cloned repo
+
+Backend API repository (if backend plugin needed)
+- Repo: https://github.com/superhero-com/superhero-api.git
+- Clone and set up backend repo if implementing PopularRankingContributor for popular feed integration
+- Follow Backend API Setup guide for environment configuration
 
 Sophia contract generation rules (hosted compiler)
 - Target https://compiler.aeternity.io.
@@ -66,8 +75,16 @@ Local checks / workarounds
 
 Plan (after I reply to the initial question)
 
+0) Project setup
+- Use workspace setup script or manual steps to create project structure:
+  - Clone Superhero UI and API repos
+  - Create contracts repo <PLUGIN_ID>-contracts and initialize git
+  - Create workspace file superhero.code-workspace
+- Open workspace in Cursor/IDE
+
 1) Contracts repo (aeproject)
-- Initialize repo <PLUGIN_ID>-contracts and aeproject.
+- Navigate to <PLUGIN_ID>-contracts directory
+- Initialize aeproject: `aeproject init`
 - Create `contracts/<CONTRACT_NAME>.aes` implementing the requested behavior (default Crowdfunding with create_campaign, contribute, refund, withdraw, get_campaign).
 - Emit events for off-chain indexing.
 - Add tests (positive + negative).
@@ -76,7 +93,9 @@ Plan (after I reply to the initial question)
   - aci/<CONTRACT_NAME>.json
 - Conventional commits.
 
-2) Superhero UI (fork/clone as above)
+2) Superhero UI plugin
+- Navigate to superhero directory
+- Create branch: `git checkout -b feat/<PLUGIN_ID>`
 - Create `src/plugins/<PLUGIN_ID>/` (+ `contract-artifacts/`).
 - Plugin entry using `definePlugin`: composer attachment(s) and item actions as needed by the plugin description.
 - Load ACI from `src/plugins/<PLUGIN_ID>/contract-artifacts/<CONTRACT_NAME>.json` (or import from the contracts repo), address from `VITE_<CONTRACT_NAME>_CONTRACT`.
@@ -87,8 +106,21 @@ Plan (after I reply to the initial question)
   - VITE_<CONTRACT_NAME>_CONTRACT=<address>
 - Conventional commit.
 
-3) Smoke test
-- Run tests; start UI; verify reads; perform one write with Superhero Wallet on testnet.
+3) Backend API Plugin (if needed for popular feed)
+- Navigate to superhero-api directory
+- Set up environment: copy `.env.example` to `.env` and configure database/Redis
+- If the plugin needs to contribute to the popular feed, create backend plugin:
+  - Extend `BasePlugin` in `src/plugins/<PLUGIN_ID>/<PLUGIN_ID>.plugin.ts`
+  - Implement `PopularRankingContributor` interface if contributing to popular feed
+  - Create sync service extending `BasePluginSyncService`
+  - Register plugin in `src/app.module.ts`
+  - Configure filters to match contract calls
+  - Process transactions and extract data
+- See API Plugin Development guide for details.
+
+4) Smoke test
+- Run contract tests; start UI; verify reads; perform one write with Superhero Wallet on testnet.
+- If backend plugin exists, start API server and verify transaction processing and popular feed contribution.
 
 Output format
 - Commands in fenced code blocks
@@ -106,7 +138,8 @@ Complete the setup steps (5–10 minutes):
 - [Prerequisites](./prerequisites.md) - Install required software (Node.js, Git, Docker, Cursor)
 - [Wallet Setup](./wallet-setup.md) - Install and configure Superhero Wallet, fund testnet account
 - [Configure Cursor](./configure-cursor.md) - **Important**: Set up MCP access to documentation for better AI assistance
-- [Project Setup](./project-setup.md) - Create your contracts repository
+- [Project Setup](./project-setup.md) - Create your contracts repository and configure workspace
+- [Backend API Setup](./backend-setup.md) - Set up backend API repository (only if building backend plugins)
 
 ## 2) Scaffold Project (2–5 minutes)
 

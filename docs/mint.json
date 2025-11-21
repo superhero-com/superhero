@@ -31,7 +31,8 @@
         "tutorials/hackathon/prerequisites",
         "tutorials/hackathon/wallet-setup",
         "tutorials/hackathon/configure-cursor",
-        "tutorials/hackathon/project-setup"
+        "tutorials/hackathon/project-setup",
+        "tutorials/hackathon/backend-setup"
       ]
     },
     {

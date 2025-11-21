@@ -14,6 +14,7 @@ title: Summary
 - [Wallet Setup](./wallet-setup.md)
 - [Configure Cursor](./configure-cursor.md)
 - [Project Setup](./project-setup.md)
+- [Backend API Setup](./backend-setup.md)
 
 ## Contract Development
 - [Project Scaffold](./scaffold-and-compiler.md)

@@ -15,25 +15,26 @@ This tutorial is designed for newcomers using Cursor or other AI tools to build 
 
 ## Repo model
 
-<Warning>
-Work in two repositories:
-1) Contracts repo (yours): Sophia code, tests, aeproject, deployments, ACI artifacts.
-2) Superhero UI repo (this repo): your plugin that consumes the deployed contracts.
-</Warning>
+You'll work with multiple repositories:
+
+1. **Contracts** (create your own): Sophia code, tests, aeproject, deployments, ACI artifacts.
+2. **[Superhero UI](https://github.com/superhero-com/superhero)**: the complete Superhero frontend application where you'll add your frontend plugin.
+3. **[Superhero API](https://github.com/superhero-com/superhero-api)** (optional): backend application for transaction processing and popular feed integration.
 
 Recommended structure:
 ```
-contracts-repo/
-  contracts/
-  tests/
-  aeproject.json
-  deployments/             # addresses per network
-  aci/                     # compiled ACIs (JSON)
-  README.md
-
-superhero-ui-repo/         # this repo
-  src/plugins/your-plugin/
-  ... (imports contract address + ACI from your contracts repo)
+superhero-plugin-workspace/
+  superhero/                    # UI repo (cloned)
+    src/plugins/your-plugin/
+  superhero-api/                 # API repo (cloned, optional)
+    src/plugins/your-plugin/
+  your-plugin-contracts/         # Contracts repo (your repo)
+    contracts/
+    tests/
+    aeproject.json
+    deployments/                 # addresses per network
+    aci/                         # compiled ACIs (JSON)
+  superhero.code-workspace        # IDE workspace file
 ```
 
 ## Fast Feedback Loop
@@ -48,7 +49,7 @@ Prefer the aeproject path for the fastest setup. See [Project Scaffold](./tutori
 
 ## Quick Links
 
-- **[Quickstart](./tutorials/hackathon/quickstart.md)** - Get started in 10-15 minutes
+- **[Quickstart](./tutorials/hackathon/quickstart.md)** - Fast track to get a plugin running with AI assistance
 - **[Setup](./tutorials/hackathon/setup.md)** - Complete environment setup
 - **[Plugin SDK Documentation](./plugin-sdk.md)** - Complete API reference
 - **[References](./tutorials/hackathon/references.md)** - Documentation links and tools

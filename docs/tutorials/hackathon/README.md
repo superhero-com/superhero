@@ -8,7 +8,7 @@ Welcome to the Superhero hackathon! This guide helps you build a Superhero plugi
 
 ## Getting Started
 
-- **[Quickstart](./quickstart.md)** - Fast track to get a plugin running in 10-15 minutes
+- **[Quickstart](./quickstart.md)** - Fast track to get a plugin running with AI assistance
 - **[Overview](./overview.md)** - Complete guide overview and architecture
 
 ## Setup
@@ -17,7 +17,8 @@ Welcome to the Superhero hackathon! This guide helps you build a Superhero plugi
 - **[Prerequisites](./prerequisites.md)** - Install required software
 - **[Wallet Setup](./wallet-setup.md)** - Configure Superhero Wallet
 - **[Configure Cursor](./configure-cursor.md)** - Set up Cursor with documentation context
-- **[Project Setup](./project-setup.md)** - Create your contracts repository
+- **[Project Setup](./project-setup.md)** - Clone repositories and configure workspace
+- **[Backend API Setup](./backend-setup.md)** - Set up backend API (optional, only if building backend plugins)
 
 ## Development Guides
 

@@ -47,14 +47,9 @@
       ]
     },
     {
-      "group": "Operations",
+      "group": "Resources",
       "pages": [
-        "tutorials/hackathon/ops-and-support"
-      ]
-    },
-    {
-      "group": "References",
-      "pages": [
+        "tutorials/hackathon/hints",
         "tutorials/hackathon/references"
       ]
     }

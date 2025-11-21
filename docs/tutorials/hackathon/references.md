@@ -1,5 +1,5 @@
 ---
-title: Official References
+title: References
 ---
 
 ## Superhero Wallet

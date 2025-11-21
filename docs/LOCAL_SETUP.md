@@ -10,10 +10,10 @@ npm i -g mintlify
 
 # Start local development server
 cd docs
-mintlify dev --port 3001
+mintlify dev --port 3002
 ```
 
-The documentation will be available at `http://localhost:3001`.
+The documentation will be available at `http://localhost:3002`.
 
 ## Deployment
 

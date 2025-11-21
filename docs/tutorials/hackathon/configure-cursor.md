@@ -42,7 +42,7 @@ If you prefer to run the documentation locally (useful for development or offlin
 
 ```bash
 cd docs
-mintlify dev --port 3001
+mintlify dev --port 3002
 ```
 
 2. Update your MCP configuration to use the local URL:
@@ -51,7 +51,7 @@ mintlify dev --port 3001
 {
   "mcpServers": {
     "superhero-docs": {
-      "url": "http://localhost:3001/mcp"
+      "url": "http://localhost:3002/mcp"
     }
   }
 }

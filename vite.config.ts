@@ -84,7 +84,7 @@ export default defineConfig(({ mode }) => {
     // Accept both prefixes in import.meta.env
     envPrefix: ['VITE_', 'VUE_APP_'],
     server: {
-      port: 3000,
+      port: 5173,
       host: true,
     },
     test: {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import moment from 'moment';
@@ -1002,6 +1002,18 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     return data.sort((a, b) => a.time - b.time);
   }, [portfolioData, currentPortfolioSnapshot, convertTo, dateRange]);
 
+  // Stable hover handler so the chart's event listeners aren't torn down on each render
+  const handleChartHover = useCallback(
+    (price: number | null, time: number | null) => {
+      if (price !== null && time !== null) {
+        setHoveredPrice({ price, time });
+      } else {
+        setHoveredPrice(null);
+      }
+    },
+    []
+  );
+
   // Extract current portfolio value from the independent query
   // This ensures consistency across all timeframes
   const currentPortfolioValue = useMemo(() => {
@@ -1124,100 +1136,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     portfolioDataRef.current = portfolioData;
   }, [portfolioData]);
 
-  // Prefetch other time ranges in the background after first load
-  useEffect(() => {
-    // Only prefetch if the current query has successfully loaded
-    if (!portfolioData || isLoading) return;
-
-    // Get all time ranges except the currently selected one
-    const otherTimeRanges = (Object.keys(TIME_RANGES) as TimeRange[]).filter(
-      (range) => range !== selectedTimeRange
-    );
-
-    // Prefetch each other time range
-    otherTimeRanges.forEach((timeRange) => {
-      const range = TIME_RANGES[timeRange];
-      const endDate = moment();
-      
-      let startDate: moment.Moment;
-      if (range.days === Infinity) {
-        startDate = MIN_START_DATE;
-        } else {
-        startDate = moment().subtract(range.days, 'days');
-        if (startDate.isBefore(MIN_START_DATE)) {
-          startDate = MIN_START_DATE;
-        }
-      }
-
-      const prefetchDateRange = {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        interval: range.interval,
-      };
-
-      // Check if data is already cached
-      const queryKey = ['portfolio-history', address, timeRange, convertTo];
-      const cachedData = queryClient.getQueryData(queryKey);
-      
-      // Only prefetch if not already cached
-      if (!cachedData) {
-        // Prefetch the query
-        queryClient.prefetchQuery({
-          queryKey,
-          queryFn: async () => {
-            const response = await SuperheroApi.getAccountPortfolioHistory(address, {
-              startDate: prefetchDateRange.startDate,
-              endDate: prefetchDateRange.endDate,
-              interval: prefetchDateRange.interval,
-              convertTo: convertTo as any,
-              include: 'pnl-range',
-            });
-            
-            const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
-            
-            // Sort by timestamp ascending
-            const sorted = snapshots.sort((a, b) => 
-              moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf()
-            );
-            
-            // Filter to ensure one point per interval period
-            const intervalSeconds = prefetchDateRange.interval;
-            const periodMap = new Map<number, PortfolioSnapshot>();
-            
-            for (const snapshot of sorted) {
-              const timestamp = moment(snapshot.timestamp).unix();
-              const periodStart = Math.floor(timestamp / intervalSeconds) * intervalSeconds;
-              
-              const existing = periodMap.get(periodStart);
-              if (!existing) {
-                periodMap.set(periodStart, snapshot);
-              } else {
-                const existingTime = moment(existing.timestamp).unix();
-                const existingDistance = Math.abs(existingTime - periodStart);
-                const currentDistance = Math.abs(timestamp - periodStart);
-                
-                if (currentDistance < existingDistance || 
-                    (currentDistance === existingDistance && timestamp > existingTime)) {
-                  periodMap.set(periodStart, snapshot);
-                }
-              }
-            }
-
-            const filtered = Array.from(periodMap.values()).sort((a, b) => 
-              moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf()
-            );
-
-            return {
-              filtered,
-              raw: sorted,
-            };
-          },
-          staleTime: 5 * 60 * 1000, // 5 minutes
-          gcTime: 30 * 60 * 1000, // Keep cached data for 30 minutes
-        });
-      }
-    });
-  }, [portfolioData, isLoading, selectedTimeRange, address, convertTo, queryClient]);
+  // NOTE: We intentionally do not prefetch other time ranges here anymore.
+  // This significantly reduces initial load time and backend load, especially
+  // on slow connections or for accounts with a lot of history.
 
   // Check if portfolio value is ready (independent of PNL data)
   // This allows portfolio value to show even if PNL data is missing for a timeframe
@@ -1643,13 +1564,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               ) : rechartsData.length > 0 ? (
               <RechartsChart
                   data={rechartsData}
-                  onHover={(price, time) => {
-                    if (price !== null && time !== null) {
-                      setHoveredPrice({ price, time });
-                    } else {
-                      setHoveredPrice(null);
-                    }
-                  }}
+                  onHover={handleChartHover}
                   convertTo={convertTo}
                   currentCurrencyInfo={currentCurrencyInfo}
                 />

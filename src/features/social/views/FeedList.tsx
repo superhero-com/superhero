@@ -15,6 +15,8 @@ import SortControls from "../components/SortControls";
 import EmptyState from "../components/EmptyState";
 import PostSkeleton from "../components/PostSkeleton";
 import ReplyToFeedItem from "../components/ReplyToFeedItem";
+import PollCreatedCard from "../feed-plugins/poll-created/PollCreatedCard";
+import { useAeSdk } from "@/hooks";
 import TokenCreatedFeedItem from "../components/TokenCreatedFeedItem";
 import TokenCreatedActivityItem from "../components/TokenCreatedActivityItem";
 import { PostApiResponse } from "../types";
@@ -24,7 +26,6 @@ import type { FeedEntry } from "../feed-plugins/types";
 import { adaptTokenCreatedToEntry } from "../feed-plugins/token-created";
 import { getAllPlugins } from "../feed-plugins/registry";
 import { usePluginEntries } from "../feed-plugins/FeedOrchestrator";
-import { useAeSdk } from "@/hooks/useAeSdk";
 import { GovernanceApi } from "@/api/governance";
 import Head from "../../../seo/Head";
 import { CONFIG } from "../../../config";
@@ -34,6 +35,39 @@ import { CONFIG } from "../../../config";
 // Custom hook
 function useUrlQuery() {
   return new URLSearchParams(useLocation().search);
+}
+
+// Wrapper component for poll items from popular feed
+function PollItemWrapper({ pollAddress, ...props }: any) {
+  const { sdk, activeAccount } = useAeSdk() as any;
+  const [currentHeight, setCurrentHeight] = React.useState<number | undefined>(undefined);
+  
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const h = await (sdk as any)?.getHeight?.();
+        if (!cancelled && typeof h === 'number') setCurrentHeight(h);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [sdk]);
+  
+  // For polls from popular feed, we'll use a simplified version without voting
+  // Users can click to open the full poll page if they want to vote
+  return (
+    <PollCreatedCard
+      {...props}
+      currentHeight={currentHeight}
+      myVote={null}
+      onVoteOption={undefined}
+      onRevoke={undefined}
+      voting={false}
+      pendingOption={null}
+    />
+  );
 }
 
 export default function FeedList({
@@ -1410,15 +1444,52 @@ export default function FeedList({
               popularDataPages: popularData?.pages?.length || 0,
               latestDataForHotPages: latestDataForHot?.pages?.length || 0,
             })} */}
-            {filteredAndSortedList.map((item) => (
-              <ReplyToFeedItem
-                key={item.id}
-                item={item}
-                commentCount={item.total_comments ?? 0}
-                allowInlineRepliesToggle={false}
-                onOpenPost={handleItemClick}
-              />
-            ))}
+            {filteredAndSortedList.map((item: any) => {
+              // Check if this is a poll item from the popular feed
+              if (item.type === 'poll' && item.metadata) {
+                const pollMetadata = item.metadata;
+                const voteOptions = pollMetadata.vote_options || [];
+                const votesByOption = pollMetadata.votes_count_by_option || {};
+                
+                // Convert vote_options array to options format expected by PollCreatedCard
+                const options = voteOptions.map((opt: { key: number; val: string }) => ({
+                  id: opt.key,
+                  label: opt.val,
+                  votes: votesByOption[String(opt.key)] || 0,
+                }));
+                
+                const totalVotes = pollMetadata.votes_count || 0;
+                
+                return (
+                  <PollItemWrapper
+                    key={item.id}
+                    pollAddress={pollMetadata.poll_address}
+                    title={item.content ? item.content.split(' - ')[0] || 'Untitled poll' : 'Untitled poll'}
+                    description={item.content && item.content.includes(' - ') ? item.content.split(' - ').slice(1).join(' - ') : undefined}
+                    author={item.sender_address}
+                    closeHeight={pollMetadata.close_height}
+                    createHeight={pollMetadata.create_height}
+                    options={options}
+                    totalVotes={totalVotes}
+                    createdAtIso={item.created_at}
+                    txHash={pollMetadata.hash}
+                    contractAddress={pollMetadata.poll_address}
+                    onOpen={() => handleItemClick(item.id)}
+                  />
+                );
+              }
+              
+              // Regular post item
+              return (
+                <ReplyToFeedItem
+                  key={item.id}
+                  item={item}
+                  commentCount={item.total_comments ?? 0}
+                  allowInlineRepliesToggle={false}
+                  onOpenPost={handleItemClick}
+                />
+              );
+            })}
           </>
         )}
       </div>

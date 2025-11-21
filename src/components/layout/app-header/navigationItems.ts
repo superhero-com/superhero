@@ -23,6 +23,7 @@ export const getNavigationItems = (t: TFunction): NavigationItem[] => [
     path: "/trends/tokens",
     icon: "📈",
     children: [
+      { id: "leaderboard", label: t('trendingChildren.leaderboard'), path: "/trends/leaderboard", icon: "🏆" },
       { id: "invite", label: t('trendingChildren.invite'), path: "/trends/invite", icon: "🎁" },
     ],
   },

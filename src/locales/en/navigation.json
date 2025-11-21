@@ -2,6 +2,7 @@
   "home": "Social",
   "trending": "Trends",
   "trendingChildren": {
+    "leaderboard": "Trading Leaderboard",
     "invite": "Invite & Earn"
   },
   "defi": "DeFi",

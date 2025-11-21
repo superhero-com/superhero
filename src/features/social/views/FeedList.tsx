@@ -26,7 +26,6 @@ import type { FeedEntry } from "../feed-plugins/types";
 import { adaptTokenCreatedToEntry } from "../feed-plugins/token-created";
 import { getAllPlugins } from "../feed-plugins/registry";
 import { usePluginEntries } from "../feed-plugins/FeedOrchestrator";
-import { useAeSdk } from "@/hooks/useAeSdk";
 import { GovernanceApi } from "@/api/governance";
 import Head from "../../../seo/Head";
 import { CONFIG } from "../../../config";

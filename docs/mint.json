@@ -36,7 +36,9 @@
         "tutorials/hackathon/scaffold-and-compiler",
         "tutorials/hackathon/contracts",
         "tutorials/hackathon/test-and-deploy",
-        "tutorials/hackathon/integrate-and-plugin-sdk"
+        "tutorials/hackathon/integrate-and-plugin-sdk",
+        "tutorials/hackathon/feed-plugins",
+        "tutorials/hackathon/api-plugin-development"
       ]
     },
     {

@@ -169,12 +169,22 @@ Emit small on‑chain events and push entries to the feed via `pushFeedEntry` fo
 ## Plugin SDK Deep Dive
 
 ### Capabilities (v1.x)
-- `feed`: add new item kinds to the unified feed
+- `feed`: add new item kinds to the unified feed (see [Feed Plugins Guide](./feed-plugins.md))
 - `composer`: add actions and attachments (interactive panels)
 - `item-actions`: contextual actions on feed items
 - `routes`: add pages to the app router
 - `modals`: register reusable modals
 - `menu`: contribute navigation items
+
+### Popular Feed Integration
+
+Plugins can contribute content to the popular feed through:
+
+1. **Frontend Feed Plugins**: Register feed plugins with proper ID format (`{plugin-name}:{id}`)
+   - See [Feed Plugins & Popular Feed Injection](./feed-plugins.md) for details
+   
+2. **Backend API Plugins**: Implement `PopularRankingContributor` interface
+   - See [API Plugin Development](./api-plugin-development.md) for backend integration
 
 ### Core types (simplified)
 ```ts

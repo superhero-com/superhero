@@ -55,7 +55,39 @@ type ComposerAttachmentSpec = {
 - After posting, deploy the poll, then update inline cache and push a `poll-created` feed entry.
 
 ## Feed plugins
-Implement `feed: FeedPlugin` with `fetchPage` and `Render` to add new item kinds to the unified feed. See `src/features/social/feed-plugins/*` for examples.
+
+Feed plugins allow you to inject custom content into the unified feed. See the [Feed Plugins & Popular Feed Injection](./tutorials/hackathon/feed-plugins.md) guide for complete documentation.
+
+Key features:
+- **Unified Feed**: Your content appears alongside regular posts
+- **Popular Feed**: Optional integration with popular ranking system
+- **Live Updates**: Real-time content updates via WebSocket
+- **Pagination**: Built-in pagination support
+
+Quick example:
+```typescript
+import { FeedPlugin } from '@/features/social/feed-plugins/types';
+import { registerPlugin } from '@/features/social/feed-plugins/registry';
+
+const myFeedPlugin: FeedPlugin = {
+  kind: 'my-content',
+  async fetchPage(page: number) {
+    const items = await fetchMyContent(page);
+    return {
+      entries: items.map(item => ({
+        id: item.id,
+        kind: 'my-content',
+        createdAt: item.created_at,
+        data: item,
+      })),
+      nextPage: items.length > 0 ? page + 1 : undefined,
+    };
+  },
+  Render: ({ entry }) => <MyContentCard data={entry.data} />,
+};
+
+registerPlugin(myFeedPlugin);
+```
 
 ## Actions and item actions
 - Composer actions: simple buttons near Emoji/GIF.
@@ -170,8 +202,28 @@ To add more languages:
 - **Easy to extend**: Add language files as needed
 - **Works for external plugins**: External plugins can bundle their own translations
 
+## API Plugin Development
+
+For backend plugins that process blockchain transactions and contribute to the popular feed, see the [API Plugin Development](./tutorials/hackathon/api-plugin-development.md) guide.
+
+Backend plugins can:
+- Process blockchain transactions
+- Extract and store plugin data
+- Contribute content to popular feed ranking
+- Handle reorgs and transaction updates
+
+## Popular Feed Integration
+
+Plugins can contribute content to the popular feed through:
+
+1. **Frontend**: Use feed plugins with proper ID format (`{plugin-name}:{id}`)
+2. **Backend**: Implement `PopularRankingContributor` interface
+
+See [Feed Plugins & Popular Feed Injection](./tutorials/hackathon/feed-plugins.md) for frontend integration and [API Plugin Development](./tutorials/hackathon/api-plugin-development.md) for backend integration.
+
 ## Testing
 - Develop locally as ESM; add your plugin URL to `CONFIG.PLUGINS`.
 - Mock `ensureWallet` and `cacheLink` for unit tests.
+- Test feed plugins with mock data and pagination scenarios.
 
 

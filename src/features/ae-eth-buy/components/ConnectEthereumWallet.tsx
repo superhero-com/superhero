@@ -25,7 +25,7 @@ export function ConnectEthereumWallet({
 
     const handleConnect = async () => {
         try {
-            await open();
+            await open({ view: 'Connect' });
         } catch (error: any) {
             console.error('Failed to open wallet modal:', error);
             if (onError) {

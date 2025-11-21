@@ -20,6 +20,9 @@ const TrendAccountDetails = lazy(
 const TrendCreate = lazy(
   () => import("./features/trending/views/CreateTokenView")
 );
+const LeaderboardView = lazy(
+  () => import("./features/trending/views/LeaderboardView")
+);
 const TokenSaleDetails = lazy(
   () => import("./features/trending/views/TokenSaleDetails")
 );
@@ -109,6 +112,7 @@ export const getRoutes = (): RouteObject[] => [
   { path: "/trends", element: <Navigate to="/trends/tokens" replace /> },
   { path: "/trends/visx", element: <TrendCloudVisx /> },
   { path: "/trends/tokens/:tokenName", element: <TokenSaleDetails /> },
+  { path: "/trends/leaderboard", element: <LeaderboardView /> },
   { path: "/tx-queue/:id", element: <TxQueue /> },
   { path: "/trends/invite", element: <TrendInvite /> },
   { path: "/trends/daos", element: <TrendDaos /> },
@@ -125,6 +129,7 @@ export const getRoutes = (): RouteObject[] => [
   { path: "/trending/daos", element: <Navigate to="/trends/daos" replace /> },
   { path: "/trending/accounts", element: <Navigate to="/trends/accounts" replace /> },
   { path: "/trending/create", element: <Navigate to="/trends/create" replace /> },
+  { path: "/trending/leaderboard", element: <Navigate to="/trends/leaderboard" replace /> },
   // Param redirects using small wrappers
   { path: "/trending/tokens/:tokenName", element: <NavigateTrendingToken /> },
   { path: "/trending/dao/:saleAddress", element: <NavigateTrendingDao /> },

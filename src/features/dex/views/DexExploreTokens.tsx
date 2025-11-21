@@ -3,7 +3,6 @@ import { useState } from "react";
 import { DexService } from "../../../api/generated";
 import { TokenListCards } from "../../../components/explore/components/TokenListCards";
 import { TokenListTable } from "../../../components/explore/components/TokenListTable";
-import { useTokenList } from "../../../components/explore/hooks/useTokenList";
 
 // Define the actual API response structure
 interface PaginatedResponse<T> {
@@ -16,8 +15,8 @@ interface PaginatedResponse<T> {
 }
 
 export default function DexExploreTokens() {
-  const [sort, setSort] = useState<"pairs_count" | "name" | "symbol" | "created_at" | "price" | "tvl" | "24hchange" | "24hvolume" | "7dchange" | "7dvolume">(
-    "pairs_count"
+  const [sort, setSort] = useState<"pairs_count" | "name" | "symbol" | "created_at" | "price" | "tvl" | "24hchange" | "24hvolume" | "7dchange" | "7dvolume" | "30dchange" | "30dvolume">(
+    "30dvolume"
   );
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [page, setPage] = useState(1);

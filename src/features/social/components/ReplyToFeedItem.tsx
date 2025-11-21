@@ -78,7 +78,19 @@ function useParentId(item: PostDto): string | null {
 }
 
 // X-like post item with optional parent context header
+<<<<<<< HEAD
 const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentContext = false, allowInlineRepliesToggle = true, isActive = false, tokenHolderLabel }: ReplyToFeedItemProps) => {
+=======
+const ReplyToFeedItem = memo(({
+  item,
+  onOpenPost,
+  commentCount = 0,
+  hideParentContext = false,
+  allowInlineRepliesToggle = true,
+  isActive = false,
+  tokenHolderLabel,
+}: ReplyToFeedItemProps) => {
+>>>>>>> origin/develop
   const { t } = useTranslation('social');
   const postId = item.id;
   const authorAddress = item.sender_address;
@@ -137,7 +149,9 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
   // Compute total descendant comments (all levels) for this item
   const { data: descendantCount } = useQuery<number>({
     queryKey: ["post-desc-count", postId],
+    // Always enable for this post so counts can update from 0 → N over time.
     enabled: !!postId,
+    // Periodically refresh to keep counts from going stale.
     refetchInterval: 120 * 1000,
     queryFn: async () => {
       const normalize = (id: string) => (String(id).endsWith("_v3") ? String(id) : `${String(id)}_v3`);

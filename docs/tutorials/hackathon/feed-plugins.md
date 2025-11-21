@@ -100,13 +100,13 @@ Example:
 
 ### Backend Integration
 
-See the [API Plugin Development](./api-plugin-development.md) guide for implementing `PopularRankingContributor` on the backend.
+See the [API Plugin Development](./api-plugin-development) guide for implementing `PopularRankingContributor` on the backend.
 
 ## Next Steps
 
-- **[API Plugin Development](./api-plugin-development.md)** - Build backend plugins for ranking
-- **[Plugin Integration](./integrate-and-plugin-sdk.md)** - Complete plugin integration guide
-- **[Plugin SDK Documentation](../plugin-sdk.md)** - Full Plugin SDK API reference
+- **[API Plugin Development](./api-plugin-development)** - Build backend plugins for ranking
+- **[Plugin Integration](./integrate-and-plugin-sdk)** - Complete plugin integration guide
+- **[Plugin SDK Documentation](../../plugin-sdk)** - Full Plugin SDK API reference
 
 ## Live Updates
 

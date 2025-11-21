@@ -56,7 +56,7 @@ type ComposerAttachmentSpec = {
 
 ## Feed plugins
 
-Feed plugins allow you to inject custom content into the unified feed. See the [Feed Plugins & Popular Feed Injection](./tutorials/hackathon/feed-plugins.md) guide for complete documentation.
+Feed plugins allow you to inject custom content into the unified feed. See the [Feed Plugins & Popular Feed Injection](./tutorials/hackathon/feed-plugins) guide for complete documentation.
 
 Key features:
 - **Unified Feed**: Your content appears alongside regular posts
@@ -204,7 +204,7 @@ To add more languages:
 
 ## API Plugin Development
 
-For backend plugins that process blockchain transactions and contribute to the popular feed, see the [API Plugin Development](./tutorials/hackathon/api-plugin-development.md) guide.
+For backend plugins that process blockchain transactions and contribute to the popular feed, see the [API Plugin Development](./tutorials/hackathon/api-plugin-development) guide.
 
 Backend plugins can:
 - Process blockchain transactions
@@ -219,7 +219,7 @@ Plugins can contribute content to the popular feed through:
 1. **Frontend**: Use feed plugins with proper ID format (`{plugin-name}:{id}`)
 2. **Backend**: Implement `PopularRankingContributor` interface
 
-See [Feed Plugins & Popular Feed Injection](./tutorials/hackathon/feed-plugins.md) for frontend integration and [API Plugin Development](./tutorials/hackathon/api-plugin-development.md) for backend integration.
+See [Feed Plugins & Popular Feed Injection](./tutorials/hackathon/feed-plugins) for frontend integration and [API Plugin Development](./tutorials/hackathon/api-plugin-development) for backend integration.
 
 ## Testing
 - Develop locally as ESM; add your plugin URL to `CONFIG.PLUGINS`.

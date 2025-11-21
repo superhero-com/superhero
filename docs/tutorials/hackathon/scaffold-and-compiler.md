@@ -35,15 +35,15 @@ Check `aeproject.json` (or CLI help) for network profiles and paths.
 
 If you're building backend plugins for transaction processing or popular feed integration:
 
-- **[Backend API Setup](./backend-setup.md)** - Set up the Superhero API repository
+- **[Backend API Setup](./backend-setup)** - Set up the Superhero API repository
 - Clone the backend repo and configure environment
 - Set up database and Redis services
 
 ## Next Steps
 
-- **[Smart Contracts](./contracts.md)** - Learn Sophia contract development
-- **[Testing & Deployment](./test-and-deploy.md)** - Test and deploy your contracts
-- **[Backend API Setup](./backend-setup.md)** - Set up backend for API plugins (if needed)
+- **[Smart Contracts](./contracts)** - Learn Sophia contract development
+- **[Testing & Deployment](./test-and-deploy)** - Test and deploy your contracts
+- **[Backend API Setup](./backend-setup)** - Set up backend for API plugins (if needed)
 
 ## Optional: manual setup (SDK + Docker compiler)
 If you prefer a minimal stack, you can still set up manually:

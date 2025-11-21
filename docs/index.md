@@ -44,13 +44,13 @@ superhero-plugin-workspace/
 - Contract (Sophia) ↔ ACI ↔ JS SDK (`@aeternity/aepp-sdk`) ↔ Superhero Plugin SDK ↔ Plugin UI
 
 <Tip>
-Prefer the aeproject path for the fastest setup. See [Project Scaffold](./tutorials/hackathon/scaffold-and-compiler.md) for details.
+Prefer the aeproject path for the fastest setup. See [Project Scaffold](./tutorials/hackathon/scaffold-and-compiler) for details.
 </Tip>
 
 ## Quick Links
 
-- **[Quickstart](./tutorials/hackathon/quickstart.md)** - Fast track to get a plugin running with AI assistance
-- **[Setup](./tutorials/hackathon/setup.md)** - Complete environment setup
-- **[Plugin SDK Documentation](./plugin-sdk.md)** - Complete API reference
-- **[References](./tutorials/hackathon/references.md)** - Documentation links and tools
+- **[Quickstart](./tutorials/hackathon/quickstart)** - Fast track to get a plugin running with AI assistance
+- **[Setup](./tutorials/hackathon/setup)** - Complete environment setup
+- **[Plugin SDK Documentation](./plugin-sdk)** - Complete API reference
+- **[References](./tutorials/hackathon/references)** - Documentation links and tools
 

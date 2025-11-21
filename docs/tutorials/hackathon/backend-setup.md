@@ -114,9 +114,9 @@ src/plugins/<your-plugin-id>/
 
 ## Next Steps
 
-- **[API Plugin Development](./api-plugin-development.md)** - Build your backend plugin
-- **[Feed Plugins](./feed-plugins.md)** - Understand frontend-backend integration
-- **[Hints & Tips](./hints.md)** - Troubleshooting and best practices
+- **[API Plugin Development](./api-plugin-development)** - Build your backend plugin
+- **[Feed Plugins](./feed-plugins)** - Understand frontend-backend integration
+- **[Hints & Tips](./hints)** - Troubleshooting and best practices
 
 <Tip>
 Make sure your database and Redis are running before starting the development server. Check logs if you encounter connection errors.

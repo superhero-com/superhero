@@ -7,7 +7,7 @@ Short on time? Follow this quick path to get a plugin running end‑to‑end.
 </Warning>
 
 <Tip>
-Configure Cursor with MCP access to this documentation for the best AI assistance experience. See [Configure Cursor](./configure-cursor.md) to set up the MCP server connection. This significantly improves AI accuracy and speeds up development.
+Configure Cursor with MCP access to this documentation for the best AI assistance experience. See [Configure Cursor](./configure-cursor) to set up the MCP server connection. This significantly improves AI accuracy and speeds up development.
 </Tip>
 
 ## AI‑assisted quick start (Cursor or similar)
@@ -136,42 +136,42 @@ Collision avoidance
 ## 1) Setup Environment
 
 Complete the setup steps (5–10 minutes):
-- [Prerequisites](./prerequisites.md) - Install required software (Node.js, Git, Docker, Cursor)
-- [Wallet Setup](./wallet-setup.md) - Install and configure Superhero Wallet, fund testnet account
-- [Configure Cursor](./configure-cursor.md) - **Important**: Set up MCP access to documentation for better AI assistance
-- [Project Setup](./project-setup.md) - Create your contracts repository and configure workspace
-- [Backend API Setup](./backend-setup.md) - Set up backend API repository (only if building backend plugins)
+- [Prerequisites](./prerequisites) - Install required software (Node.js, Git, Docker, Cursor)
+- [Wallet Setup](./wallet-setup) - Install and configure Superhero Wallet, fund testnet account
+- [Configure Cursor](./configure-cursor) - **Important**: Set up MCP access to documentation for better AI assistance
+- [Project Setup](./project-setup) - Create your contracts repository and configure workspace
+- [Backend API Setup](./backend-setup) - Set up backend API repository (only if building backend plugins)
 
 ## 2) Scaffold Project (2–5 minutes)
 
-- Follow: [Project Scaffold](./scaffold-and-compiler.md)
+- Follow: [Project Scaffold](./scaffold-and-compiler)
 - Initialize aeproject: `aeproject init`
 - Install dependencies, set up `contracts/`, `tests/`, `scripts/`
 
 ## 3) Write Your Contract (10–20 minutes)
 
-- Learn Sophia basics: [Smart Contracts](./contracts.md)
+- Learn Sophia basics: [Smart Contracts](./contracts)
 - Use the contract examples and patterns provided
 - With AI assistance, describe your contract logic and let Cursor generate the code
 - Emit events for off-chain indexing
 
 ## 4) Test Locally (5–10 minutes)
 
-- Follow: [Testing & Deployment](./test-and-deploy.md)
+- Follow: [Testing & Deployment](./test-and-deploy)
 - Compile: `aeproject compile`
 - Test: `aeproject test` or write custom Vitest tests
 - Verify all entrypoints work correctly
 
 ## 5) Deploy to Testnet (2–5 minutes)
 
-- Continue with: [Testing & Deployment](./test-and-deploy.md)
+- Continue with: [Testing & Deployment](./test-and-deploy)
 - Deploy: `aeproject deploy --network testnet`
 - Save the contract address and ACI JSON files
 - Store in `deployments/testnet/` and `aci/` directories
 
 ## 6) Integrate into Superhero (10–15 minutes)
 
-- Follow: [Plugin Integration](./integrate-and-plugin-sdk.md)
+- Follow: [Plugin Integration](./integrate-and-plugin-sdk)
 - Create plugin directory: `src/plugins/<your-plugin-id>/`
 - Copy contract ACI and address to plugin
 - Implement plugin with `definePlugin`
@@ -183,10 +183,10 @@ Complete the setup steps (5–10 minutes):
 
 Once your plugin is running:
 
-- **[Feed Plugins](./feed-plugins.md)** - Add your plugin's content to the unified feed
-- **[API Plugin Development](./api-plugin-development.md)** - Build backend plugins for transaction processing
-- **[Plugin SDK Documentation](../plugin-sdk.md)** - Complete API reference for advanced features
-- **[Hints & Tips](./hints.md)** - Troubleshooting and best practices
+- **[Feed Plugins](./feed-plugins)** - Add your plugin's content to the unified feed
+- **[API Plugin Development](./api-plugin-development)** - Build backend plugins for transaction processing
+- **[Plugin SDK Documentation](../../plugin-sdk)** - Complete API reference for advanced features
+- **[Hints & Tips](./hints)** - Troubleshooting and best practices
 
 <Tip>
 Having MCP configured makes it much easier to iterate and debug. The AI will have full context of the documentation, making it more helpful for fixing issues and adding features.

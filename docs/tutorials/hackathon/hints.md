@@ -5,7 +5,7 @@ title: Hints & Tips
 ## AI-Assisted Development
 
 <Tip>
-Adding this documentation to MCP (Model Context Protocol) in Cursor or other AI editors will significantly improve your AI-assisted development and debugging experience. The AI will have access to all documentation context, making it more accurate and helpful. See [Configure Cursor](./configure-cursor.md) for setup instructions.
+Adding this documentation to MCP (Model Context Protocol) in Cursor or other AI editors will significantly improve your AI-assisted development and debugging experience. The AI will have access to all documentation context, making it more accurate and helpful. See [Configure Cursor](./configure-cursor) for setup instructions.
 </Tip>
 
 ### Using Cursor for Contract Development
@@ -37,7 +37,7 @@ Adding this documentation to MCP (Model Context Protocol) in Cursor or other AI 
 
 ### Getting Help
 - Check the [æforum](https://forum.aeternity.com/) for community discussions
-- Review the [References](./references.md) page for documentation links
+- Review the [References](./references) page for documentation links
 - Search existing GitHub issues in the Superhero repositories
 
 ## Security Best Practices

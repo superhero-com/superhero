@@ -5,28 +5,28 @@ title: Summary
 # Documentation Summary
 
 ## Getting Started
-- [Overview](./overview.md)
-- [Quickstart](./quickstart.md)
+- [Overview](./overview)
+- [Quickstart](./quickstart)
 
 ## Setup
-- [Setup Overview](./setup.md)
-- [Prerequisites](./prerequisites.md)
-- [Wallet Setup](./wallet-setup.md)
-- [Configure Cursor](./configure-cursor.md)
-- [Project Setup](./project-setup.md)
-- [Backend API Setup](./backend-setup.md)
+- [Setup Overview](./setup)
+- [Prerequisites](./prerequisites)
+- [Wallet Setup](./wallet-setup)
+- [Configure Cursor](./configure-cursor)
+- [Project Setup](./project-setup)
+- [Backend API Setup](./backend-setup)
 
 ## Contract Development
-- [Project Scaffold](./scaffold-and-compiler.md)
-- [Smart Contracts](./contracts.md)
-- [Testing & Deployment](./test-and-deploy.md)
+- [Project Scaffold](./scaffold-and-compiler)
+- [Smart Contracts](./contracts)
+- [Testing & Deployment](./test-and-deploy)
 
 ## Plugin Development
-- [Plugin Integration](./integrate-and-plugin-sdk.md)
-- [Feed Plugins](./feed-plugins.md)
-- [API Plugin Development](./api-plugin-development.md)
+- [Plugin Integration](./integrate-and-plugin-sdk)
+- [Feed Plugins](./feed-plugins)
+- [API Plugin Development](./api-plugin-development)
 
 ## Resources
-- [Hints & Tips](./hints.md)
-- [References](./references.md)
-- [Plugin SDK Documentation](../plugin-sdk.md)
+- [Hints & Tips](./hints)
+- [References](./references)
+- [Plugin SDK Documentation](../../plugin-sdk)

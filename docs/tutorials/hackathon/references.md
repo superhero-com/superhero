@@ -43,9 +43,9 @@ Switch your wallet to testnet in settings before requesting tokens from the fauc
 ## Superhero Resources
 
 ### Plugin Development
-- **[Plugin SDK Documentation](../plugin-sdk.md)** - Complete Plugin SDK reference
-- **[Feed Plugins Guide](./feed-plugins.md)** - Feed plugin development guide
-- **[API Plugin Development](./api-plugin-development.md)** - Backend plugin development guide
+- **[Plugin SDK Documentation](../../plugin-sdk)** - Complete Plugin SDK reference
+- **[Feed Plugins Guide](./feed-plugins)** - Feed plugin development guide
+- **[API Plugin Development](./api-plugin-development)** - Backend plugin development guide
 
 ### GitHub Repositories
 - **[Superhero Frontend](https://github.com/superhero-com/superhero)** - Main Superhero application repository

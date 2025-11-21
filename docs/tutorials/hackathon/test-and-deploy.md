@@ -81,6 +81,6 @@ Negative tests to add:
 
 ## Next Steps
 
-- **[Plugin Integration](./integrate-and-plugin-sdk.md)** - Integrate your deployed contract into Superhero
-- **[Feed Plugins](./feed-plugins.md)** - Add your contract's data to the unified feed
-- **[Hints & Tips](./hints.md)** - Troubleshooting and best practices
+- **[Plugin Integration](./integrate-and-plugin-sdk)** - Integrate your deployed contract into Superhero
+- **[Feed Plugins](./feed-plugins)** - Add your contract's data to the unified feed
+- **[Hints & Tips](./hints)** - Troubleshooting and best practices

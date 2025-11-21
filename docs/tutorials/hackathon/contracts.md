@@ -39,12 +39,12 @@ title: Smart Contracts
 
 ## Next Steps
 
-- **[Testing & Deployment](./test-and-deploy.md)** - Test and deploy your contracts
-- **[Plugin Integration](./integrate-and-plugin-sdk.md)** - Integrate your contract into Superhero
+- **[Testing & Deployment](./test-and-deploy)** - Test and deploy your contracts
+- **[Plugin Integration](./integrate-and-plugin-sdk)** - Integrate your contract into Superhero
 
 ## Further Reading
 
-- **[References](./references.md)** - Complete list of documentation links
+- **[References](./references)** - Complete list of documentation links
 - [Sophia Syntax](https://github.com/aeternity/aesophia/blob/master/docs/sophia_syntax.md) - Language syntax reference
 - [Sophia Features](https://github.com/aeternity/aesophia/blob/master/docs/sophia_features.md) - Language features
 - [Sophia Stdlib](https://github.com/aeternity/aesophia/blob/master/docs/sophia_stdlib.md) - Standard library

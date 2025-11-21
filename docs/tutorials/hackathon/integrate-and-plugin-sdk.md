@@ -142,7 +142,7 @@ export default function YourComponent() {
 ```
 
 <Tip>
-See the [Plugin SDK docs](../plugin-sdk.md#translations) for more details on translations and multi-language support.
+See the [Plugin SDK docs](../../plugin-sdk#translations) for more details on translations and multi-language support.
 </Tip>
 
 ### Example
@@ -169,7 +169,7 @@ Emit small on‑chain events and push entries to the feed via `pushFeedEntry` fo
 ## Plugin SDK Capabilities
 
 ### Core Capabilities (v1.x)
-- `feed`: add new item kinds to the unified feed (see [Feed Plugins Guide](./feed-plugins.md))
+- `feed`: add new item kinds to the unified feed (see [Feed Plugins Guide](./feed-plugins))
 - `composer`: add actions and attachments (interactive panels)
 - `item-actions`: contextual actions on feed items
 - `routes`: add pages to the app router
@@ -181,17 +181,17 @@ Emit small on‑chain events and push entries to the feed via `pushFeedEntry` fo
 Plugins can contribute content to the popular feed through:
 
 1. **Frontend Feed Plugins**: Register feed plugins with proper ID format (`{plugin-name}:{id}`)
-   - See [Feed Plugins](./feed-plugins.md) for complete guide
+   - See [Feed Plugins](./feed-plugins) for complete guide
    
 2. **Backend API Plugins**: Implement `PopularRankingContributor` interface
-   - See [API Plugin Development](./api-plugin-development.md) for backend integration
+   - See [API Plugin Development](./api-plugin-development) for backend integration
 
 ## Next Steps
 
-- **[Feed Plugins](./feed-plugins.md)** - Add content to the unified feed
-- **[API Plugin Development](./api-plugin-development.md)** - Build backend plugins
-- **[Plugin SDK Documentation](../plugin-sdk.md)** - Complete API reference
-- **[Hints & Tips](./hints.md)** - Development tips and troubleshooting
+- **[Feed Plugins](./feed-plugins)** - Add content to the unified feed
+- **[API Plugin Development](./api-plugin-development)** - Build backend plugins
+- **[Plugin SDK Documentation](../../plugin-sdk)** - Complete API reference
+- **[Hints & Tips](./hints)** - Development tips and troubleshooting
 
 ### Core types (simplified)
 ```ts

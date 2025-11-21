@@ -349,7 +349,7 @@ describe('MyPlugin', () => {
 
 ## Next Steps
 
-- **[Feed Plugins](./feed-plugins.md)** - Frontend feed plugin integration
-- **[Plugin Integration](./integrate-and-plugin-sdk.md)** - Complete plugin development guide
-- **[Hints & Tips](./hints.md)** - Troubleshooting and best practices
+- **[Feed Plugins](./feed-plugins)** - Frontend feed plugin integration
+- **[Plugin Integration](./integrate-and-plugin-sdk)** - Complete plugin development guide
+- **[Hints & Tips](./hints)** - Troubleshooting and best practices
 

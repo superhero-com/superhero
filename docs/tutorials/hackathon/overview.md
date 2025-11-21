@@ -25,23 +25,23 @@ You can skim most language details. Focus on state + entrypoints, auth with `Cal
 
 ## Getting Started
 
-- **[Quickstart](./quickstart.md)** - Fast track to get a plugin running
-- **[Setup Overview](./setup.md)** - Complete setup instructions
+- **[Quickstart](./quickstart)** - Fast track to get a plugin running
+- **[Setup Overview](./setup)** - Complete setup instructions
 
 ## Contract Development
 
-- **[Project Scaffold](./scaffold-and-compiler.md)** - Set up your project with aeproject
-- **[Smart Contracts](./contracts.md)** - Learn Sophia contract development
-- **[Testing & Deployment](./test-and-deploy.md)** - Test and deploy your contracts
+- **[Project Scaffold](./scaffold-and-compiler)** - Set up your project with aeproject
+- **[Smart Contracts](./contracts)** - Learn Sophia contract development
+- **[Testing & Deployment](./test-and-deploy)** - Test and deploy your contracts
 
 ## Plugin Development
 
-- **[Plugin Integration](./integrate-and-plugin-sdk.md)** - Integrate your contract into Superhero
-- **[Feed Plugins](./feed-plugins.md)** - Add content to the unified feed
-- **[API Plugin Development](./api-plugin-development.md)** - Build backend plugins
+- **[Plugin Integration](./integrate-and-plugin-sdk)** - Integrate your contract into Superhero
+- **[Feed Plugins](./feed-plugins)** - Add content to the unified feed
+- **[API Plugin Development](./api-plugin-development)** - Build backend plugins
 
 ## Resources
 
-- **[Hints & Tips](./hints.md)** - Development tips and troubleshooting
-- **[References](./references.md)** - Links to documentation and tools
-- **[Plugin SDK Documentation](../plugin-sdk.md)** - Complete Plugin SDK reference
+- **[Hints & Tips](./hints)** - Development tips and troubleshooting
+- **[References](./references)** - Links to documentation and tools
+- **[Plugin SDK Documentation](../../plugin-sdk)** - Complete Plugin SDK reference

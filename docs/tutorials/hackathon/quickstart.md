@@ -48,9 +48,10 @@ UI repository
 - Repo: https://github.com/superhero-com/superhero.git
 - Create branch: feat/<PLUGIN_ID> in the cloned repo
 
-Backend API repository (if backend plugin needed)
+Backend API repository
 - Repo: https://github.com/superhero-com/superhero-api.git
-- Clone and set up backend repo if implementing PopularRankingContributor for popular feed integration
+- Clone and set up backend repo for transaction processing and popular feed integration
+- Implement backend plugins to process blockchain transactions and contribute to the popular feed
 - Follow Backend API Setup guide for environment configuration
 
 Sophia contract generation rules (hosted compiler)
@@ -106,16 +107,16 @@ Plan (after I reply to the initial question)
   - VITE_<CONTRACT_NAME>_CONTRACT=<address>
 - Conventional commit.
 
-3) Backend API Plugin (if needed for popular feed)
+3) Backend API Plugin
 - Navigate to superhero-api directory
 - Set up environment: copy `.env.example` to `.env` and configure database/Redis
-- If the plugin needs to contribute to the popular feed, create backend plugin:
+- Create backend plugin for transaction processing:
   - Extend `BasePlugin` in `src/plugins/<PLUGIN_ID>/<PLUGIN_ID>.plugin.ts`
-  - Implement `PopularRankingContributor` interface if contributing to popular feed
-  - Create sync service extending `BasePluginSyncService`
+  - Create sync service extending `BasePluginSyncService` to process blockchain transactions
   - Register plugin in `src/app.module.ts`
   - Configure filters to match contract calls
   - Process transactions and extract data
+- For popular feed integration, implement `PopularRankingContributor` interface
 - See API Plugin Development guide for details.
 
 4) Smoke test

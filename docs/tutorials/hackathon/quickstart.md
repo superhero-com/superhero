@@ -3,12 +3,16 @@ title: Quickstart
 ---
 
 <Warning>
-Short on time? Follow this 10–15 minute path to get a plugin running end‑to‑end.
+Short on time? Follow this quick path to get a plugin running end‑to‑end.
 </Warning>
+
+<Tip>
+Configure Cursor with MCP access to this documentation for the best AI assistance experience. See [Configure Cursor](./configure-cursor.md) to set up the MCP server connection. This significantly improves AI accuracy and speeds up development.
+</Tip>
 
 ## AI‑assisted quick start (Cursor or similar)
 
-Use this copy‑paste bootstrap prompt in an AI IDE like [Cursor](https://www.cursor.com) or any editor with an agent. It will guide the agent to ask for a short description first, then scaffold both repos and wire the plugin end‑to‑end on æternity testnet.
+Use this copy‑paste bootstrap prompt in an AI IDE like [Cursor](https://www.cursor.com) or any editor with an agent. **Make sure you've configured MCP access** (see tip above) for optimal results. The prompt will guide the agent to ask for a short description first, then scaffold both repos and wire the plugin end‑to‑end on æternity testnet.
 
 ```text
 Goal: Build a Superhero plugin (contracts + Superhero plugin) on æternity testnet with robust Sophia/compiler hygiene and a clean UI integration.
@@ -98,36 +102,58 @@ Collision avoidance
 
 ## 1) Setup Environment
 
-Complete the setup steps:
-- [Prerequisites](./prerequisites.md) - Install required software
-- [Wallet Setup](./wallet-setup.md) - Install and configure Superhero Wallet
+Complete the setup steps (5–10 minutes):
+- [Prerequisites](./prerequisites.md) - Install required software (Node.js, Git, Docker, Cursor)
+- [Wallet Setup](./wallet-setup.md) - Install and configure Superhero Wallet, fund testnet account
+- [Configure Cursor](./configure-cursor.md) - **Important**: Set up MCP access to documentation for better AI assistance
 - [Project Setup](./project-setup.md) - Create your contracts repository
 
-## 2) Scaffold Project
+## 2) Scaffold Project (2–5 minutes)
 
 - Follow: [Project Scaffold](./scaffold-and-compiler.md)
+- Initialize aeproject: `aeproject init`
 - Install dependencies, set up `contracts/`, `tests/`, `scripts/`
 
-## 3) Write Your Contract
+## 3) Write Your Contract (10–20 minutes)
 
 - Learn Sophia basics: [Smart Contracts](./contracts.md)
 - Use the contract examples and patterns provided
+- With AI assistance, describe your contract logic and let Cursor generate the code
+- Emit events for off-chain indexing
 
-## 4) Test Locally
+## 4) Test Locally (5–10 minutes)
 
 - Follow: [Testing & Deployment](./test-and-deploy.md)
-- Compile, deploy, and call methods in tests
+- Compile: `aeproject compile`
+- Test: `aeproject test` or write custom Vitest tests
+- Verify all entrypoints work correctly
 
-## 5) Deploy to Testnet
+## 5) Deploy to Testnet (2–5 minutes)
 
 - Continue with: [Testing & Deployment](./test-and-deploy.md)
-- Deploy your contract to testnet and save the address
+- Deploy: `aeproject deploy --network testnet`
+- Save the contract address and ACI JSON files
+- Store in `deployments/testnet/` and `aci/` directories
 
-## 6) Integrate into Superhero
+## 6) Integrate into Superhero (10–15 minutes)
 
 - Follow: [Plugin Integration](./integrate-and-plugin-sdk.md)
-- Create your plugin and register it in the Superhero app
+- Create plugin directory: `src/plugins/<your-plugin-id>/`
+- Copy contract ACI and address to plugin
+- Implement plugin with `definePlugin`
+- Register in `src/plugins/local.ts`
+- Configure `.env.local` with contract address
+- Test the integration
+
+## Next Steps
+
+Once your plugin is running:
+
+- **[Feed Plugins](./feed-plugins.md)** - Add your plugin's content to the unified feed
+- **[API Plugin Development](./api-plugin-development.md)** - Build backend plugins for transaction processing
+- **[Plugin SDK Documentation](../plugin-sdk.md)** - Complete API reference for advanced features
+- **[Hints & Tips](./hints.md)** - Troubleshooting and best practices
 
 <Tip>
-Ready for more? Explore [Feed Plugins](./feed-plugins.md) for feed integration, [API Plugin Development](./api-plugin-development.md) for backend plugins, and the [Plugin SDK Documentation](../plugin-sdk.md) for complete API reference.
+Having MCP configured makes it much easier to iterate and debug. The AI will have full context of the documentation, making it more helpful for fixing issues and adding features.
 </Tip>

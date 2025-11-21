@@ -1,4 +1,6 @@
-# Operations and Support
+---
+title: Operations & Support
+---
 
 ## AI Workflows in Cursor
 - Scaffold contract: describe rules and ask Cursor to generate state and entrypoints

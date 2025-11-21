@@ -1,3 +1,7 @@
+---
+title: Overview
+---
+
 # Build Superhero Extensions with Sophia (AI‑assisted)
 
 <Info>

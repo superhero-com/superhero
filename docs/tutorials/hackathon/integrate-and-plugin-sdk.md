@@ -1,4 +1,6 @@
-# Plugin Integration
+---
+title: Plugin Integration
+---
 
 ## Integrate into Superhero (where code goes)
 Call your contract from a Superhero plugin using the JS SDK and Plugin SDK.

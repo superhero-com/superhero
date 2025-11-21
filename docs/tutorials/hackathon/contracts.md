@@ -1,4 +1,6 @@
-# Smart Contracts
+---
+title: Smart Contracts
+---
 
 ## Sophia basics (skim)
 - Contract structure: `contract`, `record state`, `init`, `entrypoint`, `stateful entrypoint`

@@ -31,11 +31,16 @@
       ]
     },
     {
-      "group": "Build",
+      "group": "Contract Development",
       "pages": [
         "tutorials/hackathon/scaffold-and-compiler",
         "tutorials/hackathon/contracts",
-        "tutorials/hackathon/test-and-deploy",
+        "tutorials/hackathon/test-and-deploy"
+      ]
+    },
+    {
+      "group": "Plugin Development",
+      "pages": [
         "tutorials/hackathon/integrate-and-plugin-sdk",
         "tutorials/hackathon/feed-plugins",
         "tutorials/hackathon/api-plugin-development"

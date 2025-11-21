@@ -46,6 +46,12 @@
       "pages": [
         "tutorials/hackathon/ops-and-support"
       ]
+    },
+    {
+      "group": "References",
+      "pages": [
+        "tutorials/hackathon/references"
+      ]
     }
   ],
   "footerSocials": {

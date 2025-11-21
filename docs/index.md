@@ -48,21 +48,3 @@ superhero-ui-repo/         # this repo
 Prefer the aeproject path for the fastest setup; a minimal "manual path" is provided as an optional alternative.
 </Tip>
 
-## Pages in this tutorial
-1. [Quickstart](./tutorials/hackathon/quickstart.md)
-2. [Setup](./tutorials/hackathon/setup.md)
-3. [Scaffold and Compiler (aeproject)](./tutorials/hackathon/scaffold-and-compiler.md)
-4. [Contracts](./tutorials/hackathon/contracts.md)
-5. [Test and Deploy (aeproject)](./tutorials/hackathon/test-and-deploy.md)
-6. [Integrate and Plugin SDK](./tutorials/hackathon/integrate-and-plugin-sdk.md)
-7. [Operations and Support](./tutorials/hackathon/ops-and-support.md)
-
-## Official references
-- [Docs hub](https://docs.aeternity.com)
-- [Syntax](https://github.com/aeternity/aesophia/blob/master/docs/sophia_syntax.md)
-- [Features](https://github.com/aeternity/aesophia/blob/master/docs/sophia_features.md)
-- [Stdlib](https://github.com/aeternity/aesophia/blob/master/docs/sophia_stdlib.md)
-- [Compiler HTTP](https://github.com/aeternity/aesophia_http)
-- [JS SDK](https://github.com/aeternity/aepp-sdk-js)
-- [Community Q&A](https://forum.aeternity.com/c/sophia-smart-contracts/38)
-

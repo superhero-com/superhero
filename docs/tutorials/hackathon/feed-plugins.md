@@ -1,5 +1,5 @@
 ---
-title: Feed Plugins & Popular Feed Injection
+title: Feed Plugins
 ---
 
 ## Overview

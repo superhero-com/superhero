@@ -25,6 +25,12 @@ interface ReplyToFeedItemProps {
   hideParentContext?: boolean; // when true, do not render parent context header
   allowInlineRepliesToggle?: boolean; // when false, clicking replies just opens post
   isActive?: boolean; // when true, visually highlight as the focused post
+  /**
+   * Optional label used on Trend token pages to indicate that the author
+   * is a holder of the current token, including their balance, e.g.:
+   * "123.45 TOKEN".
+   */
+  tokenHolderLabel?: string;
 }
 
 function useParentId(item: PostDto): string | null {
@@ -72,7 +78,7 @@ function useParentId(item: PostDto): string | null {
 }
 
 // X-like post item with optional parent context header
-const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentContext = false, allowInlineRepliesToggle = true, isActive = false }: ReplyToFeedItemProps) => {
+const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentContext = false, allowInlineRepliesToggle = true, isActive = false, tokenHolderLabel }: ReplyToFeedItemProps) => {
   const { t } = useTranslation('social');
   const postId = item.id;
   const authorAddress = item.sender_address;
@@ -235,6 +241,15 @@ const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentCo
             </div>
           </div>
           <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{authorAddress}</div>
+
+          {/* Trend token holder pill (when viewing a token feed and author holds the token) */}
+          {tokenHolderLabel && (
+            <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2 py-0.5 text-[11px] text-emerald-100 font-medium">
+              <span className="text-[13px]" aria-hidden="true">🏅</span>
+              <span className="uppercase tracking-wide">Holder</span>
+              <span className="text-emerald-100/80">· {tokenHolderLabel}</span>
+            </div>
+          )}
 
           {/* Parent context header placed under author row, before reply text */}
           {parentId && !hideParentContext && (

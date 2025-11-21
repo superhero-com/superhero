@@ -1,4 +1,4 @@
-# Setup
+# Environment Setup
 
 <Info>
 You'll set up your dev environment and Superhero Wallet to create and test contracts.

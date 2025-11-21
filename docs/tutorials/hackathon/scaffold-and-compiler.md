@@ -1,4 +1,4 @@
-# Scaffold and Compiler
+# Project Scaffold
 
 ## Recommended: aeproject
 Initialize a project and run local services with one CLI.

@@ -22,7 +22,7 @@ You can skim most language details. Focus on state + entrypoints, auth with `Cal
 </Tip>
 
 ## Pages in this tutorial
-1. [Quickstart (fast track)](./00a-quickstart.md)
+1. [Quickstart (fast track)](./quickstart.md)
 2. [Setup environment](./01-setup-environment.md)
 3. [Superhero Wallet & account](./01a-superhero-wallet-and-account.md)
 4. [Project scaffold](./02-project-scaffold.md)

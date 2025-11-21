@@ -16,64 +16,33 @@
       "url": "https://github.com/superhero-com/superhero"
     }
   ],
-  "anchors": [
-    {
-      "name": "Documentation",
-      "icon": "book-open-cover",
-      "url": "https://docs.superhero.com"
-    }
-  ],
   "navigation": [
     {
       "group": "Getting Started",
       "pages": [
-        {
-          "title": "Overview",
-          "page": "index"
-        },
-        {
-          "title": "Quickstart",
-          "page": "tutorials/hackathon/00a-quickstart"
-        }
+        "index",
+        "tutorials/hackathon/quickstart"
       ]
     },
     {
       "group": "Setup",
       "pages": [
-        {
-          "title": "Setup",
-          "page": "tutorials/hackathon/02-setup"
-        }
+        "tutorials/hackathon/setup"
       ]
     },
     {
       "group": "Build",
       "pages": [
-        {
-          "title": "Scaffold & Compiler",
-          "page": "tutorials/hackathon/03-scaffold-and-compiler"
-        },
-        {
-          "title": "Contracts",
-          "page": "tutorials/hackathon/04-contracts"
-        },
-        {
-          "title": "Test & Deploy",
-          "page": "tutorials/hackathon/05-test-and-deploy"
-        },
-        {
-          "title": "Integrate & Plugin SDK",
-          "page": "tutorials/hackathon/06-integrate-and-plugin-sdk"
-        }
+        "tutorials/hackathon/scaffold-and-compiler",
+        "tutorials/hackathon/contracts",
+        "tutorials/hackathon/test-and-deploy",
+        "tutorials/hackathon/integrate-and-plugin-sdk"
       ]
     },
     {
       "group": "Operations",
       "pages": [
-        {
-          "title": "Operations & Support",
-          "page": "tutorials/hackathon/08-ops-and-support"
-        }
+        "tutorials/hackathon/ops-and-support"
       ]
     }
   ],

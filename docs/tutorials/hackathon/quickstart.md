@@ -1,4 +1,4 @@
-# Quickstart (Fast Track)
+# Quickstart
 
 <Warning>
 Short on time? Follow this 10–15 minute path to get an extension running end‑to‑end.

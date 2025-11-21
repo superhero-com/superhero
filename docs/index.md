@@ -45,13 +45,13 @@ Prefer the aeproject path for the fastest setup; a minimal "manual path" is prov
 </Tip>
 
 ## Pages in this tutorial
-1. [Quickstart](./tutorials/hackathon/00a-quickstart.md)
-2. [Setup](./tutorials/hackathon/02-setup.md)
-3. [Scaffold and Compiler (aeproject)](./tutorials/hackathon/03-scaffold-and-compiler.md)
-4. [Contracts](./tutorials/hackathon/04-contracts.md)
-5. [Test and Deploy (aeproject)](./tutorials/hackathon/05-test-and-deploy.md)
-6. [Integrate and Plugin SDK](./tutorials/hackathon/06-integrate-and-plugin-sdk.md)
-7. [Operations and Support](./tutorials/hackathon/08-ops-and-support.md)
+1. [Quickstart](./tutorials/hackathon/quickstart.md)
+2. [Setup](./tutorials/hackathon/setup.md)
+3. [Scaffold and Compiler (aeproject)](./tutorials/hackathon/scaffold-and-compiler.md)
+4. [Contracts](./tutorials/hackathon/contracts.md)
+5. [Test and Deploy (aeproject)](./tutorials/hackathon/test-and-deploy.md)
+6. [Integrate and Plugin SDK](./tutorials/hackathon/integrate-and-plugin-sdk.md)
+7. [Operations and Support](./tutorials/hackathon/ops-and-support.md)
 
 ## Official references
 - [Docs hub](https://docs.aeternity.com)

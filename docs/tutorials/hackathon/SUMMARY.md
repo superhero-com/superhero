@@ -1,7 +1,7 @@
 # Summary
 
-- [Overview](./00-overview.md)
-- [Quickstart](./00a-quickstart.md)
+- [Overview](./overview.md)
+- [Quickstart](./quickstart.md)
 - [Setup environment](./01-setup-environment.md)
 - [Superhero Wallet & account](./01a-superhero-wallet-and-account.md)
 - [Project scaffold](./02-project-scaffold.md)

@@ -1059,21 +1059,21 @@ export function AeEthBridge() {
 
                             <div className="bg-white/[0.05] border border-white/10 rounded-xl p-3 space-y-2">
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-white/60">Direction:</span>
+                                    <span className="text-white/60">{t('bridge.directionLabel')}</span>
                                     <span className="text-white font-semibold">
                                         {isBridgeActionFromAeternity ? t('bridge.bridgeDirection.aeternityToEthereum') : t('bridge.bridgeDirection.ethereumToAeternity')}
                                     </span>
                                 </div>
 
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-white/60">Amount:</span>
+                                    <span className="text-white/60">{t('bridge.amount')}</span>
                                     <span className="text-white font-semibold">
                                         {bridgeActionSummary?.amount} {bridgeActionSummary?.asset.symbol}
                                     </span>
                                 </div>
 
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-white/60">Destination:</span>
+                                    <span className="text-white/60">{t('bridge.destinationLabel')}</span>
                                     <span className="text-white text-xs font-mono truncate max-w-[200px]">
                                         {bridgeActionSummary?.destination}
                                     </span>

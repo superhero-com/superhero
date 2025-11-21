@@ -2,8 +2,9 @@
 
 ## Recommended: aeproject
 
-!!! important
-    Keep deployment outputs (addresses per network) and ACIs in your contracts repo (e.g., `deployments/` and `aci/`). You’ll import them in the Superhero UI extension later.
+<Warning>
+Keep deployment outputs (addresses per network) and ACIs in your contracts repo (e.g., `deployments/` and `aci/`). You'll import them in the Superhero UI extension later.
+</Warning>
 
 ### Run tests
 ```bash
@@ -21,8 +22,9 @@ aeproject deploy
 aeproject deploy --network testnet
 ```
 
-!!! tip
-    See `aeproject --help` for supported networks and config options.
+<Tip>
+See `aeproject --help` for supported networks and config options.
+</Tip>
 
 ## Optional: SDK + Vitest path
 If you prefer a custom SDK test harness, use the example below.

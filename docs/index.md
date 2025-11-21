@@ -1,7 +1,8 @@
 # Build Superhero Extensions with Sophia (AI‑assisted)
 
-!!! note
-    Welcome, hackathon builders! This guide is crafted by Superhero to help you ship a mini‑æpp that integrates directly into the Superhero app (social + DeFi) using Sophia smart contracts and the Plugin SDK.
+<Info>
+Welcome, hackathon builders! This guide is crafted by Superhero to help you ship a mini‑æpp that integrates directly into the Superhero app (social + DeFi) using Sophia smart contracts and the Plugin SDK.
+</Info>
 
 This tutorial is designed for newcomers using Cursor or other AI tools to build Superhero extensions backed by their own Sophia smart contracts.
 
@@ -12,10 +13,11 @@ This tutorial is designed for newcomers using Cursor or other AI tools to build 
 
 ## Repo model
 
-!!! important
-    Work in two repositories:
-    1) Contracts repo (yours): Sophia code, tests, aeproject, deployments, ACI artifacts.
-    2) Superhero UI repo (this repo): your extension that consumes the deployed contracts.
+<Warning>
+Work in two repositories:
+1) Contracts repo (yours): Sophia code, tests, aeproject, deployments, ACI artifacts.
+2) Superhero UI repo (this repo): your extension that consumes the deployed contracts.
+</Warning>
 
 Recommended structure:
 ```
@@ -38,8 +40,9 @@ superhero-ui-repo/         # this repo
 ## High‑level architecture
 - Contract (Sophia) ↔ ACI ↔ JS SDK (`@aeternity/aepp-sdk`) ↔ Superhero Plugin SDK ↔ Extension UI
 
-!!! tip
-    Prefer the aeproject path for the fastest setup; a minimal “manual path” is provided as an optional alternative.
+<Tip>
+Prefer the aeproject path for the fastest setup; a minimal "manual path" is provided as an optional alternative.
+</Tip>
 
 ## Pages in this tutorial
 1. [Quickstart](./tutorials/hackathon/00a-quickstart.md)

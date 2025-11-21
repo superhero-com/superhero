@@ -3,8 +3,9 @@
 ## Recommended: aeproject
 Initialize a project and run local services with one CLI.
 
-!!! tip
-    Run all commands in your contracts repo (created in Setup). This repo holds contracts, tests, and aeproject config.
+<Tip>
+Run all commands in your contracts repo (created in Setup). This repo holds contracts, tests, and aeproject config.
+</Tip>
 
 ### Init a new project
 ```bash
@@ -24,8 +25,9 @@ aeproject node  # starts a local devnet in Docker
 aeproject compile
 ```
 
-!!! tip
-    Check `aeproject.json` (or CLI help) for network profiles and paths.
+<Tip>
+Check `aeproject.json` (or CLI help) for network profiles and paths.
+</Tip>
 
 ## Optional: manual setup (SDK + Docker compiler)
 If you prefer a minimal stack, you can still set up manually:
@@ -73,8 +75,9 @@ SECRET_KEY=your_funded_testnet_private_key_hex
 docker run --rm -p 3080:3080 aeternity/aesophia_http:latest
 ```
 
-!!! tip
-    This exposes the compiler at `http://localhost:3080`.
+<Tip>
+This exposes the compiler at `http://localhost:3080`.
+</Tip>
 
 ### Pinning versions
 Use the compiler pragma in your Sophia source (example):

@@ -1,7 +1,8 @@
 # Quickstart (Fast Track)
 
-!!! important
-    Short on time? Follow this 10–15 minute path to get an extension running end‑to‑end.
+<Warning>
+Short on time? Follow this 10–15 minute path to get an extension running end‑to‑end.
+</Warning>
 
 ## AI‑assisted quick start (Cursor or similar)
 
@@ -119,5 +120,6 @@ docker run --rm -p 3080:3080 aeternity/aesophia_http:latest
 ## 7) Integrate into Superhero
 - Follow: [08 — Integrate into Superhero extension](./08-integrate-into-superhero-extension.md)
 
-!!! tip
-    Ready for more? Explore [Plugin SDK deep dive](./08a-plugin-sdk-deep-dive.md) and [Middleware and data access](./07a-middleware-and-data-access.md).
+<Tip>
+Ready for more? Explore [Plugin SDK deep dive](./08a-plugin-sdk-deep-dive.md) and [Middleware and data access](./07a-middleware-and-data-access.md).
+</Tip>

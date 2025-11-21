@@ -22,8 +22,9 @@ const localPlugins = [
 ];
 ```
 
-!!! note
-    New to the Plugin SDK? See below for capabilities and examples.
+<Info>
+New to the Plugin SDK? See below for capabilities and examples.
+</Info>
 
 ## Bring in your contract artifacts
 - Address: read from your contracts repo (e.g., `deployments/testnet/Poll.address`).
@@ -138,8 +139,9 @@ export default function YourComponent() {
 }
 ```
 
-!!! tip
-    See the [Plugin SDK docs](../plugin-sdk.md#translations) for more details on translations and multi-language support.
+<Tip>
+See the [Plugin SDK docs](../plugin-sdk.md#translations) for more details on translations and multi-language support.
+</Tip>
 
 ### Example
 ```ts
@@ -158,8 +160,9 @@ const contract = await aeSdk.getContractInstance({
 const results = await contract.methods.get_results(0)
 ```
 
-!!! tip
-    Emit small on‑chain events and push entries to the feed via `pushFeedEntry` for heavier off‑chain work.
+<Tip>
+Emit small on‑chain events and push entries to the feed via `pushFeedEntry` for heavier off‑chain work.
+</Tip>
 
 ## Plugin SDK Deep Dive
 
@@ -212,5 +215,6 @@ export default definePlugin({
 });
 ```
 
-!!! warning
-    Keep attachments lean: validate inputs, avoid heavy on-chain loops, and prefer emitting small events or pushing feed entries for off‑chain processing.
+<Warning>
+Keep attachments lean: validate inputs, avoid heavy on-chain loops, and prefer emitting small events or pushing feed entries for off‑chain processing.
+</Warning>

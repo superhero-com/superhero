@@ -1,6 +1,9 @@
 {
   "name": "Superhero Hackathon",
-  "logo": "https://mintlify.s3-us-west-1.amazonaws.com/defaultfavicon.svg",
+  "logo": {
+    "light": "/favicon.svg",
+    "dark": "/favicon.svg"
+  },
   "favicon": "/favicon.svg",
   "colors": {
     "primary": "#0D9373",
@@ -24,29 +27,53 @@
     {
       "group": "Getting Started",
       "pages": [
-        "index",
-        "tutorials/hackathon/00a-quickstart"
+        {
+          "title": "Overview",
+          "page": "index"
+        },
+        {
+          "title": "Quickstart",
+          "page": "tutorials/hackathon/00a-quickstart"
+        }
       ]
     },
     {
       "group": "Setup",
       "pages": [
-        "tutorials/hackathon/02-setup"
+        {
+          "title": "Setup",
+          "page": "tutorials/hackathon/02-setup"
+        }
       ]
     },
     {
       "group": "Build",
       "pages": [
-        "tutorials/hackathon/03-scaffold-and-compiler",
-        "tutorials/hackathon/04-contracts",
-        "tutorials/hackathon/05-test-and-deploy",
-        "tutorials/hackathon/06-integrate-and-plugin-sdk"
+        {
+          "title": "Scaffold & Compiler",
+          "page": "tutorials/hackathon/03-scaffold-and-compiler"
+        },
+        {
+          "title": "Contracts",
+          "page": "tutorials/hackathon/04-contracts"
+        },
+        {
+          "title": "Test & Deploy",
+          "page": "tutorials/hackathon/05-test-and-deploy"
+        },
+        {
+          "title": "Integrate & Plugin SDK",
+          "page": "tutorials/hackathon/06-integrate-and-plugin-sdk"
+        }
       ]
     },
     {
       "group": "Operations",
       "pages": [
-        "tutorials/hackathon/08-ops-and-support"
+        {
+          "title": "Operations & Support",
+          "page": "tutorials/hackathon/08-ops-and-support"
+        }
       ]
     }
   ],

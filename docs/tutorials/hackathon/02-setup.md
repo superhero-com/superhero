@@ -1,10 +1,12 @@
 # Setup
 
-!!! note
-    You’ll set up your dev environment and Superhero Wallet to create and test contracts.
+<Info>
+You'll set up your dev environment and Superhero Wallet to create and test contracts.
+</Info>
 
-!!! note
-    Do these steps in your own contracts repository (separate from the Superhero UI repo).
+<Info>
+Do these steps in your own contracts repository (separate from the Superhero UI repo).
+</Info>
 
 ## Create your contracts repo
 ```bash
@@ -33,15 +35,17 @@ aeproject --version
 ## Install Superhero Wallet
 - Chrome: [Superhero Wallet extension](https://chromewebstore.google.com/detail/superhero-wallet/mnhmmkepfddpifjkamaligfeemcbhdne)
 
-!!! tip
-    Pin the extension for quick access.
+<Tip>
+Pin the extension for quick access.
+</Tip>
 
 ## Create or import an account in Wallet
-- Choose “Create” to generate a new seed phrase, or “Import” to restore an existing one
+- Choose "Create" to generate a new seed phrase, or "Import" to restore an existing one
 - Write down the seed phrase offline; never share it
 
-!!! important
-    Back up your seed phrase. Anyone with your seed can control your account.
+<Warning>
+Back up your seed phrase. Anyone with your seed can control your account.
+</Warning>
 
 ## Switch to testnet and fund
 - In settings, select æternity testnet

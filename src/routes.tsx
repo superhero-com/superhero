@@ -1,4 +1,5 @@
 import React, { lazy } from "react";
+import { routeRegistry } from "@/features/social/plugins/registries";
 import { RouteObject, Navigate, useParams } from "react-router-dom";
 import SocialLayout from "./components/layout/SocialLayout";
 
@@ -26,10 +27,10 @@ const TokenSaleDetails = lazy(
   () => import("./features/trending/views/TokenSaleDetails")
 );
 const PostDetail = lazy(() => import("./features/social/views/PostDetail"));
+const PollDetail = lazy(() => import("./features/social/views/PollDetail"));
 const UserProfile = lazy(() => import("./views/UserProfile"));
 const Landing = lazy(() => import("./views/Landing"));
 const Conference = lazy(() => import("./views/Conference"));
-const Governance = lazy(() => import("./views/Governance"));
 const Terms = lazy(() => import("./views/Terms"));
 const Privacy = lazy(() => import("./views/Privacy"));
 const FAQ = lazy(() => import("./views/FAQ"));
@@ -89,7 +90,8 @@ function NavigateUserProfile() {
   return <Navigate to={`/users/${encodeURIComponent(address || "")}`} replace />;
 }
 
-export const routes: RouteObject[] = [
+// Export a function that builds routes dynamically, including plugin routes
+export const getRoutes = (): RouteObject[] => [
   {
     path: "/",
     element: <SocialLayout />,
@@ -101,6 +103,7 @@ export const routes: RouteObject[] = [
         path: "post/:slug/comment/:id",
         element: <PostDetail standalone={false} />,
       },
+      { path: "poll/:pollAddress", element: <PollDetail standalone={false} /> },
       { path: "users/:address", element: <UserProfile standalone={false} /> },
     ],
   },
@@ -139,10 +142,6 @@ export const routes: RouteObject[] = [
   },
   { path: "/landing", element: <Landing /> },
   { path: "/meet/:room?", element: <Conference /> },
-  { path: "/voting", element: <Governance /> },
-  { path: "/voting/p/:id", element: <Governance /> },
-  { path: "/voting/account", element: <Governance /> },
-  { path: "/voting/create", element: <Governance /> },
 
   // New DEX Routes with Layout
   {
@@ -249,6 +248,8 @@ export const routes: RouteObject[] = [
   { path: "/terms", element: <Terms /> },
   { path: "/privacy", element: <Privacy /> },
   { path: "/faq", element: <FAQ /> },
+  // Plugin-provided routes appended at the end (top-level)
+  ...routeRegistry,
   {
     path: "*",
     element: <SocialLayout />,

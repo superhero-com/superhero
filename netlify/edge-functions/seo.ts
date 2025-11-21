@@ -17,15 +17,31 @@ export default async (request: Request, context: any) => {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
+    // Skip docs paths - Mintlify serves its own HTML and shouldn't be modified
+    // Docs are typically hosted separately on Mintlify's platform
+    if (pathname.startsWith('/hackathon/') || 
+        pathname.startsWith('/site/') ||
+        pathname.includes('/tutorials/') ||
+        pathname.includes('/docs/')) {
+      return context.next();
+    }
+
     const res = await context.next();
     // Only inject into HTML documents
     const contentType = res.headers.get('content-type') || '';
     if (!contentType.includes('text/html')) return res;
 
-  const html = await res.text();
+    // Skip if this looks like Mintlify HTML (has Mintlify-specific structure)
+    const html = await res.text();
+    if (html.includes('mintlify') || 
+        html.includes('data-mint') ||
+        html.includes('mintlify-app')) {
+      // Return original HTML unchanged (recreate response since we consumed the body)
+      return new Response(html, { status: res.status, headers: res.headers });
+    }
 
-  const meta = await buildMeta(pathname, url);
-  const injected = injectHead(html, meta, url.origin);
+    const meta = await buildMeta(pathname, url);
+    const injected = injectHead(html, meta, url.origin);
 
     const newHeaders = new Headers(res.headers);
     newHeaders.set('content-length', String(new TextEncoder().encode(injected).length));

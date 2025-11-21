@@ -1,5 +1,4 @@
 [build]
-  publish = "dist"
   command = "npm run build"
 
 [build.environment]
@@ -8,10 +7,12 @@
   # Tell Netlify's secret scanner to ignore this env var so builds don't fail.
   SECRETS_SCAN_OMIT_KEYS = "VITE_WALLET_CONNECT_PROJECT_ID"
 
+# SPA redirect - catch-all for app routes
+# Note: More specific paths (like docs) should be served directly if files exist
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+from = "/*"
+to = "/index.html"
+status = 200
 
 [dev]
   command = "npm run dev"
@@ -40,7 +41,7 @@ for = "/*"
     Referrer-Policy = "strict-origin-when-cross-origin"
     X-Content-Type-Options = "nosniff"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    Permissions-Policy = "interest-cohort=()"
+    Permissions-Policy = "interest-cohort=(), clipboard-write=(self)"
 
 [[headers]]
 for = "/assets/*"

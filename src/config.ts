@@ -27,6 +27,9 @@ export type AppConfig = {
   UNFINISHED_FEATURES?: string;
   COMMIT_HASH?: string;
   BONDING_CURVE_18_DECIMALS_ADDRESS?: string;
+  // Plugins (optional)
+  PLUGINS?: string[];
+  PLUGIN_CAPABILITIES_ALLOWLIST?: string[];
 };
 
 const defaultConfig: AppConfig = {
@@ -60,7 +63,7 @@ const defaultConfig: AppConfig = {
   GOVERNANCE_CONTRACT_ADDRESS:
     "ct_ouZib4wT9cNwgRA1pxgA63XEUd8eQRrG8PcePDEYogBc1VYTq",
 
-  UNFINISHED_FEATURES: "",
+  UNFINISHED_FEATURES: "composer-attachments",
 
   BONDING_CURVE_18_DECIMALS_ADDRESS: "",
 };

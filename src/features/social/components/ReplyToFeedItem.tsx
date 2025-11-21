@@ -15,6 +15,8 @@ import { MessageCircle } from "lucide-react";
 import { useWallet } from "../../../hooks";
 import { relativeTime, compactTime, fullTimestamp } from "../../../utils/time";
 import AspectMedia from "@/components/AspectMedia";
+import { InlinePoll } from "../feed-plugins/poll-attachment";
+import { CONFIG } from "../../../config";
 
 interface ReplyToFeedItemProps {
   item: PostDto;
@@ -76,15 +78,7 @@ function useParentId(item: PostDto): string | null {
 }
 
 // X-like post item with optional parent context header
-const ReplyToFeedItem = memo(({
-  item,
-  onOpenPost,
-  commentCount = 0,
-  hideParentContext = false,
-  allowInlineRepliesToggle = true,
-  isActive = false,
-  tokenHolderLabel,
-}: ReplyToFeedItemProps) => {
+const ReplyToFeedItem = memo(({ item, onOpenPost, commentCount = 0, hideParentContext = false, allowInlineRepliesToggle = true, isActive = false, tokenHolderLabel }: ReplyToFeedItemProps) => {
   const { t } = useTranslation('social');
   const postId = item.id;
   const authorAddress = item.sender_address;
@@ -326,6 +320,9 @@ const ReplyToFeedItem = memo(({
               ))}
             </div>
           )}
+
+          {/* Inline poll pending/ready */}
+          <InlinePoll postId={String(postId)} />
 
           {/* Actions */}
           <div className="mt-4 flex items-center justify-between">

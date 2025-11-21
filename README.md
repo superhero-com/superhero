@@ -99,6 +99,15 @@ This app is a static site once built. You can deploy the `dist/` directory to an
 - Netlify configuration is included: `netlify.toml` and `public/_redirects` for SPA routing
 - Typical build settings: build command `npm run build`, publish directory `dist`
 
+## Extending with Plugins
+
+See `docs/plugin-sdk.md` for the public plugin SDK. It covers:
+
+- Feed plugins (new entry kinds)
+- Composer actions and attachments (inline panels such as Poll)
+- Item actions, routes and modals
+- Runtime loading and capability gating
+
 ## Contributing
 
 1. Create a feature branch from `main`

@@ -83,6 +83,10 @@ export default defineConfig(({ mode }) => {
     },
     // Accept both prefixes in import.meta.env
     envPrefix: ['VITE_', 'VUE_APP_'],
+    server: {
+      port: 5173,
+      host: true,
+    },
     test: {
       globals: true,
       environment: 'jsdom',

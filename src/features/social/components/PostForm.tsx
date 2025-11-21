@@ -1,5 +1,5 @@
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
 import AeButton from "../../../components/AeButton";
 import ConnectWalletButton from "../../../components/ConnectWalletButton";
@@ -12,6 +12,14 @@ import { CONFIG } from "../../../config";
 import { useAccount } from "../../../hooks/useAccount";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { GifSelectorDialog } from "./GifSelectorDialog";
+import { usePluginHostCtx } from "@/features/social/plugins/PluginHostProvider";
+import { composerRegistry, attachmentRegistry } from "@/features/social/plugins/registries";
+import { getAllPlugins } from "@/features/social/feed-plugins/registry";
+import REGISTRY_WITH_EVENTS_ACI from "@/api/GovernanceRegistryACI.json";
+import POLL_ACI from "@/api/GovernancePollACI.json";
+import BYTECODE_HASHES from "@/api/GovernanceBytecodeHashes.json";
+import { Contract, Encoded } from "@aeternity/aepp-sdk";
+import { GovernanceApi } from "@/api/governance";
 
 interface PostFormProps {
   // Common props
@@ -78,9 +86,20 @@ const PROMPTS: string[] = [
   "Teach us something in 1 line. 🧠",
 ];
 
-const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => void }, PostFormProps>((props, ref) => {
-  const { t } = useTranslation('forms');
-  const { t: tSocial } = useTranslation('social');
+type FocusOptions = {
+  immediate?: boolean;
+  preventScroll?: boolean;
+  scroll?: 'none' | 'start' | 'center';
+};
+
+type PostFormRef = {
+  focus: (opts?: FocusOptions) => void;
+};
+
+const PostForm = forwardRef(
+  (props: PostFormProps, ref: React.ForwardedRef<PostFormRef>) => {
+    const { t } = useTranslation('forms');
+    const { t: tSocial } = useTranslation('social');
   const {
     onClose,
     onSuccess,
@@ -100,12 +119,12 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     minHeight = "60px",
     autoFocus = false,
   } = props;
-  const { sdk } = useAeSdk();
+  const { sdk, currentBlockHeight } = useAeSdk() as any;
   const { activeAccount, chainNames } = useAccount();
   const queryClient = useQueryClient();
 
   useImperativeHandle(ref, () => ({
-    focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => {
+    focus: (opts?: FocusOptions) => {
       const run = () => {
         if (!textareaRef.current) return;
         try {
@@ -134,6 +153,8 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   const [showEmoji, setShowEmoji] = useState(false);
   const [showGif, setShowGif] = useState(false);
   const [promptIndex, setPromptIndex] = useState(0);
+  // Track on-chain submit progress for poll: 0 idle, 1 deploy, 2 registry
+  const [submitStep, setSubmitStep] = useState<number>(0);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiBtnRef = useRef<HTMLButtonElement>(null);
@@ -155,6 +176,70 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     return window.matchMedia('(min-width: 768px)').matches;
   });
 
+  // Plugin composer actions
+  const host = usePluginHostCtx();
+  const composerCtx = useMemo(() => ({
+    ...host,
+    insertText: (t: string) => {
+      setText((prev) => {
+        const needsSpace = prev.length > 0 && !/\s$/.test(prev);
+        return `${prev}${needsSpace ? ' ' : ''}${t}`;
+      });
+    },
+  }), [host]);
+  const composerActions = useMemo(() => {
+    const fromRegistry = composerRegistry.flatMap((r) => r.getActions(composerCtx));
+    const fromFeedPlugins = getAllPlugins()
+      .flatMap((p: any) => (typeof p.getComposerActions === 'function' ? p.getComposerActions(composerCtx) : []));
+    return [...fromFeedPlugins, ...fromRegistry];
+  }, [composerCtx]);
+
+  // Attachments state (single active attachment; poll blocks others)
+  const [activeAttachmentId, setActiveAttachmentId] = useState<string | null>(null);
+  const [attachmentState, setAttachmentState] = useState<Record<string, any>>({});
+  const setAttachmentValue = useCallback((ns: string, value: any) => {
+    setAttachmentState((prev) => ({ ...prev, [ns]: value }));
+  }, []);
+  const getAttachmentValue = useCallback(<T = any,>(ns: string): T | undefined => {
+    return attachmentState[ns] as T | undefined;
+  }, [attachmentState]);
+
+  const attachmentsCtx = useMemo(() => ({
+    ...composerCtx,
+    getValue: getAttachmentValue,
+    setValue: setAttachmentValue,
+    currentBlockHeight: currentBlockHeight ?? undefined,
+    ensureWallet: async () => ({ sdk, currentBlockHeight: currentBlockHeight ?? undefined }),
+    cacheLink: (postId: string, kind: string, payload: any) => {
+      try {
+        const key = 'sh:plugin:post-links';
+        const curr = JSON.parse(localStorage.getItem(key) || '{}');
+        const next = { ...(curr || {}) };
+        next[String(postId)] = { kind, payload, updatedAt: Date.now() };
+        localStorage.setItem(key, JSON.stringify(next));
+        window.dispatchEvent(new CustomEvent('sh:plugin:post-links:update', { detail: { postId, kind, payload } }));
+      } catch {}
+    },
+    pushFeedEntry: (kind: string, entry: any) => {
+      try { window.dispatchEvent(new CustomEvent('sh:plugin:feed:push', { detail: { kind, entry } })); } catch {}
+    },
+  }), [composerCtx, getAttachmentValue, setAttachmentValue, sdk, currentBlockHeight]);
+
+  // Helper: inject an entry to feeds (global + profile) for immediate visibility
+  const injectIntoFeeds = useCallback((entry: any) => {
+    try {
+      window.dispatchEvent(new CustomEvent('sh:feed:inject', { detail: { targets: ['global', 'profile'], entry } }));
+    } catch {}
+  }, []);
+
+  const enableAttachments = (CONFIG.UNFINISHED_FEATURES || '').includes('composer-attachments');
+  const pollActive = enableAttachments && Boolean(activeAttachmentId);
+
+  // If poll panel opens, hide/close GIF picker
+  useEffect(() => {
+    if (pollActive) setShowGif(false);
+  }, [pollActive]);
+
   useEffect(() => {
     setPromptIndex(Math.floor(Math.random() * PROMPTS.length));
   }, []);
@@ -173,11 +258,28 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   // Do not auto-fill from initialText anymore; keep user input empty by default
 
   useEffect(() => {
+    // Always auto-grow based on content
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [text]);
+
+  // When toggling poll on mobile, immediately enforce single row (without needing focus)
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const isMobile = typeof window !== 'undefined' && typeof window.matchMedia === 'function' && !window.matchMedia('(min-width: 768px)').matches;
+    if (!isMobile) return;
+    if (pollActive) {
+      el.style.height = 'auto';
+      const oneRow = overlayComputed ? (overlayComputed.paddingTop + overlayComputed.paddingBottom + parseFloat(overlayComputed.lineHeight as any)) : 40;
+      el.style.height = `${oneRow}px`;
+    } else {
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight}px`;
+    }
+  }, [pollActive, overlayComputed]);
 
   // Sync overlay typography and padding with the textarea for precise positioning
   useEffect(() => {
@@ -248,14 +350,225 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       return () => mediaQuery.removeEventListener('change', handleChange);
     } else {
       // Fallback for older browsers (MediaQueryList type)
-      const legacyHandler = (mq: MediaQueryList) => {
-        setIsDesktopViewport(mq.matches);
+      const legacyHandler = (ev: MediaQueryListEvent | MediaQueryList) => {
+        setIsDesktopViewport((ev as MediaQueryListEvent).matches ?? (ev as MediaQueryList).matches);
       };
-      mediaQuery.addListener(legacyHandler);
-      return () => mediaQuery.removeListener(legacyHandler);
+      (mediaQuery as any).addListener(legacyHandler);
+      return () => (mediaQuery as any).removeListener(legacyHandler);
     }
   }, []);
 
+  const submitPoll = useCallback(async () => {
+    // Gather inputs
+    const question = text.trim();
+    const optionsRaw = getAttachmentValue<string[]>("poll.options") || [];
+    const options = optionsRaw.map((o) => o.trim()).filter(Boolean).slice(0, 4);
+    const closeHeight = Number(getAttachmentValue<number>("poll.closeHeight") || 0) || 0;
+
+    // Basic validation guard (button is also disabled when invalid)
+    if (!question || options.length < 2) {
+      return;
+    }
+
+    // Deploy poll contract (Step 1/2)
+    setSubmitStep(1);
+    const pollBytecode = (BYTECODE_HASHES as any)["8.0.0"]["Poll_Iris.aes"].bytecode as Encoded.ContractBytearray;
+    const pollContract = await (sdk as any).initializeContract({ aci: POLL_ACI as any, bytecode: pollBytecode });
+    const metadata = { title: question, description: "", link: "", spec_ref: undefined as any };
+    const optionsRecord = options.reduce((acc, t, i) => ({ ...acc, [i]: t }), {} as Record<number, string>);
+    const initRes = await (pollContract as any).init(
+      metadata,
+      optionsRecord as any,
+      closeHeight === 0 ? undefined : closeHeight,
+      { omitUnknown: true, ttl: undefined }
+    );
+    const createdAddress = (initRes as any).address as string;
+
+    // Push a pending feed entry immediately (after wallet confirmation)
+    try {
+      const pendingEntry = {
+        id: `poll-created:${createdAddress}`,
+        kind: "poll-created" as const,
+        createdAt: new Date().toISOString(),
+        data: {
+          pollAddress: createdAddress,
+          title: question,
+          description: undefined,
+          author: activeAccount,
+          closeHeight: closeHeight || undefined,
+          createHeight: undefined,
+          options: options.map((label, id) => ({ id, label })),
+          totalVotes: 0,
+          pending: true,
+        }
+      };
+      try { window.dispatchEvent(new CustomEvent('sh:plugin:feed:push', { detail: { kind: 'poll-created', entry: pendingEntry } })); } catch {}
+      injectIntoFeeds(pendingEntry);
+    } catch {}
+
+    // Persist pending so we can reconcile after reload
+    try {
+      const key = 'sh:pending-polls';
+      const raw = localStorage.getItem(key);
+      const obj = raw ? JSON.parse(raw) : {};
+      obj[createdAddress] = { t: Date.now() };
+      localStorage.setItem(key, JSON.stringify(obj));
+    } catch {}
+
+    // Register in governance registry (listed) (Step 2/2)
+    setSubmitStep(2);
+    const registry = await Contract.initialize<{
+      add_poll: (poll: any, is_listed: boolean) => Promise<{ decodedResult: number }>
+    }>({
+      ...(sdk as any).getContext(),
+      aci: REGISTRY_WITH_EVENTS_ACI as any,
+      address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
+    } as any);
+    await (registry as any).add_poll(createdAddress as Encoded.ContractAddress, true, { ttl: undefined });
+
+    // Push final feed entry after registration with on-chain data
+    try {
+      const pollWithVotes = await GovernanceApi.getPollWithVotes(createdAddress as any);
+      const pollData = pollWithVotes?.poll;
+      const voteOptionsArray = pollData?.vote_options || [];
+      const optsRec = voteOptionsArray.reduce((acc: Record<string, string>, opt: { key: number; val: string }) => {
+        acc[String(opt.key)] = opt.val;
+        return acc;
+      }, {} as Record<string, string>);
+      const optionsArr = Object.entries(optsRec).map(([k, v]) => ({ id: Number(k), label: String(v) }));
+      // Dispatch the same custom event used by plugin host
+      const entry = {
+        id: `poll-created:${createdAddress}`,
+        kind: "poll-created",
+        createdAt: new Date().toISOString(),
+        data: {
+          pollAddress: createdAddress,
+          title: question,
+          description: undefined,
+          author: activeAccount,
+          closeHeight: pollData?.close_height as any,
+          createHeight: pollData?.create_height as any,
+          options: optionsArr,
+          totalVotes: 0,
+          pending: false,
+        },
+      };
+      try { window.dispatchEvent(new CustomEvent('sh:plugin:feed:push', { detail: { kind: 'poll-created', entry } })); } catch {}
+      injectIntoFeeds(entry);
+      // Clear pending store
+      try {
+        const key = 'sh:pending-polls';
+        const raw = localStorage.getItem(key);
+        const obj = raw ? JSON.parse(raw) : {};
+        delete obj[createdAddress];
+        localStorage.setItem(key, JSON.stringify(obj));
+      } catch {}
+    } catch {}
+
+    // Clear composer and close poll panel
+    setText("");
+    setAttachmentValue("poll.options", []);
+    setAttachmentValue("poll.closeHeight", 0);
+    setMediaUrls([]);
+    setActiveAttachmentId(null);
+    setSubmitStep(0);
+  }, [text, getAttachmentValue, setAttachmentValue, sdk]);
+
+  // Reconcile any pending polls on mount (e.g., after reload)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('sh:pending-polls');
+      if (!raw) return;
+      const obj = JSON.parse(raw) as Record<string, { t: number }>;
+      const addresses = Object.keys(obj);
+      if (addresses.length === 0) return;
+      (async () => {
+        for (const address of addresses) {
+          try {
+            const pollWithVotes = await GovernanceApi.getPollWithVotes(address as any);
+            const pollData = pollWithVotes?.poll;
+            if (!pollData) continue;
+            const voteOptionsArray = pollData?.vote_options || [];
+            const optsRec = voteOptionsArray.reduce((acc: Record<string, string>, opt: { key: number; val: string }) => {
+              acc[String(opt.key)] = opt.val;
+              return acc;
+            }, {} as Record<string, string>);
+            const optionsArr = Object.entries(optsRec).map(([k, v]) => ({ id: Number(k), label: String(v) }));
+            const entry = {
+              id: `poll-created:${address}`,
+              kind: 'poll-created' as const,
+              createdAt: new Date().toISOString(),
+              data: {
+                pollAddress: address,
+                title: pollData?.metadata?.title || '',
+                description: pollData?.metadata?.description || '',
+                author: pollData?.author as any,
+                closeHeight: pollData?.close_height as any,
+                createHeight: pollData?.create_height as any,
+                options: optionsArr,
+                totalVotes: 0,
+                pending: false,
+              }
+            };
+            try { window.dispatchEvent(new CustomEvent('sh:plugin:feed:push', { detail: { kind: 'poll-created', entry } })); } catch {}
+            // remove from pending
+            const key = 'sh:pending-polls';
+            const raw2 = localStorage.getItem(key);
+            const obj2 = raw2 ? JSON.parse(raw2) : {};
+            delete obj2[address];
+            localStorage.setItem(key, JSON.stringify(obj2));
+          } catch {}
+        }
+      })();
+    } catch {}
+  }, []);
+
+  const removeMedia = (index: number) => {
+    setMediaUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Dynamic placeholder logic
+  let currentPlaceholder: string;
+  if (placeholder) {
+    currentPlaceholder = placeholder;
+  } else if (activeAttachmentId === 'poll') {
+    currentPlaceholder = t('askAQuestion');
+  } else if (isPost) {
+    currentPlaceholder = activeAccount
+      ? PROMPTS[promptIndex]
+      : t('connectWalletToPost');
+  } else {
+    currentPlaceholder = activeAccount
+      ? t('writeReply')
+      : t('connectWalletToReply');
+  }
+
+  // Compute if submit is disabled
+  const isPollInvalid = useMemo(() => {
+    if (activeAttachmentId !== 'poll') return false;
+    const opts = (getAttachmentValue<string[]>('poll.options') || []);
+    const validOpts = opts.map((o: string) => o.trim()).filter(Boolean);
+    return validOpts.length < 2 || !text.trim();
+  }, [activeAttachmentId, getAttachmentValue, text]);
+
+  if (!activeAccount && !isPost) {
+    return (
+      <div
+        className={`mx-auto mb-5 md:mb-4 ${className}`}
+      >
+        <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl">
+          <div className="text-center text-white/70">
+            <p className="text-sm">{t('pleaseConnectWalletToReply')}</p>
+          </div>
+          <div className="mt-3 flex justify-center">
+            <ConnectWalletButton block className="w-full md:w-auto" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const singleRowMinHeight = overlayComputed ? `${overlayComputed.paddingTop + overlayComputed.paddingBottom + parseFloat(overlayComputed.lineHeight as any)}px` : '40px';
   const computedMinHeight = isDesktopViewport ? '52px' : '88px';
 
   const requiredMissing = useMemo(() => {
@@ -265,6 +578,8 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     const pattern = new RegExp(`(^|[^A-Za-z0-9_])${escaped}(?![A-Za-z0-9_])`, 'i');
     return !pattern.test(text);
   }, [text, requiredHashtag]);
+
+  const isSubmitDisabled = (activeAttachmentId === 'poll' ? isPollInvalid : !text.trim()) || (requiredHashtag ? requiredMissing : false);
 
   // Inline autocomplete: when typing a hashtag token that matches the start of requiredHashtag,
   // show only the remaining characters (e.g., "#a" -> suggest "ENS").
@@ -333,6 +648,13 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
 
     setIsSubmitting(true);
     try {
+      // If Poll panel is active, submit on-chain poll instead of a standard post
+      if (activeAttachmentId === 'poll') {
+        await submitPoll();
+        setIsSubmitting(false);
+        return;
+      }
+
       const contract = await sdk.initializeContract({
         aci: TIPPING_V3_ACI as any,
         address: CONFIG.CONTRACT_V3_ADDRESS as `ct_${string}`,
@@ -880,24 +1202,6 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     }
   };
 
-  const removeMedia = (index: number) => {
-    setMediaUrls((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  // Dynamic placeholder logic
-  let currentPlaceholder: string;
-  if (placeholder) {
-    currentPlaceholder = placeholder;
-  } else if (isPost) {
-    currentPlaceholder = activeAccount
-      ? PROMPTS[promptIndex]
-      : t('connectWalletToPost');
-  } else {
-    currentPlaceholder = activeAccount
-      ? t('writeReply')
-      : t('connectWalletToReply');
-  }
-
   // If not connected and it's a reply, show simple message
   if (!activeAccount && !isPost) {
     return (
@@ -966,7 +1270,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                     }
                   }}
                   className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pr-14 md:pb-8 md:text-base"
-                  style={{ minHeight: computedMinHeight }}
+                  style={{ minHeight: (pollActive && !isDesktopViewport) ? singleRowMinHeight : computedMinHeight }}
                   rows={1}
                   maxLength={characterLimit}
                 />
@@ -988,12 +1292,12 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                   </div>
                 )}
 
-                <div className="md:hidden absolute bottom-5 left-2">
+                <div className="md:hidden absolute bottom-5 left-2 flex items-center gap-2">
                   {/* Mobile-only GIF button inside textarea corner */}
-                  {showGifInput && (
+                  {showGifInput && !pollActive && (
                     <button
                       type="button"
-                      className="md:hidden  inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
+                      className="md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
                       title={tSocial('gif')}
                       ref={gifBtnRef}
                       onClick={(e) => {
@@ -1016,6 +1320,23 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                       <span className="uppercase tracking-wide">{tSocial('gif')}</span>
                     </button>
                   )}
+                  {/* Mobile Poll toggle next to GIF (hidden when poll is open) */}
+                  {enableAttachments && activeAttachmentId !== 'poll' && (
+                    <button
+                      type="button"
+                      className="md:hidden inline-flex items-center h-5 px-2 rounded-[calc(var(--radius)-2px)] md:rounded-full bg-transparent border border-white/10 outline outline-1 outline-white/10 text-white/80 text-[11px] leading-none hover:border-white/20 transition-colors min-h-0 min-w-0 z-20 touch-manipulation"
+                      title={tSocial('poll')}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setActiveAttachmentId('poll');
+                        // Clear GIF picker when opening poll
+                        setShowGif(false);
+                      }}
+                    >
+                      <span>{tSocial('poll')}</span>
+                    </button>
+                  )}
                 </div>
                 {characterLimit && (
                   <div className="absolute bottom-4 right-2 md:bottom-4 md:right-4 text-white/60 text-sm font-semibold pointer-events-none select-none">
@@ -1026,6 +1347,17 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
 
 
               </div>
+
+              {/* Attachment panel mount (single active) under textarea, above Post button */}
+              {enableAttachments && activeAttachmentId && (
+                <div className="mt-3">
+                  {attachmentRegistry
+                    .filter((a) => a.id === activeAttachmentId)
+                    .map((a) => (
+                      <a.Panel key={a.id} ctx={attachmentsCtx} onRemove={() => setActiveAttachmentId(null)} />
+                    ))}
+                </div>
+              )}
 
               {(showEmojiPicker || showGifInput) && (
                 <div className="hidden md:flex items-center justify-between mt-3 gap-3">
@@ -1046,7 +1378,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                       </button>
                     )}
 
-                    {showGifInput && (
+                    {showGifInput && !pollActive && (
                       <button
                         type="button"
                         className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
@@ -1082,7 +1414,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                       </div>
                     )}
 
-                    {showGifInput && (
+                    {showGifInput && !pollActive && (
                       <GifSelectorDialog
                         open={showGif}
                         onOpenChange={setShowGif}
@@ -1090,9 +1422,46 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                         onMediaUrlsChange={setMediaUrls}
                       />
                     )}
+
+                    {/* Attachments toolbar: show Poll button to the right of GIF; disable others when active */}
+                    {enableAttachments && attachmentRegistry.length > 0 && (
+                      <div className="inline-flex items-center gap-2.5">
+                        {attachmentRegistry.map((spec) => (
+                          <button
+                            key={spec.id}
+                            type="button"
+                            disabled={!!activeAttachmentId && activeAttachmentId !== spec.id}
+                            onClick={() => {
+                              const newId = activeAttachmentId === spec.id ? null : spec.id;
+                              setActiveAttachmentId(newId);
+                              // Clear GIFs when activating poll
+                              if (newId === 'poll' && mediaUrls.length > 0) {
+                                setMediaUrls([]);
+                              }
+                            }}
+                            className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-1.5 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm disabled:opacity-50"
+                            title={spec.label}
+                          >
+                            {(activeAttachmentId !== spec.id && spec.Icon) ? <spec.Icon className="w-4 h-4" /> : null}
+                            <span>{activeAttachmentId === spec.id ? tSocial('removePoll') : spec.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-3">
+                    {composerActions.map((a) => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+                        onClick={() => a.onClick(composerCtx)}
+                      >
+                        {a.Icon ? <a.Icon className="w-4 h-4" /> : null}
+                        <span>{a.label}</span>
+                      </button>
+                    ))}
                     {requiredHashtag && requiredMissing && (
                       <div className="flex items-center gap-2 text-[11px] text-white/70">
                         <span>{tSocial('postNeedsToInclude', { hashtag: (requiredHashtag || '').toUpperCase() })}</span>
@@ -1122,12 +1491,13 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                       <AeButton
                         type="submit"
                         loading={isSubmitting}
-                        disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
-                        className="relative bg-[#1161FE] border-none text-white font-black px-6 py-3 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none md:min-h-[44px] md:text-base"
+                        disabled={isSubmitDisabled}
+                        className="relative bg-[#1161FE] border-none text-white font-black px-6 py-3 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(0,0,0,0.3)] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none md:min-h-[44px] md:text-base"
                       >
+                        {''}
                         {isSubmitting
                           ? isPost
-                            ? tSocial('posting')
+                            ? (activeAttachmentId === 'poll' ? `${tSocial('posting')} ${submitStep}/2` : tSocial('posting'))
                             : tSocial('posting')
                           : isPost
                             ? tSocial('post')
@@ -1207,12 +1577,12 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                 <AeButton
                   type="submit"
                   loading={isSubmitting}
-                  disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
-                  className="relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
+                  disabled={isSubmitDisabled}
+                  className="relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px hover:shadow-[0_14px_28px_rgba(0,0,0,0.3)] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
                 >
                   {isSubmitting
                     ? isPost
-                      ? tSocial('posting')
+                      ? (activeAttachmentId === 'poll' ? `${tSocial('posting')} ${submitStep}/2` : tSocial('posting'))
                       : tSocial('posting')
                     : isPost
                       ? tSocial('post')
@@ -1227,7 +1597,8 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       </div>
     </div>
   );
-});
+  }
+) as React.ForwardRefExoticComponent<PostFormProps & React.RefAttributes<PostFormRef>>;
 
 PostForm.displayName = 'PostForm';
 

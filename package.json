@@ -9,6 +9,8 @@
     "preview": "vite preview --port 5174",
     "test": "vitest",
     "generate:api": "openapi --input http://localhost:3000/api-json --output ./src/api/generated --useOptions",
+    "ext:scaffold": "node scripts/ext-scaffold.mjs",
+    "ext:check": "node scripts/ext-check.mjs",
     "generate:sitemap": "ts-node ./scripts/generate-sitemap.ts",
     "postinstall": "node ./scripts/update-package-type.cjs"
   },

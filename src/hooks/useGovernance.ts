@@ -30,19 +30,46 @@ export const useGovernance = () => {
           address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
         });
         const contractPolls = (await registry.polls()).decodedResult;
-        
-        const { data } = await GovernanceApi.getPollOrdering(params.status === 'closed');
-        if (params.status === 'all') data.push(...(await GovernanceApi.getPollOrdering(true)).data);
-
         const height = await sdk.getHeight();
-        let merged = data.map(({ id, ...others }) => ({
-          id,
-          ...others,
-          title: contractPolls.get(BigInt(id)).title,
-          endDate: new Date(Date.now() + (others.closeHeight - height) * 3 * 60 * 1000),
-          status: (others.closeHeight == null || others.closeHeight > height
-            ? 'open' : 'closed') as 'open' | 'closed',
+        
+        // Fetch polls from new API endpoint
+        const pollsResponse = await GovernanceApi.getAllPolls(1, 1000);
+        let allPolls = pollsResponse?.items || [];
+        
+        // Filter by status if needed
+        if (params.status !== 'all') {
+          const isClosed = params.status === 'closed';
+          allPolls = allPolls.filter((poll) => {
+            if (isClosed) {
+              return poll.close_height != null && poll.close_height <= height;
+            } else {
+              return poll.close_height == null || poll.close_height > height;
+            }
+          });
+        }
+        
+        // Map to expected format
+        const data = allPolls.map((poll, index) => ({
+          id: Number(poll.poll_seq_id || index),
+          poll: poll.poll_address!,
+          totalStake: '0', // Not available in new API
+          voteCount: poll.votes_count || 0,
+          closeHeight: poll.close_height || 0,
+          delegationCount: 0, // Not available in new API
+          score: poll.votes_count || 0,
         }));
+
+        let merged = data.map(({ id, ...others }) => {
+          const pollData = contractPolls.get(BigInt(id));
+          return {
+            id,
+            ...others,
+            title: pollData?.title || 'Untitled poll',
+            endDate: new Date(Date.now() + (others.closeHeight - height) * 3 * 60 * 1000),
+            status: (others.closeHeight == null || others.closeHeight > height
+              ? 'open' : 'closed') as 'open' | 'closed',
+          };
+        });
         
         const search = params.search?.trim().toLowerCase();
         if (search) {
@@ -59,7 +86,34 @@ export const useGovernance = () => {
   const usePoll = (id?: Encoded.ContractAddress) => {
     return useQuery({
       queryKey: ['governance', 'poll', id],
-      queryFn: () => id ? GovernanceApi.getPollOverview(id) : undefined,
+      queryFn: async () => {
+        if (!id) return undefined;
+        const pollWithVotes = await GovernanceApi.getPollWithVotes(id);
+        // Convert to old format for backward compatibility
+        const poll = pollWithVotes.poll;
+        return {
+          pollState: {
+            metadata: poll.metadata || { title: '', description: '', link: '' },
+            vote_options: (poll.vote_options || []).reduce((acc: Record<string, string>, opt: { key: number; val: string }) => {
+              acc[String(opt.key)] = opt.val;
+              return acc;
+            }, {}),
+            close_height: poll.close_height,
+            create_height: poll.create_height,
+            votes: {}, // Will be populated from votes array if needed
+            author: poll.author,
+          },
+          stakesForOption: Object.entries(poll.votes_count_by_option || {}).map(([option, count]) => ({
+            option,
+            optionStake: '0',
+            percentageOfTotal: '0',
+            votes: Array(Number(count)).fill(null),
+          })),
+          totalStake: '0',
+          percentOfTotalSupply: '0',
+          voteCount: poll.votes_count || 0,
+        };
+      },
       enabled: !!id,
       staleTime: 2 * 60 * 1000, // 2 minutes
     });
@@ -70,26 +124,65 @@ export const useGovernance = () => {
     return useQuery({
       queryKey: ['governance', 'pollResults', id],
       queryFn: async () => {
-        const overview = await GovernanceApi.getPollOverview(id);
+        const pollWithVotes = await GovernanceApi.getPollWithVotes(id);
+        const poll = pollWithVotes.poll;
 
         // Shape results for UI consumption
-        const voteOptions: Record<string, string> = overview.pollState.vote_options || {};
-        const options = (overview.stakesForOption || [])
-          .sort((a, b) => Number(a.option) - Number(b.option))
-          .map((opt) => ({
-            value: Number(opt.option),
-            label: voteOptions[String(opt.option)] ?? `Option ${opt.option}`,
-            votes: Array.isArray(opt.votes) ? opt.votes.length : 0,
-            percentageOfTotal: Number(opt.percentageOfTotal),
-            optionStake: opt.optionStake,
+        const voteOptions: Record<string, string> = (poll.vote_options || []).reduce((acc: Record<string, string>, opt: { key: number; val: string }) => {
+          acc[String(opt.key)] = opt.val;
+          return acc;
+        }, {});
+        
+        const votesByOption = poll.votes_count_by_option || {};
+        const totalVotes = poll.votes_count || 0;
+        
+        const options = Object.entries(votesByOption)
+          .sort((a, b) => Number(a[0]) - Number(b[0]))
+          .map(([optionKey, count]) => ({
+            value: Number(optionKey),
+            label: voteOptions[optionKey] ?? `Option ${optionKey}`,
+            votes: Number(count) || 0,
+            percentageOfTotal: totalVotes > 0 ? (Number(count) / totalVotes * 100).toFixed(2) : '0',
+            optionStake: '0',
           }));
+
+        // Find user's vote from votes array
+        let myVote: number | undefined;
+        if (activeAccount) {
+          const accountVotes = (pollWithVotes.votes || [])
+            .filter((v: any) => {
+              const voter = v.data?.voter || v.data?.governance?.data?.voter;
+              return voter === activeAccount && v.function === 'vote';
+            })
+            .sort((a: any, b: any) => {
+              if (b.block_height !== a.block_height) return b.block_height - a.block_height;
+              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            });
+          
+          if (accountVotes.length > 0) {
+            const latestVote = accountVotes[0];
+            const option = latestVote.data?.option || latestVote.data?.governance?.data?.option;
+            // Check if revoked
+            const hasLaterRevoke = pollWithVotes.votes.some((v: any) => {
+              if (v.function !== 'revoke_vote') return false;
+              if (v.block_height > latestVote.block_height) return true;
+              if (v.block_height === latestVote.block_height) {
+                return new Date(v.created_at).getTime() > new Date(latestVote.created_at).getTime();
+              }
+              return false;
+            });
+            if (!hasLaterRevoke && typeof option === 'number') {
+              myVote = option;
+            }
+          }
+        }
 
         return {
           options,
-          totalVotes: overview.voteCount || 0,
-          totalStake: overview.totalStake,
-          percentOfTotalSupply: overview.percentOfTotalSupply,
-          myVote: overview.pollState?.votes[activeAccount] as number | undefined,
+          totalVotes,
+          totalStake: '0',
+          percentOfTotalSupply: '0',
+          myVote,
         } as const;
       },
       staleTime: 1 * 60 * 1000, // 1 minute

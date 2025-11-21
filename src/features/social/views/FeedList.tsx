@@ -15,15 +15,59 @@ import SortControls from "../components/SortControls";
 import EmptyState from "../components/EmptyState";
 import PostSkeleton from "../components/PostSkeleton";
 import ReplyToFeedItem from "../components/ReplyToFeedItem";
+import PollCreatedCard from "../feed-plugins/poll-created/PollCreatedCard";
+import { useAeSdk } from "@/hooks";
 import TokenCreatedFeedItem from "../components/TokenCreatedFeedItem";
 import TokenCreatedActivityItem from "../components/TokenCreatedActivityItem";
 import { PostApiResponse } from "../types";
+import FeedRenderer from "../feed-plugins/FeedRenderer";
+import { adaptPostToEntry } from "../feed-plugins/post";
+import type { FeedEntry } from "../feed-plugins/types";
+import { adaptTokenCreatedToEntry } from "../feed-plugins/token-created";
+import { getAllPlugins } from "../feed-plugins/registry";
+import { usePluginEntries } from "../feed-plugins/FeedOrchestrator";
+import { GovernanceApi } from "@/api/governance";
 import Head from "../../../seo/Head";
 import { CONFIG } from "../../../config";
+
+// Built-in plugins are now registered via the plugin host (local/external loaders)
 
 // Custom hook
 function useUrlQuery() {
   return new URLSearchParams(useLocation().search);
+}
+
+// Wrapper component for poll items from popular feed
+function PollItemWrapper({ pollAddress, ...props }: any) {
+  const { sdk, activeAccount } = useAeSdk() as any;
+  const [currentHeight, setCurrentHeight] = React.useState<number | undefined>(undefined);
+  
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const h = await (sdk as any)?.getHeight?.();
+        if (!cancelled && typeof h === 'number') setCurrentHeight(h);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [sdk]);
+  
+  // For polls from popular feed, we'll use a simplified version without voting
+  // Users can click to open the full poll page if they want to vote
+  return (
+    <PollCreatedCard
+      {...props}
+      currentHeight={currentHeight}
+      myVote={null}
+      onVoteOption={undefined}
+      onRevoke={undefined}
+      voting={false}
+      pendingOption={null}
+    />
+  );
 }
 
 export default function FeedList({
@@ -32,7 +76,7 @@ export default function FeedList({
   const navigate = useNavigate();
   const location = useLocation();
   const urlQuery = useUrlQuery();
-  const { chainNames } = useWallet();
+  const { chainNames, address: activeAccount } = useWallet();
   const queryClient = useQueryClient();
   const ACTIVITY_PAGE_SIZE = 50;
   const createPostRef = useRef<CreatePostRef>(null);
@@ -88,7 +132,6 @@ export default function FeedList({
 
   // Check if popular feed is enabled
   const popularFeedEnabled = CONFIG.POPULAR_FEED_ENABLED ?? true;
-
   // URL parameters
   const urlSortBy = urlQuery.get("sortBy");
   // Force "latest" if popular feed is disabled, otherwise use URL param or default to "hot"
@@ -118,6 +161,51 @@ export default function FeedList({
       }
     }
   }, [location.search, sortBy, queryClient, popularWindow]);
+
+  // Listen for injected feed entries (prepend/replace in caches)
+  useEffect(() => {
+    function onInject(ev: any) {
+      const entry = ev?.detail?.entry as any;
+      const targets: string[] = ev?.detail?.targets || [];
+      if (!entry || !entry.id) return;
+
+      const mutate = (key: any) => {
+        queryClient.setQueryData<any>(key, (prev: any) => {
+          if (!prev) return prev;
+          // Handles both infiniteQuery pages and flat arrays
+          const updateArray = (arr: any[]) => {
+            const idx = arr.findIndex((it: any) => it?.id === entry.id);
+            if (idx >= 0) {
+              const next = [...arr];
+              next[idx] = entry;
+              return next;
+            }
+            return [entry, ...arr];
+          };
+          if (prev?.pages && Array.isArray(prev.pages)) {
+            const first = prev.pages[0] || [];
+            const updatedFirst = updateArray(first);
+            return { ...prev, pages: [updatedFirst, ...prev.pages.slice(1)] };
+          }
+          if (Array.isArray(prev)) return updateArray(prev);
+          return prev;
+        });
+      };
+
+      if (targets.includes('global')) {
+        mutate(["posts", { limit: 10, sortBy, search: localSearch, filterBy }]);
+        mutate(['home-posts', sortBy, filterBy, localSearch]);
+      }
+      if (targets.includes('profile')) {
+        const author = entry?.data?.author || activeAccount;
+        if (author) mutate(['profile-posts', author]);
+      }
+    }
+    window.addEventListener('sh:feed:inject' as any, onInject as any);
+    return () => window.removeEventListener('sh:feed:inject' as any, onInject as any);
+  }, [queryClient, sortBy, filterBy, localSearch, activeAccount]);
+
+  // Comment counts are now provided directly by the API in post.total_comments
 
   // Helper to map a token object or websocket payload into a Post-like item
   const mapTokenCreatedToPost = useCallback((payload: any): PostDto => {
@@ -608,6 +696,23 @@ export default function FeedList({
     [popularData]
   );
 
+  // Plugin-driven entries (includes poll-created via its fetchPage)
+  const pluginEntries = usePluginEntries(getAllPlugins(), sortBy !== "hot");
+
+  // Fetch current chain height once to estimate accurate poll creation times
+  const { sdk } = useAeSdk();
+  const [chainHeight, setChainHeight] = useState<number | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const h = await (sdk as any)?.getHeight?.();
+        if (!cancelled && typeof h === "number") setChainHeight(h);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [sdk]);
+
   // Check if we have enough popular posts (at least 10) to fill the initial view
   const hasEnoughPopularPosts = popularList.length >= 10;
   
@@ -644,16 +749,6 @@ export default function FeedList({
       seenIds.add(id);
       return true;
     });
-    
-    // Debug log removed to reduce console spam - uncomment if needed for debugging
-    // if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
-    //   console.log('🔍 [DEBUG] latestListForHot computed:', {
-    //     pagesCount: latestDataForHot.pages.length,
-    //     allItemsCount: allItems.length,
-    //     filteredCount: filtered.length,
-    //     popularPostIdsSize: popularPostIds.size,
-    //   });
-    // }
     
     return filtered;
   }, [latestDataForHot, popularPostIds, sortBy]);
@@ -742,16 +837,28 @@ export default function FeedList({
     if (sortBy === "hot") {
       // For hot: popular posts first, then latest posts (filtered to exclude popular ones)
       const combined = [...popularList, ...latestListForHot];
-      // Debug log removed to reduce console spam - uncomment if needed for debugging
-      // if (process.env.NODE_ENV === 'development') {
-      //   console.log('🔍 [DEBUG] combinedList for hot:', {
-      //     popularListCount: popularList.length,
-      //     latestListForHotCount: latestListForHot.length,
-      //     combinedCount: combined.length,
-      //   });
-      // }
       return combined;
     }
+    
+    // Hide token-created events on the popular (hot) tab
+    const includeEvents = sortBy !== "hot";
+    const APPROX_BLOCK_MS = 180000; // ~3 minutes per block
+    const pluginItems = includeEvents
+      ? (pluginEntries.entries || []).map((e: any) => {
+          let createdAtIso = e.createdAt;
+          if (e.kind === "poll-created" && chainHeight != null && e?.data?.createHeight != null) {
+            const deltaBlocks = Math.max(0, Number(chainHeight) - Number(e.data.createHeight));
+            createdAtIso = new Date(Date.now() - deltaBlocks * APPROX_BLOCK_MS).toISOString();
+          }
+          return {
+            id: e.id,
+            created_at: createdAtIso,
+            content: e?.data?.title || "",
+            sender_address: e?.data?.author || "",
+            __feedEntry: e,
+          };
+        })
+      : [];
     
     // For latest feed: use cached data if queries don't have data yet
     // This ensures cached/prefetched data shows immediately
@@ -779,13 +886,13 @@ export default function FeedList({
       return [];
     }
     
-    // Default path: interleave activities and latest, sorted by created_at desc
+    // Default path: interleave plugin items, activities and latest, sorted by created_at desc
     // Deduplicate by post ID to avoid showing the same post twice
     const seenIds = new Set<string>();
     const merged: PostDto[] = [];
     
-    // Add activities first, then regular posts, skipping duplicates
-    for (const item of [...activitiesToUse, ...postsToUse]) {
+    // Add plugin items, activities, then regular posts, skipping duplicates
+    for (const item of [...pluginItems, ...activitiesToUse, ...postsToUse]) {
       const id = String(item?.id || '');
       if (id && !seenIds.has(id)) {
         seenIds.add(id);
@@ -798,7 +905,7 @@ export default function FeedList({
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     });
-  }, [list, activityList, sortBy, popularList, latestListForHot, bothQueriesReady, latestData, activitiesPages, queryClient, localSearch, filterBy]);
+  }, [list, activityList, pluginEntries.entries, sortBy, popularList, latestListForHot, bothQueriesReady, latestData, activitiesPages, queryClient, localSearch, filterBy, chainHeight]);
 
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {
@@ -987,17 +1094,31 @@ export default function FeedList({
       const item = filteredAndSortedList[i];
       const postId = item.id;
       const isTokenCreated = String(postId).startsWith("token-created:");
+      const isPollCreated = String(postId).startsWith("poll-created:");
 
-      if (!isTokenCreated) {
-        nodes.push(
-          <ReplyToFeedItem
-            key={postId}
-            item={item}
-            commentCount={item.total_comments ?? 0}
-            allowInlineRepliesToggle={false}
-            onOpenPost={handleItemClick}
-          />
-        );
+      if (!isTokenCreated && !isPollCreated) {
+        // Render normal posts via FeedRenderer using the adapter
+        const entry: FeedEntry = adaptPostToEntry(item as PostDto, item.total_comments ?? 0);
+        nodes.push(<FeedRenderer key={postId} entry={entry} onOpenPost={handleItemClick} />);
+        i += 1;
+        continue;
+      }
+
+      if (isPollCreated) {
+        // When polls come from pluginEntries they are already FeedEntry objects; but when merged with posts
+        // we carry them as lightweight items with id/created_at and a hidden __entry. Prefer __entry if present.
+        const entry: FeedEntry | undefined = (item as any).__feedEntry || undefined;
+        if (entry) {
+          const onOpen = (id: string) => {
+            try {
+              sessionStorage.setItem("feedScrollY", String(window.scrollY || 0));
+            } catch {}
+            navigate(`/poll/${id}`);
+          };
+          nodes.push(<FeedRenderer key={postId} entry={entry} onOpenPost={onOpen} />);
+          i += 1;
+          continue;
+        }
         i += 1;
         continue;
       }
@@ -1042,19 +1163,17 @@ export default function FeedList({
             {collapsed ? `Show ${groupItems.length - 3} more` : 'Show less'}
           </button>
         ) : undefined;
-        nodes.push(
-          <TokenCreatedActivityItem
-            key={gi.id}
-            item={gi}
-            hideMobileDivider={hideDivider}
-            mobileTight={mobileTight}
-            mobileNoTopPadding={mobileNoTopPadding}
-            mobileNoBottomPadding={mobileNoBottomPadding}
-            mobileTightTop={mobileTightTop}
-            mobileTightBottom={mobileTightBottom}
-            footer={footer}
-          />
-        );
+
+        const entry: FeedEntry = adaptTokenCreatedToEntry(gi, {
+          hideMobileDivider: hideDivider,
+          mobileTight,
+          mobileNoTopPadding,
+          mobileNoBottomPadding,
+          mobileTightTop,
+          mobileTightBottom,
+          footer,
+        });
+        nodes.push(<FeedRenderer key={gi.id} entry={entry} onOpenPost={handleItemClick} />);
       }
 
       if (groupItems.length > 3) {
@@ -1081,6 +1200,7 @@ export default function FeedList({
   useEffect(() => {
     // Vite supports preloading dynamic chunks via import()
     import("../views/PostDetail").catch(() => {});
+    import("../views/PollDetail").catch(() => {});
   }, []);
 
   // Restore scroll position when returning from detail pages
@@ -1324,15 +1444,52 @@ export default function FeedList({
               popularDataPages: popularData?.pages?.length || 0,
               latestDataForHotPages: latestDataForHot?.pages?.length || 0,
             })} */}
-            {filteredAndSortedList.map((item) => (
-              <ReplyToFeedItem
-                key={item.id}
-                item={item}
-                commentCount={item.total_comments ?? 0}
-                allowInlineRepliesToggle={false}
-                onOpenPost={handleItemClick}
-              />
-            ))}
+            {filteredAndSortedList.map((item: any) => {
+              // Check if this is a poll item from the popular feed
+              if (item.type === 'poll' && item.metadata) {
+                const pollMetadata = item.metadata;
+                const voteOptions = pollMetadata.vote_options || [];
+                const votesByOption = pollMetadata.votes_count_by_option || {};
+                
+                // Convert vote_options array to options format expected by PollCreatedCard
+                const options = voteOptions.map((opt: { key: number; val: string }) => ({
+                  id: opt.key,
+                  label: opt.val,
+                  votes: votesByOption[String(opt.key)] || 0,
+                }));
+                
+                const totalVotes = pollMetadata.votes_count || 0;
+                
+                return (
+                  <PollItemWrapper
+                    key={item.id}
+                    pollAddress={pollMetadata.poll_address}
+                    title={item.content ? item.content.split(' - ')[0] || 'Untitled poll' : 'Untitled poll'}
+                    description={item.content && item.content.includes(' - ') ? item.content.split(' - ').slice(1).join(' - ') : undefined}
+                    author={item.sender_address}
+                    closeHeight={pollMetadata.close_height}
+                    createHeight={pollMetadata.create_height}
+                    options={options}
+                    totalVotes={totalVotes}
+                    createdAtIso={item.created_at}
+                    txHash={pollMetadata.hash}
+                    contractAddress={pollMetadata.poll_address}
+                    onOpen={() => handleItemClick(item.id)}
+                  />
+                );
+              }
+              
+              // Regular post item
+              return (
+                <ReplyToFeedItem
+                  key={item.id}
+                  item={item}
+                  commentCount={item.total_comments ?? 0}
+                  allowInlineRepliesToggle={false}
+                  onOpenPost={handleItemClick}
+                />
+              );
+            })}
           </>
         )}
       </div>

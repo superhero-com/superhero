@@ -9,7 +9,7 @@ Welcome to the Superhero hackathon! This guide helps you build a Superhero plugi
 ## Getting Started
 
 - **[Quickstart](./quickstart)** - Fast track to get a plugin running with AI assistance
-- **[Overview](./overview)** - Complete guide overview and architecture
+- **[Overview](../../index)** - Complete guide overview and architecture
 
 ## Setup
 

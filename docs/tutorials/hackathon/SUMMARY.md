@@ -5,7 +5,7 @@ title: Summary
 # Documentation Summary
 
 ## Getting Started
-- [Overview](./overview)
+- [Overview](../../index)
 - [Quickstart](./quickstart)
 
 ## Setup

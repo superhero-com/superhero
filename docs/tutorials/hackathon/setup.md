@@ -1,67 +1,18 @@
 ---
-title: Environment Setup
+title: Setup Overview
 ---
 
 <Info>
-You'll set up your dev environment and Superhero Wallet to create and test contracts.
+Follow these setup pages in order to prepare your development environment for building Superhero plugins.
 </Info>
 
-<Info>
-Do these steps in your own contracts repository (separate from the Superhero UI repo).
-</Info>
+## Setup Steps
 
-## Create your contracts repo
-```bash
-mkdir my-ae-contracts && cd my-ae-contracts
-git init
-```
-
-## Install prerequisites
-- Node.js LTS (e.g., 20.x)
-- Git
-- Docker
-- Cursor (or VS Code)
-
-## Install aeproject (recommended)
-```bash
-npm i -g @aeternity/aeproject@latest
-# quick check
-aeproject --version
-```
-
-## Create an æternity account
-- Generate a dev key locally for development tests
-- For testnet, use a funded key (get AE from the faucet via docs hub)
-- Never commit private keys; use `.env*` files locally only
-
-## Install Superhero Wallet
-- Chrome: [Superhero Wallet extension](https://chromewebstore.google.com/detail/superhero-wallet/mnhmmkepfddpifjkamaligfeemcbhdne)
+1. **[Prerequisites](./prerequisites.md)** - Install required software and tools
+2. **[Wallet Setup](./wallet-setup.md)** - Install and configure Superhero Wallet
+3. **[Configure Cursor](./configure-cursor.md)** - Set up Cursor with documentation context
+4. **[Project Setup](./project-setup.md)** - Create your contracts repository and project structure
 
 <Tip>
-Pin the extension for quick access.
+You can complete these steps in any order, but we recommend following them sequentially for the smoothest setup experience.
 </Tip>
-
-## Create or import an account in Wallet
-- Choose "Create" to generate a new seed phrase, or "Import" to restore an existing one
-- Write down the seed phrase offline; never share it
-
-<Warning>
-Back up your seed phrase. Anyone with your seed can control your account.
-</Warning>
-
-## Switch to testnet and fund
-- In settings, select æternity testnet
-- Use the testnet faucet to fund your account: [æternity Testnet Faucet](https://faucet.aepps.com/)
-
-## Project directories
-- `contracts/` — Sophia source files (`.aes`)
-- `tests/` — TypeScript tests (if you use the SDK/ Vitest path)
-- `scripts/` — utility scripts (optional)
-
-## Verify tools
-```bash
-node -v
-npm -v
-docker --version
-aeproject --version
-```

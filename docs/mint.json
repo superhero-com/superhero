@@ -27,7 +27,11 @@
     {
       "group": "Setup",
       "pages": [
-        "tutorials/hackathon/setup"
+        "tutorials/hackathon/setup",
+        "tutorials/hackathon/prerequisites",
+        "tutorials/hackathon/wallet-setup",
+        "tutorials/hackathon/configure-cursor",
+        "tutorials/hackathon/project-setup"
       ]
     },
     {

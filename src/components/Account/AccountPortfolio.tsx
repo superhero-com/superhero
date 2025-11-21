@@ -999,83 +999,106 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     }
   }, [currentPortfolioSnapshot, convertTo]);
 
-  // Fetch PNL data for current timeframe
-  const {
-    data: pnlData,
-    isLoading: isPnlLoading,
-  } = useQuery({
-    queryKey: ['portfolio-pnl', address, selectedTimeRange, convertTo],
-    queryFn: async () => {
-      const response = await SuperheroApi.getAccountPortfolioHistory(address, {
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-        interval: dateRange.interval,
-        convertTo: convertTo as any,
-        include: 'pnl-range',
-      });
-      
-      const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
-      if (snapshots.length === 0) return null;
-      
-      // With range-based PNL, the backend now calculates PNL for each timeframe range
-      // The last snapshot's PNL represents PNL for transactions from startDate to endDate
-      // We can use it directly without needing to subtract
-      const lastSnapshot = snapshots[snapshots.length - 1];
-      if (!lastSnapshot.total_pnl) return null;
-      
-      const firstSnapshot = snapshots[0];
-      
-      // Use the last snapshot's PNL directly - it represents PNL for the timeframe
-      return {
-        percentage: lastSnapshot.total_pnl.percentage,
-        invested: lastSnapshot.total_pnl.invested,
-        current_value: lastSnapshot.total_pnl.current_value,
-        gain: lastSnapshot.total_pnl.gain,
-        range: {
-          from: firstSnapshot.total_pnl?.range?.from || null,
-          to: lastSnapshot.total_pnl?.range?.to || null,
-        },
-      };
-    },
-    enabled: !!address,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-  });
+  // Derive PNL data for the current timeframe from the chart data itself
+  // PnL = (value_at_end_of_window - value_at_start_of_window), using the same
+  // values that the user sees in the chart (including the live appended point)
+  const pnlData = useMemo(() => {
+    if (!rechartsData || rechartsData.length === 0) return null;
 
-  // Use PNL data from portfolioData instead of fetching on hover
-  // Each snapshot already includes PNL range from startDate to that timestamp
+    const firstPoint = rechartsData[0];
+    const lastPoint = rechartsData[rechartsData.length - 1];
+
+    const baseValue = firstPoint.value;
+    const currentValue = lastPoint.value;
+    const gainValue = currentValue - baseValue;
+
+    const percentage =
+      baseValue !== 0 ? (gainValue / baseValue) * 100 : 0;
+
+    const from = firstPoint.date.toISOString();
+    const to = lastPoint.date.toISOString();
+
+    // Map the generic value PnL into AE or fiat buckets depending on the current mode.
+    // We only ever display the branch that matches `convertTo`, so the "other" fields
+    // are kept for type completeness but not relied upon.
+    const gainAe = convertTo === 'ae' ? gainValue : 0;
+    const gainUsd = convertTo === 'ae' ? 0 : gainValue;
+
+    const investedAe = convertTo === 'ae' ? baseValue : 0;
+    const investedUsd = convertTo === 'ae' ? 0 : baseValue;
+
+    const currentAe = convertTo === 'ae' ? currentValue : 0;
+    const currentUsd = convertTo === 'ae' ? 0 : currentValue;
+
+    return {
+      percentage,
+      invested: {
+        ae: investedAe,
+        usd: investedUsd,
+      },
+      current_value: {
+        ae: currentAe,
+        usd: currentUsd,
+      },
+      gain: {
+        ae: gainAe,
+        usd: gainUsd,
+      },
+      range: {
+        from,
+        to,
+      },
+    };
+  }, [rechartsData, convertTo]);
+
+  // Derive Profit/Loss for the hovered point from the same chart values the user sees.
+  // PnL = (value_at_hover - value_at_start_of_window), so the left-most point is always 0
   const hoverPnlData = useMemo(() => {
-    if (!hoveredPrice || !portfolioData || portfolioData.length === 0) {
+    if (!hoveredPrice || !rechartsData || rechartsData.length === 0) {
       return null;
     }
-    
-    // Find the snapshot closest to the hovered timestamp
-    const hoverTime = hoveredPrice.time;
-    let closestSnapshot: PortfolioSnapshot | null = null;
-    let minDistance = Infinity;
-    
-    for (const snapshot of portfolioData) {
-      const snapshotTime = moment(snapshot.timestamp).unix();
-      const distance = Math.abs(snapshotTime - hoverTime);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestSnapshot = snapshot;
-      }
-    }
-    
-    // Use PNL data from the closest snapshot (which includes range from startDate to that timestamp)
-    if (closestSnapshot?.total_pnl) {
-      return {
-        percentage: closestSnapshot.total_pnl.percentage,
-        invested: closestSnapshot.total_pnl.invested,
-        current_value: closestSnapshot.total_pnl.current_value,
-        gain: closestSnapshot.total_pnl.gain,
-        range: closestSnapshot.total_pnl.range,
-      };
-    }
-    
-    return null;
-  }, [hoveredPrice, portfolioData]);
+
+    const firstPoint = rechartsData[0];
+
+    const baseValue = firstPoint.value;
+    const currentValue = hoveredPrice.price;
+    const gainValue = currentValue - baseValue;
+
+    const percentage =
+      baseValue !== 0 ? (gainValue / baseValue) * 100 : 0;
+
+    const from = firstPoint.date.toISOString();
+    const to = moment.unix(hoveredPrice.time).toDate().toISOString();
+
+    const gainAe = convertTo === 'ae' ? gainValue : 0;
+    const gainUsd = convertTo === 'ae' ? 0 : gainValue;
+
+    const investedAe = convertTo === 'ae' ? baseValue : 0;
+    const investedUsd = convertTo === 'ae' ? 0 : baseValue;
+
+    const currentAe = convertTo === 'ae' ? currentValue : 0;
+    const currentUsd = convertTo === 'ae' ? 0 : currentValue;
+
+    return {
+      percentage,
+      invested: {
+        ae: investedAe,
+        usd: investedUsd,
+      },
+      current_value: {
+        ae: currentAe,
+        usd: currentUsd,
+      },
+      gain: {
+        ae: gainAe,
+        usd: gainUsd,
+      },
+      range: {
+        from,
+        to,
+      },
+    };
+  }, [hoveredPrice, rechartsData, convertTo]);
 
   // Keep portfolioData ref up to date for initialization effect
   useEffect(() => {
@@ -1128,6 +1151,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               endDate: prefetchDateRange.endDate,
               interval: prefetchDateRange.interval,
               convertTo: convertTo as any,
+              include: 'pnl-range',
             });
             
             const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
@@ -1159,10 +1183,15 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                 }
               }
             }
-            
-            return Array.from(periodMap.values()).sort((a, b) => 
+
+            const filtered = Array.from(periodMap.values()).sort((a, b) => 
               moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf()
             );
+
+            return {
+              filtered,
+              raw: sorted,
+            };
           },
           staleTime: 5 * 60 * 1000, // 5 minutes
           gcTime: 30 * 60 * 1000, // Keep cached data for 30 minutes
@@ -1171,78 +1200,19 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     });
   }, [portfolioData, isLoading, selectedTimeRange, address, convertTo, queryClient]);
 
-  // Prefetch PNL data for other time ranges in the background after first load
-  useEffect(() => {
-    // Only prefetch if the current PNL query has successfully loaded
-    if (!pnlData || isPnlLoading) return;
-
-    // Get all time ranges except the currently selected one
-    const otherTimeRanges = (Object.keys(TIME_RANGES) as TimeRange[]).filter(
-      (range) => range !== selectedTimeRange
-    );
-
-    // Prefetch PNL for each other time range
-    otherTimeRanges.forEach((timeRange) => {
-      const range = TIME_RANGES[timeRange];
-      const endDate = moment();
-      
-      let startDate: moment.Moment;
-      if (range.days === Infinity) {
-        startDate = MIN_START_DATE;
-      } else {
-        startDate = moment().subtract(range.days, 'days');
-        if (startDate.isBefore(MIN_START_DATE)) {
-          startDate = MIN_START_DATE;
-        }
-      }
-
-      const prefetchDateRange = {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        interval: range.interval,
-      };
-
-      // Check if PNL data is already cached
-      const queryKey = ['portfolio-pnl', address, timeRange, convertTo];
-      const cachedData = queryClient.getQueryData(queryKey);
-      
-      // Only prefetch if not already cached
-      if (!cachedData) {
-        // Prefetch the PNL query
-        queryClient.prefetchQuery({
-          queryKey,
-          queryFn: async () => {
-            const response = await SuperheroApi.getAccountPortfolioHistory(address, {
-              startDate: prefetchDateRange.startDate,
-              endDate: prefetchDateRange.endDate,
-              interval: prefetchDateRange.interval,
-              convertTo: convertTo as any,
-              include: 'pnl-range',
-            });
-            
-            const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
-            if (snapshots.length === 0) return null;
-            
-            // Get the last snapshot which should have the PNL range from start to end
-            const lastSnapshot = snapshots[snapshots.length - 1];
-            return lastSnapshot.total_pnl || null;
-          },
-          staleTime: 5 * 60 * 1000, // 5 minutes
-          gcTime: 30 * 60 * 1000, // Keep cached data for 30 minutes
-        });
-      }
-    });
-  }, [pnlData, isPnlLoading, selectedTimeRange, address, convertTo, queryClient]);
-
-  // Check if portfolio value and PNL are ready (independent of chart data)
-  // This allows portfolio value + PNL to show before the chart loads
+  // Check if portfolio value is ready (independent of PNL data)
+  // This allows portfolio value to show even if PNL data is missing for a timeframe
   const valueAndPnlReady = useMemo(() => {
     // If hovering, show immediately (hover data comes from portfolioData which is already loaded)
     if (hoveredPrice) return true;
     
-    // Portfolio value and PNL are ready when we have both, regardless of chart data
-    return currentPortfolioValue !== null && currentPortfolioValue !== undefined && pnlData !== null && !isPnlLoading;
-  }, [hoveredPrice, currentPortfolioValue, pnlData, isPnlLoading]);
+    // Portfolio value is ready when we have it and the main history query finished
+    return (
+      currentPortfolioValue !== null &&
+      currentPortfolioValue !== undefined &&
+      !isLoading
+    );
+  }, [hoveredPrice, currentPortfolioValue, isLoading]);
 
   // Calculate display value - show as soon as value and PNL are ready (don't wait for chart)
   const displayValue = useMemo(() => {

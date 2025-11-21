@@ -31,6 +31,11 @@ aeproject compile
 Check `aeproject.json` (or CLI help) for network profiles and paths.
 </Tip>
 
+## Next Steps
+
+- **[Smart Contracts](./contracts.md)** - Learn Sophia contract development
+- **[Testing & Deployment](./test-and-deploy.md)** - Test and deploy your contracts
+
 ## Optional: manual setup (SDK + Docker compiler)
 If you prefer a minimal stack, you can still set up manually:
 

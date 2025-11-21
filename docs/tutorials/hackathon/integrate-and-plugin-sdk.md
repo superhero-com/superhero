@@ -166,9 +166,9 @@ const results = await contract.methods.get_results(0)
 Emit small on‑chain events and push entries to the feed via `pushFeedEntry` for heavier off‑chain work.
 </Tip>
 
-## Plugin SDK Deep Dive
+## Plugin SDK Capabilities
 
-### Capabilities (v1.x)
+### Core Capabilities (v1.x)
 - `feed`: add new item kinds to the unified feed (see [Feed Plugins Guide](./feed-plugins.md))
 - `composer`: add actions and attachments (interactive panels)
 - `item-actions`: contextual actions on feed items
@@ -181,10 +181,17 @@ Emit small on‑chain events and push entries to the feed via `pushFeedEntry` fo
 Plugins can contribute content to the popular feed through:
 
 1. **Frontend Feed Plugins**: Register feed plugins with proper ID format (`{plugin-name}:{id}`)
-   - See [Feed Plugins & Popular Feed Injection](./feed-plugins.md) for details
+   - See [Feed Plugins](./feed-plugins.md) for complete guide
    
 2. **Backend API Plugins**: Implement `PopularRankingContributor` interface
    - See [API Plugin Development](./api-plugin-development.md) for backend integration
+
+## Next Steps
+
+- **[Feed Plugins](./feed-plugins.md)** - Add content to the unified feed
+- **[API Plugin Development](./api-plugin-development.md)** - Build backend plugins
+- **[Plugin SDK Documentation](../plugin-sdk.md)** - Complete API reference
+- **[Hints & Tips](./hints.md)** - Development tips and troubleshooting
 
 ### Core types (simplified)
 ```ts

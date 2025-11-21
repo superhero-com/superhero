@@ -1,20 +1,31 @@
-# Summary
+---
+title: Summary
+---
 
+# Documentation Summary
+
+## Getting Started
 - [Overview](./overview.md)
 - [Quickstart](./quickstart.md)
-- [Setup environment](./01-setup-environment.md)
-- [Superhero Wallet & account](./01a-superhero-wallet-and-account.md)
-- [Project scaffold](./02-project-scaffold.md)
-- [Sophia basics](./03-sophia-basics-for-builders.md)
-- [Compiler and build](./04-compiler-and-build.md)
-- [Contract walkthrough: Poll](./05-contract-poll-walkthrough.md)
-- [Testing with Vitest](./06-testing-with-vitest.md)
-- [Deploy: devnet and testnet](./07-deploy-devnet-and-testnet.md)
-- [Middleware and data access](./07a-middleware-and-data-access.md)
-- [Integrate into Superhero extension](./08-integrate-into-superhero-extension.md)
-- [Plugin SDK deep dive](./08a-plugin-sdk-deep-dive.md)
-- [AI workflows in Cursor](./09-ai-workflows-in-cursor.md)
-- [Troubleshooting & FAQ](./10-troubleshooting-and-faq.md)
-- [Security checklist](./11-security-checklist.md)
-- [Reference links & glossary](./12-reference-links-and-glossary.md)
-- [Checklist & deploy extension](./13-checklist-and-deploy-extension.md)
+
+## Setup
+- [Setup Overview](./setup.md)
+- [Prerequisites](./prerequisites.md)
+- [Wallet Setup](./wallet-setup.md)
+- [Configure Cursor](./configure-cursor.md)
+- [Project Setup](./project-setup.md)
+
+## Contract Development
+- [Project Scaffold](./scaffold-and-compiler.md)
+- [Smart Contracts](./contracts.md)
+- [Testing & Deployment](./test-and-deploy.md)
+
+## Plugin Development
+- [Plugin Integration](./integrate-and-plugin-sdk.md)
+- [Feed Plugins](./feed-plugins.md)
+- [API Plugin Development](./api-plugin-development.md)
+
+## Resources
+- [Hints & Tips](./hints.md)
+- [References](./references.md)
+- [Plugin SDK Documentation](../plugin-sdk.md)

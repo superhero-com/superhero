@@ -37,7 +37,14 @@ title: Smart Contracts
 - Avoid loops over all voters to compute results
 - Keep strings short
 
-## Further reading
-- [Syntax](https://github.com/aeternity/aesophia/blob/master/docs/sophia_syntax.md)
-- [Features](https://github.com/aeternity/aesophia/blob/master/docs/sophia_features.md)
-- [Stdlib](https://github.com/aeternity/aesophia/blob/master/docs/sophia_stdlib.md)
+## Next Steps
+
+- **[Testing & Deployment](./test-and-deploy.md)** - Test and deploy your contracts
+- **[Plugin Integration](./integrate-and-plugin-sdk.md)** - Integrate your contract into Superhero
+
+## Further Reading
+
+- **[References](./references.md)** - Complete list of documentation links
+- [Sophia Syntax](https://github.com/aeternity/aesophia/blob/master/docs/sophia_syntax.md) - Language syntax reference
+- [Sophia Features](https://github.com/aeternity/aesophia/blob/master/docs/sophia_features.md) - Language features
+- [Sophia Stdlib](https://github.com/aeternity/aesophia/blob/master/docs/sophia_stdlib.md) - Standard library

@@ -5,7 +5,7 @@ title: Testing & Deployment
 ## Recommended: aeproject
 
 <Warning>
-Keep deployment outputs (addresses per network) and ACIs in your contracts repo (e.g., `deployments/` and `aci/`). You'll import them in the Superhero UI extension later.
+Keep deployment outputs (addresses per network) and ACIs in your contracts repo (e.g., `deployments/` and `aci/`). You'll import them in your Superhero plugin later.
 </Warning>
 
 ### Run tests
@@ -74,7 +74,13 @@ Negative tests to add:
 - Voting outside open/close window should fail
 - Invalid option index should fail
 
-## Deploy sanity checks
+## Deploy Sanity Checks
 - All negative tests pass locally
 - Compiler version pinned and consistent
 - Events emitted where needed for indexing
+
+## Next Steps
+
+- **[Plugin Integration](./integrate-and-plugin-sdk.md)** - Integrate your deployed contract into Superhero
+- **[Feed Plugins](./feed-plugins.md)** - Add your contract's data to the unified feed
+- **[Hints & Tips](./hints.md)** - Troubleshooting and best practices

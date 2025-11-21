@@ -3,7 +3,7 @@ title: Quickstart
 ---
 
 <Warning>
-Short on time? Follow this 10–15 minute path to get an extension running end‑to‑end.
+Short on time? Follow this 10–15 minute path to get a plugin running end‑to‑end.
 </Warning>
 
 ## AI‑assisted quick start (Cursor or similar)
@@ -11,12 +11,12 @@ Short on time? Follow this 10–15 minute path to get an extension running end�
 Use this copy‑paste bootstrap prompt in an AI IDE like [Cursor](https://www.cursor.com) or any editor with an agent. It will guide the agent to ask for a short description first, then scaffold both repos and wire the plugin end‑to‑end on æternity testnet.
 
 ```text
-Goal: Build a Superhero extension (contracts + Superhero plugin) on æternity testnet with robust Sophia/compiler hygiene and a clean UI integration.
+Goal: Build a Superhero plugin (contracts + Superhero plugin) on æternity testnet with robust Sophia/compiler hygiene and a clean UI integration.
 
 Strict interaction rule
 - First, send exactly the question below and STOP. Do not proceed until I reply.
 - First message to send:
-  “Please describe in 1–2 sentences what you want the Superhero extension to do (the core action, any write operations, and what users see).”
+  "Please describe in 1–2 sentences what you want the Superhero plugin to do (the core action, any write operations, and what users see)."
 - After I reply, proceed autonomously with the plan below. If I reply “default”, use the Crowdfunding example defined here.
 
 Defaults
@@ -74,7 +74,7 @@ Plan (after I reply to the initial question)
 
 2) Superhero UI (fork/clone as above)
 - Create `src/plugins/<PLUGIN_ID>/` (+ `contract-artifacts/`).
-- Plugin entry using `definePlugin`: composer attachment(s) and item actions as needed by the extension description.
+- Plugin entry using `definePlugin`: composer attachment(s) and item actions as needed by the plugin description.
 - Load ACI from `src/plugins/<PLUGIN_ID>/contract-artifacts/<CONTRACT_NAME>.json` (or import from the contracts repo), address from `VITE_<CONTRACT_NAME>_CONTRACT`.
 - Register in `src/plugins/local.ts`.
 - `.env.local`:
@@ -96,32 +96,38 @@ Collision avoidance
 - Ensure the contracts repo folder name is unique locally; if needed append “-2”.
 ```
 
-## 1) Install Superhero Wallet
-- Add the Chrome extension and create/import an æternity account.
-- Back up the seed phrase.
+## 1) Setup Environment
 
-## 2) Scaffold project
-- Follow: [02 — Project scaffold](./02-project-scaffold.md)
-- Install deps, set up `contracts/`, `tests/`, `scripts/`.
+Complete the setup steps:
+- [Prerequisites](./prerequisites.md) - Install required software
+- [Wallet Setup](./wallet-setup.md) - Install and configure Superhero Wallet
+- [Project Setup](./project-setup.md) - Create your contracts repository
 
-## 3) Start the compiler
-```bash
-docker run --rm -p 3080:3080 aeternity/aesophia_http:latest
-```
+## 2) Scaffold Project
 
-## 4) Write minimal contract
-- Use [05 — Contract walkthrough: Poll](./05-contract-poll-walkthrough.md) as a template.
+- Follow: [Project Scaffold](./scaffold-and-compiler.md)
+- Install dependencies, set up `contracts/`, `tests/`, `scripts/`
 
-## 5) Test locally
-- Follow: [06 — Testing with Vitest](./06-testing-with-vitest.md)
-- Compile, deploy, and call methods in tests.
+## 3) Write Your Contract
 
-## 6) Deploy to testnet
-- Follow: [07 — Deploy: devnet and testnet](./07-deploy-devnet-and-testnet.md)
+- Learn Sophia basics: [Smart Contracts](./contracts.md)
+- Use the contract examples and patterns provided
 
-## 7) Integrate into Superhero
-- Follow: [08 — Integrate into Superhero extension](./08-integrate-into-superhero-extension.md)
+## 4) Test Locally
+
+- Follow: [Testing & Deployment](./test-and-deploy.md)
+- Compile, deploy, and call methods in tests
+
+## 5) Deploy to Testnet
+
+- Continue with: [Testing & Deployment](./test-and-deploy.md)
+- Deploy your contract to testnet and save the address
+
+## 6) Integrate into Superhero
+
+- Follow: [Plugin Integration](./integrate-and-plugin-sdk.md)
+- Create your plugin and register it in the Superhero app
 
 <Tip>
-Ready for more? Explore [Plugin SDK deep dive](./08a-plugin-sdk-deep-dive.md) and [Middleware and data access](./07a-middleware-and-data-access.md).
+Ready for more? Explore [Feed Plugins](./feed-plugins.md) for feed integration, [API Plugin Development](./api-plugin-development.md) for backend plugins, and the [Plugin SDK Documentation](../plugin-sdk.md) for complete API reference.
 </Tip>

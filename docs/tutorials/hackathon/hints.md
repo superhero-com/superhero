@@ -4,6 +4,10 @@ title: Hints & Tips
 
 ## AI-Assisted Development
 
+<Tip>
+Adding this documentation to MCP (Model Context Protocol) in Cursor or other AI editors will significantly improve your AI-assisted development and debugging experience. The AI will have access to all documentation context, making it more accurate and helpful. See [Configure Cursor](./configure-cursor.md) for setup instructions.
+</Tip>
+
 ### Using Cursor for Contract Development
 - **Scaffold contracts**: Describe your contract rules and let Cursor generate the state and entrypoints
 - **Tighten invariants**: Add `require` checks for time windows, unique votes, and bounds

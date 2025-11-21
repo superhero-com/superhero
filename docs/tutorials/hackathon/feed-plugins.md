@@ -102,6 +102,12 @@ Example:
 
 See the [API Plugin Development](./api-plugin-development.md) guide for implementing `PopularRankingContributor` on the backend.
 
+## Next Steps
+
+- **[API Plugin Development](./api-plugin-development.md)** - Build backend plugins for ranking
+- **[Plugin Integration](./integrate-and-plugin-sdk.md)** - Complete plugin integration guide
+- **[Plugin SDK Documentation](../plugin-sdk.md)** - Full Plugin SDK API reference
+
 ## Live Updates
 
 Use the `useLive` hook to push real-time updates:

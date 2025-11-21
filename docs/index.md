@@ -32,17 +32,24 @@ contracts-repo/
   README.md
 
 superhero-ui-repo/         # this repo
-  src/extensions/your-plugin/
+  src/plugins/your-plugin/
   ... (imports contract address + ACI from your contracts repo)
 ```
 
-## Fast feedback loop
+## Fast Feedback Loop
 1) Write/refine contract with Cursor → 2) Compile via `aeproject compile` → 3) Test with `aeproject test` → 4) Integrate into a Superhero plugin → 5) `aeproject deploy` to devnet/testnet.
 
-## High‑level architecture
+## High‑Level Architecture
 - Contract (Sophia) ↔ ACI ↔ JS SDK (`@aeternity/aepp-sdk`) ↔ Superhero Plugin SDK ↔ Plugin UI
 
 <Tip>
-Prefer the aeproject path for the fastest setup; a minimal "manual path" is provided as an optional alternative.
+Prefer the aeproject path for the fastest setup. See [Project Scaffold](./tutorials/hackathon/scaffold-and-compiler.md) for details.
 </Tip>
+
+## Quick Links
+
+- **[Quickstart](./tutorials/hackathon/quickstart.md)** - Get started in 10-15 minutes
+- **[Setup](./tutorials/hackathon/setup.md)** - Complete environment setup
+- **[Plugin SDK Documentation](./plugin-sdk.md)** - Complete API reference
+- **[References](./tutorials/hackathon/references.md)** - Documentation links and tools
 

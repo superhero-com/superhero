@@ -347,3 +347,9 @@ describe('MyPlugin', () => {
 5. **Logging**: Use structured logging for debugging
 6. **Testing**: Test with real transaction data
 
+## Next Steps
+
+- **[Feed Plugins](./feed-plugins.md)** - Frontend feed plugin integration
+- **[Plugin Integration](./integrate-and-plugin-sdk.md)** - Complete plugin development guide
+- **[Hints & Tips](./hints.md)** - Troubleshooting and best practices
+

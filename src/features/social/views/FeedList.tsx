@@ -1464,8 +1464,8 @@ export default function FeedList({
                   <PollItemWrapper
                     key={item.id}
                     pollAddress={pollMetadata.poll_address}
-                    title={item.content.split(' - ')[0] || 'Untitled poll'}
-                    description={item.content.includes(' - ') ? item.content.split(' - ').slice(1).join(' - ') : undefined}
+                    title={item.content ? item.content.split(' - ')[0] || 'Untitled poll' : 'Untitled poll'}
+                    description={item.content && item.content.includes(' - ') ? item.content.split(' - ').slice(1).join(' - ') : undefined}
                     author={item.sender_address}
                     closeHeight={pollMetadata.close_height}
                     createHeight={pollMetadata.create_height}

@@ -1,15 +1,24 @@
-# Docs (MkDocs Material)
+# Docs (Mintlify)
 
 Local preview:
 
 ```bash
-python -m pip install --upgrade pip
-pip install -r docs/requirements.txt
-mkdocs serve
+# Install Mintlify CLI globally (requires Node.js v19+)
+npm i -g mintlify
+
+# Start local development server
+mintlify dev
 ```
 
-Deploy via CI on main branch. Manual deploy:
+The documentation will be available at `http://localhost:3000`.
 
-```bash
-mkdocs gh-deploy --force
-```
+## Deployment
+
+Mintlify automatically deploys documentation when changes are pushed to the main branch via GitHub integration. 
+
+To set up automatic deployments:
+1. Install the [Mintlify GitHub App](https://www.mintlify.com/docs/quickstart#install-the-github-app)
+2. Connect your repository to Mintlify
+3. Push changes to trigger automatic deployments
+
+For manual deployment, use the Mintlify dashboard or CLI.

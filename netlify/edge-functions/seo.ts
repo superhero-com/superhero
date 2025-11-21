@@ -17,9 +17,8 @@ export default async (request: Request, context: any) => {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
-    // Skip docs paths - MkDocs serves its own HTML and shouldn't be modified
-    // Docs are typically at /hackathon/* or might be at root if deployed separately
-    // Detect MkDocs by checking for common MkDocs HTML structure or path patterns
+    // Skip docs paths - Mintlify serves its own HTML and shouldn't be modified
+    // Docs are typically hosted separately on Mintlify's platform
     if (pathname.startsWith('/hackathon/') || 
         pathname.startsWith('/site/') ||
         pathname.includes('/tutorials/') ||
@@ -32,11 +31,11 @@ export default async (request: Request, context: any) => {
     const contentType = res.headers.get('content-type') || '';
     if (!contentType.includes('text/html')) return res;
 
-    // Skip if this looks like MkDocs HTML (has Material theme or MkDocs-specific structure)
+    // Skip if this looks like Mintlify HTML (has Mintlify-specific structure)
     const html = await res.text();
-    if (html.includes('mkdocs') || 
-        (html.includes('material') && html.includes('md-typeset')) ||
-        html.includes('data-md-component')) {
+    if (html.includes('mintlify') || 
+        html.includes('data-mint') ||
+        html.includes('mintlify-app')) {
       // Return original HTML unchanged (recreate response since we consumed the body)
       return new Response(html, { status: res.status, headers: res.headers });
     }

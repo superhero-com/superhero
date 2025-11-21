@@ -1,0 +1,57 @@
+{
+  "name": "Superhero Hackathon",
+  "logo": "https://mintlify.s3-us-west-1.amazonaws.com/defaultfavicon.svg",
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#07C983",
+    "dark": "#0D9373"
+  },
+  "topbarLinks": [
+    {
+      "name": "GitHub",
+      "url": "https://github.com/superhero-com/superhero"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "Documentation",
+      "icon": "book-open-cover",
+      "url": "https://docs.superhero.com"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "index",
+        "tutorials/hackathon/00a-quickstart"
+      ]
+    },
+    {
+      "group": "Setup",
+      "pages": [
+        "tutorials/hackathon/02-setup"
+      ]
+    },
+    {
+      "group": "Build",
+      "pages": [
+        "tutorials/hackathon/03-scaffold-and-compiler",
+        "tutorials/hackathon/04-contracts",
+        "tutorials/hackathon/05-test-and-deploy",
+        "tutorials/hackathon/06-integrate-and-plugin-sdk"
+      ]
+    },
+    {
+      "group": "Operations",
+      "pages": [
+        "tutorials/hackathon/08-ops-and-support"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/superhero-com/superhero"
+  }
+}
+

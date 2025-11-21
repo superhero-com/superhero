@@ -1,0 +1,66 @@
+{
+  "name": "Superhero Hackathon",
+  "logo": {
+    "light": "/favicon.svg",
+    "dark": "/favicon.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#1161FE",
+    "light": "#3D7FFF",
+    "dark": "#0D4F8C"
+  },
+  "topbarLinks": [
+    {
+      "name": "GitHub",
+      "url": "https://github.com/superhero-com/superhero"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "index",
+        "tutorials/hackathon/quickstart"
+      ]
+    },
+    {
+      "group": "Setup",
+      "pages": [
+        "tutorials/hackathon/setup",
+        "tutorials/hackathon/prerequisites",
+        "tutorials/hackathon/wallet-setup",
+        "tutorials/hackathon/configure-cursor",
+        "tutorials/hackathon/project-setup",
+        "tutorials/hackathon/backend-setup"
+      ]
+    },
+    {
+      "group": "Contract Development",
+      "pages": [
+        "tutorials/hackathon/scaffold-and-compiler",
+        "tutorials/hackathon/contracts",
+        "tutorials/hackathon/test-and-deploy"
+      ]
+    },
+    {
+      "group": "Plugin Development",
+      "pages": [
+        "tutorials/hackathon/integrate-and-plugin-sdk",
+        "tutorials/hackathon/feed-plugins",
+        "tutorials/hackathon/api-plugin-development"
+      ]
+    },
+    {
+      "group": "Resources",
+      "pages": [
+        "tutorials/hackathon/hints",
+        "tutorials/hackathon/references"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/superhero-com/superhero"
+  }
+}
+

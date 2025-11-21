@@ -1,4 +1,6 @@
-# Integrate and Plugin SDK
+---
+title: Plugin Integration
+---
 
 ## Integrate into Superhero (where code goes)
 Call your contract from a Superhero plugin using the JS SDK and Plugin SDK.
@@ -22,8 +24,9 @@ const localPlugins = [
 ];
 ```
 
-!!! note
-    New to the Plugin SDK? See below for capabilities and examples.
+<Info>
+New to the Plugin SDK? See below for capabilities and examples.
+</Info>
 
 ## Bring in your contract artifacts
 - Address: read from your contracts repo (e.g., `deployments/testnet/Poll.address`).
@@ -138,8 +141,9 @@ export default function YourComponent() {
 }
 ```
 
-!!! tip
-    See the [Plugin SDK docs](../plugin-sdk.md#translations) for more details on translations and multi-language support.
+<Tip>
+See the [Plugin SDK docs](../../plugin-sdk#translations) for more details on translations and multi-language support.
+</Tip>
 
 ### Example
 ```ts
@@ -158,18 +162,36 @@ const contract = await aeSdk.getContractInstance({
 const results = await contract.methods.get_results(0)
 ```
 
-!!! tip
-    Emit small on‑chain events and push entries to the feed via `pushFeedEntry` for heavier off‑chain work.
+<Tip>
+Emit small on‑chain events and push entries to the feed via `pushFeedEntry` for heavier off‑chain work.
+</Tip>
 
-## Plugin SDK Deep Dive
+## Plugin SDK Capabilities
 
-### Capabilities (v1.x)
-- `feed`: add new item kinds to the unified feed
+### Core Capabilities (v1.x)
+- `feed`: add new item kinds to the unified feed (see [Feed Plugins Guide](./feed-plugins))
 - `composer`: add actions and attachments (interactive panels)
 - `item-actions`: contextual actions on feed items
 - `routes`: add pages to the app router
 - `modals`: register reusable modals
 - `menu`: contribute navigation items
+
+### Popular Feed Integration
+
+Plugins can contribute content to the popular feed through:
+
+1. **Frontend Feed Plugins**: Register feed plugins with proper ID format (`{plugin-name}:{id}`)
+   - See [Feed Plugins](./feed-plugins) for complete guide
+   
+2. **Backend API Plugins**: Implement `PopularRankingContributor` interface
+   - See [API Plugin Development](./api-plugin-development) for backend integration
+
+## Next Steps
+
+- **[Feed Plugins](./feed-plugins)** - Add content to the unified feed
+- **[API Plugin Development](./api-plugin-development)** - Build backend plugins
+- **[Plugin SDK Documentation](../../plugin-sdk)** - Complete API reference
+- **[Hints & Tips](./hints)** - Development tips and troubleshooting
 
 ### Core types (simplified)
 ```ts
@@ -212,5 +234,6 @@ export default definePlugin({
 });
 ```
 
-!!! warning
-    Keep attachments lean: validate inputs, avoid heavy on-chain loops, and prefer emitting small events or pushing feed entries for off‑chain processing.
+<Warning>
+Keep attachments lean: validate inputs, avoid heavy on-chain loops, and prefer emitting small events or pushing feed entries for off‑chain processing.
+</Warning>

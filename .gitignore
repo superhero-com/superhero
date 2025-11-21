@@ -116,7 +116,8 @@ venv-*/
 docs/.venv/
 docs/venv/
 
-# MkDocs build outputs
+# Documentation build outputs (legacy MkDocs - kept for reference)
+# Mintlify is a hosted service and doesn't generate local build artifacts
 site/
 docs/site/
 site-docs/

@@ -1,9 +1,12 @@
-# Test and Deploy
+---
+title: Testing & Deployment
+---
 
 ## Recommended: aeproject
 
-!!! important
-    Keep deployment outputs (addresses per network) and ACIs in your contracts repo (e.g., `deployments/` and `aci/`). You’ll import them in the Superhero UI extension later.
+<Warning>
+Keep deployment outputs (addresses per network) and ACIs in your contracts repo (e.g., `deployments/` and `aci/`). You'll import them in your Superhero plugin later.
+</Warning>
 
 ### Run tests
 ```bash
@@ -21,8 +24,9 @@ aeproject deploy
 aeproject deploy --network testnet
 ```
 
-!!! tip
-    See `aeproject --help` for supported networks and config options.
+<Tip>
+See `aeproject --help` for supported networks and config options.
+</Tip>
 
 ## Optional: SDK + Vitest path
 If you prefer a custom SDK test harness, use the example below.
@@ -70,7 +74,13 @@ Negative tests to add:
 - Voting outside open/close window should fail
 - Invalid option index should fail
 
-## Deploy sanity checks
+## Deploy Sanity Checks
 - All negative tests pass locally
 - Compiler version pinned and consistent
 - Events emitted where needed for indexing
+
+## Next Steps
+
+- **[Plugin Integration](./integrate-and-plugin-sdk)** - Integrate your deployed contract into Superhero
+- **[Feed Plugins](./feed-plugins)** - Add your contract's data to the unified feed
+- **[Hints & Tips](./hints)** - Troubleshooting and best practices

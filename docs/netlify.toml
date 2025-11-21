@@ -1,3 +1,0 @@
-[build]
-  command = "python -m pip install --upgrade pip && python -m pip install -r requirements.txt && python -m mkdocs build -c mkdocs-docs.yml"
-  publish = "site-docs"

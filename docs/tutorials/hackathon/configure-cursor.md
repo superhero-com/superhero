@@ -2,28 +2,50 @@
 title: Configure Cursor
 ---
 
-<Info>
-Configure Cursor to access the documentation via Superhero Docs MCP server for better AI assistance.
-</Info>
+<Tip>
+Configure Cursor with MCP to access this documentation for better AI assistance. All pages are in Markdown—add `.md` to any URL to get the raw source (e.g., `/quickstart` → `/quickstart.md`).
+</Tip>
 
-## Superhero Docs MCP Server
+## Connect to MCP Server for Superhero Documentation
 
-This documentation automatically provides a Model Context Protocol (MCP) server. To enable Cursor to access your docs:
+This documentation automatically provides a Model Context Protocol (MCP) server. Configure Cursor to access it:
 
-### Step 1: Start Mintlify Dev Server (Local Development)
+### Step 1: Open Cursor Settings
 
-If running documentation locally:
+1. Open **Cursor Settings** → **Tools & Integrations** → **MCP Tools**
+2. Click **"Add Custom MCP"** to open the `mcp.json` editor
+
+### Step 2: Add MCP Configuration
+
+Add the following configuration to your `mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "superhero-docs": {
+      "url": "https://docs.superhero.com/mcp"
+    }
+  }
+}
+```
+
+### Step 3: Save and Restart
+
+1. Save the configuration file
+2. Restart Cursor to apply the changes
+
+## Alternative: Run Documentation Locally
+
+If you prefer to run the documentation locally (useful for development or offline access):
+
+1. Start the Mintlify dev server:
 
 ```bash
 cd docs
 mintlify dev --port 3001
 ```
 
-### Step 2: Configure Cursor
-
-1. Open **Cursor Settings** → **Tools & Integrations** → **MCP Tools**
-2. Click **"Add Custom MCP"** to open the `mcp.json` editor
-3. Add the following configuration:
+2. Update your MCP configuration to use the local URL:
 
 ```json
 {
@@ -35,11 +57,7 @@ mintlify dev --port 3001
 }
 ```
 
-**Note**: Replace `http://localhost:3001` with your documentation URL (e.g., `https://docs.superhero.com` for production). The MCP endpoint is always at `/mcp` relative to your docs root URL.
-
-4. Save the configuration and restart Cursor
-
 <Tip>
-Having the documentation accessible via MCP helps Cursor provide more accurate answers about Superhero plugin development, Sophia contracts, and the Plugin SDK. Make sure the Mintlify dev server is running when using a local URL.
+Make sure the Mintlify dev server is running when using a local URL. The server must be active for Cursor to access the documentation via MCP.
 </Tip>
 

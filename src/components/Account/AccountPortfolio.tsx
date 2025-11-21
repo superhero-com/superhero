@@ -77,6 +77,21 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
   const rafRef = useRef<number | null>(null);
   const pendingXRef = useRef<number | null>(null);
 
+  // Precompute value range once per data change to avoid repeated O(n) scans on every hover
+  const { minValue, maxValue } = useMemo(() => {
+    if (!data.length) {
+      return { minValue: null as number | null, maxValue: null as number | null };
+    }
+    let min = data[0].value;
+    let max = data[0].value;
+    for (let i = 1; i < data.length; i++) {
+      const v = data[i].value;
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+    return { minValue: min, maxValue: max };
+  }, [data]);
+
   // Use native event listeners to allow preventDefault
   useEffect(() => {
     const container = containerRef.current;
@@ -339,11 +354,13 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               } else {
                 // Fallback: calculate Y from data value if path-based calculation fails
                 // This ensures crosshair still appears even if path detection has issues
-                const valueRange = Math.max(...data.map(d => d.value)) - Math.min(...data.map(d => d.value));
-                if (valueRange > 0) {
-                  const normalizedValue = (point.value - Math.min(...data.map(d => d.value))) / valueRange;
+                if (minValue !== null && maxValue !== null) {
+                  const valueRange = maxValue - minValue;
+                  if (valueRange > 0) {
+                    const normalizedValue = (point.value - minValue) / valueRange;
                   const fallbackY = containerTop + (1 - normalizedValue) * (containerBottom - containerTop) * 0.8 + containerTop * 0.1;
                   setCrosshairY(Math.max(containerTop, Math.min(containerBottom, fallbackY)));
+                  }
                 }
               }
             } else {
@@ -352,11 +369,13 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               setCrosshairX(fallbackX);
               
               // Calculate Y from data value
-              const valueRange = Math.max(...data.map(d => d.value)) - Math.min(...data.map(d => d.value));
-              if (valueRange > 0) {
-                const normalizedValue = (point.value - Math.min(...data.map(d => d.value))) / valueRange;
+              if (minValue !== null && maxValue !== null) {
+                const valueRange = maxValue - minValue;
+                if (valueRange > 0) {
+                  const normalizedValue = (point.value - minValue) / valueRange;
                 const fallbackY = svgRect.top - containerBounds.top + svgRect.height * (1 - normalizedValue) * 0.8 + svgRect.height * 0.1;
                 setCrosshairY(Math.max(0, Math.min(svgRect.height, fallbackY)));
+                }
               }
             }
           }
@@ -465,7 +484,7 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
       }
       pendingXRef.current = null;
     };
-  }, [data, onHover]); // Re-run if data or onHover changes
+  }, [data, onHover, minValue, maxValue]); // Re-run if data or onHover changes
 
   // Prevent SVG elements from receiving focus
   useEffect(() => {

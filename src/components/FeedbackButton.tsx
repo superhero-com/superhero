@@ -57,13 +57,13 @@ export default function FeedbackButton() {
       {/* Mobile Popup */}
       {showMobilePopup && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm md:hidden">
-          <div className="bg-white/[0.95] rounded-2xl p-6 max-w-sm w-full shadow-2xl relative">
+          <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-2xl p-6 max-w-sm w-full shadow-2xl relative backdrop-blur-xl">
             <button
               onClick={() => setShowMobilePopup(false)}
-              className="absolute top-4 right-4 p-1 rounded-full hover:bg-black/10 transition-colors"
+              className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10 transition-colors"
               aria-label="Close"
             >
-              <X className="w-5 h-5 text-gray-700" />
+              <X className="w-5 h-5 text-white" />
             </button>
             
             <div className="flex items-center gap-3 mb-4">
@@ -73,19 +73,19 @@ export default function FeedbackButton() {
                 <MessageSquare className="w-6 h-6" style={{ color: '#0a0a0f' }} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Send Feedback</h3>
-                <p className="text-sm text-gray-600">Help us improve Superhero</p>
+                <h3 className="text-lg font-bold text-white">Send Feedback</h3>
+                <p className="text-sm text-white/70">Help us improve Superhero</p>
               </div>
             </div>
             
-            <p className="text-sm text-gray-700 mb-6">
+            <p className="text-sm text-white/80 mb-6">
               Found a bug or have a suggestion? Click below to report it on GitHub and help us make Superhero better!
             </p>
             
             <div className="flex gap-3">
               <button
                 onClick={() => setShowMobilePopup(false)}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-white/20 bg-white/5 text-white font-medium hover:bg-white/10 transition-colors backdrop-blur-sm"
               >
                 Cancel
               </button>
@@ -94,7 +94,7 @@ export default function FeedbackButton() {
                   window.open('https://github.com/superhero-com/superhero/issues', '_blank', 'noopener,noreferrer');
                   setShowMobilePopup(false);
                 }}
-                className="flex-1 px-4 py-2.5 rounded-xl font-medium text-white transition-all duration-300 hover:shadow-lg"
+                className="flex-1 px-4 py-2.5 rounded-xl font-medium transition-all duration-300 hover:shadow-lg"
                 style={{
                   background: 'linear-gradient(to right, var(--neon-teal), var(--neon-teal), #5eead4)',
                   color: '#0a0a0f',

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Button } from '../../../components/ui/button';
 import { ChevronDown, ArrowUpDown } from 'lucide-react';
 import { cn } from '../../../lib/utils';
@@ -68,6 +68,34 @@ export default function TradeTokenInput({
     }
   };
 
+  // Calculate AE value for tokenB (for USD display)
+  const tokenBAeValue = useMemo(() => {
+    if (!tokenB || !token) return Decimal.ZERO;
+    const tokenAmount = Decimal.from(tokenB);
+    // Use price_data.ae if available, otherwise fall back to token.price
+    const priceData = token.price_data as any;
+    const perTokenAe = priceData?.ae
+      ? Decimal.from(priceData.ae)
+      : token.price
+        ? Decimal.from(token.price)
+        : Decimal.ZERO;
+    return tokenAmount.mul(perTokenAe);
+  }, [tokenB, token]);
+
+  // Calculate AE value for tokenA when selling (for USD display)
+  const tokenAAeValue = useMemo(() => {
+    if (!tokenA || !token || isBuying) return Decimal.ZERO;
+    // When selling, tokenA is the token amount, convert to AE
+    const tokenAmount = Decimal.from(tokenA);
+    const priceData = token.price_data as any;
+    const perTokenAe = priceData?.ae
+      ? Decimal.from(priceData.ae)
+      : token.price
+        ? Decimal.from(token.price)
+        : Decimal.ZERO;
+    return tokenAmount.mul(perTokenAe);
+  }, [tokenA, token, isBuying]);
+
   if (!token?.sale_address) {
     return null;
   }
@@ -85,6 +113,7 @@ export default function TradeTokenInput({
         showBalance
         errorMessages={isInsufficientBalance ? ['Insufficient balance'] : undefined}
         onFocus={onTokenAFocus}
+        aeValue={tokenAAeValue}
         className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-xl"
       />
 
@@ -115,6 +144,7 @@ export default function TradeTokenInput({
         tokenBalance={!isBuying ? spendableAeBalance.toString() : userBalance}
         showBalance
         onFocus={onTokenBFocus}
+        aeValue={tokenBAeValue}
         className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-xl"
       />
     </div>

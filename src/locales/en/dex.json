@@ -57,7 +57,7 @@
     "bridgeTransactionSubmitted": "Bridge Transaction Submitted",
     "successfullySubmitted": "Successfully Submitted",
     "bridgeTransactionSubmittedDescription": "Your bridge transaction has been submitted to the blockchain",
-    "direction": "Direction:",
+    "directionLabel": "Direction:",
     "amount": "Amount:",
     "destination": "Destination:",
     "allowanceTransaction": "Allowance Transaction:",

@@ -624,15 +624,26 @@ export default function FeedList({
 
   const popularList = useMemo(
     () => {
-      const list = popularData?.pages
-        ? ((popularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? [])
-        : [];
+      if (!popularData?.pages) return [];
+      
+      const list = ((popularData.pages as any[]) || []).flatMap((page: any) => {
+        // Handle both direct items array and PostApiResponse structure
+        if (Array.isArray(page)) {
+          return page;
+        }
+        return page?.items ?? [];
+      });
+      
       if (process.env.NODE_ENV === 'development' && sortBy === 'hot') {
         console.log('[Popular Feed] popularList computed:', {
           window: popularWindow,
           itemsCount: list.length,
           firstItemId: list[0]?.id,
           pagesCount: popularData?.pages?.length,
+          firstPageStructure: popularData?.pages?.[0] ? Object.keys(popularData.pages[0]) : [],
+          firstPageHasItems: !!(popularData?.pages?.[0] as any)?.items,
+          firstPageItemsLength: (popularData?.pages?.[0] as any)?.items?.length || 0,
+          firstPageIsArray: Array.isArray(popularData?.pages?.[0]),
         });
       }
       return list;
@@ -946,29 +957,37 @@ export default function FeedList({
   // Render helpers
   const renderEmptyState = () => {
     if (sortBy === "hot") {
-      // Show loading if query is actively loading/fetching and we have no data
+      // Check if we have data pages (even if items are empty, pages existing means query completed)
+      const hasDataPages = popularData && (popularData as any)?.pages?.length > 0;
       const hasNoData = !popularData || (popularData as any)?.pages?.length === 0;
       const initialLoading = (popularLoading || popularFetching) && hasNoData;
       const err = popularError;
+      
       if (err) {
         return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); }} />;
       }
-      // Show skeleton loaders when there are no popular posts for the selected window
-      if (!err && filteredAndSortedList.length === 0 && !initialLoading) {
-        return (
-          <div className="w-full flex flex-col gap-2">
-            {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-hot-empty-${i}`} />)}
-          </div>
-        );
+      
+      // If we have data pages (query completed), don't show skeletons - let the feed render
+      // Even if items are empty, the query completed so we shouldn't show loading skeletons
+      if (hasDataPages) {
+        return null;
       }
-      if (initialLoading && filteredAndSortedList.length === 0) {
-        // Show skeleton loaders instead of loading text
+      
+      // Only show skeletons when actively loading and no data yet
+      if (initialLoading) {
         return (
           <div className="w-full flex flex-col gap-2">
             {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-hot-${i}`} />)}
           </div>
         );
       }
+      
+      // If query completed but returned no data, show empty state (not loading skeletons)
+      // This handles the case where API returns empty results
+      if (!initialLoading && hasNoData && !popularLoading && !popularFetching) {
+        return null; // Let the feed handle empty state, or show a message
+      }
+      
       return null;
     }
     // Only show loading if we don't have cached data
@@ -1356,21 +1375,35 @@ export default function FeedList({
         {/* Hot: render popular posts (which seamlessly includes recent posts after popular posts are exhausted) */}
         {sortBy === "hot" && (popularData?.pages.length > 0 || latestDataForHot?.pages.length > 0) && (
           <>
-            {/* Debug log removed to reduce console spam */}
-            {/* {process.env.NODE_ENV === 'development' && console.log('🔍 [DEBUG] Rendering hot feed:', {
+            {process.env.NODE_ENV === 'development' && console.log('🔍 [DEBUG] Rendering hot feed:', {
               filteredAndSortedListLength: filteredAndSortedList.length,
+              popularListLength: popularList.length,
               popularDataPages: popularData?.pages?.length || 0,
               latestDataForHotPages: latestDataForHot?.pages?.length || 0,
-            })} */}
-            {filteredAndSortedList.map((item) => (
-              <ReplyToFeedItem
-                key={item.id}
-                item={item}
-                commentCount={item.total_comments ?? 0}
-                allowInlineRepliesToggle={false}
-                onOpenPost={handleItemClick}
-              />
-            ))}
+              firstPageItems: (popularData?.pages?.[0] as any)?.items?.length || 0,
+            })}
+            {filteredAndSortedList.length > 0 ? (
+              filteredAndSortedList.map((item) => (
+                <ReplyToFeedItem
+                  key={item.id}
+                  item={item}
+                  commentCount={item.total_comments ?? 0}
+                  allowInlineRepliesToggle={false}
+                  onOpenPost={handleItemClick}
+                />
+              ))
+            ) : popularList.length > 0 ? (
+              // Fallback: render popularList directly if filteredAndSortedList is empty
+              popularList.map((item) => (
+                <ReplyToFeedItem
+                  key={item.id}
+                  item={item}
+                  commentCount={item.total_comments ?? 0}
+                  allowInlineRepliesToggle={false}
+                  onOpenPost={handleItemClick}
+                />
+              ))
+            ) : null}
           </>
         )}
       </div>

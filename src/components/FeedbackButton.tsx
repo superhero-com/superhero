@@ -79,7 +79,9 @@ export default function FeedbackButton() {
             </div>
             
             <p className="text-sm text-white/80 mb-6">
-              Found a bug or have a suggestion? Click below to report it on GitHub and help us make Superhero better!
+              Found a bug or have a suggestion?
+              <br />
+              Click below to report it on GitHub and help us make Superhero better!
             </p>
             
             <div className="flex gap-3">

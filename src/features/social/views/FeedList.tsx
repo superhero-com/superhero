@@ -124,17 +124,6 @@ export default function FeedList({
     }
   }, [location.search, sortBy, queryClient, popularWindow]);
   
-  // Refetch popular posts when window changes (to ensure fresh data)
-  useEffect(() => {
-    if (sortBy === 'hot' && popularData && popularData.pages.length > 0) {
-      // Check if the current data matches the current window
-      // This is a safety check - React Query should handle this automatically via query key
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[Popular Feed] Window changed, ensuring query is active for window:', popularWindow);
-      }
-    }
-  }, [popularWindow, sortBy, popularData]);
-
   // Helper to map a token object or websocket payload into a Post-like item
   const mapTokenCreatedToPost = useCallback((payload: any): PostDto => {
     const saleAddress: string = payload?.sale_address || payload?.address || "";
@@ -455,6 +444,17 @@ export default function FeedList({
     refetchOnMount: false, // Don't block on refetch - show cached data immediately
     refetchOnWindowFocus: true, // Refetch when window regains focus
   });
+
+  // Refetch popular posts when window changes (to ensure fresh data)
+  useEffect(() => {
+    if (sortBy === 'hot' && popularData && popularData.pages.length > 0) {
+      // Check if the current data matches the current window
+      // This is a safety check - React Query should handle this automatically via query key
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Popular Feed] Window changed, ensuring query is active for window:', popularWindow);
+      }
+    }
+  }, [popularWindow, sortBy, popularData]);
 
   // Track popular post IDs to filter them out from latest posts
   const popularPostIds = useMemo(() => {

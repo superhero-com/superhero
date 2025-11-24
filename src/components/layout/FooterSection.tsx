@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { MessageSquare } from 'lucide-react';
 import { SuperheroApi } from '@/api/backend';
 
 export default function FooterSection({ compact = false }: { compact?: boolean }) {

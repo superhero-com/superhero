@@ -99,7 +99,8 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
             title="Open token"
           >
             <div className="flex items-center gap-1 min-w-0">
-              <span className="text-[11px] text-white/65 shrink-0">Created</span>
+              <span className="text-[11px] text-white/65 shrink-0">{displayName}</span>
+              <span className="text-[11px] text-white/65 shrink-0">created</span>
               {tokenName && (
                 <span className="text-[12px] text-white/90 truncate">
                   {linkify(`#${tokenName}`, { knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())) })}

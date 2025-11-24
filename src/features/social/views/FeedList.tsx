@@ -355,6 +355,7 @@ export default function FeedList({
   const {
     data: popularData,
     isLoading: popularLoading,
+    isFetching: popularFetching,
     error: popularError,
     fetchNextPage: fetchNextPopular,
     hasNextPage: hasMorePopular,
@@ -945,8 +946,9 @@ export default function FeedList({
   // Render helpers
   const renderEmptyState = () => {
     if (sortBy === "hot") {
-      // Only show loading if we don't have cached data
-      const initialLoading = popularLoading && (!popularData || (popularData as any)?.pages?.length === 0);
+      // Show loading if query is actively loading/fetching and we have no data
+      const hasNoData = !popularData || (popularData as any)?.pages?.length === 0;
+      const initialLoading = (popularLoading || popularFetching) && hasNoData;
       const err = popularError;
       if (err) {
         return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); }} />;
@@ -980,7 +982,7 @@ export default function FeedList({
     const hasCachedData = sortBy !== "hot" && (hasQueryData || (hasCachedPostsData && hasCachedActivitiesData));
     
     const initialLoading = sortBy === "hot"
-      ? (popularLoading && (!popularData || (popularData as any)?.pages?.length === 0))
+      ? ((popularLoading || popularFetching) && (!popularData || (popularData as any)?.pages?.length === 0))
       : (!hasCachedData && (latestLoading || activitiesLoading)); // Only show loading if no cached data and actually loading
     if (latestError) {
       return <EmptyState type="error" error={latestError as any} onRetry={refetchLatest} />;
@@ -1146,7 +1148,7 @@ export default function FeedList({
   
   const initialLoading =
     sortBy === "hot"
-      ? (popularLoading && (!popularData || (popularData as any)?.pages?.length === 0))
+      ? ((popularLoading || popularFetching) && (!popularData || (popularData as any)?.pages?.length === 0))
       : (!hasCachedDataForLatest && (latestLoading || activitiesLoading)); // Only show loading if no cached data and actually loading
   const [showLoadMore, setShowLoadMore] = useState(false);
   useEffect(() => { setShowLoadMore(false); }, [sortBy]);

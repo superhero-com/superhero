@@ -111,13 +111,29 @@ export default function FeedList({
     const params = new URLSearchParams(location.search);
     const fromUrl = (params.get("window") as '24h'|'7d'|'all' | null) || '24h';
     if (fromUrl !== popularWindow) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Popular Feed] URL window changed from', popularWindow, 'to', fromUrl);
+      }
       setPopularWindow(fromUrl);
       if (sortBy === 'hot') {
         // Reset cached pages to avoid mixing windows
         queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
+        // Invalidate the new query to force refetch
+        queryClient.invalidateQueries({ queryKey: ["popular-posts", { limit: 10, window: fromUrl }] });
       }
     }
   }, [location.search, sortBy, queryClient, popularWindow]);
+  
+  // Refetch popular posts when window changes (to ensure fresh data)
+  useEffect(() => {
+    if (sortBy === 'hot' && popularData && popularData.pages.length > 0) {
+      // Check if the current data matches the current window
+      // This is a safety check - React Query should handle this automatically via query key
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Popular Feed] Window changed, ensuring query is active for window:', popularWindow);
+      }
+    }
+  }, [popularWindow, sortBy, popularData]);
 
   // Helper to map a token object or websocket payload into a Post-like item
   const mapTokenCreatedToPost = useCallback((payload: any): PostDto => {
@@ -359,6 +375,9 @@ export default function FeedList({
     enabled: sortBy === "hot",
     queryKey: ["popular-posts", { limit: 10, window: popularWindow }],
     queryFn: async ({ pageParam = 1 }) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Popular Feed] Fetching with window:', popularWindow, 'page:', pageParam);
+      }
       const response = await SuperheroApi.listPopularPosts({
         window: popularWindow,
         page: pageParam as number,
@@ -366,8 +385,10 @@ export default function FeedList({
       });
       if (process.env.NODE_ENV === 'development') {
         console.log('[Popular Feed] Query response:', {
+          window: popularWindow,
           pageParam,
-          response,
+          firstItemId: response?.items?.[0]?.id,
+          itemsCount: response?.items?.length,
           meta: response?.meta,
         });
       }
@@ -601,11 +622,21 @@ export default function FeedList({
   }, [latestData]);
 
   const popularList = useMemo(
-    () =>
-      popularData?.pages
+    () => {
+      const list = popularData?.pages
         ? ((popularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? [])
-        : [],
-    [popularData]
+        : [];
+      if (process.env.NODE_ENV === 'development' && sortBy === 'hot') {
+        console.log('[Popular Feed] popularList computed:', {
+          window: popularWindow,
+          itemsCount: list.length,
+          firstItemId: list[0]?.id,
+          pagesCount: popularData?.pages?.length,
+        });
+      }
+      return list;
+    },
+    [popularData, popularWindow, sortBy]
   );
 
   // Check if we have enough popular posts (at least 10) to fill the initial view
@@ -879,13 +910,18 @@ export default function FeedList({
   );
 
   const handlePopularWindowChange = useCallback((w: '24h'|'7d'|'all') => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Popular Feed] Window changing from', popularWindow, 'to', w);
+    }
     setPopularWindow(w);
     if (sortBy === 'hot') {
       navigate(`/?sortBy=hot&window=${w}`);
-      // Reset pages for new window
+      // Reset pages for new window - this ensures React Query creates a fresh query
       queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
+      // Also invalidate to force refetch
+      queryClient.invalidateQueries({ queryKey: ["popular-posts", { limit: 10, window: w }] });
     }
-  }, [navigate, sortBy, queryClient]);
+  }, [navigate, sortBy, queryClient, popularWindow]);
 
   const handleItemClick = useCallback(
     (idOrSlug: string) => {

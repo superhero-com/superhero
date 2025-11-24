@@ -56,8 +56,14 @@ export default function FeedbackButton() {
 
       {/* Mobile Popup */}
       {showMobilePopup && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm md:hidden">
-          <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-2xl p-6 max-w-sm w-full shadow-2xl relative backdrop-blur-xl">
+        <div 
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm md:hidden"
+          onClick={() => setShowMobilePopup(false)}
+        >
+          <div 
+            className="bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-2xl p-6 max-w-sm w-full shadow-2xl relative backdrop-blur-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => setShowMobilePopup(false)}
               className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10 transition-colors"

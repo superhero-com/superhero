@@ -624,14 +624,19 @@ export default function FeedList({
 
   const popularList = useMemo(
     () => {
-      if (!popularData?.pages) return [];
+      if (!popularData?.pages || popularData.pages.length === 0) return [];
       
       const list = ((popularData.pages as any[]) || []).flatMap((page: any) => {
         // Handle both direct items array and PostApiResponse structure
         if (Array.isArray(page)) {
-          return page;
+          return page.filter(item => item && item.id); // Filter out invalid items
         }
-        return page?.items ?? [];
+        // PostApiResponse structure: { items: [...], meta: {...} }
+        const items = page?.items;
+        if (Array.isArray(items)) {
+          return items.filter(item => item && item.id); // Filter out invalid items
+        }
+        return [];
       });
       
       if (process.env.NODE_ENV === 'development' && sortBy === 'hot') {
@@ -644,6 +649,7 @@ export default function FeedList({
           firstPageHasItems: !!(popularData?.pages?.[0] as any)?.items,
           firstPageItemsLength: (popularData?.pages?.[0] as any)?.items?.length || 0,
           firstPageIsArray: Array.isArray(popularData?.pages?.[0]),
+          firstPageRaw: JSON.stringify(popularData?.pages?.[0]).substring(0, 200),
         });
       }
       return list;
@@ -957,8 +963,9 @@ export default function FeedList({
   // Render helpers
   const renderEmptyState = () => {
     if (sortBy === "hot") {
-      // Check if we have data pages (even if items are empty, pages existing means query completed)
+      // Check if we have actual content to show
       const hasDataPages = popularData && (popularData as any)?.pages?.length > 0;
+      const hasContent = popularList.length > 0 || filteredAndSortedList.length > 0;
       const hasNoData = !popularData || (popularData as any)?.pages?.length === 0;
       const initialLoading = (popularLoading || popularFetching) && hasNoData;
       const err = popularError;
@@ -967,10 +974,15 @@ export default function FeedList({
         return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); }} />;
       }
       
-      // If we have data pages (query completed), don't show skeletons - let the feed render
-      // Even if items are empty, the query completed so we shouldn't show loading skeletons
-      if (hasDataPages) {
+      // If we have content to show, don't show skeletons - let the feed render
+      if (hasContent) {
         return null;
+      }
+      
+      // If we have data pages but no content, query completed but returned empty
+      // Don't show loading skeletons in this case
+      if (hasDataPages && !hasContent) {
+        return null; // Query completed but no items - let feed handle it
       }
       
       // Only show skeletons when actively loading and no data yet
@@ -982,10 +994,13 @@ export default function FeedList({
         );
       }
       
-      // If query completed but returned no data, show empty state (not loading skeletons)
-      // This handles the case where API returns empty results
-      if (!initialLoading && hasNoData && !popularLoading && !popularFetching) {
-        return null; // Let the feed handle empty state, or show a message
+      // If not loading and no data, show empty skeletons (for empty state)
+      if (!initialLoading && hasNoData) {
+        return (
+          <div className="w-full flex flex-col gap-2">
+            {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-hot-empty-${i}`} />)}
+          </div>
+        );
       }
       
       return null;
@@ -1373,7 +1388,7 @@ export default function FeedList({
         {sortBy !== "hot" && (latestData?.pages.length > 0 || activityList.length > 0) && renderFeedItems}
 
         {/* Hot: render popular posts (which seamlessly includes recent posts after popular posts are exhausted) */}
-        {sortBy === "hot" && (popularData?.pages.length > 0 || latestDataForHot?.pages.length > 0) && (
+        {sortBy === "hot" && (
           <>
             {process.env.NODE_ENV === 'development' && console.log('🔍 [DEBUG] Rendering hot feed:', {
               filteredAndSortedListLength: filteredAndSortedList.length,
@@ -1381,29 +1396,24 @@ export default function FeedList({
               popularDataPages: popularData?.pages?.length || 0,
               latestDataForHotPages: latestDataForHot?.pages?.length || 0,
               firstPageItems: (popularData?.pages?.[0] as any)?.items?.length || 0,
+              popularLoading,
+              popularFetching,
+              hasContent: popularList.length > 0 || filteredAndSortedList.length > 0,
             })}
-            {filteredAndSortedList.length > 0 ? (
-              filteredAndSortedList.map((item) => (
-                <ReplyToFeedItem
-                  key={item.id}
-                  item={item}
-                  commentCount={item.total_comments ?? 0}
-                  allowInlineRepliesToggle={false}
-                  onOpenPost={handleItemClick}
-                />
-              ))
-            ) : popularList.length > 0 ? (
-              // Fallback: render popularList directly if filteredAndSortedList is empty
-              popularList.map((item) => (
-                <ReplyToFeedItem
-                  key={item.id}
-                  item={item}
-                  commentCount={item.total_comments ?? 0}
-                  allowInlineRepliesToggle={false}
-                  onOpenPost={handleItemClick}
-                />
-              ))
-            ) : null}
+            {/* Always try to render content if we have it */}
+            {(filteredAndSortedList.length > 0 || popularList.length > 0) && (
+              <>
+                {(filteredAndSortedList.length > 0 ? filteredAndSortedList : popularList).map((item) => (
+                  <ReplyToFeedItem
+                    key={item.id}
+                    item={item}
+                    commentCount={item.total_comments ?? 0}
+                    allowInlineRepliesToggle={false}
+                    onOpenPost={handleItemClick}
+                  />
+                ))}
+              </>
+            )}
           </>
         )}
       </div>

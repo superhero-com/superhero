@@ -60,7 +60,7 @@ export default function LeftRail() {
           </a>
         </div>
         <div className="p-4">
-          <SwapForm />
+          <SwapForm embedded />
         </div>
       </div>
     </div>

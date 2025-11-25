@@ -58,7 +58,7 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
 
   const fiatPrice = useMemo(() => {
     return getFiat(isCoin ? Decimal.from(modelValue) : aeValue);
-  }, [modelValue, aeValue, isCoin]);
+  }, [modelValue, aeValue, isCoin, getFiat]);
 
   // Update internal value when modelValue changes (similar to Vue watcher)
   useEffect(() => {

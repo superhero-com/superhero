@@ -40,7 +40,7 @@ export default function Shell({ left, right, children, containerClassName }: She
             .join(" ")}
         >
           {hasLeft && (
-            <aside className="hidden lg:block sticky top-0 self-start min-w-0">
+            <aside className="hidden lg:block sticky top-[88px] self-start min-w-0 h-[calc(100vh-88px)] overflow-y-auto pb-4">
               {left}
             </aside>
           )}
@@ -48,12 +48,11 @@ export default function Shell({ left, right, children, containerClassName }: She
           <main className="min-w-0 overflow-visible">{children}</main>
 
           {hasRight && (
-            <aside className="hidden lg:block min-w-0 overflow-visible">
-              <div className="right-rail-bleed -mx-2 lg:-mx-4 px-2 lg:px-4 overflow-visible">
-                <div className="right-rail-scroll overflow-visible">
-                  <div className="min-w-0">{right}</div>
+            <aside className="hidden lg:block sticky top-[88px] self-start min-w-0 h-[calc(100vh-88px)] overflow-y-auto pb-4">
+              <div className="min-w-0 h-full">
+                {right}
+                <div className="mt-4">
                   <FooterSection />
-                  {/* Back to top anchored at very bottom of the aside */}
                   <BackToTop />
                 </div>
               </div>

@@ -58,7 +58,7 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
 
   const fiatPrice = useMemo(() => {
     return getFiat(isCoin ? Decimal.from(modelValue) : aeValue);
-  }, [modelValue, aeValue, isCoin]);
+  }, [modelValue, aeValue, isCoin, getFiat]);
 
   // Update internal value when modelValue changes (similar to Vue watcher)
   useEffect(() => {
@@ -215,9 +215,17 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
                 <FractionFormatter fractionalPrice={formatFractionalPrice(fiatPrice) as any} />
               </div>
             ) : (
-              <div className="text-sm text-white/70">
-                <span className="opacity-60">Balance:&nbsp;</span>
-                <span>{Decimal.from(tokenBalance).prettify()}</span>
+              <div className="flex items-center gap-2 text-sm text-white/70">
+                <div>
+                  <span className="opacity-60">Balance:&nbsp;</span>
+                  <span>{Decimal.from(tokenBalance).prettify()}</span>
+                </div>
+                {!aeValue.isZero && (
+                  <div className="flex items-center gap-1 opacity-80">
+                    <span>{currentCurrencyInfo.symbol} </span>
+                    <FractionFormatter fractionalPrice={formatFractionalPrice(getFiat(aeValue)) as any} />
+                  </div>
+                )}
               </div>
             )}
 

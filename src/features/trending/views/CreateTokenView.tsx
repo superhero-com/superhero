@@ -491,6 +491,57 @@ export default function CreateTokenView() {
                   Price moves with buys/sells, no order books. Each token mints a DAO treasury
                   that can fund initiatives via on-chain votes.
                 </p>
+                
+                {/* Explainer Section */}
+                <div className="mt-8 md:mt-12 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl">
+                  <h3 className="text-xl font-bold text-white mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
+                    How Bonding Curves Work
+                  </h3>
+                  <div className="space-y-4 text-white/80 text-sm leading-relaxed">
+                    <div>
+                      <h4 className="font-semibold text-white mb-2">Price Discovery Mechanism</h4>
+                      <p>
+                        Unlike traditional exchanges with order books, bonding curves use a mathematical formula to determine token prices. 
+                        The price increases as more tokens are bought and decreases when tokens are sold. This creates automatic price discovery 
+                        based on supply and demand.
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-white mb-2">The Math Behind It</h4>
+                      <p className="mb-2">
+                        The bonding curve follows a quadratic formula: <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">price = k × supply²</code>
+                      </p>
+                      <p className="mb-2">
+                        Where <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">k</code> is a constant and <code className="bg-white/10 px-2 py-1 rounded text-xs font-mono">supply</code> is the total number of tokens in circulation.
+                      </p>
+                      <p>
+                        This means:
+                      </p>
+                      <ul className="list-disc list-inside mt-2 space-y-1 ml-4">
+                        <li>Early buyers get tokens at lower prices</li>
+                        <li>Each purchase increases the price for the next buyer</li>
+                        <li>Selling tokens reduces the supply and lowers the price</li>
+                        <li>The curve ensures liquidity - you can always buy or sell</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-white mb-2">DAO Treasury</h4>
+                      <p>
+                        A portion of every transaction goes into a DAO treasury controlled by token holders. 
+                        This treasury can fund community initiatives through on-chain governance votes, 
+                        allowing the community to collectively decide how to grow and develop the token.
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-white mb-2">Fees & Affiliations</h4>
+                      <p>
+                        When creating a token, you can set an initial buy amount. A small protocol fee (5%) 
+                        is applied to support the platform and protocol token rewards. The rest goes into 
+                        the bonding curve, ensuring fair price discovery from the start.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 

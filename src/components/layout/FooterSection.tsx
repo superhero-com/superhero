@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { MessageSquare } from 'lucide-react';
 import { SuperheroApi } from '@/api/backend';
 
 export default function FooterSection({ compact = false }: { compact?: boolean }) {
@@ -130,7 +131,7 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
           }}
           aria-label="Send Feedback on GitHub"
         >
-          <span className="text-lg" style={{ color: '#0a0a0f', WebkitTextFillColor: '#0a0a0f' }} aria-hidden="true">💬</span>
+          <MessageSquare className="w-5 h-5" style={{ color: '#0a0a0f' }} aria-hidden="true" />
           <span className={compact ? 'text-sm' : 'text-base'} style={{ color: '#0a0a0f', WebkitTextFillColor: '#0a0a0f' }}>Send Feedback</span>
         </a>
       </div>

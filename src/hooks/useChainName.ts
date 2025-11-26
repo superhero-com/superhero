@@ -8,10 +8,9 @@ interface ChainNameResponse {
     active: boolean;
     name: string;
     key: string;
+    block_height?: number;
+    block_time?: number;
     tx: {
-        block_height?: number;
-        time?: number;
-        hash?: string;
         pointers: Array<{
             encoded_key: string;
             id: string;
@@ -89,9 +88,9 @@ async function fetchChainNameFromMiddleware(accountAddress: string): Promise<str
                         pointer => pointer.id === accountAddress
                     );
                     if (hasMatchingPointer) {
-                        // Use block_height if available, otherwise fall back to time, otherwise 0
-                        const blockHeight = name.tx.block_height ?? 0;
-                        const time = name.tx.time ?? 0;
+                        // Use block_height if available, otherwise fall back to block_time, otherwise 0
+                        const blockHeight = name.block_height ?? 0;
+                        const time = name.block_time ?? 0;
                         matchingNames.push({ name: name.name, blockHeight, time });
                     }
                 }

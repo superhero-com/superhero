@@ -97,23 +97,62 @@ async function fetchChainNameFromMiddleware(accountAddress: string): Promise<str
                 }
             }
             
-            // Find all names where the LATEST pointer points to this account address
-            // Only include names that actually point TO the account (not just owned by it)
-            const matchingNames: Array<{ name: string; blockHeight: number; time: number }> = [];
+            // Verify current pointer state for each name by querying the name directly
+            // The /names/pointees endpoint returns historical records, so we need to check current state
+            const verifiedNames: Array<{ name: string; blockHeight: number; time: number }> = [];
             
-            for (const name of latestByName.values()) {
-                // Check if the latest pointer points to this account address
-                const hasMatchingPointer = name.tx.pointers.some(
-                    pointer => pointer && pointer.id === accountAddress
-                );
-                
-                if (hasMatchingPointer) {
-                    // Use block_height if available, otherwise fall back to block_time, otherwise 0
-                    const blockHeight = name.block_height ?? 0;
-                    const time = name.block_time ?? 0;
-                    matchingNames.push({ name: name.name, blockHeight, time });
+            // Check each name's current state in parallel
+            const verificationPromises = Array.from(latestByName.values()).map(async (name) => {
+                try {
+                    // Query the name directly to get its current pointer state
+                    const nameUrl = `${base}/v3/names/${encodeURIComponent(name.name)}`;
+                    const nameResponse = await fetch(nameUrl, { cache: 'no-cache' });
+                    
+                    if (!nameResponse.ok) {
+                        // If name query fails, fall back to using the pointees data
+                        // Check if the latest pointer from pointees points to this account
+                        const hasMatchingPointer = name.tx.pointers.some(
+                            pointer => pointer && pointer.id === accountAddress
+                        );
+                        return hasMatchingPointer ? { name: name.name, blockHeight: name.block_height ?? 0, time: name.block_time ?? 0 } : null;
+                    }
+                    
+                    const nameData = await nameResponse.json();
+                    
+                    // Check if the CURRENT pointer points to this account address
+                    const currentPointers = nameData.pointers || [];
+                    const hasMatchingPointer = currentPointers.some(
+                        (pointer: any) => pointer && pointer.id === accountAddress
+                    );
+                    
+                    if (hasMatchingPointer) {
+                        // Use the block_height from the pointees data (when it was last updated to point here)
+                        // or fall back to block_time
+                        return { 
+                            name: name.name, 
+                            blockHeight: name.block_height ?? 0, 
+                            time: name.block_time ?? 0 
+                        };
+                    }
+                    
+                    return null;
+                } catch (e) {
+                    // If verification fails, fall back to pointees data
+                    const hasMatchingPointer = name.tx.pointers.some(
+                        pointer => pointer && pointer.id === accountAddress
+                    );
+                    return hasMatchingPointer ? { name: name.name, blockHeight: name.block_height ?? 0, time: name.block_time ?? 0 } : null;
+                }
+            });
+            
+            const verifiedResults = await Promise.all(verificationPromises);
+            for (const result of verifiedResults) {
+                if (result) {
+                    verifiedNames.push(result);
                 }
             }
+            
+            const matchingNames = verifiedNames;
             
             if (matchingNames.length === 0) {
                 return null;

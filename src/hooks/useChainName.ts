@@ -1,217 +1,39 @@
 import { useAtom } from "jotai";
 import { useEffect, useMemo, useRef } from "react";
 import { chainNamesAtom } from "../atoms/walletAtoms";
-import { CONFIG } from "../config";
+import { AccountsService } from "../api/generated/services/AccountsService";
 import { useAeSdk } from "./useAeSdk";
 
-interface ChainNameResponse {
-    active: boolean;
-    name: string;
-    key: string;
-    block_height?: number;
-    block_time?: number;
-    tx: {
-        pointers: Array<{
-            encoded_key: string;
-            id: string;
-            key: string;
-        }>;
-    };
-}
-
-// Global request queue and rate limiter to prevent too many simultaneous requests
-const requestQueue = new Set<string>();
+// Global request queue to prevent duplicate requests
 const pendingRequests = new Map<string, Promise<string | null>>();
-const MAX_CONCURRENT_REQUESTS = 3;
-let activeRequestCount = 0;
 
 // Track addresses that have been checked and found no name (with timestamps)
-// This allows us to check addresses without names more frequently
 const noNameCheckTimestamps = new Map<string, number>();
-const NO_NAME_REFRESH_INTERVAL = 1000 * 60 * 5; // 5 minutes - check addresses without names more often
+const NO_NAME_REFRESH_INTERVAL = 1000 * 60 * 10; // 10 minutes - refresh interval
 
-// Cache verification results per name to avoid re-verifying the same name too often
-interface NameVerificationCache {
-    name: string;
-    pointsTo: string; // Account address this name points to
-    verifiedAt: number; // Timestamp when verified
-}
-const nameVerificationCache = new Map<string, NameVerificationCache>();
-const VERIFICATION_CACHE_TTL = 1000 * 60 * 15; // 15 minutes - cache verification results
+// Cache refresh interval for addresses with names
+const CACHED_NAME_REFRESH_INTERVAL = 1000 * 60 * 15; // 15 minutes - chain names don't change often
 
-// Cache refresh interval for addresses with names (longer than no-name check)
-const CACHED_NAME_REFRESH_INTERVAL = 1000 * 60 * 10; // 10 minutes - refresh cached names less frequently
-
-async function fetchChainNameFromMiddleware(accountAddress: string): Promise<string | null> {
+async function fetchChainNameFromBackend(accountAddress: string): Promise<string | null> {
     // If there's already a pending request for this address, return it
     const pending = pendingRequests.get(accountAddress);
     if (pending) {
         return pending;
     }
 
-    // Wait if we're at the concurrent request limit
-    const waitForSlot = (): Promise<void> => {
-        return new Promise((resolve) => {
-            const checkSlot = () => {
-                if (activeRequestCount < MAX_CONCURRENT_REQUESTS) {
-                    activeRequestCount++;
-                    resolve();
-                } else {
-                    setTimeout(checkSlot, 100); // Check every 100ms
-                }
-            };
-            checkSlot();
-        });
-    };
-
     const requestPromise = (async () => {
         try {
-            await waitForSlot();
-            
-            const base = (CONFIG.MIDDLEWARE_URL || '').replace(/\/$/, '');
-            if (!base) {
-                console.warn('MIDDLEWARE_URL not configured');
+            // Use backend API which handles all the complex logic
+            const account = await AccountsService.getAccount({ address: accountAddress });
+            return account?.chain_name || null;
+        } catch (e: any) {
+            // 404 is normal if account doesn't exist
+            if (e?.status === 404) {
                 return null;
             }
-            
-            const url = `${base}/v3/accounts/${encodeURIComponent(accountAddress)}/names/pointees`;
-            const response = await fetch(url, { cache: 'no-cache' });
-            
-            if (!response.ok) {
-                if (response.status === 404) {
-                    // Account not found or no names - this is normal
-                    return null;
-                }
-                throw new Error(`Failed to fetch chain names: ${response.status} ${response.statusText}`);
-            }
-            
-            const names: ChainNameResponse[] = (await response.json()).data as ChainNameResponse[];
-            
-            if (!Array.isArray(names)) {
-                return null;
-            }
-            
-            // Group names by name string and get the latest entry for each name
-            // The API returns historical records, so we need to use only the most recent pointer update
-            const latestByName = new Map<string, ChainNameResponse>();
-            
-            for (const name of names) {
-                if (!name.active || !name.tx?.pointers || !Array.isArray(name.tx.pointers)) {
-                    continue;
-                }
-                
-                const existing = latestByName.get(name.name);
-                const nameBlockHeight = name.block_height ?? 0;
-                
-                // Keep only the latest entry for each name (highest block_height)
-                if (!existing || nameBlockHeight > (existing.block_height ?? 0)) {
-                    latestByName.set(name.name, name);
-                }
-            }
-            
-            // Verify current pointer state for each name by querying the name directly
-            // The /names/pointees endpoint returns historical records, so we need to check current state
-            // Use cached verification results to avoid excessive API calls
-            const verifiedNames: Array<{ name: string; blockHeight: number; time: number }> = [];
-            const now = Date.now();
-            
-            // Check each name's current state (using cache when available)
-            const verificationPromises = Array.from(latestByName.values()).map(async (name) => {
-                // Check cache first
-                const cached = nameVerificationCache.get(name.name);
-                if (cached && (now - cached.verifiedAt) < VERIFICATION_CACHE_TTL) {
-                    // Use cached verification result
-                    if (cached.pointsTo === accountAddress) {
-                        return { name: name.name, blockHeight: name.block_height ?? 0, time: name.block_time ?? 0 };
-                    }
-                    return null;
-                }
-                
-                // Cache expired or missing - verify by querying the name directly
-                try {
-                    const nameUrl = `${base}/v3/names/${encodeURIComponent(name.name)}`;
-                    const nameResponse = await fetch(nameUrl, { cache: 'no-cache' });
-                    
-                    if (!nameResponse.ok) {
-                        // If name query fails, fall back to using the pointees data
-                        const hasMatchingPointer = name.tx.pointers.some(
-                            pointer => pointer && pointer.id === accountAddress
-                        );
-                        // Cache the fallback result (but mark as less reliable)
-                        if (hasMatchingPointer) {
-                            nameVerificationCache.set(name.name, {
-                                name: name.name,
-                                pointsTo: accountAddress,
-                                verifiedAt: now - VERIFICATION_CACHE_TTL + (1000 * 60 * 5), // Shorter cache for fallback
-                            });
-                            return { name: name.name, blockHeight: name.block_height ?? 0, time: name.block_time ?? 0 };
-                        }
-                        return null;
-                    }
-                    
-                    const nameData = await nameResponse.json();
-                    
-                    // Check if the CURRENT pointer points to this account address
-                    const currentPointers = nameData.pointers || [];
-                    const currentPointerAddress = currentPointers[0]?.id || null;
-                    const hasMatchingPointer = currentPointers.some(
-                        (pointer: any) => pointer && pointer.id === accountAddress
-                    );
-                    
-                    // Cache the verification result
-                    nameVerificationCache.set(name.name, {
-                        name: name.name,
-                        pointsTo: currentPointerAddress || '',
-                        verifiedAt: now,
-                    });
-                    
-                    if (hasMatchingPointer) {
-                        return { 
-                            name: name.name, 
-                            blockHeight: name.block_height ?? 0, 
-                            time: name.block_time ?? 0 
-                        };
-                    }
-                    
-                    return null;
-                } catch (e) {
-                    // If verification fails, fall back to pointees data
-                    const hasMatchingPointer = name.tx.pointers.some(
-                        pointer => pointer && pointer.id === accountAddress
-                    );
-                    return hasMatchingPointer ? { name: name.name, blockHeight: name.block_height ?? 0, time: name.block_time ?? 0 } : null;
-                }
-            });
-            
-            const verifiedResults = await Promise.all(verificationPromises);
-            for (const result of verifiedResults) {
-                if (result) {
-                    verifiedNames.push(result);
-                }
-            }
-            
-            const matchingNames = verifiedNames;
-            
-            if (matchingNames.length === 0) {
-                return null;
-            }
-            
-            // Sort by block_height (descending), then by time (descending) as fallback
-            // The newest pointer will have the highest block_height
-            matchingNames.sort((a, b) => {
-                if (a.blockHeight !== b.blockHeight) {
-                    return b.blockHeight - a.blockHeight; // Higher block_height = newer
-                }
-                return b.time - a.time; // Higher time = newer
-            });
-            
-            // Return the name with the newest pointer
-            return matchingNames[0].name;
-        } catch (e) {
-            console.warn('Failed to fetch chain name from middleware', e);
+            console.warn('Failed to fetch chain name from backend', e);
             return null;
         } finally {
-            activeRequestCount--;
             pendingRequests.delete(accountAddress);
         }
     })();
@@ -267,10 +89,9 @@ export function useChainName(accountAddress: string) {
                         return; // Another component already updated it
                     }
                     
-                    requestQueue.add(accountAddress);
                     fetchingRef.current.add(accountAddress);
                     
-                    fetchChainNameFromMiddleware(accountAddress)
+                    fetchChainNameFromBackend(accountAddress)
                         .then(name => {
                             if (name && name !== cachedName) {
                                 // Found a different (newer) name - update cache
@@ -282,7 +103,6 @@ export function useChainName(accountAddress: string) {
                         })
                         .finally(() => {
                             fetchingRef.current.delete(accountAddress);
-                            requestQueue.delete(accountAddress);
                         });
                 };
                 
@@ -298,7 +118,7 @@ export function useChainName(accountAddress: string) {
         // Address has no name - check if we should fetch
         const shouldFetch = () => {
             // Prevent duplicate requests
-            if (fetchingRef.current.has(accountAddress) || requestQueue.has(accountAddress)) {
+            if (fetchingRef.current.has(accountAddress) || pendingRequests.has(accountAddress)) {
                 return false;
             }
             
@@ -316,11 +136,9 @@ export function useChainName(accountAddress: string) {
                 return;
             }
             
-            // Add to queue and fetch
-            requestQueue.add(accountAddress);
             fetchingRef.current.add(accountAddress);
             
-            fetchChainNameFromMiddleware(accountAddress)
+            fetchChainNameFromBackend(accountAddress)
                 .then(name => {
                     if (name) {
                         // Found a name - update cache and remove from no-name tracking
@@ -333,7 +151,6 @@ export function useChainName(accountAddress: string) {
                 })
                 .finally(() => {
                     fetchingRef.current.delete(accountAddress);
-                    requestQueue.delete(accountAddress);
                 });
         };
         
@@ -407,7 +224,7 @@ export function useSuperheroChainNames() {
             
             fetchingRef.current = true;
             try {
-                const name = await fetchChainNameFromMiddleware(accountAddress);
+                const name = await fetchChainNameFromBackend(accountAddress);
                 if (name) {
                     // Found a name - update cache and remove from no-name tracking
                     setChainNames(prev => ({ ...prev, [accountAddress]: name }));

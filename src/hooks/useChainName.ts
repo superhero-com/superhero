@@ -9,6 +9,9 @@ interface ChainNameResponse {
     name: string;
     key: string;
     tx: {
+        block_height?: number;
+        time?: number;
+        hash?: string;
         pointers: Array<{
             encoded_key: string;
             id: string;
@@ -77,19 +80,38 @@ async function fetchChainNameFromMiddleware(accountAddress: string): Promise<str
                 return null;
             }
             
-            // Find the first active name that has the account address in its pointers
+            // Find all active names that have the account address in their pointers
+            const matchingNames: Array<{ name: string; blockHeight: number; time: number }> = [];
+            
             for (const name of names) {
                 if (name.active && name.tx?.pointers) {
                     const hasMatchingPointer = name.tx.pointers.some(
                         pointer => pointer.id === accountAddress
                     );
                     if (hasMatchingPointer) {
-                        return name.name;
+                        // Use block_height if available, otherwise fall back to time, otherwise 0
+                        const blockHeight = name.tx.block_height ?? 0;
+                        const time = name.tx.time ?? 0;
+                        matchingNames.push({ name: name.name, blockHeight, time });
                     }
                 }
             }
             
-            return null;
+            if (matchingNames.length === 0) {
+                return null;
+            }
+            
+            // Sort by block_height (descending), then by time (descending) as fallback
+            // The newest pointer will have the highest block_height
+            matchingNames.sort((a, b) => {
+                if (a.blockHeight !== b.blockHeight) {
+                    return b.blockHeight - a.blockHeight; // Higher block_height = newer
+                }
+                return b.time - a.time; // Higher time = newer
+            });
+            
+            // Return the name with the newest pointer
+            return matchingNames[0].name;
         } catch (e) {
             console.warn('Failed to fetch chain name from middleware', e);
             return null;

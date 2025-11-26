@@ -43,6 +43,12 @@ export const AddressAvatarWithChainName = memo(({
     contentClassName
 }: AddressAvatarWithChainNameProps) => {
     const navigate = useNavigate();
+    
+    // Guard against undefined/null address
+    if (!address) {
+        return null;
+    }
+    
     const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(address);
     const { chainName } = useChainName(address);
 
@@ -143,7 +149,7 @@ export const AddressAvatarWithChainName = memo(({
                                 )}
                                 title={address}
                             >
-                                {`${address?.slice(0, 6)}...${address?.slice(-6)}`}
+                                {address ? `${address.slice(0, 6)}...${address.slice(-6)}` : ''}
                             </span>
                         );
                     })()

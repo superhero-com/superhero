@@ -79,18 +79,30 @@ async function fetchChainNameFromMiddleware(accountAddress: string): Promise<str
                 return null;
             }
             
-            // Find all active names that have the account address in their pointers
-            // Only include names where the account address is actually pointed to (not just owned)
-            const matchingNames: Array<{ name: string; blockHeight: number; time: number }> = [];
+            // Group names by name string and get the latest entry for each name
+            // The API returns historical records, so we need to use only the most recent pointer update
+            const latestByName = new Map<string, ChainNameResponse>();
             
             for (const name of names) {
-                // Must be active and have pointers array
                 if (!name.active || !name.tx?.pointers || !Array.isArray(name.tx.pointers)) {
                     continue;
                 }
                 
-                // Check if any pointer points to this account address
-                // This ensures we only include names that actually point TO the account, not just owned by it
+                const existing = latestByName.get(name.name);
+                const nameBlockHeight = name.block_height ?? 0;
+                
+                // Keep only the latest entry for each name (highest block_height)
+                if (!existing || nameBlockHeight > (existing.block_height ?? 0)) {
+                    latestByName.set(name.name, name);
+                }
+            }
+            
+            // Find all names where the LATEST pointer points to this account address
+            // Only include names that actually point TO the account (not just owned by it)
+            const matchingNames: Array<{ name: string; blockHeight: number; time: number }> = [];
+            
+            for (const name of latestByName.values()) {
+                // Check if the latest pointer points to this account address
                 const hasMatchingPointer = name.tx.pointers.some(
                     pointer => pointer && pointer.id === accountAddress
                 );

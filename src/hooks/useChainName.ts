@@ -80,19 +80,26 @@ async function fetchChainNameFromMiddleware(accountAddress: string): Promise<str
             }
             
             // Find all active names that have the account address in their pointers
+            // Only include names where the account address is actually pointed to (not just owned)
             const matchingNames: Array<{ name: string; blockHeight: number; time: number }> = [];
             
             for (const name of names) {
-                if (name.active && name.tx?.pointers) {
-                    const hasMatchingPointer = name.tx.pointers.some(
-                        pointer => pointer.id === accountAddress
-                    );
-                    if (hasMatchingPointer) {
-                        // Use block_height if available, otherwise fall back to block_time, otherwise 0
-                        const blockHeight = name.block_height ?? 0;
-                        const time = name.block_time ?? 0;
-                        matchingNames.push({ name: name.name, blockHeight, time });
-                    }
+                // Must be active and have pointers array
+                if (!name.active || !name.tx?.pointers || !Array.isArray(name.tx.pointers)) {
+                    continue;
+                }
+                
+                // Check if any pointer points to this account address
+                // This ensures we only include names that actually point TO the account, not just owned by it
+                const hasMatchingPointer = name.tx.pointers.some(
+                    pointer => pointer && pointer.id === accountAddress
+                );
+                
+                if (hasMatchingPointer) {
+                    // Use block_height if available, otherwise fall back to block_time, otherwise 0
+                    const blockHeight = name.block_height ?? 0;
+                    const time = name.block_time ?? 0;
+                    matchingNames.push({ name: name.name, blockHeight, time });
                 }
             }
             

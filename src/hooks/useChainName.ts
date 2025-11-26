@@ -30,6 +30,18 @@ let activeRequestCount = 0;
 const noNameCheckTimestamps = new Map<string, number>();
 const NO_NAME_REFRESH_INTERVAL = 1000 * 60 * 5; // 5 minutes - check addresses without names more often
 
+// Cache verification results per name to avoid re-verifying the same name too often
+interface NameVerificationCache {
+    name: string;
+    pointsTo: string; // Account address this name points to
+    verifiedAt: number; // Timestamp when verified
+}
+const nameVerificationCache = new Map<string, NameVerificationCache>();
+const VERIFICATION_CACHE_TTL = 1000 * 60 * 15; // 15 minutes - cache verification results
+
+// Cache refresh interval for addresses with names (longer than no-name check)
+const CACHED_NAME_REFRESH_INTERVAL = 1000 * 60 * 10; // 10 minutes - refresh cached names less frequently
+
 async function fetchChainNameFromMiddleware(accountAddress: string): Promise<string | null> {
     // If there's already a pending request for this address, return it
     const pending = pendingRequests.get(accountAddress);
@@ -99,35 +111,61 @@ async function fetchChainNameFromMiddleware(accountAddress: string): Promise<str
             
             // Verify current pointer state for each name by querying the name directly
             // The /names/pointees endpoint returns historical records, so we need to check current state
+            // Use cached verification results to avoid excessive API calls
             const verifiedNames: Array<{ name: string; blockHeight: number; time: number }> = [];
+            const now = Date.now();
             
-            // Check each name's current state in parallel
+            // Check each name's current state (using cache when available)
             const verificationPromises = Array.from(latestByName.values()).map(async (name) => {
+                // Check cache first
+                const cached = nameVerificationCache.get(name.name);
+                if (cached && (now - cached.verifiedAt) < VERIFICATION_CACHE_TTL) {
+                    // Use cached verification result
+                    if (cached.pointsTo === accountAddress) {
+                        return { name: name.name, blockHeight: name.block_height ?? 0, time: name.block_time ?? 0 };
+                    }
+                    return null;
+                }
+                
+                // Cache expired or missing - verify by querying the name directly
                 try {
-                    // Query the name directly to get its current pointer state
                     const nameUrl = `${base}/v3/names/${encodeURIComponent(name.name)}`;
                     const nameResponse = await fetch(nameUrl, { cache: 'no-cache' });
                     
                     if (!nameResponse.ok) {
                         // If name query fails, fall back to using the pointees data
-                        // Check if the latest pointer from pointees points to this account
                         const hasMatchingPointer = name.tx.pointers.some(
                             pointer => pointer && pointer.id === accountAddress
                         );
-                        return hasMatchingPointer ? { name: name.name, blockHeight: name.block_height ?? 0, time: name.block_time ?? 0 } : null;
+                        // Cache the fallback result (but mark as less reliable)
+                        if (hasMatchingPointer) {
+                            nameVerificationCache.set(name.name, {
+                                name: name.name,
+                                pointsTo: accountAddress,
+                                verifiedAt: now - VERIFICATION_CACHE_TTL + (1000 * 60 * 5), // Shorter cache for fallback
+                            });
+                            return { name: name.name, blockHeight: name.block_height ?? 0, time: name.block_time ?? 0 };
+                        }
+                        return null;
                     }
                     
                     const nameData = await nameResponse.json();
                     
                     // Check if the CURRENT pointer points to this account address
                     const currentPointers = nameData.pointers || [];
+                    const currentPointerAddress = currentPointers[0]?.id || null;
                     const hasMatchingPointer = currentPointers.some(
                         (pointer: any) => pointer && pointer.id === accountAddress
                     );
                     
+                    // Cache the verification result
+                    nameVerificationCache.set(name.name, {
+                        name: name.name,
+                        pointsTo: currentPointerAddress || '',
+                        verifiedAt: now,
+                    });
+                    
                     if (hasMatchingPointer) {
-                        // Use the block_height from the pointees data (when it was last updated to point here)
-                        // or fall back to block_time
                         return { 
                             name: name.name, 
                             blockHeight: name.block_height ?? 0, 
@@ -213,39 +251,46 @@ export function useChainName(accountAddress: string) {
         const lastNoNameCheck = noNameCheckTimestamps.get(accountAddress);
         const now = Date.now();
         
-        // If name exists in cache, we should still verify it's the newest one
-        // This is important when users have multiple chain names - we want the newest pointer
-        // So we'll fetch to check, but with a longer debounce to avoid excessive requests
+        // If name exists in cache, refresh it periodically but not too frequently
+        // Chain names don't change often, so we can use a longer refresh interval
         if (cachedName) {
-            // Still fetch to ensure we have the newest pointer, but with a longer delay
-            // This handles cases where a user has multiple names and we cached an older one
-            const performFetchForCached = () => {
-                // Double-check cache hasn't changed
-                if (chainNamesRef.current[accountAddress] !== cachedName) {
-                    return; // Another component already updated it
-                }
-                
-                requestQueue.add(accountAddress);
-                fetchingRef.current.add(accountAddress);
-                
-                fetchChainNameFromMiddleware(accountAddress)
-                    .then(name => {
-                        if (name && name !== cachedName) {
-                            // Found a different (newer) name - update cache
-                            setChainNames(prev => ({ ...prev, [accountAddress]: name }));
-                            noNameCheckTimestamps.delete(accountAddress);
-                        }
-                    })
-                    .finally(() => {
-                        fetchingRef.current.delete(accountAddress);
-                        requestQueue.delete(accountAddress);
-                    });
-            };
+            // Track when this cached name was last refreshed
+            const lastRefreshKey = `chainName:refresh:${accountAddress}`;
+            const lastRefresh = noNameCheckTimestamps.get(lastRefreshKey) || 0;
+            const timeSinceRefresh = now - lastRefresh;
             
-            // Debounce: Wait 2 seconds before checking cached names (less aggressive than new fetches)
-            timeoutRef.current = setTimeout(() => {
-                performFetchForCached();
-            }, 2000);
+            // Only refresh if it's been a while since last refresh
+            if (timeSinceRefresh >= CACHED_NAME_REFRESH_INTERVAL) {
+                const performFetchForCached = () => {
+                    // Double-check cache hasn't changed
+                    if (chainNamesRef.current[accountAddress] !== cachedName) {
+                        return; // Another component already updated it
+                    }
+                    
+                    requestQueue.add(accountAddress);
+                    fetchingRef.current.add(accountAddress);
+                    
+                    fetchChainNameFromMiddleware(accountAddress)
+                        .then(name => {
+                            if (name && name !== cachedName) {
+                                // Found a different (newer) name - update cache
+                                setChainNames(prev => ({ ...prev, [accountAddress]: name }));
+                                noNameCheckTimestamps.delete(accountAddress);
+                            }
+                            // Update refresh timestamp regardless of whether name changed
+                            noNameCheckTimestamps.set(lastRefreshKey, Date.now());
+                        })
+                        .finally(() => {
+                            fetchingRef.current.delete(accountAddress);
+                            requestQueue.delete(accountAddress);
+                        });
+                };
+                
+                // Schedule refresh (no immediate debounce needed since we already checked time)
+                timeoutRef.current = setTimeout(() => {
+                    performFetchForCached();
+                }, 1000); // Small delay to batch requests
+            }
             
             return;
         }

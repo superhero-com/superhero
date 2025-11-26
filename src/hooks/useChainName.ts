@@ -155,10 +155,40 @@ export function useChainName(accountAddress: string) {
         const lastNoNameCheck = noNameCheckTimestamps.get(accountAddress);
         const now = Date.now();
         
-        // If name exists in cache, use it - but set up periodic refresh for addresses without names
+        // If name exists in cache, we should still verify it's the newest one
+        // This is important when users have multiple chain names - we want the newest pointer
+        // So we'll fetch to check, but with a longer debounce to avoid excessive requests
         if (cachedName) {
-            // Address has a name - don't fetch frequently (names rarely change)
-            // We could set up a very long interval here, but for now just use cached value
+            // Still fetch to ensure we have the newest pointer, but with a longer delay
+            // This handles cases where a user has multiple names and we cached an older one
+            const performFetchForCached = () => {
+                // Double-check cache hasn't changed
+                if (chainNamesRef.current[accountAddress] !== cachedName) {
+                    return; // Another component already updated it
+                }
+                
+                requestQueue.add(accountAddress);
+                fetchingRef.current.add(accountAddress);
+                
+                fetchChainNameFromMiddleware(accountAddress)
+                    .then(name => {
+                        if (name && name !== cachedName) {
+                            // Found a different (newer) name - update cache
+                            setChainNames(prev => ({ ...prev, [accountAddress]: name }));
+                            noNameCheckTimestamps.delete(accountAddress);
+                        }
+                    })
+                    .finally(() => {
+                        fetchingRef.current.delete(accountAddress);
+                        requestQueue.delete(accountAddress);
+                    });
+            };
+            
+            // Debounce: Wait 2 seconds before checking cached names (less aggressive than new fetches)
+            timeoutRef.current = setTimeout(() => {
+                performFetchForCached();
+            }, 2000);
+            
             return;
         }
         

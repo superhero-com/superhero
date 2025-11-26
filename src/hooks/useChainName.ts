@@ -97,6 +97,14 @@ export function useChainName(accountAddress: string) {
                                 // Found a different (newer) name - update cache
                                 setChainNames(prev => ({ ...prev, [accountAddress]: name }));
                                 noNameCheckTimestamps.delete(accountAddress);
+                            } else if (!name && cachedName) {
+                                // Chain name was removed/expired - clear cache
+                                setChainNames(prev => {
+                                    const updated = { ...prev };
+                                    delete updated[accountAddress];
+                                    return updated;
+                                });
+                                noNameCheckTimestamps.set(accountAddress, Date.now());
                             }
                             // Update refresh timestamp regardless of whether name changed
                             noNameCheckTimestamps.set(lastRefreshKey, Date.now());
@@ -138,6 +146,9 @@ export function useChainName(accountAddress: string) {
             
             fetchingRef.current.add(accountAddress);
             
+            // Capture current timestamp when fetch actually executes (not when scheduled)
+            const fetchTime = Date.now();
+            
             fetchChainNameFromBackend(accountAddress)
                 .then(name => {
                     if (name) {
@@ -145,8 +156,8 @@ export function useChainName(accountAddress: string) {
                         setChainNames(prev => ({ ...prev, [accountAddress]: name }));
                         noNameCheckTimestamps.delete(accountAddress);
                     } else {
-                        // No name found - remember we checked this address
-                        noNameCheckTimestamps.set(accountAddress, now);
+                        // No name found - remember we checked this address (use current fetch time)
+                        noNameCheckTimestamps.set(accountAddress, fetchTime);
                     }
                 })
                 .finally(() => {

@@ -33,8 +33,12 @@ export default function TokenTopicFeed({ topicName, showHeader = false, displayT
   }, [posts]);
 
   // Build a unified hashtag regex early to check if posts match the filter
+  // Exclude matches where the hashtag is followed by a hyphen and more characters
+  // (e.g., #superhero should not match #superhero-devs)
   const hashtagRegex = useMemo(() => {
-    return new RegExp(`(^|[^A-Za-z0-9_])#${escapeRegExp(baseName)}(?![A-Za-z0-9_])`, 'i');
+    // Match the hashtag only if it's not followed by a hyphen and more characters
+    // The negative lookahead checks: not (word char OR hyphen followed by at least one char)
+    return new RegExp(`(^|[^A-Za-z0-9_])#${escapeRegExp(baseName)}(?![A-Za-z0-9_]|-[A-Za-z0-9_])`, 'i');
   }, [baseName]);
 
   // Check if any posts match the hashtag filter (not just if posts exist)

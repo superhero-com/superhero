@@ -154,6 +154,25 @@ export default function UserProfile({
     staleTime: 60_000,
   });
 
+  // Fetch created tokens count for stats display
+  const { data: createdTokensResp } = useQuery({
+    queryKey: [
+      "TokensService.listAll",
+      "created-count",
+      effectiveAddress,
+    ],
+    queryFn: () =>
+      TokensService.listAll({
+        creatorAddress: effectiveAddress,
+        orderBy: "created_at",
+        orderDirection: "DESC",
+        limit: 1,
+        page: 1,
+      }) as unknown as Promise<{ items: any[]; meta?: any }>,
+    enabled: !!effectiveAddress,
+    staleTime: 60_000,
+  });
+
   // Get posts from the query data
   const posts = data?.items || [];
 
@@ -564,7 +583,7 @@ export default function UserProfile({
               Created Trends
             </div>
             <div className="text-base md:text-lg font-bold text-white">
-              {(accountInfo?.total_created_tokens ?? 0).toLocaleString()}
+              {((createdTokensResp as any)?.meta?.totalItems ?? accountInfo?.total_created_tokens ?? 0).toLocaleString()}
             </div>
           </button>
           <button

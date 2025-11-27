@@ -43,8 +43,16 @@ export const AddressAvatarWithChainName = memo(({
     contentClassName
 }: AddressAvatarWithChainNameProps) => {
     const navigate = useNavigate();
-    const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(address);
-    const { chainName } = useChainName(address);
+    
+    // Hooks must be called unconditionally before any early returns
+    // Use empty string as fallback to ensure hooks are always called with a valid value
+    const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(address || '');
+    const { chainName } = useChainName(address || '');
+    
+    // Guard against undefined/null address after hooks are called
+    if (!address) {
+        return null;
+    }
 
     // Hover state management (same as UserBadge)
     const [hover, setHover] = useState(false);
@@ -143,7 +151,7 @@ export const AddressAvatarWithChainName = memo(({
                                 )}
                                 title={address}
                             >
-                                {`${address?.slice(0, 6)}...${address?.slice(-6)}`}
+                                {address ? `${address.slice(0, 6)}...${address.slice(-6)}` : ''}
                             </span>
                         );
                     })()

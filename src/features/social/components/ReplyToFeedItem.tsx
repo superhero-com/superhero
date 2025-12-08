@@ -200,9 +200,9 @@ const ReplyToFeedItem = memo(({
       role={isActive ? undefined : "button"}
       aria-label={isActive ? undefined : "Open post"}
     >
-      {/* Top-right on-chain button */}
+      {/* Top-right on-chain button - positioned at top-right corner */}
       {item.tx_hash && (
-        <div className="absolute top-4 right-2 md:top-5 md:right-5 z-20">
+        <div className="absolute top-0 right-0 z-30 translate-x-0 translate-y-0">
           <BlockchainInfoPopover
             txHash={item.tx_hash}
             createdAt={item.created_at as unknown as string}
@@ -249,7 +249,7 @@ const ReplyToFeedItem = memo(({
               )}
             </div>
           </div>
-          <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{authorAddress}</div>
+          <div className="mt-0.5 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{authorAddress}</div>
 
           {/* Trend token holder pill (when viewing a token feed and author holds the token) */}
           {tokenHolderLabel && (

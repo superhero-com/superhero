@@ -157,8 +157,8 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected, embedded
     const initializeTokens = async () => {
       console.log('[SwapForm] Initialize tokens');
       const searchParams = new URLSearchParams(location.search);
-      const fromParam = searchParams.get('from');
-      const toParam = searchParams.get('to');
+      const fromParam = embedded ? null : searchParams.get('from'); // Skip URL params when embedded
+      const toParam = embedded ? null : searchParams.get('to'); // Skip URL params when embedded
       const defaultToAddress = 'ct_KeTvHnhU85vuuQMMZocaiYkPL9tkoavDRT3Jsy47LK2YqLHYb'; // WTT
 
       // Set tokenIn based on URL param or default
@@ -193,10 +193,13 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected, embedded
     return () => {
       cancelled = true;
     };
-  }, [tokens, location.search, tokenIn, tokenOut, findTokenByAddressOrSymbol]);
+  }, [tokens, location.search, tokenIn, tokenOut, findTokenByAddressOrSymbol, embedded]);
 
   // Update URL parameters when tokens change (after initial load)
   useEffect(() => {
+    // Skip URL updates when embedded (e.g., in dashboard widget)
+    if (embedded) return;
+    
     // Skip URL updates during initial load or when tokens are being set from URL params
     if (!tokens.length || (!tokenIn && !tokenOut)) return;
 
@@ -204,7 +207,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected, embedded
     if (tokenIn || tokenOut) {
       updateUrlParams(tokenIn, tokenOut);
     }
-  }, [tokenIn, tokenOut, tokens.length, updateUrlParams]);
+  }, [tokenIn, tokenOut, tokens.length, updateUrlParams, embedded]);
 
   // Quote for exact-in mode when amountIn or tokens change
   useEffect(() => {

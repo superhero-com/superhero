@@ -342,7 +342,7 @@ export default function LeftRail({
       <LayoutSwitcher />
       {/* Navigation Bar - Tab style like LayoutSwitcher */}
       <div className="mb-0">
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex items-center gap-3 mb-6">
           <Link to="/" className="flex items-center no-underline hover:no-underline group" aria-label="Superhero Home">
             <HeaderLogo className="h-8 w-auto transition-transform duration-200 group-hover:scale-105" />
           </Link>

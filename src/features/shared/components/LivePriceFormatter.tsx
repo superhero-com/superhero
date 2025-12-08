@@ -33,8 +33,9 @@ export default function LivePriceFormatter({
 }: LivePriceFormatterProps) {
   const { getFiat } = useCurrencies();
   const computedFiatPrice = useMemo(() => {
-    return getFiat(aePrice);
-  }, [aePrice, fiatPrice]);
+    // Use provided fiatPrice if available, otherwise compute it from aePrice
+    return fiatPrice ?? getFiat(aePrice);
+  }, [aePrice, fiatPrice, getFiat]);
 
   return (
     <PriceFormatter

@@ -1,0 +1,277 @@
+@use './variables.scss' as *;
+
+/* ============================================
+   LAYOUT VARIANT STYLES
+   ============================================ */
+
+/* Default Variant - Original */
+body.layout-variant-default {
+  // Keep original styles
+}
+
+/* Minimal Variant - Subtle rail borders */
+body.layout-variant-minimal {
+  .shell-container {
+    .grid {
+      gap: 1rem;
+      
+      aside {
+        // Left rail
+        &:first-child {
+          border-right: 1px solid rgba(255, 255, 255, 0.08);
+          padding-right: 1rem;
+          margin-right: 0.5rem;
+        }
+        
+        // Right rail
+        &:last-child {
+          border-left: 1px solid rgba(255, 255, 255, 0.08);
+          padding-left: 1rem;
+          margin-left: 0.5rem;
+        }
+      }
+    }
+  }
+  
+  // Target glass cards in rails
+  .left-rail [class*="bg-white"],
+  #right-rail-root [class*="bg-white"] {
+    &[class*="0.03"] {
+      background: rgba(255, 255, 255, 0.02) !important;
+    }
+    
+    &[class*="border-white"] {
+      border-color: rgba(255, 255, 255, 0.06) !important;
+    }
+  }
+}
+
+/* Clean Variant - Distinct rail backgrounds */
+body.layout-variant-clean {
+  .shell-container {
+    .grid {
+      gap: 1.5rem;
+      
+      aside {
+        position: relative;
+        
+        // Left rail - subtle background
+        &:first-child {
+          background: rgba(255, 255, 255, 0.015);
+          border-radius: 0;
+          padding: 0 1rem;
+          margin-right: 0.5rem;
+          border-right: 1px solid rgba(255, 255, 255, 0.1);
+          
+          &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, 
+              rgba(255, 107, 107, 0.4) 0%,
+              rgba(0, 255, 157, 0.4) 100%);
+            opacity: 0.6;
+            z-index: 1;
+          }
+        }
+        
+        // Right rail - subtle background
+        &:last-child {
+          background: rgba(255, 255, 255, 0.015);
+          border-radius: 0;
+          padding: 0 1rem;
+          margin-left: 0.5rem;
+          border-left: 1px solid rgba(255, 255, 255, 0.1);
+          
+          &::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, 
+              rgba(0, 255, 157, 0.4) 0%,
+              rgba(69, 183, 209, 0.4) 100%);
+            opacity: 0.6;
+            z-index: 1;
+          }
+        }
+      }
+    }
+  }
+  
+  // Target glass cards in rails
+  .left-rail [class*="bg-white"],
+  #right-rail-root [class*="bg-white"] {
+    &[class*="0.03"] {
+      background: rgba(255, 255, 255, 0.025) !important;
+    }
+    
+    &[class*="border-white"] {
+      border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+  }
+}
+
+/* Ultra Minimal Variant - Just subtle separators */
+body.layout-variant-ultra-minimal {
+  .shell-container {
+    .grid {
+      gap: 2rem;
+      
+      aside {
+        // Left rail - ultra subtle
+        &:first-child {
+          padding-right: 1.5rem;
+          margin-right: 0;
+          position: relative;
+          
+          &::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 10%;
+            bottom: 10%;
+            width: 1px;
+            background: linear-gradient(180deg, 
+              transparent 0%,
+              rgba(255, 255, 255, 0.05) 20%,
+              rgba(255, 255, 255, 0.05) 80%,
+              transparent 100%);
+          }
+        }
+        
+        // Right rail - ultra subtle
+        &:last-child {
+          padding-left: 1.5rem;
+          margin-left: 0;
+          position: relative;
+          
+          &::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10%;
+            bottom: 10%;
+            width: 1px;
+            background: linear-gradient(180deg, 
+              transparent 0%,
+              rgba(255, 255, 255, 0.05) 20%,
+              rgba(255, 255, 255, 0.05) 80%,
+              transparent 100%);
+          }
+        }
+      }
+    }
+  }
+  
+  // Target glass cards in rails
+  .left-rail [class*="bg-white"],
+  #right-rail-root [class*="bg-white"] {
+    &[class*="0.03"] {
+      background: rgba(255, 255, 255, 0.015) !important;
+    }
+    
+    &[class*="border-white"] {
+      border-color: rgba(255, 255, 255, 0.04) !important;
+    }
+  }
+}
+
+/* Background Variants - Darker, cleaner backgrounds */
+body.layout-variant-minimal,
+body.layout-variant-clean,
+body.layout-variant-ultra-minimal {
+  background: #0a0a0f !important;
+  
+  &::before {
+    background: #0a0a0f !important;
+  }
+  
+  // Ensure no gradient overlays
+  background-image: none !important;
+  
+  &::before {
+    background-image: none !important;
+  }
+}
+
+/* Glass Style Updates - Single Gradient for Highlights */
+body.layout-variant-minimal,
+body.layout-variant-clean,
+body.layout-variant-ultra-minimal {
+  // Single gradient for buttons and highlights
+  .bg-gradient-to-r {
+    // Override multi-color gradients with single gradient
+    &[class*="from-pink"]:not([class*="to-purple"]):not([class*="via"]) {
+      background: linear-gradient(135deg, rgba(255, 107, 107, 0.9) 0%, rgba(255, 107, 107, 0.7) 100%) !important;
+    }
+    
+    &[class*="from-yellow"] {
+      background: linear-gradient(135deg, rgba(255, 217, 61, 0.9) 0%, rgba(255, 217, 61, 0.7) 100%) !important;
+    }
+    
+    &[class*="from-emerald"],
+    &[class*="from-teal"] {
+      background: linear-gradient(135deg, rgba(0, 255, 157, 0.9) 0%, rgba(0, 255, 157, 0.7) 100%) !important;
+    }
+    
+    &[class*="from-sky"],
+    &[class*="from-blue"] {
+      background: linear-gradient(135deg, rgba(69, 183, 209, 0.9) 0%, rgba(69, 183, 209, 0.7) 100%) !important;
+    }
+    
+    &[class*="from-indigo"] {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, rgba(99, 102, 241, 0.7) 100%) !important;
+    }
+    
+    &[class*="from-amber"],
+    &[class*="from-orange"],
+    &[class*="from-rose"] {
+      background: linear-gradient(135deg, rgba(255, 107, 107, 0.9) 0%, rgba(255, 107, 107, 0.7) 100%) !important;
+    }
+    
+    &[class*="from-fuchsia"],
+    &[class*="from-purple"] {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.9) 0%, rgba(168, 85, 247, 0.7) 100%) !important;
+    }
+  }
+  
+  // Glass cards with darker background
+  [class*="bg-white"][class*="0.03"] {
+    background: rgba(255, 255, 255, 0.02) !important;
+    backdrop-filter: blur(12px);
+  }
+  
+  [class*="border-white"][class*="0.1"] {
+    border-color: rgba(255, 255, 255, 0.06) !important;
+  }
+  
+  // Enhanced glass effect
+  .backdrop-blur-md {
+    backdrop-filter: blur(16px);
+  }
+  
+  .backdrop-blur-lg {
+    backdrop-filter: blur(20px);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  body.layout-variant-clean,
+  body.layout-variant-minimal,
+  body.layout-variant-ultra-minimal {
+    .shell-container .grid aside {
+      &::before,
+      &::after {
+        display: none;
+      }
+    }
+  }
+}
+

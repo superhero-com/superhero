@@ -3,13 +3,14 @@ import { useAeSdk, useWalletConnect } from "../../hooks";
 import SwapForm from "../dex/core/SwapForm";
 import AeButton from "../AeButton";
 import { IconWallet } from "../../icons";
+import { BuyAeWidget } from "../../features/ae-eth-buy";
 
 export default function LeftRail() {
   const { activeAccount } = useAeSdk();
   const { connectWallet } = useWalletConnect();
 
   return (
-    <div className="grid gap-4 h-fit min-w-0 scrollbar-thin scrollbar-track-white/[0.02] scrollbar-thumb-gradient-to-r scrollbar-thumb-from-pink-500/60 scrollbar-thumb-via-[rgba(0,255,157,0.6)] scrollbar-thumb-to-pink-500/60 scrollbar-thumb-rounded-[10px] scrollbar-thumb-border scrollbar-thumb-border-white/10 hover:scrollbar-thumb-from-pink-500/80 hover:scrollbar-thumb-via-[rgba(0,255,157,0.8)] hover:scrollbar-thumb-to-pink-500/80">
+    <div className="grid gap-3 h-fit min-w-0 scrollbar-thin scrollbar-track-white/[0.02] scrollbar-thumb-gradient-to-r scrollbar-thumb-from-pink-500/60 scrollbar-thumb-via-[rgba(0,255,157,0.6)] scrollbar-thumb-to-pink-500/60 scrollbar-thumb-rounded-[10px] scrollbar-thumb-border scrollbar-thumb-border-white/10 hover:scrollbar-thumb-from-pink-500/80 hover:scrollbar-thumb-via-[rgba(0,255,157,0.8)] hover:scrollbar-thumb-to-pink-500/80">
       
       {/* Connect Wallet Card - Only show if not connected */}
       {!activeAccount && (
@@ -62,6 +63,11 @@ export default function LeftRail() {
         <div className="p-4">
           <SwapForm embedded />
         </div>
+      </div>
+
+      {/* Buy AE with ETH widget */}
+      <div className="bg-white/[0.03] border border-white/10 rounded-[24px] p-2.5 shadow-none">
+        <BuyAeWidget embedded={true} />
       </div>
     </div>
   );

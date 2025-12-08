@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useNavigate, useLocation, useParams, Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { SuperheroApi } from "../../api/backend";
 import { useAccountBalances } from "../../hooks/useAccountBalances";
 import WalletOverviewCard from "@/components/wallet/WalletOverviewCard";
 import { useAeSdk } from "../../hooks/useAeSdk";
 import Sparkline from "../Trendminer/Sparkline";
-import { BuyAeWidget } from "../../features/ae-eth-buy";
+import { HeaderLogo } from "../../icons";
+import { getNavigationItems } from "./app-header/navigationItems";
 
 import { useWallet } from "../../hooks";
 import { useAddressByChainName } from "../../hooks/useChainName";
@@ -323,11 +324,124 @@ export default function RightRail({
     };
   }, [selectedCurrency]);
 
+  const { t: tNav } = useTranslation('navigation');
+  const navigationItems = getNavigationItems(tNav);
+  const isDaoPath = location.pathname.startsWith('/trends/dao') || location.pathname.startsWith('/trends/daos');
+  
+  const isActiveRoute = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    if (path === '/trends/daos') return isDaoPath;
+    return location.pathname.startsWith(path);
+  };
+
   return (
-    <div id="right-rail-root" className="grid gap-4 h-fit min-w-0 scrollbar-thin scrollbar-track-white/[0.02] scrollbar-thumb-gradient-to-r scrollbar-thumb-from-pink-500/60 scrollbar-thumb-via-[rgba(0,255,157,0.6)] scrollbar-thumb-to-pink-500/60 scrollbar-thumb-rounded-[10px] scrollbar-thumb-border scrollbar-thumb-border-white/10 hover:scrollbar-thumb-from-pink-500/80 hover:scrollbar-thumb-via-[rgba(0,255,157,0.8)] hover:scrollbar-thumb-to-pink-500/80">
+    <div id="right-rail-root" className="grid gap-3 h-fit min-w-0 scrollbar-thin scrollbar-track-white/[0.02] scrollbar-thumb-gradient-to-r scrollbar-thumb-from-pink-500/60 scrollbar-thumb-via-[rgba(0,255,157,0.6)] scrollbar-thumb-to-pink-500/60 scrollbar-thumb-rounded-[10px] scrollbar-thumb-border scrollbar-thumb-border-white/10 hover:scrollbar-thumb-from-pink-500/80 hover:scrollbar-thumb-via-[rgba(0,255,157,0.8)] hover:scrollbar-thumb-to-pink-500/80">
+      {/* Navigation Bar - Horizontal like navbar */}
+      <div className="mb-3">
+        <div className="flex items-center gap-3 mb-3">
+          <Link to="/" className="flex items-center no-underline hover:no-underline group" aria-label="Superhero Home">
+            <HeaderLogo className="h-8 w-auto transition-transform duration-200 group-hover:scale-105" />
+          </Link>
+        </div>
+        <nav className="flex flex-wrap items-center gap-1.5">
+          {navigationItems
+            .filter((item: any) => !!item && !!item.id)
+            .map((item: any) => {
+              const isActive = isActiveRoute(item.path);
+              const hasChildren = Array.isArray(item.children) && item.children.length > 0;
+              const commonClass = `no-underline font-medium px-3 py-1.5 rounded-lg text-sm transition-all duration-200 relative ${
+                isActive 
+                  ? 'text-[var(--custom-links-color)] bg-[rgba(0,255,157,0.1)]' 
+                  : 'text-[var(--light-font-color)] hover:text-[var(--standard-font-color)] hover:bg-white/10'
+              }`;
+              
+              if (item.isExternal) {
+                return (
+                  <a
+                    key={item.id}
+                    href={item.path}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={commonClass}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.color = 'var(--standard-font-color)';
+                        e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.color = 'var(--light-font-color)';
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }
+                    }}
+                  >
+                    {item.label}
+                    {isActive && (
+                      <span 
+                        className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
+                        style={{ backgroundColor: 'var(--custom-links-color)' }}
+                      />
+                    )}
+                  </a>
+                );
+              }
+              
+              if (hasChildren) {
+                return (
+                  <div key={item.id} className="relative group">
+                    <Link
+                      to={item.path}
+                      className={`${commonClass} ${isActive ? '' : 'group-hover:bg-white/10'}`}
+                    >
+                      {item.label}
+                      <span className="ml-1 text-xs">▾</span>
+                      {isActive && (
+                        <span 
+                          className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
+                          style={{ backgroundColor: 'var(--custom-links-color)' }}
+                        />
+                      )}
+                    </Link>
+                    {/* Dropdown */}
+                    <div className="hidden group-hover:block absolute left-0 top-full mt-2 min-w-[220px] rounded-xl border border-white/10 bg-[var(--background-color)] shadow-[0_12px_32px_rgba(0,0,0,0.35)] py-2 z-[1001]">
+                      {item.children.map((child: any) => (
+                        <Link
+                          key={child.id}
+                          to={child.path}
+                          className="no-underline flex items-center gap-2 px-4 py-2 text-[var(--light-font-color)] hover:text-[var(--standard-font-color)] hover:bg-white/10"
+                        >
+                          <span className="w-5 text-center">{child.icon}</span>
+                          <span className="text-sm font-medium">{child.label}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+              
+              return (
+                <Link
+                  key={item.id}
+                  to={item.path}
+                  className={commonClass}
+                >
+                  {item.label}
+                  {isActive && (
+                    <span 
+                      className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
+                      style={{ backgroundColor: 'var(--custom-links-color)' }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
+        </nav>
+      </div>
+      
       {/* Network & Wallet Overview - Hidden on own profile */}
       {!isOwnProfile && (
-        <div className="bg-white/[0.03] border border-white/10 rounded-[20px] px-5 py-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
+        <div className="bg-white/[0.03] border border-white/10 rounded-[20px] px-3 py-2.5 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
           <WalletOverviewCard key={activeAccount} selectedCurrency={selectedCurrency} prices={prices} />
         </div>
       )}
@@ -441,18 +555,18 @@ export default function RightRail({
 
 
       {/* Trading Leaderboard promo */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none mb-4">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg">🏆</span>
-          <h4 className="m-0 text-white text-base font-bold">
+      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-2.5 shadow-none mb-0">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-base">🏆</span>
+          <h4 className="m-0 text-white text-sm font-bold">
             Top Traders
           </h4>
         </div>
-        <p className="text-[11px] text-[var(--light-font-color)] mb-3">
+        <p className="text-[10px] text-[var(--light-font-color)] mb-2.5">
           See which wallets are leading the markets by PnL, ROI and AUM on the Trading Leaderboard.
         </p>
         <button
-          className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black border-none rounded-xl py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5"
+          className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black border-none rounded-lg py-2 px-2.5 text-[10px] font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5"
           onClick={() => navigate('/trends/leaderboard')}
         >
           View Trading Leaderboard
@@ -460,52 +574,52 @@ export default function RightRail({
       </div>
 
       {/* Quick Actions - moved to Right Rail bottom */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-lg">⚡</span>
-          <h4 className="m-0 text-white text-base font-bold">
+      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-2.5 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
+        <div className="flex items-center gap-2 mb-2.5">
+          <span className="text-base">⚡</span>
+          <h4 className="m-0 text-white text-sm font-bold">
             Quick Actions
           </h4>
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-2">
           <button
-            className="bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white border-none rounded-lg py-2.5 px-2 text-[10px] font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/trends/tokens')}
             title={t('titles.exploreTrends')}
           >
             🔍 Explore Trends
           </button>
           <button
-            className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-none rounded-lg py-2.5 px-2 text-[10px] font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/trends/create')}
             title={t('titles.tokenizeATrend')}
           >
             🚀 Tokenize a Trend
           </button>
           <button
-            className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-none rounded-lg py-2.5 px-2 text-[10px] font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/defi/swap')}
             title={t('titles.swapTokensOnDex')}
           >
             🔄 Swap Tokens
           </button>
           <button
-            className="bg-gradient-to-r from-sky-500 to-blue-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-sky-500 to-blue-600 text-white border-none rounded-lg py-2.5 px-2 text-[10px] font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/defi/wrap')}
             title={t('titles.wrapOrUnwrapAe')}
           >
             📦 Wrap AE
           </button>
           <button
-            className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white border-none rounded-lg py-2.5 px-2 text-[10px] font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/defi/buy-ae-with-eth')}
             title={t('titles.buyAeWithEth')}
           >
             🌉 Buy AE with ETH
           </button>
           <button
-            className="bg-gradient-to-r from-amber-500 to-orange-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="bg-gradient-to-r from-amber-500 to-orange-600 text-white border-none rounded-lg py-2.5 px-2 text-[10px] font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             onClick={() => navigate('/defi/pool')}
             title={t('titles.provideLiquidityToPools')}
           >
@@ -515,7 +629,7 @@ export default function RightRail({
             href="https://quali.chat"
             target="_blank"
             rel="noopener noreferrer"
-            className="col-span-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(147,51,234,0.35)] no-underline text-center flex items-center justify-center gap-1.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="col-span-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white border-none rounded-lg py-2.5 px-2 text-[10px] font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(147,51,234,0.35)] no-underline text-center flex items-center justify-center gap-1.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
             title={t('titles.openChat')}
           >
             💬 Chat
@@ -523,10 +637,6 @@ export default function RightRail({
         </div>
       </div>
 
-      {/* Buy AE with ETH widget (compact) */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none">
-        <BuyAeWidget embedded={true} />
-      </div>
     </div>
   );
 }

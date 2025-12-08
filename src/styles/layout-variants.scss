@@ -1,212 +1,50 @@
 @use './variables.scss' as *;
 
 /* ============================================
-   LAYOUT VARIANT STYLES
+   LAYOUT VARIANT STYLES - Rail Content Options
    ============================================ */
 
-/* Default Variant - Original */
-body.layout-variant-default {
-  // Keep original styles
-}
-
-/* Minimal Variant - Subtle rail borders */
-body.layout-variant-minimal {
-  .shell-container {
-    .grid {
-      gap: 1rem;
-      
-      aside {
-        // Left rail
-        &:first-child {
-          border-right: 1px solid rgba(255, 255, 255, 0.08);
-          padding-right: 1rem;
-          margin-right: 0.5rem;
-        }
-        
-        // Right rail
-        &:last-child {
-          border-left: 1px solid rgba(255, 255, 255, 0.08);
-          padding-left: 1rem;
-          margin-left: 0.5rem;
-        }
-      }
-    }
-  }
-  
-  // Target glass cards in rails
-  .left-rail [class*="bg-white"],
-  #right-rail-root [class*="bg-white"] {
-    &[class*="0.03"] {
-      background: rgba(255, 255, 255, 0.02) !important;
-    }
-    
-    &[class*="border-white"] {
-      border-color: rgba(255, 255, 255, 0.06) !important;
-    }
-  }
-}
-
-/* Clean Variant - Distinct rail backgrounds */
-body.layout-variant-clean {
-  .shell-container {
-    .grid {
-      gap: 1.5rem;
-      
-      aside {
-        position: relative;
-        
-        // Left rail - subtle background
-        &:first-child {
-          background: rgba(255, 255, 255, 0.015);
-          border-radius: 0;
-          padding: 0 1rem;
-          margin-right: 0.5rem;
-          border-right: 1px solid rgba(255, 255, 255, 0.1);
-          
-          &::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: linear-gradient(180deg, 
-              rgba(255, 107, 107, 0.4) 0%,
-              rgba(0, 255, 157, 0.4) 100%);
-            opacity: 0.6;
-            z-index: 1;
-          }
-        }
-        
-        // Right rail - subtle background
-        &:last-child {
-          background: rgba(255, 255, 255, 0.015);
-          border-radius: 0;
-          padding: 0 1rem;
-          margin-left: 0.5rem;
-          border-left: 1px solid rgba(255, 255, 255, 0.1);
-          
-          &::before {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: linear-gradient(180deg, 
-              rgba(0, 255, 157, 0.4) 0%,
-              rgba(69, 183, 209, 0.4) 100%);
-            opacity: 0.6;
-            z-index: 1;
-          }
-        }
-      }
-    }
-  }
-  
-  // Target glass cards in rails
-  .left-rail [class*="bg-white"],
-  #right-rail-root [class*="bg-white"] {
-    &[class*="0.03"] {
-      background: rgba(255, 255, 255, 0.025) !important;
-    }
-    
-    &[class*="border-white"] {
-      border-color: rgba(255, 255, 255, 0.08) !important;
-    }
-  }
-}
-
-/* Ultra Minimal Variant - Just subtle separators */
-body.layout-variant-ultra-minimal {
-  .shell-container {
-    .grid {
-      gap: 2rem;
-      
-      aside {
-        // Left rail - ultra subtle
-        &:first-child {
-          padding-right: 1.5rem;
-          margin-right: 0;
-          position: relative;
-          
-          &::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 10%;
-            bottom: 10%;
-            width: 1px;
-            background: linear-gradient(180deg, 
-              transparent 0%,
-              rgba(255, 255, 255, 0.05) 20%,
-              rgba(255, 255, 255, 0.05) 80%,
-              transparent 100%);
-          }
-        }
-        
-        // Right rail - ultra subtle
-        &:last-child {
-          padding-left: 1.5rem;
-          margin-left: 0;
-          position: relative;
-          
-          &::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 10%;
-            bottom: 10%;
-            width: 1px;
-            background: linear-gradient(180deg, 
-              transparent 0%,
-              rgba(255, 255, 255, 0.05) 20%,
-              rgba(255, 255, 255, 0.05) 80%,
-              transparent 100%);
-          }
-        }
-      }
-    }
-  }
-  
-  // Target glass cards in rails
-  .left-rail [class*="bg-white"],
-  #right-rail-root [class*="bg-white"] {
-    &[class*="0.03"] {
-      background: rgba(255, 255, 255, 0.015) !important;
-    }
-    
-    &[class*="border-white"] {
-      border-color: rgba(255, 255, 255, 0.04) !important;
-    }
-  }
-}
-
-/* Background Variants - Darker, cleaner backgrounds */
-body.layout-variant-minimal,
-body.layout-variant-clean,
-body.layout-variant-ultra-minimal {
+/* Base: Dark background + rail borders (applies to all variants) */
+body.layout-variant-flush,
+body.layout-variant-dividers,
+body.layout-variant-integrated,
+body.layout-variant-hybrid {
   background: #0a0a0f !important;
   
   &::before {
     background: #0a0a0f !important;
+    background-image: none !important;
   }
   
   // Ensure no gradient overlays
   background-image: none !important;
   
-  &::before {
-    background-image: none !important;
+  // Remove bottom margins from rail cards - gap handles spacing
+  aside [class*="bg-white"][class*="0.03"] {
+    margin-bottom: 0 !important;
   }
-}
-
-/* Glass Style Updates - Single Gradient for Highlights */
-body.layout-variant-minimal,
-body.layout-variant-clean,
-body.layout-variant-ultra-minimal {
-  // Single gradient for buttons and highlights
+  
+  // Rail borders
+  .shell-container {
+    .grid {
+      gap: 0.75rem;
+      
+      aside {
+        // Left rail
+        &:first-child {
+          border-right: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        // Right rail
+        &:last-child {
+          border-left: 1px solid rgba(255, 255, 255, 0.08);
+        }
+      }
+    }
+  }
+  
+  // Single gradient for buttons
   .bg-gradient-to-r {
-    // Override multi-color gradients with single gradient
     &[class*="from-pink"]:not([class*="to-purple"]):not([class*="via"]) {
       background: linear-gradient(135deg, rgba(255, 107, 107, 0.9) 0%, rgba(255, 107, 107, 0.7) 100%) !important;
     }
@@ -240,32 +78,126 @@ body.layout-variant-ultra-minimal {
       background: linear-gradient(135deg, rgba(168, 85, 247, 0.9) 0%, rgba(168, 85, 247, 0.7) 100%) !important;
     }
   }
-  
-  // Glass cards with darker background
-  [class*="bg-white"][class*="0.03"] {
-    background: rgba(255, 255, 255, 0.02) !important;
-    backdrop-filter: blur(12px);
+}
+
+/* Variant 1: FLUSH - Edge-to-edge cards, no borders/rounded corners */
+body.layout-variant-flush {
+  // Left rail (now contains RightRail with id="right-rail-root") - keep original card design
+  aside:first-child #right-rail-root [class*="bg-white"][class*="0.03"] {
+    // Restore original card styling
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(12px) !important;
   }
   
-  [class*="border-white"][class*="0.1"] {
-    border-color: rgba(255, 255, 255, 0.06) !important;
+  // Right rail (now contains LeftRail with Swap) - keep original card design
+  aside:last-child .grid [class*="bg-white"][class*="0.03"] {
+    // Restore original card styling
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(12px) !important;
   }
   
-  // Enhanced glass effect
-  .backdrop-blur-md {
-    backdrop-filter: blur(16px);
+  // No additional margins - gap handles spacing
+}
+
+/* Variant 2: DIVIDERS - Keep cards but make them flush with subtle dividers */
+body.layout-variant-dividers {
+  // Left rail (now contains RightRail with id="right-rail-root") - keep original card design
+  aside:first-child #right-rail-root [class*="bg-white"][class*="0.03"] {
+    // Restore original card styling
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(12px) !important;
   }
   
-  .backdrop-blur-lg {
-    backdrop-filter: blur(20px);
+  // Right rail (now contains LeftRail with Swap) - keep original card design
+  aside:last-child .grid [class*="bg-white"][class*="0.03"] {
+    // Restore original card styling
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(12px) !important;
+  }
+  
+  // Add visible dividers between card sections in left rail
+  aside:first-child #right-rail-root.grid > div:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    padding-bottom: 0.75rem !important;
+  }
+}
+
+/* Variant 3: INTEGRATED - Subtle background, no borders */
+body.layout-variant-integrated {
+  // Left rail (now contains RightRail with id="right-rail-root") - keep original card design
+  aside:first-child #right-rail-root [class*="bg-white"][class*="0.03"] {
+    // Restore original card styling
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(12px) !important;
+  }
+  
+  // Right rail (now contains LeftRail with Swap) - keep original card design
+  aside:last-child .grid [class*="bg-white"][class*="0.03"] {
+    // Restore original card styling
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(12px) !important;
+  }
+  
+  // Add subtle dividers in left rail
+  aside:first-child #right-rail-root > div:not(:last-child) {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  }
+}
+
+/* Variant 4: HYBRID - Cards for widgets, flat for info */
+body.layout-variant-hybrid {
+  // Left rail (now contains RightRail with id="right-rail-root") - keep original card design
+  aside:first-child #right-rail-root [class*="bg-white"][class*="0.03"] {
+    // Restore original card styling
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(12px) !important;
+  }
+  
+  // Right rail (now contains LeftRail with Swap) - keep original card design
+  aside:last-child .grid [class*="bg-white"][class*="0.03"] {
+    // Restore original card styling
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(12px) !important;
+  }
+  
+  // Add dividers for info sections in left rail
+  aside:first-child #right-rail-root > div:not(:nth-last-child(2)):not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    padding-bottom: 0.75rem;
   }
 }
 
 /* Responsive adjustments */
 @media (max-width: 1024px) {
-  body.layout-variant-clean,
-  body.layout-variant-minimal,
-  body.layout-variant-ultra-minimal {
+  body.layout-variant-flush,
+  body.layout-variant-dividers,
+  body.layout-variant-integrated,
+  body.layout-variant-hybrid {
     .shell-container .grid aside {
       &::before,
       &::after {
@@ -274,4 +206,3 @@ body.layout-variant-ultra-minimal {
     }
   }
 }
-

@@ -3,7 +3,6 @@ import { Outlet } from "react-router-dom";
 import Shell from "./Shell";
 import RightRail from "./RightRail";
 import LeftRail from "./LeftRail";
-import LayoutVariantSwitcher from "./LayoutVariantSwitcher";
 
 export default function SocialLayout({
   children,
@@ -12,13 +11,10 @@ export default function SocialLayout({
 }) {
   const containerClassName = "max-w-[min(1400px,100%)]";
   return (
-    <>
-      <Shell left={<LeftRail />} right={<RightRail />} containerClassName={containerClassName}>
-        <Suspense fallback={<div className="loading-fallback" />}>
-          {children ?? <Outlet />}
-        </Suspense>
-      </Shell>
-      <LayoutVariantSwitcher />
-    </>
+    <Shell left={<RightRail />} right={<LeftRail />} containerClassName={containerClassName}>
+      <Suspense fallback={<div className="loading-fallback" />}>
+        {children ?? <Outlet />}
+      </Suspense>
+    </Shell>
   );
 }

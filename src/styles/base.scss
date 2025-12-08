@@ -660,4 +660,29 @@ textarea:disabled {
   transform: scale(0.98);
 }
 
+/* 
+  GlassSurface Component Styles
+  Used by the GlassSurface component from reactbits.dev pattern
+*/
+@keyframes holographic-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
 
+.glass-surface {
+  &:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 
+      0 12px 48px rgba(0, 0, 0, 0.3),
+      -1px -1px 0 rgba(0, 255, 255, 0.1), 
+      1px 1px 0 rgba(255, 0, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    transform: translateY(-2px) scale(1.002);
+    
+    & > div:first-child {
+      opacity: 1 !important;
+      animation-duration: 3s !important;
+    }
+  }
+}

@@ -11,7 +11,7 @@ export default function SocialLayout({
 }) {
   const containerClassName = "max-w-[min(1400px,100%)]";
   return (
-    <Shell left={<RightRail />} right={<LeftRail />} containerClassName={containerClassName}>
+    <Shell left={<LeftRail />} right={<RightRail />} containerClassName={containerClassName}>
       <Suspense fallback={<div className="loading-fallback" />}>
         {children ?? <Outlet />}
       </Suspense>

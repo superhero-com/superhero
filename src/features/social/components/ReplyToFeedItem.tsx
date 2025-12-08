@@ -15,6 +15,7 @@ import { MessageCircle } from "lucide-react";
 import { useWallet } from "../../../hooks";
 import { relativeTime, compactTime, fullTimestamp } from "../../../utils/time";
 import AspectMedia from "@/components/AspectMedia";
+import { GlassSurface } from "@/components/ui/GlassSurface";
 
 interface ReplyToFeedItemProps {
   item: PostDto;
@@ -188,20 +189,20 @@ const ReplyToFeedItem = memo(({
   const isContextMuted = !isActive && allowInlineRepliesToggle === false;
 
   return (
-    <article
+    <GlassSurface
       className={cn(
-        "relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 pt-4 pb-5 md:w-full md:mx-0 md:p-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:rounded-2xl md:backdrop-blur-xl transition-colors",
-        !isActive && "cursor-pointer hover:border-white/25 hover:shadow-none",
-        isActive && "bg-white/[0.06] md:bg-white/[0.08] md:border-white/40",
+        "relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 pt-4 pb-5 md:w-full md:mx-0 md:p-5 transition-colors",
+        isActive && "bg-white/[0.08] border-white/40",
         isContextMuted && "md:bg-white/[0.03] md:border-white/10"
       )}
+      interactive={!isActive}
       onClick={isActive ? undefined : handleOpen}
       role={isActive ? undefined : "button"}
       aria-label={isActive ? undefined : "Open post"}
     >
       {/* Top-right on-chain button */}
       {item.tx_hash && (
-        <div className="absolute top-4 right-2 md:top-5 md:right-5 z-10">
+        <div className="absolute top-4 right-2 md:top-5 md:right-5 z-20">
           <BlockchainInfoPopover
             txHash={item.tx_hash}
             createdAt={item.created_at as unknown as string}
@@ -385,7 +386,7 @@ const ReplyToFeedItem = memo(({
       </div>
       {/* Full-bleed divider on mobile */}
       <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />
-    </article>
+    </GlassSurface>
   );
 });
 

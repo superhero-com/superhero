@@ -170,7 +170,7 @@ export default function DashboardTrendingTokens() {
               <Flame className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">Trends</h1>
+              <h1 className="text-xl font-bold text-white tracking-normal sm:tracking-normal" style={{ background: 'none', backgroundImage: 'none', WebkitBackgroundClip: 'unset', WebkitTextFillColor: 'unset', letterSpacing: 'normal' }}>Trends</h1>
               <p className="text-xs text-white/60">Explore and trade current trends</p>
             </div>
           </div>

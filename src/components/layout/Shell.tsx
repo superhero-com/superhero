@@ -64,7 +64,7 @@ export default function Shell({ left, right, children, containerClassName }: She
       >
         <div
           className={[
-            "flex-grow grid grid-cols-1 gap-0 p-1 px-2 md:p-3 md:px-4 lg:p-4 lg:pb-0 sm:p-2 sm:px-3 transition-all duration-300",
+            "flex-grow grid grid-cols-1 gap-0 px-2 pb-1 md:px-4 md:pb-3 lg:px-4 lg:pb-4 sm:px-3 sm:pb-2 transition-all duration-300",
             gridClass
           ]
             .filter(Boolean)
@@ -72,17 +72,17 @@ export default function Shell({ left, right, children, containerClassName }: She
         >
           {showVisualLeft && (
             <aside className="hidden lg:block sticky top-0 self-start min-w-0 h-screen overflow-y-auto no-scrollbar">
-              <div className="pt-2 pb-6">
+              <div className="pt-4 pb-6">
                 {left}
               </div>
             </aside>
           )}
 
-          <main className="min-w-0 overflow-visible transition-all duration-300 py-1 md:py-0">{children}</main>
+          <main className="min-w-0 overflow-visible transition-all duration-300 pt-4 pb-1 md:pt-4 md:pb-0">{children}</main>
 
           {showVisualRight && (
             <aside className="hidden lg:block sticky top-0 self-start min-w-0 h-screen overflow-y-auto no-scrollbar">
-              <div className="min-w-0 h-full pb-6 pt-0">
+              <div className="min-w-0 h-full pb-6 pt-4">
                 {right}
                 <div className="mt-6">
                   <BackToTop />

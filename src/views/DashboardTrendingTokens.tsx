@@ -29,6 +29,7 @@ type OrderByOption = typeof SORT[keyof typeof SORT];
 export default function DashboardTrendingTokens() {
   const navigate = useNavigate();
   const loadMoreBtn = useRef<HTMLButtonElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore);
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
 
@@ -124,20 +125,23 @@ export default function DashboardTrendingTokens() {
     };
   }, [tokens]);
 
-  // Intersection observer for infinite loading
+  // Intersection observer for infinite loading within scrollable container
   useEffect(() => {
+    if (!scrollContainerRef.current || !loadMoreBtn.current) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.intersectionRatio === 1 && hasNextPage && !isFetching) {
+        if (entry.isIntersecting && hasNextPage && !isFetching) {
           fetchNextPage();
         }
       },
-      { threshold: 1 }
+      { 
+        root: scrollContainerRef.current,
+        threshold: 0.1
+      }
     );
 
-    if (loadMoreBtn.current) {
-      observer.observe(loadMoreBtn.current);
-    }
+    observer.observe(loadMoreBtn.current);
 
     return () => {
       observer.disconnect();
@@ -228,17 +232,24 @@ export default function DashboardTrendingTokens() {
 
       {/* Token List - Compact Table Style */}
       <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Rank</th>
-                <th className="text-left py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Token</th>
-                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Market Cap</th>
-                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Price</th>
-                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider max-w-[100px]">Graph</th>
-              </tr>
-            </thead>
+        <div ref={scrollContainerRef} className="overflow-x-auto min-h-[100vh] max-h-[calc(100vh-300px)] overflow-y-auto relative">
+          <div 
+            className="sticky top-0 z-30 border-b border-white/10 grid grid-cols-[auto_1fr_auto_auto_100px] w-full" 
+            style={{ 
+              background: 'rgba(255, 255, 255, 0.05)',
+              backdropFilter: 'blur(24px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+              isolation: 'isolate'
+            }}
+          >
+            <div className="text-left py-2 pl-3 pr-0.5 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Rank</div>
+            <div className="text-left py-2 pl-0.5 pr-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Token</div>
+            <div className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Market Cap</div>
+            <div className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Price</div>
+            <div className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Graph</div>
+          </div>
+          <table className="w-full relative">
             <tbody>
               {tokens.map((token: TokenDto, index: number) => {
                 const rank = index + 1;
@@ -247,7 +258,7 @@ export default function DashboardTrendingTokens() {
                 return (
                   <tr
                     key={token.address}
-                    className="border-b border-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 group relative hover:translate-y-0 hover:shadow-lg"
+                    className="border-b border-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 group hover:translate-y-0 hover:shadow-lg"
                     onClick={() => navigate(`/trends/tokens/${encodeURIComponent(tokenName)}`)}
                   >
                       {/* Rank */}
@@ -321,26 +332,26 @@ export default function DashboardTrendingTokens() {
               })}
             </tbody>
           </table>
+          
+          {/* Load More Button - inside scrollable container */}
+          {hasNextPage && (
+            <div className="py-4 text-center">
+              <button
+                ref={loadMoreBtn}
+                onClick={() => fetchNextPage()}
+                disabled={isFetching}
+                className={`px-4 py-2 rounded-lg border-none text-white cursor-pointer text-xs font-semibold transition-all duration-300 ${
+                  isFetching
+                    ? 'bg-white/10 cursor-not-allowed opacity-60'
+                    : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 shadow-lg hover:shadow-xl hover:scale-105'
+                }`}
+              >
+                {isFetching ? 'Loading...' : 'Load More'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Load More Button */}
-      {hasNextPage && (
-        <div className="mt-4 text-center">
-          <button
-            ref={loadMoreBtn}
-            onClick={() => fetchNextPage()}
-            disabled={isFetching}
-            className={`px-4 py-2 rounded-lg border-none text-white cursor-pointer text-xs font-semibold transition-all duration-300 ${
-              isFetching
-                ? 'bg-white/10 cursor-not-allowed opacity-60'
-                : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 shadow-lg hover:shadow-xl hover:scale-105'
-            }`}
-          >
-            {isFetching ? 'Loading...' : 'Load More'}
-          </button>
-        </div>
-      )}
 
       {/* Empty State */}
       {!tokens.length && !isFetching && (
@@ -352,17 +363,24 @@ export default function DashboardTrendingTokens() {
       {/* Loading State */}
       {isFetching && !tokens.length && (
         <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Rank</th>
-                  <th className="text-left py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Token</th>
-                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Market Cap</th>
-                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Price</th>
-                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider max-w-[100px]">Graph</th>
-                </tr>
-              </thead>
+          <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto relative">
+            <div 
+              className="sticky top-0 z-30 border-b border-white/10 grid grid-cols-[auto_1fr_auto_auto_100px] w-full" 
+              style={{ 
+                background: 'rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(24px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+                isolation: 'isolate'
+              }}
+            >
+              <div className="text-left py-2 pl-3 pr-0.5 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Rank</div>
+              <div className="text-left py-2 pl-0.5 pr-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Token</div>
+              <div className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Market Cap</div>
+              <div className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Price</div>
+              <div className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Graph</div>
+            </div>
+            <table className="w-full relative">
               <tbody>
                 {[...Array(5)].map((_, i) => (
                   <tr key={i} className="border-b border-white/5">

@@ -28,7 +28,8 @@ function useUrlQuery() {
 
 export default function FeedList({
   standalone = true,
-}: { standalone?: boolean } = {}) {
+  compact = false,
+}: { standalone?: boolean; compact?: boolean } = {}) {
   const navigate = useNavigate();
   const location = useLocation();
   const urlQuery = useUrlQuery();
@@ -996,6 +997,7 @@ export default function FeedList({
             commentCount={item.total_comments ?? 0}
             allowInlineRepliesToggle={false}
             onOpenPost={handleItemClick}
+            compact={compact}
           />
         );
         i += 1;
@@ -1325,6 +1327,7 @@ export default function FeedList({
                 commentCount={item.total_comments ?? 0}
                 allowInlineRepliesToggle={false}
                 onOpenPost={handleItemClick}
+                compact={compact}
               />
             ))}
           </>

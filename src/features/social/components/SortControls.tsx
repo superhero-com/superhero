@@ -1,5 +1,4 @@
 import React, { memo } from "react";
-import { AeButton } from "../../../components/ui/ae-button";
 import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 import {
@@ -142,60 +141,82 @@ const SortControls = memo(
         </div>
       </div>
 
-      {/* Desktop: keep existing pill style */}
+      {/* Desktop: use dropdown like mobile */}
       <div className="hidden md:flex w-full items-center justify-between gap-2">
-        <div className="inline-flex items-center gap-1.5 bg-white/5 rounded-full p-0.5 border border-white/10 md:w-auto">
-          <AeButton
-            onClick={() => onSortChange("hot")}
-            variant={sortBy === "hot" ? "default" : "ghost"}
-            size="xs"
-            noShadow={true}
-            className={cn(
-              "rounded-full px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24 md:uppercase",
-              sortBy === "hot"
-                ? "bg-[#1161FE] text-white hover:bg-[#1161FE] focus:bg-[#1161FE]"
-                : "text-white/70 hover:text-white hover:bg-white/10 focus:text-white focus:bg-white/10"
-            )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 text-base font-bold text-white tracking-tight [text-shadow:none] [background:none] [-webkit-text-fill-color:white] hover:opacity-80 transition-opacity focus:outline-none">
+              <span>{getMobileTitle()}</span>
+              <ChevronDown className="h-4 w-4 text-white/70" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent 
+            align="start" 
+            sideOffset={8}
+            className="bg-white/5 backdrop-blur-xl border-white/20 text-white min-w-[240px] py-2 rounded-xl shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-4 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-top"
+            style={{
+              background: "radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.06), transparent 40%), rgba(255, 255, 255, 0.03)",
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
+            }}
           >
-            Popular
-          </AeButton>
-          <AeButton
-            onClick={() => onSortChange("latest")}
-            variant={sortBy === "latest" ? "default" : "ghost"}
-            size="xs"
-            noShadow={true}
-            className={cn(
-              "rounded-full px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24 md:uppercase",
-              sortBy === "latest"
-                ? "bg-[#1161FE] text-white hover:bg-[#1161FE] focus:bg-[#1161FE]"
-                : "text-white/70 hover:text-white hover:bg-white/10 focus:text-white focus:bg-white/10"
-            )}
-          >
-            Latest
-          </AeButton>
-        </div>
-        {sortBy === 'hot' && (
-          <div className="inline-flex items-center gap-1 bg-white/5 rounded-full p-0.5 border border-white/10 ml-auto">
-            {(['24h','7d','all'] as const).map((tf) => {
-              const isActive = popularWindow === tf;
-              const label = tf === '24h' ? 'Today' : tf === '7d' ? 'This week' : 'All time';
-              return (
-                <button
-                  key={tf}
-                  onClick={() => onPopularWindowChange && onPopularWindowChange(tf)}
-                  className={cn(
-                    'px-3 py-1.5 text-[11px] rounded-full border transition-all duration-300',
-                    isActive
-                      ? 'bg-[#1161FE] text-white border-transparent shadow-sm'
-                      : 'bg-transparent text-white/80 border-white/10 hover:bg-white/10'
-                  )}
+            {sortBy === "hot" ? (
+              <>
+                {popularWindow !== "24h" && (
+                  <DropdownMenuItem
+                    onClick={() => handleMobileOptionSelect("today")}
+                    className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+                  >
+                    Today
+                  </DropdownMenuItem>
+                )}
+                {popularWindow !== "7d" && (
+                  <DropdownMenuItem
+                    onClick={() => handleMobileOptionSelect("this-week")}
+                    className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+                  >
+                    This week
+                  </DropdownMenuItem>
+                )}
+                {popularWindow !== "all" && (
+                  <DropdownMenuItem
+                    onClick={() => handleMobileOptionSelect("all-time")}
+                    className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+                  >
+                    All time
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem
+                  onClick={() => handleMobileOptionSelect("latest")}
+                  className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
                 >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        )}
+                  Latest
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <>
+                <DropdownMenuItem
+                  onClick={() => handleMobileOptionSelect("today")}
+                  className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+                >
+                  Popular today
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleMobileOptionSelect("this-week")}
+                  className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+                >
+                  Popular this week
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleMobileOptionSelect("all-time")}
+                  className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+                >
+                  Popular all time
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
     );

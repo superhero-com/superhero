@@ -64,7 +64,7 @@ export default function Shell({ left, right, children, containerClassName }: She
       >
         <div
           className={[
-            "flex-grow grid grid-cols-1 gap-6 p-1 px-2 md:p-3 md:px-4 lg:p-4 lg:pb-0 sm:gap-4 sm:p-2 sm:px-3 transition-all duration-300",
+            "flex-grow grid grid-cols-1 gap-0 p-1 px-2 md:p-3 md:px-4 lg:p-4 lg:pb-0 sm:p-2 sm:px-3 transition-all duration-300",
             gridClass
           ]
             .filter(Boolean)

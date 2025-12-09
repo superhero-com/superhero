@@ -24,20 +24,20 @@ body.layout-variant-hybrid {
     margin-bottom: 0 !important;
   }
   
-  // Rail borders
+  // Rail borders - removed vertical dividers
   .shell-container {
     .grid {
       gap: 0.75rem;
       
       aside {
-        // Left rail
+        // Left rail - no border
         &:first-child {
-          border-right: 1px solid rgba(255, 255, 255, 0.08);
+          border-right: none;
         }
         
-        // Right rail
+        // Right rail - no border
         &:last-child {
-          border-left: 1px solid rgba(255, 255, 255, 0.08);
+          border-left: none;
         }
       }
     }

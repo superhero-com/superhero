@@ -66,9 +66,9 @@ const SortControls = memo(
         <div className="flex items-center justify-between border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] px-4 pt-3 pb-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 text-base font-bold text-white tracking-tight [text-shadow:none] [background:none] [-webkit-text-fill-color:white] hover:opacity-80 transition-opacity focus:outline-none">
+              <button className="flex items-center gap-1.5 text-sm font-semibold text-white tracking-tight [text-shadow:none] [background:none] [-webkit-text-fill-color:white] hover:opacity-80 transition-opacity focus:outline-none">
                 <span>{getMobileTitle()}</span>
-                <ChevronDown className="h-4 w-4 text-white/70" />
+                <ChevronDown className="h-3.5 w-3.5 text-white/70" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent 
@@ -142,16 +142,16 @@ const SortControls = memo(
       </div>
 
       {/* Desktop: use dropdown like mobile */}
-      <div className="hidden md:flex w-full items-center justify-between gap-2">
+      <div className="hidden md:flex w-full items-center justify-end gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 text-base font-bold text-white tracking-tight [text-shadow:none] [background:none] [-webkit-text-fill-color:white] hover:opacity-80 transition-opacity focus:outline-none">
+            <button className="flex items-center gap-1.5 text-sm font-semibold text-white tracking-tight [text-shadow:none] [background:none] [-webkit-text-fill-color:white] hover:opacity-80 transition-opacity focus:outline-none">
               <span>{getMobileTitle()}</span>
-              <ChevronDown className="h-4 w-4 text-white/70" />
+              <ChevronDown className="h-3.5 w-3.5 text-white/70" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent 
-            align="start" 
+            align="end" 
             sideOffset={8}
             className="bg-white/5 backdrop-blur-xl border-white/20 text-white min-w-[240px] py-2 rounded-xl shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-4 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-top"
             style={{

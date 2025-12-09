@@ -4,9 +4,15 @@ import { TokensService } from '@/api/generated';
 import type { TokenDto } from '@/api/generated';
 import { GlassSurface } from '@/components/ui/GlassSurface';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, Flame, Zap } from 'lucide-react';
+import { TrendingUp, Flame, Zap, ChevronDown } from 'lucide-react';
 import { PriceDataFormatter } from '@/features/shared/components';
 import TokenLineChart from '@/features/trending/components/TokenLineChart';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const SORT = {
   marketCap: 'market_cap',
@@ -23,8 +29,23 @@ type OrderByOption = typeof SORT[keyof typeof SORT];
 export default function DashboardTrendingTokens() {
   const navigate = useNavigate();
   const loadMoreBtn = useRef<HTMLButtonElement>(null);
-  const [orderBy] = useState<OrderByOption>(SORT.trendingScore);
-  const [orderDirection] = useState<'ASC' | 'DESC'>('DESC');
+  const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.trendingScore);
+  const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
+
+  const getSortLabel = () => {
+    if (orderBy === SORT.trendingScore) return 'Now trending';
+    if (orderBy === SORT.marketCap) return 'Market Cap';
+    if (orderBy === SORT.price) return 'Price';
+    if (orderBy === SORT.name) return 'Name';
+    if (orderBy === SORT.newest) return 'Newest';
+    if (orderBy === SORT.oldest) return 'Oldest';
+    if (orderBy === SORT.holdersCount) return 'Holders';
+    return 'Now trending';
+  };
+
+  const handleSortChange = (newOrderBy: OrderByOption) => {
+    setOrderBy(newOrderBy);
+  };
 
   const { data, isFetching, fetchNextPage, hasNextPage } = useInfiniteQuery({
     initialPageParam: 1,
@@ -100,14 +121,81 @@ export default function DashboardTrendingTokens() {
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="mb-4">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
-            <Flame className="w-4 h-4 text-white" />
+      <div className="mb-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
+              <Flame className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-white">Tokenized Trends</h1>
+              <p className="text-xs text-white/60">Ranked by {getSortLabel().toLowerCase()}</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">Trending Tokens</h1>
-            <p className="text-xs text-white/60">Ranked by trending score</p>
+          
+          {/* Sort Dropdown */}
+          <div className="flex items-center h-[52px] justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1.5 text-sm font-semibold text-white tracking-tight [text-shadow:none] [background:none] [-webkit-text-fill-color:white] hover:opacity-80 transition-opacity focus:outline-none">
+                  <span>{getSortLabel()}</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-white/70" />
+                </button>
+              </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              sideOffset={8}
+              className="bg-white/5 backdrop-blur-xl border-white/20 text-white min-w-[200px] py-2 rounded-xl shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-4 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-top"
+              style={{
+                background: "radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.06), transparent 40%), rgba(255, 255, 255, 0.03)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
+              }}
+            >
+              <DropdownMenuItem
+                onClick={() => handleSortChange(SORT.trendingScore)}
+                className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+              >
+                Now trending
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleSortChange(SORT.marketCap)}
+                className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+              >
+                Market Cap
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleSortChange(SORT.price)}
+                className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+              >
+                Price
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleSortChange(SORT.name)}
+                className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+              >
+                Name
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleSortChange(SORT.newest)}
+                className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+              >
+                Newest
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleSortChange(SORT.oldest)}
+                className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+              >
+                Oldest
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleSortChange(SORT.holdersCount)}
+                className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
+              >
+                Holders
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           </div>
         </div>
       </div>
@@ -173,7 +261,7 @@ export default function DashboardTrendingTokens() {
                     
                     {/* Price */}
                     <td className="py-2 px-3 text-right">
-                      <div className="bg-gradient-to-r from-yellow-400 to-cyan-500 bg-clip-text text-transparent text-xs text-right inline-block ml-auto">
+                      <div className="text-yellow-400 text-xs text-right inline-block ml-auto">
                         <PriceDataFormatter
                           hideFiatPrice
                           priceData={token.price_data}

@@ -82,7 +82,7 @@ export default function Shell({ left, right, children, containerClassName }: She
 
           {showVisualRight && (
             <aside className="hidden lg:block sticky top-0 self-start min-w-0 h-screen overflow-y-auto no-scrollbar">
-              <div className="min-w-0 h-full pt-2 pb-6">
+              <div className="min-w-0 h-full pb-6 pt-0">
                 {right}
                 <div className="mt-6">
                   <BackToTop />

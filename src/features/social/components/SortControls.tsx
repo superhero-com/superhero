@@ -40,7 +40,7 @@ const SortControls = memo(
       }
       // Popular feed
       const timeLabel = popularWindow === '24h' ? 'Today' : popularWindow === '7d' ? 'This week' : 'All time';
-      return `Popular ${timeLabel.toLowerCase()}`;
+      return `Hot ${timeLabel.toLowerCase()}`;
     };
 
     // Helper function to handle dropdown selection
@@ -126,7 +126,7 @@ const SortControls = memo(
                     onClick={() => handleMobileOptionSelect("this-week")}
                     className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
                   >
-                    Popular this week
+                    Hot this week
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => handleMobileOptionSelect("all-time")}

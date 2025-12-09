@@ -4,9 +4,9 @@ import { TokensService } from '@/api/generated';
 import type { TokenDto } from '@/api/generated';
 import { GlassSurface } from '@/components/ui/GlassSurface';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, Flame, Zap, ChevronDown } from 'lucide-react';
+import { TrendingUp, Flame, Zap, ChevronDown, Crown } from 'lucide-react';
 import { PriceDataFormatter } from '@/features/shared/components';
-import TokenLineChart from '@/features/trending/components/TokenLineChart';
+import TokenPriceChart from '@/components/charts/TokenPriceChart';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,6 +69,60 @@ export default function DashboardTrendingTokens() {
     [data]
   ) as TokenDto[];
 
+  // Get trending score from token - it might be in metaInfo or as a computed field
+  const getTrendingScore = (token: TokenDto): number => {
+    // Check if trending_score is in metaInfo
+    if (token.metaInfo && typeof token.metaInfo.trending_score === 'number') {
+      return token.metaInfo.trending_score;
+    }
+    if (token.metaInfo && typeof token.metaInfo.trending_score === 'string') {
+      return parseFloat(token.metaInfo.trending_score) || 0;
+    }
+    // Check if it's a direct property (might be added by backend)
+    if ((token as any).trending_score !== undefined) {
+      const score = (token as any).trending_score;
+      return typeof score === 'number' ? score : parseFloat(String(score)) || 0;
+    }
+    return 0;
+  };
+
+  // Calculate top 3 trending tokens and highest market cap token (regardless of current sort)
+  const { topTrendingTokens, highestMarketCapToken } = useMemo(() => {
+    if (!tokens.length) return { topTrendingTokens: [], highestMarketCapToken: null };
+
+    // Get all tokens with their trending scores
+    const tokensWithTrending = tokens.map(token => ({
+      token,
+      trendingScore: getTrendingScore(token),
+    }));
+
+    // Sort by trending score descending and get top 3
+    const sortedByTrending = [...tokensWithTrending].sort((a, b) => b.trendingScore - a.trendingScore);
+    const topTrending = sortedByTrending.slice(0, 3).map(item => item.token.address);
+
+    // Find token with highest market cap
+    // Use AE value from market_cap_data (PriceDto structure has 'ae' property)
+    let highestMarketCap = 0;
+    let highestMarketCapToken = null;
+    
+    tokens.forEach(token => {
+      // PriceDto has 'ae' property, not 'value'
+      const marketCapValue = token.market_cap_data?.ae;
+      if (marketCapValue !== undefined && marketCapValue !== null) {
+        const numValue = typeof marketCapValue === 'string' ? parseFloat(marketCapValue) : Number(marketCapValue);
+        if (!isNaN(numValue) && numValue > highestMarketCap) {
+          highestMarketCap = numValue;
+          highestMarketCapToken = token.address;
+        }
+      }
+    });
+
+    return {
+      topTrendingTokens: topTrending,
+      highestMarketCapToken,
+    };
+  }, [tokens]);
+
   // Intersection observer for infinite loading
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -88,23 +142,6 @@ export default function DashboardTrendingTokens() {
       observer.disconnect();
     };
   }, [hasNextPage, isFetching, fetchNextPage]);
-
-  // Get trending score from token - it might be in metaInfo or as a computed field
-  const getTrendingScore = (token: TokenDto): number => {
-    // Check if trending_score is in metaInfo
-    if (token.metaInfo && typeof token.metaInfo.trending_score === 'number') {
-      return token.metaInfo.trending_score;
-    }
-    if (token.metaInfo && typeof token.metaInfo.trending_score === 'string') {
-      return parseFloat(token.metaInfo.trending_score) || 0;
-    }
-    // Check if it's a direct property (might be added by backend)
-    if ((token as any).trending_score !== undefined) {
-      const score = (token as any).trending_score;
-      return typeof score === 'number' ? score : parseFloat(String(score)) || 0;
-    }
-    return 0;
-  };
 
   const getRankBadgeColor = (rank: number) => {
     if (rank === 1) return 'from-yellow-400 to-yellow-600 shadow-yellow-500/50';
@@ -128,8 +165,8 @@ export default function DashboardTrendingTokens() {
               <Flame className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">Tokenized Trends</h1>
-              <p className="text-xs text-white/60">Ranked by {getSortLabel().toLowerCase()}</p>
+              <h1 className="text-xl font-bold text-white">Trends</h1>
+              <p className="text-xs text-white/60">Explore and trade current trends</p>
             </div>
           </div>
           
@@ -201,7 +238,7 @@ export default function DashboardTrendingTokens() {
       </div>
 
       {/* Token List - Compact Table Style */}
-      <GlassSurface className="overflow-hidden" interactive={false}>
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -210,7 +247,7 @@ export default function DashboardTrendingTokens() {
                 <th className="text-left py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Token</th>
                 <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Market Cap</th>
                 <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Price</th>
-                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Chart</th>
+                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider max-w-[100px]">Graph</th>
               </tr>
             </thead>
             <tbody>
@@ -221,12 +258,12 @@ export default function DashboardTrendingTokens() {
                 return (
                   <tr
                     key={token.address}
-                    className="border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors group relative hover:translate-y-0"
+                    className="border-b border-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 group relative hover:translate-y-0 hover:shadow-lg"
                     onClick={() => navigate(`/trends/tokens/${encodeURIComponent(tokenName)}`)}
                   >
                     {/* Rank */}
                     <td className="py-2 pl-3 pr-0.5">
-                      <div className={`inline-flex items-center justify-center w-6 h-6 rounded-md bg-gradient-to-br ${getRankBadgeColor(rank)} font-bold ${rank <= 3 ? 'text-gray-900' : 'text-white'} text-xs shadow-md`}>
+                      <div className={`inline-flex items-center justify-center w-6 h-6 rounded-md bg-gradient-to-br ${getRankBadgeColor(rank)} font-black ${rank <= 3 ? 'text-gray-900' : 'text-white'} text-xs shadow-md`}>
                         {rank}
                       </div>
                     </td>
@@ -235,15 +272,25 @@ export default function DashboardTrendingTokens() {
                     <td className="py-2 pl-0.5 pr-3">
                       <div className="flex items-center gap-1.5">
                         <span className="font-semibold text-white text-sm group-hover:text-[var(--neon-teal)] transition-colors">
-                          <span className="text-white/60 text-xs mr-0.5">#</span>
+                          <span className="text-white/60 group-hover:text-[var(--neon-teal)] text-xs mr-0.5 transition-colors">#</span>
                           {token.symbol || token.name}
                         </span>
-                        {rank <= 3 && (
-                          <span className="flex-shrink-0">
-                            {rank === 1 && <Zap className="w-3 h-3 text-yellow-400" />}
-                            {rank === 2 && <TrendingUp className="w-3 h-3 text-gray-300" />}
-                            {rank === 3 && <Flame className="w-3 h-3 text-orange-400" />}
-                          </span>
+                        {/* Show icons - crown first if applicable, then flame */}
+                        {(highestMarketCapToken === token.address || topTrendingTokens.includes(token.address)) && (
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            {/* Crown icon for highest market cap token (shown first) */}
+                            {highestMarketCapToken === token.address && (
+                              <span className="flex-shrink-0">
+                                <Crown className="w-3 h-3 text-yellow-400" />
+                              </span>
+                            )}
+                            {/* Flame icons for top 3 trending tokens */}
+                            {topTrendingTokens.includes(token.address) && (
+                              <span className={`flex-shrink-0 ${topTrendingTokens.indexOf(token.address) === 0 ? 'flame-pulsate' : ''}`}>
+                                <Flame className={`${topTrendingTokens.indexOf(token.address) === 0 ? 'w-4 h-4' : topTrendingTokens.indexOf(token.address) === 1 ? 'w-3.5 h-3.5' : 'w-3 h-3'} ${topTrendingTokens.indexOf(token.address) === 0 ? 'text-orange-400' : topTrendingTokens.indexOf(token.address) === 1 ? 'text-orange-500' : 'text-orange-600'}`} />
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
                     </td>
@@ -270,13 +317,12 @@ export default function DashboardTrendingTokens() {
                     </td>
                     
                     {/* Chart */}
-                    <td className="py-2 px-3 text-right">
+                    <td className="py-2 px-3 text-right max-w-[100px]">
                       {token.sale_address && (
                         <div className="ml-auto max-w-[100px]">
-                          <TokenLineChart
+                          <TokenPriceChart
                             saleAddress={token.sale_address}
                             height={24}
-                            hideTimeframe={true}
                           />
                         </div>
                       )}
@@ -287,7 +333,7 @@ export default function DashboardTrendingTokens() {
             </tbody>
           </table>
         </div>
-      </GlassSurface>
+      </div>
 
       {/* Load More Button */}
       {hasNextPage && (
@@ -316,7 +362,7 @@ export default function DashboardTrendingTokens() {
 
       {/* Loading State */}
       {isFetching && !tokens.length && (
-        <GlassSurface className="overflow-hidden" interactive={false}>
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -325,7 +371,7 @@ export default function DashboardTrendingTokens() {
                   <th className="text-left py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Token</th>
                   <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Market Cap</th>
                   <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Price</th>
-                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Chart</th>
+                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider max-w-[100px]">Graph</th>
                 </tr>
               </thead>
               <tbody>
@@ -351,7 +397,7 @@ export default function DashboardTrendingTokens() {
               </tbody>
             </table>
           </div>
-        </GlassSurface>
+        </div>
       )}
     </div>
   );

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import FeedList from '@/features/social/views/FeedList';
-import { MessageCircleMore, ChevronDown } from 'lucide-react';
+import { MessagesSquare, ChevronDown } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +37,7 @@ export default function FeedWidget() {
       return "Latest";
     }
     const timeLabel = popularWindow === '24h' ? 'Today' : popularWindow === '7d' ? 'This week' : 'All time';
-    return `Popular ${timeLabel.toLowerCase()}`;
+    return `Hot ${timeLabel.toLowerCase()}`;
   };
 
   const handleMobileOptionSelect = (option: string) => {
@@ -67,7 +67,7 @@ export default function FeedWidget() {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-              <MessageCircleMore className="w-4 h-4 text-white" />
+              <MessagesSquare className="w-4 h-4 text-white" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-white">Feed</h1>
@@ -139,7 +139,7 @@ export default function FeedWidget() {
                       onClick={() => handleMobileOptionSelect("this-week")}
                       className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
                     >
-                      Popular this week
+                      Hot this week
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => handleMobileOptionSelect("all-time")}

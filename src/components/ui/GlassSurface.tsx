@@ -43,7 +43,7 @@ export function GlassSurface({
     position: 'relative',
     background: variantStyles[variant].background,
     border: `1px solid ${variantStyles[variant].borderColor}`,
-    borderRadius: '24px',
+    borderRadius: '12px',
     backdropFilter: variantStyles[variant].backdropFilter,
     WebkitBackdropFilter: variantStyles[variant].backdropFilter,
     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',

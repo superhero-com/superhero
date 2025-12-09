@@ -24,6 +24,7 @@ interface ReplyToFeedItemProps {
   hideParentContext?: boolean; // when true, do not render parent context header
   allowInlineRepliesToggle?: boolean; // when false, clicking replies just opens post
   isActive?: boolean; // when true, visually highlight as the focused post
+  compact?: boolean; // when true, use smaller spacing and fonts for widget display
   /**
    * Optional label used on Trend token pages to indicate that the author
    * is a holder of the current token, including their balance, e.g.:
@@ -84,6 +85,7 @@ const ReplyToFeedItem = memo(({
   hideParentContext = false,
   allowInlineRepliesToggle = true,
   isActive = false,
+  compact = false,
   tokenHolderLabel,
 }: ReplyToFeedItemProps) => {
   const { t } = useTranslation('social');
@@ -191,7 +193,8 @@ const ReplyToFeedItem = memo(({
   return (
     <GlassSurface
       className={cn(
-        "relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 pt-4 pb-5 md:w-full md:mx-0 md:p-5 transition-colors",
+        "relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 pt-4 pb-5 md:w-full md:mx-0 transition-colors",
+        compact ? "md:p-3" : "md:p-5",
         isActive && "bg-white/[0.08] border-white/40",
         isContextMuted && "md:bg-white/[0.03] md:border-white/10"
       )}
@@ -209,27 +212,28 @@ const ReplyToFeedItem = memo(({
             sender={item.sender_address}
             contract={(item as any).contract_address}
             postId={String(item.id)}
-            className="px-2"
+            className={compact ? "px-1" : "px-2"}
             showLabel
+            compact={compact}
           />
         </div>
       )}
       {/* Main row: avatar next to name/time like X */}
-      <div className="flex gap-2 md:gap-3 items-start">
+      <div className={cn("flex items-start", compact ? "gap-1.5 md:gap-2" : "gap-2 md:gap-3")}>
         <div className="flex-shrink-0 pt-0.5">
           <div className="md:hidden">
-            <AddressAvatarWithChainNameFeed address={authorAddress} size={34} overlaySize={16} showAddressAndChainName={false} />
+            <AddressAvatarWithChainNameFeed address={authorAddress} size={compact ? 28 : 34} overlaySize={compact ? 12 : 16} showAddressAndChainName={false} />
           </div>
           <div className="hidden md:block">
-            <AddressAvatarWithChainNameFeed address={authorAddress} size={40} overlaySize={20} showAddressAndChainName={false} />
+            <AddressAvatarWithChainNameFeed address={authorAddress} size={compact ? 32 : 40} overlaySize={compact ? 14 : 20} showAddressAndChainName={false} />
           </div>
         </div>
 
         <div className="flex-1 min-w-0">
           {/* Header: name · time */}
           <div className="flex items-center justify-between gap-2.5">
-            <div className="flex items-baseline gap-2.5 min-w-0">
-              <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
+            <div className={cn("flex items-baseline min-w-0", compact ? "gap-1.5" : "gap-2.5")}>
+              <div className={cn("font-semibold text-white truncate", compact ? "text-[13px]" : "text-[15px]")}>{displayName}</div>
               <span className="text-white/50 shrink-0">·</span>
               {item.tx_hash ? (
                 <BlockchainInfoPopover
@@ -239,17 +243,17 @@ const ReplyToFeedItem = memo(({
                   contract={(item as any).contract_address}
                   postId={String(item.id)}
                   triggerContent={
-                    <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>
+                    <span className={cn("text-white/70 whitespace-nowrap shrink-0", compact ? "text-[10px]" : "text-[12px]")} title={fullTimestamp(item.created_at as unknown as string)}>
                       {compactTime(item.created_at as unknown as string)}
                     </span>
                   }
                 />
               ) : (
-                <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
+                <div className={cn("text-white/70 whitespace-nowrap shrink-0", compact ? "text-[10px]" : "text-[12px]")} title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
               )}
             </div>
           </div>
-          <div className="mt-0.5 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{authorAddress}</div>
+          <div className={cn("mt-0.5 text-white/65 font-mono leading-[1.2] truncate", compact ? "text-[8px] md:text-[9px]" : "text-[9px] md:text-[10px]")}>{authorAddress}</div>
 
           {/* Trend token holder pill (when viewing a token feed and author holds the token) */}
           {tokenHolderLabel && (
@@ -269,7 +273,10 @@ const ReplyToFeedItem = memo(({
                 const slugOrId = (parent as any)?.slug || String(parentId).replace(/_v3$/, "");
                 onOpenPost(slugOrId);
               }}
-              className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/15 rounded-xl p-3 transition-none shadow-none hover:bg-white/[0.04] hover:border-white/40 hover:shadow-none"
+              className={cn(
+                "block w-full text-left bg-white/[0.04] border border-white/15 rounded-xl transition-none shadow-none hover:bg-white/[0.04] hover:border-white/40 hover:shadow-none",
+                compact ? "mt-2 mb-1.5 p-2" : "mt-3 mb-2 p-3"
+              )}
               title={t('openParent')}
             >
               <div className="flex items-end mb-1 min-w-0">
@@ -304,7 +311,7 @@ const ReplyToFeedItem = memo(({
           )}
 
           {/* Body */}
-          <div className="mt-3 text-[15px] text-foreground leading-snug">
+          <div className={cn("mt-3 text-foreground leading-snug", compact ? "text-[13px]" : "text-[15px]")}>
             {linkify(item.content, { knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())) })}
           </div>
 
@@ -312,7 +319,8 @@ const ReplyToFeedItem = memo(({
           {media.length > 0 && (
             <div
               className={cn(
-                "mt-3 grid gap-2 rounded-xl overflow-hidden",
+                "grid rounded-xl overflow-hidden",
+                compact ? "mt-2 gap-1.5" : "mt-3 gap-2",
                 media.length === 1 && "grid-cols-1",
                 media.length === 2 && "grid-cols-2",
                 media.length >= 3 && "grid-cols-2"
@@ -320,40 +328,45 @@ const ReplyToFeedItem = memo(({
             >
               {media.slice(0, 4).map((m: string, index: number) => (
                 media.length === 1 ? (
-                  <AspectMedia key={`${postId}-${index}`} src={m} alt="media" />
+                  <AspectMedia key={`${postId}-${index}`} src={m} alt="media" maxHeight={compact ? 120 : undefined} />
                 ) : (
-                  <AspectMedia key={`${postId}-${index}`} src={m} alt="media" maxHeight={200} />
+                  <AspectMedia key={`${postId}-${index}`} src={m} alt="media" maxHeight={compact ? 120 : 200} />
                 )
               ))}
             </div>
           )}
 
           {/* Actions */}
-          <div className="mt-4 flex items-center justify-between">
-            <div className="inline-flex items-center gap-4 md:gap-2">
-              <PostTipButton toAddress={authorAddress} postId={String(postId)} />
-            <button
-              type="button"
-              onClick={(e) => {
-                if (allowInlineRepliesToggle) {
-                  e.stopPropagation();
-                  toggleReplies();
-                  if (!showReplies) setTimeout(() => refetchChildReplies(), 0);
-                } else {
-                  // On post pages: do not toggle, just open the post
-                  e.stopPropagation();
-                  handleOpen();
-                }
-              }}
-              className="inline-flex items-center gap-1.5 text-[13px] px-0 py-0 rounded-lg bg-transparent border-0 h-auto min-h-0 min-w-0 md:px-2.5 md:py-1 md:h-[28px] md:min-h-[28px] md:bg-white/[0.04] md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25 md:transition-colors"
-              aria-expanded={allowInlineRepliesToggle ? showReplies : undefined}
-              aria-controls={`replies-${postId}`}
-            >
-              <MessageCircle className="w-[14px] h-[14px]" strokeWidth={2.25} />
-            {typeof descendantCount === 'number' ? descendantCount : commentCount}
-            </button>
+          <div className={cn("flex items-center justify-between", compact ? "mt-2" : "mt-4")}>
+            <div className={cn("inline-flex items-center", compact ? "gap-2 md:gap-1.5" : "gap-4 md:gap-2")}>
+              <PostTipButton toAddress={authorAddress} postId={String(postId)} compact={compact} />
+              <button
+                type="button"
+                onClick={(e) => {
+                  if (allowInlineRepliesToggle) {
+                    e.stopPropagation();
+                    toggleReplies();
+                    if (!showReplies) setTimeout(() => refetchChildReplies(), 0);
+                  } else {
+                    // On post pages: do not toggle, just open the post
+                    e.stopPropagation();
+                    handleOpen();
+                  }
+                }}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-lg bg-transparent border-0 h-auto min-h-0 min-w-0 md:transition-colors",
+                  compact 
+                    ? "text-[11px] px-0 py-0 md:px-1.5 md:py-0.5 md:h-[22px] md:min-h-[22px] md:bg-white/[0.04] md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25"
+                    : "text-[13px] px-0 py-0 md:px-2.5 md:py-1 md:h-[28px] md:min-h-[28px] md:bg-white/[0.04] md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25"
+                )}
+                aria-expanded={allowInlineRepliesToggle ? showReplies : undefined}
+                aria-controls={`replies-${postId}`}
+              >
+                <MessageCircle className={cn(compact ? "w-[12px] h-[12px]" : "w-[14px] h-[14px]")} strokeWidth={2.25} />
+                {typeof descendantCount === 'number' ? descendantCount : commentCount}
+              </button>
             </div>
-            <SharePopover postId={item.id} postSlug={(item as any)?.slug} />
+            <SharePopover postId={item.id} postSlug={(item as any)?.slug} compact={compact} />
           </div>
 
           {/* Nested replies for this item */}

@@ -28,6 +28,7 @@ const TokenSaleDetails = lazy(
 const PostDetail = lazy(() => import("./features/social/views/PostDetail"));
 const UserProfile = lazy(() => import("./views/UserProfile"));
 const Landing = lazy(() => import("./views/Landing"));
+const DashboardTrendingTokens = lazy(() => import("./views/DashboardTrendingTokens"));
 const Conference = lazy(() => import("./views/Conference"));
 const Governance = lazy(() => import("./views/Governance"));
 const Terms = lazy(() => import("./views/Terms"));
@@ -95,7 +96,7 @@ export const routes: RouteObject[] = [
     path: "/",
     element: <SocialLayout />,
     children: [
-      { index: true, element: <FeedList standalone={false} /> },
+      { index: true, element: <DashboardTrendingTokens /> },
       // Post routes - slug-based (also handles IDs, which will redirect in PostDetail)
       { path: "post/:slug", element: <PostDetail standalone={false} /> },
       {

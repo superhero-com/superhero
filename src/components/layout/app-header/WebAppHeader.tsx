@@ -68,11 +68,11 @@ export default function WebAppHeader() {
           className="flex-grow mb-0"
         />
 
-        {/* Right area lives inside the boxed header container */}
-        <div className="ml-auto flex items-center gap-4 justify-end">
-          <LayoutSwitcher mode="header" />
-          <HeaderWalletButton />
-        </div>
+              {/* Right area lives inside the boxed header container */}
+              <div className="ml-auto flex items-center gap-4 justify-end">
+                {/* LayoutSwitcher hidden */}
+                <HeaderWalletButton />
+              </div>
       </div>
     </header>
   );

@@ -339,7 +339,7 @@ export default function LeftRail({
 
   return (
     <div id="left-rail-root" className="grid gap-6 h-fit min-w-0 scrollbar-thin scrollbar-track-white/[0.02] scrollbar-thumb-gradient-to-r scrollbar-thumb-from-pink-500/60 scrollbar-thumb-via-[rgba(0,255,157,0.6)] scrollbar-thumb-to-pink-500/60 scrollbar-thumb-rounded-[10px] scrollbar-thumb-border scrollbar-thumb-border-white/10 hover:scrollbar-thumb-from-pink-500/80 hover:scrollbar-thumb-via-[rgba(0,255,157,0.8)] hover:scrollbar-thumb-to-pink-500/80">
-      <LayoutSwitcher />
+      {/* LayoutSwitcher hidden */}
       {/* Navigation Bar - Tab style like LayoutSwitcher */}
       <div className="mb-0">
         <div className="flex items-center gap-3 mb-6">

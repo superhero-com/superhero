@@ -14,7 +14,7 @@ export interface NavigationItem {
 export const getNavigationItems = (t: TFunction): NavigationItem[] => [
   {
     id: "home",
-    label: "Social", // Renamed from t('home') for clarity as per user request
+    label: "Feed", // Renamed from t('home') for clarity as per user request
     path: "/",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -40,14 +40,14 @@ export const getNavigationItems = (t: TFunction): NavigationItem[] => [
   },
   {
     id: "dex",
-    label: "DeFi", // t('defi')
+    label: "Mini-Apps", // t('defi')
     path: "/defi",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path>
-        <line x1="12" y1="18" x2="12" y2="22"></line>
-        <line x1="12" y1="2" x2="12" y2="6"></line>
+        <rect x="3" y="3" width="7" height="7"></rect>
+        <rect x="14" y="3" width="7" height="7"></rect>
+        <rect x="14" y="14" width="7" height="7"></rect>
+        <rect x="3" y="14" width="7" height="7"></rect>
       </svg>
     ),
     children: [

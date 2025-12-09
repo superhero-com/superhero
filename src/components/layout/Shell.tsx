@@ -1,6 +1,5 @@
 import React from "react";
 import BackToTop from "./BackToTop";
-import FooterSection from "./FooterSection";
 import { useLayoutVariant } from "../../contexts/LayoutVariantContext";
 
 type ShellProps = {
@@ -86,7 +85,6 @@ export default function Shell({ left, right, children, containerClassName }: She
               <div className="min-w-0 h-full pt-2 pb-6">
                 {right}
                 <div className="mt-6">
-                  <FooterSection />
                   <BackToTop />
                 </div>
               </div>

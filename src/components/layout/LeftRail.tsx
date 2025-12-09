@@ -15,6 +15,7 @@ import LayoutSwitcher from "./LayoutSwitcher";
 import TabSwitcher from "./TabSwitcher";
 import { GlassSurface } from "../ui/GlassSurface";
 import AeButton from "../AeButton";
+import FooterSection from "./FooterSection";
 
 export default function LeftRail({
   hidePriceSection = true,
@@ -587,6 +588,9 @@ export default function LeftRail({
           </a>
         </div>
       </GlassSurface>
+
+      {/* Footer Section */}
+      <FooterSection compact />
 
     </div>
   );

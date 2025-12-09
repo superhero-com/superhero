@@ -65,6 +65,19 @@ export function TokenPriceChart({
       }
     }
 
+    // Check if all values are the same (flat line)
+    const allValues = formattedData.map(d => d.value);
+    const isFlat = allValues.every(val => Math.abs(val - allValues[0]) < 0.000001);
+    
+    // For flat lines, add tiny variation to ensure stroke renders properly
+    if (isFlat && formattedData.length > 0) {
+      const baseValue = formattedData[0].value;
+      return formattedData.map((item, index) => ({
+        ...item,
+        value: baseValue + (index % 2 === 0 ? 0.0000001 : -0.0000001), // Tiny variation to ensure line renders
+      }));
+    }
+
     return formattedData;
   }, [data]);
 
@@ -83,19 +96,26 @@ export function TokenPriceChart({
         <AreaChart data={chartData} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
           <defs>
             <linearGradient id={`colorValue-${saleAddress}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgba(34, 197, 94, 0.3)" stopOpacity={1} />
-              <stop offset="100%" stopColor="rgba(34, 197, 94, 0.01)" stopOpacity={1} />
+              <stop offset="0%" stopColor="rgba(249, 115, 22, 0.3)" stopOpacity={1} />
+              <stop offset="100%" stopColor="rgba(236, 72, 153, 0.01)" stopOpacity={1} />
+            </linearGradient>
+            <linearGradient id={`strokeGradient-${saleAddress}`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#ec4899" />
+              <stop offset="100%" stopColor="#f97316" />
             </linearGradient>
           </defs>
           <Area
             type="monotone"
             dataKey="value"
-            stroke="#22c55e"
+            stroke={`url(#strokeGradient-${saleAddress})`}
             strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
             fill={`url(#colorValue-${saleAddress})`}
             dot={false}
             activeDot={false}
             animationDuration={300}
+            connectNulls={false}
           />
         </AreaChart>
       </ResponsiveContainer>

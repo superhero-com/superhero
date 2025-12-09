@@ -33,18 +33,19 @@ export default function DashboardTrendingTokens() {
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
 
   const getSortLabel = () => {
-    if (orderBy === SORT.trendingScore) return 'Now trending';
-    if (orderBy === SORT.marketCap) return 'Market Cap';
-    if (orderBy === SORT.price) return 'Price';
+    if (orderBy === SORT.trendingScore) return 'Trending now';
+    if (orderBy === SORT.marketCap || orderBy === SORT.price) return 'Market Cap/Price';
     if (orderBy === SORT.name) return 'Name';
     if (orderBy === SORT.newest) return 'Newest';
     if (orderBy === SORT.oldest) return 'Oldest';
     if (orderBy === SORT.holdersCount) return 'Holders';
-    return 'Now trending';
+    return 'Trending now';
   };
 
   const handleSortChange = (newOrderBy: OrderByOption) => {
-    setOrderBy(newOrderBy);
+    // Map price to market_cap since they produce the same ranking
+    const actualOrderBy = newOrderBy === SORT.price ? SORT.marketCap : newOrderBy;
+    setOrderBy(actualOrderBy);
   };
 
   const { data, isFetching, fetchNextPage, hasNextPage } = useInfiniteQuery({
@@ -193,25 +194,13 @@ export default function DashboardTrendingTokens() {
                 onClick={() => handleSortChange(SORT.trendingScore)}
                 className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
               >
-                Now trending
+                Trending now
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => handleSortChange(SORT.marketCap)}
                 className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
               >
-                Market Cap
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleSortChange(SORT.price)}
-                className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
-              >
-                Price
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleSortChange(SORT.name)}
-                className="cursor-pointer focus:bg-white/10 focus:text-white px-4 py-2.5 text-sm"
-              >
-                Name
+                Market Cap/Price
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => handleSortChange(SORT.newest)}
@@ -261,12 +250,12 @@ export default function DashboardTrendingTokens() {
                     className="border-b border-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 group relative hover:translate-y-0 hover:shadow-lg"
                     onClick={() => navigate(`/trends/tokens/${encodeURIComponent(tokenName)}`)}
                   >
-                    {/* Rank */}
-                    <td className="py-2 pl-3 pr-0.5">
-                      <div className={`inline-flex items-center justify-center w-6 h-6 rounded-md bg-gradient-to-br ${getRankBadgeColor(rank)} font-black ${rank <= 3 ? 'text-gray-900' : 'text-white'} text-xs shadow-md`}>
-                        {rank}
-                      </div>
-                    </td>
+                      {/* Rank */}
+                      <td className="py-2 pl-3 pr-0.5">
+                        <div className={`inline-flex items-center justify-center w-6 h-6 rounded-md bg-gradient-to-br ${getRankBadgeColor(rank)} font-black ${rank <= 3 ? 'text-gray-900 text-[13px]' : 'text-white text-xs'} shadow-md`}>
+                          {rank}
+                        </div>
+                      </td>
                     
                     {/* Token Name */}
                     <td className="py-2 pl-0.5 pr-3">

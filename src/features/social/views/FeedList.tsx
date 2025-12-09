@@ -1257,13 +1257,7 @@ export default function FeedList({
           canonicalPath="/"
         />
       )}
-      {!standalone && !isBannerDismissed && (
-        <div className="mb-3 md:mb-4">
-          <HeroBannerCarousel 
-            onStartPosting={() => createPostRef.current?.focus()} 
-          />
-        </div>
-      )}
+      {/* Banner removed */}
       {/* Single CreatePost instance for consistent focus/scroll across viewports */}
       <div>
         <CreatePost

@@ -1,47 +1,12 @@
 import React from "react";
-import { useAeSdk, useWalletConnect } from "../../hooks";
+import { useAeSdk } from "../../hooks";
 import SwapForm from "../dex/core/SwapForm";
-import AeButton from "../AeButton";
-import { IconWallet } from "../../icons";
 import { BuyAeWidget } from "../../features/ae-eth-buy";
 import { GlassSurface } from "../ui/GlassSurface";
 
 export default function RightRail() {
-  const { activeAccount } = useAeSdk();
-  const { connectWallet } = useWalletConnect();
-
   return (
     <div className="grid gap-3 h-fit min-w-0 scrollbar-thin scrollbar-track-white/[0.02] scrollbar-thumb-gradient-to-r scrollbar-thumb-from-pink-500/60 scrollbar-thumb-via-[rgba(0,255,157,0.6)] scrollbar-thumb-to-pink-500/60 scrollbar-thumb-rounded-[10px] scrollbar-thumb-border scrollbar-thumb-border-white/10 hover:scrollbar-thumb-from-pink-500/80 hover:scrollbar-thumb-via-[rgba(0,255,157,0.8)] hover:scrollbar-thumb-to-pink-500/80">
-      
-      {/* Connect Wallet Card - Only show if not connected */}
-      {!activeAccount && (
-        <GlassSurface className="p-4 text-center group" interactive>
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          
-          <div className="relative z-10">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20 transform group-hover:scale-110 transition-transform duration-300">
-              <IconWallet className="w-8 h-8 text-white" />
-            </div>
-            
-            <h3 className="text-xl font-bold text-white mb-2">
-              Connect Wallet
-            </h3>
-            
-            <p className="text-sm text-white/60 mb-6 leading-relaxed">
-              Access your assets and start trading on Superhero.
-            </p>
-            
-            <AeButton
-              variant="primary"
-              onClick={connectWallet}
-              className="w-full py-3 font-bold text-base shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all duration-300"
-            >
-              Connect Now
-            </AeButton>
-          </div>
-        </GlassSurface>
-      )}
-
       {/* Swap Widget */}
       <GlassSurface className="overflow-hidden" interactive>
         <div className="p-4 border-b border-white/5 flex items-center justify-between">

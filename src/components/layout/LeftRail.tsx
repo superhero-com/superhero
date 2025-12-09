@@ -6,14 +6,15 @@ import { useAccountBalances } from "../../hooks/useAccountBalances";
 import WalletOverviewCard from "@/components/wallet/WalletOverviewCard";
 import { useAeSdk } from "../../hooks/useAeSdk";
 import Sparkline from "../Trendminer/Sparkline";
-import { HeaderLogo } from "../../icons";
+import { HeaderLogo, IconWallet } from "../../icons";
 import { getNavigationItems } from "./app-header/navigationItems";
 
-import { useWallet } from "../../hooks";
+import { useWallet, useWalletConnect } from "../../hooks";
 import { useAddressByChainName } from "../../hooks/useChainName";
 import LayoutSwitcher from "./LayoutSwitcher";
 import TabSwitcher from "./TabSwitcher";
 import { GlassSurface } from "../ui/GlassSurface";
+import AeButton from "../AeButton";
 
 export default function LeftRail({
   hidePriceSection = true,
@@ -25,6 +26,7 @@ export default function LeftRail({
   const location = useLocation();
   const params = useParams();
   const { activeAccount } = useAeSdk();
+  const { connectWallet } = useWalletConnect();
   
   // Resolve chain name if present
   const isChainName = params.address?.endsWith(".chain");
@@ -358,6 +360,35 @@ export default function LeftRail({
             }))}
         />
       </div>
+      
+      {/* Connect Wallet Card - Only show if not connected */}
+      {!activeAccount && (
+        <GlassSurface className="p-4 text-center group" interactive>
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          
+          <div className="relative z-10">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20 transform group-hover:scale-110 transition-transform duration-300">
+              <IconWallet className="w-8 h-8 text-white" />
+            </div>
+            
+            <h3 className="text-xl font-bold text-white mb-2">
+              Connect Wallet
+            </h3>
+            
+            <p className="text-sm text-white/60 mb-6 leading-relaxed">
+              Access your assets and start trading on Superhero.
+            </p>
+            
+            <AeButton
+              variant="primary"
+              onClick={connectWallet}
+              className="w-full py-3 font-bold text-base shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all duration-300"
+            >
+              Connect Now
+            </AeButton>
+          </div>
+        </GlassSurface>
+      )}
       
       {/* Network & Wallet Overview - Hidden on own profile */}
       {!isOwnProfile && (

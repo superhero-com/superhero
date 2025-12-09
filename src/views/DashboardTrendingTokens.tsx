@@ -233,23 +233,24 @@ export default function DashboardTrendingTokens() {
       {/* Token List - Compact Table Style */}
       <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
         <div ref={scrollContainerRef} className="overflow-x-auto min-h-[100vh] max-h-[calc(100vh-300px)] overflow-y-auto relative">
-          <div 
-            className="sticky top-0 z-30 border-b border-white/10 grid grid-cols-[auto_1fr_auto_auto_100px] w-full" 
-            style={{ 
-              background: 'rgba(255, 255, 255, 0.05)',
-              backdropFilter: 'blur(24px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
-              isolation: 'isolate'
-            }}
-          >
-            <div className="text-left py-2 pl-3 pr-0.5 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Rank</div>
-            <div className="text-left py-2 pl-0.5 pr-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Token</div>
-            <div className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Market Cap</div>
-            <div className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Price</div>
-            <div className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Graph</div>
-          </div>
-          <table className="w-full relative">
+          <table className="w-full">
+            <thead className="sticky top-0 z-30">
+              <tr 
+                className="border-b border-white/10" 
+                style={{ 
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(24px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <th className="text-left py-2 pl-3 pr-0.5 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Rank</th>
+                <th className="text-left py-2 pl-0.5 pr-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Token</th>
+                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Market Cap</th>
+                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Price</th>
+                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider max-w-[100px]">Graph</th>
+              </tr>
+            </thead>
             <tbody>
               {tokens.map((token: TokenDto, index: number) => {
                 const rank = index + 1;
@@ -364,23 +365,24 @@ export default function DashboardTrendingTokens() {
       {isFetching && !tokens.length && (
         <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
           <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto relative">
-            <div 
-              className="sticky top-0 z-30 border-b border-white/10 grid grid-cols-[auto_1fr_auto_auto_100px] w-full" 
-              style={{ 
-                background: 'rgba(255, 255, 255, 0.05)',
-                backdropFilter: 'blur(24px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
-                isolation: 'isolate'
-              }}
-            >
-              <div className="text-left py-2 pl-3 pr-0.5 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Rank</div>
-              <div className="text-left py-2 pl-0.5 pr-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Token</div>
-              <div className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Market Cap</div>
-              <div className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Price</div>
-              <div className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Graph</div>
-            </div>
-            <table className="w-full relative">
+            <table className="w-full">
+              <thead className="sticky top-0 z-30">
+                <tr 
+                  className="border-b border-white/10" 
+                  style={{ 
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    backdropFilter: 'blur(24px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+                  }}
+                >
+                  <th className="text-left py-2 pl-3 pr-0.5 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Rank</th>
+                  <th className="text-left py-2 pl-0.5 pr-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Token</th>
+                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Market Cap</th>
+                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Price</th>
+                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider max-w-[100px]">Graph</th>
+                </tr>
+              </thead>
               <tbody>
                 {[...Array(5)].map((_, i) => (
                   <tr key={i} className="border-b border-white/5">

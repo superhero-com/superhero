@@ -5,6 +5,7 @@ import { linkify } from "../../../utils/linkify";
 import { useWallet } from "../../../hooks";
 import type { PostDto } from "../../../api/generated";
 import { compactTime } from "../../../utils/time";
+import { GlassSurface } from "@/components/ui/GlassSurface";
 // SharePopover removed from activity row per design
 
 interface TokenCreatedActivityItemProps {
@@ -54,13 +55,14 @@ const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false, mobile
   }, [navigate, tokenLink]);
 
   return (
-    <article
+    <GlassSurface
       role="button"
       tabIndex={0}
       onClick={(e) => { e.stopPropagation(); onOpen(); }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
-      className={`token-activity relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 ${mobileNoTopPadding ? 'pt-0' : ((mobileTightTop || mobileTight) ? 'pt-0.5' : 'pt-2')} ${mobileNoBottomPadding ? 'pb-0' : ((mobileTightBottom || mobileTight) ? 'pb-0.5' : 'pb-2')} md:w-full md:mx-0 md:py-1 md:px-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-transparent md:hover:border-white/25 md:rounded-[12px] md:backdrop-blur-xl transition-colors hover:shadow-none`}
+      className={`token-activity relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 ${mobileNoTopPadding ? 'pt-0' : ((mobileTightTop || mobileTight) ? 'pt-0.5' : 'pt-2')} ${mobileNoBottomPadding ? 'pb-0' : ((mobileTightBottom || mobileTight) ? 'pb-0.5' : 'pb-2')} md:w-full md:mx-0 md:py-2 md:px-5 transition-colors`}
       aria-label={tokenName ? `Open trend ${tokenName}` : 'Open trend'}
+      interactive
     >
       <div className="flex items-center justify-between gap-3 md:h-8">
         <div className="flex items-center gap-1 min-w-0">
@@ -108,7 +110,7 @@ const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false, mobile
       {!hideMobileDivider && (
         <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />
       )}
-    </article>
+    </GlassSurface>
   );
 });
 

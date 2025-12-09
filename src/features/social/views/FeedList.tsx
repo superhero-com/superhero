@@ -28,7 +28,8 @@ function useUrlQuery() {
 
 export default function FeedList({
   standalone = true,
-}: { standalone?: boolean } = {}) {
+  compact = false,
+}: { standalone?: boolean; compact?: boolean } = {}) {
   const navigate = useNavigate();
   const location = useLocation();
   const urlQuery = useUrlQuery();
@@ -996,6 +997,7 @@ export default function FeedList({
             commentCount={item.total_comments ?? 0}
             allowInlineRepliesToggle={false}
             onOpenPost={handleItemClick}
+            compact={compact}
           />
         );
         i += 1;
@@ -1257,13 +1259,7 @@ export default function FeedList({
           canonicalPath="/"
         />
       )}
-      {!standalone && !isBannerDismissed && (
-        <div className="mb-3 md:mb-4">
-          <HeroBannerCarousel 
-            onStartPosting={() => createPostRef.current?.focus()} 
-          />
-        </div>
-      )}
+      {/* Banner removed */}
       {/* Single CreatePost instance for consistent focus/scroll across viewports */}
       <div>
         <CreatePost
@@ -1331,6 +1327,7 @@ export default function FeedList({
                 commentCount={item.total_comments ?? 0}
                 allowInlineRepliesToggle={false}
                 onOpenPost={handleItemClick}
+                compact={compact}
               />
             ))}
           </>

@@ -7,9 +7,11 @@ import { useAeSdk, useAccount, useWalletConnect } from "./hooks";
 import { routes } from "./routes";
 import "./styles/genz-components.scss";
 import "./styles/mobile-optimizations.scss";
+import "./styles/layout-variants.scss";
 import AppHeader from "./components/layout/app-header";
 import { useSuperheroChainNames } from "./hooks/useChainName";
 import FeedbackButton from "./components/FeedbackButton";
+import { LayoutVariantProvider } from "./contexts/LayoutVariantContext";
 
 const CookiesDialog = React.lazy(
   () => import("./components/modals/CookiesDialog")
@@ -66,30 +68,32 @@ export default function App() {
   }, [activeAccount]);
 
   return (
-    <div className="app-container">
-      
-      <GlobalNewAccountEducation />
-      <AppHeader />
-      <div className="app-content">
-        <CollectInvitationLinkCard />
+    <LayoutVariantProvider>
+      <div className="app-container">
+        
+        <GlobalNewAccountEducation />
+        <AppHeader />
+        <div className="app-content">
+          <CollectInvitationLinkCard />
+        </div>
+        <Suspense fallback={<div className="loading-fallback" />}>
+          <ModalProvider
+            registry={{
+              "cookies-dialog": CookiesDialog,
+              "token-select": TokenSelectModal,
+              "image-gallery": ImageGallery,
+              alert: AlertModal,
+              "transaction-confirm": TransactionConfirmModal,
+              "connect-wallet": ConnectWalletModal,
+              "tip": TipModal,
+            }}
+          />
+        </Suspense>
+        <Suspense fallback={<div className="loading-fallback" />}>
+          <div className="app-routes-container">{useRoutes(routes as any)}</div>
+        </Suspense>
+        <FeedbackButton />
       </div>
-      <Suspense fallback={<div className="loading-fallback" />}>
-        <ModalProvider
-          registry={{
-            "cookies-dialog": CookiesDialog,
-            "token-select": TokenSelectModal,
-            "image-gallery": ImageGallery,
-            alert: AlertModal,
-            "transaction-confirm": TransactionConfirmModal,
-            "connect-wallet": ConnectWalletModal,
-            "tip": TipModal,
-          }}
-        />
-      </Suspense>
-      <Suspense fallback={<div className="loading-fallback" />}>
-        <div className="app-routes-container">{useRoutes(routes as any)}</div>
-      </Suspense>
-      <FeedbackButton />
-    </div>
+    </LayoutVariantProvider>
   );
 }

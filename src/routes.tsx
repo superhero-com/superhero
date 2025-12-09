@@ -28,6 +28,7 @@ const TokenSaleDetails = lazy(
 const PostDetail = lazy(() => import("./features/social/views/PostDetail"));
 const UserProfile = lazy(() => import("./views/UserProfile"));
 const Landing = lazy(() => import("./views/Landing"));
+const DashboardTrendingTokens = lazy(() => import("./views/DashboardTrendingTokens"));
 const Conference = lazy(() => import("./views/Conference"));
 const Governance = lazy(() => import("./views/Governance"));
 const Terms = lazy(() => import("./views/Terms"));
@@ -37,6 +38,7 @@ const TxQueue = lazy(() => import("./views/TxQueue"));
 
 // DEX Components
 const DexLayout = lazy(() => import("./features/dex/layouts/DexLayout"));
+const MiniAppsLanding = lazy(() => import("./features/dex/views/MiniAppsLanding"));
 const DexSwap = lazy(() => import("./features/dex/views/DexSwap"));
 const DexWrap = lazy(() => import("./features/dex/views/DexWrap"));
 const DexBridge = lazy(() => import("./features/dex/views/DexBridge"));
@@ -94,7 +96,7 @@ export const routes: RouteObject[] = [
     path: "/",
     element: <SocialLayout />,
     children: [
-      { index: true, element: <FeedList standalone={false} /> },
+      { index: true, element: <DashboardTrendingTokens /> },
       // Post routes - slug-based (also handles IDs, which will redirect in PostDetail)
       { path: "post/:slug", element: <PostDetail standalone={false} /> },
       {
@@ -147,7 +149,11 @@ export const routes: RouteObject[] = [
   // New DEX Routes with Layout
   {
     path: "/defi",
-    element: <Navigate to="/defi/swap" replace />,
+    element: (
+      <DexLayout>
+        <MiniAppsLanding />
+      </DexLayout>
+    ),
   },
   {
     path: "/defi/swap",

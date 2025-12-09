@@ -93,23 +93,21 @@ export default function DashboardTrendingTokens() {
   };
 
   const getRankIcon = (rank: number) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
+    // Return null to use numbers instead of emojis
     return null;
   };
 
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
-            <Flame className="w-5 h-5 text-white" />
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
+            <Flame className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-white">Trending Tokens</h1>
-            <p className="text-sm text-white/60">Ranked by trending score</p>
+            <h1 className="text-xl font-bold text-white">Trending Tokens</h1>
+            <p className="text-xs text-white/60">Ranked by trending score</p>
           </div>
         </div>
       </div>
@@ -120,64 +118,51 @@ export default function DashboardTrendingTokens() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/10">
-                <th className="text-left py-3 px-4 text-xs font-semibold text-white/60 uppercase tracking-wider">Rank</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-white/60 uppercase tracking-wider">Token</th>
-                <th className="text-right py-3 px-4 text-xs font-semibold text-white/60 uppercase tracking-wider">Trending Score</th>
-                <th className="text-right py-3 px-4 text-xs font-semibold text-white/60 uppercase tracking-wider">Market Cap</th>
-                <th className="text-right py-3 px-4 text-xs font-semibold text-white/60 uppercase tracking-wider">Price</th>
-                <th className="text-right py-3 px-4 text-xs font-semibold text-white/60 uppercase tracking-wider">Chart</th>
+                <th className="text-left py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Rank</th>
+                <th className="text-left py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Token</th>
+                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Market Cap</th>
+                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Price</th>
+                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Chart</th>
               </tr>
             </thead>
             <tbody>
               {tokens.map((token: TokenDto, index: number) => {
                 const rank = index + 1;
                 const tokenName = token.name || token.symbol || 'Unnamed';
-                const scoreNum = getTrendingScore(token);
-                const maxScore = tokens.length > 0 ? getTrendingScore(tokens[0]) : 1;
 
                 return (
                   <tr
                     key={token.address}
-                    className="border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors group relative"
+                    className="border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors group relative hover:translate-y-0"
                     onClick={() => navigate(`/trends/tokens/${encodeURIComponent(tokenName)}`)}
                   >
                     {/* Rank */}
-                    <td className="py-3 px-4">
-                      <div className={`inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br ${getRankBadgeColor(rank)} font-bold text-white text-sm shadow-md`}>
-                        {getRankIcon(rank) || rank}
+                    <td className="py-2 pl-3 pr-0.5">
+                      <div className={`inline-flex items-center justify-center w-6 h-6 rounded-md bg-gradient-to-br ${getRankBadgeColor(rank)} font-bold ${rank <= 3 ? 'text-gray-900' : 'text-white'} text-xs shadow-md`}>
+                        {rank}
                       </div>
                     </td>
                     
                     {/* Token Name */}
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-white group-hover:text-[var(--neon-teal)] transition-colors">
-                          <span className="text-white/60 text-sm mr-0.5">#</span>
+                    <td className="py-2 pl-0.5 pr-3">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-white text-sm group-hover:text-[var(--neon-teal)] transition-colors">
+                          <span className="text-white/60 text-xs mr-0.5">#</span>
                           {token.symbol || token.name}
                         </span>
                         {rank <= 3 && (
                           <span className="flex-shrink-0">
-                            {rank === 1 && <Zap className="w-4 h-4 text-yellow-400" />}
-                            {rank === 2 && <TrendingUp className="w-4 h-4 text-gray-300" />}
-                            {rank === 3 && <Flame className="w-4 h-4 text-orange-400" />}
+                            {rank === 1 && <Zap className="w-3 h-3 text-yellow-400" />}
+                            {rank === 2 && <TrendingUp className="w-3 h-3 text-gray-300" />}
+                            {rank === 3 && <Flame className="w-3 h-3 text-orange-400" />}
                           </span>
                         )}
                       </div>
                     </td>
                     
-                    {/* Trending Score */}
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--neon-teal)]/10 border border-[var(--neon-teal)]/30">
-                          <Flame className="w-3 h-3 text-[var(--neon-teal)]" />
-                          <span className="font-bold text-[var(--neon-teal)] text-sm">{Math.round(scoreNum).toLocaleString()}</span>
-                        </div>
-                      </div>
-                    </td>
-                    
                     {/* Market Cap */}
-                    <td className="py-3 px-4 text-right">
-                      <div className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                    <td className="py-2 px-3 text-right">
+                      <div className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent text-xs text-right inline-block ml-auto">
                         <PriceDataFormatter
                           bignumber
                           hideFiatPrice
@@ -187,8 +172,8 @@ export default function DashboardTrendingTokens() {
                     </td>
                     
                     {/* Price */}
-                    <td className="py-3 px-4 text-right">
-                      <div className="bg-gradient-to-r from-yellow-400 to-cyan-500 bg-clip-text text-transparent">
+                    <td className="py-2 px-3 text-right">
+                      <div className="bg-gradient-to-r from-yellow-400 to-cyan-500 bg-clip-text text-transparent text-xs text-right inline-block ml-auto">
                         <PriceDataFormatter
                           hideFiatPrice
                           priceData={token.price_data}
@@ -197,12 +182,12 @@ export default function DashboardTrendingTokens() {
                     </td>
                     
                     {/* Chart */}
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-2 px-3 text-right">
                       {token.sale_address && (
-                        <div className="ml-auto max-w-[120px]">
+                        <div className="ml-auto max-w-[100px]">
                           <TokenLineChart
                             saleAddress={token.sale_address}
-                            height={32}
+                            height={24}
                             hideTimeframe={true}
                           />
                         </div>
@@ -218,12 +203,12 @@ export default function DashboardTrendingTokens() {
 
       {/* Load More Button */}
       {hasNextPage && (
-        <div className="mt-6 text-center">
+        <div className="mt-4 text-center">
           <button
             ref={loadMoreBtn}
             onClick={() => fetchNextPage()}
             disabled={isFetching}
-            className={`px-6 py-3 rounded-xl border-none text-white cursor-pointer text-sm font-semibold transition-all duration-300 ${
+            className={`px-4 py-2 rounded-lg border-none text-white cursor-pointer text-xs font-semibold transition-all duration-300 ${
               isFetching
                 ? 'bg-white/10 cursor-not-allowed opacity-60'
                 : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 shadow-lg hover:shadow-xl hover:scale-105'
@@ -248,34 +233,30 @@ export default function DashboardTrendingTokens() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/10">
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-white/60 uppercase tracking-wider">Rank</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-white/60 uppercase tracking-wider">Token</th>
-                  <th className="text-right py-3 px-4 text-xs font-semibold text-white/60 uppercase tracking-wider">Trending Score</th>
-                  <th className="text-right py-3 px-4 text-xs font-semibold text-white/60 uppercase tracking-wider">Market Cap</th>
-                  <th className="text-right py-3 px-4 text-xs font-semibold text-white/60 uppercase tracking-wider">Price</th>
-                  <th className="text-right py-3 px-4 text-xs font-semibold text-white/60 uppercase tracking-wider">Chart</th>
+                  <th className="text-left py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Rank</th>
+                  <th className="text-left py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Token</th>
+                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Market Cap</th>
+                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Price</th>
+                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Chart</th>
                 </tr>
               </thead>
               <tbody>
                 {[...Array(5)].map((_, i) => (
                   <tr key={i} className="border-b border-white/5">
-                    <td className="py-3 px-4">
-                      <div className="w-8 h-8 rounded-lg bg-white/10 animate-pulse" />
+                    <td className="py-2 px-3">
+                      <div className="w-6 h-6 rounded-md bg-white/10 animate-pulse" />
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="h-4 bg-white/10 rounded w-32 animate-pulse" />
+                    <td className="py-2 px-3">
+                      <div className="h-3 bg-white/10 rounded w-24 animate-pulse" />
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-2 px-3 text-right">
+                      <div className="h-3 bg-white/10 rounded w-12 ml-auto animate-pulse" />
+                    </td>
+                    <td className="py-2 px-3 text-right">
+                      <div className="h-3 bg-white/10 rounded w-12 ml-auto animate-pulse" />
+                    </td>
+                    <td className="py-2 px-3 text-right">
                       <div className="h-6 bg-white/10 rounded w-20 ml-auto animate-pulse" />
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <div className="h-4 bg-white/10 rounded w-16 ml-auto animate-pulse" />
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <div className="h-4 bg-white/10 rounded w-16 ml-auto animate-pulse" />
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <div className="h-8 bg-white/10 rounded w-24 ml-auto animate-pulse" />
                     </td>
                   </tr>
                 ))}

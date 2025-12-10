@@ -1,6 +1,6 @@
 import { formatFractionalPrice } from "@/utils/common";
 import { COIN_SYMBOL } from "@/utils/constants";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "../../../components/ui/button";
 import WalletConnectBtn from "../../../components/WalletConnectBtn";
 import { useAeSdk } from "../../../hooks/useAeSdk";
@@ -14,6 +14,9 @@ import MessageBox from "./MessageBox";
 import TradeTokenInput from "./TradeTokenInput";
 import TransactionConfirmDetailRow from "./TransactionConfirmDetailRow";
 import Spinner from "@/components/Spinner";
+import { useCurrencies } from "../../../hooks/useCurrencies";
+import { Decimal } from "../../../libs/decimal";
+import type { PriceDto } from "@/api/generated/models/PriceDto";
 
 interface TokenTradeCardProps {
   token: TokenDto;
@@ -25,6 +28,7 @@ export default function TokenTradeCard({
   onClose,
 }: TokenTradeCardProps) {
   const { activeAccount } = useAeSdk();
+  const { currentCurrencyCode, getFiat } = useCurrencies();
   const [settingsDialogVisible, setSettingsDialogVisible] = useState(false);
   const [detailsShown, setDetailsShown] = useState(false);
 
@@ -51,6 +55,28 @@ export default function TokenTradeCard({
     placeTokenTradeOrder,
     resetFormState,
   } = useTokenTrade({ token });
+
+  // Calculate USD price for averageTokenPrice using token's price_data if available
+  const averageTokenPriceUsd = useMemo(() => {
+    if (!averageTokenPrice || averageTokenPrice.isZero || averageTokenPrice.infinite) {
+      return undefined;
+    }
+
+    const priceData = token?.price_data as PriceDto | undefined;
+    
+    // If backend provides fiat price per token, calculate: (averageTokenPrice / perTokenAe) * perTokenFiat
+    if (priceData?.ae && priceData[currentCurrencyCode as keyof PriceDto]) {
+      const perTokenAe = Decimal.from(priceData.ae);
+      const perTokenFiat = Decimal.from(priceData[currentCurrencyCode as keyof PriceDto] as unknown as string);
+      if (!perTokenAe.isZero) {
+        // Calculate ratio: averageTokenPrice / perTokenAe, then multiply by perTokenFiat
+        return averageTokenPrice.div(perTokenAe).mul(perTokenFiat);
+      }
+    }
+
+    // Fallback: use getFiat to convert AE to fiat
+    return getFiat(averageTokenPrice);
+  }, [averageTokenPrice, token, currentCurrencyCode, getFiat]);
 
   const currentStepText = isBuying ? "" : "1/2";
 
@@ -126,6 +152,7 @@ export default function TokenTradeCard({
             <TransactionConfirmDetailRow label="Avg Token Price">
               <LivePriceFormatter
                 aePrice={averageTokenPrice}
+                fiatPrice={averageTokenPriceUsd}
                 watchPrice={false}
                 className="mb-1"
               />

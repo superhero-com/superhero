@@ -16,9 +16,6 @@ interface LivePriceFormatterProps {
   className?: string;
 }
 
-// Mock fiat conversion - in a real app, this would come from a currency service
-
-
 export default function LivePriceFormatter({
   aePrice,
   fiatPrice,
@@ -31,11 +28,37 @@ export default function LivePriceFormatter({
   row = false,
   className = '',
 }: LivePriceFormatterProps) {
-  const { getFiat } = useCurrencies();
+  const { getFiat, currentCurrencyRate, aeternityData, isLoadingPrice } = useCurrencies();
   const computedFiatPrice = useMemo(() => {
-    // Use provided fiatPrice if available, otherwise compute it from aePrice
-    return fiatPrice ?? getFiat(aePrice);
-  }, [aePrice, fiatPrice, getFiat]);
+    // Use provided fiatPrice if available
+    if (fiatPrice !== undefined && !fiatPrice.isZero) {
+      return fiatPrice;
+    }
+    
+    // Validate AE price
+    if (!aePrice || aePrice.isZero || aePrice.infinite) {
+      return Decimal.ZERO;
+    }
+    
+    // Priority 1: If currency rate is available and valid, use getFiat
+    if (currentCurrencyRate && currentCurrencyRate > 0) {
+      const computed = getFiat(aePrice);
+      if (!computed.isZero) {
+        return computed;
+      }
+    }
+    
+    // Priority 2: Fallback to aeternityData.currentPrice if available
+    if (aeternityData?.currentPrice && typeof aeternityData.currentPrice === 'number' && aeternityData.currentPrice > 0) {
+      const computed = aePrice.mul(Decimal.from(aeternityData.currentPrice));
+      if (!computed.isZero) {
+        return computed;
+      }
+    }
+    
+    // Last resort: try getFiat anyway (might work if rate loads asynchronously)
+    return getFiat(aePrice);
+  }, [aePrice, fiatPrice, getFiat, currentCurrencyRate, aeternityData]);
 
   return (
     <PriceFormatter

@@ -1,5 +1,6 @@
-import FractionFormatter from "@/features/shared/components/FractionFormatter";
+import FractionFormatter, { FormattedFractionalPrice } from "@/features/shared/components/FractionFormatter";
 import { Decimal } from '../../../libs/decimal';
+import { formatFractionalPrice } from '@/utils/common';
 
 interface FiatPriceFormatterProps {
   fiatPrice: Decimal;
@@ -9,46 +10,25 @@ interface FiatPriceFormatterProps {
 
 const DEFAULT_CURRENCY_SYMBOL = '$';
 
-/**
- * Formats a fiat price without fractional notation (always shows actual number)
- * This is different from formatFractionalPrice which uses notation for very small numbers
- */
-function formatFiatPrice(price: Decimal) {
-  if (price.isZero) {
-    return {
-      number: '0.00',
-    };
-  }
-  if (price.gte(Decimal.from('1'))) {
-    return {
-      number: price.prettify(2),
-    };
-  }
-  if (price.gte(Decimal.from('0.01'))) {
-    return {
-      number: price.prettify(4),
-    };
-  }
-  if (price.gte(Decimal.from('0.0001'))) {
-    return {
-      number: price.prettify(6),
-    };
-  }
-  // For very small amounts, show up to 8 decimal places (no fractional notation)
-  return {
-    number: price.prettify(8),
-  };
-}
-
 export default function FiatPriceFormatter({
   fiatPrice,
   currencySymbol = DEFAULT_CURRENCY_SYMBOL,
   className = '',
 }: FiatPriceFormatterProps) {
+  // Use formatFractionalPrice to show fractional notation for very small amounts (as QA prefers)
+  const formattedPriceRaw = formatFractionalPrice(fiatPrice);
+  
+  // Convert to FractionFormatter's expected type (zerosCount as string)
+  const formattedPrice: FormattedFractionalPrice = {
+    number: formattedPriceRaw.number,
+    zerosCount: formattedPriceRaw.zerosCount !== undefined ? String(formattedPriceRaw.zerosCount) : undefined,
+    significantDigits: formattedPriceRaw.significantDigits,
+  };
+  
   return (
     <div className={`inline-flex items-center ${className}`}>
       <div className={className}>{currencySymbol}</div>
-      <FractionFormatter fractionalPrice={formatFiatPrice(fiatPrice)} />
+      <FractionFormatter fractionalPrice={formattedPrice} />
     </div>
   );
 }

@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Button } from '../../../components/ui/button';
 import { ChevronDown, ArrowUpDown } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import AssetInput from './AssetInput';
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import { Decimal } from '../../../libs/decimal';
+import type { PriceDto } from "@/api/generated/models/PriceDto";
+import { useCurrencies } from '../../../hooks/useCurrencies';
 
 interface TradeTokenInputProps {
   token?: TokenDto;
@@ -39,6 +41,64 @@ export default function TradeTokenInput({
   readonly = false,
   isInsufficientBalance = false,
 }: TradeTokenInputProps) {
+  const { currentCurrencyCode, getFiat } = useCurrencies();
+  
+  // Calculate AE value for token amounts using token's price_data
+  // For USD calculation, prefer using fiat price directly from price_data if available
+  const tokenAAeValue = useMemo(() => {
+    if (!tokenA || !token) return Decimal.ZERO;
+    const priceData = token.price_data as PriceDto | undefined;
+    const perTokenAe = priceData?.ae
+      ? Decimal.from(priceData.ae)
+      : token.price
+        ? Decimal.from(token.price)
+        : Decimal.ZERO;
+    if (perTokenAe.isZero) return Decimal.ZERO;
+    return Decimal.from(tokenA).mul(perTokenAe);
+  }, [tokenA, token]);
+
+  const tokenBAeValue = useMemo(() => {
+    if (!tokenB || !token) return Decimal.ZERO;
+    const priceData = token.price_data as PriceDto | undefined;
+    const perTokenAe = priceData?.ae
+      ? Decimal.from(priceData.ae)
+      : token.price
+        ? Decimal.from(token.price)
+        : Decimal.ZERO;
+    if (perTokenAe.isZero) return Decimal.ZERO;
+    return Decimal.from(tokenB).mul(perTokenAe);
+  }, [tokenB, token]);
+
+  // Calculate USD value directly from price_data if available (more accurate for large numbers)
+  const tokenAUsdValue = useMemo(() => {
+    if (!tokenA || !token) return undefined;
+    const priceData = token.price_data as PriceDto | undefined;
+    
+    // If backend provides fiat price per token, use it directly (more accurate)
+    const perTokenFiatRaw = priceData?.[currentCurrencyCode as keyof PriceDto];
+    if (perTokenFiatRaw) {
+      const perTokenFiat = Decimal.from(perTokenFiatRaw as unknown as string);
+      return Decimal.from(tokenA).mul(perTokenFiat);
+    }
+    
+    // Fallback: convert AE to USD
+    return getFiat(tokenAAeValue);
+  }, [tokenA, token, currentCurrencyCode, tokenAAeValue, getFiat]);
+
+  const tokenBUsdValue = useMemo(() => {
+    if (!tokenB || !token) return undefined;
+    const priceData = token.price_data as PriceDto | undefined;
+    
+    // If backend provides fiat price per token, use it directly (more accurate)
+    const perTokenFiatRaw = priceData?.[currentCurrencyCode as keyof PriceDto];
+    if (perTokenFiatRaw) {
+      const perTokenFiat = Decimal.from(perTokenFiatRaw as unknown as string);
+      return Decimal.from(tokenB).mul(perTokenFiat);
+    }
+    
+    // Fallback: convert AE to USD
+    return getFiat(tokenBAeValue);
+  }, [tokenB, token, currentCurrencyCode, tokenBAeValue, getFiat]);
   
   const handleTokenAUpdate = (value: string) => {
     // Allow empty string, partial decimals like "0." or "."
@@ -81,6 +141,8 @@ export default function TradeTokenInput({
         tokenSymbol={token.symbol}
         isCoin={isBuying}
         tokenBalance={isBuying ? spendableAeBalance.toString() : userBalance}
+        aeValue={isBuying ? Decimal.ZERO : tokenAAeValue}
+        fiatValue={isBuying ? undefined : tokenAUsdValue}
         maxBtnAllowed
         showBalance
         errorMessages={isInsufficientBalance ? ['Insufficient balance'] : undefined}
@@ -113,6 +175,8 @@ export default function TradeTokenInput({
         tokenSymbol={token.symbol}
         isCoin={!isBuying}
         tokenBalance={!isBuying ? spendableAeBalance.toString() : userBalance}
+        aeValue={!isBuying ? Decimal.ZERO : tokenBAeValue}
+        fiatValue={!isBuying ? undefined : tokenBUsdValue}
         showBalance
         onFocus={onTokenBFocus}
         className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-xl"

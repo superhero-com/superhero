@@ -21,6 +21,7 @@ interface AssetInputProps {
   errorMessages?: string[];
   color?: 'success' | 'default';
   aeValue?: Decimal;
+  fiatValue?: Decimal;
   className?: string;
 }
 
@@ -47,6 +48,7 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
   errorMessages = [],
   color = 'default',
   aeValue = Decimal.ZERO,
+  fiatValue,
   className = '',
 }, ref) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -57,8 +59,13 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
   const [internalValue, setInternalValue] = useState<string>(String(modelValue));
 
   const fiatPrice = useMemo(() => {
+    // Use provided fiatValue if available (more accurate for large token amounts)
+    if (fiatValue !== undefined) {
+      return fiatValue;
+    }
+    // Fallback to calculating from AE value
     return getFiat(isCoin ? Decimal.from(modelValue) : aeValue);
-  }, [modelValue, aeValue, isCoin]);
+  }, [modelValue, aeValue, isCoin, fiatValue, getFiat]);
 
   // Update internal value when modelValue changes (similar to Vue watcher)
   useEffect(() => {
@@ -215,9 +222,16 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
                 <FractionFormatter fractionalPrice={formatFractionalPrice(fiatPrice) as any} />
               </div>
             ) : (
-              <div className="text-sm text-white/70">
-                <span className="opacity-60">Balance:&nbsp;</span>
-                <span>{Decimal.from(tokenBalance).prettify()}</span>
+              <div className="flex items-center gap-2 text-sm text-white/70">
+                <div className="flex items-center gap-1">
+                  <span>{currentCurrencyInfo.symbol} </span>
+                  <FractionFormatter fractionalPrice={formatFractionalPrice(fiatPrice) as any} />
+                </div>
+                <span className="opacity-60">|</span>
+                <div>
+                  <span className="opacity-60">Balance:&nbsp;</span>
+                  <span>{Decimal.from(tokenBalance).prettify()}</span>
+                </div>
               </div>
             )}
 

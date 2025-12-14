@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { TokensService } from '@/api/generated';
 import type { TokenDto } from '@/api/generated';
 import { GlassSurface } from '@/components/ui/GlassSurface';
@@ -67,10 +67,31 @@ export default function DashboardTrendingTokens() {
     staleTime: 1000 * 60, // 1 minute
   });
 
+  // Fetch the token with highest market cap separately (regardless of current sort)
+  const { data: highestMarketCapData } = useQuery({
+    queryKey: ['highest-market-cap-token'],
+    queryFn: () =>
+      TokensService.listAll({
+        orderBy: 'market_cap' as any,
+        orderDirection: 'DESC',
+        limit: 1,
+        page: 1,
+      }),
+    staleTime: 1000 * 60 * 5, // 5 minutes - market cap doesn't change that frequently
+  });
+
   const tokens = useMemo(() => 
     data?.pages?.length ? data.pages.map((page) => page.items).flat() : [],
     [data]
   ) as TokenDto[];
+
+  // Get the highest market cap token address from the separate query
+  const highestMarketCapTokenAddress = useMemo(() => {
+    if (highestMarketCapData?.items?.length > 0) {
+      return highestMarketCapData.items[0].address;
+    }
+    return null;
+  }, [highestMarketCapData]);
 
   // Get trending score from token - it might be in metaInfo or as a computed field
   const getTrendingScore = (token: TokenDto): number => {
@@ -89,9 +110,9 @@ export default function DashboardTrendingTokens() {
     return 0;
   };
 
-  // Calculate top 3 trending tokens and highest market cap token (regardless of current sort)
-  const { topTrendingTokens, highestMarketCapToken } = useMemo(() => {
-    if (!tokens.length) return { topTrendingTokens: [], highestMarketCapToken: null };
+  // Calculate top 3 trending tokens (regardless of current sort)
+  const topTrendingTokens = useMemo(() => {
+    if (!tokens.length) return [];
 
     // Get all tokens with their trending scores
     const tokensWithTrending = tokens.map(token => ({
@@ -101,29 +122,7 @@ export default function DashboardTrendingTokens() {
 
     // Sort by trending score descending and get top 3
     const sortedByTrending = [...tokensWithTrending].sort((a, b) => b.trendingScore - a.trendingScore);
-    const topTrending = sortedByTrending.slice(0, 3).map(item => item.token.address);
-
-    // Find token with highest market cap
-    // Use AE value from market_cap_data (PriceDto structure has 'ae' property)
-    let highestMarketCap = 0;
-    let highestMarketCapToken = null;
-    
-    tokens.forEach(token => {
-      // PriceDto has 'ae' property, not 'value'
-      const marketCapValue = token.market_cap_data?.ae;
-      if (marketCapValue !== undefined && marketCapValue !== null) {
-        const numValue = typeof marketCapValue === 'string' ? parseFloat(marketCapValue) : Number(marketCapValue);
-        if (!isNaN(numValue) && numValue > highestMarketCap) {
-          highestMarketCap = numValue;
-          highestMarketCapToken = token.address;
-        }
-      }
-    });
-
-    return {
-      topTrendingTokens: topTrending,
-      highestMarketCapToken,
-    };
+    return sortedByTrending.slice(0, 3).map(item => item.token.address);
   }, [tokens]);
 
   // Intersection observer for infinite loading within scrollable container
@@ -282,10 +281,10 @@ export default function DashboardTrendingTokens() {
                           {token.symbol || token.name}
                         </span>
                         {/* Show icons - crown first if applicable, then flame */}
-                        {(highestMarketCapToken === token.address || topTrendingTokens.includes(token.address)) && (
+                        {(highestMarketCapTokenAddress === token.address || topTrendingTokens.includes(token.address)) && (
                           <div className="flex items-center gap-1 flex-shrink-0">
-                            {/* Crown icon for highest market cap token (shown first) */}
-                            {highestMarketCapToken === token.address && (
+                            {/* Crown icon for highest market cap token globally (shown first) */}
+                            {highestMarketCapTokenAddress === token.address && (
                               <span className="flex-shrink-0">
                                 <Crown className="w-3 h-3 text-yellow-400" />
                               </span>

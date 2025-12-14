@@ -7,14 +7,16 @@ import WalletOverviewCard from "@/components/wallet/WalletOverviewCard";
 import { useAeSdk } from "../../hooks/useAeSdk";
 import Sparkline from "../Trendminer/Sparkline";
 import { HeaderLogo, IconWallet } from "../../icons";
+import Favicon from "../../svg/favicon.svg?react";
 import { getNavigationItems } from "./app-header/navigationItems";
 
-import { useWallet, useWalletConnect } from "../../hooks";
+import { useWallet, useWalletConnect, useModal } from "../../hooks";
 import { useAddressByChainName } from "../../hooks/useChainName";
 import LayoutSwitcher from "./LayoutSwitcher";
 import TabSwitcher from "./TabSwitcher";
 import { GlassSurface } from "../ui/GlassSurface";
 import AeButton from "../AeButton";
+import { ConnectWalletButton } from "../ConnectWalletButton";
 import FooterSection from "./FooterSection";
 
 export default function LeftRail({
@@ -23,6 +25,7 @@ export default function LeftRail({
   hidePriceSection?: boolean;
 }) {
   const { t } = useTranslation('common');
+  const { openModal } = useModal();
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
@@ -380,13 +383,27 @@ export default function LeftRail({
               Access your assets and start trading on Superhero.
             </p>
             
-            <AeButton
-              variant="primary"
-              onClick={connectWallet}
-              className="w-full py-3 font-bold text-base shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all duration-300"
-            >
-              Connect Now
-            </AeButton>
+            <div className="connect-wallet-button-wrapper">
+              <style>{`
+                .connect-wallet-button-wrapper svg path {
+                  fill: white !important;
+                }
+                .connect-wallet-button-wrapper span svg path {
+                  fill: white !important;
+                }
+                .connect-wallet-button-wrapper button svg path {
+                  fill: white !important;
+                }
+                .connect-wallet-button-wrapper button span svg path {
+                  fill: white !important;
+                }
+              `}</style>
+              <ConnectWalletButton
+                block
+                variant="dex"
+                className="!w-full !rounded-xl !py-3 !font-bold !text-base !shadow-lg !shadow-blue-500/20 hover:!shadow-blue-500/40 hover:!-translate-y-0.5 !transition-all !duration-300 !bg-[#1161FE] !text-white [&_svg_path]:!fill-white [&_span_svg_path]:!fill-white"
+              />
+            </div>
           </div>
         </GlassSurface>
       )}
@@ -532,7 +549,7 @@ export default function LeftRail({
           <h4 className="m-0 text-white text-sm font-bold">
             Quick Actions
           </h4>
-        </div>
+      </div>
 
         <div className="grid grid-cols-2 gap-2.5">
           <button
@@ -586,7 +603,7 @@ export default function LeftRail({
           >
             💬 Open Chat
           </a>
-        </div>
+      </div>
       </GlassSurface>
 
       {/* Footer Section */}

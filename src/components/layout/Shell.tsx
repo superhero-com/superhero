@@ -57,8 +57,8 @@ export default function Shell({ left, right, children, containerClassName }: She
     <>
       <div className={[
         "shell-container min-h-screen w-full mx-auto flex flex-col transition-all duration-300",
-        // Respect caller-provided max-w classes; otherwise use default
-        containerClassName && /(^|\s)max-w-/.test(containerClassName) ? "" : "max-w-[min(1400px,100%)]",
+        // Respect caller-provided max-w classes; otherwise allow full width scaling
+        containerClassName && /(^|\s)max-w-/.test(containerClassName) ? "" : "",
         containerClassName || ""
       ].filter(Boolean).join(" ")}
       >

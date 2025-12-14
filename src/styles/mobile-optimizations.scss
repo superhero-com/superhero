@@ -44,12 +44,10 @@
 
 .app-content {
   width: 100%;
-  max-width: 1536px;
   margin: 0 auto;
   
   @include mobile {
     padding: 0 0.5rem;
-    max-width: 100%;
     
     /* Only offset for header when invite card is visible above routes */
     .has-invite-card & {

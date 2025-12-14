@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { TrendingUp, Flame, Zap, ChevronDown, Crown } from 'lucide-react';
 import { PriceDataFormatter } from '@/features/shared/components';
 import TokenPriceChart from '@/components/charts/TokenPriceChart';
+import PercentageChange from '@/features/trending/components/PercentageChange';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -248,6 +249,10 @@ export default function DashboardTrendingTokens() {
                 <th className="text-left py-2 pl-0.5 pr-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Token</th>
                 <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Market Cap</th>
                 <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Price</th>
+                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden lg:table-cell">Holders</th>
+                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden 2xl:table-cell whitespace-nowrap">24h</th>
+                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden 2xl:table-cell whitespace-nowrap">7d</th>
+                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden 2xl:table-cell whitespace-nowrap">30d</th>
                 <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider max-w-[100px]">Graph</th>
               </tr>
             </thead>
@@ -316,6 +321,42 @@ export default function DashboardTrendingTokens() {
                         />
                       </div>
                     </td>
+
+                    {/* Holders */}
+                    <td className="py-2 px-3 text-right hidden lg:table-cell">
+                      <div className="text-xs text-right inline-block ml-auto font-medium" style={{
+                        background: 'linear-gradient(to right, #60a5fa, #10b981)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text'
+                      }}>
+                        {token.holders_count?.toLocaleString() || '0'}
+                      </div>
+                    </td>
+
+                    {/* 24h Change */}
+                    <td className="py-2 px-3 text-right hidden 2xl:table-cell">
+                      <PercentageChange 
+                        value={(token as any).performance?.past_24h?.current_change_percent}
+                        className="text-xs"
+                      />
+                    </td>
+
+                    {/* 7d Change */}
+                    <td className="py-2 px-3 text-right hidden 2xl:table-cell">
+                      <PercentageChange 
+                        value={(token as any).performance?.past_7d?.current_change_percent}
+                        className="text-xs"
+                      />
+                    </td>
+
+                    {/* 30d Change */}
+                    <td className="py-2 px-3 text-right hidden 2xl:table-cell">
+                      <PercentageChange 
+                        value={(token as any).performance?.past_30d?.current_change_percent}
+                        className="text-xs"
+                      />
+                    </td>
                     
                     {/* Chart */}
                     <td className="py-2 px-3 text-right max-w-[100px]">
@@ -380,6 +421,10 @@ export default function DashboardTrendingTokens() {
                   <th className="text-left py-2 pl-0.5 pr-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Token</th>
                   <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Market Cap</th>
                   <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Price</th>
+                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden lg:table-cell">Holders</th>
+                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden 2xl:table-cell whitespace-nowrap">24h</th>
+                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden 2xl:table-cell whitespace-nowrap">7d</th>
+                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden 2xl:table-cell whitespace-nowrap">30d</th>
                   <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider max-w-[100px]">Graph</th>
                 </tr>
               </thead>
@@ -396,6 +441,18 @@ export default function DashboardTrendingTokens() {
                       <div className="h-3 bg-white/10 rounded w-12 ml-auto animate-pulse" />
                     </td>
                     <td className="py-2 px-3 text-right">
+                      <div className="h-3 bg-white/10 rounded w-12 ml-auto animate-pulse" />
+                    </td>
+                    <td className="py-2 px-3 text-right hidden lg:table-cell">
+                      <div className="h-3 bg-white/10 rounded w-12 ml-auto animate-pulse" />
+                    </td>
+                    <td className="py-2 px-3 text-right hidden 2xl:table-cell">
+                      <div className="h-3 bg-white/10 rounded w-12 ml-auto animate-pulse" />
+                    </td>
+                    <td className="py-2 px-3 text-right hidden 2xl:table-cell">
+                      <div className="h-3 bg-white/10 rounded w-12 ml-auto animate-pulse" />
+                    </td>
+                    <td className="py-2 px-3 text-right hidden 2xl:table-cell">
                       <div className="h-3 bg-white/10 rounded w-12 ml-auto animate-pulse" />
                     </td>
                     <td className="py-2 px-3 text-right">

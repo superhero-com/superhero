@@ -2,6 +2,7 @@ import { PriceDataFormatter } from "@/features/shared/components";
 import { useMemo } from "react";
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import { TokenLineChart } from "./TokenLineChart";
+import PercentageChange from "./PercentageChange";
 
 
 interface TokenListTableRowProps {
@@ -59,35 +60,48 @@ export default function TokenListTableRow({
             <span className="text-white/60 text-[.85em] mr-0.5 align-baseline">#</span>
             <span>{token.symbol || token.name}</span>
           </div>
-          {/* Row 2: left = MC, right = Price + 24h */}
+          {/* Row 2: left = MC + Holders, right = Price + 24h + Chart */}
           <div className="flex items-center justify-between gap-3 pt-0">
-            <div className="only-fiat mobile-market-cap text-[11px] text-white/60 leading-4 font-medium">
-              <PriceDataFormatter
-                bignumber
-                watchPrice={false}
-                className=""
-                priceData={token.market_cap_data}
-              />
-            </div>
-            <div className="flex items-center gap-4 shrink-0">
-            <div className="only-fiat text-[13px] text-white font-semibold text-right tabular-nums min-w-[72px]">
+            <div className="flex flex-col gap-0.5">
+              <div className="only-fiat mobile-market-cap text-[11px] text-white/60 leading-4 font-medium">
                 <PriceDataFormatter
+                  bignumber
                   watchPrice={false}
-                  hideFiatPrice
-                  className="text-white"
-                  priceData={token.price_data}
+                  className=""
+                  priceData={token.market_cap_data}
                 />
               </div>
-            <div className="flex justify-end">
-              {saleAddress && (
-                <TokenLineChart
-                  saleAddress={saleAddress}
-                  height={26}
-                  hideTimeframe={true}
-                  className="w-[72px]"
-                />
-              )}
+              <div className="text-[10px] text-white/50">
+                {token.holders_count?.toLocaleString() || '0'} holders
+              </div>
             </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="flex flex-col items-end gap-0.5">
+                <div className="only-fiat text-[13px] text-white font-semibold text-right tabular-nums min-w-[72px]">
+                  <PriceDataFormatter
+                    watchPrice={false}
+                    hideFiatPrice
+                    className="text-white"
+                    priceData={token.price_data}
+                  />
+                </div>
+                <div className="text-right">
+                  <PercentageChange 
+                    value={(token as any).performance?.past_24h?.current_change_percent}
+                    className="text-[10px]"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end">
+                {saleAddress && (
+                  <TokenLineChart
+                    saleAddress={saleAddress}
+                    height={26}
+                    hideTimeframe={true}
+                    className="w-[72px]"
+                  />
+                )}
+              </div>
             </div>
           </div>
           <a
@@ -159,6 +173,27 @@ export default function TokenListTableRow({
           <div className="bg-gradient-to-r from-blue-400 to-green-500 bg-clip-text text-transparent font-medium">
             {token.holders_count?.toLocaleString() || '0'}
           </div>
+        </td>
+
+        {/* 24h Change */}
+        <td className="cell cell-change-24h text-right px-1 px-lg-3 hidden lg:table-cell">
+          <PercentageChange 
+            value={(token as any).performance?.past_24h?.current_change_percent}
+          />
+        </td>
+
+        {/* 7d Change */}
+        <td className="cell cell-change-7d text-right px-1 px-lg-3 hidden lg:table-cell">
+          <PercentageChange 
+            value={(token as any).performance?.past_7d?.current_change_percent}
+          />
+        </td>
+
+        {/* 30d Change */}
+        <td className="cell cell-change-30d text-right px-1 px-lg-3 hidden lg:table-cell">
+          <PercentageChange 
+            value={(token as any).performance?.past_30d?.current_change_percent}
+          />
         </td>
 
         {/* Chart */}

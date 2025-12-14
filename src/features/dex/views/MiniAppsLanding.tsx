@@ -88,7 +88,7 @@ export default function MiniAppsLanding() {
 
   return (
     <div className="min-h-screen w-full py-8 px-4 md:px-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full">
         {/* Header */}
         <div className="mb-8 md:mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">

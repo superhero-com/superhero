@@ -150,9 +150,9 @@ export const routes: RouteObject[] = [
   {
     path: "/defi",
     element: (
-      <DexLayout>
+      <SocialLayout>
         <MiniAppsLanding />
-      </DexLayout>
+      </SocialLayout>
     ),
   },
   {

@@ -45,11 +45,11 @@ export default function Shell({ left, right, children, containerClassName }: She
   } else {
     // Dashboard (Default)
     if (showVisualLeft && showVisualRight) {
-       gridClass = "lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)_minmax(300px,360px)]";
+       gridClass = "lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)_minmax(300px,360px)] xl:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)_minmax(360px,420px)] 2xl:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)_minmax(420px,480px)]";
     } else if (showVisualLeft) {
        gridClass = "lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)]";
     } else if (showVisualRight) {
-       gridClass = "lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]";
+       gridClass = "lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)] xl:grid-cols-[minmax(0,1fr)_minmax(360px,420px)] 2xl:grid-cols-[minmax(0,1fr)_minmax(420px,480px)]";
     }
   }
 

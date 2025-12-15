@@ -33,7 +33,7 @@ export default function RemoveLiquidityForm() {
 
   if (!selectedPosition) {
     return (
-      <div className="max-w-[min(480px,100%)] mx-auto bg-transparent border-none backdrop-blur-0 rounded-none p-0 shadow-none text-center md:bg-white/[0.02] md:border md:border-white/10 md:backdrop-blur-[20px] md:rounded-[24px] md:p-8 md:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+      <div className="w-full max-w-full mx-auto bg-transparent border-0 p-0 pb-6 text-center">
         <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-500/10 to-red-500/20 flex items-center justify-center mx-auto mb-4 text-2xl">
           💧
         </div>
@@ -49,7 +49,7 @@ export default function RemoveLiquidityForm() {
 
   if (!address) {
     return (
-      <div className="max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.1)] text-center">
+      <div className="w-full max-w-full mx-auto bg-transparent border-0 p-0 pb-6 text-center">
         <ConnectWalletButton label="CONNECT WALLET" variant="dex" className="text-sm" />
       </div>
     );
@@ -129,7 +129,7 @@ export default function RemoveLiquidityForm() {
 
   if (showConfirm) {
     return (
-      <div className="max-w-[min(480px,100%)] mx-auto bg-transparent border-none backdrop-blur-0 rounded-none p-0 shadow-none md:bg-white/[0.02] md:border md:border-white/10 md:backdrop-blur-[20px] md:rounded-[24px] md:p-6 md:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+      <div className="w-full max-w-full mx-auto bg-transparent border-0 p-0 pb-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -236,7 +236,7 @@ export default function RemoveLiquidityForm() {
   }
 
   return (
-    <div className="max-w-[min(480px,100%)] mx-auto bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+    <div className="w-full max-w-full mx-auto bg-transparent border-0 p-0 pb-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">

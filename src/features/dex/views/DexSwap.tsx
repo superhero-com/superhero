@@ -43,7 +43,7 @@ export default function DexSwap() {
         </div>
       </div>
       {/* Main Content - wrapped in card */}
-      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl w-full max-w-full" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
         {/* Browser Window Header */}
         <div 
           className="flex items-center justify-between border-b border-white/10 px-3 py-2"
@@ -63,10 +63,10 @@ export default function DexSwap() {
             <X className="w-3 h-3 text-white/60" />
           </button>
         </div>
-        <div className="p-6 md:p-8">
-          <div className="grid grid-cols-1 lg:grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-6 md:gap-8 items-start w-full">
+        <div className="p-3 sm:p-4 md:p-5 lg:p-6 xl:p-8 w-full max-w-full overflow-x-hidden">
+          <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 items-start w-full" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))' }}>
           {/* Swap Form */}
-          <div className="min-w-0">
+          <div className="min-w-0 w-full">
             <SwapForm
               onPairSelected={setSelectedPair}
               onFromTokenSelected={setFromToken}
@@ -75,7 +75,7 @@ export default function DexSwap() {
 
           {/* Chart */}
           {!!selectedPair?.address && (
-            <div className="min-w-0 flex flex-col gap-6">
+            <div className="min-w-0 w-full flex flex-col gap-6">
               <PoolCandlestickChart
                 pairAddress={selectedPair?.address}
                 fromTokenAddress={fromToken?.address}

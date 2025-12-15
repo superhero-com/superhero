@@ -32,7 +32,7 @@ export default function DexWrap() {
         </div>
       </div>
       {/* Main Content - wrapped in card */}
-      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl w-full max-w-full" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
         {/* Browser Window Header */}
         <div 
           className="flex items-center justify-between border-b border-white/10 px-3 py-2"

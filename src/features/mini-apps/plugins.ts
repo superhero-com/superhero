@@ -41,3 +41,4 @@ export function getMiniAppRoutes() {
   return miniAppRegistry.getAllRoutes();
 }
 
+

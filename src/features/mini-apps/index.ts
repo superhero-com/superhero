@@ -32,3 +32,4 @@ export * from './registry';
 export { registerBuiltInMiniApps } from './built-in';
 export { default as MiniAppsLanding } from './views/MiniAppsLanding';
 
+

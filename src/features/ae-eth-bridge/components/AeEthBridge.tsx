@@ -12,14 +12,14 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/features/mini-apps/components/ScopedDialog';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
+} from '@/features/mini-apps/components/ScopedSelect';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useRecentActivities } from '@/hooks/useRecentActivities';
 

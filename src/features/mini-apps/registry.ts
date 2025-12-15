@@ -1,5 +1,6 @@
 import React from 'react';
 import SocialLayout from '@/components/layout/SocialLayout';
+import { MiniAppContainer } from './components/MiniAppContainer';
 import type { MiniAppPlugin, MiniAppMetadata, MiniAppCategory } from './types';
 
 /**
@@ -88,7 +89,15 @@ class MiniAppRegistry {
       
       return {
         path: plugin.route.path,
-        element: React.createElement(Layout, {}, React.createElement(Component)),
+        element: React.createElement(
+          Layout,
+          {},
+          React.createElement(
+            MiniAppContainer,
+            {},
+            React.createElement(Component)
+          )
+        ),
         ...plugin.route.options,
       };
     });

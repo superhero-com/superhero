@@ -1,6 +1,11 @@
 import React, { lazy } from "react";
 import { RouteObject, Navigate, useParams } from "react-router-dom";
 import SocialLayout from "./components/layout/SocialLayout";
+import { initializeMiniApps, getMiniAppRoutes } from "./features/mini-apps/plugins";
+
+// Initialize mini-apps plugin system
+// This registers all built-in mini-apps and any community plugins
+initializeMiniApps();
 
 const FeedList = lazy(() => import("./features/social/views/FeedList"));
 const TokenList = lazy(() => import("./features/trending/views/TokenList"));
@@ -38,11 +43,8 @@ const TxQueue = lazy(() => import("./views/TxQueue"));
 
 // DEX Components
 const DexLayout = lazy(() => import("./features/dex/layouts/DexLayout"));
-const MiniAppsLanding = lazy(() => import("./features/dex/views/MiniAppsLanding"));
-const DexSwap = lazy(() => import("./features/dex/views/DexSwap"));
-const DexWrap = lazy(() => import("./features/dex/views/DexWrap"));
-const DexBridge = lazy(() => import("./features/dex/views/DexBridge"));
-const Pool = lazy(() => import("./features/dex/views/Pool"));
+const MiniAppsLanding = lazy(() => import("./features/mini-apps/views/MiniAppsLanding"));
+const MiniAppsDocs = lazy(() => import("./features/mini-apps/views/MiniAppsDocs"));
 const DexExploreTokens = lazy(
   () => import("./features/dex/views/DexExploreTokens")
 );
@@ -52,7 +54,6 @@ const DexExplorePools = lazy(
 const DexExploreTransactions = lazy(
   () => import("./features/dex/views/DexExploreTransactions")
 );
-const Bridge = lazy(() => import("./features/ae-eth-bridge/views/Bridge"));
 
 // Legacy DEX components (for backward compatibility)
 const Explore = lazy(() => import("./views/Explore"));
@@ -156,7 +157,7 @@ export const routes: RouteObject[] = [
   { path: "/voting/account", element: <Governance /> },
   { path: "/voting/create", element: <Governance /> },
 
-  // New DEX Routes with Layout
+  // Mini-Apps Routes (dynamically generated from registry)
   {
     path: "/apps",
     element: (
@@ -166,53 +167,15 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/apps/swap",
+    path: "/docs/mini-apps",
     element: (
       <SocialLayout>
-        <DexSwap />
+        <MiniAppsDocs />
       </SocialLayout>
     ),
   },
-  {
-    path: "/apps/wrap",
-    element: (
-      <SocialLayout>
-        <DexWrap />
-      </SocialLayout>
-    ),
-  },
-  {
-    path: "/apps/buy-ae-with-eth",
-    element: (
-      <SocialLayout>
-        <DexBridge />
-      </SocialLayout>
-    ),
-  },
-  {
-    path: "/apps/bridge",
-    element: (
-      <SocialLayout>
-        <Bridge />
-      </SocialLayout>
-    ),
-  },
-  {
-    path: "/apps/pool",
-    element: (
-      <SocialLayout>
-        <Pool />
-      </SocialLayout>
-    ),
-  },
-  {
-    path: "/apps/pool/add-tokens",
-    element: (
-      <SocialLayout>
-        <AddTokens />
-      </SocialLayout>
-    ),
-  },
+  // Dynamic routes from mini-app registry
+  ...getMiniAppRoutes(),
   {
     path: "/apps/explore/tokens",
     element: (
@@ -268,11 +231,11 @@ export const routes: RouteObject[] = [
   { path: "/defi/explore/pools", element: <Navigate to="/apps/explore/pools" replace /> },
   { path: "/defi/explore/pools/:poolAddress", element: <NavigateDefiPool /> },
   { path: "/defi/explore/transactions", element: <Navigate to="/apps/explore/transactions" replace /> },
-  { path: "/pool", element: <Pool /> },
+  { path: "/pool", element: <Navigate to="/apps/pool" replace /> },
   { path: "/explore", element: <Explore /> },
   { path: "/explore/tokens/:id", element: <TokenDetail /> },
   { path: "/explore/pools/:id", element: <PoolDetail /> },
-  { path: "/pool/add-tokens", element: <AddTokens /> },
+  { path: "/pool/add-tokens", element: <Navigate to="/apps/pool/add-tokens" replace /> },
 
   { path: "/terms", element: <Terms /> },
   { path: "/privacy", element: <Privacy /> },

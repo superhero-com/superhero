@@ -1,5 +1,6 @@
 import React from "react";
 import BackToTop from "./BackToTop";
+import MobileBottomNav from "./MobileBottomNav";
 import { useLayoutVariant } from "../../contexts/LayoutVariantContext";
 
 type ShellProps = {
@@ -78,7 +79,7 @@ export default function Shell({ left, right, children, containerClassName }: She
             </aside>
           )}
 
-          <main className="min-w-0 overflow-visible transition-all duration-300 pt-4 pb-1 md:pt-4 md:pb-0">{children}</main>
+          <main className="min-w-0 overflow-visible transition-all duration-300 pt-4 pb-20 md:pt-4 md:pb-0">{children}</main>
 
           {showVisualRight && (
             <aside className="hidden lg:block sticky top-0 self-start min-w-0 h-screen overflow-y-auto no-scrollbar">
@@ -92,6 +93,8 @@ export default function Shell({ left, right, children, containerClassName }: She
           )}
         </div>
       </div>
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </>
   );
 }

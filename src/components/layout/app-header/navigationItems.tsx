@@ -14,7 +14,7 @@ export interface NavigationItem {
 export const getNavigationItems = (t: TFunction): NavigationItem[] => [
   {
     id: "home",
-    label: "Feed", // Renamed from t('home') for clarity as per user request
+    label: "Home",
     path: "/",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

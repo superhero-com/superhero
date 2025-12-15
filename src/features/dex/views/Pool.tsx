@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import ConnectWalletButton from '../../../components/ConnectWalletButton';
 import RecentActivity from '../../../components/dex/supporting/RecentActivity';
@@ -7,19 +7,13 @@ import { AddLiquidityForm, LiquidityPositionCard, RemoveLiquidityForm } from '..
 import { PoolProvider, usePool } from '../context/PoolProvider';
 import { useLiquidityPositions } from '../hooks';
 import Spinner from '../../../components/Spinner';
-import { Droplets, X, LayoutGrid } from 'lucide-react';
-
-type LayoutOption = 'option1' | 'option2' | 'option3' | 'option4' | 'option5' | 'option6' | 'option7' | 'option8';
+import { Droplets, X } from 'lucide-react';
 
 function PoolContent() {
   const navigate = useNavigate();
   const { activeAccount } = useAccount();
   const { positions, loading, error, refreshPositions } = useLiquidityPositions();
   const { selectPositionForAdd, selectPositionForRemove, currentAction } = usePool();
-  const [layoutOption, setLayoutOption] = useState<LayoutOption>('option1');
-  const [showSwitcher, setShowSwitcher] = useState(true);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleFormSelect = () => {
     // Focus on the forms section
@@ -28,33 +22,6 @@ function PoolContent() {
       formsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
-
-  const layoutOptions = [
-    { value: 'option1', label: 'Balanced Two-Column', description: 'Mobile: Stacked | Desktop: 60/40 split' },
-    { value: 'option2', label: 'Three-Column Grid', description: 'Mobile: Stacked | Tablet: 2 cols | Desktop: 3 cols' },
-    { value: 'option3', label: 'Vertical Stack', description: 'Mobile-first - Always stacked, max-width' },
-    { value: 'option4', label: 'Side-by-Side Equal', description: 'Mobile: Stacked | Desktop: 50/50 split' },
-    { value: 'option5', label: 'Wide Form Layout', description: 'Mobile: Stacked | Desktop: Form 70%' },
-    { value: 'option6', label: 'Compact Dashboard', description: 'Mobile: Stacked | Tablet: 2 cols | Desktop: 3 cols' },
-    { value: 'option7', label: 'Single Column', description: 'Mobile-first - Full width, always stacked' },
-    { value: 'option8', label: 'Asymmetric Focus', description: 'Mobile: Stacked | Desktop: Large form focus' },
-  ];
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
-    }
-
-    if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [showDropdown]);
 
   // Reusable Positions Card Component - Improved Responsive
   const PositionsCard = () => (
@@ -183,71 +150,6 @@ function PoolContent() {
 
   return (
     <div className="w-full max-w-full pb-4 md:pb-6 overflow-x-hidden">
-      {/* Fixed Layout Switcher - Top Right Corner */}
-      {showSwitcher && (
-        <div className="fixed top-4 right-4 z-[9999]" ref={dropdownRef}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowDropdown(!showDropdown);
-            }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-yellow-500/20 border border-yellow-500/30 hover:bg-yellow-500/30 transition-colors cursor-pointer text-xs font-semibold text-yellow-400 shadow-lg backdrop-blur-sm"
-            title="Layout Switcher (Temporary)"
-          >
-            <LayoutGrid className="w-4 h-4" />
-            <span className="hidden sm:inline">Layout</span>
-          </button>
-          {showDropdown && (
-            <div className="absolute top-full right-0 mt-2 w-72 bg-gray-900/95 border border-white/20 rounded-lg shadow-2xl backdrop-blur-md z-[10000] max-h-[80vh] overflow-y-auto">
-              <div className="p-3">
-                <div className="text-[10px] font-semibold text-yellow-400 mb-3 px-2 uppercase tracking-wider">
-                  Layout Options (Temp)
-                </div>
-                <div className="space-y-1.5">
-                  {layoutOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => {
-                        setLayoutOption(option.value as LayoutOption);
-                        setShowDropdown(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-md text-xs transition-colors ${
-                        layoutOption === option.value
-                          ? 'bg-blue-500/20 border border-blue-500/40 text-blue-300'
-                          : 'hover:bg-white/5 text-white/80 border border-transparent'
-                      }`}
-                    >
-                      <div className="font-semibold mb-0.5">{option.label}</div>
-                      <div className="text-[10px] text-white/50 leading-tight">{option.description}</div>
-                    </button>
-                  ))}
-                </div>
-                <button
-                  onClick={() => {
-                    setShowSwitcher(false);
-                    setShowDropdown(false);
-                  }}
-                  className="w-full text-left px-3 py-1.5 mt-3 pt-2 border-t border-white/10 rounded-md text-[10px] text-white/60 hover:bg-white/5 border-transparent"
-                >
-                  Hide Switcher
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-      
-      {/* Show Switcher Button (when hidden) */}
-      {!showSwitcher && (
-        <button
-          onClick={() => setShowSwitcher(true)}
-          className="fixed top-4 right-4 z-[9999] px-3 py-2 rounded-lg bg-yellow-500/20 border border-yellow-500/30 hover:bg-yellow-500/30 transition-colors cursor-pointer text-xs font-semibold text-yellow-400 shadow-lg backdrop-blur-sm"
-          title="Show Layout Switcher"
-        >
-          <LayoutGrid className="w-4 h-4" />
-        </button>
-      )}
-
       {/* Header */}
       <div className="mb-2">
         <div className="flex items-center justify-between gap-2">
@@ -293,175 +195,24 @@ function PoolContent() {
           </button>
         </div>
         <div className="p-3 sm:p-4 md:p-5 lg:p-6 xl:p-8 w-full max-w-full overflow-x-hidden">
-          {/* OPTION 1: Balanced Two-Column Layout - Auto-fit with minmax, wraps when needed */}
-          {layoutOption === 'option1' && (
-            <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 items-start" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))' }}>
-              <div className="min-w-0 w-full">
-                <div id="liquidity-forms-section" className="lg:sticky lg:top-5 flex flex-col gap-4 sm:gap-5 md:gap-6">
-                  {currentAction === 'remove' ? (
-                    <RemoveLiquidityForm />
-                  ) : (
-                    <AddLiquidityForm />
-                  )}
-                </div>
-              </div>
-              <div className="min-w-0 w-full flex flex-col gap-3 sm:gap-4 md:gap-5 lg:gap-6">
-                <PositionsCard />
-                <div className="lg:sticky lg:top-5">
-                  <RecentActivity />
-                </div>
+          {/* Balanced Two-Column Layout - Auto-fit with minmax, wraps when needed */}
+          <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 items-start" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))' }}>
+            <div className="min-w-0 w-full">
+              <div id="liquidity-forms-section" className="lg:sticky lg:top-5 flex flex-col gap-4 sm:gap-5 md:gap-6">
+                {currentAction === 'remove' ? (
+                  <RemoveLiquidityForm />
+                ) : (
+                  <AddLiquidityForm />
+                )}
               </div>
             </div>
-          )}
-
-          {/* OPTION 2: Three-Column Grid Layout - Auto-fit with minmax */}
-          {layoutOption === 'option2' && (
-            <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 items-start" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))' }}>
-              <div className="min-w-0 w-full">
-                <div id="liquidity-forms-section" className="xl:sticky xl:top-5 flex flex-col gap-4 sm:gap-5 md:gap-6">
-                  {currentAction === 'remove' ? (
-                    <RemoveLiquidityForm />
-                  ) : (
-                    <AddLiquidityForm />
-                  )}
-                </div>
-              </div>
-              <div className="min-w-0 w-full">
-                <PositionsCard />
-              </div>
-              <div className="min-w-0 w-full">
-                <div className="xl:sticky xl:top-5">
-                  <RecentActivity />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* OPTION 3: Vertical Stack Layout - Always stacked */}
-          {layoutOption === 'option3' && (
-            <div className="flex flex-col gap-3 sm:gap-4 md:gap-5 lg:gap-6 w-full max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl mx-auto">
-              <div className="min-w-0 w-full">
-                <div id="liquidity-forms-section" className="flex flex-col gap-4 sm:gap-5 md:gap-6">
-                  {currentAction === 'remove' ? (
-                    <RemoveLiquidityForm />
-                  ) : (
-                    <AddLiquidityForm />
-                  )}
-                </div>
-              </div>
-              <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 w-full" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))' }}>
-                <div className="min-w-0 w-full">
-                  <PositionsCard />
-                </div>
-                <div className="min-w-0 w-full">
-                  <RecentActivity />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* OPTION 4: Side-by-Side Equal Cards - Auto-fit with minmax */}
-          {layoutOption === 'option4' && (
-            <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 items-start" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))' }}>
-              <div className="min-w-0 w-full">
-                <div id="liquidity-forms-section" className="lg:sticky lg:top-5 flex flex-col gap-4 sm:gap-5 md:gap-6">
-                  {currentAction === 'remove' ? (
-                    <RemoveLiquidityForm />
-                  ) : (
-                    <AddLiquidityForm />
-                  )}
-                </div>
-              </div>
-              <div className="min-w-0 w-full flex flex-col gap-3 sm:gap-4 md:gap-5 lg:gap-6">
-                <PositionsCard />
+            <div className="min-w-0 w-full flex flex-col gap-3 sm:gap-4 md:gap-5 lg:gap-6">
+              <PositionsCard />
+              <div className="lg:sticky lg:top-5">
                 <RecentActivity />
               </div>
             </div>
-          )}
-
-          {/* OPTION 5: Wide Form Layout - Auto-fit with minmax */}
-          {layoutOption === 'option5' && (
-            <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 items-start" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 2fr)) minmax(min(100%, 280px), 1fr)' }}>
-              <div className="min-w-0 w-full">
-                <div id="liquidity-forms-section" className="lg:sticky lg:top-5 flex flex-col gap-4 sm:gap-5 md:gap-6">
-                  {currentAction === 'remove' ? (
-                    <RemoveLiquidityForm />
-                  ) : (
-                    <AddLiquidityForm />
-                  )}
-                </div>
-              </div>
-              <div className="min-w-0 w-full flex flex-col gap-3 sm:gap-4 md:gap-5 lg:gap-6">
-                <PositionsCard />
-                <div className="lg:sticky lg:top-5">
-                  <RecentActivity />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* OPTION 6: Compact Dashboard - Auto-fit with minmax */}
-          {layoutOption === 'option6' && (
-            <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 items-start" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))' }}>
-              <div className="min-w-0 w-full">
-                <div id="liquidity-forms-section" className="flex flex-col gap-4 sm:gap-5 md:gap-6">
-                  {currentAction === 'remove' ? (
-                    <RemoveLiquidityForm />
-                  ) : (
-                    <AddLiquidityForm />
-                  )}
-                </div>
-              </div>
-              <div className="min-w-0 w-full">
-                <PositionsCard />
-              </div>
-              <div className="min-w-0 w-full">
-                <RecentActivity />
-              </div>
-            </div>
-          )}
-
-          {/* OPTION 7: Single Column - Always stacked */}
-          {layoutOption === 'option7' && (
-            <div className="flex flex-col gap-3 sm:gap-4 md:gap-5 lg:gap-6 w-full max-w-full">
-              <div className="min-w-0 w-full">
-                <div id="liquidity-forms-section" className="flex flex-col gap-4 sm:gap-5 md:gap-6">
-                  {currentAction === 'remove' ? (
-                    <RemoveLiquidityForm />
-                  ) : (
-                    <AddLiquidityForm />
-                  )}
-                </div>
-              </div>
-              <div className="min-w-0 w-full">
-                <PositionsCard />
-              </div>
-              <div className="min-w-0 w-full">
-                <RecentActivity />
-              </div>
-            </div>
-          )}
-
-          {/* OPTION 8: Asymmetric Focus - Auto-fit with minmax */}
-          {layoutOption === 'option8' && (
-            <div className="grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 items-start" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 500px), 3fr)) minmax(min(100%, 250px), 1fr)' }}>
-              <div className="min-w-0 w-full">
-                <div id="liquidity-forms-section" className="lg:sticky lg:top-5 flex flex-col gap-4 sm:gap-5 md:gap-6">
-                  {currentAction === 'remove' ? (
-                    <RemoveLiquidityForm />
-                  ) : (
-                    <AddLiquidityForm />
-                  )}
-                </div>
-              </div>
-              <div className="min-w-0 w-full flex flex-col gap-3 sm:gap-4 md:gap-5 lg:gap-6">
-                <PositionsCard />
-                <div className="lg:sticky lg:top-5">
-                  <RecentActivity />
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

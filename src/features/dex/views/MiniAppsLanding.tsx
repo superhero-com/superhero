@@ -90,7 +90,7 @@ export default function MiniAppsLanding() {
     <div className="min-h-screen w-full py-8 px-4 md:px-6">
       <div className="w-full">
         {/* Header */}
-        <div className="mb-8 md:mb-12">
+        <div className="mb-6 md:mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
             Mini-Apps
           </h1>
@@ -99,8 +99,9 @@ export default function MiniAppsLanding() {
           </p>
         </div>
 
-        {/* Mini-Apps Grid */}
-        <div className="space-y-8 md:space-y-12">
+        {/* Mini-Apps Grid - Wrapped in Card */}
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl p-6 md:p-8" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+          <div className="space-y-8 md:space-y-12">
           {Object.entries(groupedApps).map(([category, apps]) => (
             <div key={category}>
               <h2 className="text-xl md:text-2xl font-semibold text-white mb-4 md:mb-6 flex items-center gap-2">
@@ -147,10 +148,10 @@ export default function MiniAppsLanding() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
 
-        {/* Footer CTA */}
-        <div className="mt-12 md:mt-16">
+          {/* Footer CTA */}
+          <div className="mt-12 md:mt-16">
           <GlassSurface className="p-6 md:p-8 text-center">
             <h3 className="text-2xl font-bold text-white mb-2">
               Build Your Own Mini-App
@@ -170,6 +171,7 @@ export default function MiniAppsLanding() {
               View on GitHub
             </a>
           </GlassSurface>
+          </div>
         </div>
       </div>
     </div>

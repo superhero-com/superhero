@@ -10,35 +10,35 @@ export default function DexSwap() {
   const [fromToken, setFromToken] = useState<DexTokenDto | null>(null);
   // todo get selected pool address3
   return (
-    <div className="mx-auto md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
+    <div className="w-full py-4 md:py-6">
       <Head
         title="Swap AE and tokens – Superhero DEX"
         description="Trustless swapping on Superhero DEX with live charts and recent activity."
         canonicalPath="/defi/swap"
       />
-      {/* Main Content - unified layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-[480px_minmax(560px,1fr)] gap-6 md:gap-8 items-start w-full">
-        {/* Left card (Swap) */}
-        <div className="order-1 lg:order-1">
-          <SwapForm
-            onPairSelected={setSelectedPair}
-            onFromTokenSelected={setFromToken}
-          />
-        </div>
-
-        {/* Right column (Chart + Recent Activity) */}
-        <div className="order-2 lg:order-2 w-full min-w-0 flex flex-col gap-6">
-          {!!selectedPair?.address && (
-            <PoolCandlestickChart
-              pairAddress={selectedPair?.address}
-              fromTokenAddress={fromToken?.address}
-              height={460}
+      {/* Main Content - wrapped in card */}
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl p-6 md:p-8" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-6 md:gap-8 items-start w-full">
+          {/* Swap Form */}
+          <div className="min-w-0">
+            <SwapForm
+              onPairSelected={setSelectedPair}
+              onFromTokenSelected={setFromToken}
             />
+          </div>
+
+          {/* Chart */}
+          {!!selectedPair?.address && (
+            <div className="min-w-0 flex flex-col gap-6">
+              <PoolCandlestickChart
+                pairAddress={selectedPair?.address}
+                fromTokenAddress={fromToken?.address}
+                height={460}
+              />
+            </div>
           )}
-          <RecentActivity />
         </div>
       </div>
-      {/* New Account Education hidden on DEX */}
     </div>
   );
 }

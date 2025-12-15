@@ -22,12 +22,13 @@ function PoolContent() {
   };
 
   return (
-    <div className="mx-auto md:py-0 flex flex-col gap-6 md:gap-8 min-h-screen">
-      {/* Top Row - Forms and Positions */}
-      <div className="grid grid-cols-1 lg:grid-cols-[480px_minmax(560px,1fr)] gap-6 md:gap-8 items-start">
-        {/* Mobile: Forms First, Desktop: Forms First (left column) */}
-        <div className="lg:order-1 order-1">
-          {/* Liquidity Forms */}
+    <div className="w-full py-4 md:py-6">
+      {/* Main Content - wrapped in card */}
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl p-6 md:p-8" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+        {/* Top Row - Forms and Positions */}
+        <div className="grid grid-cols-1 lg:grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-6 md:gap-8 items-start">
+        {/* Liquidity Forms */}
+        <div className="min-w-0">
           <div id="liquidity-forms-section" className="lg:sticky lg:top-5 flex flex-col gap-6">
             {currentAction === 'remove' ? (
               <RemoveLiquidityForm />
@@ -37,8 +38,8 @@ function PoolContent() {
           </div>
         </div>
 
-        {/* Mobile: Positions Second, Desktop: Positions Second (right column) */}
-        <div className="lg:order-2 order-2">
+        {/* Positions */}
+        <div className="min-w-0">
           <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] relative overflow-hidden">
             {/* Header */}
             <div className="mb-6">
@@ -166,7 +167,7 @@ function PoolContent() {
           </div>
         </div>
       </div>
-
+      </div>
     </div>
   );
 }

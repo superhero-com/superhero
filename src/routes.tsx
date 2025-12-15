@@ -158,49 +158,49 @@ export const routes: RouteObject[] = [
   {
     path: "/defi/swap",
     element: (
-      <DexLayout>
+      <SocialLayout>
         <DexSwap />
-      </DexLayout>
+      </SocialLayout>
     ),
   },
   {
     path: "/defi/wrap",
     element: (
-      <DexLayout>
+      <SocialLayout>
         <DexWrap />
-      </DexLayout>
+      </SocialLayout>
     ),
   },
   {
     path: "/defi/buy-ae-with-eth",
     element: (
-      <DexLayout>
+      <SocialLayout>
         <DexBridge />
-      </DexLayout>
+      </SocialLayout>
     ),
   },
   {
     path: "/defi/bridge",
     element: (
-      <DexLayout>
+      <SocialLayout>
         <Bridge />
-      </DexLayout>
+      </SocialLayout>
     ),
   },
   {
     path: "/defi/pool",
     element: (
-      <DexLayout>
+      <SocialLayout>
         <Pool />
-      </DexLayout>
+      </SocialLayout>
     ),
   },
   {
     path: "/defi/pool/add-tokens",
     element: (
-      <DexLayout>
+      <SocialLayout>
         <AddTokens />
-      </DexLayout>
+      </SocialLayout>
     ),
   },
   {

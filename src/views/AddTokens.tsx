@@ -179,7 +179,9 @@ export default function AddTokens() {
   }, [walletTokens, filter]);
 
   return (
-    <div className="max-w-[900px] mx-auto py-4 px-4">
+    <div className="w-full py-4 md:py-6">
+      {/* Main Content - wrapped in card */}
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl p-6 md:p-8" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
       <DexTabs />
       <h2 className="text-2xl font-bold text-white mb-2">Add tokens from your wallet</h2>
       <p className="text-sm text-white/80 mb-3 leading-relaxed">
@@ -272,6 +274,7 @@ export default function AddTokens() {
             )}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   );

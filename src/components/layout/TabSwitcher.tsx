@@ -24,7 +24,7 @@ export default function TabSwitcher({ items, className }: TabSwitcherProps) {
   };
 
   return (
-    <GlassSurface className={`mb-6 w-full ${className || ''}`} interactive={false}>
+    <GlassSurface className={`mb-0 w-full ${className || ''}`} interactive={false}>
       <div className="flex flex-row items-center gap-1.5 p-1.5">
         {items.map((item) => {
           const isActive = isActiveRoute(item.path);

@@ -29,8 +29,8 @@ export default function HeaderWalletButton() {
     }
   };
 
-  // If not connected, show connect button
-  if (!walletInfo && !activeAccount) {
+  // If not connected or activeAccount is undefined, show connect button
+  if (!activeAccount) {
     return (
       <AeButton
         onClick={handleConnect}

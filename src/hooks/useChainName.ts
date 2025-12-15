@@ -1,100 +1,39 @@
 import { useAtom } from "jotai";
 import { useEffect, useMemo, useRef } from "react";
 import { chainNamesAtom } from "../atoms/walletAtoms";
-import { CONFIG } from "../config";
+import { AccountsService } from "../api/generated/services/AccountsService";
 import { useAeSdk } from "./useAeSdk";
 
-interface ChainNameResponse {
-    active: boolean;
-    name: string;
-    key: string;
-    tx: {
-        pointers: Array<{
-            encoded_key: string;
-            id: string;
-            key: string;
-        }>;
-    };
-}
-
-// Global request queue and rate limiter to prevent too many simultaneous requests
-const requestQueue = new Set<string>();
+// Global request queue to prevent duplicate requests
 const pendingRequests = new Map<string, Promise<string | null>>();
-const MAX_CONCURRENT_REQUESTS = 3;
-let activeRequestCount = 0;
 
 // Track addresses that have been checked and found no name (with timestamps)
-// This allows us to check addresses without names more frequently
 const noNameCheckTimestamps = new Map<string, number>();
-const NO_NAME_REFRESH_INTERVAL = 1000 * 60 * 5; // 5 minutes - check addresses without names more often
+const NO_NAME_REFRESH_INTERVAL = 1000 * 60 * 10; // 10 minutes - refresh interval
 
-async function fetchChainNameFromMiddleware(accountAddress: string): Promise<string | null> {
+// Cache refresh interval for addresses with names
+const CACHED_NAME_REFRESH_INTERVAL = 1000 * 60 * 15; // 15 minutes - chain names don't change often
+
+async function fetchChainNameFromBackend(accountAddress: string): Promise<string | null> {
     // If there's already a pending request for this address, return it
     const pending = pendingRequests.get(accountAddress);
     if (pending) {
         return pending;
     }
 
-    // Wait if we're at the concurrent request limit
-    const waitForSlot = (): Promise<void> => {
-        return new Promise((resolve) => {
-            const checkSlot = () => {
-                if (activeRequestCount < MAX_CONCURRENT_REQUESTS) {
-                    activeRequestCount++;
-                    resolve();
-                } else {
-                    setTimeout(checkSlot, 100); // Check every 100ms
-                }
-            };
-            checkSlot();
-        });
-    };
-
     const requestPromise = (async () => {
         try {
-            await waitForSlot();
-            
-            const base = (CONFIG.MIDDLEWARE_URL || '').replace(/\/$/, '');
-            if (!base) {
-                console.warn('MIDDLEWARE_URL not configured');
+            // Use backend API which handles all the complex logic
+            const account = await AccountsService.getAccount({ address: accountAddress });
+            return account?.chain_name || null;
+        } catch (e: any) {
+            // 404 is normal if account doesn't exist
+            if (e?.status === 404) {
                 return null;
             }
-            
-            const url = `${base}/v3/accounts/${encodeURIComponent(accountAddress)}/names/pointees`;
-            const response = await fetch(url, { cache: 'no-cache' });
-            
-            if (!response.ok) {
-                if (response.status === 404) {
-                    // Account not found or no names - this is normal
-                    return null;
-                }
-                throw new Error(`Failed to fetch chain names: ${response.status} ${response.statusText}`);
-            }
-            
-            const names: ChainNameResponse[] = (await response.json()).data as ChainNameResponse[];
-            
-            if (!Array.isArray(names)) {
-                return null;
-            }
-            
-            // Find the first active name that has the account address in its pointers
-            for (const name of names) {
-                if (name.active && name.tx?.pointers) {
-                    const hasMatchingPointer = name.tx.pointers.some(
-                        pointer => pointer.id === accountAddress
-                    );
-                    if (hasMatchingPointer) {
-                        return name.name;
-                    }
-                }
-            }
-            
-            return null;
-        } catch (e) {
-            console.warn('Failed to fetch chain name from middleware', e);
+            console.warn('Failed to fetch chain name from backend', e);
             return null;
         } finally {
-            activeRequestCount--;
             pendingRequests.delete(accountAddress);
         }
     })();
@@ -134,17 +73,60 @@ export function useChainName(accountAddress: string) {
         const lastNoNameCheck = noNameCheckTimestamps.get(accountAddress);
         const now = Date.now();
         
-        // If name exists in cache, use it - but set up periodic refresh for addresses without names
+        // If name exists in cache, refresh it periodically but not too frequently
+        // Chain names don't change often, so we can use a longer refresh interval
         if (cachedName) {
-            // Address has a name - don't fetch frequently (names rarely change)
-            // We could set up a very long interval here, but for now just use cached value
+            // Track when this cached name was last refreshed
+            const lastRefreshKey = `chainName:refresh:${accountAddress}`;
+            const lastRefresh = noNameCheckTimestamps.get(lastRefreshKey) || 0;
+            const timeSinceRefresh = now - lastRefresh;
+            
+            // Only refresh if it's been a while since last refresh
+            if (timeSinceRefresh >= CACHED_NAME_REFRESH_INTERVAL) {
+                const performFetchForCached = () => {
+                    // Double-check cache hasn't changed
+                    if (chainNamesRef.current[accountAddress] !== cachedName) {
+                        return; // Another component already updated it
+                    }
+                    
+                    fetchingRef.current.add(accountAddress);
+                    
+                    fetchChainNameFromBackend(accountAddress)
+                        .then(name => {
+                            if (name && name !== cachedName) {
+                                // Found a different (newer) name - update cache
+                                setChainNames(prev => ({ ...prev, [accountAddress]: name }));
+                                noNameCheckTimestamps.delete(accountAddress);
+                            } else if (!name && cachedName) {
+                                // Chain name was removed/expired - clear cache
+                                setChainNames(prev => {
+                                    const updated = { ...prev };
+                                    delete updated[accountAddress];
+                                    return updated;
+                                });
+                                noNameCheckTimestamps.set(accountAddress, Date.now());
+                            }
+                            // Update refresh timestamp regardless of whether name changed
+                            noNameCheckTimestamps.set(lastRefreshKey, Date.now());
+                        })
+                        .finally(() => {
+                            fetchingRef.current.delete(accountAddress);
+                        });
+                };
+                
+                // Schedule refresh (no immediate debounce needed since we already checked time)
+                timeoutRef.current = setTimeout(() => {
+                    performFetchForCached();
+                }, 1000); // Small delay to batch requests
+            }
+            
             return;
         }
         
         // Address has no name - check if we should fetch
         const shouldFetch = () => {
             // Prevent duplicate requests
-            if (fetchingRef.current.has(accountAddress) || requestQueue.has(accountAddress)) {
+            if (fetchingRef.current.has(accountAddress) || pendingRequests.has(accountAddress)) {
                 return false;
             }
             
@@ -162,24 +144,24 @@ export function useChainName(accountAddress: string) {
                 return;
             }
             
-            // Add to queue and fetch
-            requestQueue.add(accountAddress);
             fetchingRef.current.add(accountAddress);
             
-            fetchChainNameFromMiddleware(accountAddress)
+            // Capture current timestamp when fetch actually executes (not when scheduled)
+            const fetchTime = Date.now();
+            
+            fetchChainNameFromBackend(accountAddress)
                 .then(name => {
                     if (name) {
                         // Found a name - update cache and remove from no-name tracking
                         setChainNames(prev => ({ ...prev, [accountAddress]: name }));
                         noNameCheckTimestamps.delete(accountAddress);
                     } else {
-                        // No name found - remember we checked this address
-                        noNameCheckTimestamps.set(accountAddress, now);
+                        // No name found - remember we checked this address (use current fetch time)
+                        noNameCheckTimestamps.set(accountAddress, fetchTime);
                     }
                 })
                 .finally(() => {
                     fetchingRef.current.delete(accountAddress);
-                    requestQueue.delete(accountAddress);
                 });
         };
         
@@ -253,7 +235,7 @@ export function useSuperheroChainNames() {
             
             fetchingRef.current = true;
             try {
-                const name = await fetchChainNameFromMiddleware(accountAddress);
+                const name = await fetchChainNameFromBackend(accountAddress);
                 if (name) {
                     // Found a name - update cache and remove from no-name tracking
                     setChainNames(prev => ({ ...prev, [accountAddress]: name }));

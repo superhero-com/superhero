@@ -86,6 +86,16 @@ function NavigateTrendingAccount() {
   return <Navigate to={`/trends/accounts/${encodeURIComponent(address || "")}`} replace />;
 }
 
+function NavigateDefiToken() {
+  const { tokenAddress } = useParams<{ tokenAddress: string }>();
+  return <Navigate to={`/apps/explore/tokens/${tokenAddress}`} replace />;
+}
+
+function NavigateDefiPool() {
+  const { poolAddress } = useParams<{ poolAddress: string }>();
+  return <Navigate to={`/apps/explore/pools/${poolAddress}`} replace />;
+}
+
 function NavigateUserProfile() {
   const { address } = useParams();
   return <Navigate to={`/users/${encodeURIComponent(address || "")}`} replace />;
@@ -247,7 +257,17 @@ export const routes: RouteObject[] = [
   // Legacy DEX Routes (for backward compatibility)
   { path: "/swap", element: <Navigate to="/apps/swap" replace /> },
   { path: "/defi", element: <Navigate to="/apps" replace /> },
-  { path: "/defi/*", element: <Navigate to="/apps" replace /> },
+  { path: "/defi/swap", element: <Navigate to="/apps/swap" replace /> },
+  { path: "/defi/wrap", element: <Navigate to="/apps/wrap" replace /> },
+  { path: "/defi/buy-ae-with-eth", element: <Navigate to="/apps/buy-ae-with-eth" replace /> },
+  { path: "/defi/bridge", element: <Navigate to="/apps/bridge" replace /> },
+  { path: "/defi/pool", element: <Navigate to="/apps/pool" replace /> },
+  { path: "/defi/pool/add-tokens", element: <Navigate to="/apps/pool/add-tokens" replace /> },
+  { path: "/defi/explore/tokens", element: <Navigate to="/apps/explore/tokens" replace /> },
+  { path: "/defi/explore/tokens/:tokenAddress", element: <NavigateDefiToken /> },
+  { path: "/defi/explore/pools", element: <Navigate to="/apps/explore/pools" replace /> },
+  { path: "/defi/explore/pools/:poolAddress", element: <NavigateDefiPool /> },
+  { path: "/defi/explore/transactions", element: <Navigate to="/apps/explore/transactions" replace /> },
   { path: "/pool", element: <Pool /> },
   { path: "/explore", element: <Explore /> },
   { path: "/explore/tokens/:id", element: <TokenDetail /> },

@@ -4,6 +4,8 @@ import { getNavigationItems } from './app-header/navigationItems';
 import { useTranslation } from 'react-i18next';
 import { useAeSdk } from '../../hooks/useAeSdk';
 import { useModal } from '../../hooks/useModal';
+import { useAccountBalances } from '../../hooks/useAccountBalances';
+import AddressAvatar from '../AddressAvatar';
 
 export default function MobileBottomNav() {
   const navigate = useNavigate();
@@ -11,6 +13,7 @@ export default function MobileBottomNav() {
   const { t } = useTranslation('navigation');
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
+  const { decimalBalance } = useAccountBalances(activeAccount || '');
   const navigationItems = getNavigationItems(t);
 
   // Filter to only show Home, Trends, and Mini-Apps
@@ -129,7 +132,7 @@ export default function MobileBottomNav() {
             }
           }}
           className={`
-            relative flex items-center gap-2 px-4 py-2.5 rounded-xl
+            relative flex items-center gap-2 px-3 py-2 rounded-xl
             transition-all duration-300 ease-out
             ${activeAccount 
               ? 'bg-gray-800/80' // Dark gray pill background when connected
@@ -138,34 +141,34 @@ export default function MobileBottomNav() {
           `}
           aria-label={activeAccount ? 'View Profile' : 'Connect Wallet'}
         >
-          {/* Icon */}
-          <div
-            className={`
-              flex-shrink-0 transition-all duration-300
-              ${activeAccount 
-                ? 'text-[#00ff9d]' // Bright green when connected
-                : 'text-white/60' // Gray when not connected
-              }
-            `}
-            style={{
-              filter: activeAccount ? 'drop-shadow(0 0 4px rgba(0, 255, 157, 0.6))' : 'none',
-            }}
-          >
-            <WalletIcon />
-          </div>
+          {/* Avatar or Icon */}
+          {activeAccount ? (
+            <div className="flex-shrink-0 w-5 h-5 rounded-full overflow-hidden ring-1 ring-[#00ff9d]/40">
+              <AddressAvatar address={activeAccount} size={20} borderRadius="50%" />
+            </div>
+          ) : (
+            <div
+              className="flex-shrink-0 transition-all duration-300 text-white/60"
+            >
+              <WalletIcon />
+            </div>
+          )}
 
-          {/* Label or Address */}
-          <span
-            className={`
-              text-sm font-medium whitespace-nowrap transition-colors duration-300
-              ${activeAccount 
-                ? 'text-white' // White text when connected
-                : 'text-white/60' // Gray text when not connected
-              }
-            `}
-          >
-            {activeAccount ? formatAddress(activeAccount) : 'Wallet'}
-          </span>
+          {/* Address and Balance */}
+          {activeAccount ? (
+            <div className="flex flex-col items-start gap-0 leading-tight">
+              <span className="text-xs font-medium whitespace-nowrap text-white">
+                {formatAddress(activeAccount)}
+              </span>
+              <span className="text-[10px] font-medium whitespace-nowrap text-white/60">
+                {decimalBalance.prettify()} AE
+              </span>
+            </div>
+          ) : (
+            <span className="text-sm font-medium whitespace-nowrap text-white/60">
+              Wallet
+            </span>
+          )}
         </button>
       </div>
     </nav>

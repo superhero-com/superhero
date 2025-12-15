@@ -6,6 +6,7 @@ import DexTabs from '../components/dex/DexTabs';
 import { useToast } from '../components/ToastProvider';
 import { CONFIG } from '../config';
 import { ACI, DEX_ADDRESSES, fromAettos, getPairAddress, initDexContracts } from '../libs/dex';
+import { PlusCircle, X } from 'lucide-react';
 
 import { useAeSdk } from '../hooks';
 export default function AddTokens() {
@@ -179,9 +180,52 @@ export default function AddTokens() {
   }, [walletTokens, filter]);
 
   return (
-    <div className="w-full py-4 md:py-6">
+    <div className="w-full pb-4 md:pb-6">
+      {/* Header */}
+      <div className="mb-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
+              <PlusCircle className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-white tracking-normal sm:tracking-normal" style={{ background: 'none', backgroundImage: 'none', WebkitBackgroundClip: 'unset', WebkitTextFillColor: 'unset', letterSpacing: 'normal' }}>Add Tokens</h1>
+              <p className="text-xs text-white/60">Discover tokens from your wallet and add them to the DEX</p>
+            </div>
+          </div>
+          <div className="flex items-center h-[52px] justify-end">
+            <button
+              onClick={() => navigate('/apps')}
+              className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors cursor-pointer text-xs font-semibold text-white/80 hover:text-white"
+              aria-label="More mini apps"
+            >
+              More mini apps
+            </button>
+          </div>
+        </div>
+      </div>
       {/* Main Content - wrapped in card */}
-      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl p-6 md:p-8" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+        {/* Browser Window Header */}
+        <div 
+          className="flex items-center justify-between border-b border-white/10 px-3 py-2"
+          style={{ 
+            background: 'rgba(255, 255, 255, 0.05)',
+            backdropFilter: 'blur(24px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+          }}
+        >
+          <div className="text-[10px] font-semibold text-white/60 uppercase tracking-wider">MINI APP</div>
+          <button
+            onClick={() => navigate('/apps')}
+            className="w-5 h-5 rounded hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
+            aria-label="Close"
+          >
+            <X className="w-3 h-3 text-white/60" />
+          </button>
+        </div>
+        <div className="p-6 md:p-8">
       <DexTabs />
       <h2 className="text-2xl font-bold text-white mb-2">Add tokens from your wallet</h2>
       <p className="text-sm text-white/80 mb-3 leading-relaxed">
@@ -275,6 +319,7 @@ export default function AddTokens() {
           </tbody>
         </table>
       </div>
+        </div>
       </div>
     </div>
   );

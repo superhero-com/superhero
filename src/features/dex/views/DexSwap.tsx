@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Head from "../../../seo/Head";
 import { DexTokenDto, PairDto } from "../../../api/generated";
 import SwapForm from "../../../components/dex/core/SwapForm";
 import RecentActivity from "../../../components/dex/supporting/RecentActivity";
 import PoolCandlestickChart from "../components/charts/PoolCandlestickChart";
 import { ArrowLeftRight, X } from "lucide-react";
+import { HeaderLogo } from "../../../icons";
 
 export default function DexSwap() {
   const navigate = useNavigate();
@@ -19,18 +20,12 @@ export default function DexSwap() {
         description="Trustless swapping on Superhero DEX with live charts and recent activity."
         canonicalPath="/apps/swap"
       />
-      {/* Header */}
-      <div className="mb-2">
+      {/* Header with Superhero Logo - Hidden on 2xl+ when left rail is shown */}
+      <div className="mb-2 2xl:hidden">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-              <ArrowLeftRight className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white tracking-normal sm:tracking-normal" style={{ background: 'none', backgroundImage: 'none', WebkitBackgroundClip: 'unset', WebkitTextFillColor: 'unset', letterSpacing: 'normal' }}>Swap</h1>
-              <p className="text-xs text-white/60">Exchange tokens instantly on the DEX</p>
-            </div>
-          </div>
+          <Link to="/" className="flex items-center no-underline hover:no-underline group" aria-label="Superhero Home">
+            <HeaderLogo className="h-8 w-auto transition-transform duration-200 group-hover:scale-105" />
+          </Link>
           <div className="flex items-center h-[52px] justify-end">
             <button
               onClick={() => navigate('/apps')}
@@ -54,7 +49,15 @@ export default function DexSwap() {
             boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
           }}
         >
-          <div className="text-[10px] font-semibold text-white/60 uppercase tracking-wider">MINI APP</div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
+              <ArrowLeftRight className="w-3.5 h-3.5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-white m-0 leading-tight">Swap</h2>
+              <p className="text-[10px] text-white/60 m-0 leading-tight">Exchange tokens instantly on the DEX</p>
+            </div>
+          </div>
           <button
             onClick={() => navigate('/apps')}
             className="w-5 h-5 rounded hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"

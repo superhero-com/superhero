@@ -54,6 +54,9 @@ export default function MobileBottomNav() {
     return location.pathname.startsWith(path);
   };
 
+  // Check if we're on the profile page
+  const isOnProfilePage = activeAccount && location.pathname.startsWith(`/users/${activeAccount}`);
+
   return (
     <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[10000]">
       {/* Liquid Glass Navigation Bar */}
@@ -132,10 +135,10 @@ export default function MobileBottomNav() {
             }
           }}
           className={`
-            relative flex items-center gap-2 px-3 py-2 rounded-xl
+            relative flex items-center gap-2 px-4 py-2.5 rounded-xl
             transition-all duration-300 ease-out
-            ${activeAccount 
-              ? 'bg-gray-800/80' // Dark gray pill background when connected
+            ${isOnProfilePage 
+              ? 'bg-gray-800/80' // Dark gray pill background only when on profile page
               : 'bg-transparent hover:bg-white/5'
             }
           `}
@@ -143,8 +146,8 @@ export default function MobileBottomNav() {
         >
           {/* Avatar or Icon */}
           {activeAccount ? (
-            <div className="flex-shrink-0 w-5 h-5 rounded-full overflow-hidden ring-1 ring-[#00ff9d]/40">
-              <AddressAvatar address={activeAccount} size={20} borderRadius="50%" />
+            <div className="flex-shrink-0 w-4 h-4 rounded-full overflow-hidden ring-1 ring-[#00ff9d]/40">
+              <AddressAvatar address={activeAccount} size={16} borderRadius="50%" />
             </div>
           ) : (
             <div
@@ -154,10 +157,10 @@ export default function MobileBottomNav() {
             </div>
           )}
 
-          {/* Address and Balance */}
+          {/* Address and Balance - Two rows */}
           {activeAccount ? (
             <div className="flex flex-col items-start gap-0 leading-tight">
-              <span className="text-xs font-medium whitespace-nowrap text-white">
+              <span className="text-xs font-medium whitespace-nowrap text-white/60">
                 {formatAddress(activeAccount)}
               </span>
               <span className="text-[10px] font-medium whitespace-nowrap text-white/60">

@@ -1,23 +1,18 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { AeEthBridge } from "../components/AeEthBridge";
 import { Network, X } from "lucide-react";
+import { HeaderLogo } from "../../../icons";
 
 export default function Bridge() {
     const navigate = useNavigate();
     return (
         <div className="w-full pb-4 md:pb-6">
-            {/* Header */}
-            <div className="mb-2">
+            {/* Header with Superhero Logo - Hidden on 2xl+ when left rail is shown */}
+            <div className="mb-2 2xl:hidden">
                 <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center">
-                            <Network className="w-4 h-4 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-bold text-white tracking-normal sm:tracking-normal" style={{ background: 'none', backgroundImage: 'none', WebkitBackgroundClip: 'unset', WebkitTextFillColor: 'unset', letterSpacing: 'normal' }}>Bridge</h1>
-                            <p className="text-xs text-white/60">Bridge assets between æternity and Ethereum</p>
-                        </div>
-                    </div>
+                    <Link to="/" className="flex items-center no-underline hover:no-underline group" aria-label="Superhero Home">
+                        <HeaderLogo className="h-8 w-auto transition-transform duration-200 group-hover:scale-105" />
+                    </Link>
                     <div className="flex items-center h-[52px] justify-end">
                         <button
                             onClick={() => navigate('/apps')}
@@ -41,7 +36,15 @@ export default function Bridge() {
                         boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
                     }}
                 >
-                    <div className="text-[10px] font-semibold text-white/60 uppercase tracking-wider">MINI APP</div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center flex-shrink-0">
+                            <Network className="w-3.5 h-3.5 text-white" />
+                        </div>
+                        <div>
+                            <h2 className="text-sm font-bold text-white m-0 leading-tight">Bridge</h2>
+                            <p className="text-[10px] text-white/60 m-0 leading-tight">Bridge assets between æternity and Ethereum</p>
+                        </div>
+                    </div>
                     <button
                         onClick={() => navigate('/apps')}
                         className="w-5 h-5 rounded hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"

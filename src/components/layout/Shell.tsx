@@ -8,15 +8,22 @@ type ShellProps = {
   right?: React.ReactNode;
   children: React.ReactNode;
   containerClassName?: string;
+  /** When true, content spans both left and middle columns (for mini-apps) */
+  spanLeftAndMiddle?: boolean;
+  /** When true, show left rail on wide screens (xl+) even when spanLeftAndMiddle is true */
+  showLeftOnWideForMiniApps?: boolean;
 };
 
-export default function Shell({ left, right, children, containerClassName }: ShellProps) {
+export default function Shell({ left, right, children, containerClassName, spanLeftAndMiddle = false, showLeftOnWideForMiniApps = false }: ShellProps) {
   const { variant } = useLayoutVariant();
   
   // 3-column grid on large screens: left | center | right
   // On smaller screens show only center; right rail stays hidden; left can be rendered separately if desired
   const hasRight = Boolean(right);
-  const hasLeft = Boolean(left);
+  // Show left rail if:
+  // 1. It exists AND we're not spanning left+middle, OR
+  // 2. We're on a mini-app route and showLeftOnWideForMiniApps is true (will be conditionally rendered on xl+)
+  const hasLeft = Boolean(left) && (!spanLeftAndMiddle || showLeftOnWideForMiniApps);
 
   // Determine visibility and grid columns based on variant
   // SocialLayout passes: left={RightRail} (Visual Left), right={LeftRail} (Visual Right)
@@ -45,7 +52,31 @@ export default function Shell({ left, right, children, containerClassName }: She
     }
   } else {
     // Dashboard (Default)
-    if (showVisualLeft && showVisualRight) {
+    if (spanLeftAndMiddle) {
+      // Content spans left+middle, but on wide screens (2xl+, >1500px) show left rail alongside
+      if (showLeftOnWideForMiniApps) {
+        // Mini-apps with left rail on wide screens
+        if (showVisualLeft && showVisualRight) {
+          // 2xl+ breakpoint: left | mini-app | right
+          gridClass = "lg:grid-cols-[minmax(800px,1fr)_minmax(300px,360px)] xl:grid-cols-[minmax(800px,1fr)_minmax(360px,420px)] 2xl:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)_minmax(420px,480px)]";
+        } else if (showVisualLeft) {
+          // 2xl+ breakpoint: left | mini-app
+          gridClass = "lg:grid-cols-[minmax(800px,1fr)] xl:grid-cols-[minmax(800px,1fr)] 2xl:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)]";
+        } else if (showVisualRight) {
+          // No left rail, just mini-app | right
+          gridClass = "lg:grid-cols-[minmax(800px,1fr)_minmax(300px,360px)] xl:grid-cols-[minmax(800px,1fr)_minmax(360px,420px)] 2xl:grid-cols-[minmax(800px,1fr)_minmax(420px,480px)]";
+        } else {
+          gridClass = "lg:grid-cols-[minmax(800px,1fr)]";
+        }
+      } else {
+        // Content spans left+middle, only right rail visible (original behavior)
+        if (showVisualRight) {
+          gridClass = "lg:grid-cols-[minmax(800px,1fr)_minmax(300px,360px)] xl:grid-cols-[minmax(800px,1fr)_minmax(360px,420px)] 2xl:grid-cols-[minmax(800px,1fr)_minmax(420px,480px)]";
+        } else {
+          gridClass = "lg:grid-cols-[minmax(800px,1fr)]";
+        }
+      }
+    } else if (showVisualLeft && showVisualRight) {
        gridClass = "lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)_minmax(300px,360px)] xl:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)_minmax(360px,420px)] 2xl:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)_minmax(420px,480px)]";
     } else if (showVisualLeft) {
        gridClass = "lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)]";
@@ -72,7 +103,11 @@ export default function Shell({ left, right, children, containerClassName }: She
             .join(" ")}
         >
           {showVisualLeft && (
-            <aside className="hidden lg:block sticky top-0 self-start min-w-0 h-screen overflow-y-auto no-scrollbar">
+            <aside className={`sticky top-0 self-start min-w-0 h-screen overflow-y-auto no-scrollbar ${
+              spanLeftAndMiddle && showLeftOnWideForMiniApps 
+                ? 'hidden 2xl:block' // Only show on 2xl+ (>1500px) for mini-apps
+                : 'hidden lg:block'  // Show on lg+ for dashboard
+            }`}>
               <div className="pt-4 pb-6">
                 {left}
               </div>

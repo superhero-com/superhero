@@ -17,35 +17,35 @@ const navigationItems: NavigationItem[] = [
     id: "swap",
     label: "SWAP",
     icon: "🔄",
-    path: "/defi/swap",
+    path: "/apps/swap",
     description: "Trade any supported AEX-9 tokens",
   },
   {
     id: "pool",
     label: "POOL",
     icon: "💧",
-    path: "/defi/pool",
+    path: "/apps/pool",
     description: "Manage liquidity positions",
   },
   {
     id: "wrap",
     label: "WRAP",
     icon: "📦",
-    path: "/defi/wrap",
+    path: "/apps/wrap",
     description: "Convert AE ↔ WAE",
   },
   {
     id: "bridge",
     label: "BRIDGE",
     icon: "🌉",
-    path: "/defi/bridge",
+    path: "/apps/bridge",
     description: "Bridge tokens between Ethereum and æternity",
   },
   {
     id: "buy-ae",
     label: "BUY AE",
     icon: "💎",
-    path: "/defi/buy-ae-with-eth",
+    path: "/apps/buy-ae-with-eth",
     description: "Buy AE with ETH",
   },
 ];
@@ -55,21 +55,21 @@ const exploreItems: NavigationItem[] = [
     id: "tokens",
     label: "Tokens",
     icon: "🪙",
-    path: "/defi/explore/tokens",
+    path: "/apps/explore/tokens",
     description: "Browse all available tokens",
   },
   {
     id: "pools",
     label: "Pools",
     icon: "🏊",
-    path: "/defi/explore/pools",
+    path: "/apps/explore/pools",
     description: "Explore liquidity pools",
   },
   {
     id: "transactions",
     label: "Transactions",
     icon: "📋",
-    path: "/defi/explore/transactions",
+    path: "/apps/explore/transactions",
     description: "Track recent activity",
   },
 ];
@@ -114,7 +114,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
       id: "explore",
       label: "Explore",
       icon: "🔍",
-      path: "/defi/explore",
+      path: "/apps/explore",
       description: "Explore tokens, pools, and transactions",
     },
   ];
@@ -195,7 +195,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
   );
 
   // Hide navigation tabs on landing page
-  const isLandingPage = location.pathname === '/defi';
+  const isLandingPage = location.pathname === '/apps';
 
   return (
     <>

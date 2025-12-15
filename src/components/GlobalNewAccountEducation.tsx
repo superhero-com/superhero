@@ -145,7 +145,7 @@ export default function GlobalNewAccountEducation() {
         {/* Action buttons */}
         <div style={{ display: 'flex', gap: 8 }}>
           <button
-            onClick={() => window.location.href = '/defi'}
+            onClick={() => window.location.href = '/apps'}
             style={{
               flex: 1,
               padding: '8px 12px',

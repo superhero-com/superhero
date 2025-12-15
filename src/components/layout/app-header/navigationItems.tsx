@@ -41,7 +41,7 @@ export const getNavigationItems = (t: TFunction): NavigationItem[] => [
   {
     id: "dex",
     label: "Mini-Apps", // t('defi')
-    path: "/defi",
+    path: "/apps",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7"></rect>
@@ -51,32 +51,32 @@ export const getNavigationItems = (t: TFunction): NavigationItem[] => [
       </svg>
     ),
     children: [
-      { id: "dex-swap", label: t('defiChildren.swap'), path: "/defi/swap", icon: "🔄" },
-      { id: "dex-wrap", label: t('defiChildren.wrap'), path: "/defi/wrap", icon: "📦" },
-      { id: "dex-bridge", label: t('defiChildren.bridge'), path: "/defi/bridge", icon: "🌉" },
+      { id: "dex-swap", label: t('defiChildren.swap'), path: "/apps/swap", icon: "🔄" },
+      { id: "dex-wrap", label: t('defiChildren.wrap'), path: "/apps/wrap", icon: "📦" },
+      { id: "dex-bridge", label: t('defiChildren.bridge'), path: "/apps/bridge", icon: "🌉" },
       {
         id: "dex-buy-ae",
         label: t('defiChildren.buyAe'),
-        path: "/defi/buy-ae-with-eth",
+        path: "/apps/buy-ae-with-eth",
         icon: "💎",
       },
-      { id: "dex-pool", label: t('defiChildren.pool'), path: "/defi/pool", icon: "💧" },
+      { id: "dex-pool", label: t('defiChildren.pool'), path: "/apps/pool", icon: "💧" },
       {
         id: "dex-explore-tokens",
         label: t('defiChildren.exploreTokens'),
-        path: "/defi/explore/tokens",
+        path: "/apps/explore/tokens",
         icon: "🪙",
       },
       {
         id: "dex-explore-pools",
         label: t('defiChildren.explorePools'),
-        path: "/defi/explore/pools",
+        path: "/apps/explore/pools",
         icon: "🏊",
       },
       {
         id: "dex-explore-transactions",
         label: t('defiChildren.transactions'),
-        path: "/defi/explore/transactions",
+        path: "/apps/explore/transactions",
         icon: "📋",
       },
     ],

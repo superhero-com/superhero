@@ -86,15 +86,15 @@ export function TokenListCards({
   };
 
   const handleTokenClick = (token: Token) => {
-    navigate(`/defi/explore/tokens/${token.address}`);
+    navigate(`/apps/explore/tokens/${token.address}`);
   };
 
   const handleSwapClick = (token: Token) => {
-    navigate(`/defi/swap?from=AE&to=${token.address}`);
+    navigate(`/apps/swap?from=AE&to=${token.address}`);
   };
 
   const handleAddClick = (token: Token) => {
-    navigate(`/defi/pool?from=AE&to=${token.address}`);
+    navigate(`/apps/pool?from=AE&to=${token.address}`);
   };
 
   if (loading && tokens.length === 0) {

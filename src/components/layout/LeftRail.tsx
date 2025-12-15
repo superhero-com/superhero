@@ -568,28 +568,28 @@ export default function LeftRail({
           </button>
           <button
             className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-none rounded-xl py-3 px-2 text-[10px] font-bold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden shadow-md"
-            onClick={() => navigate('/defi/swap')}
+            onClick={() => navigate('/apps/swap')}
             title={t('titles.swapTokensOnDex')}
           >
             🔄 Swap Tokens
           </button>
           <button
             className="bg-gradient-to-r from-sky-500 to-blue-600 text-white border-none rounded-xl py-3 px-2 text-[10px] font-bold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden shadow-md"
-            onClick={() => navigate('/defi/wrap')}
+            onClick={() => navigate('/apps/wrap')}
             title={t('titles.wrapOrUnwrapAe')}
           >
             📦 Wrap AE
           </button>
           <button
             className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white border-none rounded-xl py-3 px-2 text-[10px] font-bold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden shadow-md"
-            onClick={() => navigate('/defi/buy-ae-with-eth')}
+            onClick={() => navigate('/apps/buy-ae-with-eth')}
             title={t('titles.buyAeWithEth')}
           >
             🌉 Buy AE w/ ETH
           </button>
           <button
             className="bg-gradient-to-r from-amber-500 to-orange-600 text-white border-none rounded-xl py-3 px-2 text-[10px] font-bold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden shadow-md"
-            onClick={() => navigate('/defi/pool')}
+            onClick={() => navigate('/apps/pool')}
             title={t('titles.provideLiquidityToPools')}
           >
             💧 Liquidity

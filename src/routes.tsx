@@ -148,7 +148,7 @@ export const routes: RouteObject[] = [
 
   // New DEX Routes with Layout
   {
-    path: "/defi",
+    path: "/apps",
     element: (
       <SocialLayout>
         <MiniAppsLanding />
@@ -156,7 +156,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/defi/swap",
+    path: "/apps/swap",
     element: (
       <SocialLayout>
         <DexSwap />
@@ -164,7 +164,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/defi/wrap",
+    path: "/apps/wrap",
     element: (
       <SocialLayout>
         <DexWrap />
@@ -172,7 +172,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/defi/buy-ae-with-eth",
+    path: "/apps/buy-ae-with-eth",
     element: (
       <SocialLayout>
         <DexBridge />
@@ -180,7 +180,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/defi/bridge",
+    path: "/apps/bridge",
     element: (
       <SocialLayout>
         <Bridge />
@@ -188,7 +188,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/defi/pool",
+    path: "/apps/pool",
     element: (
       <SocialLayout>
         <Pool />
@@ -196,7 +196,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/defi/pool/add-tokens",
+    path: "/apps/pool/add-tokens",
     element: (
       <SocialLayout>
         <AddTokens />
@@ -204,7 +204,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/defi/explore/tokens",
+    path: "/apps/explore/tokens",
     element: (
       <DexLayout>
         <DexExploreTokens />
@@ -212,7 +212,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/defi/explore/tokens/:tokenAddress",
+    path: "/apps/explore/tokens/:tokenAddress",
     element: (
       <DexLayout>
         <TokenDetail />
@@ -220,7 +220,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/defi/explore/pools",
+    path: "/apps/explore/pools",
     element: (
       <DexLayout>
         <DexExplorePools />
@@ -228,7 +228,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/defi/explore/pools/:poolAddress",
+    path: "/apps/explore/pools/:poolAddress",
     element: (
       <DexLayout>
         <PoolDetail />
@@ -236,7 +236,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/defi/explore/transactions",
+    path: "/apps/explore/transactions",
     element: (
       <DexLayout>
         <DexExploreTransactions />
@@ -245,7 +245,9 @@ export const routes: RouteObject[] = [
   },
 
   // Legacy DEX Routes (for backward compatibility)
-  { path: "/swap", element: <Navigate to="/defi/swap" replace /> },
+  { path: "/swap", element: <Navigate to="/apps/swap" replace /> },
+  { path: "/defi", element: <Navigate to="/apps" replace /> },
+  { path: "/defi/*", element: <Navigate to="/apps" replace /> },
   { path: "/pool", element: <Pool /> },
   { path: "/explore", element: <Explore /> },
   { path: "/explore/tokens/:id", element: <TokenDetail /> },

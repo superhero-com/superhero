@@ -168,7 +168,7 @@ export default function TokenDetail() {
             <div className="flex gap-2 mb-6 flex-wrap">
               <AeButton
                 onClick={() =>
-                  navigate(`/defi/swap?from=AE&to=${tokenAddress}`)
+                  navigate(`/apps/swap?from=AE&to=${tokenAddress}`)
                 }
                 variant="secondary-dark"
                 size="medium"
@@ -178,7 +178,7 @@ export default function TokenDetail() {
               </AeButton>
               <AeButton
                 onClick={() =>
-                  navigate(`/defi/pool?from=AE&to=${tokenAddress}`)
+                  navigate(`/apps/pool?from=AE&to=${tokenAddress}`)
                 }
                 variant="secondary-dark"
                 size="medium"
@@ -188,7 +188,7 @@ export default function TokenDetail() {
               </AeButton>
               <AeButton
                 onClick={() =>
-                  navigate(`/defi/explore/pools?tokenAddress=${tokenAddress}`)
+                  navigate(`/apps/explore/pools?tokenAddress=${tokenAddress}`)
                 }
                 variant="secondary-dark"
                 size="medium"
@@ -198,7 +198,7 @@ export default function TokenDetail() {
               </AeButton>
               <AeButton
                 onClick={() =>
-                  navigate(`/defi/explore/transactions?tokenAddress=${tokenAddress}`)
+                  navigate(`/apps/explore/transactions?tokenAddress=${tokenAddress}`)
                 }
                 variant="secondary-dark"
                 size="medium"

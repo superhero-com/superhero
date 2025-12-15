@@ -14,7 +14,7 @@ export default function DexSwap() {
       <Head
         title="Swap AE and tokens – Superhero DEX"
         description="Trustless swapping on Superhero DEX with live charts and recent activity."
-        canonicalPath="/defi/swap"
+        canonicalPath="/apps/swap"
       />
       {/* Main Content - wrapped in card */}
       <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl p-6 md:p-8" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>

@@ -985,8 +985,10 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                     }
                   }}
                   className={cn(
-                    "bg-transparent border-none rounded-xl text-white transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:outline-none pt-1.5 pr-2.5 pl-0 pb-9 md:p-0 md:pr-14 md:pb-8",
-                    compact ? "text-[13px] md:text-[13px]" : "text-[14px] md:text-[15px]"
+                    "bg-white/[0.07] border border-white/14 rounded-xl text-white transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:outline-none focus:border-[#1161FE] focus:bg-white/[0.1] focus:shadow-[0_0_0_2px_rgba(17,97,254,0.2)]",
+                    compact 
+                      ? "text-[13px] md:text-[13px] px-2 py-1.5 md:px-2.5 md:py-1.5 pb-8 md:pb-8"
+                      : "text-[14px] md:text-[15px] px-3 py-2 md:px-4 md:py-2.5 pb-9 md:pb-8"
                   )}
                   style={{ minHeight: computedMinHeight }}
                   rows={1}

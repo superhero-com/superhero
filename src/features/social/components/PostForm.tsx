@@ -12,6 +12,8 @@ import { CONFIG } from "../../../config";
 import { useAccount } from "../../../hooks/useAccount";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { GifSelectorDialog } from "./GifSelectorDialog";
+import { GlassSurface } from "@/components/ui/GlassSurface";
+import { cn } from "@/lib/utils";
 
 interface PostFormProps {
   // Common props
@@ -40,6 +42,7 @@ interface PostFormProps {
   characterLimit?: number;
   minHeight?: string;
   autoFocus?: boolean;
+  compact?: boolean;
 }
 
 const DEFAULT_EMOJIS = [
@@ -99,6 +102,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     characterLimit = 280,
     minHeight = "60px",
     autoFocus = false,
+    compact = false,
   } = props;
   const { sdk } = useAeSdk();
   const { activeAccount, chainNames } = useAccount();
@@ -917,26 +921,41 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   }
 
   return (
-    <div
-      className={`${isPost ? "w-full max-w-none" : "mx-auto"
-        } mb-2 md:mb-4 ${className}`}
+    <GlassSurface 
+      className={cn(
+        isPost ? "relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] md:w-full md:mx-0" : "mx-auto",
+        compact ? "px-2 pt-4 pb-5 md:p-3" : "p-4 md:p-5",
+        "transition-colors",
+        className
+      )}
     >
-      <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="relative">
-          <div className="flex flex-col gap-3 md:grid md:grid-cols-[56px_1fr] md:gap-x-0 md:gap-y-3">
+          <div className={cn("flex items-start", compact ? "gap-1.5 md:gap-2" : "gap-3")}>
             {activeAccount && (
-              <div className="hidden md:block">
-                <AddressAvatarWithChainName
-                  address={activeAccount}
-                  size={40}
-                  overlaySize={20}
-                  isHoverEnabled={true}
-                  showAddressAndChainName={false}
-                  className=""
-                />
+              <div className="flex-shrink-0 pt-0.5">
+                <div className="md:hidden">
+                  <AddressAvatarWithChainName
+                    address={activeAccount}
+                    size={compact ? 28 : 36}
+                    overlaySize={compact ? 12 : 16}
+                    isHoverEnabled={true}
+                    showAddressAndChainName={false}
+                    className=""
+                  />
+                </div>
+                <div className="hidden md:block">
+                  <AddressAvatarWithChainName
+                    address={activeAccount}
+                    size={compact ? 32 : 40}
+                    overlaySize={compact ? 14 : 20}
+                    isHoverEnabled={true}
+                    showAddressAndChainName={false}
+                    className=""
+                  />
+                </div>
               </div>
             )}
-            <div className={activeAccount ? "md:col-start-2" : "md:col-span-2"}>
+            <div className="flex-1 min-w-0">
               <div className="relative">
                 <textarea
                   ref={textareaRef}
@@ -965,7 +984,10 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                       });
                     }
                   }}
-                  className="bg-white/7 border border-white/14 rounded-xl md:rounded-2xl pt-1.5 pr-2.5 pl-2.5 pb-9 text-white text-base transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:border-[#1161FE] focus:bg-white/10 focus:shadow-[0_0_0_2px_rgba(17,97,254,0.5),0_8px_24px_rgba(0,0,0,0.25)] md:p-4 md:pr-14 md:pb-8 md:text-base"
+                  className={cn(
+                    "bg-transparent border-none rounded-xl text-white transition-all duration-200 outline-none caret-[#1161FE] resize-none leading-snug md:leading-relaxed w-full box-border placeholder-white/60 font-medium focus:outline-none pt-1.5 pr-2.5 pl-0 pb-9 md:p-0 md:pr-14 md:pb-8",
+                    compact ? "text-[13px] md:text-[13px]" : "text-[14px] md:text-[15px]"
+                  )}
                   style={{ minHeight: computedMinHeight }}
                   rows={1}
                   maxLength={characterLimit}
@@ -1028,7 +1050,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
               </div>
 
               {(showEmojiPicker || showGifInput) && (
-                <div className="hidden md:flex items-center justify-between mt-3 gap-3">
+                <div className="flex items-center justify-between mt-3 gap-3">
                   <div className="flex items-center gap-2.5 relative">
                     {showEmojiPicker && (
                       <button
@@ -1139,93 +1161,93 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                   </div>
                 </div>
               )}
-            </div>
 
-            {showMediaFeatures && mediaUrls.length > 0 && (
-              <div className="col-span-full md:col-start-2 w-full overflow-x-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent -mx-4 px-4 md:mx-0 md:px-0">
-                <div className="flex flex-row gap-3 pb-2">
-                  {mediaUrls.map((url, index) => (
-                    <div
-                      key={index}
-                      className="relative rounded-xl overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.25)] flex-shrink-0 w-[200px] md:w-[180px]"
-                    >
-                      {/.mp4$|.webm$|.mov$/i.test(url) ? (
-                        <video
-                          src={url}
-                          controls
-                          className="w-full h-[200px] md:h-[180px] object-cover block"
-                        />
-                      ) : (
-                        <img
-                          src={url}
-                          alt="media"
-                          className="w-full h-[200px] md:h-[180px] object-cover block"
-                        />
-                      )}
+              {showMediaFeatures && mediaUrls.length > 0 && (
+                <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent mt-3">
+                  <div className="flex flex-row gap-3 pb-2">
+                    {mediaUrls.map((url, index) => (
+                      <div
+                        key={index}
+                        className="relative rounded-xl overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.25)] flex-shrink-0 w-[200px] md:w-[180px]"
+                      >
+                        {/.mp4$|.webm$|.mov$/i.test(url) ? (
+                          <video
+                            src={url}
+                            controls
+                            className="w-full h-[200px] md:h-[180px] object-cover block"
+                          />
+                        ) : (
+                          <img
+                            src={url}
+                            alt="media"
+                            className="w-full h-[200px] md:h-[180px] object-cover block"
+                          />
+                        )}
+                        <button
+                          type="button"
+                          className="absolute top-1.5 right-1.5 bg-black/70 border-none text-white w-7 h-7 rounded-full cursor-pointer grid place-items-center transition-all duration-200 hover:bg-black/90 hover:scale-105 active:scale-95"
+                          onClick={() => removeMedia(index)}
+                        >
+                          <IconClose className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Mobile buttons */}
+              <div className="flex items-center justify-center w-full pt-0 -mt-3 md:hidden">
+                <div className="flex flex-col items-center justify-center w-full">
+                  {requiredHashtag && requiredMissing && (
+                    <div className="w-full mb-2 flex items-center justify-center gap-2 text-[12px] text-white/70">
+                      <span>{tSocial('postNeedsToInclude', { hashtag: (requiredHashtag || '').toUpperCase() })}</span>
                       <button
                         type="button"
-                        className="absolute top-1.5 right-1.5 bg-black/70 border-none text-white w-7 h-7 rounded-full cursor-pointer grid place-items-center transition-all duration-200 hover:bg-black/90 hover:scale-105 active:scale-95"
-                        onClick={() => removeMedia(index)}
+                        className="px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-colors"
+                        onClick={() => {
+                          const tag = (requiredHashtag || '').toUpperCase();
+                          const needsSpace = text.length > 0 && !/\s$/.test(text);
+                          const next = `${text}${needsSpace ? ' ' : ''}${tag} `;
+                          setText(next);
+                          requestAnimationFrame(() => {
+                            if (textareaRef.current) {
+                              const pos = next.length;
+                              textareaRef.current.focus();
+                              textareaRef.current.setSelectionRange(pos, pos);
+                            }
+                          });
+                        }}
+                        title={tSocial('addRequiredHashtag')}
                       >
-                        <IconClose className="w-3 h-3" />
+                        {tSocial('add')}
                       </button>
                     </div>
-                  ))}
+                  )}
+                  {activeAccount ? (
+                    <AeButton
+                      type="submit"
+                      loading={isSubmitting}
+                      disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
+                      className="relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
+                    >
+                      {isSubmitting
+                        ? isPost
+                          ? tSocial('posting')
+                          : tSocial('posting')
+                        : isPost
+                          ? tSocial('post')
+                          : tSocial('postReply')}
+                    </AeButton>
+                  ) : (
+                    <ConnectWalletButton block className="w-full rounded-xl md:rounded-full" />
+                  )}
                 </div>
               </div>
-            )}
-          </div>
-
-          <div className="flex items-center justify-center w-full pt-0 -mt-3 md:hidden">
-            <div className="flex flex-col items-center justify-center w-full">
-            {requiredHashtag && requiredMissing && (
-              <div className="w-full mb-2 flex items-center justify-center gap-2 text-[12px] text-white/70">
-                <span>{tSocial('postNeedsToInclude', { hashtag: (requiredHashtag || '').toUpperCase() })}</span>
-                <button
-                  type="button"
-                  className="px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-colors"
-                  onClick={() => {
-                    const tag = (requiredHashtag || '').toUpperCase();
-                    const needsSpace = text.length > 0 && !/\s$/.test(text);
-                    const next = `${text}${needsSpace ? ' ' : ''}${tag} `;
-                    setText(next);
-                    requestAnimationFrame(() => {
-                      if (textareaRef.current) {
-                        const pos = next.length;
-                        textareaRef.current.focus();
-                        textareaRef.current.setSelectionRange(pos, pos);
-                      }
-                    });
-                  }}
-                  title={tSocial('addRequiredHashtag')}
-                >
-                  {tSocial('add')}
-                </button>
-              </div>
-            )}
-              {activeAccount ? (
-                <AeButton
-                  type="submit"
-                  loading={isSubmitting}
-                  disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
-                  className="relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
-                >
-                  {isSubmitting
-                    ? isPost
-                      ? tSocial('posting')
-                      : tSocial('posting')
-                    : isPost
-                      ? tSocial('post')
-                      : tSocial('postReply')}
-                </AeButton>
-              ) : (
-                <ConnectWalletButton block className="w-full rounded-xl md:rounded-full" />
-              )}
             </div>
           </div>
         </form>
-      </div>
-    </div>
+      </GlassSurface>
   );
 });
 

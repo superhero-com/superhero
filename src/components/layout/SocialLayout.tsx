@@ -44,7 +44,7 @@ export default function SocialLayout({
   // On wide screens (xl+), show left rail alongside mini-apps
   return (
     <Shell 
-      left={<LeftRail />}
+      left={isMiniAppRoute ? <LeftRail /> : undefined}
       right={<RightRail />} 
       spanLeftAndMiddle={isMiniAppRoute}
       showLeftOnWideForMiniApps={isMiniAppRoute}

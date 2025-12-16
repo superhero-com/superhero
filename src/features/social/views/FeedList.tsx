@@ -11,6 +11,7 @@ import Shell from "../../../components/layout/Shell";
 import RightRail from "../../../components/layout/RightRail";
 import { useWallet } from "../../../hooks";
 import CreatePost, { CreatePostRef } from "../components/CreatePost";
+import PostButton from "../components/PostButton";
 import SortControls from "../components/SortControls";
 import EmptyState from "../components/EmptyState";
 import PostSkeleton from "../components/PostSkeleton";
@@ -29,7 +30,14 @@ function useUrlQuery() {
 export default function FeedList({
   standalone = true,
   compact = false,
-}: { standalone?: boolean; compact?: boolean } = {}) {
+  hidePostButton = false,
+  hideSortControls = false,
+}: { 
+  standalone?: boolean; 
+  compact?: boolean;
+  hidePostButton?: boolean;
+  hideSortControls?: boolean;
+} = {}) {
   const navigate = useNavigate();
   const location = useLocation();
   const urlQuery = useUrlQuery();
@@ -1260,53 +1268,55 @@ export default function FeedList({
         />
       )}
       {/* Banner removed */}
-      {/* Single CreatePost instance for consistent focus/scroll across viewports */}
-      <div>
-        <CreatePost
-          ref={createPostRef}
-          onSuccess={() => {
-            // Use ref to get current sortBy value instead of closure value
-            // This ensures we refetch the correct feed even if onPostCreated changed sortBy first
-            const currentSortBy = sortByRef.current;
-            if (currentSortBy === "hot") {
-              refetchPopular();
-            } else {
-              refetchLatest();
-            }
-          }}
-          onPostCreated={() => {
-            // Switch to latest tab if user is on popular tab when posting
-            if (sortBy === "hot") {
-              handleSortChange("latest");
-              // Update ref immediately so onSuccess callback sees the new value
-              sortByRef.current = "latest";
-            }
-          }}
-          autoFocus={shouldAutoFocusPost}
-        />
-        {/* Sort controls rendered once; styles adapt per breakpoint */}
-        <div className="md:hidden">
-          <SortControls
-            sortBy={sortBy}
-            onSortChange={handleSortChange}
-            className="sticky top-0 z-10 w-full"
-            popularWindow={popularWindow}
-            onPopularWindowChange={handlePopularWindowChange}
-            popularFeedEnabled={popularFeedEnabled}
-          />
-        </div>
-        <div className="hidden md:block">
-          <SortControls
-            sortBy={sortBy}
-            onSortChange={handleSortChange}
-            popularWindow={popularWindow}
-            onPopularWindowChange={handlePopularWindowChange}
-            popularFeedEnabled={popularFeedEnabled}
-          />
-        </div>
-      </div>
+      {/* Sort controls rendered once; styles adapt per breakpoint */}
+      {!hideSortControls && (
+        <>
+          <div className="md:hidden">
+            <SortControls
+              sortBy={sortBy}
+              onSortChange={handleSortChange}
+              className="sticky top-0 z-10 w-full"
+              popularWindow={popularWindow}
+              onPopularWindowChange={handlePopularWindowChange}
+              popularFeedEnabled={popularFeedEnabled}
+            />
+          </div>
+          <div className="hidden md:block">
+            <SortControls
+              sortBy={sortBy}
+              onSortChange={handleSortChange}
+              popularWindow={popularWindow}
+              onPopularWindowChange={handlePopularWindowChange}
+              popularFeedEnabled={popularFeedEnabled}
+            />
+          </div>
+        </>
+      )}
 
       <div className="w-full flex flex-col gap-0 md:gap-2 md:mx-0">
+        {/* Post Button - Small item at top of feed */}
+        {!hidePostButton && (
+          <PostButton
+            onPostCreated={() => {
+              // Switch to latest tab if user is on popular tab when posting
+              if (sortBy === "hot") {
+                handleSortChange("latest");
+                // Update ref immediately so onSuccess callback sees the new value
+                sortByRef.current = "latest";
+              }
+            }}
+            onSuccess={() => {
+              // Use ref to get current sortBy value instead of closure value
+              // This ensures we refetch the correct feed even if onPostCreated changed sortBy first
+              const currentSortBy = sortByRef.current;
+              if (currentSortBy === "hot") {
+                refetchPopular();
+              } else {
+                refetchLatest();
+              }
+            }}
+          />
+        )}
         {renderEmptyState()}
         {/* Non-hot: existing renderer - show feed if we have data, even while refetching */}
         {sortBy !== "hot" && (latestData?.pages.length > 0 || activityList.length > 0) && renderFeedItems}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import FeedList from '@/features/social/views/FeedList';
+import PostButton from '@/features/social/components/PostButton';
 import { MessagesSquare, ChevronDown } from 'lucide-react';
 import {
   DropdownMenu,
@@ -155,22 +156,19 @@ export default function FeedWidget() {
         </div>
       </div>
 
+      {/* Post Button */}
+      <div className="mb-4">
+        <PostButton compact={true} />
+      </div>
+
       {/* Use FeedList with standalone=false to get just the feed content */}
       <div className="[&_>_div]:!w-full [&_>_div]:!max-w-none">
-        <style>{`
-          /* Hide CreatePost in FeedWidget - it's the first div > div > div */
-          [data-feed-widget] > div > div:first-child > div:first-child {
-            display: none !important;
-          }
-          /* Hide SortControls in FeedList since we're rendering it in the header */
-          [data-feed-widget] > div > div:first-child > div:nth-child(2),
-          [data-feed-widget] > div > div:first-child > div:nth-child(3) {
-            display: none !important;
-          }
-        `}</style>
-        <div data-feed-widget>
-          <FeedList standalone={false} compact={true} />
-        </div>
+        <FeedList 
+          standalone={false} 
+          compact={true} 
+          hidePostButton={true}
+          hideSortControls={true}
+        />
       </div>
     </div>
   );

@@ -1050,12 +1050,17 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
               </div>
 
               {(showEmojiPicker || showGifInput) && (
-                <div className="flex items-center justify-between mt-3 gap-3">
-                  <div className="flex items-center gap-2.5 relative">
+                <div className={cn("flex items-center justify-between mt-3", compact ? "gap-2 md:gap-1.5" : "gap-4 md:gap-2")}>
+                  <div className={cn("flex items-center relative", compact ? "gap-2 md:gap-1.5" : "gap-4 md:gap-2")}>
                     {showEmojiPicker && (
                       <button
                         type="button"
-                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-lg bg-transparent border-0 h-auto min-h-0 min-w-0 md:bg-white/[0.04] md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25 transition-colors",
+                          compact
+                            ? "text-[11px] px-0 py-0 md:px-1.5 md:py-0.5 md:h-[22px] md:min-h-[22px]"
+                            : "text-[13px] px-0 py-0 md:px-2.5 md:py-1 md:h-[28px] md:min-h-[28px]"
+                        )}
                         title={tSocial('emoji')}
                         ref={emojiBtnRef}
                         onClick={() => {
@@ -1063,7 +1068,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                           setShowGif(false);
                         }}
                       >
-                        <IconSmile className="w-4 h-4" />
+                        <IconSmile className={cn(compact ? "w-[11px] h-[11px]" : "w-[14px] h-[14px]")} />
                         <span>{tSocial('emoji')}</span>
                       </button>
                     )}
@@ -1071,7 +1076,12 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                     {showGifInput && (
                       <button
                         type="button"
-                        className="bg-white/5 border border-white/10 text-white/70 px-3 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm font-semibold hover:bg-primary-100 hover:border-primary-300 hover:text-primary-600 hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,255,157,0.2)] active:translate-y-0 md:px-4 md:py-2.5 md:min-h-[44px] md:text-sm"
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-lg bg-transparent border-0 h-auto min-h-0 min-w-0 md:bg-white/[0.04] md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25 transition-colors",
+                          compact
+                            ? "text-[11px] px-0 py-0 md:px-1.5 md:py-0.5 md:h-[22px] md:min-h-[22px]"
+                            : "text-[13px] px-0 py-0 md:px-2.5 md:py-1 md:h-[28px] md:min-h-[28px]"
+                        )}
                         title={tSocial('gif')}
                         ref={gifBtnRef}
                         onClick={() => {
@@ -1079,7 +1089,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                           setShowEmoji(false);
                         }}
                       >
-                        <IconGif className="w-4 h-4" />
+                        <IconGif className={cn(compact ? "w-[11px] h-[11px]" : "w-[14px] h-[14px]")} />
                         <span>{tSocial('gif')}</span>
                       </button>
                     )}
@@ -1114,7 +1124,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                     )}
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className={cn("flex items-center", compact ? "gap-2 md:gap-1.5" : "gap-4 md:gap-2")}>
                     {requiredHashtag && requiredMissing && (
                       <div className="flex items-center gap-2 text-[11px] text-white/70">
                         <span>{tSocial('postNeedsToInclude', { hashtag: (requiredHashtag || '').toUpperCase() })}</span>
@@ -1145,7 +1155,12 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                         type="submit"
                         loading={isSubmitting}
                         disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
-                        className="relative bg-[#1161FE] border-none text-white font-black px-6 py-3 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none md:min-h-[44px] md:text-base"
+                        className={cn(
+                          "relative border-none text-white font-black rounded-lg cursor-pointer transition-all duration-300 disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none md:bg-white/[0.04] md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25",
+                          compact
+                            ? "bg-[#1161FE] hover:bg-[#1161FE] text-[11px] px-0 py-0 md:px-1.5 md:py-0.5 md:h-[22px] md:min-h-[22px]"
+                            : "bg-[#1161FE] hover:bg-[#1161FE] text-[13px] px-0 py-0 md:px-2.5 md:py-1 md:h-[28px] md:min-h-[28px]"
+                        )}
                       >
                         {isSubmitting
                           ? isPost
@@ -1229,7 +1244,12 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                       type="submit"
                       loading={isSubmitting}
                       disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
-                      className="relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
+                      className={cn(
+                        "relative border-none text-white font-black rounded-lg cursor-pointer transition-all duration-300 disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:bg-white/[0.04] md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25",
+                        compact
+                          ? "bg-[#1161FE] hover:bg-[#1161FE] text-[11px] px-0 py-0 md:px-1.5 md:py-0.5 md:h-[22px] md:min-h-[22px]"
+                          : "bg-[#1161FE] hover:bg-[#1161FE] text-[13px] px-0 py-0 md:px-2.5 md:py-1 md:h-[28px] md:min-h-[28px]"
+                      )}
                     >
                       {isSubmitting
                         ? isPost

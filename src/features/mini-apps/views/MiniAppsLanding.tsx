@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { GlassSurface } from '@/components/ui/GlassSurface';
 import { miniAppRegistry } from '../registry';
+import { initializeMiniApps } from '../plugins';
 import type { MiniAppCategory } from '../types';
 import { HeaderLogo } from '@/icons';
 
@@ -23,8 +24,15 @@ const categoryIcons: Record<MiniAppCategory, string> = {
 
 export default function MiniAppsLanding() {
   const navigate = useNavigate();
+  const [allApps, setAllApps] = useState(miniAppRegistry.getAllMetadata());
 
-  const allApps = miniAppRegistry.getAllMetadata();
+  // Ensure mini-apps are initialized when component mounts
+  useEffect(() => {
+    // Initialize if not already done
+    initializeMiniApps();
+    // Update apps list after initialization
+    setAllApps(miniAppRegistry.getAllMetadata());
+  }, []);
   
   const groupedApps = allApps.reduce((acc, app) => {
     if (!acc[app.category]) {

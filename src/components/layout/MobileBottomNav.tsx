@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useAeSdk } from '../../hooks/useAeSdk';
 import { useModal } from '../../hooks/useModal';
 import { useAccountBalances } from '../../hooks/useAccountBalances';
+import { useChainName } from '../../hooks/useChainName';
 import AddressAvatar from '../AddressAvatar';
 
 export default function MobileBottomNav() {
@@ -14,6 +15,7 @@ export default function MobileBottomNav() {
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
   const { decimalBalance } = useAccountBalances(activeAccount || '');
+  const { chainName } = useChainName(activeAccount || '');
   const navigationItems = getNavigationItems(t);
 
   // Filter to only show Home, Trends, and Mini-Apps
@@ -157,11 +159,11 @@ export default function MobileBottomNav() {
             </div>
           )}
 
-          {/* Address and Balance - Two rows */}
+          {/* Address/Chain Name and Balance - Two rows */}
           {activeAccount ? (
             <div className="flex flex-col items-start gap-0 leading-tight">
-              <span className="text-xs font-medium whitespace-nowrap text-white/60">
-                {formatAddress(activeAccount)}
+              <span className="text-xs font-medium whitespace-nowrap text-[var(--neon-teal)]">
+                {chainName || formatAddress(activeAccount)}
               </span>
               <span className="text-[10px] font-medium whitespace-nowrap text-white/60">
                 {decimalBalance.prettify()} AE

@@ -146,7 +146,7 @@ export const AddressAvatarWithChainName = memo(({
                         ) : (
                             <span
                                 className={cn(
-                                    'text-sm font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent leading-tight font-sans',
+                                    'text-sm font-bold text-[var(--neon-green)] leading-tight font-sans',
                                     className,
                                 )}
                                 title={address}

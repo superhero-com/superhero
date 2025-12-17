@@ -15,6 +15,8 @@ import './styles/tailwind.css';
 import { HelmetProvider, Helmet } from 'react-helmet-async';
 
 OpenAPI.BASE = (CONFIG.SUPERHERO_API_URL || 'https://api.superhero.com').replace(/\/$/, '');
+console.log('[main.tsx] OpenAPI.BASE set to:', OpenAPI.BASE);
+console.log('[main.tsx] CONFIG.SUPERHERO_API_URL:', CONFIG.SUPERHERO_API_URL);
 
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 

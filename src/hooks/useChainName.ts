@@ -23,15 +23,28 @@ async function fetchChainNameFromBackend(accountAddress: string): Promise<string
 
     const requestPromise = (async () => {
         try {
+            console.log('[useChainName] Fetching chain name for address:', accountAddress);
             // Use backend API which handles all the complex logic
             const account = await AccountsService.getAccount({ address: accountAddress });
+            console.log('[useChainName] Account response:', { 
+                address: accountAddress, 
+                chain_name: account?.chain_name,
+                hasChainName: !!account?.chain_name 
+            });
             return account?.chain_name || null;
         } catch (e: any) {
             // 404 is normal if account doesn't exist
             if (e?.status === 404) {
+                console.log('[useChainName] Account not found (404) for:', accountAddress);
                 return null;
             }
-            console.warn('Failed to fetch chain name from backend', e);
+            console.warn('[useChainName] Failed to fetch chain name from backend', {
+                address: accountAddress,
+                error: e,
+                status: e?.status,
+                message: e?.message,
+                url: e?.url
+            });
             return null;
         } finally {
             pendingRequests.delete(accountAddress);
@@ -42,7 +55,7 @@ async function fetchChainNameFromBackend(accountAddress: string): Promise<string
     return requestPromise;
 }
 
-export function useChainName(accountAddress: string) {
+export function useChainName(accountAddress: string, options?: { immediate?: boolean }) {
     const [chainNames, setChainNames] = useAtom(chainNamesAtom);
     const fetchingRef = useRef<Set<string>>(new Set());
     const chainNamesRef = useRef(chainNames);
@@ -50,6 +63,7 @@ export function useChainName(accountAddress: string) {
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const chainName = useMemo(() => chainNames[accountAddress], [chainNames, accountAddress]);
+    const immediate = options?.immediate ?? false;
 
     // Keep ref updated with latest chainNames
     useEffect(() => {
@@ -166,12 +180,14 @@ export function useChainName(accountAddress: string) {
         };
         
         if (shouldFetch()) {
-            // Debounce: Wait 5 seconds before fetching to batch requests and reduce spam
+            // If immediate flag is set, fetch right away (for hover, active account, etc.)
+            // Otherwise debounce: Wait 200ms before fetching to batch requests and reduce spam
             // This prevents fetching for every address immediately when feed loads
             // Only addresses that stay visible will trigger a fetch
+            const delay = immediate ? 0 : 200;
             timeoutRef.current = setTimeout(() => {
                 performFetch();
-            }, 5000); // 5 second delay - only fetch for addresses that stay visible
+            }, delay);
         } else if (lastNoNameCheck) {
             // Set up interval to check again after the refresh interval
             const timeUntilNextCheck = NO_NAME_REFRESH_INTERVAL - (now - lastNoNameCheck);
@@ -180,10 +196,11 @@ export function useChainName(accountAddress: string) {
                     performFetch();
                 }, timeUntilNextCheck);
             } else {
-                // Already past refresh interval, fetch now (with debounce)
+                // Already past refresh interval, fetch now (with debounce unless immediate)
+                const delay = immediate ? 0 : 200;
                 timeoutRef.current = setTimeout(() => {
                     performFetch();
-                }, 5000);
+                }, delay);
             }
         }
 
@@ -197,7 +214,7 @@ export function useChainName(accountAddress: string) {
                 intervalRef.current = null;
             }
         };
-    }, [accountAddress, setChainNames]);
+    }, [accountAddress, setChainNames, immediate]);
 
     return { chainName };
 }

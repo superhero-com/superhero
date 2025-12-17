@@ -15,7 +15,8 @@ export default function MobileBottomNav() {
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
   const { decimalBalance } = useAccountBalances(activeAccount || '');
-  const { chainName } = useChainName(activeAccount || '');
+  // Fetch chain name immediately for active account
+  const { chainName } = useChainName(activeAccount || '', { immediate: true });
   const navigationItems = getNavigationItems(t);
 
   // Filter to only show Home, Trends, and Mini-Apps

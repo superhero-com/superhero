@@ -47,7 +47,8 @@ export const AddressAvatarWithChainName = memo(({
     // Hooks must be called unconditionally before any early returns
     // Use empty string as fallback to ensure hooks are always called with a valid value
     const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(address || '');
-    const { chainName } = useChainName(address || '');
+    // Fetch chain name immediately for displayed addresses (showBalance or showAddressAndChainName)
+    const { chainName } = useChainName(address || '', { immediate: showBalance || showAddressAndChainName });
     
     // Guard against undefined/null address after hooks are called
     if (!address) {

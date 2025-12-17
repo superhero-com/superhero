@@ -233,7 +233,7 @@ export default function DashboardTrendingTokens() {
       {/* Token List - Compact Table Style */}
       <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
         <div ref={scrollContainerRef} className="overflow-x-auto min-h-[100vh] max-h-[calc(100vh-300px)] overflow-y-auto relative">
-          <table className="w-full">
+          <table className="w-full dashboard-trends-table">
             <thead className="sticky top-0 z-30">
               <tr 
                 className="border-b border-white/10" 
@@ -263,18 +263,18 @@ export default function DashboardTrendingTokens() {
                 return (
                   <tr
                     key={token.address}
-                    className="border-b border-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 group hover:translate-y-0 hover:shadow-lg"
+                    className="border-b border-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 group hover:translate-y-0 hover:shadow-lg dashboard-trends-row"
                     onClick={() => navigate(`/trends/tokens/${encodeURIComponent(tokenName)}`)}
                   >
-                      {/* Rank */}
-                      <td className="py-2 pl-3 pr-0.5">
-                        <div className={`inline-flex items-center justify-center w-6 h-6 rounded-md bg-gradient-to-br ${getRankBadgeColor(rank)} font-black ${rank <= 3 ? 'text-gray-900 text-[13px]' : 'text-white text-xs'} shadow-md`}>
-                          {rank}
-                        </div>
-                      </td>
-                    
+                    {/* Rank */}
+                    <td className="py-2 pl-3 pr-0.5 dashboard-trends-rank">
+                      <div className={`inline-flex items-center justify-center w-6 h-6 rounded-md bg-gradient-to-br ${getRankBadgeColor(rank)} font-black ${rank <= 3 ? 'text-gray-900 text-[13px]' : 'text-white text-xs'} shadow-md`}>
+                        {rank}
+                      </div>
+                    </td>
+                  
                     {/* Token Name */}
-                    <td className="py-2 pl-0.5 pr-3">
+                    <td className="py-2 pl-0.5 pr-3 dashboard-trends-name">
                       <div className="flex items-center gap-1.5">
                         <span className="font-semibold text-white text-sm group-hover:text-[var(--neon-teal)] transition-colors">
                           <span className="text-white/60 group-hover:text-[var(--neon-teal)] text-xs mr-0.5 transition-colors">#</span>
@@ -301,7 +301,7 @@ export default function DashboardTrendingTokens() {
                     </td>
                     
                     {/* Market Cap */}
-                    <td className="py-2 px-3 text-right">
+                    <td className="py-2 px-3 text-right dashboard-trends-market-cap">
                       <div className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent text-xs text-right inline-block ml-auto">
                         <PriceDataFormatter
                           bignumber
@@ -312,7 +312,7 @@ export default function DashboardTrendingTokens() {
                     </td>
                     
                     {/* Price */}
-                    <td className="py-2 px-3 text-right">
+                    <td className="py-2 pl-3 pr-0 text-right dashboard-trends-price">
                       <div className="text-yellow-400 text-xs text-right inline-block ml-auto">
                         <PriceDataFormatter
                           hideFiatPrice
@@ -322,7 +322,7 @@ export default function DashboardTrendingTokens() {
                     </td>
 
                     {/* Holders */}
-                    <td className="py-2 px-3 text-right hidden lg:table-cell">
+                    <td className="py-2 px-3 text-right hidden lg:table-cell dashboard-trends-holders">
                       <div className="text-xs text-right inline-block ml-auto font-medium" style={{
                         background: 'linear-gradient(to right, #60a5fa, #10b981)',
                         WebkitBackgroundClip: 'text',
@@ -333,8 +333,8 @@ export default function DashboardTrendingTokens() {
                       </div>
                     </td>
 
-                    {/* 24h Change */}
-                    <td className="py-2 px-3 text-right hidden 2xl:table-cell">
+                    {/* 24h Change - only show on small screens */}
+                    <td className="py-2 px-3 text-right dashboard-trends-24h md:hidden">
                       <PercentageChange 
                         value={(token as any).performance?.past_24h?.current_change_percent}
                         className="text-xs"
@@ -342,7 +342,7 @@ export default function DashboardTrendingTokens() {
                     </td>
 
                     {/* 7d Change */}
-                    <td className="py-2 px-3 text-right hidden 2xl:table-cell">
+                    <td className="py-2 px-3 text-right hidden 2xl:table-cell dashboard-trends-7d">
                       <PercentageChange 
                         value={(token as any).performance?.past_7d?.current_change_percent}
                         className="text-xs"
@@ -350,7 +350,7 @@ export default function DashboardTrendingTokens() {
                     </td>
 
                     {/* 30d Change */}
-                    <td className="py-2 px-3 text-right hidden 2xl:table-cell">
+                    <td className="py-2 px-3 text-right hidden 2xl:table-cell dashboard-trends-30d">
                       <PercentageChange 
                         value={(token as any).performance?.past_30d?.current_change_percent}
                         className="text-xs"
@@ -358,9 +358,9 @@ export default function DashboardTrendingTokens() {
                     </td>
                     
                     {/* Chart */}
-                    <td className="py-2 px-3 text-right max-w-[100px]">
+                    <td className="py-2 px-3 text-right max-w-[100px] dashboard-trends-chart">
                       {token.sale_address && (
-                        <div className="ml-auto max-w-[100px]">
+                        <div className="ml-auto max-w-[100px] dashboard-trends-chart-inner">
                           <TokenPriceChart
                             saleAddress={token.sale_address}
                             height={24}
@@ -373,6 +373,263 @@ export default function DashboardTrendingTokens() {
               })}
             </tbody>
           </table>
+          
+          {/* Responsive styles for sm breakpoint - Mobile 2-row card layout */}
+          <style>{`
+            /* Mobile 2-row card layout for sm screens (640px) */
+            @media screen and (max-width: 767px) {
+              /* Remove top padding/margin from Trends header on mobile */
+              .dashboard-trends-table {
+                table-layout: fixed;
+                width: 100%;
+                margin-top: 0 !important;
+                padding-top: 0 !important;
+              }
+              
+              /* Remove top padding from header container and main wrapper */
+              .w-full > div:first-child {
+                padding-top: 0 !important;
+                margin-top: 0 !important;
+              }
+              
+              .w-full {
+                padding-top: 0 !important;
+                margin-top: 0 !important;
+              }
+              
+              /* Remove top padding from parent main element on mobile */
+              main {
+                padding-top: 0 !important;
+              }
+              
+              /* Remove top padding from any parent containers */
+              main > div,
+              main > div > div {
+                padding-top: 0 !important;
+                margin-top: 0 !important;
+              }
+              
+              /* Hide the entire header on mobile */
+              .dashboard-trends-table thead {
+                display: none !important;
+              }
+              
+              /* Hide columns that don't fit */
+              .dashboard-trends-table tbody td.dashboard-trends-holders,
+              .dashboard-trends-table tbody td.dashboard-trends-7d,
+              .dashboard-trends-table tbody td.dashboard-trends-30d {
+                display: none !important;
+              }
+              
+              /* Convert to 2-row grid layout */
+              .dashboard-trends-row {
+                display: grid;
+                grid-template-columns: 36px 1fr auto;
+                grid-template-rows: auto auto;
+                grid-template-areas:
+                  'rank name       change'
+                  'rank market-cap price';
+                padding: 10px 0 10px 16px;
+                margin: 0;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+                gap: 0;
+                row-gap: 4px;
+                column-gap: 4px;
+                transition: background-color 0.15s ease;
+              }
+              
+              .dashboard-trends-row:hover {
+                background-color: rgba(255, 255, 255, 0.03);
+              }
+              
+              /* Rank badge - spans both rows, left column */
+              .dashboard-trends-rank {
+                grid-area: rank;
+                padding: 0 !important;
+                padding-top: 2px !important;
+                align-self: start;
+              }
+              
+              .dashboard-trends-rank > div {
+                width: 24px;
+                height: 24px;
+                font-size: 10px;
+                font-weight: 700;
+              }
+              
+              /* Remove all padding from table cells on mobile */
+              .dashboard-trends-row td {
+                padding: 0 !important;
+              }
+              
+              /* Name - first row, spans 3 columns for long names */
+              .dashboard-trends-name {
+                grid-area: name;
+                padding: 0 !important;
+                padding-right: 16px !important;
+                min-width: 0;
+                display: flex;
+                align-items: center;
+              }
+              
+              .dashboard-trends-name > div {
+                padding: 0 !important;
+                margin: 0 !important;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                flex-wrap: wrap;
+              }
+              
+              .dashboard-trends-name span {
+                font-size: 15px;
+                font-weight: 600;
+                line-height: 1.2;
+                word-break: break-word;
+                overflow-wrap: break-word;
+                max-width: 100%;
+                display: inline-block;
+              }
+              
+              /* Ensure hashtag displays inline with name */
+              .dashboard-trends-name span span {
+                display: inline;
+              }
+              
+              /* Market Cap - second row, first column */
+              .dashboard-trends-market-cap {
+                grid-area: market-cap;
+                display: flex;
+                align-items: center;
+                padding: 0 !important;
+                padding-right: 16px !important;
+              }
+              
+              .dashboard-trends-market-cap > div,
+              .dashboard-trends-market-cap > div > div,
+              .dashboard-trends-market-cap .price-formatter,
+              .dashboard-trends-market-cap .price-formatter > div,
+              .dashboard-trends-market-cap .fraction-formatter > div:first-child,
+              .dashboard-trends-market-cap .fraction-formatter > div:last-child {
+                text-align: left !important;
+                margin: 0 !important;
+                font-size: 12px !important;
+                font-weight: normal;
+                line-height: 1.2;
+                background: linear-gradient(to right, #60a5fa, #10b981) !important;
+                -webkit-background-clip: text !important;
+                -webkit-text-fill-color: transparent !important;
+                background-clip: text !important;
+              }
+              
+              /* Price - second row, right edge */
+              .dashboard-trends-price {
+                grid-area: price;
+                display: flex;
+                align-items: center;
+                padding: 0 !important;
+                padding-right: 0 !important;
+                margin-right: 0 !important;
+                justify-content: flex-end;
+              }
+              
+              .dashboard-trends-price > div,
+              .dashboard-trends-price > div > div,
+              .dashboard-trends-price .price-formatter,
+              .dashboard-trends-price .price-formatter > div,
+              .dashboard-trends-price .fraction-formatter > div:first-child,
+              .dashboard-trends-price .fraction-formatter > div:last-child {
+                text-align: right !important;
+                margin: 0 !important;
+                margin-right: 0 !important;
+                padding-right: 0 !important;
+                font-size: 12px !important;
+                line-height: 1.2;
+                color: rgba(255, 255, 255, 0.7);
+              }
+              
+              /* Reduce subscript number size and spacing */
+              .dashboard-trends-market-cap .fraction-formatter,
+              .dashboard-trends-price .fraction-formatter {
+                gap: 1px;
+              }
+              
+              .dashboard-trends-market-cap .fraction-formatter > div:nth-child(2),
+              .dashboard-trends-price .fraction-formatter > div:nth-child(2) {
+                font-size: 9px !important;
+                margin-top: 4px !important;
+                padding: 0 !important;
+                margin-left: -1px !important;
+                margin-right: -1px !important;
+                line-height: 1;
+              }
+              
+              /* Price Change (24h) - first row, right side next to name - only show on small screens */
+              .dashboard-trends-24h {
+                grid-area: change;
+                display: flex !important;
+                align-items: center;
+                padding: 0 !important;
+                justify-content: flex-end;
+                min-width: 50px;
+                flex-shrink: 0;
+              }
+              
+              /* Chart - hide on mobile */
+              .dashboard-trends-chart {
+                display: none !important;
+              }
+            }
+            
+            /* Very small screens - adjust spacing */
+            @media screen and (max-width: 400px) {
+              .dashboard-trends-row {
+                padding: 8px 12px;
+                grid-template-columns: 32px 1fr;
+                column-gap: 4px;
+              }
+              
+              .dashboard-trends-rank > div {
+                width: 22px;
+                height: 22px;
+                font-size: 9px;
+              }
+              
+              .dashboard-trends-name {
+                padding-bottom: 6px !important;
+              }
+              
+              .dashboard-trends-name span {
+                font-size: 14px;
+              }
+              
+              .dashboard-trends-market-cap {
+                margin-right: 12px;
+              }
+              
+              .dashboard-trends-market-cap > div,
+              .dashboard-trends-market-cap > div > div,
+              .dashboard-trends-market-cap .price-formatter,
+              .dashboard-trends-market-cap .price-formatter > div,
+              .dashboard-trends-market-cap .fraction-formatter > div:first-child,
+              .dashboard-trends-market-cap .fraction-formatter > div:last-child {
+                font-size: 12px !important;
+              }
+              
+              .dashboard-trends-price {
+                margin-right: 0 !important;
+              }
+              
+              .dashboard-trends-price > div,
+              .dashboard-trends-price > div > div,
+              .dashboard-trends-price .price-formatter,
+              .dashboard-trends-price .price-formatter > div,
+              .dashboard-trends-price .fraction-formatter > div:first-child,
+              .dashboard-trends-price .fraction-formatter > div:last-child {
+                font-size: 12px !important;
+              }
+            }
+          `}</style>
           
           {/* Load More Button - inside scrollable container */}
           {hasNextPage && (

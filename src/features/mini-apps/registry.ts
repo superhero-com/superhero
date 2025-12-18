@@ -93,9 +93,13 @@ class MiniAppRegistry {
           Layout,
           {},
           React.createElement(
-            MiniAppContainer,
-            {},
-            React.createElement(Component)
+            React.Suspense,
+            { fallback: React.createElement('div', { className: 'loading-fallback' }) },
+            React.createElement(
+              MiniAppContainer,
+              {},
+              React.createElement(Component)
+            )
           )
         ),
         ...plugin.route.options,

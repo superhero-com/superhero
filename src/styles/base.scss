@@ -141,18 +141,9 @@ body {
   overflow-x: hidden;
   /* Better touch scrolling */
   -webkit-overflow-scrolling: touch;
-  /* Default background - can be overridden by layout variants */
+  /* Solid dark background only - no gradients */
   background: $background_color;
   background-attachment: fixed;
-  
-  /* Only apply gradient background for default variant */
-  &:not(.layout-variant-minimal):not(.layout-variant-clean):not(.layout-variant-ultra-minimal) {
-    background:
-      radial-gradient(circle at 20% 80%, rgba(255, 107, 107, 0.15) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(0, 255, 157, 0.15) 0%, transparent 50%),
-      radial-gradient(circle at 40% 40%, rgba(69, 183, 209, 0.1) 0%, transparent 50%),
-      linear-gradient(135deg, $background_color 0%, #0f0f23 50%, #1a1a2e 100%);
-  }
 }
 
 /* iOS-safe fixed background to full viewport height */
@@ -169,15 +160,6 @@ body::before {
   background: $background_color;
   will-change: transform;
   transform: translateZ(0); /* helps Safari keep it fixed */
-}
-
-/* Only apply gradient background for default variant */
-body:not(.layout-variant-minimal):not(.layout-variant-clean):not(.layout-variant-ultra-minimal)::before {
-  background:
-    radial-gradient(circle at 20% 80%, rgba(255, 107, 107, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(0, 255, 157, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(69, 183, 209, 0.1) 0%, transparent 50%),
-    linear-gradient(135deg, $background_color 0%, #0f0f23 50%, #1a1a2e 100%);
 }
 
 a { 

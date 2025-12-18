@@ -4,10 +4,11 @@ import { TokensService } from '@/api/generated';
 import type { TokenDto } from '@/api/generated';
 import { GlassSurface } from '@/components/ui/GlassSurface';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, Flame, Zap, ChevronDown, Crown } from 'lucide-react';
+import { TrendingUp, Flame, Zap, ChevronDown, Crown, Users } from 'lucide-react';
 import { PriceDataFormatter } from '@/features/shared/components';
 import TokenPriceChart from '@/components/charts/TokenPriceChart';
 import PercentageChange from '@/features/trending/components/PercentageChange';
+import { formatNumber } from '@/utils/number';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -127,7 +128,12 @@ export default function DashboardTrendingTokens() {
 
   // Intersection observer for infinite loading within scrollable container
   useEffect(() => {
-    if (!scrollContainerRef.current || !loadMoreBtn.current) return;
+    if (!scrollContainerRef.current || !loadMoreBtn.current) {
+      return;
+    }
+
+    const scrollContainer = scrollContainerRef.current;
+    const loadMoreButton = loadMoreBtn.current;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -136,12 +142,12 @@ export default function DashboardTrendingTokens() {
         }
       },
       { 
-        root: scrollContainerRef.current,
+        root: scrollContainer,
         threshold: 0.1
       }
     );
 
-    observer.observe(loadMoreBtn.current);
+    observer.observe(loadMoreButton);
 
     return () => {
       observer.disconnect();
@@ -160,10 +166,11 @@ export default function DashboardTrendingTokens() {
     return null;
   };
 
+
   return (
-    <div className="w-full">
+    <div className="w-full h-full flex flex-col" style={{ minHeight: 0 }}>
       {/* Header */}
-      <div className="mb-2">
+      <div className="mb-2 flex-shrink-0 sticky top-0 z-20 bg-[#0a0a0f]">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
@@ -231,8 +238,28 @@ export default function DashboardTrendingTokens() {
       </div>
 
       {/* Token List - Compact Table Style */}
-      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
-        <div ref={scrollContainerRef} className="overflow-x-auto min-h-[100vh] max-h-[calc(100vh-300px)] overflow-y-auto relative">
+      <div className="overflow-hidden rounded-t-xl border-t border-l border-r border-white/10 bg-white/[0.02] backdrop-blur-xl flex flex-col flex-1" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)', minHeight: 0 }}>
+        <div 
+          ref={scrollContainerRef}
+          className="overflow-x-auto overflow-y-auto relative flex-1"
+          style={{ minHeight: 0 }}
+          onScroll={(e) => {
+            // Prevent outer scroll when inner container is scrollable
+            const target = e.currentTarget;
+            if (target.scrollTop > 0 && target.scrollTop < target.scrollHeight - target.clientHeight) {
+              e.stopPropagation();
+            }
+          }}
+          onWheel={(e) => {
+            // Prevent outer scroll when scrolling within container
+            const target = e.currentTarget;
+            const isAtTop = target.scrollTop === 0;
+            const isAtBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 1;
+            if ((e.deltaY > 0 && !isAtBottom) || (e.deltaY < 0 && !isAtTop)) {
+              e.stopPropagation();
+            }
+          }}
+        >
           <table className="w-full dashboard-trends-table">
             <thead className="sticky top-0 z-30">
               <tr 
@@ -248,7 +275,11 @@ export default function DashboardTrendingTokens() {
                 <th className="text-left py-2 pl-0.5 pr-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Token</th>
                 <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Market Cap</th>
                 <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Price</th>
-                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden lg:table-cell">Holders</th>
+                <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden lg:table-cell">
+                  <div className="flex items-center justify-end gap-1">
+                    <Users className="w-3 h-3" />
+                  </div>
+                </th>
                 <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden 2xl:table-cell whitespace-nowrap">24h</th>
                 <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden 2xl:table-cell whitespace-nowrap">7d</th>
                 <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden 2xl:table-cell whitespace-nowrap">30d</th>
@@ -329,7 +360,7 @@ export default function DashboardTrendingTokens() {
                         WebkitTextFillColor: 'transparent',
                         backgroundClip: 'text'
                       }}>
-                        {token.holders_count?.toLocaleString() || '0'}
+                        {formatNumber(token.holders_count || 0, 0)}
                       </div>
                     </td>
 
@@ -660,7 +691,7 @@ export default function DashboardTrendingTokens() {
 
       {/* Loading State */}
       {isFetching && !tokens.length && (
-        <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+        <div className="overflow-hidden rounded-t-xl border-t border-l border-r border-white/10 bg-white/[0.02] backdrop-blur-xl" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
           <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto relative">
             <table className="w-full">
               <thead className="sticky top-0 z-30">
@@ -677,7 +708,11 @@ export default function DashboardTrendingTokens() {
                   <th className="text-left py-2 pl-0.5 pr-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Token</th>
                   <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Market Cap</th>
                   <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider">Price</th>
-                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden lg:table-cell">Holders</th>
+                  <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden lg:table-cell">
+                    <div className="flex items-center justify-end gap-1">
+                      <Users className="w-3 h-3" />
+                    </div>
+                  </th>
                   <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden 2xl:table-cell whitespace-nowrap">24h</th>
                   <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden 2xl:table-cell whitespace-nowrap">7d</th>
                   <th className="text-right py-2 px-3 text-[10px] font-semibold text-white/60 uppercase tracking-wider hidden 2xl:table-cell whitespace-nowrap">30d</th>

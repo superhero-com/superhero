@@ -1106,6 +1106,7 @@ export default function FeedList({
 
   // Auto-load more when reaching bottom using IntersectionObserver (all screens)
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const fetchingRef = useRef(false);
   // Only show loading if we don't have any data yet and queries are still loading
   // If we have cached data, show it immediately even while refetching
@@ -1133,6 +1134,20 @@ export default function FeedList({
         console.log('[Popular Feed] Sentinel not found');
       }
       return;
+    }
+    // Use scroll container if standalone, otherwise find parent scroll container
+    let scrollContainer = standalone ? scrollContainerRef.current : null;
+    if (!standalone && sentinel) {
+      // Find parent scroll container by traversing up the DOM
+      let parent = sentinel.parentElement;
+      while (parent) {
+        const styles = window.getComputedStyle(parent);
+        if (styles.overflowY === 'auto' || styles.overflowY === 'scroll' || parent.classList.contains('overflow-y-auto')) {
+          scrollContainer = parent;
+          break;
+        }
+        parent = parent.parentElement;
+      }
     }
     // Debug log removed to reduce console spam - uncomment if needed for debugging
     // if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
@@ -1230,7 +1245,11 @@ export default function FeedList({
       Promise.all(tasks).finally(() => {
         fetchingRef.current = false;
       });
-    }, { root: null, rootMargin: '800px 0px', threshold: 0.01 });
+    }, { 
+      root: scrollContainer, 
+      rootMargin: '800px 0px', 
+      threshold: 0.01 
+    });
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [
@@ -1256,10 +1275,11 @@ export default function FeedList({
     queryEnabledWithEnoughPosts, // Add queryEnabledWithEnoughPosts to dependencies
     hasEnoughPopularPosts, // Add hasEnoughPopularPosts to dependencies
     latestDataForHot, // Add latestDataForHot to dependencies
+    scrollContainerRef, // Add scrollContainerRef to dependencies
   ]);
 
   const content = (
-    <div className="w-full">
+    <div className="w-full h-full flex flex-col" style={{ minHeight: 0 }}>
       {isHomepage && (
         <Head
           title="Superhero.com – The All‑in‑One Social + Crypto App"
@@ -1271,7 +1291,7 @@ export default function FeedList({
       {/* Sort controls rendered once; styles adapt per breakpoint */}
       {!hideSortControls && (
         <>
-          <div className="md:hidden">
+          <div className="md:hidden flex-shrink-0">
             <SortControls
               sortBy={sortBy}
               onSortChange={handleSortChange}
@@ -1281,7 +1301,7 @@ export default function FeedList({
               popularFeedEnabled={popularFeedEnabled}
             />
           </div>
-          <div className="hidden md:block">
+          <div className="hidden md:block flex-shrink-0">
             <SortControls
               sortBy={sortBy}
               onSortChange={handleSortChange}
@@ -1293,149 +1313,203 @@ export default function FeedList({
         </>
       )}
 
-      <div className="w-full flex flex-col gap-0 md:gap-2 md:mx-0">
-        {/* Post Button - Small item at top of feed */}
-        {!hidePostButton && (
-          <PostButton
-            onPostCreated={() => {
-              // Switch to latest tab if user is on popular tab when posting
-              if (sortBy === "hot") {
-                handleSortChange("latest");
-                // Update ref immediately so onSuccess callback sees the new value
-                sortByRef.current = "latest";
+      {/* Scrollable Feed Container - only when standalone */}
+      {standalone ? (
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl flex flex-col flex-1" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)', minHeight: 0 }}>
+          <div 
+            ref={scrollContainerRef}
+            className="overflow-y-auto overflow-x-hidden flex-1 relative"
+            style={{ minHeight: 0 }}
+            onScroll={(e) => {
+              // Prevent outer scroll when scrolling within container
+              const target = e.currentTarget;
+              if (target.scrollTop > 0 && target.scrollTop < target.scrollHeight - target.clientHeight) {
+                e.stopPropagation();
               }
             }}
-            onSuccess={() => {
-              // Use ref to get current sortBy value instead of closure value
-              // This ensures we refetch the correct feed even if onPostCreated changed sortBy first
-              const currentSortBy = sortByRef.current;
-              if (currentSortBy === "hot") {
-                refetchPopular();
-              } else {
-                refetchLatest();
+            onWheel={(e) => {
+              // Prevent outer scroll when scrolling within container
+              const target = e.currentTarget;
+              const isAtTop = target.scrollTop === 0;
+              const isAtBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 1;
+              if ((e.deltaY > 0 && !isAtBottom) || (e.deltaY < 0 && !isAtTop)) {
+                e.stopPropagation();
               }
             }}
-          />
-        )}
-        {renderEmptyState()}
-        {/* Non-hot: existing renderer - show feed if we have data, even while refetching */}
-        {sortBy !== "hot" && (latestData?.pages.length > 0 || activityList.length > 0) && renderFeedItems}
-
-        {/* Hot: render popular posts (which seamlessly includes recent posts after popular posts are exhausted) */}
-        {sortBy === "hot" && (popularData?.pages.length > 0 || latestDataForHot?.pages.length > 0) && (
-          <>
-            {/* Debug log removed to reduce console spam */}
-            {/* {process.env.NODE_ENV === 'development' && console.log('🔍 [DEBUG] Rendering hot feed:', {
-              filteredAndSortedListLength: filteredAndSortedList.length,
-              popularDataPages: popularData?.pages?.length || 0,
-              latestDataForHotPages: latestDataForHot?.pages?.length || 0,
-            })} */}
-            {filteredAndSortedList.map((item) => (
-              <ReplyToFeedItem
-                key={item.id}
-                item={item}
-                commentCount={item.total_comments ?? 0}
-                allowInlineRepliesToggle={false}
-                onOpenPost={handleItemClick}
-                compact={compact}
-              />
-            ))}
-          </>
-        )}
-      </div>
-
-      {/* Load more button (desktop) */}
-      {!initialLoading && !latestError && !popularError && (
-        <>
-          {/* Desktop: explicit load more button */}
-          {showLoadMore && (
-            <div className="hidden md:block p-4 md:p-6 text-center">
-              <AeButton
-                loading={
-                  sortBy === "hot"
-                    ? (fetchingMorePopular || fetchingMoreLatestForHot)
-                    : (fetchingMoreLatest || fetchingMoreActivities)
-                }
-                onClick={async () => {
-                  if (sortBy === "hot") {
-                    const lastPage = popularData?.pages?.[popularData.pages.length - 1];
-                    const manualHasMore = lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && lastPage.meta.currentPage < lastPage.meta.totalPages;
-                    // Debug logs removed to reduce console spam - uncomment if needed for debugging
-                    // if (process.env.NODE_ENV === 'development') {
-                    //   console.log('🔍 [DEBUG] Load More Button CLICKED:', {
-                    //     hasMorePopular,
-                    //     fetchingMorePopular,
-                    //     popularExhausted,
-                    //     hasMoreLatestForHot,
-                    //     fetchingMoreLatestForHot,
-                    //     lastPageMeta: lastPage?.meta,
-                    //     manualHasMore,
-                    //     popularPagesCount: popularData?.pages?.length || 0,
-                    //     latestPagesCount: latestDataForHot?.pages?.length || 0,
-                    //     queryEnabledWithEnoughPosts,
-                    //   });
-                    // }
-                    // If popular posts are exhausted or we don't have enough, fetch latest posts (prioritize this)
-                    if ((popularExhausted || !hasEnoughPopularPosts) && queryEnabledWithEnoughPosts) {
-                      // Only fetch if query is enabled, not currently fetching, and there are more pages
-                      if (hasMoreLatestForHot && !fetchingMoreLatestForHot) {
-                        // Debug log removed to reduce console spam
-                        // if (process.env.NODE_ENV === 'development') {
-                        //   console.log('🔍 [DEBUG] Load More Button - FETCHING latest posts');
-                        // }
-                        await fetchNextLatestForHot();
-                      }
-                      // Debug log removed to reduce console spam
-                      // else if (process.env.NODE_ENV === 'development') {
-                      //   console.log('🔍 [DEBUG] Load More Button - NOT fetching latest posts:', {
-                      //     hasMoreLatestForHot,
-                      //     fetchingMoreLatestForHot,
-                      //     queryEnabledWithEnoughPosts,
-                      //   });
-                      // }
-                    } else if (!popularExhausted && hasEnoughPopularPosts && (hasMorePopular || manualHasMore) && !fetchingMorePopular) {
-                      // Try to fetch popular posts if there are more and we have enough already
-                      // Debug log removed to reduce console spam
-                      // if (process.env.NODE_ENV === 'development') {
-                      //   console.log('🔍 [DEBUG] Load More Button - FETCHING popular posts');
-                      // }
-                      await fetchNextPopular();
+          >
+            <div className="w-full flex flex-col gap-0 md:gap-2 md:mx-0">
+              {/* Post Button - Small item at top of feed */}
+              {!hidePostButton && (
+                <PostButton
+                  onPostCreated={() => {
+                    // Switch to latest tab if user is on popular tab when posting
+                    if (sortBy === "hot") {
+                      handleSortChange("latest");
+                      // Update ref immediately so onSuccess callback sees the new value
+                      sortByRef.current = "latest";
                     }
-                    // Debug log removed to reduce console spam
-                    // else if (process.env.NODE_ENV === 'development') {
-                    //   console.log('🔍 [DEBUG] Load More Button - NOT fetching:', {
-                    //     popularExhausted,
-                    //     hasEnoughPopularPosts,
-                    //     queryEnabledWithEnoughPosts,
-                    //     hasMorePopular,
-                    //     manualHasMore,
-                    //     fetchingMorePopular,
-                    //     hasMoreLatestForHot,
-                    //     fetchingMoreLatestForHot,
-                    //   });
-                    // }
-                    return;
-                  }
-                  const tasks: Promise<any>[] = [];
-                  if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
-                  if (hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
-                  if (tasks.length > 0) await Promise.all(tasks);
-                }}
-                className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5"
-              >
-                Load more
-              </AeButton>
+                  }}
+                  onSuccess={() => {
+                    // Use ref to get current sortBy value instead of closure value
+                    // This ensures we refetch the correct feed even if onPostCreated changed sortBy first
+                    const currentSortBy = sortByRef.current;
+                    if (currentSortBy === "hot") {
+                      refetchPopular();
+                    } else {
+                      refetchLatest();
+                    }
+                  }}
+                />
+              )}
+              {renderEmptyState()}
+              {/* Non-hot: existing renderer - show feed if we have data, even while refetching */}
+              {sortBy !== "hot" && (latestData?.pages.length > 0 || activityList.length > 0) && renderFeedItems}
+
+              {/* Hot: render popular posts (which seamlessly includes recent posts after popular posts are exhausted) */}
+              {sortBy === "hot" && (popularData?.pages.length > 0 || latestDataForHot?.pages.length > 0) && (
+                <>
+                  {filteredAndSortedList.map((item) => (
+                    <ReplyToFeedItem
+                      key={item.id}
+                      item={item}
+                      commentCount={item.total_comments ?? 0}
+                      allowInlineRepliesToggle={false}
+                      onOpenPost={handleItemClick}
+                      compact={compact}
+                    />
+                  ))}
+                </>
+              )}
+
+              {/* Load more button (desktop) */}
+              {!initialLoading && !latestError && !popularError && (
+                <>
+                  {/* Desktop: explicit load more button */}
+                  {showLoadMore && (
+                    <div className="hidden md:block p-4 md:p-6 text-center">
+                      <AeButton
+                        loading={
+                          sortBy === "hot"
+                            ? (fetchingMorePopular || fetchingMoreLatestForHot)
+                            : (fetchingMoreLatest || fetchingMoreActivities)
+                        }
+                        onClick={async () => {
+                          if (sortBy === "hot") {
+                            const lastPage = popularData?.pages?.[popularData.pages.length - 1];
+                            const manualHasMore = lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && lastPage.meta.currentPage < lastPage.meta.totalPages;
+                            if ((popularExhausted || !hasEnoughPopularPosts) && queryEnabledWithEnoughPosts) {
+                              if (hasMoreLatestForHot && !fetchingMoreLatestForHot) {
+                                await fetchNextLatestForHot();
+                              }
+                            } else if (!popularExhausted && hasEnoughPopularPosts && (hasMorePopular || manualHasMore) && !fetchingMorePopular) {
+                              await fetchNextPopular();
+                            }
+                            return;
+                          }
+                          const tasks: Promise<any>[] = [];
+                          if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
+                          if (hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
+                          if (tasks.length > 0) await Promise.all(tasks);
+                        }}
+                        className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5"
+                      >
+                        Load more
+                      </AeButton>
+                    </div>
+                  )}
+                  {/* Auto-load sentinel for all breakpoints */}
+                  <div id="feed-infinite-sentinel" className="h-10" ref={sentinelRef} />
+                </>
+              )}
             </div>
+          </div>
+        </div>
+      ) : (
+        <div className="w-full flex flex-col gap-0 md:gap-2 md:mx-0">
+          {/* Post Button - Small item at top of feed */}
+          {!hidePostButton && (
+            <PostButton
+              onPostCreated={() => {
+                if (sortBy === "hot") {
+                  handleSortChange("latest");
+                  sortByRef.current = "latest";
+                }
+              }}
+              onSuccess={() => {
+                const currentSortBy = sortByRef.current;
+                if (currentSortBy === "hot") {
+                  refetchPopular();
+                } else {
+                  refetchLatest();
+                }
+              }}
+            />
           )}
-          {/* Auto-load sentinel for all breakpoints */}
-          <div id="feed-infinite-sentinel" className="h-10" ref={sentinelRef} />
-        </>
+          {renderEmptyState()}
+          {/* Non-hot: existing renderer - show feed if we have data, even while refetching */}
+          {sortBy !== "hot" && (latestData?.pages.length > 0 || activityList.length > 0) && renderFeedItems}
+
+          {/* Hot: render popular posts */}
+          {sortBy === "hot" && (popularData?.pages.length > 0 || latestDataForHot?.pages.length > 0) && (
+            <>
+              {filteredAndSortedList.map((item) => (
+                <ReplyToFeedItem
+                  key={item.id}
+                  item={item}
+                  commentCount={item.total_comments ?? 0}
+                  allowInlineRepliesToggle={false}
+                  onOpenPost={handleItemClick}
+                  compact={compact}
+                />
+              ))}
+            </>
+          )}
+
+          {/* Load more button (desktop) */}
+          {!initialLoading && !latestError && !popularError && (
+            <>
+              {showLoadMore && (
+                <div className="hidden md:block p-4 md:p-6 text-center">
+                  <AeButton
+                    loading={
+                      sortBy === "hot"
+                        ? (fetchingMorePopular || fetchingMoreLatestForHot)
+                        : (fetchingMoreLatest || fetchingMoreActivities)
+                    }
+                    onClick={async () => {
+                      if (sortBy === "hot") {
+                        const lastPage = popularData?.pages?.[popularData.pages.length - 1];
+                        const manualHasMore = lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && lastPage.meta.currentPage < lastPage.meta.totalPages;
+                        if ((popularExhausted || !hasEnoughPopularPosts) && queryEnabledWithEnoughPosts) {
+                          if (hasMoreLatestForHot && !fetchingMoreLatestForHot) {
+                            await fetchNextLatestForHot();
+                          }
+                        } else if (!popularExhausted && hasEnoughPopularPosts && (hasMorePopular || manualHasMore) && !fetchingMorePopular) {
+                          await fetchNextPopular();
+                        }
+                        return;
+                      }
+                      const tasks: Promise<any>[] = [];
+                      if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
+                      if (hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
+                      if (tasks.length > 0) await Promise.all(tasks);
+                    }}
+                    className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5"
+                  >
+                    Load more
+                  </AeButton>
+                </div>
+              )}
+              <div id="feed-infinite-sentinel" className="h-10" ref={sentinelRef} />
+            </>
+          )}
+        </div>
       )}
     </div>
   );
 
   return standalone ? (
-    <Shell right={<RightRail hideTrends />} containerClassName="max-w-[1080px] mx-auto">
+    <Shell right={<RightRail />} containerClassName="max-w-[1080px] mx-auto">
       {content}
     </Shell>
   ) : (

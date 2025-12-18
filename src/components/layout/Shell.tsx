@@ -88,15 +88,16 @@ export default function Shell({ left, right, children, containerClassName, spanL
   return (
     <>
       <div className={[
-        "shell-container min-h-screen w-full mx-auto flex flex-col transition-all duration-300",
+        "shell-container w-full mx-auto flex flex-col transition-all duration-300",
         // Respect caller-provided max-w classes; otherwise allow full width scaling
         containerClassName && /(^|\s)max-w-/.test(containerClassName) ? "" : "",
         containerClassName || ""
       ].filter(Boolean).join(" ")}
+      style={{ height: '100vh', maxHeight: '100vh', overflow: 'hidden' }}
       >
         <div
           className={[
-            "flex-grow grid grid-cols-1 gap-0 px-2 pb-1 md:px-4 md:pb-3 lg:px-4 lg:pb-4 sm:px-3 sm:pb-2 transition-all duration-300",
+            "flex-grow grid grid-cols-1 gap-0 px-2 md:px-4 lg:px-4 sm:px-3 transition-all duration-300",
             gridClass
           ]
             .filter(Boolean)
@@ -114,11 +115,11 @@ export default function Shell({ left, right, children, containerClassName, spanL
             </aside>
           )}
 
-          <main className="min-w-0 overflow-visible transition-all duration-300 pt-4 pb-20 md:pt-4 md:pb-0">{children}</main>
+          <main className="min-w-0 overflow-hidden transition-all duration-300 flex flex-col" style={{ minHeight: 0 }}>{children}</main>
 
           {showVisualRight && (
             <aside className="hidden lg:block sticky top-0 self-start min-w-0 h-screen overflow-y-auto no-scrollbar">
-              <div className="min-w-0 h-full pb-6 pt-4">
+              <div className="min-w-0 h-full pb-6">
                 {right}
                 <div className="mt-6">
                   <BackToTop />

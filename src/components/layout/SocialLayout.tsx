@@ -12,7 +12,7 @@ import LeftRail from "./LeftRail";
  */
 function DashboardContentContainer({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)] gap-0 w-full">
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,300px)_minmax(560px,1fr)] gap-0 w-full h-full" style={{ minHeight: 0 }}>
       {/* Left Rail */}
       <aside className="hidden lg:block sticky top-0 self-start min-w-0 h-screen overflow-y-auto no-scrollbar">
         <div className="pt-4 pb-6">
@@ -21,7 +21,7 @@ function DashboardContentContainer({ children }: { children: React.ReactNode }) 
       </aside>
       
       {/* Middle Content */}
-      <main className="min-w-0 overflow-visible transition-all duration-300 pt-4 pb-20 md:pt-4 md:pb-0">
+      <main className="min-w-0 overflow-hidden transition-all duration-300 flex flex-col" style={{ minHeight: 0, height: '100%', maxHeight: '100vh' }}>
         {children}
       </main>
     </div>

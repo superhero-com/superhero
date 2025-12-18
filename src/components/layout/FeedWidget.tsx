@@ -62,9 +62,9 @@ export default function FeedWidget() {
   };
 
   return (
-    <div className="h-fit min-w-0">
-      {/* Header */}
-      <div className="mb-2">
+    <div className="h-full flex flex-col min-w-0" style={{ minHeight: 0 }}>
+      {/* Fixed Header */}
+      <div className="mb-2 flex-shrink-0 sticky top-0 z-10 bg-[#0a0a0f]" style={{ backgroundColor: '#0a0a0f' }}>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
@@ -157,18 +157,47 @@ export default function FeedWidget() {
       </div>
 
       {/* Post Button */}
-      <div className="mb-4">
+      <div className="mb-4 flex-shrink-0">
         <PostButton compact={true} />
       </div>
 
-      {/* Use FeedList with standalone=false to get just the feed content */}
-      <div className="[&_>_div]:!w-full [&_>_div]:!max-w-none">
-        <FeedList 
-          standalone={false} 
-          compact={true} 
-          hidePostButton={true}
-          hideSortControls={true}
-        />
+      {/* Scrollable Feed Content */}
+      <div className="flex-1 overflow-hidden" style={{ minHeight: 0 }}>
+        <div 
+          ref={(el) => {
+            // Pass scroll container ref to FeedList via data attribute or context
+            if (el) {
+              (el as any).__feedScrollContainer = true;
+            }
+          }}
+          className="h-full overflow-y-auto overflow-x-hidden"
+          onScroll={(e) => {
+            // Prevent outer scroll when scrolling within container
+            const target = e.currentTarget;
+            if (target.scrollTop > 0 && target.scrollTop < target.scrollHeight - target.clientHeight) {
+              e.stopPropagation();
+            }
+          }}
+          onWheel={(e) => {
+            // Prevent outer scroll when scrolling within container
+            const target = e.currentTarget;
+            const isAtTop = target.scrollTop === 0;
+            const isAtBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 1;
+            if ((e.deltaY > 0 && !isAtBottom) || (e.deltaY < 0 && !isAtTop)) {
+              e.stopPropagation();
+            }
+          }}
+        >
+          {/* Use FeedList with standalone=false to get just the feed content */}
+          <div className="[&_>_div]:!w-full [&_>_div]:!max-w-none pt-4">
+            <FeedList 
+              standalone={false} 
+              compact={true} 
+              hidePostButton={true}
+              hideSortControls={true}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

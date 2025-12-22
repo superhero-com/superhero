@@ -85,7 +85,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
     enabled: !!token?.sale_address,
     staleTime: 30 * 1000, // 30 seconds
     refetchInterval: 60 * 1000, // 1 minute
-    refetchOnWindowFocus: true, // Refresh when user returns to tab (new trades may have occurred)
+    refetchOnWindowFocus: false, // Disable refetch on window focus - refetchInterval handles updates
   });
 
   // Table headers configuration

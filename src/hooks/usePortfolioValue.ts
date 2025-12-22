@@ -87,7 +87,7 @@ export function usePortfolioValue({
     retry,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
     gcTime: 5 * 60 * 1000, // Keep cached data for 5 minutes
-    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnWindowFocus: false, // Disable refetch on window focus - refetchInterval handles updates
     refetchOnReconnect: true, // Refetch when network reconnects
   });
 

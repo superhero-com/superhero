@@ -48,7 +48,7 @@ export function useCurrencies() {
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 60 * 1000, // 1 minute
-    refetchOnWindowFocus: true, // Refresh when user returns to tab
+    refetchOnWindowFocus: false, // Disable refetch on window focus - refetchInterval handles updates
   });
 
   // Fetch detailed Aeternity market data from backend API
@@ -63,7 +63,7 @@ export function useCurrencies() {
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 60 * 1000, // 1 minute
-    refetchOnWindowFocus: true, // Refresh when user returns to tab
+    refetchOnWindowFocus: false, // Disable refetch on window focus - refetchInterval handles updates
   });
 
   const isLoadingPrice =  isLoadingRates || isLoadingAeternityData;

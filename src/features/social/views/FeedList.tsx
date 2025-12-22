@@ -199,7 +199,7 @@ export default function FeedList({
     // Show cached data immediately, refetch in background
     staleTime: 10000, // Consider data fresh for 10 seconds
     refetchOnMount: false, // Don't block on refetch - show cached data immediately
-    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
   });
   const activityList: PostDto[] = useMemo(() => {
     const allItems = activitiesPages?.pages 
@@ -271,7 +271,7 @@ export default function FeedList({
     // Show cached data immediately, refetch in background
     staleTime: 10000, // Consider data fresh for 10 seconds
     refetchOnMount: false, // Don't block on refetch - show cached data immediately
-    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
   });
 
   // Prefetch activities (token-created) and posts when component mounts or when switching to latest
@@ -1249,7 +1249,7 @@ export default function FeedList({
       });
     }, { 
       root: scrollContainer, 
-      rootMargin: '800px 0px', 
+      rootMargin: '200px 0px', // Reduced from 800px to prevent aggressive pagination
       threshold: 0.01 
     });
     observer.observe(sentinel);

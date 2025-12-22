@@ -42,6 +42,8 @@ export function TokenPriceChart({
       performanceChartTimeframe,
     ],
     staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
+    refetchOnReconnect: false, // Disable refetch on reconnect - staleTime is sufficient
   });
 
   const chartData = useMemo(() => {

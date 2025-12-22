@@ -36,7 +36,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     },
     enabled: !!slug,
     refetchInterval: 10 * 60 * 1000, // Check every 10 minutes for hidden status
-    refetchOnWindowFocus: true, // Check when user returns to tab
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
 
@@ -58,7 +58,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     queryKey: ['post-ancestors', (postData as any)?.id, parentId],
     enabled: !!postData,
     refetchInterval: 15 * 60 * 1000, // Check every 15 minutes for hidden status (less frequent than main post)
-    refetchOnWindowFocus: true, // Check when user returns to tab
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
     staleTime: 10 * 60 * 1000, // Consider data fresh for 10 minutes
     queryFn: async () => {
       const chain: PostDto[] = [];
@@ -67,7 +67,14 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
       let safety = 0;
       while (currentId && !seen.has(currentId) && safety < 100) {
         seen.add(currentId);
-        const p = (await PostsService.getById({ id: currentId })) as unknown as PostDto;
+        // Use queryClient.fetchQuery to leverage React Query caching and deduplication
+        const p = await queryClient.fetchQuery({
+          queryKey: ['post', currentId],
+          queryFn: async () => {
+            return await PostsService.getById({ id: currentId }) as unknown as PostDto;
+          },
+          staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+        });
         // unshift so the oldest ancestor is first
         chain.unshift(p);
         currentId = extractParentId(p as any);

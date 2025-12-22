@@ -26,6 +26,8 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
       retry: 1,
+      refetchOnWindowFocus: false, // Disable by default - enable only where needed (e.g., currency rates)
+      refetchOnReconnect: true, // Still refetch on reconnect
     },
   },
 });

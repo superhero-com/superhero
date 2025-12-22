@@ -6,6 +6,13 @@ export const SuperheroApi = {
     const base = (CONFIG.SUPERHERO_API_URL || '').replace(/\/$/, '');
     if (!base) throw new Error('SUPERHERO_API_URL not configured');
     const url = `${base}${path.startsWith('/') ? '' : '/'}${path}`;
+    // #region agent log
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const stackTrace = new Error().stack || '';
+    const callerMatch = stackTrace.match(/at\s+(\w+\.\w+)/g);
+    const caller = callerMatch && callerMatch.length > 1 ? callerMatch[1] : 'unknown';
+    fetch('http://127.0.0.1:7242/ingest/f2f932c5-966e-499b-aaa2-090a82a9b89d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'backend.ts:fetchJson',message:'API request initiated',data:{requestId,url,path,caller,method:init?.method||'GET'},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     if (process.env.NODE_ENV === 'development') {
       console.log(`[SuperheroApi] Base URL: ${base}`);
       console.log(`[SuperheroApi] Fetching: ${url}`);

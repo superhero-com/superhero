@@ -95,8 +95,21 @@ const ReplyToFeedItem = memo(({
   const displayName = chainNames?.[authorAddress] || "Legend";
 
   const parentId = useParentId(item);
-  const [parent, setParent] = useState<PostDto | null>(null);
-  const [parentError, setParentError] = useState<Error | null>(null);
+  
+  // Use React Query for parent post to enable caching and request deduplication
+  const {
+    data: parent,
+    error: parentError,
+  } = useQuery({
+    queryKey: ["post", parentId],
+    queryFn: async () => {
+      if (!parentId) return null;
+      return await PostsService.getById({ id: parentId }) as unknown as PostDto;
+    },
+    enabled: !!parentId && !hideParentContext,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
+  });
 
   // Nested replies state for this item
   const [showReplies, setShowReplies] = useState(false);
@@ -114,26 +127,9 @@ const ReplyToFeedItem = memo(({
     },
     enabled: showReplies,
     refetchInterval: 300 * 1000, // Reduced from 2 minutes to 5 minutes
-    refetchOnWindowFocus: true, // Refresh comments when user returns to tab (new comments may have been added)
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
     staleTime: 30 * 1000, // Consider data fresh for 30 seconds
   });
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      if (!parentId || hideParentContext) return;
-      try {
-        const res = await PostsService.getById({ id: parentId });
-        if (!cancelled) setParent(res as unknown as PostDto);
-      } catch (e: any) {
-        if (!cancelled) setParentError(e as Error);
-      }
-    }
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [parentId, hideParentContext]);
 
   const handleOpen = useCallback(() => {
     const slugOrId = (item as any)?.slug || String(postId).replace(/_v3$/, "");

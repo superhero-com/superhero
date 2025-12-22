@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation, useParams, Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import { SuperheroApi } from "../../api/backend";
 import { useAccountBalances } from "../../hooks/useAccountBalances";
 import WalletOverviewCard from "@/components/wallet/WalletOverviewCard";
@@ -12,6 +13,7 @@ import { getNavigationItems } from "./app-header/navigationItems";
 
 import { useWallet, useWalletConnect, useModal } from "../../hooks";
 import { useAddressByChainName } from "../../hooks/useChainName";
+import { useCurrencies } from "../../hooks/useCurrencies";
 import LayoutSwitcher from "./LayoutSwitcher";
 import TabSwitcher from "./TabSwitcher";
 import { GlassSurface } from "../ui/GlassSurface";
@@ -31,6 +33,7 @@ export default function LeftRail({
   const params = useParams();
   const { activeAccount } = useAeSdk();
   const { connectWallet } = useWalletConnect();
+  const { currencyRates, aeternityData } = useCurrencies();
   
   // Resolve chain name if present
   const isChainName = params.address?.endsWith(".chain");
@@ -48,6 +51,7 @@ export default function LeftRail({
     if (!activeAccount || !effectiveProfileAddress) return false;
     return effectiveProfileAddress === activeAccount;
   }, [location.pathname, effectiveProfileAddress, activeAccount]);
+  
   const [prices, setPrices] = useState<any>(() => {
     // Initialize from cache if available
     try {
@@ -67,6 +71,14 @@ export default function LeftRail({
   const [selectedCurrency, setSelectedCurrency] = useState<
     "usd" | "eur" | "cny"
   >("usd");
+  
+  // Use React Query for historical price to avoid duplicate requests
+  const { data: historicalPriceData } = useQuery({
+    queryKey: ['historical-price', selectedCurrency],
+    queryFn: () => SuperheroApi.getHistoricalPrice(selectedCurrency, 1, 'daily'),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 30 * 1000, // 30 seconds (matching the old interval)
+  });
 
   const [usdSpark, setUsdSpark] = useState<number[]>(() => {
     try {
@@ -125,213 +137,149 @@ export default function LeftRail({
     return "#94a3b8";
   };
 
-  // Load data
+  // Update prices when currency rates, market data, or historical price data changes
+  // This uses data from useCurrencies hook (React Query cached) instead of making duplicate API calls
   useEffect(() => {
-    async function loadPrice() {
-      try {
-        // Step 1: First, try to load today's daily price from historical data (fast, cached on backend)
-        // This gives us immediate price data without waiting for CoinGecko
-        // Only fetch the selected currency first for instant display
-        try {
-          const historicalData = await SuperheroApi.getHistoricalPrice(selectedCurrency, 1, 'daily');
-          if (historicalData && Array.isArray(historicalData) && historicalData.length > 0) {
-            // Get the latest price point (last item in array)
-            const latestPrice = historicalData[historicalData.length - 1];
-            if (Array.isArray(latestPrice) && latestPrice.length >= 2) {
-              const price = latestPrice[1];
-              
-              // Update prices immediately with quick data for selected currency
-              setPrices((prevPrices) => {
-                const quickPriceData: any = {
-                  usd: prevPrices?.usd ?? null,
-                  eur: prevPrices?.eur ?? null,
-                  cny: prevPrices?.cny ?? null,
-                  [selectedCurrency]: price,
-                };
-                
-                // Preserve existing market stats
-                quickPriceData.change24h = prevPrices?.change24h ?? null;
-                quickPriceData.marketCap = prevPrices?.marketCap ?? null;
-                quickPriceData.volume24h = prevPrices?.volume24h ?? null;
-                
-                return quickPriceData;
-              });
-            }
-          }
-        } catch (error) {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn("Failed to load quick historical price:", error);
-          }
-        }
-
-        // Step 2: Fetch current currency rates and market data asynchronously (may hit CoinGecko)
-        // This updates with the latest data in the background
-        const [ratesResult, marketDataResult] = await Promise.allSettled([
-          SuperheroApi.getCurrencyRates(),
-          SuperheroApi.getMarketData(selectedCurrency),
-        ]);
-
-        const rates = ratesResult.status === 'fulfilled' ? ratesResult.value : null;
-        const marketData = marketDataResult.status === 'fulfilled' ? marketDataResult.value : null;
-
-        // Log errors for failed requests
-        if (ratesResult.status === 'rejected') {
-          console.error("Failed to load currency rates:", ratesResult.reason);
-        } else if (ratesResult.status === 'fulfilled' && rates === null) {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn("Currency rates API returned empty response");
-          }
-        }
-        
-        if (marketDataResult.status === 'rejected') {
-          console.error("Failed to load market data:", marketDataResult.reason);
-        } else if (marketDataResult.status === 'fulfilled' && marketData === null) {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn("Market data API returned empty response");
-          }
-        }
-
-        // Update sparklines whenever rates are available (regardless of marketData)
-        if (rates) {
-          if (rates.usd != null) {
-            setUsdSpark((prev) => {
-              const next = [...prev, Number(rates.usd)].slice(-50);
-              sessionStorage.setItem("ae_spark_usd", JSON.stringify(next));
-              return next;
-            });
-          }
-
-          if (rates.eur != null) {
-            setEurSpark((prev) => {
-              const next = [...prev, Number(rates.eur)].slice(-50);
-              sessionStorage.setItem("ae_spark_eur", JSON.stringify(next));
-              return next;
-            });
-          }
-        }
-
-        // Update price data, preserving existing market stats when marketData fails
-        // Use API rates if available, otherwise fallback to latest sparkline value
+    // Step 1: Use historical price data from React Query (cached)
+    if (historicalPriceData && Array.isArray(historicalPriceData) && historicalPriceData.length > 0) {
+      const latestPrice = historicalPriceData[historicalPriceData.length - 1];
+      if (Array.isArray(latestPrice) && latestPrice.length >= 2) {
+        const price = latestPrice[1];
         setPrices((prevPrices) => {
-          const priceData: any = {
-            usd: rates?.usd ?? null,
-            eur: rates?.eur ?? null,
-            cny: rates?.cny ?? null,
+          // Only update if the price actually changed
+          if (prevPrices?.[selectedCurrency] === price) {
+            return prevPrices;
+          }
+          
+          const quickPriceData: any = {
+            usd: prevPrices?.usd ?? null,
+            eur: prevPrices?.eur ?? null,
+            cny: prevPrices?.cny ?? null,
+            [selectedCurrency]: price,
           };
-
-          // Fallback to sparkline data if API rates are null but we have sparkline data
-          // Read from sessionStorage to get the most current values
-          if (!priceData.usd) {
-            try {
-              const usdSparkData = sessionStorage.getItem("ae_spark_usd");
-              if (usdSparkData) {
-                const usdSparkArray = JSON.parse(usdSparkData);
-                if (Array.isArray(usdSparkArray) && usdSparkArray.length > 0) {
-                  priceData.usd = usdSparkArray[usdSparkArray.length - 1];
-                }
-              }
-            } catch {
-              // Ignore errors reading sparkline data
-            }
-          }
           
-          if (!priceData.eur) {
-            try {
-              const eurSparkData = sessionStorage.getItem("ae_spark_eur");
-              if (eurSparkData) {
-                const eurSparkArray = JSON.parse(eurSparkData);
-                if (Array.isArray(eurSparkArray) && eurSparkArray.length > 0) {
-                  priceData.eur = eurSparkArray[eurSparkArray.length - 1];
-                }
-              }
-            } catch {
-              // Ignore errors reading sparkline data
-            }
-          }
-
-          // Only update market stats if marketData is available
-          // Otherwise preserve existing values to prevent overwriting with null
-          if (marketData) {
-            priceData.change24h = marketData.priceChangePercentage24h || 
-                                  marketData.price_change_percentage_24h || 
-                                  null;
-            priceData.marketCap = marketData.marketCap || 
-                                 marketData.market_cap || 
-                                 null;
-            priceData.volume24h = marketData.totalVolume || 
-                                 marketData.total_volume || 
-                                 null;
-          } else {
-            // Preserve existing market stats when marketData fails
-            priceData.change24h = prevPrices?.change24h ?? null;
-            priceData.marketCap = prevPrices?.marketCap ?? null;
-            priceData.volume24h = prevPrices?.volume24h ?? null;
-          }
-
-          // Only update if we have at least one currency price
-          if (priceData.usd != null || priceData.eur != null || priceData.cny != null) {
-            // Cache the price data
-            try {
-              sessionStorage.setItem("ae_prices", JSON.stringify({
-                data: priceData,
-                timestamp: Date.now(),
-              }));
-            } catch {
-              // Ignore cache errors
-            }
-            return priceData;
-          }
-
-          // Return previous prices if no new data available
-          return prevPrices;
-        });
-      } catch (error) {
-        console.error("Failed to load price data:", error);
-        // On error, try to use cached data or sparkline fallback
-        setPrices((prevPrices) => {
-          if (prevPrices) return prevPrices;
+          // Preserve existing market stats
+          quickPriceData.change24h = prevPrices?.change24h ?? null;
+          quickPriceData.marketCap = prevPrices?.marketCap ?? null;
+          quickPriceData.volume24h = prevPrices?.volume24h ?? null;
           
-          // Fallback to sparkline data if available
-          const fallbackData: any = {};
-          try {
-            const usdSparkData = sessionStorage.getItem("ae_spark_usd");
-            if (usdSparkData) {
-              const usdSparkArray = JSON.parse(usdSparkData);
-              if (Array.isArray(usdSparkArray) && usdSparkArray.length > 0) {
-                fallbackData.usd = usdSparkArray[usdSparkArray.length - 1];
-              }
-            }
-          } catch {
-            // Ignore errors
-          }
-          
-          try {
-            const eurSparkData = sessionStorage.getItem("ae_spark_eur");
-            if (eurSparkData) {
-              const eurSparkArray = JSON.parse(eurSparkData);
-              if (Array.isArray(eurSparkArray) && eurSparkArray.length > 0) {
-                fallbackData.eur = eurSparkArray[eurSparkArray.length - 1];
-              }
-            }
-          } catch {
-            // Ignore errors
-          }
-          
-          if (fallbackData.usd != null || fallbackData.eur != null) {
-            return fallbackData;
-          }
-          
-          return null;
+          return quickPriceData;
         });
       }
     }
 
-    loadPrice();
-    const t = window.setInterval(loadPrice, 30000);
-    return () => {
-      window.clearInterval(t);
-    };
-  }, [selectedCurrency]);
+    // Step 2: Use currency rates and market data from useCurrencies hook (React Query cached)
+    // Update sparklines whenever rates are available (only if they changed)
+    if (currencyRates) {
+      if (currencyRates.usd != null) {
+        setUsdSpark((prev) => {
+          const newValue = Number(currencyRates.usd);
+          // Only update if the value actually changed
+          if (prev.length > 0 && prev[prev.length - 1] === newValue) {
+            return prev;
+          }
+          const next = [...prev, newValue].slice(-50);
+          sessionStorage.setItem("ae_spark_usd", JSON.stringify(next));
+          return next;
+        });
+      }
+
+      if (currencyRates.eur != null) {
+        setEurSpark((prev) => {
+          const newValue = Number(currencyRates.eur);
+          // Only update if the value actually changed
+          if (prev.length > 0 && prev[prev.length - 1] === newValue) {
+            return prev;
+          }
+          const next = [...prev, newValue].slice(-50);
+          sessionStorage.setItem("ae_spark_eur", JSON.stringify(next));
+          return next;
+        });
+      }
+    }
+
+    // Update price data using currency rates and market data from useCurrencies hook
+    setPrices((prevPrices) => {
+      const priceData: any = {
+        usd: currencyRates?.usd ?? null,
+        eur: currencyRates?.eur ?? null,
+        cny: currencyRates?.cny ?? null,
+      };
+
+      // Fallback to sparkline data if API rates are null but we have sparkline data
+      if (!priceData.usd) {
+        try {
+          const usdSparkData = sessionStorage.getItem("ae_spark_usd");
+          if (usdSparkData) {
+            const usdSparkArray = JSON.parse(usdSparkData);
+            if (Array.isArray(usdSparkArray) && usdSparkArray.length > 0) {
+              priceData.usd = usdSparkArray[usdSparkArray.length - 1];
+            }
+          }
+        } catch {
+          // Ignore errors reading sparkline data
+        }
+      }
+      
+      if (!priceData.eur) {
+        try {
+          const eurSparkData = sessionStorage.getItem("ae_spark_eur");
+          if (eurSparkData) {
+            const eurSparkArray = JSON.parse(eurSparkData);
+            if (Array.isArray(eurSparkArray) && eurSparkArray.length > 0) {
+              priceData.eur = eurSparkArray[eurSparkArray.length - 1];
+            }
+          }
+        } catch {
+          // Ignore errors reading sparkline data
+        }
+      }
+
+      // Update market stats from aeternityData (from useCurrencies hook)
+      if (aeternityData) {
+        priceData.change24h = aeternityData.priceChangePercentage24h || 
+                              aeternityData.price_change_percentage_24h || 
+                              null;
+        priceData.marketCap = aeternityData.marketCap || 
+                             aeternityData.market_cap || 
+                             null;
+        priceData.volume24h = aeternityData.totalVolume || 
+                             aeternityData.total_volume || 
+                             null;
+      } else {
+        // Preserve existing market stats when marketData is not available
+        priceData.change24h = prevPrices?.change24h ?? null;
+        priceData.marketCap = prevPrices?.marketCap ?? null;
+        priceData.volume24h = prevPrices?.volume24h ?? null;
+      }
+
+      // Check if data actually changed before updating
+      const hasChanged = 
+        prevPrices?.usd !== priceData.usd ||
+        prevPrices?.eur !== priceData.eur ||
+        prevPrices?.cny !== priceData.cny ||
+        prevPrices?.change24h !== priceData.change24h ||
+        prevPrices?.marketCap !== priceData.marketCap ||
+        prevPrices?.volume24h !== priceData.volume24h;
+
+      // Only update if we have at least one currency price AND data changed
+      if ((priceData.usd != null || priceData.eur != null || priceData.cny != null) && hasChanged) {
+        // Cache the price data
+        try {
+          sessionStorage.setItem("ae_prices", JSON.stringify({
+            data: priceData,
+            timestamp: Date.now(),
+          }));
+        } catch {
+          // Ignore cache errors
+        }
+        return priceData;
+      }
+
+      // Return previous prices if no new data available or nothing changed
+      return prevPrices;
+    });
+  }, [selectedCurrency, currencyRates, aeternityData, historicalPriceData]);
 
   const { t: tNav } = useTranslation('navigation');
   const navigationItems = getNavigationItems(tNav);

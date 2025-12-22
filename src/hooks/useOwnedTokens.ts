@@ -58,6 +58,7 @@ export function useOwnedTokens() {
     enabled: !!activeAccount,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 2 * 60 * 1000, // 2 minutes
+    refetchOnWindowFocus: true, // Refresh when user returns to tab (tokens may have been created/transferred)
   });
 
   // Extract the tokens array from the response

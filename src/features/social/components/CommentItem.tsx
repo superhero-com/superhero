@@ -39,7 +39,7 @@ const CommentItem = memo(({
   const chainName = chainNames?.[authorAddress];
   const hasReplies = comment.total_comments > 0;
   const canReply = depth < maxDepth;
-  const { status } = useTransactionStatus(comment.tx_hash, { enabled: !!comment.tx_hash, refetchInterval: 8000 });
+  const { status } = useTransactionStatus(comment.tx_hash, { enabled: !!comment.tx_hash, refetchInterval: 30000 }); // Reduced from 8s to 30s
 
   // Query for comment replies - only fetch when showReplies is true
   const {
@@ -58,7 +58,9 @@ const CommentItem = memo(({
       return result?.items || [];
     },
     enabled: showReplies,
-    refetchInterval: 120 * 1000,
+    refetchInterval: 300 * 1000, // Reduced from 2 minutes to 5 minutes
+    refetchOnWindowFocus: true, // Refresh comments when user returns to tab (new comments may have been added)
+    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
   });
 
   const handleReplyClick = useCallback(() => {

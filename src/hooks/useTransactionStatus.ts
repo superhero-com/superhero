@@ -12,7 +12,7 @@ export const useTransactionStatus = (
   options: UseTransactionStatusOptions = {}
 ) => {
   const { sdk } = useAeSdk();
-  const { enabled = true, refetchInterval = 5000 } = options;
+  const { enabled = true, refetchInterval = 30000 } = options; // Increased default from 5s to 30s
   
   const [status, setStatus] = useState<TransactionStatus | null>(null);
   const [loading, setLoading] = useState(false);

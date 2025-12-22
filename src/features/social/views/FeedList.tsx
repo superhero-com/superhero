@@ -442,6 +442,7 @@ export default function FeedList({
     staleTime: 10000, // Consider data fresh for 10 seconds
     refetchOnMount: false, // Don't block on refetch - show cached data immediately
     refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchInterval: 2 * 60 * 1000, // Refresh rankings every 2 minutes (rankings change over time)
   });
 
   // Track popular post IDs to filter them out from latest posts
@@ -768,6 +769,7 @@ export default function FeedList({
     let activitiesToUse = activityList;
     
     // If queries don't have data yet, try to get cached data
+    // Using queryClient ref to avoid dependency issues (queryClient is stable)
     if ((!latestData || latestData.pages.length === 0) && bothQueriesReady) {
       const cachedPosts = queryClient.getQueryData<any>(["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }]) ||
                          queryClient.getQueryData<any>(["posts", { limit: 10, sortBy, search: localSearch, filterBy }]);
@@ -807,7 +809,7 @@ export default function FeedList({
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     });
-  }, [list, activityList, sortBy, popularList, latestListForHot, bothQueriesReady, latestData, activitiesPages, queryClient, localSearch, filterBy]);
+  }, [list, activityList, sortBy, popularList, latestListForHot, bothQueriesReady, latestData, activitiesPages, localSearch, filterBy]);
 
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {

@@ -28,6 +28,8 @@ export default function DirectReplies({
       return undefined;
     },
     initialPageParam: 1,
+    refetchOnWindowFocus: true, // Refresh comments when user returns to tab (new comments may have been added)
+    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
   });
 
   const list: PostDto[] = useMemo(

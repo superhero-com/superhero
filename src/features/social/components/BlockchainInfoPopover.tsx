@@ -41,7 +41,7 @@ export function BlockchainInfoPopover({
   const [open, setOpen] = useState(false);
   const [extraLoading, setExtraLoading] = useState(false);
   const [extraError, setExtraError] = useState<string | null>(null);
-  const { status } = useTransactionStatus(txHash, { enabled: !!txHash, refetchInterval: 8000 });
+  const { status } = useTransactionStatus(txHash, { enabled: !!txHash, refetchInterval: 30000 }); // Reduced from 8s to 30s
 
   // Optional: fetch additional tx details from API when opened (non-blocking)
   const handleOpenChange = useCallback(async (next: boolean) => {

@@ -113,7 +113,9 @@ const ReplyToFeedItem = memo(({
       return result?.items || [];
     },
     enabled: showReplies,
-    refetchInterval: 120 * 1000,
+    refetchInterval: 300 * 1000, // Reduced from 2 minutes to 5 minutes
+    refetchOnWindowFocus: true, // Refresh comments when user returns to tab (new comments may have been added)
+    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
   });
 
   useEffect(() => {
@@ -149,7 +151,7 @@ const ReplyToFeedItem = memo(({
     // Always enable for this post so counts can update from 0 → N over time.
     enabled: !!postId,
     // Periodically refresh to keep counts from going stale.
-    refetchInterval: 120 * 1000,
+    refetchInterval: 300 * 1000, // Reduced from 2 minutes to 5 minutes
     queryFn: async () => {
       const normalize = (id: string) => (String(id).endsWith("_v3") ? String(id) : `${String(id)}_v3`);
       const root = normalize(String(postId));
@@ -180,7 +182,7 @@ const ReplyToFeedItem = memo(({
 
   // Inline mined badge helper
   function MinedBadge({ txHash }: { txHash: string }) {
-    const { status } = useTransactionStatus(txHash, { enabled: !!txHash, refetchInterval: 8000 });
+    const { status } = useTransactionStatus(txHash, { enabled: !!txHash, refetchInterval: 30000 }); // Reduced from 8s to 30s
     if (!status) return null;
     if (status.confirmed) {
       return <Badge className="border-green-500/30 bg-green-500/20 text-green-300">Mined</Badge>;

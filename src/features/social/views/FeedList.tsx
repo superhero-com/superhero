@@ -1178,14 +1178,20 @@ export default function FeedList({
     // }
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
-      // Only trigger auto-pagination if user has scrolled (prevents aggressive pagination on initial load)
-      if (!entry.isIntersecting || fetchingRef.current || !hasScrolledRef.current) {
+      // Allow auto-pagination if:
+      // 1. User has scrolled (normal pagination), OR
+      // 2. Transitioning from popular to latest posts (popularExhausted) - this should happen automatically
+      const isTransitioningToLatest = sortBy === "hot" && (popularExhausted || !hasEnoughPopularPosts) && queryEnabledWithEnoughPosts && hasMoreLatestForHot;
+      const shouldAllowPagination = hasScrolledRef.current || isTransitioningToLatest;
+      
+      if (!entry.isIntersecting || fetchingRef.current || !shouldAllowPagination) {
         // Debug log removed to reduce console spam
         // if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
         //   console.log('[Popular Feed] Intersection observer: not triggering', {
         //     isIntersecting: entry.isIntersecting,
         //     fetchingRef: fetchingRef.current,
         //     hasScrolled: hasScrolledRef.current,
+        //     isTransitioningToLatest,
         //   });
         // }
         return;

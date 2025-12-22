@@ -141,40 +141,10 @@ const ReplyToFeedItem = memo(({
     ? item.media.filter((m) => (typeof m === "string" ? !m.startsWith("comment:") : true))
     : [];
 
-  // Compute total descendant comments (all levels) for this item
-  const { data: descendantCount } = useQuery<number>({
-    queryKey: ["post-desc-count", postId],
-    // Always enable for this post so counts can update from 0 → N over time.
-    enabled: !!postId,
-    // Periodically refresh to keep counts from going stale.
-    refetchInterval: 300 * 1000, // Reduced from 2 minutes to 5 minutes
-    queryFn: async () => {
-      const normalize = (id: string) => (String(id).endsWith("_v3") ? String(id) : `${String(id)}_v3`);
-      const root = normalize(String(postId));
-      const queue: string[] = [root];
-      let total = 0;
-      let requestBudget = 150; // safety cap per item
-      while (queue.length > 0 && requestBudget > 0) {
-        const current = queue.shift()!;
-        let page = 1;
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-          if (requestBudget <= 0) break;
-          requestBudget -= 1;
-          const res: any = await PostsService.getComments({ id: current, orderDirection: "ASC", page, limit: 50 });
-          const items: PostDto[] = res?.items || [];
-          total += items.length;
-          for (const child of items) {
-            if ((child.total_comments ?? 0) > 0) queue.push(normalize(String(child.id)));
-          }
-          const meta = res?.meta;
-          if (!meta?.currentPage || !meta?.totalPages || meta.currentPage >= meta.totalPages) break;
-          page = meta.currentPage + 1;
-        }
-      }
-      return total;
-    },
-  });
+  // Use backend-provided total_comments instead of fetching descendant count
+  // The backend already provides total_comments which includes all descendant comments
+  // This eliminates hundreds of unnecessary API requests per post
+  const descendantCount = (item.total_comments ?? commentCount ?? 0);
 
   // Inline mined badge helper
   function MinedBadge({ txHash }: { txHash: string }) {
@@ -361,7 +331,7 @@ const ReplyToFeedItem = memo(({
                 aria-controls={`replies-${postId}`}
               >
                 <MessageCircle className={cn(compact ? "w-[12px] h-[12px]" : "w-[14px] h-[14px]")} strokeWidth={2.25} />
-                {typeof descendantCount === 'number' ? descendantCount : commentCount}
+                {descendantCount}
               </button>
             </div>
             <SharePopover postId={item.id} postSlug={(item as any)?.slug} compact={compact} />

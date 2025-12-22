@@ -1249,7 +1249,7 @@ export default function FeedList({
       });
     }, { 
       root: scrollContainer, 
-      rootMargin: '200px 0px', // Reduced from 800px to prevent aggressive pagination
+      rootMargin: '50px 0px', // Further reduced from 200px to prevent aggressive pagination on initial load
       threshold: 0.01 
     });
     observer.observe(sentinel);

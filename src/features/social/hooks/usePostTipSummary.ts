@@ -5,7 +5,7 @@ function normalizePostIdV3(postId: string): string {
   return String(postId).endsWith('_v3') ? String(postId) : `${postId}_v3`;
 }
 
-export function usePostTipSummary(postId?: string) {
+export function usePostTipSummary(postId?: string, enabled: boolean = false) {
   const id = postId ? normalizePostIdV3(postId) : undefined;
 
   return useQuery<{ totalTips?: string } | undefined>({
@@ -18,7 +18,7 @@ export function usePostTipSummary(postId?: string) {
         return undefined;
       }
     },
-    enabled: Boolean(id),
+    enabled: Boolean(id) && enabled, // Only fetch when explicitly enabled (e.g., on hover or when visible)
     staleTime: 60_000,
     refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
   });

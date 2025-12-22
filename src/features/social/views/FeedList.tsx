@@ -1111,6 +1111,7 @@ export default function FeedList({
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const fetchingRef = useRef(false);
   const hasScrolledRef = useRef(false); // Track if user has scrolled to prevent auto-pagination on initial load
+  const hasTransitionedToLatestRef = useRef(false); // Track if we've already done the initial transition from popular to latest
   // Only show loading if we don't have any data yet and queries are still loading
   // If we have cached data, show it immediately even while refetching
   // For latest feed: show cached data immediately if available (from queries or cache)
@@ -1127,7 +1128,11 @@ export default function FeedList({
       ? (popularLoading && (!popularData || (popularData as any)?.pages?.length === 0))
       : (!hasCachedDataForLatest && (latestLoading || activitiesLoading)); // Only show loading if no cached data and actually loading
   const [showLoadMore, setShowLoadMore] = useState(false);
-  useEffect(() => { setShowLoadMore(false); }, [sortBy]);
+  useEffect(() => { 
+    setShowLoadMore(false);
+    // Reset transition tracking when switching sort modes
+    hasTransitionedToLatestRef.current = false;
+  }, [sortBy]);
   
   // Track scroll for non-standalone mode (window scroll)
   useEffect(() => {
@@ -1180,8 +1185,8 @@ export default function FeedList({
       const entry = entries[0];
       // Allow auto-pagination if:
       // 1. User has scrolled (normal pagination), OR
-      // 2. Transitioning from popular to latest posts (popularExhausted) - this should happen automatically
-      const isTransitioningToLatest = sortBy === "hot" && (popularExhausted || !hasEnoughPopularPosts) && queryEnabledWithEnoughPosts && hasMoreLatestForHot;
+      // 2. First transition from popular to latest posts (only once, then require scrolling)
+      const isTransitioningToLatest = sortBy === "hot" && (popularExhausted || !hasEnoughPopularPosts) && queryEnabledWithEnoughPosts && hasMoreLatestForHot && !hasTransitionedToLatestRef.current;
       const shouldAllowPagination = hasScrolledRef.current || isTransitioningToLatest;
       
       if (!entry.isIntersecting || fetchingRef.current || !shouldAllowPagination) {
@@ -1227,6 +1232,10 @@ export default function FeedList({
         if ((popularExhausted || !hasEnoughPopularPosts) && queryEnabledWithEnoughPosts) {
           // Only fetch if query is enabled, not currently fetching, and there are more pages
           if (hasMoreLatestForHot && !fetchingMoreLatestForHot) {
+            // Mark that we've done the initial transition (only allow one automatic fetch)
+            if (!hasTransitionedToLatestRef.current) {
+              hasTransitionedToLatestRef.current = true;
+            }
             // Debug log removed to reduce console spam
             // if (process.env.NODE_ENV === 'development') {
             //   console.log('🔍 [DEBUG] Intersection Observer - FETCHING latest posts');

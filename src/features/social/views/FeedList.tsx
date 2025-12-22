@@ -1110,6 +1110,7 @@ export default function FeedList({
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const fetchingRef = useRef(false);
+  const hasScrolledRef = useRef(false); // Track if user has scrolled to prevent auto-pagination on initial load
   // Only show loading if we don't have any data yet and queries are still loading
   // If we have cached data, show it immediately even while refetching
   // For latest feed: show cached data immediately if available (from queries or cache)
@@ -1127,6 +1128,19 @@ export default function FeedList({
       : (!hasCachedDataForLatest && (latestLoading || activitiesLoading)); // Only show loading if no cached data and actually loading
   const [showLoadMore, setShowLoadMore] = useState(false);
   useEffect(() => { setShowLoadMore(false); }, [sortBy]);
+  
+  // Track scroll for non-standalone mode (window scroll)
+  useEffect(() => {
+    if (standalone) return; // Standalone mode uses container scroll handler
+    const handleScroll = () => {
+      if (window.scrollY > 10) {
+        hasScrolledRef.current = true;
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [standalone]);
+  
   useEffect(() => {
     if (initialLoading) return;
     if (!('IntersectionObserver' in window)) return;
@@ -1164,12 +1178,14 @@ export default function FeedList({
     // }
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
-      if (!entry.isIntersecting || fetchingRef.current) {
+      // Only trigger auto-pagination if user has scrolled (prevents aggressive pagination on initial load)
+      if (!entry.isIntersecting || fetchingRef.current || !hasScrolledRef.current) {
         // Debug log removed to reduce console spam
         // if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
         //   console.log('[Popular Feed] Intersection observer: not triggering', {
         //     isIntersecting: entry.isIntersecting,
         //     fetchingRef: fetchingRef.current,
+        //     hasScrolled: hasScrolledRef.current,
         //   });
         // }
         return;
@@ -1327,6 +1343,10 @@ export default function FeedList({
               const target = e.currentTarget;
               if (target.scrollTop > 0 && target.scrollTop < target.scrollHeight - target.clientHeight) {
                 e.stopPropagation();
+              }
+              // Mark that user has scrolled to enable auto-pagination
+              if (target.scrollTop > 10) {
+                hasScrolledRef.current = true;
               }
             }}
             onWheel={(e) => {

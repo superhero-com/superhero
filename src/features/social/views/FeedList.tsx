@@ -441,7 +441,7 @@ export default function FeedList({
     // Show cached data immediately, refetch in background
     staleTime: 10000, // Consider data fresh for 10 seconds
     refetchOnMount: false, // Don't block on refetch - show cached data immediately
-    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
     refetchInterval: 2 * 60 * 1000, // Refresh rankings every 2 minutes (rankings change over time)
   });
 

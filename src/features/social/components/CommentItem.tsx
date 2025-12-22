@@ -59,7 +59,7 @@ const CommentItem = memo(({
     },
     enabled: showReplies,
     refetchInterval: 300 * 1000, // Reduced from 2 minutes to 5 minutes
-    refetchOnWindowFocus: true, // Refresh comments when user returns to tab (new comments may have been added)
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
     staleTime: 30 * 1000, // Consider data fresh for 30 seconds
   });
 

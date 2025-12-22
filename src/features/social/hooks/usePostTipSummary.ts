@@ -20,7 +20,7 @@ export function usePostTipSummary(postId?: string) {
     },
     enabled: Boolean(id),
     staleTime: 60_000,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
   });
 }
 

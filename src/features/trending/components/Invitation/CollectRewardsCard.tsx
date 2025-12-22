@@ -135,10 +135,12 @@ export default function CollectRewardsCard({
         {/* Description - Left Side */}
         <div className="flex-1 space-y-4 text-sm text-muted-foreground">
           <p>
-            To access participation rewards, contributors may invite others to explore the platform. If at least {MIN_INVITEES} of their invitees engage with the ecosystem (e.g., by minting or transacting with tokens), the contributor becomes eligible to unlock optional rewards.
+            Rewards accumulate as invited accounts participate in token sales. Once at least{" "}
+            {MIN_INVITEES} unique invitees have bought tokens, you can withdraw any accumulated
+            rewards.
           </p>
           <p className="text-xs opacity-60">
-            Rewards can be claimed manually at any time for the current or previous calendar month. Unclaimed rewards beyond this window will be permanently removed to maintain system balance.
+            Note: eligibility and rewards depend on on-chain activity and are not guaranteed.
           </p>
         </div>
 

@@ -1,11 +1,11 @@
 import { formatFractionalPrice } from "@/utils/common";
 import { COIN_SYMBOL } from "@/utils/constants";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../../../components/ui/button";
 import WalletConnectBtn from "../../../components/WalletConnectBtn";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { cn } from "../../../lib/utils";
-import FractionFormatter, { FormattedFractionalPrice } from "../../shared/components/FractionFormatter";
+import FractionFormatter from "../../shared/components/FractionFormatter";
 import LivePriceFormatter from "../../shared/components/LivePriceFormatter";
 import { useTokenTrade } from "../hooks/useTokenTrade";
 import { TokenDto } from "@/api/generated/models/TokenDto";
@@ -39,7 +39,6 @@ export default function TokenTradeCard({
     isInsufficientBalance,
     averageTokenPrice,
     priceImpactDiff,
-    priceImpactPercent,
     protocolTokenReward,
     userBalance,
     spendableAeBalance,
@@ -51,6 +50,39 @@ export default function TokenTradeCard({
     placeTokenTradeOrder,
     resetFormState,
   } = useTokenTrade({ token });
+
+  // Keep a string buffer for slippage input so users can type intermediate states like "0."
+  const [slippageInput, setSlippageInput] = useState<string>(String(slippage ?? 0));
+
+  useEffect(() => {
+    if (settingsDialogVisible) {
+      setSlippageInput(String(slippage ?? 0));
+    }
+    // Intentionally not depending on `slippage` to avoid overwriting user typing while dialog is open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settingsDialogVisible]);
+
+  const commitSlippageInput = () => {
+    const normalized = (slippageInput || "").replace(/,/g, ".");
+    const trimmed = normalized.endsWith(".") ? normalized.slice(0, -1) : normalized;
+
+    // If user cleared the input (or typed only '.'), fall back to 0
+    if (trimmed === "" || trimmed === ".") {
+      setSlippage(0);
+      setSlippageInput("0");
+      return;
+    }
+
+    const parsed = Number(trimmed);
+    if (!Number.isFinite(parsed)) {
+      setSlippageInput(String(slippage ?? 0));
+      return;
+    }
+
+    const clamped = Math.max(0, Math.min(50, parsed));
+    setSlippage(clamped);
+    setSlippageInput(String(clamped));
+  };
 
   const currentStepText = isBuying ? "" : "1/2";
 
@@ -163,7 +195,7 @@ export default function TokenTradeCard({
                   <div className="flex items-center">
                     {priceImpactDiff.isZero ? "" : isBuying ? "+" : "-"}
                     <FractionFormatter
-                      fractionalPrice={formatFractionalPrice(priceImpactDiff) as FormattedFractionalPrice}
+                      fractionalPrice={formatFractionalPrice(priceImpactDiff)}
                     />
                     &nbsp;{COIN_SYMBOL}
                   </div>
@@ -273,9 +305,27 @@ export default function TokenTradeCard({
                 Slippage Tolerance (%)
               </label>
               <input
-                type="number"
-                value={slippage}
-                onChange={(e) => setSlippage(parseFloat(e.target.value) || 0)}
+                type="text"
+                inputMode="decimal"
+                value={slippageInput}
+                onChange={(e) => {
+                  const next = (e.target.value || "").replace(/,/g, ".");
+                  // Allow intermediate states: "", ".", "0."
+                  if (next === "" || next === ".") {
+                    setSlippageInput(next);
+                    setSlippage(0);
+                    return;
+                  }
+                  // Only allow digits + optional single dot
+                  if (!/^\d*(?:\.\d*)?$/.test(next)) return;
+
+                  setSlippageInput(next);
+                  const n = Number(next);
+                  if (Number.isFinite(n)) {
+                    setSlippage(Math.max(0, Math.min(50, n)));
+                  }
+                }}
+                onBlur={commitSlippageInput}
                 className="w-full p-3 border border-white/10 rounded-xl bg-white/[0.05] text-white placeholder-white/40 backdrop-blur-[10px] focus:outline-none focus:border-[#4ecdc4] transition-colors"
                 step="0.1"
                 min="0"
@@ -284,7 +334,10 @@ export default function TokenTradeCard({
             </div>
             <Button
               variant="default"
-              onClick={() => setSettingsDialogVisible(false)}
+              onClick={() => {
+                commitSlippageInput();
+                setSettingsDialogVisible(false);
+              }}
               className="w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0"
             >
               Done

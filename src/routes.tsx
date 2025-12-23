@@ -3,6 +3,7 @@ import { RouteObject, Navigate, useParams } from "react-router-dom";
 import SocialLayout from "./components/layout/SocialLayout";
 
 const FeedList = lazy(() => import("./features/social/views/FeedList"));
+const NotFound = lazy(() => import("./views/NotFound"));
 const TokenList = lazy(() => import("./features/trending/views/TokenList"));
 const TrendCloudVisx = lazy(() => import("./views/Trendminer/TrendCloudVisx"));
 const TrendInvite = lazy(() => import("./views/Trendminer/Invite"));
@@ -251,7 +252,6 @@ export const routes: RouteObject[] = [
   { path: "/faq", element: <FAQ /> },
   {
     path: "*",
-    element: <SocialLayout />,
-    children: [{ index: true, element: <FeedList standalone={false} /> }],
+    element: <NotFound />,
   },
 ];

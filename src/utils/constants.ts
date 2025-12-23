@@ -46,6 +46,11 @@ export const AETERNITY_TOKEN_BASE_DATA = {
       symbol: '€',
     },
     {
+      name: 'Chinese Yuan',
+      code: 'cny',
+      symbol: '¥',
+    },
+    {
       name: 'Australia Dollar',
       code: 'aud',
       symbol: 'AU$',

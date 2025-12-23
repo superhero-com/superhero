@@ -65,7 +65,7 @@ export default function PriceDataFormatter({
     return bignumber
       ? Decimal.from(toAe(priceData[currentCurrencyCode]))
       : Decimal.from(priceData[currentCurrencyCode]);
-  }, [priceData, currentCurrencyCode, bignumber]);
+  }, [priceData, currentCurrencyCode, bignumber, getFiat]);
 
   return (
     <PriceFormatter

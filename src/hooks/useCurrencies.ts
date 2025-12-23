@@ -1,21 +1,14 @@
-import { useMemo, useCallback, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMemo, useCallback } from 'react';
 import { toAe } from '@aeternity/aepp-sdk';
 import { useAtom } from 'jotai';
-import { atom } from 'jotai';
-import { atomWithStorage } from 'jotai/utils';
 
 import { PriceDto } from '../api/generated';
 import { Decimal } from '../libs/decimal';
 import { SuperheroApi } from '../api/backend';
 import { selectedCurrencyAtom } from '../atoms/walletAtoms';
-import { CoinGeckoMarketResponse } from '../libs/CoinGecko';
+import { currencyRatesAtom, currencyRatesLastErrorAtAtom, currencyRatesUpdatedAtAtom } from '../atoms/currencyAtoms';
 import { CURRENCIES } from '../utils/constants';
-import { ICurrency, CurrencyCode as AllCurrencyCode, CurrencyRates } from '../utils/types';
-
-// Create atoms for currency data state management (similar to Vue stores)
-const aeternityDataAtom = atomWithStorage<CoinGeckoMarketResponse | null>('currency:aeternity-data', null);
-const currencyRatesAtom = atomWithStorage<CurrencyRates>('currency:rates', {});
+import { ICurrency, CurrencyCode as AllCurrencyCode } from '../utils/types';
 
 /**
  * useCurrencies - React hook for currency management and conversion
@@ -31,40 +24,13 @@ const currencyRatesAtom = atomWithStorage<CurrencyRates>('currency:rates', {});
  */
 export function useCurrencies() {
   const [currentCurrencyCode, setCurrentCurrencyCode] = useAtom(selectedCurrencyAtom);
-  const [aeternityData, setAeternityData] = useAtom(aeternityDataAtom);
   const [currencyRates, setCurrencyRates] = useAtom(currencyRatesAtom);
+  const [, setRatesUpdatedAt] = useAtom(currencyRatesUpdatedAtAtom);
+  const [, setRatesLastErrorAt] = useAtom(currencyRatesLastErrorAtAtom);
 
-
-
-  // Fetch currency rates from backend API
-  const { isLoading: isLoadingRates, refetch: refetchRates } = useQuery({
-    queryKey: ['currency-rates'],
-    queryFn: async () => {
-      const rates = await SuperheroApi.getCurrencyRates();
-      if (rates) {
-        setCurrencyRates(rates);
-      }
-      return rates;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 60 * 1000, // 1 minute
-  });
-
-  // Fetch detailed Aeternity market data from backend API
-  const { isLoading: isLoadingAeternityData, refetch: refetchAeternityData } = useQuery({
-    queryKey: ['aeternity-data', currentCurrencyCode],
-    queryFn: async () => {
-      const data = await SuperheroApi.getMarketData(currentCurrencyCode);
-      if (data) {
-        setAeternityData(data);
-      }
-      return data;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 60 * 1000, // 1 minute
-  });
-
-  const isLoadingPrice =  isLoadingRates || isLoadingAeternityData;
+  // Rates are polled globally by AePricePollingProvider.
+  const isLoadingRates = !currencyRates || currencyRates[currentCurrencyCode] == null;
+  const isLoadingPrice = isLoadingRates;
 
   const currentCurrencyRate = useMemo(
     (): number => currencyRates?.[currentCurrencyCode] || 0,
@@ -76,32 +42,42 @@ export function useCurrencies() {
     [currentCurrencyCode]
   );
 
-  // Load functions that match the Vue composable
-  const loadAeternityData = useCallback(async () => {
-    const data = await SuperheroApi.getMarketData(currentCurrencyCode);
-    if (data) {
-      setAeternityData(data);
-    }
-    return data;
-  }, [currentCurrencyCode, setAeternityData]);
-
   const loadCurrencyRates = useCallback(async () => {
-    const rates = await SuperheroApi.getCurrencyRates();
-    if (rates) {
-      setCurrencyRates(rates);
+    // Rates are normally handled by AePricePollingProvider, but keep this as an imperative fallback.
+    try {
+      const raw = await SuperheroApi.getCurrencyRates();
+      if (!raw || typeof raw !== 'object' || Object.keys(raw).length === 0) {
+        throw new Error('Invalid currency rates response');
+      }
+
+      // normalize keys to lowercase and keep only finite numbers
+      const normalized = Object.fromEntries(
+        Object.entries(raw)
+          .map(([k, v]) => [String(k).toLowerCase(), Number(v)])
+          .filter(([, v]) => Number.isFinite(v)),
+      );
+
+      if (Object.keys(normalized).length === 0) {
+        throw new Error('Invalid currency rates response');
+      }
+
+      setCurrencyRates(normalized as any);
+      setRatesUpdatedAt(Date.now());
+      setRatesLastErrorAt(0);
+      return normalized;
+    } catch (e) {
+      setRatesLastErrorAt(Date.now());
+      throw e;
     }
-    return rates;
-  }, [setCurrencyRates]);
+  }, [setCurrencyRates, setRatesLastErrorAt, setRatesUpdatedAt]);
 
   const setCurrentCurrency = useCallback((currency: AllCurrencyCode) => {
     // Only set if the currency is supported by the wallet atom
     const supportedCurrencies = ['usd', 'eur', 'cny'] as const;
     if (supportedCurrencies.includes(currency as any)) {
       setCurrentCurrencyCode(currency as any);
-      // Trigger a refetch of data when currency changes
-      loadAeternityData();
     }
-  }, [setCurrentCurrencyCode, loadAeternityData]);
+  }, [setCurrentCurrencyCode]);
 
   /**
    * Formats a value as currency according to the current currency settings
@@ -175,8 +151,6 @@ export function useCurrencies() {
   }, [currentCurrencyRate, formatCurrency, getFiat]);
 
   return {
-    // Data (matching Vue composable structure)
-    aeternityData,
     currencyRates,
     currentCurrencyCode,
     currentCurrencyInfo,
@@ -184,7 +158,6 @@ export function useCurrencies() {
     isLoadingPrice,
 
     // Actions (matching Vue composable methods)
-    loadAeternityData,
     loadCurrencyRates,
     setCurrentCurrency,
 

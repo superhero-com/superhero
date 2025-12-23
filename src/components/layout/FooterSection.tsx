@@ -1,13 +1,41 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MessageSquare } from 'lucide-react';
-import { SuperheroApi } from '@/api/backend';
+import { useAtomValue } from 'jotai';
+import { currencyRatesAtom, currencyRatesLastErrorAtAtom, currencyRatesUpdatedAtAtom } from '@/atoms/currencyAtoms';
 
 export default function FooterSection({ compact = false }: { compact?: boolean }) {
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [apiStatus, setApiStatus] = useState<{
     backend: 'online' | 'offline' | 'checking';
   }>({ backend: 'checking' });
+  const [now, setNow] = useState(() => Date.now());
+
+  const currencyRates = useAtomValue(currencyRatesAtom);
+  const ratesUpdatedAt = useAtomValue(currencyRatesUpdatedAtAtom);
+  const lastRatesErrorAt = useAtomValue(currencyRatesLastErrorAtAtom);
+
+  const derivedBackendStatus = useMemo(() => {
+    // If we have any rates and they were updated recently by the global poller,
+    // consider the backend "online" without making any extra requests here.
+    const hasRates = currencyRates && Object.keys(currencyRates).length > 0;
+    const lastSuccessAge = ratesUpdatedAt ? now - ratesUpdatedAt : Infinity;
+
+    // Fresh rates => online
+    if (hasRates && lastSuccessAge < 60_000) return 'online';
+
+    // If we have never successfully fetched rates yet:
+    // - if we already saw a fetch error => offline
+    // - otherwise => checking (still booting / in-flight)
+    if (!ratesUpdatedAt) return lastRatesErrorAt ? 'offline' : 'checking';
+
+    // If rates are stale AND the last poll attempt that happened after the last success failed,
+    // treat as offline (backend unreachable) and keep it until the next successful update.
+    if (lastSuccessAge >= 60_000 && lastRatesErrorAt > ratesUpdatedAt) return 'offline';
+
+    // Otherwise: stale but no recent error signal (e.g. background throttling) => checking
+    return 'checking';
+  }, [currencyRates, ratesUpdatedAt, lastRatesErrorAt, now]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -15,28 +43,18 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    const checkApiStatus = async () => {
-      setIsOnline(navigator.onLine);
-      
-      // Check Backend API
-      try {
-        await SuperheroApi.getCurrencyRates();
-        setApiStatus((prev) => ({ ...prev, backend: 'online' }));
-      } catch (error) {
-        console.error('[FooterSection] Backend API check failed:', error);
-        setApiStatus((prev) => ({ ...prev, backend: 'offline' }));
-      }
-    };
-
-    // Check immediately on mount, then set up interval for periodic checks
-    checkApiStatus();
-    const interval = setInterval(checkApiStatus, 30000); // Check every 30 seconds
+    // Update clock periodically so `derivedBackendStatus` can age out without fetching.
+    const interval = setInterval(() => setNow(Date.now()), 30_000);
     return () => {
       clearInterval(interval);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  useEffect(() => {
+    setApiStatus((prev) => ({ ...prev, backend: derivedBackendStatus }));
+  }, [derivedBackendStatus]);
 
   const statusEmoji = (s: 'online' | 'offline' | 'checking') =>
     s === 'online' ? '🟢' : s === 'offline' ? '🔴' : '🟡';

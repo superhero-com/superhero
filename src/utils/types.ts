@@ -60,6 +60,7 @@ export interface Wallets {
 export type CurrencyCode =
   | "usd"
   | "eur"
+  | "cny"
   | "aud"
   | "brl"
   | "cad"

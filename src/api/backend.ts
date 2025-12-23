@@ -292,13 +292,6 @@ export const SuperheroApi = {
     if (currency) qp.set('currency', currency);
     return this.fetchJson(`/api/coins/aeternity/market-data?${qp.toString()}`);
   },
-  getHistoricalPrice(currency: string = 'usd', days: number = 1, interval: 'daily' | 'hourly' | 'minute' = 'daily') {
-    const qp = new URLSearchParams();
-    if (currency) qp.set('currency', currency);
-    if (days) qp.set('days', String(days));
-    if (interval) qp.set('interval', interval);
-    return this.fetchJson(`/api/coins/aeternity/history?${qp.toString()}`);
-  },
   // Posts endpoints
   listPosts(params: { limit?: number; page?: number; orderBy?: 'total_comments'|'created_at'; orderDirection?: 'ASC'|'DESC'; search?: string; accountAddress?: string; topics?: string } = {}) {
     const qp = new URLSearchParams();
@@ -314,54 +307,7 @@ export const SuperheroApi = {
   },
 };
 
-const USE_MOCK = false; // Override to true to force mock in development
-
-async function fetchJson(path: string, init?: RequestInit) {
-  const mode = (import.meta as any).env?.MODE;
-  const isDevLike = mode === 'development' || mode === 'test';
-  const base = (CONFIG.BACKEND_URL || 'https://raendom-backend.z52da5wt.xyz').replace(/\/$/, '');
-  if ((USE_MOCK || !base) && isDevLike) {
-    return mockFetch(path);
-  }
-  const url = base ? `${base}/${path}` : `/${path}`;
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[fetchJson] Fetching: ${url}`);
-  }
-  const res = await fetch(url, init);
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    const error = new Error(`Request failed: ${res.status} ${body || ''}`.trim());
-    (error as any).url = url;
-    (error as any).status = res.status;
-    throw error;
-  }
-  return res.json();
-}
-
-function mockFetch(path: string) {
-  // very small mock to allow local UI debugging without a backend
-  if (path.startsWith('tips?')) {
-    const params = new URLSearchParams(path.split('?')[1]);
-    const page = Number(params.get('page') || '1');
-    return Promise.resolve(new Array(10).fill(0).map((_, i) => ({
-      id: `${page}-${i + 1}`,
-      title: `Mock tip ${((page - 1) * 10) + i + 1}`,
-      url: 'https://aeternity.com',
-    })));
-  }
-  if (path === 'payfortx/post') return Promise.resolve({ challenge: 'mock-challenge' });
-  if (path === 'cache/price') return Promise.resolve({ aeternity: { usd: 0.25, eur: 0.23 } });
-  if (path === 'api/stats') return Promise.resolve({ totalTipsLength: 123, totalAmount: '1000000000000000000', sendersLength: 42 });
-  if (path.startsWith('comment/api/tip/')) return Promise.resolve([]);
-  if (path === 'verified') return Promise.resolve([]);
-  if (path === 'static/wallet/graylist') return Promise.resolve([]);
-  if (path === 'tokenCache/tokenInfo') return Promise.resolve({});
-  if (path.startsWith('tokenCache/')) return Promise.resolve([]);
-  if (path.startsWith('tips/single/')) return Promise.resolve({ id: path.split('/').pop(), title: 'Mock Single Tip', url: 'https://aeternity.com' });
-  return Promise.resolve({});
-}
-
-// API function for new posts endpoint
+// API function for new posts endpoint (legacy helper used by some screens)
 export async function fetchPosts(limit: number = 5) {
   return SuperheroApi.listPosts({ limit });
 }

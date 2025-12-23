@@ -81,8 +81,12 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
   }));
 
   const sanitizeValue = (value: string): string => {
+    // iOS numeric keyboard may use comma as decimal separator.
+    // Normalize to dot before sanitizing.
+    const normalized = value.replace(/,/g, '.');
+
     // Remove all non-numeric characters except decimal point
-    let sanitized = value.replace(/[^0-9.]/g, '');
+    let sanitized = normalized.replace(/[^0-9.]/g, '');
 
     // Ensure only one decimal point
     const parts = sanitized.split('.');
@@ -92,8 +96,9 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
 
     // Limit decimal places to 8 (common for crypto)
     const decimalLimit = 21; 
-    if (parts.length === 2 && parts[1].length > decimalLimit) {
-      sanitized = parts[0] + '.' + parts[1].substring(0, decimalLimit);
+    const nextParts = sanitized.split('.');
+    if (nextParts.length === 2 && nextParts[1].length > decimalLimit) {
+      sanitized = nextParts[0] + '.' + nextParts[1].substring(0, decimalLimit);
     }
 
     return sanitized;
@@ -102,35 +107,22 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
   const formatMoney = (value: string): string => {
     if (!value || value === '') return '';
     
-    // Remove any existing formatting
-    const cleanValue = value.replace(/[^0-9.]/g, '');
-    
-    // Split into integer and decimal parts
-    const parts = cleanValue.split('.');
-    const integerPart = parts[0];
-    const decimalPart = parts[1] || '';
-    
-    // Only add thousands separators if the integer part has more than 3 digits
-    // and is not just zeros (to avoid formatting 0.000000 as 0,000,000)
-    let formattedInteger = integerPart;
-    if (integerPart.length > 3 && integerPart !== '0') {
-      formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    }
-    
-    // Combine with decimal part
-    return decimalPart ? `${formattedInteger}.${decimalPart}` : formattedInteger;
+    // Keep display unformatted to avoid conflicts between thousands separators (",")
+    // and decimal separator on some iOS locales (",").
+    return value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
-    const sanitizedValue = sanitizeValue(rawValue);
+    const normalizedRawValue = rawValue.replace(/,/g, '.');
+    const sanitizedValue = sanitizeValue(normalizedRawValue);
     
     // Use raw value for display if it ends with decimal point or has trailing zeros after decimal
     // Use formatted value for complete numbers
     let displayValue;
-    if (rawValue.endsWith('.') || (rawValue.includes('.') && rawValue.endsWith('0'))) {
+    if (normalizedRawValue.endsWith('.') || (normalizedRawValue.includes('.') && normalizedRawValue.endsWith('0'))) {
       // Keep the raw value for partial decimal input or trailing zeros
-      displayValue = rawValue;
+      displayValue = normalizedRawValue;
     } else {
       // Format complete numbers
       displayValue = formatMoney(sanitizedValue);

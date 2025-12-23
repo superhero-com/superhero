@@ -143,10 +143,20 @@ export default function TokenSaleDetails() {
 
   // Check if user owns this token
   const ownsThisToken = useMemo(() => {
-    // This would need to be implemented based on your wallet/account system
-    return token && ownedTokens
-      ? ownedTokens.some((it: any) => it.id === token.id)
-      : false;
+    if (!token || !ownedTokens?.length) return false;
+
+    // `useOwnedTokens` returns the nested `row.token` objects from
+    // `/api/accounts/{address}/tokens`, so we can match directly by address.
+    const tokenAddress = String((token as any)?.address || "").toLowerCase();
+    const tokenSaleAddress = String((token as any)?.sale_address || "").toLowerCase();
+    const target = tokenSaleAddress || tokenAddress;
+    if (!target) return false;
+
+    return ownedTokens.some((t: any) => {
+      const addr = String(t?.address || "").toLowerCase();
+      const sale = String(t?.sale_address || "").toLowerCase();
+      return addr === target || sale === target;
+    });
   }, [activeAccount, token, ownedTokens]);
 
   // Render error state (token not found)

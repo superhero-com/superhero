@@ -7,9 +7,11 @@ import { useAeSdk, useAccount, useWalletConnect } from "./hooks";
 import { routes } from "./routes";
 import "./styles/genz-components.scss";
 import "./styles/mobile-optimizations.scss";
+import "./styles/layout-variants.scss";
 import AppHeader from "./components/layout/app-header";
 import { useSuperheroChainNames } from "./hooks/useChainName";
 import FeedbackButton from "./components/FeedbackButton";
+import { LayoutVariantProvider } from "./contexts/LayoutVariantContext";
 
 const CookiesDialog = React.lazy(
   () => import("./components/modals/CookiesDialog")
@@ -55,41 +57,83 @@ export default function App() {
   }, [loadAccountData]);
 
   // setup intervals for periodic data refresh
+  // Increased interval from 10s to 30s to reduce load
+  // Pauses when window is not visible to save resources
   useEffect(() => {
     if (!activeAccount) return;
     // Note: Initial load is handled by useAccountBalances hook when account changes
     // This interval is just for periodic refreshes
-    const interval = setInterval(() => {
-      loadAccountDataRef.current();
-    }, 10000);
-    return () => clearInterval(interval);
+    
+    let interval: NodeJS.Timeout | null = null;
+    
+    const startInterval = () => {
+      // Clear any existing interval
+      if (interval) clearInterval(interval);
+      
+      // Only start interval if document is visible
+      if (!document.hidden) {
+        interval = setInterval(() => {
+          // Double-check visibility before fetching
+          if (!document.hidden) {
+            loadAccountDataRef.current();
+          }
+        }, 30000); // Reduced frequency: 30s instead of 10s
+      }
+    };
+    
+    // Start interval initially
+    startInterval();
+    
+    // Handle visibility changes
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Pause when hidden
+        if (interval) {
+          clearInterval(interval);
+          interval = null;
+        }
+      } else {
+        // Resume when visible, and immediately refresh
+        loadAccountDataRef.current();
+        startInterval();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      if (interval) clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [activeAccount]);
 
   return (
-    <div className="app-container">
-      
-      <GlobalNewAccountEducation />
-      <AppHeader />
-      <div className="app-content">
-        <CollectInvitationLinkCard />
+    <LayoutVariantProvider>
+      <div className="app-container">
+        
+        <GlobalNewAccountEducation />
+        <AppHeader />
+        <div className="app-content">
+          <CollectInvitationLinkCard />
+        </div>
+        <Suspense fallback={<div className="loading-fallback" />}>
+          <ModalProvider
+            registry={{
+              "cookies-dialog": CookiesDialog,
+              "token-select": TokenSelectModal,
+              "image-gallery": ImageGallery,
+              alert: AlertModal,
+              "transaction-confirm": TransactionConfirmModal,
+              "connect-wallet": ConnectWalletModal,
+              "tip": TipModal,
+            }}
+          />
+        </Suspense>
+        <Suspense fallback={<div className="loading-fallback" />}>
+          <div className="app-routes-container">{useRoutes(routes as any)}</div>
+        </Suspense>
+        <FeedbackButton />
       </div>
-      <Suspense fallback={<div className="loading-fallback" />}>
-        <ModalProvider
-          registry={{
-            "cookies-dialog": CookiesDialog,
-            "token-select": TokenSelectModal,
-            "image-gallery": ImageGallery,
-            alert: AlertModal,
-            "transaction-confirm": TransactionConfirmModal,
-            "connect-wallet": ConnectWalletModal,
-            "tip": TipModal,
-          }}
-        />
-      </Suspense>
-      <Suspense fallback={<div className="loading-fallback" />}>
-        <div className="app-routes-container">{useRoutes(routes as any)}</div>
-      </Suspense>
-      <FeedbackButton />
-    </div>
+    </LayoutVariantProvider>
   );
 }

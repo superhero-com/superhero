@@ -848,8 +848,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     address,
     convertTo: convertTo as any,
     enabled: !!address,
-    staleTime: 30_000, // 30 seconds
-    refetchInterval: 60_000, // 1 minute
+    staleTime: 60_000, // 1 minute (increased from 30s)
+    refetchInterval: 120_000, // 2 minutes (increased from 1 minute)
   });
 
   // Prepare chart data for Recharts first (needed for currentPortfolioValue extraction)

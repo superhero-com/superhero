@@ -20,6 +20,8 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   const queryClient = useQueryClient();
 
   // Query for post data using new PostsService
+  // Posts are immutable on-chain, but can be hidden by moderators for legal reasons
+  // Check periodically (every 10 minutes) and when user returns to tab
   const {
     data: postData,
     isLoading: isPostLoading,
@@ -33,7 +35,9 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
       return resolvePostByKey(key);
     },
     enabled: !!slug,
-    refetchInterval: 120 * 1000, // Auto-refresh every 2 minutes
+    refetchInterval: 10 * 60 * 1000, // Check every 10 minutes for hidden status
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
 
   // Full ancestor chain (oldest -> ... -> direct parent)
@@ -48,11 +52,14 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
 
 
   // Resolve full ancestors iteratively
+  // Ancestors can also be hidden, so check periodically but less frequently
   const parentId = postData ? extractParentId(postData as any) : null;
   const { data: ancestors = [] } = useQuery<PostDto[]>({
     queryKey: ['post-ancestors', (postData as any)?.id, parentId],
     enabled: !!postData,
-    refetchInterval: 120 * 1000,
+    refetchInterval: 15 * 60 * 1000, // Check every 15 minutes for hidden status (less frequent than main post)
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
+    staleTime: 10 * 60 * 1000, // Consider data fresh for 10 minutes
     queryFn: async () => {
       const chain: PostDto[] = [];
       const seen = new Set<string>();
@@ -60,7 +67,14 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
       let safety = 0;
       while (currentId && !seen.has(currentId) && safety < 100) {
         seen.add(currentId);
-        const p = (await PostsService.getById({ id: currentId })) as unknown as PostDto;
+        // Use queryClient.fetchQuery to leverage React Query caching and deduplication
+        const p = await queryClient.fetchQuery({
+          queryKey: ['post', currentId],
+          queryFn: async () => {
+            return await PostsService.getById({ id: currentId }) as unknown as PostDto;
+          },
+          staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+        });
         // unshift so the oldest ancestor is first
         chain.unshift(p);
         currentId = extractParentId(p as any);
@@ -81,45 +95,10 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     return () => window.cancelAnimationFrame(id);
   }, [postData, ancestors.length]);
 
-  // Compute total descendant comments (all levels) for current post
-  // Use postData.id in cache key for consistency (same post regardless of slug/ID navigation)
-  const { data: descendantCount } = useQuery<number>({
-    queryKey: ['post-desc-count', postData?.id],
-    enabled: !!postData?.id,
-    refetchInterval: 120 * 1000,
-    queryFn: async () => {
-      const normalize = (id: string) => (String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`);
-      const postIdForQuery = postData!.id;
-      const queue: string[] = [normalize(String(postIdForQuery))];
-      let total = 0;
-      let requestBudget = 200; // safety cap
-      while (queue.length > 0 && requestBudget > 0) {
-        const current = queue.shift()!;
-        // paginate through comments for this id
-        let page = 1;
-        // loop pages
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-          if (requestBudget <= 0) break;
-          requestBudget -= 1;
-          const res: any = await PostsService.getComments({ id: current, orderDirection: 'ASC', page, limit: 50 });
-          const items: PostDto[] = res?.items || [];
-          total += items.length;
-          // enqueue children that have further replies
-          for (const child of items) {
-            if ((child.total_comments ?? 0) > 0) {
-              queue.push(normalize(String(child.id)));
-            }
-          }
-          const meta = res?.meta;
-          if (!meta?.currentPage || !meta?.totalPages || meta.currentPage >= meta.totalPages) break;
-          page = meta.currentPage + 1;
-        }
-      }
-      // Do not count the root itself, only descendants counted in total
-      return total;
-    },
-  });
+  // Use total_comments from postData instead of recursively counting
+  // This avoids making hundreds of API requests and significantly improves performance
+  // The backend already provides total_comments which includes all descendant comments
+  const descendantCount = (postData as any)?.total_comments ?? 0;
 
   // No need for author helpers; cards handle display
 
@@ -166,7 +145,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
       ))}
       {postData && (
         <div ref={currentPostRef}>
-          <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={(descendantCount ?? (postData as any).total_comments ?? 0) as number} onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)} isActive />
+          <ReplyToFeedItem hideParentContext allowInlineRepliesToggle={false} item={postData as any} commentCount={descendantCount as number} onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)} isActive />
         </div>
       )}
     </div>

@@ -229,7 +229,7 @@ export default function DexExplorePools() {
                     key={pair.address}
                     className="bg-white/[0.02] border border-[var(--glass-border)] rounded-2xl p-4 backdrop-blur-[10px] cursor-pointer transition-all duration-300 active:scale-[0.98] active:bg-white/[0.05]"
                     onClick={() =>
-                      navigate(`/defi/explore/pools/${pair.address}`)
+                      navigate(`/apps/explore/pools/${pair.address}`)
                     }
                   >
                     {/* Pool Pair Header */}
@@ -238,7 +238,7 @@ export default function DexExplorePools() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/defi/explore/tokens/${pair.token0}`);
+                            navigate(`/apps/explore/tokens/${pair.token0}`);
                           }}
                           className="bg-transparent border-0 cursor-pointer p-0"
                         >
@@ -250,7 +250,7 @@ export default function DexExplorePools() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/defi/explore/tokens/${pair.token1}`);
+                            navigate(`/apps/explore/tokens/${pair.token1}`);
                           }}
                           className="bg-transparent border-0 cursor-pointer p-0"
                         >
@@ -292,7 +292,7 @@ export default function DexExplorePools() {
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(
-                            `/defi/swap?from=${pair.token0.address}&to=${pair.token1.address}`
+                            `/apps/swap?from=${pair.token0.address}&to=${pair.token1.address}`
                           );
                         }}
                         className="flex-1 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-[var(--button-gradient)] active:text-white"
@@ -303,7 +303,7 @@ export default function DexExplorePools() {
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(
-                            `/defi/pool?from=${pair.token0.address}&to=${pair.token1.address}`
+                            `/apps/pool?from=${pair.token0.address}&to=${pair.token1.address}`
                           );
                         }}
                         className="flex-1 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 outline-none active:scale-95 active:bg-[var(--button-gradient)] active:text-white"
@@ -350,14 +350,14 @@ export default function DexExplorePools() {
                         key={pair.address}
                         className="border-b border-white/5 transition-all duration-300 hover:bg-white/[0.03] cursor-pointer"
                         onClick={() =>
-                          navigate(`/defi/explore/pools/${pair.address}`)
+                          navigate(`/apps/explore/pools/${pair.address}`)
                         }
                       >
                         <td className="py-4 px-3 flex items-center gap-0.5">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/defi/explore/tokens/${pair.token0}`);
+                              navigate(`/apps/explore/tokens/${pair.token0}`);
                             }}
                             className="text-[var(--accent-color)] bg-transparent border-0 cursor-pointer text-[15px] font-semibold transition-all duration-300 hover:underline hover:-translate-y-px"
                           >
@@ -369,7 +369,7 @@ export default function DexExplorePools() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/defi/explore/tokens/${pair.token1}`);
+                              navigate(`/apps/explore/tokens/${pair.token1}`);
                             }}
                             className="text-[var(--accent-color)] bg-transparent border-0 cursor-pointer text-[15px] font-semibold transition-all duration-300 hover:underline hover:-translate-y-px"
                           >
@@ -400,7 +400,7 @@ export default function DexExplorePools() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate(
-                                  `/defi/swap?from=${pair.token0.address}&to=${pair.token1.address}`
+                                  `/apps/swap?from=${pair.token0.address}&to=${pair.token1.address}`
                                 );
                               }}
                               className="py-1.5 px-3 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-xs font-medium backdrop-blur-[10px] transition-all duration-300 hover:bg-[var(--button-gradient)] hover:-translate-y-px hover:text-white"
@@ -411,7 +411,7 @@ export default function DexExplorePools() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate(
-                                  `/defi/pool?from=${pair.token0.address}&to=${pair.token1.address}`
+                                  `/apps/pool?from=${pair.token0.address}&to=${pair.token1.address}`
                                 );
                               }}
                               className="py-1.5 px-3 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] text-[var(--standard-font-color)] cursor-pointer text-xs font-medium backdrop-blur-[10px] transition-all duration-300 hover:bg-[var(--button-gradient)] hover:-translate-y-px hover:text-white"

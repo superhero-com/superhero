@@ -169,6 +169,15 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
             >
               Holders
             </SortableColumnHeader>
+            <th className="cell cell-change-24h text-xs opacity-50 text-right py-1 px-1 px-lg-3 hidden lg:table-cell whitespace-nowrap">
+              24h
+            </th>
+            <th className="cell cell-change-7d text-xs opacity-50 text-right py-1 px-1 px-lg-3 hidden lg:table-cell whitespace-nowrap">
+              7d
+            </th>
+            <th className="cell cell-change-30d text-xs opacity-50 text-right py-1 px-1 px-lg-3 hidden lg:table-cell whitespace-nowrap">
+              30d
+            </th>
             <th className="cell cell-chart text-xs text-center opacity-50 py-1 pl-3 whitespace-nowrap">
               <span className="hidden md:inline">Performance</span>
               <span className="md:hidden inline">Performance</span>
@@ -270,6 +279,12 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
           .cell-market-cap,
           .cell-holders {
             width: 170px;
+          }
+
+          .cell-change-24h,
+          .cell-change-7d,
+          .cell-change-30d {
+            width: 90px;
           }
 
           .cell-chart {

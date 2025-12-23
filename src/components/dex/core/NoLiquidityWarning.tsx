@@ -28,7 +28,7 @@ export default function NoLiquidityWarning({
   const handleAddLiquidity = () => {
     const tokenInAddr = tokenIn.is_ae ? 'AE' : tokenIn.address;
     const tokenOutAddr = tokenOut.is_ae ? 'AE' : tokenOut.address;
-    navigate(`/defi/pool?from=${tokenInAddr}&to=${tokenOutAddr}`);
+    navigate(`/apps/pool?from=${tokenInAddr}&to=${tokenOutAddr}`);
   };
 
   if (exceedsLiquidity && maxAvailable) {

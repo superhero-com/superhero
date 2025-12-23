@@ -1,6 +1,11 @@
 import React, { lazy } from "react";
 import { RouteObject, Navigate, useParams } from "react-router-dom";
 import SocialLayout from "./components/layout/SocialLayout";
+import { initializeMiniApps, getMiniAppRoutes } from "./features/mini-apps/plugins";
+
+// Initialize mini-apps plugin system
+// This registers all built-in mini-apps and any community plugins
+initializeMiniApps();
 
 const FeedList = lazy(() => import("./features/social/views/FeedList"));
 const TokenList = lazy(() => import("./features/trending/views/TokenList"));
@@ -28,6 +33,7 @@ const TokenSaleDetails = lazy(
 const PostDetail = lazy(() => import("./features/social/views/PostDetail"));
 const UserProfile = lazy(() => import("./views/UserProfile"));
 const Landing = lazy(() => import("./views/Landing"));
+const DashboardTrendingTokens = lazy(() => import("./views/DashboardTrendingTokens"));
 const Conference = lazy(() => import("./views/Conference"));
 const Governance = lazy(() => import("./views/Governance"));
 const Terms = lazy(() => import("./views/Terms"));
@@ -37,10 +43,8 @@ const TxQueue = lazy(() => import("./views/TxQueue"));
 
 // DEX Components
 const DexLayout = lazy(() => import("./features/dex/layouts/DexLayout"));
-const DexSwap = lazy(() => import("./features/dex/views/DexSwap"));
-const DexWrap = lazy(() => import("./features/dex/views/DexWrap"));
-const DexBridge = lazy(() => import("./features/dex/views/DexBridge"));
-const Pool = lazy(() => import("./features/dex/views/Pool"));
+const MiniAppsLanding = lazy(() => import("./features/mini-apps/views/MiniAppsLanding"));
+const MiniAppsDocs = lazy(() => import("./features/mini-apps/views/MiniAppsDocs"));
 const DexExploreTokens = lazy(
   () => import("./features/dex/views/DexExploreTokens")
 );
@@ -50,7 +54,6 @@ const DexExplorePools = lazy(
 const DexExploreTransactions = lazy(
   () => import("./features/dex/views/DexExploreTransactions")
 );
-const Bridge = lazy(() => import("./features/ae-eth-bridge/views/Bridge"));
 
 // Legacy DEX components (for backward compatibility)
 const Explore = lazy(() => import("./views/Explore"));
@@ -84,6 +87,16 @@ function NavigateTrendingAccount() {
   return <Navigate to={`/trends/accounts/${encodeURIComponent(address || "")}`} replace />;
 }
 
+function NavigateDefiToken() {
+  const { tokenAddress } = useParams<{ tokenAddress: string }>();
+  return <Navigate to={`/apps/explore/tokens/${tokenAddress}`} replace />;
+}
+
+function NavigateDefiPool() {
+  const { poolAddress } = useParams<{ poolAddress: string }>();
+  return <Navigate to={`/apps/explore/pools/${poolAddress}`} replace />;
+}
+
 function NavigateUserProfile() {
   const { address } = useParams();
   return <Navigate to={`/users/${encodeURIComponent(address || "")}`} replace />;
@@ -94,7 +107,7 @@ export const routes: RouteObject[] = [
     path: "/",
     element: <SocialLayout />,
     children: [
-      { index: true, element: <FeedList standalone={false} /> },
+      { index: true, element: <DashboardTrendingTokens /> },
       // Post routes - slug-based (also handles IDs, which will redirect in PostDetail)
       { path: "post/:slug", element: <PostDetail standalone={false} /> },
       {
@@ -144,61 +157,27 @@ export const routes: RouteObject[] = [
   { path: "/voting/account", element: <Governance /> },
   { path: "/voting/create", element: <Governance /> },
 
-  // New DEX Routes with Layout
+  // Mini-Apps Routes (dynamically generated from registry)
   {
-    path: "/defi",
-    element: <Navigate to="/defi/swap" replace />,
-  },
-  {
-    path: "/defi/swap",
+    path: "/apps",
     element: (
-      <DexLayout>
-        <DexSwap />
-      </DexLayout>
+      <SocialLayout>
+        <MiniAppsLanding />
+      </SocialLayout>
     ),
   },
   {
-    path: "/defi/wrap",
+    path: "/docs/mini-apps",
     element: (
-      <DexLayout>
-        <DexWrap />
-      </DexLayout>
+      <SocialLayout>
+        <MiniAppsDocs />
+      </SocialLayout>
     ),
   },
+  // Dynamic routes from mini-app registry
+  ...getMiniAppRoutes(),
   {
-    path: "/defi/buy-ae-with-eth",
-    element: (
-      <DexLayout>
-        <DexBridge />
-      </DexLayout>
-    ),
-  },
-  {
-    path: "/defi/bridge",
-    element: (
-      <DexLayout>
-        <Bridge />
-      </DexLayout>
-    ),
-  },
-  {
-    path: "/defi/pool",
-    element: (
-      <DexLayout>
-        <Pool />
-      </DexLayout>
-    ),
-  },
-  {
-    path: "/defi/pool/add-tokens",
-    element: (
-      <DexLayout>
-        <AddTokens />
-      </DexLayout>
-    ),
-  },
-  {
-    path: "/defi/explore/tokens",
+    path: "/apps/explore/tokens",
     element: (
       <DexLayout>
         <DexExploreTokens />
@@ -206,7 +185,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/defi/explore/tokens/:tokenAddress",
+    path: "/apps/explore/tokens/:tokenAddress",
     element: (
       <DexLayout>
         <TokenDetail />
@@ -214,7 +193,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/defi/explore/pools",
+    path: "/apps/explore/pools",
     element: (
       <DexLayout>
         <DexExplorePools />
@@ -222,7 +201,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/defi/explore/pools/:poolAddress",
+    path: "/apps/explore/pools/:poolAddress",
     element: (
       <DexLayout>
         <PoolDetail />
@@ -230,7 +209,7 @@ export const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/defi/explore/transactions",
+    path: "/apps/explore/transactions",
     element: (
       <DexLayout>
         <DexExploreTransactions />
@@ -239,12 +218,24 @@ export const routes: RouteObject[] = [
   },
 
   // Legacy DEX Routes (for backward compatibility)
-  { path: "/swap", element: <Navigate to="/defi/swap" replace /> },
-  { path: "/pool", element: <Pool /> },
+  { path: "/swap", element: <Navigate to="/apps/swap" replace /> },
+  { path: "/defi", element: <Navigate to="/apps" replace /> },
+  { path: "/defi/swap", element: <Navigate to="/apps/swap" replace /> },
+  { path: "/defi/wrap", element: <Navigate to="/apps/wrap" replace /> },
+  { path: "/defi/buy-ae-with-eth", element: <Navigate to="/apps/buy-ae-with-eth" replace /> },
+  { path: "/defi/bridge", element: <Navigate to="/apps/bridge" replace /> },
+  { path: "/defi/pool", element: <Navigate to="/apps/pool" replace /> },
+  { path: "/defi/pool/add-tokens", element: <Navigate to="/apps/pool/add-tokens" replace /> },
+  { path: "/defi/explore/tokens", element: <Navigate to="/apps/explore/tokens" replace /> },
+  { path: "/defi/explore/tokens/:tokenAddress", element: <NavigateDefiToken /> },
+  { path: "/defi/explore/pools", element: <Navigate to="/apps/explore/pools" replace /> },
+  { path: "/defi/explore/pools/:poolAddress", element: <NavigateDefiPool /> },
+  { path: "/defi/explore/transactions", element: <Navigate to="/apps/explore/transactions" replace /> },
+  { path: "/pool", element: <Navigate to="/apps/pool" replace /> },
   { path: "/explore", element: <Explore /> },
   { path: "/explore/tokens/:id", element: <TokenDetail /> },
   { path: "/explore/pools/:id", element: <PoolDetail /> },
-  { path: "/pool/add-tokens", element: <AddTokens /> },
+  { path: "/pool/add-tokens", element: <Navigate to="/apps/pool/add-tokens" replace /> },
 
   { path: "/terms", element: <Terms /> },
   { path: "/privacy", element: <Privacy /> },

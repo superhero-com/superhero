@@ -33,6 +33,8 @@ export default function PostCommentsList({ id, onCommentAdded }: PostCommentsLis
     },
     enabled: !!id,
     refetchInterval: 120 * 1000, // Auto-refresh every 2 minutes
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
+    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
   });
 
 

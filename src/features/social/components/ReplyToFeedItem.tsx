@@ -15,6 +15,7 @@ import { MessageCircle } from "lucide-react";
 import { useWallet } from "../../../hooks";
 import { relativeTime, compactTime, fullTimestamp } from "../../../utils/time";
 import AspectMedia from "@/components/AspectMedia";
+import { GlassSurface } from "@/components/ui/GlassSurface";
 
 interface ReplyToFeedItemProps {
   item: PostDto;
@@ -23,6 +24,7 @@ interface ReplyToFeedItemProps {
   hideParentContext?: boolean; // when true, do not render parent context header
   allowInlineRepliesToggle?: boolean; // when false, clicking replies just opens post
   isActive?: boolean; // when true, visually highlight as the focused post
+  compact?: boolean; // when true, use smaller spacing and fonts for widget display
   /**
    * Optional label used on Trend token pages to indicate that the author
    * is a holder of the current token, including their balance, e.g.:
@@ -83,6 +85,7 @@ const ReplyToFeedItem = memo(({
   hideParentContext = false,
   allowInlineRepliesToggle = true,
   isActive = false,
+  compact = false,
   tokenHolderLabel,
 }: ReplyToFeedItemProps) => {
   const { t } = useTranslation('social');
@@ -92,8 +95,21 @@ const ReplyToFeedItem = memo(({
   const displayName = chainNames?.[authorAddress] || "Legend";
 
   const parentId = useParentId(item);
-  const [parent, setParent] = useState<PostDto | null>(null);
-  const [parentError, setParentError] = useState<Error | null>(null);
+  
+  // Use React Query for parent post to enable caching and request deduplication
+  const {
+    data: parent,
+    error: parentError,
+  } = useQuery({
+    queryKey: ["post", parentId],
+    queryFn: async () => {
+      if (!parentId) return null;
+      return await PostsService.getById({ id: parentId }) as unknown as PostDto;
+    },
+    enabled: !!parentId && !hideParentContext,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
+  });
 
   // Nested replies state for this item
   const [showReplies, setShowReplies] = useState(false);
@@ -110,25 +126,10 @@ const ReplyToFeedItem = memo(({
       return result?.items || [];
     },
     enabled: showReplies,
-    refetchInterval: 120 * 1000,
+    refetchInterval: 300 * 1000, // Reduced from 2 minutes to 5 minutes
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
+    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
   });
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      if (!parentId || hideParentContext) return;
-      try {
-        const res = await PostsService.getById({ id: parentId });
-        if (!cancelled) setParent(res as unknown as PostDto);
-      } catch (e: any) {
-        if (!cancelled) setParentError(e as Error);
-      }
-    }
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [parentId, hideParentContext]);
 
   const handleOpen = useCallback(() => {
     const slugOrId = (item as any)?.slug || String(postId).replace(/_v3$/, "");
@@ -140,44 +141,14 @@ const ReplyToFeedItem = memo(({
     ? item.media.filter((m) => (typeof m === "string" ? !m.startsWith("comment:") : true))
     : [];
 
-  // Compute total descendant comments (all levels) for this item
-  const { data: descendantCount } = useQuery<number>({
-    queryKey: ["post-desc-count", postId],
-    // Always enable for this post so counts can update from 0 → N over time.
-    enabled: !!postId,
-    // Periodically refresh to keep counts from going stale.
-    refetchInterval: 120 * 1000,
-    queryFn: async () => {
-      const normalize = (id: string) => (String(id).endsWith("_v3") ? String(id) : `${String(id)}_v3`);
-      const root = normalize(String(postId));
-      const queue: string[] = [root];
-      let total = 0;
-      let requestBudget = 150; // safety cap per item
-      while (queue.length > 0 && requestBudget > 0) {
-        const current = queue.shift()!;
-        let page = 1;
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-          if (requestBudget <= 0) break;
-          requestBudget -= 1;
-          const res: any = await PostsService.getComments({ id: current, orderDirection: "ASC", page, limit: 50 });
-          const items: PostDto[] = res?.items || [];
-          total += items.length;
-          for (const child of items) {
-            if ((child.total_comments ?? 0) > 0) queue.push(normalize(String(child.id)));
-          }
-          const meta = res?.meta;
-          if (!meta?.currentPage || !meta?.totalPages || meta.currentPage >= meta.totalPages) break;
-          page = meta.currentPage + 1;
-        }
-      }
-      return total;
-    },
-  });
+  // Use backend-provided total_comments instead of fetching descendant count
+  // The backend already provides total_comments which includes all descendant comments
+  // This eliminates hundreds of unnecessary API requests per post
+  const descendantCount = (item.total_comments ?? commentCount ?? 0);
 
   // Inline mined badge helper
   function MinedBadge({ txHash }: { txHash: string }) {
-    const { status } = useTransactionStatus(txHash, { enabled: !!txHash, refetchInterval: 8000 });
+    const { status } = useTransactionStatus(txHash, { enabled: !!txHash, refetchInterval: 30000 }); // Reduced from 8s to 30s
     if (!status) return null;
     if (status.confirmed) {
       return <Badge className="border-green-500/30 bg-green-500/20 text-green-300">Mined</Badge>;
@@ -188,47 +159,49 @@ const ReplyToFeedItem = memo(({
   const isContextMuted = !isActive && allowInlineRepliesToggle === false;
 
   return (
-    <article
+    <GlassSurface
       className={cn(
-        "relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 pt-4 pb-5 md:w-full md:mx-0 md:p-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:rounded-2xl md:backdrop-blur-xl transition-colors",
-        !isActive && "cursor-pointer hover:border-white/25 hover:shadow-none",
-        isActive && "bg-white/[0.06] md:bg-white/[0.08] md:border-white/40",
+        "relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 pt-4 pb-5 md:w-full md:mx-0 transition-colors",
+        compact ? "md:p-3" : "md:p-5",
+        isActive && "bg-white/[0.08] border-white/40",
         isContextMuted && "md:bg-white/[0.03] md:border-white/10"
       )}
+      interactive={!isActive}
       onClick={isActive ? undefined : handleOpen}
       role={isActive ? undefined : "button"}
       aria-label={isActive ? undefined : "Open post"}
     >
-      {/* Top-right on-chain button */}
+      {/* Top-right on-chain button - positioned at top-right corner */}
       {item.tx_hash && (
-        <div className="absolute top-4 right-2 md:top-5 md:right-5 z-10">
+        <div className="absolute top-0 right-0 z-30 translate-x-0 translate-y-0">
           <BlockchainInfoPopover
             txHash={item.tx_hash}
             createdAt={item.created_at as unknown as string}
             sender={item.sender_address}
             contract={(item as any).contract_address}
             postId={String(item.id)}
-            className="px-2"
+            className={compact ? "px-1" : "px-2"}
             showLabel
+            compact={compact}
           />
         </div>
       )}
       {/* Main row: avatar next to name/time like X */}
-      <div className="flex gap-2 md:gap-3 items-start">
+      <div className={cn("flex items-start", compact ? "gap-1.5 md:gap-2" : "gap-2 md:gap-3")}>
         <div className="flex-shrink-0 pt-0.5">
           <div className="md:hidden">
-            <AddressAvatarWithChainNameFeed address={authorAddress} size={34} overlaySize={16} showAddressAndChainName={false} />
+            <AddressAvatarWithChainNameFeed address={authorAddress} size={compact ? 28 : 34} overlaySize={compact ? 12 : 16} showAddressAndChainName={false} />
           </div>
           <div className="hidden md:block">
-            <AddressAvatarWithChainNameFeed address={authorAddress} size={40} overlaySize={20} showAddressAndChainName={false} />
+            <AddressAvatarWithChainNameFeed address={authorAddress} size={compact ? 32 : 40} overlaySize={compact ? 14 : 20} showAddressAndChainName={false} />
           </div>
         </div>
 
         <div className="flex-1 min-w-0">
           {/* Header: name · time */}
           <div className="flex items-center justify-between gap-2.5">
-            <div className="flex items-baseline gap-2.5 min-w-0">
-              <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
+            <div className={cn("flex items-baseline min-w-0", compact ? "gap-1.5" : "gap-2.5")}>
+              <div className={cn("font-semibold text-white truncate", compact ? "text-[13px]" : "text-[15px]")}>{displayName}</div>
               <span className="text-white/50 shrink-0">·</span>
               {item.tx_hash ? (
                 <BlockchainInfoPopover
@@ -238,17 +211,17 @@ const ReplyToFeedItem = memo(({
                   contract={(item as any).contract_address}
                   postId={String(item.id)}
                   triggerContent={
-                    <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>
+                    <span className={cn("text-white/70 whitespace-nowrap shrink-0", compact ? "text-[10px]" : "text-[12px]")} title={fullTimestamp(item.created_at as unknown as string)}>
                       {compactTime(item.created_at as unknown as string)}
                     </span>
                   }
                 />
               ) : (
-                <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
+                <div className={cn("text-white/70 whitespace-nowrap shrink-0", compact ? "text-[10px]" : "text-[12px]")} title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
               )}
             </div>
           </div>
-          <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{authorAddress}</div>
+          <div className={cn("mt-0.5 text-white/65 font-mono leading-[1.2] truncate", compact ? "text-[8px] md:text-[9px]" : "text-[9px] md:text-[10px]")}>{authorAddress}</div>
 
           {/* Trend token holder pill (when viewing a token feed and author holds the token) */}
           {tokenHolderLabel && (
@@ -268,7 +241,10 @@ const ReplyToFeedItem = memo(({
                 const slugOrId = (parent as any)?.slug || String(parentId).replace(/_v3$/, "");
                 onOpenPost(slugOrId);
               }}
-              className="mt-3 mb-2 block w-full text-left bg-white/[0.04] border border-white/15 rounded-xl p-3 transition-none shadow-none hover:bg-white/[0.04] hover:border-white/40 hover:shadow-none"
+              className={cn(
+                "block w-full text-left bg-white/[0.04] border border-white/15 rounded-xl transition-none shadow-none hover:bg-white/[0.04] hover:border-white/40 hover:shadow-none",
+                compact ? "mt-2 mb-1.5 p-2" : "mt-3 mb-2 p-3"
+              )}
               title={t('openParent')}
             >
               <div className="flex items-end mb-1 min-w-0">
@@ -303,7 +279,7 @@ const ReplyToFeedItem = memo(({
           )}
 
           {/* Body */}
-          <div className="mt-3 text-[15px] text-foreground leading-snug">
+          <div className={cn("mt-3 text-foreground leading-snug", compact ? "text-[13px]" : "text-[15px]")}>
             {linkify(item.content, { knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())) })}
           </div>
 
@@ -311,7 +287,8 @@ const ReplyToFeedItem = memo(({
           {media.length > 0 && (
             <div
               className={cn(
-                "mt-3 grid gap-2 rounded-xl overflow-hidden",
+                "grid rounded-xl overflow-hidden",
+                compact ? "mt-2 gap-1.5" : "mt-3 gap-2",
                 media.length === 1 && "grid-cols-1",
                 media.length === 2 && "grid-cols-2",
                 media.length >= 3 && "grid-cols-2"
@@ -319,40 +296,45 @@ const ReplyToFeedItem = memo(({
             >
               {media.slice(0, 4).map((m: string, index: number) => (
                 media.length === 1 ? (
-                  <AspectMedia key={`${postId}-${index}`} src={m} alt="media" />
+                  <AspectMedia key={`${postId}-${index}`} src={m} alt="media" maxHeight={compact ? 120 : undefined} />
                 ) : (
-                  <AspectMedia key={`${postId}-${index}`} src={m} alt="media" maxHeight={200} />
+                  <AspectMedia key={`${postId}-${index}`} src={m} alt="media" maxHeight={compact ? 120 : 200} />
                 )
               ))}
             </div>
           )}
 
           {/* Actions */}
-          <div className="mt-4 flex items-center justify-between">
-            <div className="inline-flex items-center gap-4 md:gap-2">
-              <PostTipButton toAddress={authorAddress} postId={String(postId)} />
-            <button
-              type="button"
-              onClick={(e) => {
-                if (allowInlineRepliesToggle) {
-                  e.stopPropagation();
-                  toggleReplies();
-                  if (!showReplies) setTimeout(() => refetchChildReplies(), 0);
-                } else {
-                  // On post pages: do not toggle, just open the post
-                  e.stopPropagation();
-                  handleOpen();
-                }
-              }}
-              className="inline-flex items-center gap-1.5 text-[13px] px-0 py-0 rounded-lg bg-transparent border-0 h-auto min-h-0 min-w-0 md:px-2.5 md:py-1 md:h-[28px] md:min-h-[28px] md:bg-white/[0.04] md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25 md:transition-colors"
-              aria-expanded={allowInlineRepliesToggle ? showReplies : undefined}
-              aria-controls={`replies-${postId}`}
-            >
-              <MessageCircle className="w-[14px] h-[14px]" strokeWidth={2.25} />
-            {typeof descendantCount === 'number' ? descendantCount : commentCount}
-            </button>
+          <div className={cn("flex items-center justify-between", compact ? "mt-2" : "mt-4")}>
+            <div className={cn("inline-flex items-center", compact ? "gap-2 md:gap-1.5" : "gap-4 md:gap-2")}>
+              <PostTipButton toAddress={authorAddress} postId={String(postId)} compact={compact} />
+              <button
+                type="button"
+                onClick={(e) => {
+                  if (allowInlineRepliesToggle) {
+                    e.stopPropagation();
+                    toggleReplies();
+                    if (!showReplies) setTimeout(() => refetchChildReplies(), 0);
+                  } else {
+                    // On post pages: do not toggle, just open the post
+                    e.stopPropagation();
+                    handleOpen();
+                  }
+                }}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-lg bg-transparent border-0 h-auto min-h-0 min-w-0 md:transition-colors",
+                  compact 
+                    ? "text-[11px] px-0 py-0 md:px-1.5 md:py-0.5 md:h-[22px] md:min-h-[22px] md:bg-white/[0.04] md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25"
+                    : "text-[13px] px-0 py-0 md:px-2.5 md:py-1 md:h-[28px] md:min-h-[28px] md:bg-white/[0.04] md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25"
+                )}
+                aria-expanded={allowInlineRepliesToggle ? showReplies : undefined}
+                aria-controls={`replies-${postId}`}
+              >
+                <MessageCircle className={cn(compact ? "w-[12px] h-[12px]" : "w-[14px] h-[14px]")} strokeWidth={2.25} />
+                {descendantCount}
+              </button>
             </div>
-            <SharePopover postId={item.id} postSlug={(item as any)?.slug} />
+            <SharePopover postId={item.id} postSlug={(item as any)?.slug} compact={compact} />
           </div>
 
           {/* Nested replies for this item */}
@@ -385,7 +367,7 @@ const ReplyToFeedItem = memo(({
       </div>
       {/* Full-bleed divider on mobile */}
       <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />
-    </article>
+    </GlassSurface>
   );
 });
 

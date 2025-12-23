@@ -16,13 +16,15 @@
           var theme = saved || (prefersDark ? 'dark' : 'light');
           document.documentElement.setAttribute('data-theme', theme);
           document.documentElement.classList.add('preload');
-          // Set immediate baseline colors to avoid initial black flash
+          // Set immediate baseline colors to avoid initial flash
           if (theme === 'dark') {
             document.documentElement.style.backgroundColor = '#0a0a0f';
             document.documentElement.style.color = '#f8fafc';
+            document.body.style.backgroundColor = '#0a0a0f';
           } else {
             document.documentElement.style.backgroundColor = '#fafafa';
             document.documentElement.style.color = '#1e293b';
+            document.body.style.backgroundColor = '#fafafa';
           }
         } catch (e) {}
       })();
@@ -30,7 +32,7 @@
     <title>Superhero.com – The All‑in‑One Social + Crypto App</title>
     <link rel="icon" type="image/svg+xml" href="/src/svg/favicon.svg" />
   </head>
-  <body>
+  <body style="background-color: #0a0a0f;">
     <div id="root"></div>
     <script>
       // Synchronous runtime configuration injected at container start via envsubst
@@ -63,7 +65,7 @@
         BONDING_CURVE_18_DECIMALS_ADDRESS: '$BONDING_CURVE_18_DECIMALS_ADDRESS',
       };
     </script>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/bootstrap.ts"></script>
     <script>
       // Re-enable transitions after first paint
       window.addEventListener('load', function () {
@@ -71,6 +73,7 @@
           document.documentElement.classList.remove('preload');
           document.documentElement.style.backgroundColor = '';
           document.documentElement.style.color = '';
+          document.body.style.backgroundColor = '';
         });
       });
     </script>

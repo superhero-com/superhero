@@ -51,7 +51,7 @@
   --neon-blue: #45b7d1;
   --neon-yellow: #ffd93d;
   --neon-purple: #a855f7;
-  --neon-green: #10b981;
+  --neon-green: #00ff9d;
   
   /* Gen Z Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.05);
@@ -107,7 +107,7 @@
   --neon-blue: #45b7d1;
   --neon-yellow: #ffd93d;
   --neon-purple: #a855f7;
-  --neon-green: #10b981;
+  --neon-green: #00ff9d;
   
   /* Gen Z Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.8);
@@ -141,13 +141,9 @@ body {
   overflow-x: hidden;
   /* Better touch scrolling */
   -webkit-overflow-scrolling: touch;
-  /* Gen Z Ultra Dynamic Background */
-  background:
-    radial-gradient(circle at 20% 80%, rgba(255, 107, 107, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(0, 255, 157, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(69, 183, 209, 0.1) 0%, transparent 50%),
-    linear-gradient(135deg, $background_color 0%, #0f0f23 50%, #1a1a2e 100%);
-    background-attachment: fixed;
+  /* Solid dark background only - no gradients */
+  background: $background_color;
+  background-attachment: fixed;
 }
 
 /* iOS-safe fixed background to full viewport height */
@@ -161,11 +157,7 @@ body::before {
   height: 100dvh; /* ensure fixed to device viewport on mobile */
   z-index: -1;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 20% 80%, rgba(255, 107, 107, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(0, 255, 157, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(69, 183, 209, 0.1) 0%, transparent 50%),
-    linear-gradient(135deg, $background_color 0%, #0f0f23 50%, #1a1a2e 100%);
+  background: $background_color;
   will-change: transform;
   transform: translateZ(0); /* helps Safari keep it fixed */
 }
@@ -615,6 +607,25 @@ textarea:disabled {
   animation: winningPulse 2s ease-in-out infinite;
 }
 
+/* Flame pulsating and glowing animation for top trending token */
+@keyframes flamePulsate {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 2px rgba(251, 146, 60, 0.6)) drop-shadow(0 0 4px rgba(251, 146, 60, 0.4));
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 4px rgba(251, 146, 60, 0.9)) drop-shadow(0 0 6px rgba(251, 146, 60, 0.6)) drop-shadow(0 0 8px rgba(251, 146, 60, 0.3));
+    opacity: 0.95;
+  }
+}
+
+.flame-pulsate {
+  animation: flamePulsate 1.5s ease-in-out infinite;
+  display: inline-flex;
+}
+
 /* Enhanced hover effects for governance components */
 .governance-card {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -650,4 +661,29 @@ textarea:disabled {
   transform: scale(0.98);
 }
 
+/* 
+  GlassSurface Component Styles
+  Used by the GlassSurface component from reactbits.dev pattern
+*/
+@keyframes holographic-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
 
+.glass-surface {
+  &:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 
+      0 12px 48px rgba(0, 0, 0, 0.3),
+      -1px -1px 0 rgba(0, 255, 255, 0.1), 
+      1px 1px 0 rgba(255, 0, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    transform: translateY(-2px) scale(1.002);
+    
+    & > div:first-child {
+      opacity: 1 !important;
+      animation-duration: 3s !important;
+    }
+  }
+}

@@ -28,6 +28,8 @@ export default function DirectReplies({
       return undefined;
     },
     initialPageParam: 1,
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests (staleTime is sufficient)
+    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
   });
 
   const list: PostDto[] = useMemo(

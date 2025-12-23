@@ -30,8 +30,8 @@ export function usePortfolioValue({
   address, 
   convertTo,
   enabled = true,
-  staleTime = 30_000, // 30 seconds default
-  refetchInterval = 60_000, // 1 minute default
+  staleTime = 60_000, // 1 minute default (increased from 30s)
+  refetchInterval = 120_000, // 2 minutes default (increased from 1 minute)
   retry = 2, // Retry failed requests up to 2 times
 }: UsePortfolioValueOptions) {
   const { currentCurrencyInfo } = useCurrencies();
@@ -87,7 +87,7 @@ export function usePortfolioValue({
     retry,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
     gcTime: 5 * 60 * 1000, // Keep cached data for 5 minutes
-    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnWindowFocus: false, // Disable refetch on window focus - refetchInterval handles updates
     refetchOnReconnect: true, // Refetch when network reconnects
   });
 

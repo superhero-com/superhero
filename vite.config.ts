@@ -2,6 +2,7 @@ import { defineConfig, loadEnv, type Plugin } from 'vite';
 import path from 'path';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { resolve } from 'path';
 import { existsSync } from 'fs';
 import { createRequire } from 'module';
@@ -47,16 +48,41 @@ export default defineConfig(({ mode }) => {
   console.log('[Vite Config] VITE_SUPERHERO_API_URL:', env.VITE_SUPERHERO_API_URL);
   
   return {
-    plugins: [react(), svgr(), jsonPlugin()],
+    plugins: [
+      // Polyfill Node built-ins required by some browser-bundled deps (e.g. @ethersproject/bignumber -> buffer)
+      nodePolyfills({
+        globals: {
+          Buffer: true,
+          global: true,
+          process: true,
+        },
+        // Some deps expect `import buffer from "buffer"` to yield an object with `{ Buffer }` (CJS-ish default export).
+        // Override the default ESM polyfill with our compat shim.
+        overrides: {
+          buffer: path.resolve(__dirname, './src/shims/buffer.ts'),
+        },
+        protocolImports: true,
+      }),
+      react(),
+      svgr(),
+      jsonPlugin(),
+    ],
     ssr: {
       noExternal: ['react-helmet-async'],
     },
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
+        // Ensure Node built-ins resolve to browser-compatible polyfills
+        buffer: path.resolve(__dirname, './src/shims/buffer.ts'),
+        process: 'process/browser',
+        util: 'util',
+        assert: 'assert',
       },
     },
-    optimizeDeps: {},
+    optimizeDeps: {
+      include: ['buffer', 'process', 'util', 'assert'],
+    },
 
     // Ensure env is loaded from the app directory
     // Vite will automatically expose VITE_* vars to import.meta.env
@@ -64,6 +90,7 @@ export default defineConfig(({ mode }) => {
     define: {
       // Define process.env for compatibility - use object mapping to allow runtime access
       'process.env': env,
+      global: 'globalThis',
     },
     build: {
       sourcemap: false,
@@ -92,4 +119,5 @@ export default defineConfig(({ mode }) => {
     
   };
 });
+
 

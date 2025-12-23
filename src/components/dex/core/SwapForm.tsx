@@ -25,9 +25,10 @@ import Spinner from '../../../components/Spinner';
 export interface SwapFormProps {
   onPairSelected?: (pair: PairDto) => void;
   onFromTokenSelected?: (token: DexTokenDto) => void;
+  embedded?: boolean;
 }
 
-export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFormProps) {
+export default function SwapForm({ onPairSelected, onFromTokenSelected, embedded = false }: SwapFormProps) {
   const { t } = useTranslation('dex');
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
@@ -156,8 +157,8 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     const initializeTokens = async () => {
       console.log('[SwapForm] Initialize tokens');
       const searchParams = new URLSearchParams(location.search);
-      const fromParam = searchParams.get('from');
-      const toParam = searchParams.get('to');
+      const fromParam = embedded ? null : searchParams.get('from'); // Skip URL params when embedded
+      const toParam = embedded ? null : searchParams.get('to'); // Skip URL params when embedded
       const defaultToAddress = 'ct_KeTvHnhU85vuuQMMZocaiYkPL9tkoavDRT3Jsy47LK2YqLHYb'; // WTT
 
       // Set tokenIn based on URL param or default
@@ -192,10 +193,13 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     return () => {
       cancelled = true;
     };
-  }, [tokens, location.search, tokenIn, tokenOut, findTokenByAddressOrSymbol]);
+  }, [tokens, location.search, tokenIn, tokenOut, findTokenByAddressOrSymbol, embedded]);
 
   // Update URL parameters when tokens change (after initial load)
   useEffect(() => {
+    // Skip URL updates when embedded (e.g., in dashboard widget)
+    if (embedded) return;
+    
     // Skip URL updates during initial load or when tokens are being set from URL params
     if (!tokens.length || (!tokenIn && !tokenOut)) return;
 
@@ -203,7 +207,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     if (tokenIn || tokenOut) {
       updateUrlParams(tokenIn, tokenOut);
     }
-  }, [tokenIn, tokenOut, tokens.length, updateUrlParams]);
+  }, [tokenIn, tokenOut, tokens.length, updateUrlParams, embedded]);
 
   // Quote for exact-in mode when amountIn or tokens change
   useEffect(() => {
@@ -366,10 +370,10 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   }, [swapLoading, amountIn, amountOut, tokenIn, tokenOut, hasInsufficientBalance, routeInfo.path.length, hasNoLiquidity, routeInfo.liquidityStatus]);
 
   return (
-    <div className="w-full sm:w-[480px] mx-auto bg-transparent border-0 p-0 relative overflow-hidden flex-shrink-0 sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+    <div className="w-full max-w-full bg-transparent border-0 p-0 pb-6 relative overflow-hidden flex-shrink-0">
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xl font-bold m-0 sh-dex-title">
+        <h2 className={`${embedded ? 'text-lg' : 'text-xl'} font-bold m-0 sh-dex-title`}>
           {t('swap.title')}
         </h2>
 

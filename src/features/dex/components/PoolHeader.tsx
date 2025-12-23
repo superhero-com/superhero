@@ -33,7 +33,7 @@ export function PoolHeader({ pairData }: PoolHeaderProps) {
         <AeButton
           onClick={() =>
             navigate(
-              `/defi/swap?from=${pairData?.token0?.address}&to=${pairData?.token1?.address}`
+              `/apps/swap?from=${pairData?.token0?.address}&to=${pairData?.token1?.address}`
             )
           }
           variant="secondary-dark"
@@ -45,7 +45,7 @@ export function PoolHeader({ pairData }: PoolHeaderProps) {
         <AeButton
           onClick={() =>
             navigate(
-              `/defi/pool?from=${pairData?.token0?.address}&to=${pairData?.token1?.address}`
+              `/apps/pool?from=${pairData?.token0?.address}&to=${pairData?.token1?.address}`
             )
           }
           variant="secondary-dark"
@@ -56,7 +56,7 @@ export function PoolHeader({ pairData }: PoolHeaderProps) {
         </AeButton>
         <AeButton
           onClick={() =>
-            navigate(`/defi/explore/tokens/${pairData?.token0?.address}`)
+            navigate(`/apps/explore/tokens/${pairData?.token0?.address}`)
           }
           variant="secondary-dark"
           size="medium"
@@ -66,7 +66,7 @@ export function PoolHeader({ pairData }: PoolHeaderProps) {
         </AeButton>
         <AeButton
           onClick={() =>
-            navigate(`/defi/explore/tokens/${pairData?.token1?.address}`)
+            navigate(`/apps/explore/tokens/${pairData?.token1?.address}`)
           }
           variant="secondary-dark"
           size="medium"

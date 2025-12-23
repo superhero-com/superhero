@@ -47,7 +47,8 @@ export const AddressAvatarWithChainName = memo(({
     // Hooks must be called unconditionally before any early returns
     // Use empty string as fallback to ensure hooks are always called with a valid value
     const { decimalBalance, aex9Balances, loadAccountData } = useAccountBalances(address || '');
-    const { chainName } = useChainName(address || '');
+    // Fetch chain name immediately for displayed addresses (showBalance or showAddressAndChainName)
+    const { chainName } = useChainName(address || '', { immediate: showBalance || showAddressAndChainName });
     
     // Guard against undefined/null address after hooks are called
     if (!address) {
@@ -161,14 +162,16 @@ export const AddressAvatarWithChainName = memo(({
                             <span className="chain-name text-[14px] md:text-[15px] font-bold bg-gradient-to-r from-[var(--neon-teal)] via-[var(--neon-teal)] to-teal-300 bg-clip-text text-transparent">
                                 {chainName || (hideFallbackName ? '' : 'Legend')}
                             </span>
-                            <span className="text-xs text-white/70 font-mono leading-[0.9] no-gradient-text">
-                                <AddressFormatted
-                                    address={address}
-                                    truncate={false}
-                                    truncateFixed={false}
-                                    className={className}
-                                />
-                            </span>
+                            <AddressFormatted
+                                address={address}
+                                truncate={false}
+                                truncateFixed={false}
+                                className={cn(
+                                    "text-xs font-mono leading-[0.9]",
+                                    "!bg-gradient-to-r !from-[var(--neon-teal)] !via-[var(--neon-teal)] !to-teal-300 !bg-clip-text !text-transparent",
+                                    className
+                                )}
+                            />
                         </>
                     )
                 )}

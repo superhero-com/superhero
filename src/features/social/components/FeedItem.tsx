@@ -2,6 +2,7 @@ import AddressAvatarWithChainNameFeed from "@/@components/Address/AddressAvatarW
 import { cn } from "@/lib/utils";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from 'react-i18next';
+import { useQuery } from "@tanstack/react-query";
 import { PostDto } from "../../../api/generated";
 import { PostsService } from "../../../api/generated";
 // Using shared glass card styles via `genz-card` to match wallet/AE price cards
@@ -77,26 +78,20 @@ const FeedItem = memo(({ item, commentCount, onItemClick, isFirst = false }: Fee
     return null;
   }, [item]);
 
-  // Fetch immediate parent for context header; best‑effort only
-  const [parent, setParent] = useState<PostDto | null>(null);
-  const [parentError, setParentError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function loadParent() {
-      if (!parentId) return;
-      try {
-        const res = await PostsService.getById({ id: parentId });
-        if (!cancelled) setParent(res as unknown as PostDto);
-      } catch (e: any) {
-        if (!cancelled) setParentError(e as Error);
-      }
-    }
-    loadParent();
-    return () => {
-      cancelled = true;
-    };
-  }, [parentId]);
+  // Fetch immediate parent for context header using React Query for caching and deduplication
+  const {
+    data: parent,
+    error: parentError,
+  } = useQuery({
+    queryKey: ["post", parentId],
+    queryFn: async () => {
+      if (!parentId) return null;
+      return await PostsService.getById({ id: parentId }) as unknown as PostDto;
+    },
+    enabled: !!parentId,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent excessive requests
+  });
 
   const handleItemClick = useCallback(() => {
     onItemClick(postId);

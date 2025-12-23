@@ -297,6 +297,13 @@ export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions): C
             const formData = getFormData(options);
             const body = getRequestBody(options);
             const headers = await getHeaders(config, options);
+            // #region agent log
+            const requestId = `gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const stackTrace = new Error().stack || '';
+            const callerMatch = stackTrace.match(/at\s+(\w+Service\.\w+)/g);
+            const caller = callerMatch && callerMatch.length > 1 ? callerMatch[1] : 'unknown';
+            fetch('http://127.0.0.1:7242/ingest/f2f932c5-966e-499b-aaa2-090a82a9b89d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'request.ts:request',message:'Generated API request initiated',data:{requestId,url,path:options.url,method:options.method,caller},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
 
             if (!onCancel.isCancelled) {
                 const response = await sendRequest(config, options, url, body, formData, headers, onCancel);

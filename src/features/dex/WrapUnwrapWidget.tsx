@@ -132,7 +132,7 @@ export function WrapUnwrapWidget({ className, style }: WrapUnwrapWidgetProps) {
   return (
     <div
       className={cn(
-        "max-w-[min(480px,100%)] bg-transparent border-0 p-0 relative overflow-hidden sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]",
+        "w-full max-w-full bg-transparent border-0 p-0 pb-6 relative overflow-hidden",
         className
       )}
     >

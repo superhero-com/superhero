@@ -57,7 +57,7 @@ export function ConnectWalletButton({ label, block, style, className, variant = 
       style={style}
     >
       <span className="hidden sm:inline-flex items-center gap-2">
-        <Favicon className="w-4 h-4" />
+        <Favicon className="w-4 h-4 [&_path]:!fill-white" />
         {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
       </span>
       <span className="sm:hidden">

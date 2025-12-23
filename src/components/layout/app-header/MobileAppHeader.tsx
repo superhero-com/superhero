@@ -290,7 +290,7 @@ export default function MobileAppHeader() {
             <div className="px-6 pb-4 sm:px-5 sm:pb-3">
               <div className="bg-white/5 hover:bg-white/10 rounded-xl">
                 <Link
-                  to="/defi/buy-ae-with-eth"
+                  to="/apps/buy-ae-with-eth"
                   onClick={handleNavigationClick}
                   className="w-full no-underline font-semibold transition-all duration-200 h-[56px] sm:h-[52px] rounded-xl text-white text-base flex items-center justify-center px-5 bg-transparent"
                   style={{ WebkitTextFillColor: 'white', WebkitBackgroundClip: 'initial' as any, background: 'none' }}

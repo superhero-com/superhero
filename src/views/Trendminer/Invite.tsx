@@ -4,9 +4,9 @@ import {
   InvitationList, 
   InviteAndEarnCard 
 } from "../../features/trending/components/Invitation";
-import RightRail from "../../components/layout/RightRail";
 import Shell from "../../components/layout/Shell";
 import { useAeSdk } from "../../hooks";
+
 export default function Invite() {
   const { activeAccount } = useAeSdk();
   const [showInfo, setShowInfo] = useState<boolean>(() => {
@@ -62,7 +62,7 @@ export default function Invite() {
                       1
                     </div>
                     <div className="text-slate-400 leading-relaxed text-xs sm:text-sm md:text-base flex-1 min-w-0 break-words pt-0.5">
-                      Generate invite links by staking AE per invite
+                      Generate invite links by funding a one-time AE reward per invite
                     </div>
                   </div>
                   <div className="flex items-start gap-3 sm:gap-4 p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl transition-all duration-300 hover:bg-white/3 hover:translate-x-1">
@@ -78,7 +78,7 @@ export default function Invite() {
                       3
                     </div>
                     <div className="text-slate-400 leading-relaxed text-xs sm:text-sm md:text-base flex-1 min-w-0 break-words pt-0.5">
-                      When 4+ invitees purchase tokens, earn rewards
+                      After 4 unique invitees buy tokens, you can withdraw accumulated rewards
                     </div>
                   </div>
                   <div className="flex items-start gap-3 sm:gap-4 p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl transition-all duration-300 hover:bg-white/3 hover:translate-x-1">

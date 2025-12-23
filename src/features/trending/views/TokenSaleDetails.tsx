@@ -6,6 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { TokensService } from "../../../api/generated/services/TokensService";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { useOwnedTokens } from "../../../hooks/useOwnedTokens";
+import TokenNotFound from "../../../components/TokenNotFound";
 
 // Components
 // import CommentsList from "../../../components/Trendminer/CommentsList";
@@ -162,44 +163,10 @@ export default function TokenSaleDetails() {
   // Render error state (token not found)
   if (isError && !isTokenNewlyCreated) {
     return (
-      <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
-        <Head
-          title={`Buy #${tokenName} on Superhero.com`}
-          description={`Explore ${tokenName} token, trades, holders and posts.`}
-          canonicalPath={`/trends/tokens/${tokenName}`}
-        />
-        <div className="text-center relative z-10 py-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Token{" "}
-            <span className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] bg-clip-text text-transparent">
-              <span className="text-white/60 text-[.9em] mr-0.5 align-baseline">#</span>
-              <span>{tokenName}</span>
-            </span>{" "}
-            not found
-          </h1>
-          <p className="text-white/70 text-lg mb-8">
-            This token doesn't exist yet, but you can create it!
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => navigate("/trends/tokens")}
-              className="border-white/20 bg-white/5 text-white hover:bg-white/10"
-            >
-              ← Back to Token List
-            </Button>
-            <Button
-              size="lg"
-              onClick={() => navigate(`/trends/create?tokenName=${tokenName}`)}
-              className="bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] hover:shadow-lg"
-            >
-              Claim It
-            </Button>
-          </div>
-        </div>
-      </div>
+      <TokenNotFound
+        tokenName={tokenName || ""}
+        errorMessage={error instanceof Error ? error.message : undefined}
+      />
     );
   }
 
@@ -231,17 +198,8 @@ export default function TokenSaleDetails() {
     );
   }
 
-  if (!token) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-48 p-10 text-center text-white/80">
-        <Head
-          title={`Buy #${tokenName} on Superhero.com`}
-          description={`Explore ${tokenName} token, trades, holders and posts.`}
-          canonicalPath={`/trends/tokens/${tokenName}`}
-        />
-        Token not found
-      </div>
-    );
+  if (!isLoading && !token) {
+    return <TokenNotFound tokenName={tokenName || ""} />;
   }
 
   return (

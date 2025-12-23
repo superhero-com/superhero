@@ -30,7 +30,7 @@ export type AppConfig = {
 };
 
 const defaultConfig: AppConfig = {
-  BACKEND_URL: "https://raendom-backend.z52da5wt.xyz",
+  BACKEND_URL: "https://api.superhero.com",
   SUPERHERO_API_URL: "https://api.superhero.com",
   SUPERHERO_WS_URL: "https://api.superhero.com",
   NODE_URL: "https://mdw.wordcraft.fun",

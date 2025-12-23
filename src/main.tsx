@@ -9,6 +9,7 @@ import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import ToastProvider from './components/ToastProvider';
 import { AeSdkProvider } from './context/AeSdkProvider';
+import { AePricePollingProvider } from './context/AePricePollingProvider';
 import './i18n';
 import './styles/base.scss';
 import './styles/tailwind.css';
@@ -39,15 +40,17 @@ const queryClient = new QueryClient({
         </Helmet>
         <QueryClientProvider client={queryClient}>
           <Provider>
-            <ToastProvider>
-              <BrowserRouter>
-                <ErrorBoundary>
-                  <AeSdkProvider>
-                    <App />
-                  </AeSdkProvider>
-                </ErrorBoundary>
-              </BrowserRouter>
-            </ToastProvider>
+            <AePricePollingProvider>
+              <ToastProvider>
+                <BrowserRouter>
+                  <ErrorBoundary>
+                    <AeSdkProvider>
+                      <App />
+                    </AeSdkProvider>
+                  </ErrorBoundary>
+                </BrowserRouter>
+              </ToastProvider>
+            </AePricePollingProvider>
           </Provider>
         </QueryClientProvider>
       </HelmetProvider>

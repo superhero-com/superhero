@@ -37,6 +37,7 @@ export default function InviteAndEarnCard({
   const [copyInviteLinkDialog, setCopyInviteLinkDialog] = useState(false);
   const [invitationLinks, setInvitationLinks] = useState<string[]>([]);
   const [linkHasBeenCopied, setLinkHasBeenCopied] = useState(false);
+  const [closeBlockedPulse, setCloseBlockedPulse] = useState(false);
 
   // Refs
   const amountInputRef = useRef<HTMLInputElement>(null);
@@ -100,6 +101,26 @@ export default function InviteAndEarnCard({
       setLinkHasBeenCopied(false);
     }, 500);
   };
+
+  const pulseCloseBlocked = useCallback(() => {
+    // retrigger animation even on repeated attempts
+    setCloseBlockedPulse(false);
+    requestAnimationFrame(() => setCloseBlockedPulse(true));
+    window.setTimeout(() => setCloseBlockedPulse(false), 500);
+  }, []);
+
+  const handleCopyDialogOpenChange = useCallback((open: boolean) => {
+    // Block closing until user confirms
+    if (!open && !linkHasBeenCopied) {
+      pulseCloseBlocked();
+      return;
+    }
+    if (!open) {
+      closeCopyInviteLinkDialog();
+      return;
+    }
+    setCopyInviteLinkDialog(true);
+  }, [linkHasBeenCopied, pulseCloseBlocked]);
 
   return (
     <div className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
@@ -230,9 +251,24 @@ export default function InviteAndEarnCard({
       {/* Copy Invite Link Dialog */}
       <Dialog
         open={copyInviteLinkDialog}
-        onOpenChange={setCopyInviteLinkDialog}
+        onOpenChange={handleCopyDialogOpenChange}
       >
-        <DialogContent className="max-w-lg">
+        <DialogContent
+          className="max-w-lg"
+          hideClose={!linkHasBeenCopied}
+          onEscapeKeyDown={(e) => {
+            if (!linkHasBeenCopied) {
+              e.preventDefault();
+              pulseCloseBlocked();
+            }
+          }}
+          onInteractOutside={(e) => {
+            if (!linkHasBeenCopied) {
+              e.preventDefault();
+              pulseCloseBlocked();
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle className="text-center text-xl font-bold">
               {t('copyInviteLinks')}
@@ -268,7 +304,13 @@ export default function InviteAndEarnCard({
             </Alert>
 
             {/* Confirmation Checkbox */}
-            <div className="flex items-center space-x-2">
+            <div
+              className={`flex items-center space-x-2 rounded-lg p-2 transition-colors ${
+                closeBlockedPulse && !linkHasBeenCopied
+                  ? "animate-shake bg-red-500/10 border border-red-500/30"
+                  : ""
+              }`}
+            >
               <Checkbox
                 id="copied"
                 checked={linkHasBeenCopied}
@@ -278,6 +320,12 @@ export default function InviteAndEarnCard({
                 {t('iHaveCopiedInvitationLinks')}
               </Label>
             </div>
+
+            {!linkHasBeenCopied && (
+              <div className="text-center text-xs text-white/60">
+                Please confirm you copied the links to enable closing this dialog.
+              </div>
+            )}
 
             {/* Close Button */}
             <AeButton

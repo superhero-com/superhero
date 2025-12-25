@@ -9,6 +9,60 @@ import Spinner from "@/components/Spinner";
 
 const MIN_INVITEES = 4;
 const MIN_SPENT_AE = 10;
+const AETTOS_DECIMALS = 18;
+
+type UniqueInviteesState =
+  | "ThresholdReached"
+  | { ThresholdReached: [] }
+  | { WaitingForInvitations: [unknown, unknown] };
+
+function isThresholdReachedState(state: unknown): boolean {
+  if (!state) return false;
+  if (state === "ThresholdReached") return true;
+  return typeof state === "object" && "ThresholdReached" in (state as any);
+}
+
+function getWaitingForInvitations(state: unknown): [unknown, unknown] | null {
+  if (!state || typeof state !== "object") return null;
+  const waiting = (state as any).WaitingForInvitations;
+  return Array.isArray(waiting) && waiting.length === 2 ? waiting : null;
+}
+
+function normalizeAddressSetToArray(value: unknown): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter((x) => typeof x === "string") as string[];
+  // Some decoders may return Set or custom set-like objects
+  if (value instanceof Set) return Array.from(value).filter((x): x is string => typeof x === "string");
+  if (typeof (value as any).values === "function") {
+    try {
+      return Array.from((value as any).values()).filter((x): x is string => typeof x === "string");
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function normalizeAddressToAettosEntries(value: unknown): Array<[string, string]> {
+  if (!value) return [];
+  if (value instanceof Map) {
+    return Array.from(value.entries())
+      .filter(([k]) => typeof k === "string")
+      .map(([k, v]) => [k as string, String(v)]);
+  }
+  if (Array.isArray(value)) {
+    // Sometimes decoded as array of tuples
+    return value
+      .map((item) => (Array.isArray(item) && item.length >= 2 ? [item[0], item[1]] : null))
+      .filter((x): x is [unknown, unknown] => !!x)
+      .filter(([k]) => typeof k === "string")
+      .map(([k, v]) => [k as string, String(v)]);
+  }
+  if (typeof value === "object") {
+    return Object.entries(value as Record<string, unknown>).map(([k, v]) => [k, String(v)]);
+  }
+  return [];
+}
 
 interface CollectRewardsCardProps {
   className?: string;
@@ -23,21 +77,23 @@ export default function CollectRewardsCard({
   const [accumulatedRewardsAe, setAccumulatedRewardsAe] = useState<Decimal>(
     Decimal.ZERO
   );
-  const [numberOfUniqueInvitees, setNumberOfUniqueInvitees] =
-    useState<number>(0);
+  const [inviteesReachedCount, setInviteesReachedCount] = useState<number>(0);
+  const [inviteesInProgressCount, setInviteesInProgressCount] = useState<number>(0);
+  const [inviteeProgress, setInviteeProgress] = useState<
+    Array<{ address: string; spentAe: Decimal; progressPct: number; reached: boolean }>
+  >([]);
+  const [thresholdReached, setThresholdReached] = useState<boolean>(false);
   const [collectingReward, setCollectingReward] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Calculate progress percentage
   const progressPercentage = Math.min(
-    (numberOfUniqueInvitees / MIN_INVITEES) * 100,
+    (inviteesReachedCount / MIN_INVITEES) * 100,
     100
   );
 
   // Check if eligible for rewards
-  const isEligibleForRewards =
-    numberOfUniqueInvitees >= MIN_INVITEES &&
-    accumulatedRewardsAe.gt(Decimal.ZERO);
+  const isEligibleForRewards = thresholdReached && accumulatedRewardsAe.gt(Decimal.ZERO);
 
   // Calculate accumulated rewards
   const calculateAccumulatedRewards = useCallback(async () => {
@@ -59,22 +115,78 @@ export default function CollectRewardsCard({
   // Calculate unique invitees
   const calculateUniqueInvitees = useCallback(async () => {
     if (!activeAccount || !sdk) return;
-    let _numberOfUniqueInvitees = 0;
 
     try {
       const affiliationTreasury = await getAffiliationTreasury(sdk as any);
-      const inviteeData = await affiliationTreasury.getUniqueInvitee(
-        activeAccount
-      );
+      const inviteeData: UniqueInviteesState = await affiliationTreasury.getUniqueInvitee(activeAccount);
 
-      _numberOfUniqueInvitees =
-        'ThresholdReached' in inviteeData
-          ? MIN_INVITEES
-          : inviteeData.WaitingForInvitations[0].length || inviteeData.WaitingForInvitations[1].size;
+      if (isThresholdReachedState(inviteeData)) {
+        setThresholdReached(true);
+        setInviteesReachedCount(MIN_INVITEES);
+        setInviteesInProgressCount(0);
+        setInviteeProgress([]);
+        return;
+      }
+
+      const waiting = getWaitingForInvitations(inviteeData);
+      if (!waiting) {
+        setThresholdReached(false);
+        setInviteesReachedCount(0);
+        setInviteesInProgressCount(0);
+        setInviteeProgress([]);
+        return;
+      }
+
+      const reachedAddresses = normalizeAddressSetToArray(waiting[0]);
+      const waitingEntries = normalizeAddressToAettosEntries(waiting[1]);
+
+      const reachedCount = reachedAddresses.length;
+      const inProgressCount = waitingEntries.length;
+
+      const progressItems: Array<{ address: string; spentAe: Decimal; progressPct: number; reached: boolean }> = [];
+
+      for (const addr of reachedAddresses) {
+        progressItems.push({
+          address: addr,
+          spentAe: Decimal.from(MIN_SPENT_AE),
+          progressPct: 100,
+          reached: true,
+        });
+      }
+
+      for (const [addr, aettosStr] of waitingEntries) {
+        // aettosStr should already be in 18-decimals (aettos), same format Decimal expects
+        const spent = Decimal.fromBigNumberString(aettosStr);
+        const pct = Math.max(
+          0,
+          Math.min(100, Number(spent.div(MIN_SPENT_AE).mul(100).toString(0)))
+        );
+        progressItems.push({
+          address: addr,
+          spentAe: spent,
+          progressPct: Number.isFinite(pct) ? pct : 0,
+          reached: false,
+        });
+      }
+
+      // Sort: reached first, then highest spend
+      progressItems.sort((a, b) => {
+        if (a.reached !== b.reached) return a.reached ? -1 : 1;
+        if (a.spentAe.eq(b.spentAe)) return 0;
+        return a.spentAe.gt(b.spentAe) ? -1 : 1;
+      });
+
+      setThresholdReached(false);
+      setInviteesReachedCount(reachedCount);
+      setInviteesInProgressCount(inProgressCount);
+      setInviteeProgress(progressItems);
     } catch (error: any) {
-      //
+      console.error("Failed to calculate unique invitees:", error);
+      setThresholdReached(false);
+      setInviteesReachedCount(0);
+      setInviteesInProgressCount(0);
+      setInviteeProgress([]);
     }
-    setNumberOfUniqueInvitees(_numberOfUniqueInvitees);
   }, [activeAccount, sdk]);
 
   // Collect rewards
@@ -93,12 +205,15 @@ export default function CollectRewardsCard({
     } catch (error: any) {
       console.error("Failed to collect rewards:", error);
 
-      if (error?.message?.includes("MINIMUM_OF_4_ACCOUNTS_SHALL_BUY")) {
+      if (
+        error?.message?.includes("MINIMUM_ACCOUNTS_THRESHOLD_NOT_REACHED") ||
+        error?.message?.includes("MINIMUM_OF_4_ACCOUNTS_SHALL_BUY")
+      ) {
         setErrorMessage(
-          `You need to have at least ${MIN_INVITEES} accounts that have bought tokens to be able to collect rewards.`
+          `Not eligible yet: you need ${MIN_INVITEES} direct invitees who each spent at least ${MIN_SPENT_AE} AE in token sales.`
         );
       } else {
-        setErrorMessage("An error occurred while collecting rewards.");
+        setErrorMessage(error?.message || "An error occurred while collecting rewards.");
       }
     } finally {
       setCollectingReward(false);
@@ -135,9 +250,9 @@ export default function CollectRewardsCard({
         {/* Description - Left Side */}
         <div className="flex-1 space-y-4 text-sm text-muted-foreground">
           <p>
-            Rewards accumulate as invited accounts participate in token sales. Once at least{" "}
-            {MIN_INVITEES} unique invitees have bought tokens, you can withdraw any accumulated
-            rewards.
+            Rewards accumulate as your direct invitees participate in token sales. You can withdraw once{" "}
+            <span className="font-semibold text-white/80">{MIN_INVITEES} direct invitees</span> have each
+            spent at least <span className="font-semibold text-white/80">{MIN_SPENT_AE} AE</span> (cumulative).
           </p>
           <p className="text-xs opacity-60">
             Note: eligibility and rewards depend on on-chain activity and are not guaranteed.
@@ -151,7 +266,7 @@ export default function CollectRewardsCard({
             <div className="flex justify-between items-center font-semibold text-sm md:text-base flex-wrap gap-2">
               <span>Progress to rewards</span>
               <span className="text-teal-400 font-bold text-base md:text-lg text-shadow-[0_0_10px_rgba(78,205,196,0.5)] break-words">
-                {numberOfUniqueInvitees}/{MIN_INVITEES} invitees
+                {inviteesReachedCount}/{MIN_INVITEES} reached
               </span>
             </div>
             <div className="w-full h-2 bg-white/10 rounded-md overflow-hidden relative before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:animate-[shimmer_2s_infinite]">
@@ -161,10 +276,43 @@ export default function CollectRewardsCard({
               ></div>
             </div>
             <div className="text-center font-medium text-slate-400 text-xs md:text-sm p-1 rounded-lg bg-white/2 break-words">
-              {numberOfUniqueInvitees >= MIN_INVITEES
-                ? "🎉 Eligible for rewards!"
-                : `${MIN_INVITEES - numberOfUniqueInvitees} more invitees needed`}
+              {thresholdReached
+                ? "🎉 Eligible to withdraw"
+                : `${Math.max(0, MIN_INVITEES - inviteesReachedCount)} more invitees need to reach ${MIN_SPENT_AE} AE`}
             </div>
+            {!thresholdReached && inviteesInProgressCount > 0 && (
+              <div className="text-center text-xs text-white/60">
+                {inviteesInProgressCount} invitee{inviteesInProgressCount === 1 ? "" : "s"} still accumulating
+              </div>
+            )}
+
+            {!thresholdReached && inviteeProgress.length > 0 && (
+              <div className="mt-2 space-y-2">
+                {inviteeProgress.slice(0, 6).map((item) => (
+                  <div key={item.address} className="bg-white/3 rounded-lg border border-white/5 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-xs font-mono text-white/80 truncate">
+                        {item.address}
+                      </div>
+                      <div className="text-xs text-white/70 whitespace-nowrap">
+                        {item.reached ? "Reached" : `${item.spentAe.toString(2)} / ${MIN_SPENT_AE} AE`}
+                      </div>
+                    </div>
+                    <div className="mt-2 h-1.5 bg-white/10 rounded overflow-hidden">
+                      <div
+                        className={`h-full rounded ${item.reached ? "bg-teal-400" : "bg-purple-400"}`}
+                        style={{ width: `${item.progressPct}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+                {inviteeProgress.length > 6 && (
+                  <div className="text-center text-xs text-white/50">
+                    +{inviteeProgress.length - 6} more
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Rewards Display */}
@@ -202,8 +350,10 @@ export default function CollectRewardsCard({
                   <Spinner className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6" />
                   Withdrawing...
                 </div>
-              ) : !isEligibleForRewards ? (
+              ) : !thresholdReached ? (
                 "Not eligible yet"
+              ) : accumulatedRewardsAe.lte(Decimal.ZERO) ? (
+                "No rewards yet"
               ) : (
                 "Collect rewards"
               )}

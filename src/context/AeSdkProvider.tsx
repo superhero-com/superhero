@@ -46,7 +46,7 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
     const [currentBlockHeight, setCurrentBlockHeight] = useState<number | null>(null);
     const [activeNetwork, setActiveNetwork] = useState<INetwork>(NETWORK_MAINNET);
     const [transactionsQueue, setTransactionsQueue] = useAtom(transactionsQueueAtom);
-    const [walletInfo] = useAtom(walletInfoAtom);
+    const [walletInfo, setWalletInfo] = useAtom(walletInfoAtom);
     const transactionsQueueRef = useRef(transactionsQueue);
     const activeAccountRef = useRef<string | undefined>(activeAccount);
     const generationPollIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -120,6 +120,8 @@ export const AeSdkProvider = ({ children }: { children: React.ReactNode }) => {
                 }
             },
             onDisconnect: () => {
+                // walletInfoAtom is persisted; clear it so polling can't "resurrect" connection state after disconnect
+                setWalletInfo(undefined);
                 setActiveAccount(undefined);
                 setAccounts([]);
             },

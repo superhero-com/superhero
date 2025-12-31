@@ -33,6 +33,7 @@ export default function InvitationList() {
   const [selectedInvitation, setSelectedInvitation] =
     useState<any | null>(null);
   const [linkHasBeenCopied, setLinkHasBeenCopied] = useState(false);
+  const [closeBlockedPulse, setCloseBlockedPulse] = useState(false);
 
   const handleRevokeInvitation = async (invitation: any) => {
     setRevokingInvitationInvitee(invitation.invitee);
@@ -52,6 +53,12 @@ export default function InvitationList() {
     setSelectedInvitation(invitation);
     setShowInvitationDialog(true);
     setLinkHasBeenCopied(false);
+  };
+
+  const pulseCloseBlocked = () => {
+    setCloseBlockedPulse(false);
+    requestAnimationFrame(() => setCloseBlockedPulse(true));
+    window.setTimeout(() => setCloseBlockedPulse(false), 500);
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -277,9 +284,35 @@ export default function InvitationList() {
       {/* Invitation Link Dialog */}
       <Dialog
         open={showInvitationDialog}
-        onOpenChange={setShowInvitationDialog}
+        onOpenChange={(open) => {
+          if (!open && !linkHasBeenCopied) {
+            pulseCloseBlocked();
+            return;
+          }
+          setShowInvitationDialog(open);
+          if (!open) {
+            setSelectedInvitation(null);
+            setLinkHasBeenCopied(false);
+            setCloseBlockedPulse(false);
+          }
+        }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent
+          className="max-w-md"
+          hideClose={!linkHasBeenCopied}
+          onEscapeKeyDown={(e) => {
+            if (!linkHasBeenCopied) {
+              e.preventDefault();
+              pulseCloseBlocked();
+            }
+          }}
+          onInteractOutside={(e) => {
+            if (!linkHasBeenCopied) {
+              e.preventDefault();
+              pulseCloseBlocked();
+            }
+          }}
+        >
           <DialogHeader className="text-center">
             <DialogTitle className="text-xl mb-2">Copy Invite Link</DialogTitle>
             <DialogDescription className="text-sm text-white/70 mb-4">
@@ -313,7 +346,11 @@ export default function InvitationList() {
                 />
                 <label
                   htmlFor="link-copied"
-                  className="text-sm text-white/80 cursor-pointer"
+                  className={`text-sm text-white/80 cursor-pointer rounded-lg px-2 py-1 transition-colors ${
+                    closeBlockedPulse && !linkHasBeenCopied
+                      ? "animate-shake bg-red-500/10 border border-red-500/30"
+                      : ""
+                  }`}
                 >
                   I have copied the link
                 </label>

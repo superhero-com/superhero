@@ -13,11 +13,19 @@ import ReplyToFeedItem from '../components/ReplyToFeedItem';
 import DirectReplies from '../components/DirectReplies';
 import CommentForm from '../components/CommentForm';
 import { resolvePostByKey } from '../utils/resolvePost';
+import { Decimal } from '@/libs/decimal';
+import { usePostTipSummary } from '../hooks/usePostTipSummary';
+import { usePostTips } from '../hooks/usePostTips';
+import { useAeSdk } from '@/hooks/useAeSdk';
+import { useWallet } from '@/hooks';
+import { Link } from 'react-router-dom';
+import { formatAddress } from '@/utils/address';
 
 export default function PostDetail({ standalone = true }: { standalone?: boolean } = {}) {
   const { slug } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { activeNetwork } = useAeSdk();
 
   // Query for post data using new PostsService
   const {
@@ -216,6 +224,11 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
           {renderStack()}
 
           <section className="mt-2">
+            <h3 className="text-white/90 font-semibold mb-2">Tips</h3>
+            <PostTipOverview post={postData as any} explorerUrl={activeNetwork?.explorerUrl} />
+          </section>
+
+          <section className="mt-2">
             <h3 className="text-white/90 font-semibold mb-2">Replies</h3>
             <DirectReplies id={String((postData as any)?.id)} onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)} />
             <div className="mt-6">
@@ -234,5 +247,72 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     </Shell>
   ) : (
     content
+  );
+}
+
+function PostTipOverview({ post, explorerUrl }: { post: any; explorerUrl?: string }) {
+  const { chainNames } = useWallet();
+  const postId = String(post?.id || '');
+  const receiver = String(post?.sender_address || post?.senderAddress || '');
+
+  const { data: summary } = usePostTipSummary(postId);
+  const total = summary?.totalTips != null ? Number(summary.totalTips) : 0;
+  const totalAe = Number.isFinite(total) ? total : 0;
+
+  const { data: tips = [], isLoading } = usePostTips(postId, receiver);
+  const top = tips.slice(0, 10);
+  const explorerBase = (explorerUrl || '').replace(/\/$/, '');
+
+  return (
+    <div className="border border-white/10 rounded-2xl p-3 sm:p-4 bg-white/[0.05] backdrop-blur-[10px]">
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-sm text-white/70">
+          Total tipped: <span className="text-white font-semibold">{Decimal.from(String(totalAe)).prettify()}</span> AE
+        </div>
+        <div className="text-xs text-white/50">{tips.length ? `${tips.length} tips` : ''}</div>
+      </div>
+
+      {isLoading && <div className="text-sm text-white/60">Loading tips…</div>}
+      {!isLoading && tips.length === 0 && (
+        <div className="text-sm text-white/60">No tips yet.</div>
+      )}
+
+      {!isLoading && tips.length > 0 && (
+        <div className="grid gap-2">
+          {top.map((t) => (
+            <div key={t.hash} className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <Link
+                  to={`/users/${t.sender}`}
+                  className="text-sm text-white truncate hover:underline"
+                  title={t.sender}
+                >
+                  {chainNames?.[t.sender] || formatAddress(t.sender, 3, true)}
+                </Link>
+                <div className="text-xs text-white/50 truncate">{t.date}</div>
+              </div>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="text-sm text-white font-semibold">
+                  {Decimal.from(t.amountAe).prettify()} AE
+                </div>
+                {explorerBase && (
+                  <a
+                    className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa]"
+                    href={`${explorerBase}/transactions/${t.hash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+          {tips.length > top.length && (
+            <div className="text-xs text-white/50 pt-1">Showing latest {top.length} tips.</div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

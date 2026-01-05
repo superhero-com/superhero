@@ -39,6 +39,7 @@ import { getTxUrl } from '../utils/getTxUrl';
 import { Logger } from '../utils/logger';
 import { FromTo } from '@/features/shared/components';
 import { Decimal } from '@/libs/decimal';
+import { isAmountGreaterThanBalance } from '@/utils/balance';
 
 const checkEvmNetworkHasEnoughBalance = async (asset: any, normalizedAmount: BigNumber, walletProvider: Eip1193Provider) => {
     if (asset.symbol === 'WAE') return true;
@@ -245,6 +246,15 @@ export function AeEthBridge() {
         }
         return new BigNumber(amount).shiftedBy(asset.decimals);
     }, [asset, amount]);
+
+    const hasInsufficientBalance = useMemo(() => {
+        // Only validate when we have a connected source account and balances are not loading
+        const hasSourceAccount =
+            direction === Direction.EthereumToAeternity ? !!selectedEthAccount : !!aeternityAddress;
+        if (!hasSourceAccount || loadingBalance || !amount) return false;
+
+        return isAmountGreaterThanBalance(amount, tokenBalance || '0');
+    }, [direction, selectedEthAccount, aeternityAddress, loadingBalance, amount, tokenBalance]);
 
     const isValidDestination = useMemo(() => {
         if (!destination) {
@@ -919,6 +929,12 @@ export function AeEthBridge() {
                             )}
                         />
 
+                        {hasInsufficientBalance && (
+                            <div className="text-red-400 text-sm py-3 px-3 sm:px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-4 sm:mb-5">
+                                Insufficient balance. Available: {Decimal.from(tokenBalance || '0').prettify(6)} {asset?.symbol}
+                            </div>
+                        )}
+
                         {/* Destination Address */}
                         <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-5 backdrop-blur-[10px]">
                             <div className="flex justify-between items-center mb-2">
@@ -1012,8 +1028,8 @@ export function AeEthBridge() {
                                 ) && (
                                     <button
                                         onClick={direction === Direction.AeternityToEthereum ? bridgeToEvm : bridgeToAeternity}
-                                        disabled={buttonBusy || !isBridgeContractEnabled || !hasOperatorEnoughBalance || !isValidDestination || !amount || parseFloat(amount) <= 0 || (direction === Direction.EthereumToAeternity && ethereumAccounts.length === 0)}
-                                        className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${buttonBusy || !isBridgeContractEnabled || !hasOperatorEnoughBalance || !isValidDestination || !amount || parseFloat(amount) <= 0 || (direction === Direction.EthereumToAeternity && ethereumAccounts.length === 0)
+                                        disabled={buttonBusy || !isBridgeContractEnabled || !hasOperatorEnoughBalance || !isValidDestination || !amount || parseFloat(amount) <= 0 || hasInsufficientBalance || (direction === Direction.EthereumToAeternity && ethereumAccounts.length === 0)}
+                                        className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${buttonBusy || !isBridgeContractEnabled || !hasOperatorEnoughBalance || !isValidDestination || !amount || parseFloat(amount) <= 0 || hasInsufficientBalance || (direction === Direction.EthereumToAeternity && ethereumAccounts.length === 0)
                                             ? 'bg-white/10 cursor-not-allowed opacity-60'
                                             : 'bg-black hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0'
                                             }`}

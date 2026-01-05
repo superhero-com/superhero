@@ -1,7 +1,8 @@
 import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
-import { Eip1193Provider, formatEther } from 'ethers';
+import { Contract, Eip1193Provider, formatEther } from 'ethers';
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
+import BigNumber from 'bignumber.js';
 import { ConnectWalletButton } from "../../../components/ConnectWalletButton";
 import { useToast } from "../../../components/ToastProvider";
 import { CONFIG } from "../../../config";
@@ -18,6 +19,8 @@ import { useSwapQuote } from "../../../components/dex/hooks/useSwapQuote";
 import { DexService } from "../../../api/generated";
 import { DEX_ADDRESSES } from "../../../libs/dex";
 import Spinner from "@/components/Spinner";
+import { isAmountGreaterThanBalance } from '@/utils/balance';
+import { BRIDGE_ABI, BRIDGE_CONSTANTS } from '../constants';
 
 interface BuyAeWidgetProps {
   embedded?: boolean; // renders without outer card/padding for sidebars
@@ -43,6 +46,7 @@ function BuyAeWidgetContent({
   const [ethBridgeError, setEthBridgeError] = useState<string | null>(null);
   const [ethBridgeStep, setEthBridgeStep] = useState<BridgeStatus>("idle");
   const [ethBalance, setEthBalance] = useState<string | null>(null);
+  const [ethSpendable, setEthSpendable] = useState<string | null>(null);
   const [fetchingBalance, setFetchingBalance] = useState(false);
   const [aeEthToken, setAeEthToken] = useState<any>(null);
   const [aeToken, setAeToken] = useState<any>(null);
@@ -56,6 +60,7 @@ function BuyAeWidgetContent({
   const fetchEthBalance = useCallback(async () => {
     if (!walletProvider || !ethAddress) {
       setEthBalance(null);
+      setEthSpendable(null);
       return;
     }
 
@@ -65,14 +70,56 @@ function BuyAeWidgetContent({
       const balanceWei = await getEthBalance(provider, ethAddress);
       const balanceEth = formatEther(balanceWei);
       setEthBalance(balanceEth);
+
+      // Estimate a conservative gas reserve for the bridge tx so "Max" won’t exceed spendable funds.
+      try {
+        if (activeAccount?.startsWith('ak_')) {
+          const signer = await provider.getSigner();
+          const bridge = new Contract(BRIDGE_CONSTANTS.ETH_BRIDGE_ADDRESS, BRIDGE_ABI, signer);
+          const feeData = await provider.getFeeData();
+          const feePerGas = feeData.gasPrice ?? feeData.maxFeePerGas ?? 0n;
+
+          // Gas use is essentially independent of amount; estimate with 1 wei.
+          const gasEstimate = await bridge.bridge_out.estimateGas(
+            BRIDGE_CONSTANTS.ETH_NATIVE_ETH_PLACEHOLDER,
+            activeAccount,
+            1n,
+            BRIDGE_CONSTANTS.ACTION_TYPE.ETH_TO_AE,
+            { value: 1n },
+          );
+
+          const gasCost = (gasEstimate * feePerGas * 12n) / 10n; // +20% buffer
+          const balance = BigInt(balanceWei);
+          const maxWei = balance > gasCost ? (balance - gasCost) : 0n;
+          const spendableEth = formatEther(maxWei.toString());
+          setEthSpendable(spendableEth);
+        } else {
+          setEthSpendable(balanceEth);
+        }
+      } catch {
+        // If estimation fails, still reserve a conservative fee budget (feeData × default gas limit).
+        try {
+          const feeData = await provider.getFeeData();
+          const feePerGas = feeData.gasPrice ?? feeData.maxFeePerGas ?? 0n;
+          const fallbackGasLimit = 200_000n;
+          const gasCost = (fallbackGasLimit * feePerGas * 12n) / 10n; // +20% buffer
+          const balance = BigInt(balanceWei);
+          const maxWei = balance > gasCost ? (balance - gasCost) : 0n;
+          setEthSpendable(formatEther(maxWei.toString()));
+        } catch {
+          // Last resort: keep full balance.
+          setEthSpendable(balanceEth);
+        }
+      }
     } catch (error) {
       setEthBridgeError("Failed to fetch ETH balance");
       console.error("Failed to fetch ETH balance:", error);
       setEthBalance(null);
+      setEthSpendable(null);
     } finally {
       setFetchingBalance(false);
     }
-  }, [walletProvider, ethAddress]);
+  }, [walletProvider, ethAddress, activeAccount]);
 
   // Fetch ETH balance when wallet is connected
   useEffect(() => {
@@ -81,6 +128,7 @@ function BuyAeWidgetContent({
     } else {
       // Clear balance when wallet is disconnected
       setEthBalance(null);
+      setEthSpendable(null);
     }
   }, [ethConnected, walletProvider, ethAddress, fetchEthBalance]);
 
@@ -109,6 +157,7 @@ function BuyAeWidgetContent({
   // Handle Ethereum wallet disconnection
   const handleEthDisconnected = useCallback(() => {
     setEthBalance(null);
+    setEthSpendable(null);
     setEthBridgeIn("");
     setEthBridgeOutAe("");
     setEthBridgeError(null);
@@ -280,8 +329,10 @@ function BuyAeWidgetContent({
       await fetchEthBalance();
     }
 
-    if (ethBalance) {
-      setEthBridgeIn(parseFloat(ethBalance).toFixed(6));
+    const maxSource = ethSpendable ?? ethBalance;
+    if (maxSource) {
+      // Round DOWN so max never exceeds the wallet balance (avoid 0.000145 -> 0.000146).
+      setEthBridgeIn(new BigNumber(maxSource).toFixed(6, BigNumber.ROUND_DOWN));
     }
   };
 
@@ -294,6 +345,15 @@ function BuyAeWidgetContent({
     liquidityExceeded ||
     !ethBridgeOutAe ||
     Number(ethBridgeOutAe) <= 0;
+
+  const balanceForValidation = ethSpendable ?? ethBalance;
+  const hasInsufficientEthBalance =
+    !!balanceForValidation &&
+    !!ethBridgeIn &&
+    !fetchingBalance &&
+    isAmountGreaterThanBalance(ethBridgeIn, balanceForValidation);
+
+  const isDisabledWithBalanceCheck = isDisabled || hasInsufficientEthBalance;
 
   const sectionBase = "border border-white/10 rounded-2xl p-3 sm:p-4";
   const sectionBg = embedded
@@ -346,7 +406,7 @@ function BuyAeWidgetContent({
         onChangeFromAmount={setEthBridgeIn}
         fromBalanceText={
           ethBalance && !fetchingBalance
-            ? `Balance: ${Decimal.from(ethBalance ?? '0').prettify()} ETH`
+            ? `Balance: ${Decimal.from(ethBalance ?? '0').prettify()} ETH${ethSpendable ? ` (max: ${Decimal.from(ethSpendable).prettify(6)})` : ''}`
             : 'Ethereum'
         }
         onMaxClick={handleMaxClick}
@@ -374,6 +434,12 @@ function BuyAeWidgetContent({
           </div>
         )}
       />
+
+      {hasInsufficientEthBalance && (
+        <div className="text-red-400 text-sm py-3 px-3 sm:px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-4 sm:mb-5">
+          Insufficient balance. Available: {Decimal.from(balanceForValidation ?? '0').prettify(6)} ETH
+        </div>
+      )}
 
       {/* Bridge Process Info */}
       {ethBridgeStep !== "idle" && (
@@ -450,8 +516,8 @@ function BuyAeWidgetContent({
           {ethConnected && (
             <button
               onClick={handleEthBridge}
-              disabled={isDisabled}
-              className={`w-full mt-4 py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isDisabled
+              disabled={isDisabledWithBalanceCheck}
+              className={`w-full mt-4 py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isDisabledWithBalanceCheck
                 ? "bg-white/10 cursor-not-allowed opacity-60"
                 : "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] shadow-[0_8px_25px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 active:translate-y-0"
                 }`}

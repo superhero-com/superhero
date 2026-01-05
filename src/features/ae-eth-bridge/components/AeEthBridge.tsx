@@ -27,7 +27,7 @@ import ConnectWalletButton from '@/components/ConnectWalletButton';
 import BridgeTokenSelector from './BridgeTokenSelector';
 import ConnectEthereumWallet from './ConnectEthereumWallet';
 import Spinner from '@/components/Spinner';
-import { BRIDGE_USAGE_INTERVAL_IN_HOURS, BridgeConstants } from '../constants';
+import { AETERNITY_FUNDS_ADDRESS, BRIDGE_USAGE_INTERVAL_IN_HOURS, BridgeConstants } from '../constants';
 import { useBridge } from '../hooks/useBridge';
 import { useTokenBalances } from '../hooks/useTokenBalances';
 import { AppKitProvider } from '../providers/AppKitProvider';
@@ -154,18 +154,20 @@ export function AeEthBridge() {
     const [amount, setAmount] = useState<string>('');
     const [ethereumAccounts, setEthereumAccounts] = useState<string[]>([]);
     const [selectedEthAccount, setSelectedEthAccount] = useState<string>('');
+    const [maxBusy, setMaxBusy] = useState(false);
 
     // TODO: Implement these checks properly
     const isBridgeContractEnabled = true;
     const hasOperatorEnoughBalance = true;
     const aeternityAddress = activeAccount;
+    const effectiveEthAccount = selectedEthAccount || ethereumAccounts[0] || '';
 
     // Use the new useTokenBalances hook
     const { aeBalances, ethBalances, loading: loadingBalance, refetch: refetchBalances } = useTokenBalances({
         assets,
         direction,
         aeAccount: aeternityAddress,
-        ethAccount: selectedEthAccount,
+        ethAccount: effectiveEthAccount,
         sdk
     });
 
@@ -203,7 +205,7 @@ export function AeEthBridge() {
             Logger.error('Error fetching Ethereum accounts:', error);
             setEthereumAccounts([]);
         }
-    }, [walletProvider, selectedEthAccount]);
+    }, [walletProvider, selectedEthAccount, refetchBalances]);
 
 
     const handleDirectionChange = useCallback((value: Direction) => {
@@ -750,6 +752,66 @@ export function AeEthBridge() {
         }
     }, [destinationTokenAddress, t]);
 
+    const handleMaxClick = useCallback(async () => {
+        if (!asset) return;
+
+        // For native ETH, reserve some ETH for gas fees so the tx doesn’t fail.
+        const isNativeEth = asset.ethAddress === BridgeConstants.ethereum.default_eth;
+        if (direction === Direction.EthereumToAeternity && isNativeEth && walletProvider && effectiveEthAccount) {
+            setMaxBusy(true);
+            try {
+                const provider = new BrowserProvider(walletProvider, {
+                    name: 'Ethereum Bridge',
+                    chainId: parseInt(BridgeConstants.ethereum.ethChainId, 16),
+                });
+                const signer = await provider.getSigner();
+
+                const bridge = new Ethereum.Contract(
+                    BridgeConstants.ethereum.bridge_address,
+                    BridgeConstants.ethereum.bridge_abi,
+                    signer,
+                );
+
+                const feeData = await provider.getFeeData();
+                const feePerGas = feeData.gasPrice ?? feeData.maxFeePerGas ?? 0n;
+
+                // Use a valid destination for gas estimation; prefer user input, otherwise a safe constant.
+                const destinationForEstimate =
+                    (destination?.startsWith('ak_') && isValidDestination ? destination : (activeAccount || AETERNITY_FUNDS_ADDRESS));
+
+                // Estimate with a tiny amount/value; gas usage is effectively independent of the amount.
+                const gasEstimate = await bridge.bridge_out.estimateGas(
+                    asset.ethAddress,
+                    destinationForEstimate,
+                    '1', // 1 wei as amount
+                    BRIDGE_ETH_ACTION_TYPE,
+                    { value: 1n },
+                );
+
+                // Add a safety buffer (20%) to handle fee spikes.
+                const gasCost = (gasEstimate * feePerGas * 12n) / 10n;
+
+                const balanceWei = await provider.getBalance(effectiveEthAccount);
+                const maxWei = balanceWei > gasCost ? (balanceWei - gasCost) : 0n;
+
+                const maxEth = new BigNumber(maxWei.toString())
+                    .shiftedBy(-18)
+                    .toFixed(6, BigNumber.ROUND_DOWN);
+
+                setAmount(maxEth);
+                return;
+            } catch (e) {
+                Logger.warn('Failed to estimate max ETH amount, falling back to balance:', e);
+                // fall through to default behaviour
+            } finally {
+                setMaxBusy(false);
+            }
+        }
+
+        // Default: just use the fetched balance (now kept at 6 decimals and rounded down).
+        setAmount(tokenBalance);
+    }, [asset, direction, walletProvider, effectiveEthAccount, destination, isValidDestination, activeAccount, tokenBalance]);
+
     return (
         <AppKitProvider>
             <>
@@ -872,12 +934,12 @@ export function AeEthBridge() {
                             fromBalanceText={
                                 loadingBalance
                                     ? t('bridge.loadingBalance')
-                                    : selectedEthAccount
+                                    : (direction === Direction.EthereumToAeternity ? !!effectiveEthAccount : !!aeternityAddress)
                                         ? t('bridge.balance', { balance: Decimal.from(tokenBalance).prettify() })
                                         : null
                             }
-                            onMaxClick={tokenBalance ? () => setAmount(tokenBalance) : undefined}
-                            maxDisabled={false}
+                            onMaxClick={tokenBalance ? () => { void handleMaxClick(); } : undefined}
+                            maxDisabled={maxBusy || loadingBalance}
                             fromTokenNode={(
                                 <BridgeTokenSelector
                                     selected={asset}

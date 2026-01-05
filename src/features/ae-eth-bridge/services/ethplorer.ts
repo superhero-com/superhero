@@ -85,7 +85,7 @@ export function getTokenBalanceFromEthplorer(
   // Check if it's native ETH
   if (isNativeEth) {
     const ethBalance = ethplorerData.ETH?.balance || 0;
-    return new BigNumber(ethBalance).toFixed(4);
+    return new BigNumber(ethBalance).toFixed(6, BigNumber.ROUND_DOWN);
   }
   
   // Find the token in the tokens array
@@ -100,7 +100,7 @@ export function getTokenBalanceFromEthplorer(
   // Convert raw balance to formatted balance using token decimals
   const balance = new BigNumber(token.rawBalance)
     .shiftedBy(-decimals)
-    .toFixed(4);
+    .toFixed(6, BigNumber.ROUND_DOWN);
     
   return balance;
 }

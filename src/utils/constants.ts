@@ -89,6 +89,7 @@ export const AETERNITY_TOKEN_BASE_DATA = {
     sell: "sell",
     create_community: "create_community",
     register_invitation_code: "register_invitation_code",
+    revoke_invitation_code: "revoke_invitation_code",
     redeem_invitation_code: "redeem_invitation_code",
 
     transfer: "transfer",

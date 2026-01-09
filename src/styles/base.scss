@@ -2,6 +2,16 @@
 @use './mixins.scss' as *;
 @use './mobile-optimizations.scss' as *;
 @import './tailwind.css';
+@import './themes.scss';
+
+// Import Space Grotesk for distinctive headings
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+// Typography - Use Space Grotesk for headings
+h1, h2, h3, .font-display {
+  font-family: 'Space Grotesk', Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.02em;
+}
 
 :root {
   color-scheme: dark;

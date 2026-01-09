@@ -4,6 +4,8 @@ import { useAeSdk, useWalletConnect, useModal } from '../hooks';
 import Favicon from '../svg/favicon.svg?react';
 import { AeButton } from './ui/ae-button';
 import { cn } from '@/lib/utils';
+import { useSectionTheme } from '@/components/layout/AppLayout';
+import { useTheme } from '@/contexts/ThemeContext';
 
 type Props = {
   label?: string;
@@ -12,13 +14,16 @@ type Props = {
   className?: string;
   variant?: 'default' | 'dex';
   muted?: boolean; // greyed-out appearance while still clickable
+  useThemeColors?: boolean; // Whether to use section theme colors
 };
 
-export function ConnectWalletButton({ label, block, style, className, variant = 'default', muted = false }: Props) {
+export function ConnectWalletButton({ label, block, style, className, variant = 'default', muted = false, useThemeColors = true }: Props) {
   const { t } = useTranslation('common');
   const { activeAccount } = useAeSdk()
   const { connectWallet, connectingWallet } = useWalletConnect()
   const { openModal } = useModal();
+  const { colors } = useSectionTheme();
+  const { isDark } = useTheme();
   
   const displayLabel = label || t('buttons.connectWallet');
   const connectingText = t('buttons.connecting');
@@ -26,24 +31,38 @@ export function ConnectWalletButton({ label, block, style, className, variant = 
   if (activeAccount) return null;
   
   const dexClasses = cn(
-    // Mobile (default): superhero blue with card-like radius
-    'bg-[#1161FE] text-white border-none rounded-xl text-sm',
+    // Mobile (default): section gradient with card-like radius
+    'text-white border-none rounded-xl text-sm',
     // Desktop+: elegant dark/glass pill with icon
-    'sm:bg-black/80 sm:text-white sm:border sm:border-white/10 sm:backdrop-blur-[10px] sm:hover:bg-black/70 sm:!rounded-full sm:text-sm',
+    isDark 
+      ? 'sm:bg-slate-800/80 sm:text-white sm:border sm:border-slate-600 sm:backdrop-blur-[10px] sm:hover:bg-slate-700/80 sm:!rounded-full sm:text-sm'
+      : 'sm:bg-black/80 sm:text-white sm:border sm:border-white/10 sm:backdrop-blur-[10px] sm:hover:bg-black/70 sm:!rounded-full sm:text-sm',
     'sm:shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:sm:shadow-[0_12px_32px_rgba(0,0,0,0.45)]'
   );
 
   const baseClasses = cn(
-    'rounded-xl sm:rounded-full border-border bg-card backdrop-blur-sm backdrop-saturate-120 hover:bg-card/80 hover:shadow-md text-sm',
-    'sm:bg-card sm:hover:bg-card/80 sm:text-sm',
-    'bg-[#1161FE] text-white border-none rounded-xl sm:rounded-full'
+    'rounded-xl sm:rounded-full border-border backdrop-blur-sm backdrop-saturate-120 hover:shadow-md text-sm text-white border-none',
+    isDark 
+      ? 'sm:bg-slate-800/80 sm:hover:bg-slate-700/80 sm:text-sm'
+      : 'sm:bg-card sm:hover:bg-card/80 sm:text-sm'
   );
 
   const mutedClasses = cn(
     'rounded-xl sm:rounded-full text-sm',
-    'bg-white/10 text-white/70 border border-white/10 hover:bg-white/10 hover:text-white/80',
+    isDark
+      ? 'bg-slate-700/50 text-slate-400 border border-slate-600 hover:bg-slate-700/70 hover:text-slate-300'
+      : 'bg-white/10 text-white/70 border border-white/10 hover:bg-white/10 hover:text-white/80',
     'shadow-none'
   );
+
+  // Compute the final style with section theme colors
+  const computedStyle: React.CSSProperties = {
+    ...style,
+    ...(useThemeColors && !muted ? {
+      background: colors.gradient,
+      boxShadow: `0 4px 16px ${colors.primary}40`,
+    } : {})
+  };
 
   return (
     <AeButton
@@ -54,7 +73,7 @@ export function ConnectWalletButton({ label, block, style, className, variant = 
       size={variant === 'dex' ? 'default' : 'default'}
       fullWidth={block}
       className={cn(muted ? mutedClasses : (variant === 'dex' ? dexClasses : baseClasses), className)}
-      style={style}
+      style={computedStyle}
     >
       <span className="hidden sm:inline-flex items-center gap-2">
         <Favicon className="w-4 h-4" />

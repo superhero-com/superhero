@@ -81,11 +81,11 @@ export default function GlobalStatsAnalytics() {
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {statsItems.map((item) => (
         <div key={item.name} className="p-2">
-          <div className="text-xs opacity-80 mb-1">{item.name}</div>
-          <div className="font-extrabold text-sm sm:text-base">
+          <div className="text-xs text-gray-500 mb-1">{item.name}</div>
+          <div className="font-extrabold text-sm sm:text-base text-gray-900">
             {item.value}
             {item.fiat && (
-              <div className="text-xs font-normal opacity-70 mt-1">
+              <div className="text-xs font-normal text-gray-500 mt-1">
                 {item.fiat}
               </div>
             )}

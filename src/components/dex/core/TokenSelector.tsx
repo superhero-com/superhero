@@ -6,6 +6,7 @@ import { useAccount } from '../../../hooks/useAccount';
 import { Decimal } from '../../../libs/decimal';
 import { DEX_ADDRESSES } from '../../../libs/dex';
 import Spinner from '../../../components/Spinner';
+import { useSectionTheme } from '../../layout/AppLayout';
 
 interface TokenSelectorProps {
   label?: string;
@@ -35,6 +36,7 @@ export default function TokenSelector({
   const [open, setOpen] = useState(false);
   const [customAddress, setCustomAddress] = useState('');
   const { aex9Balances, balance } = useAccount();
+  const { colors } = useSectionTheme();
 
 
   const filteredTokens = useMemo(() => {
@@ -112,15 +114,19 @@ export default function TokenSelector({
                 }
                 setCustomAddress('');
               }}
-              className={`min-w-[120px] py-2.5 px-4 rounded-xl border border-white/10 text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 ease-out flex items-center justify-center gap-2 normal-case ${
+              className={`min-w-[120px] py-2.5 px-4 rounded-xl border text-sm font-semibold backdrop-blur-[10px] transition-all duration-300 ease-out flex items-center justify-center gap-2 normal-case ${
                 disabled || loading
                   ? 'cursor-not-allowed opacity-50'
                   : 'cursor-pointer hover:-translate-y-0.5'
               } ${
                 selected
-                  ? 'bg-[#1161FE] text-white'
-                  : 'bg-white/[0.05] text-white'
+                  ? 'text-white'
+                  : 'bg-white/[0.05] text-white border-white/10'
               }`}
+              style={selected ? { 
+                background: colors.gradient,
+                borderColor: colors.primary
+              } : undefined}
             >
               {loading ? (
                 <Spinner className="w-3.5 h-3.5" />

@@ -10,6 +10,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import ToastProvider from './components/ToastProvider';
 import { AeSdkProvider } from './context/AeSdkProvider';
 import { AePricePollingProvider } from './context/AePricePollingProvider';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { OnboardingProvider } from './contexts/OnboardingContext';
 import './i18n';
 import './styles/base.scss';
 import './styles/tailwind.css';
@@ -44,9 +46,13 @@ const queryClient = new QueryClient({
               <ToastProvider>
                 <BrowserRouter>
                   <ErrorBoundary>
-                    <AeSdkProvider>
-                      <App />
-                    </AeSdkProvider>
+                    <ThemeProvider>
+                      <OnboardingProvider>
+                        <AeSdkProvider>
+                          <App />
+                        </AeSdkProvider>
+                      </OnboardingProvider>
+                    </ThemeProvider>
                   </ErrorBoundary>
                 </BrowserRouter>
               </ToastProvider>

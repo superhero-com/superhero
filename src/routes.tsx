@@ -1,8 +1,15 @@
 import React, { lazy } from "react";
 import { RouteObject, Navigate, useParams } from "react-router-dom";
-import SocialLayout from "./components/layout/SocialLayout";
+import AppLayout from "./components/layout/AppLayout";
 
+// New Home page
+const Home = lazy(() => import("./views/Home"));
+
+// Social components
 const FeedList = lazy(() => import("./features/social/views/FeedList"));
+const PostDetail = lazy(() => import("./features/social/views/PostDetail"));
+const UserProfile = lazy(() => import("./views/UserProfile"));
+
 const NotFound = lazy(() => import("./views/NotFound"));
 const TokenList = lazy(() => import("./features/trending/views/TokenList"));
 const TrendCloudVisx = lazy(() => import("./views/Trendminer/TrendCloudVisx"));
@@ -26,8 +33,6 @@ const LeaderboardView = lazy(
 const TokenSaleDetails = lazy(
   () => import("./features/trending/views/TokenSaleDetails")
 );
-const PostDetail = lazy(() => import("./features/social/views/PostDetail"));
-const UserProfile = lazy(() => import("./views/UserProfile"));
 const Landing = lazy(() => import("./views/Landing"));
 const Conference = lazy(() => import("./views/Conference"));
 const Governance = lazy(() => import("./views/Governance"));
@@ -91,167 +96,162 @@ function NavigateUserProfile() {
 }
 
 export const routes: RouteObject[] = [
+  // All routes wrapped in AppLayout
   {
     path: "/",
-    element: <SocialLayout />,
+    element: <AppLayout />,
     children: [
-      { index: true, element: <FeedList standalone={false} /> },
-      // Post routes - slug-based (also handles IDs, which will redirect in PostDetail)
-      { path: "post/:slug", element: <PostDetail standalone={false} /> },
+      // New landing page (Topics-focused)
+      { index: true, element: <Home /> },
+      
+      // Social routes (moved from root)
+      { path: "social", element: <FeedList standalone={true} /> },
+      { path: "post/:slug", element: <PostDetail standalone={true} /> },
+      { path: "post/:slug/comment/:id", element: <PostDetail standalone={true} /> },
+      { path: "users/:address", element: <UserProfile standalone={true} /> },
+
+      // Topics/Trends routes
+      { path: "trends/tokens", element: <TokenList /> },
+      { path: "trends", element: <Navigate to="/trends/tokens" replace /> },
+      { path: "trends/visx", element: <TrendCloudVisx /> },
+      { path: "trends/tokens/:tokenName", element: <TokenSaleDetails /> },
+      { path: "trends/leaderboard", element: <LeaderboardView /> },
+      { path: "trends/invite", element: <TrendInvite /> },
+      { path: "trends/daos", element: <TrendDaos /> },
+      { path: "trends/dao/:saleAddress", element: <TrendDao /> },
+      { path: "trends/dao/:saleAddress/vote/:voteId/:voteAddress", element: <VoteView /> },
+      { path: "trends/accounts", element: <TrendAccounts /> },
+      { path: "trends/accounts/:address", element: <TrendAccountDetails /> },
+      { path: "trends/create", element: <TrendCreate /> },
+
+      // DeFi routes
+      { path: "defi", element: <Navigate to="/defi/swap" replace /> },
       {
-        path: "post/:slug/comment/:id",
-        element: <PostDetail standalone={false} />,
+        path: "defi/swap",
+        element: (
+          <DexLayout>
+            <DexSwap />
+          </DexLayout>
+        ),
       },
-      { path: "users/:address", element: <UserProfile standalone={false} /> },
+      {
+        path: "defi/wrap",
+        element: (
+          <DexLayout>
+            <DexWrap />
+          </DexLayout>
+        ),
+      },
+      {
+        path: "defi/buy-ae-with-eth",
+        element: (
+          <DexLayout>
+            <DexBridge />
+          </DexLayout>
+        ),
+      },
+      {
+        path: "defi/bridge",
+        element: (
+          <DexLayout>
+            <Bridge />
+          </DexLayout>
+        ),
+      },
+      {
+        path: "defi/pool",
+        element: (
+          <DexLayout>
+            <Pool />
+          </DexLayout>
+        ),
+      },
+      {
+        path: "defi/pool/add-tokens",
+        element: (
+          <DexLayout>
+            <AddTokens />
+          </DexLayout>
+        ),
+      },
+      {
+        path: "defi/explore/tokens",
+        element: (
+          <DexLayout>
+            <DexExploreTokens />
+          </DexLayout>
+        ),
+      },
+      {
+        path: "defi/explore/tokens/:tokenAddress",
+        element: (
+          <DexLayout>
+            <TokenDetail />
+          </DexLayout>
+        ),
+      },
+      {
+        path: "defi/explore/pools",
+        element: (
+          <DexLayout>
+            <DexExplorePools />
+          </DexLayout>
+        ),
+      },
+      {
+        path: "defi/explore/pools/:poolAddress",
+        element: (
+          <DexLayout>
+            <PoolDetail />
+          </DexLayout>
+        ),
+      },
+      {
+        path: "defi/explore/transactions",
+        element: (
+          <DexLayout>
+            <DexExploreTransactions />
+          </DexLayout>
+        ),
+      },
+
+      // Other routes
+      { path: "tx-queue/:id", element: <TxQueue /> },
+      { path: "landing", element: <Landing /> },
+      { path: "meet/:room?", element: <Conference /> },
+      { path: "voting", element: <Governance /> },
+      { path: "voting/p/:id", element: <Governance /> },
+      { path: "voting/account", element: <Governance /> },
+      { path: "voting/create", element: <Governance /> },
+      { path: "terms", element: <Terms /> },
+      { path: "privacy", element: <Privacy /> },
+      { path: "faq", element: <FAQ /> },
+
+      // Legacy redirects
+      { path: "trending", element: <Navigate to="/trends/tokens" replace /> },
+      { path: "trending/tokens", element: <Navigate to="/trends/tokens" replace /> },
+      { path: "trending/visx", element: <Navigate to="/trends/visx" replace /> },
+      { path: "trending/invite", element: <Navigate to="/trends/invite" replace /> },
+      { path: "trending/daos", element: <Navigate to="/trends/daos" replace /> },
+      { path: "trending/accounts", element: <Navigate to="/trends/accounts" replace /> },
+      { path: "trending/create", element: <Navigate to="/trends/create" replace /> },
+      { path: "trending/leaderboard", element: <Navigate to="/trends/leaderboard" replace /> },
+      { path: "trending/tokens/:tokenName", element: <NavigateTrendingToken /> },
+      { path: "trending/dao/:saleAddress", element: <NavigateTrendingDao /> },
+      { path: "trending/dao/:saleAddress/vote/:voteId/:voteAddress", element: <NavigateTrendingVote /> },
+      { path: "trending/accounts/:address", element: <NavigateTrendingAccount /> },
+      { path: "user/:address", element: <NavigateUserProfile /> },
+
+      // Legacy DEX Routes
+      { path: "swap", element: <Navigate to="/defi/swap" replace /> },
+      { path: "pool", element: <Pool /> },
+      { path: "explore", element: <Explore /> },
+      { path: "explore/tokens/:id", element: <TokenDetail /> },
+      { path: "explore/pools/:id", element: <PoolDetail /> },
+      { path: "pool/add-tokens", element: <AddTokens /> },
+
+      // 404
+      { path: "*", element: <NotFound /> },
     ],
-  },
-  // New trends routes
-  { path: "/trends/tokens", element: <TokenList /> },
-  { path: "/trends", element: <Navigate to="/trends/tokens" replace /> },
-  { path: "/trends/visx", element: <TrendCloudVisx /> },
-  { path: "/trends/tokens/:tokenName", element: <TokenSaleDetails /> },
-  { path: "/trends/leaderboard", element: <LeaderboardView /> },
-  { path: "/tx-queue/:id", element: <TxQueue /> },
-  { path: "/trends/invite", element: <TrendInvite /> },
-  { path: "/trends/daos", element: <TrendDaos /> },
-  { path: "/trends/dao/:saleAddress", element: <TrendDao /> },
-  { path: "/trends/dao/:saleAddress/vote/:voteId/:voteAddress", element: <VoteView /> },
-  { path: "/trends/accounts", element: <TrendAccounts /> },
-  { path: "/trends/accounts/:address", element: <TrendAccountDetails /> },
-  { path: "/trends/create", element: <TrendCreate /> },
-  // Legacy redirects from /trending/* -> /trends/*
-  { path: "/trending", element: <Navigate to="/trends/tokens" replace /> },
-  { path: "/trending/tokens", element: <Navigate to="/trends/tokens" replace /> },
-  { path: "/trending/visx", element: <Navigate to="/trends/visx" replace /> },
-  { path: "/trending/invite", element: <Navigate to="/trends/invite" replace /> },
-  { path: "/trending/daos", element: <Navigate to="/trends/daos" replace /> },
-  { path: "/trending/accounts", element: <Navigate to="/trends/accounts" replace /> },
-  { path: "/trending/create", element: <Navigate to="/trends/create" replace /> },
-  { path: "/trending/leaderboard", element: <Navigate to="/trends/leaderboard" replace /> },
-  // Param redirects using small wrappers
-  { path: "/trending/tokens/:tokenName", element: <NavigateTrendingToken /> },
-  { path: "/trending/dao/:saleAddress", element: <NavigateTrendingDao /> },
-  { path: "/trending/dao/:saleAddress/vote/:voteId/:voteAddress", element: <NavigateTrendingVote /> },
-  { path: "/trending/accounts/:address", element: <NavigateTrendingAccount /> },
-  // Redirect /user/* to /users/* for consistency
-  {
-    path: "/user/:address",
-    element: <NavigateUserProfile />,
-  },
-  { path: "/landing", element: <Landing /> },
-  { path: "/meet/:room?", element: <Conference /> },
-  { path: "/voting", element: <Governance /> },
-  { path: "/voting/p/:id", element: <Governance /> },
-  { path: "/voting/account", element: <Governance /> },
-  { path: "/voting/create", element: <Governance /> },
-
-  // New DEX Routes with Layout
-  {
-    path: "/defi",
-    element: <Navigate to="/defi/swap" replace />,
-  },
-  {
-    path: "/defi/swap",
-    element: (
-      <DexLayout>
-        <DexSwap />
-      </DexLayout>
-    ),
-  },
-  {
-    path: "/defi/wrap",
-    element: (
-      <DexLayout>
-        <DexWrap />
-      </DexLayout>
-    ),
-  },
-  {
-    path: "/defi/buy-ae-with-eth",
-    element: (
-      <DexLayout>
-        <DexBridge />
-      </DexLayout>
-    ),
-  },
-  {
-    path: "/defi/bridge",
-    element: (
-      <DexLayout>
-        <Bridge />
-      </DexLayout>
-    ),
-  },
-  {
-    path: "/defi/pool",
-    element: (
-      <DexLayout>
-        <Pool />
-      </DexLayout>
-    ),
-  },
-  {
-    path: "/defi/pool/add-tokens",
-    element: (
-      <DexLayout>
-        <AddTokens />
-      </DexLayout>
-    ),
-  },
-  {
-    path: "/defi/explore/tokens",
-    element: (
-      <DexLayout>
-        <DexExploreTokens />
-      </DexLayout>
-    ),
-  },
-  {
-    path: "/defi/explore/tokens/:tokenAddress",
-    element: (
-      <DexLayout>
-        <TokenDetail />
-      </DexLayout>
-    ),
-  },
-  {
-    path: "/defi/explore/pools",
-    element: (
-      <DexLayout>
-        <DexExplorePools />
-      </DexLayout>
-    ),
-  },
-  {
-    path: "/defi/explore/pools/:poolAddress",
-    element: (
-      <DexLayout>
-        <PoolDetail />
-      </DexLayout>
-    ),
-  },
-  {
-    path: "/defi/explore/transactions",
-    element: (
-      <DexLayout>
-        <DexExploreTransactions />
-      </DexLayout>
-    ),
-  },
-
-  // Legacy DEX Routes (for backward compatibility)
-  { path: "/swap", element: <Navigate to="/defi/swap" replace /> },
-  { path: "/pool", element: <Pool /> },
-  { path: "/explore", element: <Explore /> },
-  { path: "/explore/tokens/:id", element: <TokenDetail /> },
-  { path: "/explore/pools/:id", element: <PoolDetail /> },
-  { path: "/pool/add-tokens", element: <AddTokens /> },
-
-  { path: "/terms", element: <Terms /> },
-  { path: "/privacy", element: <Privacy /> },
-  { path: "/faq", element: <FAQ /> },
-  {
-    path: "*",
-    element: <NotFound />,
   },
 ];

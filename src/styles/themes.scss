@@ -1,0 +1,95 @@
+// Section-specific color theming for Superhero
+// Each major section (Topics, Social, DeFi) has its own color palette
+
+:root {
+  // Topics (Trends) - Amber/Orange theme
+  --topics-primary: #F59E0B;
+  --topics-primary-light: #FCD34D;
+  --topics-primary-dark: #D97706;
+  --topics-gradient: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  --topics-bg-gradient: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%);
+  --topics-border: rgba(245, 158, 11, 0.3);
+
+  // Social - Cyan/Teal theme
+  --social-primary: #06B6D4;
+  --social-primary-light: #67E8F9;
+  --social-primary-dark: #0891B2;
+  --social-gradient: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%);
+  --social-bg-gradient: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(8, 145, 178, 0.05) 100%);
+  --social-border: rgba(6, 182, 212, 0.3);
+
+  // DeFi - Violet/Indigo theme
+  --defi-primary: #8B5CF6;
+  --defi-primary-light: #C4B5FD;
+  --defi-primary-dark: #6366F1;
+  --defi-gradient: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+  --defi-bg-gradient: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+  --defi-border: rgba(139, 92, 246, 0.3);
+
+  // Dynamic section variables (set via JS in AppLayout)
+  --section-primary: var(--topics-primary);
+  --section-primary-light: var(--topics-primary-light);
+  --section-gradient: var(--topics-gradient);
+  --section-border: var(--topics-border);
+}
+
+// Section-specific body backgrounds (optional enhancement)
+body[data-section="topics"] {
+  --section-primary: var(--topics-primary);
+  --section-primary-light: var(--topics-primary-light);
+  --section-gradient: var(--topics-gradient);
+  --section-border: var(--topics-border);
+}
+
+body[data-section="social"] {
+  --section-primary: var(--social-primary);
+  --section-primary-light: var(--social-primary-light);
+  --section-gradient: var(--social-gradient);
+  --section-border: var(--social-border);
+}
+
+body[data-section="defi"] {
+  --section-primary: var(--defi-primary);
+  --section-primary-light: var(--defi-primary-light);
+  --section-gradient: var(--defi-gradient);
+  --section-border: var(--defi-border);
+}
+
+// Utility classes for section theming
+.section-text {
+  color: var(--section-primary);
+}
+
+.section-bg {
+  background: var(--section-gradient);
+}
+
+.section-border {
+  border-color: var(--section-border);
+}
+
+.section-bg-subtle {
+  background: linear-gradient(135deg, 
+    rgba(var(--section-primary), 0.1) 0%, 
+    rgba(var(--section-primary), 0.02) 100%
+  );
+}
+
+// Topics-specific styles
+.topics-theme {
+  --local-primary: var(--topics-primary);
+  --local-gradient: var(--topics-gradient);
+}
+
+// Social-specific styles
+.social-theme {
+  --local-primary: var(--social-primary);
+  --local-gradient: var(--social-gradient);
+}
+
+// DeFi-specific styles
+.defi-theme {
+  --local-primary: var(--defi-primary);
+  --local-gradient: var(--defi-gradient);
+}
+

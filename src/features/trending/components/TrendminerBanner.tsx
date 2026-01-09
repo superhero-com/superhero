@@ -1,19 +1,33 @@
 import React from "react";
 import AeButton from "../../../components/AeButton";
 import GlobalStatsAnalytics from "../../../components/Trendminer/GlobalStatsAnalytics";
+import { useSectionTheme } from "@/components/layout/AppLayout";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function TrendminerBanner() {
+  const { colors } = useSectionTheme();
+  const { isDark } = useTheme();
+  
   return (
-    <div className="rounded-[24px] mt-4 mb-6" style={{ background: 'linear-gradient(90deg, rgba(244, 193, 12, 0.1), rgba(255, 109, 21, 0.1))' }}>
+    <div 
+      className="rounded-[24px] mt-4 mb-6" 
+      style={{ 
+        background: isDark 
+          ? `linear-gradient(90deg, ${colors.primary}15, ${colors.primaryDark}15)` 
+          : `linear-gradient(90deg, ${colors.primary}15, ${colors.primaryDark}15)` 
+      }}
+    >
       <div className="max-w-[1400px] mx-auto p-4 sm:p-6">
         <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
           <div className="min-w-0 flex-1">
-            <div className="text-center text-2xl sm:text-3xl lg:text-left lg:text-4xl font-bold leading-tight text-white">
-              Tokenize Trends.
+            <div 
+              className={`text-center text-2xl sm:text-3xl lg:text-left lg:text-4xl font-bold leading-tight ${isDark ? 'text-white' : 'text-gray-900'}`}
+            >
+              Every #Hashtag
               <br />
-              Own the Hype.
+              is a Token.
               <br />
-              Build Communities.
+              Own the Trends.
             </div>
             <div className="flex flex-col gap-3 mt-4">
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
@@ -22,9 +36,13 @@ export default function TrendminerBanner() {
                   size="md"
                   rounded
                   onClick={() => (window.location.href = "/trends/create")}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 text-white hover:opacity-90"
+                  style={{ 
+                    background: colors.gradient,
+                    boxShadow: `0 4px 16px ${colors.primary}40`
+                  }}
                 >
-                  TOKENIZE A TREND
+                  CREATE HASHTAG
                 </AeButton>
 
                 <AeButton
@@ -32,7 +50,11 @@ export default function TrendminerBanner() {
                   size="md"
                   rounded
                   onClick={() => (window.location.href = "/trends/daos")}
-                  className="bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 text-white hover:opacity-90"
+                  style={{ 
+                    background: colors.gradient,
+                    boxShadow: `0 4px 16px ${colors.primary}40`
+                  }}
                 >
                   EXPLORE DAOS
                 </AeButton>
@@ -43,18 +65,21 @@ export default function TrendminerBanner() {
                   onClick={() =>
                     (window.location.href = "/trends/invite")
                   }
-                  className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 text-white hover:opacity-90"
+                  style={{ 
+                    background: colors.gradient,
+                    boxShadow: `0 4px 16px ${colors.primary}40`
+                  }}
                 >
                   INVITE & EARN
                 </AeButton>
               </div>
 
             </div>
-            <div className="text-sm text-white/75 mt-2.5 max-w-[720px] overflow-hidden text-ellipsis leading-relaxed">
-              Tokenized trends are community DAO tokens launched on a bonding
-              curve. Price moves with buys/sells, no order books. Each token
-              creates a DAO with treasury that can fund initiatives via on-chain
-              votes. Connect your wallet to trade and participate.
+            <div className={`text-sm mt-2.5 max-w-[720px] overflow-hidden text-ellipsis leading-relaxed ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+              Hashtags are tokenized trends with their own DAO and treasury.
+              Prices move on a bonding curve - buy to support, sell to exit.
+              Each hashtag community can fund initiatives through on-chain voting.
             </div>
           </div>
           <div className="min-w-[300px] flex-shrink-0 lg:mt-8">

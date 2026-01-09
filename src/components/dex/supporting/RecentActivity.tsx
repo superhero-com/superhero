@@ -66,7 +66,7 @@ function TransactionStatus({
     return (
       <div className="flex items-center gap-1 text-[10px] font-medium">
         <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span>
-        <span className="text-white/60">Pending</span>
+        <span className="text-gray-500">Pending</span>
       </div>
     );
   }
@@ -101,7 +101,7 @@ function TransactionStatus({
             : "Confirmed"}
         </span>
         {status.blockNumber && (
-          <span className="text-white/60 opacity-80 ml-1 text-[9px]">
+          <span className="text-gray-500 ml-1 text-[9px]">
             #{status.blockNumber}
           </span>
         )}
@@ -183,19 +183,19 @@ export default function RecentActivity({
 
   if (!activities.length) {
     return (
-      <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
-        <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-white/10">
+      <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-gray-200">
           <span className="text-base">📊</span>
-          <span className="text-base font-bold text-white flex-1">
+          <span className="text-base font-bold text-gray-900 flex-1">
             Recent Activity
           </span>
         </div>
-        <div className="text-center py-8 px-4 text-white/60">
+        <div className="text-center py-8 px-4 text-gray-500">
           <div className="text-[32px] mb-3 opacity-60">🔍</div>
-          <div className="text-sm font-semibold mb-1 text-white">
+          <div className="text-sm font-semibold mb-1 text-gray-900">
             No recent activities
           </div>
-          <div className="text-xs opacity-80">
+          <div className="text-xs text-gray-500">
             Your DeFi transactions will appear here
           </div>
         </div>
@@ -204,14 +204,14 @@ export default function RecentActivity({
   }
 
   return (
-    <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px] shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
-      <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-white/10">
+    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-gray-200">
         <span className="text-base">📊</span>
-        <span className="text-base font-bold text-white flex-1">
+        <span className="text-base font-bold text-gray-900 flex-1">
           Recent Activity
         </span>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-white/60 bg-white/[0.05] py-0.5 px-2 rounded-xl border border-white/10">
+          <span className="text-xs font-semibold text-gray-600 bg-gray-100 py-0.5 px-2 rounded-xl border border-gray-200">
             {activities.length}
           </span>
           {activities.length > 0 && (
@@ -235,7 +235,7 @@ export default function RecentActivity({
           return (
             <div
               key={`${activity.hash || i}-${activity.timestamp}`}
-              className="bg-white/[0.02] border border-white/[0.05] rounded-xl p-3 transition-all duration-200 ease-out hover:bg-white/[0.05] hover:border-white/15 hover:-translate-y-0.5"
+              className="bg-gray-50 border border-gray-200 rounded-xl p-3 transition-all duration-200 ease-out hover:bg-gray-100 hover:border-gray-300 hover:-translate-y-0.5"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 flex-1 min-w-0">
@@ -243,10 +243,10 @@ export default function RecentActivity({
                     {activityTypeIcons[activity.type]}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-semibold text-white mb-0.5">
+                    <div className="text-[13px] font-semibold text-gray-900 mb-0.5">
                       {activityTypeLabels[activity.type]}
                     </div>
-                    <div className="flex flex-row flex-wrap items-center text-[11px] text-white/60  gap-1.5 mb-1">
+                    <div className="flex flex-row flex-wrap items-center text-[11px] text-gray-600 gap-1.5 mb-1">
                       {activity.tokenIn && activity.tokenOut && (
                         <span>
                           <TokenChip address={activity.tokenIn} />
@@ -261,7 +261,7 @@ export default function RecentActivity({
                           </span>
                         )}
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <div className="text-[10px] text-white/60 font-medium whitespace-nowrap">
+                          <div className="text-[10px] text-gray-500 font-medium whitespace-nowrap">
                             {formatTimeAgo(activity.timestamp)}
                           </div>
                           {activity.hash && CONFIG.EXPLORER_URL && (
@@ -300,7 +300,7 @@ export default function RecentActivity({
 
         {activities.length > 10 && (
           <div className="text-center py-2 mt-1">
-            <div className="text-[11px] text-white/60 font-medium opacity-80">
+            <div className="text-[11px] text-gray-500 font-medium">
               +{activities.length - 10} more activities
             </div>
           </div>

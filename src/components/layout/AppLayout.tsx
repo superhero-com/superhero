@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useMemo } from "react";
 import { useLocation, Outlet } from "react-router-dom";
 import LeftSidebar from "./LeftSidebar";
-import TopBar from "./TopBar";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import SocialFeedPanel from "@/components/SocialFeedPanel";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -16,11 +15,13 @@ interface SectionColors {
   gradient: string;
   border: string;
   bgGradient: string;
+  bgTint: string; // Subtle background tint
   cardBg: string;
   sidebarBg: string;
   iconBg: string;
   textPrimary: string;
   textSecondary: string;
+  accentName: string; // Human-readable name
 }
 
 interface SectionThemeContextValue {
@@ -28,115 +29,132 @@ interface SectionThemeContextValue {
   colors: SectionColors;
 }
 
-// Light mode themes
+// Swiss Minimal Light mode themes - Clean, typography-focused
+// Each section has a distinct accent color but maintains Swiss minimalism
 const lightThemes: Record<SectionTheme, SectionColors> = {
   topics: {
-    primary: "#06B6D4",
-    primaryLight: "#67E8F9",
-    primaryDark: "#0891B2",
-    gradient: "linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)",
-    border: "rgba(6, 182, 212, 0.3)",
-    bgGradient: "linear-gradient(180deg, #f0fdfa 0%, #ecfeff 50%, #f8fafc 100%)",
-    cardBg: "rgba(255, 255, 255, 0.9)",
-    sidebarBg: "#ffffff",
-    iconBg: "#06B6D4",
-    textPrimary: "#111827",
-    textSecondary: "#6B7280",
+    primary: "#FF0000", // Swiss red
+    primaryLight: "#FF3333",
+    primaryDark: "#CC0000",
+    gradient: "#FF0000",
+    border: "#E4E4E7",
+    bgGradient: "#FAFAFA",
+    bgTint: "rgba(255, 0, 0, 0.015)", // Very subtle red tint
+    cardBg: "#FFFFFF",
+    sidebarBg: "#FFFFFF",
+    iconBg: "#000000",
+    textPrimary: "#000000",
+    textSecondary: "#71717A",
+    accentName: "Red",
   },
   social: {
-    primary: "#8B5CF6",
-    primaryLight: "#C4B5FD",
-    primaryDark: "#DB2777",
-    gradient: "linear-gradient(135deg, #8B5CF6 0%, #DB2777 100%)",
-    border: "rgba(139, 92, 246, 0.2)",
-    bgGradient: "linear-gradient(180deg, #faf5ff 0%, #fdf2f8 50%, #f8fafc 100%)",
-    cardBg: "rgba(255, 255, 255, 0.9)",
-    sidebarBg: "#ffffff",
-    iconBg: "#8B5CF6",
-    textPrimary: "#111827",
-    textSecondary: "#6B7280",
+    primary: "#FF0000",
+    primaryLight: "#FF3333",
+    primaryDark: "#CC0000",
+    gradient: "#FF0000",
+    border: "#E4E4E7",
+    bgGradient: "#FAFAFA",
+    bgTint: "rgba(255, 0, 0, 0.015)",
+    cardBg: "#FFFFFF",
+    sidebarBg: "#FFFFFF",
+    iconBg: "#000000",
+    textPrimary: "#000000",
+    textSecondary: "#71717A",
+    accentName: "Red",
   },
   defi: {
-    primary: "#10B981",
-    primaryLight: "#34D399",
-    primaryDark: "#059669",
-    gradient: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
-    border: "rgba(16, 185, 129, 0.2)",
-    bgGradient: "linear-gradient(180deg, #ecfdf5 0%, #d1fae5 50%, #f8fafc 100%)",
-    cardBg: "rgba(255, 255, 255, 0.9)",
-    sidebarBg: "#ffffff",
-    iconBg: "#10B981",
-    textPrimary: "#111827",
-    textSecondary: "#6B7280",
+    primary: "#22C55E", // Green for DeFi
+    primaryLight: "#4ADE80",
+    primaryDark: "#16A34A",
+    gradient: "#22C55E",
+    border: "#D4E7DC", // Subtle green-tinted border
+    bgGradient: "#F8FBF9", // Very subtle green background
+    bgTint: "rgba(34, 197, 94, 0.03)", // Subtle green tint
+    cardBg: "#FFFFFF",
+    sidebarBg: "#FFFFFF",
+    iconBg: "#000000",
+    textPrimary: "#000000",
+    textSecondary: "#71717A",
+    accentName: "Green",
   },
   default: {
-    primary: "#06B6D4",
-    primaryLight: "#67E8F9",
-    primaryDark: "#0891B2",
-    gradient: "linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)",
-    border: "rgba(6, 182, 212, 0.3)",
-    bgGradient: "linear-gradient(180deg, #f0fdfa 0%, #ecfeff 50%, #f8fafc 100%)",
-    cardBg: "rgba(255, 255, 255, 0.9)",
-    sidebarBg: "#ffffff",
-    iconBg: "#06B6D4",
-    textPrimary: "#111827",
-    textSecondary: "#6B7280",
+    primary: "#FF0000",
+    primaryLight: "#FF3333",
+    primaryDark: "#CC0000",
+    gradient: "#FF0000",
+    border: "#E4E4E7",
+    bgGradient: "#FAFAFA",
+    bgTint: "transparent",
+    cardBg: "#FFFFFF",
+    sidebarBg: "#FFFFFF",
+    iconBg: "#000000",
+    textPrimary: "#000000",
+    textSecondary: "#71717A",
+    accentName: "Red",
   },
 };
 
-// Dark mode themes
+// Swiss Minimal Dark mode themes
 const darkThemes: Record<SectionTheme, SectionColors> = {
   topics: {
-    primary: "#22D3EE",
-    primaryLight: "#67E8F9",
-    primaryDark: "#06B6D4",
-    gradient: "linear-gradient(135deg, #22D3EE 0%, #06B6D4 100%)",
-    border: "rgba(34, 211, 238, 0.3)",
-    bgGradient: "linear-gradient(180deg, #0f172a 0%, #0c1322 50%, #020617 100%)",
-    cardBg: "rgba(30, 41, 59, 0.8)",
-    sidebarBg: "#0f172a",
-    iconBg: "#22D3EE",
-    textPrimary: "#F8FAFC",
-    textSecondary: "#94A3B8",
+    primary: "#FF0000", // Swiss red
+    primaryLight: "#FF3333",
+    primaryDark: "#CC0000",
+    gradient: "#FF0000",
+    border: "#27272A",
+    bgGradient: "#09090B",
+    bgTint: "rgba(255, 0, 0, 0.02)", // Very subtle red tint in dark
+    cardBg: "#18181B",
+    sidebarBg: "#09090B",
+    iconBg: "#FFFFFF",
+    textPrimary: "#FFFFFF",
+    textSecondary: "#A1A1AA",
+    accentName: "Red",
   },
   social: {
-    primary: "#A78BFA",
-    primaryLight: "#C4B5FD",
-    primaryDark: "#F472B6",
-    gradient: "linear-gradient(135deg, #A78BFA 0%, #F472B6 100%)",
-    border: "rgba(167, 139, 250, 0.3)",
-    bgGradient: "linear-gradient(180deg, #1a0f1f 0%, #150a18 50%, #020617 100%)",
-    cardBg: "rgba(30, 41, 59, 0.8)",
-    sidebarBg: "#0f172a",
-    iconBg: "#A78BFA",
-    textPrimary: "#F8FAFC",
-    textSecondary: "#94A3B8",
+    primary: "#FF0000",
+    primaryLight: "#FF3333",
+    primaryDark: "#CC0000",
+    gradient: "#FF0000",
+    border: "#27272A",
+    bgGradient: "#09090B",
+    bgTint: "rgba(255, 0, 0, 0.02)",
+    cardBg: "#18181B",
+    sidebarBg: "#09090B",
+    iconBg: "#FFFFFF",
+    textPrimary: "#FFFFFF",
+    textSecondary: "#A1A1AA",
+    accentName: "Red",
   },
   defi: {
-    primary: "#34D399",
-    primaryLight: "#6EE7B7",
-    primaryDark: "#10B981",
-    gradient: "linear-gradient(135deg, #34D399 0%, #10B981 100%)",
-    border: "rgba(52, 211, 153, 0.3)",
-    bgGradient: "linear-gradient(180deg, #0a1f17 0%, #071510 50%, #020617 100%)",
-    cardBg: "rgba(30, 41, 59, 0.8)",
-    sidebarBg: "#0f172a",
-    iconBg: "#34D399",
-    textPrimary: "#F8FAFC",
-    textSecondary: "#94A3B8",
+    primary: "#22C55E",
+    primaryLight: "#4ADE80",
+    primaryDark: "#16A34A",
+    gradient: "#22C55E",
+    border: "#1E3A2F", // Dark green-tinted border
+    bgGradient: "#080C0A", // Very dark with green tint
+    bgTint: "rgba(34, 197, 94, 0.03)", // Subtle green tint
+    cardBg: "#111612", // Slight green tint in cards
+    sidebarBg: "#09090B",
+    iconBg: "#FFFFFF",
+    textPrimary: "#FFFFFF",
+    textSecondary: "#A1A1AA",
+    accentName: "Green",
   },
   default: {
-    primary: "#22D3EE",
-    primaryLight: "#67E8F9",
-    primaryDark: "#06B6D4",
-    gradient: "linear-gradient(135deg, #22D3EE 0%, #06B6D4 100%)",
-    border: "rgba(34, 211, 238, 0.3)",
-    bgGradient: "linear-gradient(180deg, #0f172a 0%, #0c1322 50%, #020617 100%)",
-    cardBg: "rgba(30, 41, 59, 0.8)",
-    sidebarBg: "#0f172a",
-    iconBg: "#22D3EE",
-    textPrimary: "#F8FAFC",
-    textSecondary: "#94A3B8",
+    primary: "#FF0000",
+    primaryLight: "#FF3333",
+    primaryDark: "#CC0000",
+    gradient: "#FF0000",
+    border: "#27272A",
+    bgGradient: "#09090B",
+    bgTint: "transparent",
+    cardBg: "#18181B",
+    sidebarBg: "#09090B",
+    iconBg: "#FFFFFF",
+    textPrimary: "#FFFFFF",
+    textSecondary: "#A1A1AA",
+    accentName: "Red",
   },
 };
 
@@ -179,9 +197,23 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <SectionThemeContext.Provider value={themeValue}>
+      {/* Import Inter font */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        .app-layout * {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        }
+        
+        /* Smooth section transition */
+        .app-layout {
+          transition: background-color 0.4s ease, border-color 0.3s ease;
+        }
+      `}</style>
+      
       <div 
         className={`
-          app-layout min-h-screen flex transition-colors duration-500
+          app-layout min-h-screen flex transition-all duration-500
           ${isDark ? "dark" : ""}
         `}
         style={{
@@ -195,18 +227,16 @@ export default function AppLayout({ children }: AppLayoutProps) {
           "--section-icon-bg": themeValue.colors.iconBg,
           "--section-text-primary": themeValue.colors.textPrimary,
           "--section-text-secondary": themeValue.colors.textSecondary,
-          background: themeValue.colors.bgGradient,
+          background: `linear-gradient(to bottom, ${themeValue.colors.bgTint}, ${themeValue.colors.bgGradient})`,
           color: themeValue.colors.textPrimary,
+          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
         } as React.CSSProperties}
       >
         {/* Left Sidebar - fixed on desktop */}
         <LeftSidebar />
         
         {/* Main content area */}
-        <div className="flex-1 flex flex-col min-h-screen lg:ml-[240px]">
-          {/* Top Bar */}
-          <TopBar />
-          
+        <div className="flex-1 flex flex-col min-h-screen lg:ml-[280px]">
           {/* Main content */}
           <main className="flex-1 overflow-auto">
             <div className="max-w-[1400px] mx-auto px-4 py-6 lg:px-6">

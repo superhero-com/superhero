@@ -2,10 +2,15 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAeSdk, useWalletConnect, useModal } from '../hooks';
 import Favicon from '../svg/favicon.svg?react';
-import { AeButton } from './ui/ae-button';
 import { cn } from '@/lib/utils';
-import { useSectionTheme } from '@/components/layout/AppLayout';
 import { useTheme } from '@/contexts/ThemeContext';
+
+/**
+ * ConnectWalletButton - Swiss Minimal Design
+ * - Clean borders, no rounded corners
+ * - Black/white color scheme
+ * - Typography-focused
+ */
 
 type Props = {
   label?: string;
@@ -13,8 +18,8 @@ type Props = {
   style?: React.CSSProperties;
   className?: string;
   variant?: 'default' | 'dex';
-  muted?: boolean; // greyed-out appearance while still clickable
-  useThemeColors?: boolean; // Whether to use section theme colors
+  muted?: boolean;
+  useThemeColors?: boolean;
 };
 
 export function ConnectWalletButton({ label, block, style, className, variant = 'default', muted = false, useThemeColors = true }: Props) {
@@ -22,67 +27,59 @@ export function ConnectWalletButton({ label, block, style, className, variant = 
   const { activeAccount } = useAeSdk()
   const { connectWallet, connectingWallet } = useWalletConnect()
   const { openModal } = useModal();
-  const { colors } = useSectionTheme();
   const { isDark } = useTheme();
   
   const displayLabel = label || t('buttons.connectWallet');
   const connectingText = t('buttons.connecting');
 
   if (activeAccount) return null;
-  
-  const dexClasses = cn(
-    // Mobile (default): section gradient with card-like radius
-    'text-white border-none rounded-xl text-sm',
-    // Desktop+: elegant dark/glass pill with icon
-    isDark 
-      ? 'sm:bg-slate-800/80 sm:text-white sm:border sm:border-slate-600 sm:backdrop-blur-[10px] sm:hover:bg-slate-700/80 sm:!rounded-full sm:text-sm'
-      : 'sm:bg-black/80 sm:text-white sm:border sm:border-white/10 sm:backdrop-blur-[10px] sm:hover:bg-black/70 sm:!rounded-full sm:text-sm',
-    'sm:shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:sm:shadow-[0_12px_32px_rgba(0,0,0,0.45)]'
-  );
 
-  const baseClasses = cn(
-    'rounded-xl sm:rounded-full border-border backdrop-blur-sm backdrop-saturate-120 hover:shadow-md text-sm text-white border-none',
-    isDark 
-      ? 'sm:bg-slate-800/80 sm:hover:bg-slate-700/80 sm:text-sm'
-      : 'sm:bg-card sm:hover:bg-card/80 sm:text-sm'
-  );
+  // Swiss minimal colors
+  const borderColor = isDark ? '#3f3f46' : '#E4E4E7';
 
-  const mutedClasses = cn(
-    'rounded-xl sm:rounded-full text-sm',
-    isDark
-      ? 'bg-slate-700/50 text-slate-400 border border-slate-600 hover:bg-slate-700/70 hover:text-slate-300'
-      : 'bg-white/10 text-white/70 border border-white/10 hover:bg-white/10 hover:text-white/80',
-    'shadow-none'
-  );
-
-  // Compute the final style with section theme colors
-  const computedStyle: React.CSSProperties = {
+  // Swiss minimal style - dark theme friendly
+  const swissStyle: React.CSSProperties = {
+    background: 'transparent',
+    color: isDark ? '#FFFFFF' : '#000000',
+    border: `1px solid ${borderColor}`,
+    borderRadius: 0,
+    fontWeight: 500,
+    letterSpacing: '0.05em',
+    fontSize: '0.75rem',
     ...style,
-    ...(useThemeColors && !muted ? {
-      background: colors.gradient,
-      boxShadow: `0 4px 16px ${colors.primary}40`,
-    } : {})
+  };
+
+  const mutedStyle: React.CSSProperties = {
+    background: 'transparent',
+    color: isDark ? '#71717A' : '#71717A',
+    border: `1px solid ${borderColor}`,
+    borderRadius: 0,
+    fontWeight: 500,
+    letterSpacing: '0.05em',
+    fontSize: '0.75rem',
+    ...style,
   };
 
   return (
-    <AeButton
+    <button
+      type="button"
       onClick={() => openModal({ name: 'connect-wallet' })}
       disabled={connectingWallet}
-      loading={connectingWallet}
-      variant="ghost"
-      size={variant === 'dex' ? 'default' : 'default'}
-      fullWidth={block}
-      className={cn(muted ? mutedClasses : (variant === 'dex' ? dexClasses : baseClasses), className)}
-      style={computedStyle}
+      className={cn(
+        'px-4 py-2 inline-flex items-center justify-center gap-2 transition-opacity hover:opacity-90 focus:outline-none active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed',
+        block && 'w-full',
+        className
+      )}
+      style={muted ? mutedStyle : swissStyle}
     >
       <span className="hidden sm:inline-flex items-center gap-2">
-        <Favicon className="w-4 h-4" />
+        <Favicon className="w-3.5 h-3.5" />
         {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
       </span>
       <span className="sm:hidden">
         {(connectingWallet ? connectingText : displayLabel).toUpperCase()}
       </span>
-    </AeButton>
+    </button>
   );
 }
 

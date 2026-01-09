@@ -25,7 +25,7 @@ function getInitialTheme(): ThemeMode {
       return "dark";
     }
   }
-  return "light"; // Default to light
+  return "dark"; // Default to dark
 }
 
 interface ThemeProviderProps {

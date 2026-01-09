@@ -7,7 +7,18 @@ import AddressAvatarWithChainName from "../../@components/Address/AddressAvatarW
 import ConnectWalletButton from "../ConnectWalletButton";
 import { useTheme } from "@/contexts/ThemeContext";
 
-export default function UserProfileChip() {
+/**
+ * UserProfileChip - Swiss Minimal Design
+ * - Clean borders, no rounded corners
+ * - Minimal color palette
+ * - Typography-focused
+ */
+
+interface UserProfileChipProps {
+  showOnlyWhenConnected?: boolean;
+}
+
+export default function UserProfileChip({ showOnlyWhenConnected = false }: UserProfileChipProps) {
   const navigate = useNavigate();
   const { activeAccount } = useAeSdk();
   const { decimalBalance } = useAccountBalances(activeAccount);
@@ -19,6 +30,13 @@ export default function UserProfileChip() {
   const chainName = activeAccount ? chainNames?.[activeAccount] : null;
   const displayName = chainName || (activeAccount ? `${activeAccount.slice(0, 8)}...` : null);
   const balanceAe = Number(decimalBalance?.toString() || 0);
+
+  // Swiss colors
+  const textPrimary = isDark ? '#FFFFFF' : '#000000';
+  const textSecondary = isDark ? '#71717A' : '#71717A';
+  const borderColor = isDark ? '#27272A' : '#E4E4E7';
+  const bgColor = isDark ? '#09090B' : '#FFFFFF';
+  const hoverBg = isDark ? '#18181B' : '#F4F4F5';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -37,6 +55,8 @@ export default function UserProfileChip() {
   }, [dropdownOpen]);
 
   if (!activeAccount) {
+    // If showOnlyWhenConnected, return null (Connect button is in sidebar)
+    if (showOnlyWhenConnected) return null;
     return <ConnectWalletButton />;
   }
 
@@ -45,14 +65,11 @@ export default function UserProfileChip() {
       <button
         type="button"
         onClick={() => setDropdownOpen(!dropdownOpen)}
-        className={`
-          flex items-center gap-2 px-3 py-1.5
-          rounded-xl transition-all duration-200
-          ${isDark 
-            ? "bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-slate-500" 
-            : "bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300"
-          }
-        `}
+        className="flex items-center gap-2 px-3 py-1.5 transition-colors"
+        style={{
+          background: hoverBg,
+          border: `1px solid ${borderColor}`,
+        }}
       >
         <AddressAvatarWithChainName
           address={activeAccount}
@@ -65,39 +82,43 @@ export default function UserProfileChip() {
           isHoverEnabled={false}
         />
         <div className="hidden sm:flex flex-col items-start min-w-0">
-          <span className={`text-xs font-medium truncate max-w-[140px] ${isDark ? "text-white" : "text-gray-900"}`}>
+          <span 
+            className="text-xs font-medium truncate max-w-[140px]"
+            style={{ color: textPrimary }}
+          >
             {displayName}
           </span>
-          <span className={`text-[10px] ${isDark ? "text-slate-400" : "text-gray-500"}`}>
+          <span 
+            className="text-[10px]"
+            style={{ color: textSecondary }}
+          >
             {balanceAe.toLocaleString(undefined, { maximumFractionDigits: 2 })} AE
           </span>
         </div>
         <svg
-          className={`w-4 h-4 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""} ${isDark ? "text-slate-400" : "text-gray-400"}`}
+          className={`w-3 h-3 transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
           fill="none"
-          stroke="currentColor"
+          stroke={textSecondary}
           viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
       {/* Dropdown */}
       {dropdownOpen && (
         <div
-          className={`
-            absolute right-0 top-full mt-2
-            w-64 p-3
-            rounded-xl shadow-xl
-            z-50
-            ${isDark 
-              ? "bg-slate-800 border border-slate-700" 
-              : "bg-white border border-gray-200"
-            }
-          `}
+          className="absolute right-0 top-full mt-2 w-64 p-3 z-50 shadow-lg"
+          style={{
+            background: bgColor,
+            border: `1px solid ${borderColor}`,
+          }}
         >
           {/* User Info */}
-          <div className={`pb-3 border-b mb-3 ${isDark ? "border-slate-700" : "border-gray-100"}`}>
+          <div 
+            className="pb-3 mb-3"
+            style={{ borderBottom: `1px solid ${borderColor}` }}
+          >
             <div className="flex items-center gap-3">
               <AddressAvatarWithChainName
                 address={activeAccount}
@@ -110,10 +131,16 @@ export default function UserProfileChip() {
                 isHoverEnabled={false}
               />
               <div className="flex-1 min-w-0">
-                <div className={`text-sm font-medium truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                <div 
+                  className="text-sm font-medium truncate"
+                  style={{ color: textPrimary }}
+                >
                   {chainName || `${activeAccount.slice(0, 12)}...`}
                 </div>
-                <div className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"}`}>
+                <div 
+                  className="text-xs"
+                  style={{ color: textSecondary }}
+                >
                   {balanceAe.toLocaleString(undefined, { maximumFractionDigits: 4 })} AE
                 </div>
               </div>
@@ -121,25 +148,26 @@ export default function UserProfileChip() {
           </div>
 
           {/* Quick Actions */}
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             <button
               type="button"
               onClick={() => {
                 navigate(`/users/${activeAccount}`);
                 setDropdownOpen(false);
               }}
-              className={`
-                w-full flex items-center gap-2 px-3 py-2
-                text-sm rounded-lg transition-colors
-                text-left
-                ${isDark 
-                  ? "text-slate-300 hover:text-white hover:bg-slate-700" 
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }
-              `}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors"
+              style={{ color: textSecondary }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = hoverBg;
+                e.currentTarget.style.color = textPrimary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = textSecondary;
+              }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               <span>View Profile</span>
             </button>
@@ -149,18 +177,19 @@ export default function UserProfileChip() {
                 navigator.clipboard.writeText(activeAccount);
                 setDropdownOpen(false);
               }}
-              className={`
-                w-full flex items-center gap-2 px-3 py-2
-                text-sm rounded-lg transition-colors
-                text-left
-                ${isDark 
-                  ? "text-slate-300 hover:text-white hover:bg-slate-700" 
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }
-              `}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors"
+              style={{ color: textSecondary }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = hoverBg;
+                e.currentTarget.style.color = textPrimary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = textSecondary;
+              }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
               <span>Copy Address</span>
             </button>
@@ -169,18 +198,19 @@ export default function UserProfileChip() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setDropdownOpen(false)}
-              className={`
-                w-full flex items-center gap-2 px-3 py-2
-                text-sm rounded-lg transition-colors
-                no-underline
-                ${isDark 
-                  ? "text-slate-300 hover:text-white hover:bg-slate-700" 
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }
-              `}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm no-underline transition-colors"
+              style={{ color: textSecondary }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = hoverBg;
+                e.currentTarget.style.color = textPrimary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = textSecondary;
+              }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
               <span>View on aeScan</span>
             </a>

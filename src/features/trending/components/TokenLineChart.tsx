@@ -14,6 +14,9 @@ interface TokenLineChartProps {
   hideTimeframe?: boolean;
   timeframe?: string;
   className?: string;
+  lineColor?: string;
+  topColor?: string;
+  bottomColor?: string;
 }
 
 
@@ -32,10 +35,17 @@ export function TokenLineChart({
   height = 200,
   hideTimeframe = false,
   className,
+  lineColor = 'rgb(245, 158, 11)',
+  topColor,
+  bottomColor,
 }: TokenLineChartProps) {
   const [loading, setLoading] = useState(false);
   const areaSeries = useRef<ISeriesApi<'Area'> | undefined>();
   const performanceChartTimeframe = useAtomValue(performanceChartTimeframeAtom);
+
+  // Generate gradient colors from line color if not provided
+  const computedTopColor = topColor || lineColor.replace('rgb', 'rgba').replace(')', ', 0.25)');
+  const computedBottomColor = bottomColor || lineColor.replace('rgb', 'rgba').replace(')', ', 0.02)');
 
   const { data } = useQuery({
     queryFn: () =>
@@ -79,9 +89,9 @@ export function TokenLineChart({
     onChartReady: (chartInstance) => {
       const seriesOptions: AreaSeriesPartialOptions = {
         priceLineVisible: false,
-        lineColor: 'rgb(245, 158, 11)',
-        topColor: 'rgba(245, 158, 11, 0.2)',
-        bottomColor: 'rgba(245, 158, 11, 0.01)',
+        lineColor: lineColor,
+        topColor: computedTopColor,
+        bottomColor: computedBottomColor,
         lineWidth: 2,
         crosshairMarkerVisible: false,
         baseLineVisible: true,

@@ -187,8 +187,8 @@ export default function TokenList() {
   return (
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen  text-white px-4">
       <Head
-        title="Superhero.com – Tokenize Trends. Own the Hype. Build Communities."
-        description="Discover and tokenize trending topics. Trade tokens, build communities, and own the hype on Superhero."
+        title="Superhero - Explore Hashtags"
+        description="Every hashtag is a token. Discover trending topics, trade opinions, and own the hype on Superhero."
         canonicalPath="/trends/tokens"
       />
       <TrendminerBanner />
@@ -202,8 +202,8 @@ export default function TokenList() {
         {/* Left: Token List */}
         <div className="w-full">
           <div className="flex flex-col items-start mb-6 gap-3 w-full">
-            <div className="flex text-xl sm:text-2xl font-bold text-white w-full">
-              Tokenized Trends
+            <div className="flex text-xl sm:text-2xl font-bold text-gray-900 w-full">
+              All Hashtags
             </div>
 
             {/* FILTERS */}
@@ -211,12 +211,12 @@ export default function TokenList() {
               {/* OrderBy Filter */}
               <div className="w-full md:w-auto flex-shrink-0">
                 <Select value={orderBy} onValueChange={updateOrderBy}>
-                  <SelectTrigger className="px-2 py-2 h-10 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05] w-full sm:w-auto sm:min-w-[140px]">
+                  <SelectTrigger className="px-2 py-2 h-10 bg-white text-gray-900 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-gray-50 w-full sm:w-auto sm:min-w-[140px]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-900 border-white/10">
+                  <SelectContent className="bg-white border-gray-200">
                     {orderByOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/10 text-xs">
+                      <SelectItem key={option.value} value={option.value} className="text-gray-900 hover:bg-gray-100 text-xs">
                         {option.title}
                       </SelectItem>
                     ))}
@@ -231,7 +231,7 @@ export default function TokenList() {
                     variant={ownedOnly ? "primary" : "ghost"}
                     className={`h-10 px-3 whitespace-nowrap w-full md:w-auto flex-shrink-0 transition-all duration-300 ${ownedOnly
                       ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl'
-                      : '!bg-transparent !backdrop-blur-0 !border-0 !ring-0 text-white hover:bg-pink-500/10'
+                      : '!bg-transparent !backdrop-blur-0 !border-0 !ring-0 text-gray-700 hover:bg-pink-500/10'
                       }`}
                     onClick={() => setOwnedOnly(!ownedOnly)}
                   >
@@ -241,12 +241,12 @@ export default function TokenList() {
               )}
 
               {/* Search */}
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search tokens"
-                className="px-2 py-2 h-10 min-h-[auto] bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] placeholder-white/50 transition-all duration-300 hover:bg-white/[0.05] w-full md:flex-1 min-w-[160px] md:max-w-none"
-              />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search hashtags..."
+                  className="px-2 py-2 h-10 min-h-[auto] bg-white text-gray-900 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-[#1161FE] placeholder-gray-400 transition-all duration-300 hover:bg-gray-50 w-full md:flex-1 min-w-[160px] md:max-w-none"
+                />
 
               {/* Performance Timeframe Selector */}
               <div className="flex items-center justify-center md:justify-start w-auto flex-shrink-0">
@@ -257,8 +257,8 @@ export default function TokenList() {
 
           {/* Message Box for no results */}
           {(!data?.pages?.length || !data?.pages[0].items.length) && !isFetching && (
-            <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 text-center text-white/80 mb-4">
-              <h3 className="font-semibold mb-2 text-white">No Token Sales</h3>
+            <div className="bg-white border border-gray-200 rounded-[24px] p-6 text-center text-gray-600 mb-4 shadow-sm">
+              <h3 className="font-semibold mb-2 text-gray-900">No Token Sales</h3>
               <p>No tokens found matching your criteria.</p>
             </div>
           )}
@@ -286,9 +286,9 @@ export default function TokenList() {
             ref={loadMoreBtn}
             onClick={() => fetchNextPage()}
             disabled={isFetching}
-            className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isFetching
-              ? 'bg-white/10 cursor-not-allowed opacity-60'
-              : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'
+            className={`px-6 py-3 rounded-full border-none cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isFetching
+              ? 'bg-gray-200 text-gray-500 cursor-not-allowed opacity-60'
+              : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300'
               }`}
           >
             {isFetching ? (

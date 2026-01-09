@@ -8,6 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSectionTheme } from "@/components/layout/AppLayout";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface SortControlsProps {
   sortBy: string;
@@ -21,6 +23,9 @@ interface SortControlsProps {
 // Component: Sort Controls
 const SortControls = memo(
   ({ sortBy, onSortChange, className = "", popularWindow = 'all', onPopularWindowChange, popularFeedEnabled = true }: SortControlsProps) => {
+    const { colors } = useSectionTheme();
+    const { isDark } = useTheme();
+    
     // Show "Latest Feed" title if popular feed is disabled
     if (!popularFeedEnabled) {
       return (
@@ -144,7 +149,12 @@ const SortControls = memo(
 
       {/* Desktop: keep existing pill style */}
       <div className="hidden md:flex w-full items-center justify-between gap-2">
-        <div className="inline-flex items-center gap-1.5 bg-white/5 rounded-full p-0.5 border border-white/10 md:w-auto">
+        <div 
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-full p-0.5 border md:w-auto",
+            isDark ? "bg-slate-800/50 border-slate-700" : "bg-white/50 border-gray-200"
+          )}
+        >
           <AeButton
             onClick={() => onSortChange("hot")}
             variant={sortBy === "hot" ? "default" : "ghost"}
@@ -152,10 +162,15 @@ const SortControls = memo(
             noShadow={true}
             className={cn(
               "rounded-full px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24 md:uppercase",
-              sortBy === "hot"
-                ? "bg-[#1161FE] text-white hover:bg-[#1161FE] focus:bg-[#1161FE]"
-                : "text-white/70 hover:text-white hover:bg-white/10 focus:text-white focus:bg-white/10"
+              sortBy !== "hot" && (isDark 
+                ? "text-slate-400 hover:text-white hover:bg-slate-700" 
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100")
             )}
+            style={sortBy === "hot" ? { 
+              background: colors.gradient, 
+              color: 'white',
+              boxShadow: `0 4px 12px ${colors.primary}40`
+            } : undefined}
           >
             Popular
           </AeButton>
@@ -166,16 +181,26 @@ const SortControls = memo(
             noShadow={true}
             className={cn(
               "rounded-full px-3 py-1 text-xs font-semibold transition-all flex-1 w-full md:w-24 md:uppercase",
-              sortBy === "latest"
-                ? "bg-[#1161FE] text-white hover:bg-[#1161FE] focus:bg-[#1161FE]"
-                : "text-white/70 hover:text-white hover:bg-white/10 focus:text-white focus:bg-white/10"
+              sortBy !== "latest" && (isDark 
+                ? "text-slate-400 hover:text-white hover:bg-slate-700" 
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100")
             )}
+            style={sortBy === "latest" ? { 
+              background: colors.gradient, 
+              color: 'white',
+              boxShadow: `0 4px 12px ${colors.primary}40`
+            } : undefined}
           >
             Latest
           </AeButton>
         </div>
         {sortBy === 'hot' && (
-          <div className="inline-flex items-center gap-1 bg-white/5 rounded-full p-0.5 border border-white/10 ml-auto">
+          <div 
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full p-0.5 border ml-auto",
+              isDark ? "bg-slate-800/50 border-slate-700" : "bg-white/50 border-gray-200"
+            )}
+          >
             {(['24h','7d','all'] as const).map((tf) => {
               const isActive = popularWindow === tf;
               const label = tf === '24h' ? 'Today' : tf === '7d' ? 'This week' : 'All time';
@@ -185,10 +210,16 @@ const SortControls = memo(
                   onClick={() => onPopularWindowChange && onPopularWindowChange(tf)}
                   className={cn(
                     'px-3 py-1.5 text-[11px] rounded-full border transition-all duration-300',
-                    isActive
-                      ? 'bg-[#1161FE] text-white border-transparent shadow-sm'
-                      : 'bg-transparent text-white/80 border-white/10 hover:bg-white/10'
+                    !isActive && (isDark 
+                      ? 'bg-transparent text-slate-400 border-transparent hover:bg-slate-700' 
+                      : 'bg-transparent text-gray-600 border-transparent hover:bg-gray-100')
                   )}
+                  style={isActive ? {
+                    background: colors.gradient,
+                    color: 'white',
+                    border: 'transparent',
+                    boxShadow: `0 4px 12px ${colors.primary}40`
+                  } : undefined}
                 >
                   {label}
                 </button>

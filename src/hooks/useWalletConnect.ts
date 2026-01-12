@@ -1,7 +1,6 @@
 import {
     BrowserWindowMessageConnection,
     walletDetector,
-    SUBSCRIPTION_TYPES,
 } from "@aeternity/aepp-sdk";
 import { useAtom } from "jotai";
 import { useAeSdk } from "./useAeSdk";
@@ -20,6 +19,9 @@ import { useAccount } from "./useAccount";
 
 export function useWalletConnect() {
     const wallet = useRef<Wallet | undefined>(undefined);
+    const scanStopRef = useRef<null | (() => void)>(null);
+    const scanConnectionRef = useRef<BrowserWindowMessageConnection | null>(null);
+    const scanPromiseRef = useRef<Promise<Wallet | undefined> | null>(null);
     const { loadAccountData } = useAccount();
     const [walletInfo, setWalletInfo] = useAtom<WalletInfo | undefined>(walletInfoAtom);
     const [scanningForAccounts, setScanningForAccounts] = useState(false);
@@ -58,6 +60,26 @@ export function useWalletConnect() {
         checkAddressWalletConnection()
     }, [location.search]);
 
+    // Cleanup any pending wallet detection when this hook's owner unmounts
+    useEffect(() => {
+        return () => {
+            try {
+                scanStopRef.current?.();
+            } catch {
+                // ignore
+            } finally {
+                scanStopRef.current = null;
+            }
+            try {
+                scanConnectionRef.current?.disconnect?.();
+            } catch {
+                // ignore
+            } finally {
+                scanConnectionRef.current = null;
+            }
+        };
+    }, []);
+
 
     async function subscribeAddress() {
         /*
@@ -75,7 +97,9 @@ export function useWalletConnect() {
             (async () => {
                 try {
                     await aeSdk.subscribeAddress(
-                        SUBSCRIPTION_TYPES.subscribe,
+                        // Runtime expects the string values ('subscribe'/'unsubscribe');
+                        // using the SDK const-enum breaks with TS isolatedModules.
+                        "subscribe" as any,
                         "connected",
                     );
                     await scanForAccounts();
@@ -137,10 +161,28 @@ export function useWalletConnect() {
     }
 
     async function disconnectWallet() {
+        // Stop any in-flight wallet detection and close message connection to prevent auto-reconnect.
+        try {
+            scanStopRef.current?.();
+        } catch {
+            // ignore
+        } finally {
+            scanStopRef.current = null;
+        }
+        try {
+            scanConnectionRef.current?.disconnect?.();
+        } catch {
+            // ignore
+        } finally {
+            scanConnectionRef.current = null;
+        }
+        scanPromiseRef.current = null;
+        // Drop cached wallet so we can't reconnect using a stale connection.
+        wallet.current = undefined;
+
         setWalletInfo(undefined);
 
         setWalletConnected(false);
-        setWalletInfo(undefined);
         setActiveAccount(undefined);
         setAccounts([]);
         try {
@@ -154,9 +196,36 @@ export function useWalletConnect() {
      * Scan for wallets
      */
     async function scanForWallets(): Promise<Wallet | undefined> {
-        const foundWallet: Wallet | undefined = await new Promise((resolve) => {
+        // Concurrency safety: if a scan is already running, reuse it instead of starting a new one.
+        if (scanPromiseRef.current) return scanPromiseRef.current;
+
+        const scanPromise = new Promise<Wallet | undefined>((resolve) => {
+            let isDone = false;
+            const scannerConnection = new BrowserWindowMessageConnection({ debug: false });
+            const cleanup = () => {
+                if (isDone) return;
+                isDone = true;
+
+                try {
+                    stopScan();
+                } catch {
+                    // ignore
+                }
+                try {
+                    scannerConnection.disconnect?.();
+                } catch {
+                    // ignore
+                }
+
+                // Clear shared refs only if they still point to this scan's resources.
+                if (scanConnectionRef.current === scannerConnection) scanConnectionRef.current = null;
+                if (scanStopRef.current === stopScan) scanStopRef.current = null;
+                if (scanPromiseRef.current === scanPromise) scanPromiseRef.current = null;
+            };
+
             const $walletConnectTimeout = setTimeout(
                 () => {
+                    cleanup();
                     resolve(undefined);
                 },
                 (IS_MOBILE || IS_SAFARI) && !IS_FRAMED_AEPP ? 7000 : 15000,
@@ -169,17 +238,17 @@ export function useWalletConnect() {
                 wallets: Wallets;
             }) => {
                 clearTimeout($walletConnectTimeout);
-                stopScan();
+                cleanup();
                 resolve(newWallet);
             };
 
-            const scannerConnection = new BrowserWindowMessageConnection({
-                debug: true,
-            });
             const stopScan = walletDetector(scannerConnection, handleWallets);
+            scanConnectionRef.current = scannerConnection;
+            scanStopRef.current = stopScan;
         });
 
-        return foundWallet;
+        scanPromiseRef.current = scanPromise;
+        return scanPromise;
     }
 
     async function checkWalletConnection() {

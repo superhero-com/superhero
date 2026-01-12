@@ -2,6 +2,7 @@ import { PairDto } from "@/api/generated";
 import { AddressChip } from "@/components/AddressChip";
 import AeButton from "@/components/AeButton";
 import { TokenChip } from "@/components/TokenChip";
+import { useSectionTheme } from "@/components/layout/AppLayout";
 import { useNavigate } from "react-router-dom";
 
 interface PoolHeaderProps {
@@ -10,6 +11,7 @@ interface PoolHeaderProps {
 
 export function PoolHeader({ pairData }: PoolHeaderProps) {
   const navigate = useNavigate();
+  const { colors } = useSectionTheme();
 
   return (
     <>
@@ -38,7 +40,8 @@ export function PoolHeader({ pairData }: PoolHeaderProps) {
           }
           variant="secondary-dark"
           size="medium"
-          className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+          className="border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+          style={{ background: colors.gradient }}
         >
           Swap
         </AeButton>
@@ -50,7 +53,8 @@ export function PoolHeader({ pairData }: PoolHeaderProps) {
           }
           variant="secondary-dark"
           size="medium"
-          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+          className="border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+          style={{ background: colors.gradient }}
         >
           Add Liquidity
         </AeButton>
@@ -60,7 +64,8 @@ export function PoolHeader({ pairData }: PoolHeaderProps) {
           }
           variant="secondary-dark"
           size="medium"
-          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+          className="border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+          style={{ background: colors.gradient }}
         >
           View {pairData?.token0?.symbol || "Token"}
         </AeButton>
@@ -70,7 +75,8 @@ export function PoolHeader({ pairData }: PoolHeaderProps) {
           }
           variant="secondary-dark"
           size="medium"
-          className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+          className="border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+          style={{ background: colors.gradient }}
         >
           View {pairData?.token1?.symbol || "Token"}
         </AeButton>

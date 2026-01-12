@@ -225,6 +225,34 @@
     }
   }
   
+  // Swiss Minimal variant - clean, no effects
+  &--swiss {
+    background: inherit;
+    color: inherit;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    text-shadow: none;
+    transform: none;
+    
+    &:hover:not(:disabled) {
+      transform: none;
+      box-shadow: none;
+      opacity: 0.9;
+    }
+    
+    &:active:not(:disabled) {
+      transform: scale(0.98);
+      box-shadow: none;
+    }
+    
+    &:focus-visible {
+      outline: none;
+      box-shadow: none;
+    }
+  }
+  
   &__content {
     display: flex;
     align-items: center;

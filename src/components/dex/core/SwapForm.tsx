@@ -366,7 +366,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   }, [swapLoading, amountIn, amountOut, tokenIn, tokenOut, hasInsufficientBalance, routeInfo.path.length, hasNoLiquidity, routeInfo.liquidityStatus]);
 
   return (
-    <div className="w-full sm:w-[480px] mx-auto bg-transparent border-0 p-0 relative overflow-hidden flex-shrink-0 sm:bg-white/[0.02] sm:border sm:border-white/10 sm:backdrop-blur-[20px] sm:rounded-[24px] sm:p-6 sm:shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+    <div className="w-full sm:w-[480px] mx-auto bg-transparent border-0 p-0 relative overflow-hidden flex-shrink-0 sm:bg-white sm:border sm:border-gray-200 sm:rounded-[24px] sm:p-6 sm:shadow-md">
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-xl font-bold m-0 sh-dex-title">
@@ -376,13 +376,13 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <DexSettings title={t('swap.swapSettings')}>
           <button
             aria-label={t('labels.openSettings', { ns: 'common' })}
-            className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
+            className="px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 cursor-pointer transition-all duration-300 ease-out text-xs font-medium hover:bg-gray-100 hover:-translate-y-0.5 active:translate-y-0"
           >
             ⚙️ {t('swap.settings')}
           </button>
         </DexSettings>
       </div>
-      <p className="m-0 mb-4 text-sm text-white/60 leading-relaxed">
+      <p className="m-0 mb-4 text-sm text-gray-600 leading-relaxed">
         {t('swap.description')}
       </p>
 
@@ -411,7 +411,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <button
           onClick={handleTokenSwap}
           disabled={swapLoading || !tokenIn || !tokenOut}
-          className="w-12 h-12 rounded-full border border-white/10 bg-white/[0.08] backdrop-blur-[10px] text-white cursor-pointer flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(0,0,0,0.25)] z-[2] relative hover:bg-white/[0.12] hover:-translate-y-0.5 hover:rotate-180 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:rotate-0"
+          className="w-12 h-12 rounded-full border border-gray-200 bg-white text-gray-700 cursor-pointer flex items-center justify-center text-xl font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-md z-[2] relative hover:bg-gray-50 hover:-translate-y-0.5 hover:rotate-180 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:rotate-0"
         >
           ⬇️
         </button>
@@ -484,10 +484,10 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         <button
           onClick={() => setShowConfirm(true)}
           disabled={isSwapDisabled}
-          className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isSwapDisabled
-              ? 'bg-white/10 cursor-not-allowed opacity-60'
-              : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
+              ? 'bg-gray-200 text-gray-500 cursor-not-allowed opacity-60'
+              : 'bg-[#1161FE] text-white shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0'
           }`}
         >
           {swapLoading ? (

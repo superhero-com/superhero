@@ -9,6 +9,7 @@ import { BuyAeWidget } from "../../features/ae-eth-buy";
 import { useWallet } from "../../hooks";
 import { useAddressByChainName } from "../../hooks/useChainName";
 import { useCurrencies } from "@/hooks/useCurrencies";
+import { useSectionTheme } from "./AppLayout";
 
 export default function RightRail({
   hidePriceSection = true,
@@ -21,6 +22,7 @@ export default function RightRail({
   const params = useParams();
   const { activeAccount } = useAeSdk();
   const { currentCurrencyCode, setCurrentCurrency, currencyRates } = useCurrencies();
+  const { colors } = useSectionTheme();
   
   // Resolve chain name if present
   const isChainName = params.address?.endsWith(".chain");
@@ -71,14 +73,20 @@ export default function RightRail({
     <div id="right-rail-root" className="grid gap-4 h-fit min-w-0 scrollbar-thin scrollbar-track-white/[0.02] scrollbar-thumb-gradient-to-r scrollbar-thumb-from-pink-500/60 scrollbar-thumb-via-[rgba(0,255,157,0.6)] scrollbar-thumb-to-pink-500/60 scrollbar-thumb-rounded-[10px] scrollbar-thumb-border scrollbar-thumb-border-white/10 hover:scrollbar-thumb-from-pink-500/80 hover:scrollbar-thumb-via-[rgba(0,255,157,0.8)] hover:scrollbar-thumb-to-pink-500/80">
       {/* Network & Wallet Overview - Hidden on own profile */}
       {!isOwnProfile && (
-        <div className="bg-white/[0.03] border border-white/10 rounded-[20px] px-5 py-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
+        <div 
+          className="bg-white/[0.03] rounded-[20px] px-5 py-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden"
+          style={{ border: `1px solid ${colors.border}` }}
+        >
           <WalletOverviewCard key={activeAccount} selectedCurrency={selectedCurrency} prices={prices} />
         </div>
       )}
 
       {/* Enhanced Price Section (hidden by default via hidePriceSection) */}
       {!hidePriceSection && (
-        <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
+        <div 
+          className="bg-white/[0.03] rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden"
+          style={{ border: `1px solid ${colors.border}` }}
+        >
           <div className="flex items-center gap-3 mb-4">
             <span className="text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
               📈
@@ -173,10 +181,13 @@ export default function RightRail({
 
 
       {/* Trading Leaderboard promo */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none mb-4">
+      <div 
+        className="bg-white/[0.03] rounded-[20px] p-4 shadow-none mb-4"
+        style={{ border: `1px solid ${colors.border}` }}
+      >
         <div className="flex items-center gap-2 mb-2">
           <span className="text-lg">🏆</span>
-          <h4 className="m-0 text-white text-base font-bold">
+          <h4 className="m-0 text-gray-900 text-base font-bold">
             Top Traders
           </h4>
         </div>
@@ -184,7 +195,8 @@ export default function RightRail({
           See which wallets are leading the markets by PnL, ROI and AUM on the Trading Leaderboard.
         </p>
         <button
-          className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black border-none rounded-xl py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5"
+          className="w-full text-white border-none rounded-xl py-2.5 px-3 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+          style={{ background: colors.gradient }}
           onClick={() => navigate('/trends/leaderboard')}
         >
           View Trading Leaderboard
@@ -192,52 +204,61 @@ export default function RightRail({
       </div>
 
       {/* Quick Actions - moved to Right Rail bottom */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
+      <div 
+        className="bg-white/[0.03] rounded-[20px] p-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden"
+        style={{ border: `1px solid ${colors.border}` }}
+      >
         <div className="flex items-center gap-2 mb-4">
           <span className="text-lg">⚡</span>
-          <h4 className="m-0 text-white text-base font-bold">
+          <h4 className="m-0 text-gray-900 text-base font-bold">
             Quick Actions
           </h4>
         </div>
 
         <div className="grid grid-cols-2 gap-2.5">
           <button
-            className="bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            style={{ background: colors.gradient }}
             onClick={() => navigate('/trends/tokens')}
             title={t('titles.exploreTrends')}
           >
             🔍 Explore Trends
           </button>
           <button
-            className="bg-gradient-to-r from-rose-500 to-orange-500 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            style={{ background: colors.gradient }}
             onClick={() => navigate('/trends/create')}
             title={t('titles.tokenizeATrend')}
           >
             🚀 Tokenize a Trend
           </button>
           <button
-            className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            style={{ background: colors.gradient }}
             onClick={() => navigate('/defi/swap')}
             title={t('titles.swapTokensOnDex')}
           >
             🔄 Swap Tokens
           </button>
           <button
-            className="bg-gradient-to-r from-sky-500 to-blue-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            style={{ background: colors.gradient }}
             onClick={() => navigate('/defi/wrap')}
             title={t('titles.wrapOrUnwrapAe')}
           >
             📦 Wrap AE
           </button>
           <button
-            className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            style={{ background: colors.gradient }}
             onClick={() => navigate('/defi/buy-ae-with-eth')}
             title={t('titles.buyAeWithEth')}
           >
             🌉 Buy AE with ETH
           </button>
           <button
-            className="bg-gradient-to-r from-amber-500 to-orange-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            style={{ background: colors.gradient }}
             onClick={() => navigate('/defi/pool')}
             title={t('titles.provideLiquidityToPools')}
           >
@@ -247,7 +268,8 @@ export default function RightRail({
             href="https://quali.chat"
             target="_blank"
             rel="noopener noreferrer"
-            className="col-span-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(147,51,234,0.35)] no-underline text-center flex items-center justify-center gap-1.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            className="col-span-2 text-white border-none rounded-xl py-3.5 px-3.5 text-xs font-semibold cursor-pointer transition-all duration-200 hover:-translate-y-0.5 no-underline text-center flex items-center justify-center gap-1.5 relative overflow-hidden after:content-[''] after:absolute after:top-0 after:-left-full after:w-full after:h-full after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:transition-all after:duration-600 hover:after:left-full"
+            style={{ background: colors.gradient }}
             title={t('titles.openChat')}
           >
             💬 Chat
@@ -256,7 +278,10 @@ export default function RightRail({
       </div>
 
       {/* Buy AE with ETH widget (compact) */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none">
+      <div 
+        className="bg-white/[0.03] rounded-[20px] p-4 shadow-none"
+        style={{ border: `1px solid ${colors.border}` }}
+      >
         <BuyAeWidget embedded={true} />
       </div>
     </div>

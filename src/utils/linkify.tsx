@@ -267,7 +267,7 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
   return withLineBreaks;
 }
 
-export function formatUrl(url: string): string {
+function formatUrl(url: string): string {
   try {
     const withProtocol = url.startsWith('http') ? url : `https://${url}`;
     const u = new URL(withProtocol);
@@ -279,7 +279,7 @@ export function formatUrl(url: string): string {
   }
 }
 
-export function truncateEnd(text: string, max: number): string {
+function truncateEnd(text: string, max: number): string {
   if (text.length <= max) return text;
   return text.slice(0, Math.max(0, max - 1)) + '…';
 }

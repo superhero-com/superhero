@@ -1,6 +1,5 @@
 import { BrowserWindowMessageConnection, Encoded, Tag } from "@aeternity/aepp-sdk";
 import {
-  PRICE_MOVEMENT_TIMEFRAMES,
   TX_FUNCTIONS,
   WEB_SOCKET_CHANNELS,
 } from "@/utils/constants";

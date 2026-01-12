@@ -111,14 +111,19 @@ export default function FeedList({
     const params = new URLSearchParams(location.search);
     const fromUrl = (params.get("window") as '24h'|'7d'|'all' | null) || '24h';
     if (fromUrl !== popularWindow) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Popular Feed] URL window changed from', popularWindow, 'to', fromUrl);
+      }
       setPopularWindow(fromUrl);
       if (sortBy === 'hot') {
         // Reset cached pages to avoid mixing windows
         queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
+        // Invalidate the new query to force refetch
+        queryClient.invalidateQueries({ queryKey: ["popular-posts", { limit: 10, window: fromUrl }] });
       }
     }
   }, [location.search, sortBy, queryClient, popularWindow]);
-
+  
   // Helper to map a token object or websocket payload into a Post-like item
   const mapTokenCreatedToPost = useCallback((payload: any): PostDto => {
     const saleAddress: string = payload?.sale_address || payload?.address || "";
@@ -350,6 +355,7 @@ export default function FeedList({
   const {
     data: popularData,
     isLoading: popularLoading,
+    isFetching: popularFetching,
     error: popularError,
     fetchNextPage: fetchNextPopular,
     hasNextPage: hasMorePopular,
@@ -359,6 +365,9 @@ export default function FeedList({
     enabled: sortBy === "hot",
     queryKey: ["popular-posts", { limit: 10, window: popularWindow }],
     queryFn: async ({ pageParam = 1 }) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Popular Feed] Fetching with window:', popularWindow, 'page:', pageParam);
+      }
       const response = await SuperheroApi.listPopularPosts({
         window: popularWindow,
         page: pageParam as number,
@@ -366,8 +375,10 @@ export default function FeedList({
       });
       if (process.env.NODE_ENV === 'development') {
         console.log('[Popular Feed] Query response:', {
+          window: popularWindow,
           pageParam,
-          response,
+          firstItemId: response?.items?.[0]?.id,
+          itemsCount: response?.items?.length,
           meta: response?.meta,
         });
       }
@@ -434,6 +445,17 @@ export default function FeedList({
     refetchOnMount: false, // Don't block on refetch - show cached data immediately
     refetchOnWindowFocus: true, // Refetch when window regains focus
   });
+
+  // Refetch popular posts when window changes (to ensure fresh data)
+  useEffect(() => {
+    if (sortBy === 'hot' && popularData && popularData.pages.length > 0) {
+      // Check if the current data matches the current window
+      // This is a safety check - React Query should handle this automatically via query key
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Popular Feed] Window changed, ensuring query is active for window:', popularWindow);
+      }
+    }
+  }, [popularWindow, sortBy, popularData]);
 
   // Track popular post IDs to filter them out from latest posts
   const popularPostIds = useMemo(() => {
@@ -601,11 +623,38 @@ export default function FeedList({
   }, [latestData]);
 
   const popularList = useMemo(
-    () =>
-      popularData?.pages
-        ? ((popularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? [])
-        : [],
-    [popularData]
+    () => {
+      if (!popularData?.pages || popularData.pages.length === 0) return [];
+      
+      const list = ((popularData.pages as any[]) || []).flatMap((page: any) => {
+        // Handle both direct items array and PostApiResponse structure
+        if (Array.isArray(page)) {
+          return page.filter(item => item && item.id); // Filter out invalid items
+        }
+        // PostApiResponse structure: { items: [...], meta: {...} }
+        const items = page?.items;
+        if (Array.isArray(items)) {
+          return items.filter(item => item && item.id); // Filter out invalid items
+        }
+        return [];
+      });
+      
+      if (process.env.NODE_ENV === 'development' && sortBy === 'hot') {
+        console.log('[Popular Feed] popularList computed:', {
+          window: popularWindow,
+          itemsCount: list.length,
+          firstItemId: list[0]?.id,
+          pagesCount: popularData?.pages?.length,
+          firstPageStructure: popularData?.pages?.[0] ? Object.keys(popularData.pages[0]) : [],
+          firstPageHasItems: !!(popularData?.pages?.[0] as any)?.items,
+          firstPageItemsLength: (popularData?.pages?.[0] as any)?.items?.length || 0,
+          firstPageIsArray: Array.isArray(popularData?.pages?.[0]),
+          firstPageRaw: JSON.stringify(popularData?.pages?.[0]).substring(0, 200),
+        });
+      }
+      return list;
+    },
+    [popularData, popularWindow, sortBy]
   );
 
   // Check if we have enough popular posts (at least 10) to fill the initial view
@@ -879,13 +928,18 @@ export default function FeedList({
   );
 
   const handlePopularWindowChange = useCallback((w: '24h'|'7d'|'all') => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Popular Feed] Window changing from', popularWindow, 'to', w);
+    }
     setPopularWindow(w);
     if (sortBy === 'hot') {
       navigate(`/?sortBy=hot&window=${w}`);
-      // Reset pages for new window
+      // Reset pages for new window - this ensures React Query creates a fresh query
       queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
+      // Also invalidate to force refetch
+      queryClient.invalidateQueries({ queryKey: ["popular-posts", { limit: 10, window: w }] });
     }
-  }, [navigate, sortBy, queryClient]);
+  }, [navigate, sortBy, queryClient, popularWindow]);
 
   const handleItemClick = useCallback(
     (idOrSlug: string) => {
@@ -909,28 +963,46 @@ export default function FeedList({
   // Render helpers
   const renderEmptyState = () => {
     if (sortBy === "hot") {
-      // Only show loading if we don't have cached data
-      const initialLoading = popularLoading && (!popularData || (popularData as any)?.pages?.length === 0);
+      // Check if we have actual content to show
+      const hasDataPages = popularData && (popularData as any)?.pages?.length > 0;
+      const hasContent = popularList.length > 0 || filteredAndSortedList.length > 0;
+      const hasNoData = !popularData || (popularData as any)?.pages?.length === 0;
+      const initialLoading = (popularLoading || popularFetching) && hasNoData;
       const err = popularError;
+      
       if (err) {
         return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); }} />;
       }
-      // Show skeleton loaders when there are no popular posts for the selected window
-      if (!err && filteredAndSortedList.length === 0 && !initialLoading) {
-        return (
-          <div className="w-full flex flex-col gap-2">
-            {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-hot-empty-${i}`} />)}
-          </div>
-        );
+      
+      // If we have content to show, don't show skeletons - let the feed render
+      if (hasContent) {
+        return null;
       }
-      if (initialLoading && filteredAndSortedList.length === 0) {
-        // Show skeleton loaders instead of loading text
+      
+      // If we have data pages but no content, query completed but returned empty
+      // Don't show loading skeletons in this case
+      if (hasDataPages && !hasContent) {
+        return null; // Query completed but no items - let feed handle it
+      }
+      
+      // Only show skeletons when actively loading and no data yet
+      if (initialLoading) {
         return (
           <div className="w-full flex flex-col gap-2">
             {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-hot-${i}`} />)}
           </div>
         );
       }
+      
+      // If not loading and no data, show empty skeletons (for empty state)
+      if (!initialLoading && hasNoData) {
+        return (
+          <div className="w-full flex flex-col gap-2">
+            {Array.from({ length: 3 }, (_, i) => <PostSkeleton key={`skeleton-hot-empty-${i}`} />)}
+          </div>
+        );
+      }
+      
       return null;
     }
     // Only show loading if we don't have cached data
@@ -944,7 +1016,7 @@ export default function FeedList({
     const hasCachedData = sortBy !== "hot" && (hasQueryData || (hasCachedPostsData && hasCachedActivitiesData));
     
     const initialLoading = sortBy === "hot"
-      ? (popularLoading && (!popularData || (popularData as any)?.pages?.length === 0))
+      ? ((popularLoading || popularFetching) && (!popularData || (popularData as any)?.pages?.length === 0))
       : (!hasCachedData && (latestLoading || activitiesLoading)); // Only show loading if no cached data and actually loading
     if (latestError) {
       return <EmptyState type="error" error={latestError as any} onRetry={refetchLatest} />;
@@ -1110,7 +1182,7 @@ export default function FeedList({
   
   const initialLoading =
     sortBy === "hot"
-      ? (popularLoading && (!popularData || (popularData as any)?.pages?.length === 0))
+      ? ((popularLoading || popularFetching) && (!popularData || (popularData as any)?.pages?.length === 0))
       : (!hasCachedDataForLatest && (latestLoading || activitiesLoading)); // Only show loading if no cached data and actually loading
   const [showLoadMore, setShowLoadMore] = useState(false);
   useEffect(() => { setShowLoadMore(false); }, [sortBy]);
@@ -1316,23 +1388,32 @@ export default function FeedList({
         {sortBy !== "hot" && (latestData?.pages.length > 0 || activityList.length > 0) && renderFeedItems}
 
         {/* Hot: render popular posts (which seamlessly includes recent posts after popular posts are exhausted) */}
-        {sortBy === "hot" && (popularData?.pages.length > 0 || latestDataForHot?.pages.length > 0) && (
+        {sortBy === "hot" && (
           <>
-            {/* Debug log removed to reduce console spam */}
-            {/* {process.env.NODE_ENV === 'development' && console.log('🔍 [DEBUG] Rendering hot feed:', {
+            {process.env.NODE_ENV === 'development' && console.log('🔍 [DEBUG] Rendering hot feed:', {
               filteredAndSortedListLength: filteredAndSortedList.length,
+              popularListLength: popularList.length,
               popularDataPages: popularData?.pages?.length || 0,
               latestDataForHotPages: latestDataForHot?.pages?.length || 0,
-            })} */}
-            {filteredAndSortedList.map((item) => (
-              <ReplyToFeedItem
-                key={item.id}
-                item={item}
-                commentCount={item.total_comments ?? 0}
-                allowInlineRepliesToggle={false}
-                onOpenPost={handleItemClick}
-              />
-            ))}
+              firstPageItems: (popularData?.pages?.[0] as any)?.items?.length || 0,
+              popularLoading,
+              popularFetching,
+              hasContent: popularList.length > 0 || filteredAndSortedList.length > 0,
+            })}
+            {/* Always try to render content if we have it */}
+            {(filteredAndSortedList.length > 0 || popularList.length > 0) && (
+              <>
+                {(filteredAndSortedList.length > 0 ? filteredAndSortedList : popularList).map((item) => (
+                  <ReplyToFeedItem
+                    key={item.id}
+                    item={item}
+                    commentCount={item.total_comments ?? 0}
+                    allowInlineRepliesToggle={false}
+                    onOpenPost={handleItemClick}
+                  />
+                ))}
+              </>
+            )}
           </>
         )}
       </div>

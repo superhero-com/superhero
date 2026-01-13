@@ -1,4 +1,5 @@
 import React from 'react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Button } from '../../../../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
 import { DataTableMeta } from './DataTable';
@@ -24,7 +25,6 @@ export function DataTablePagination({
 }: DataTablePaginationProps) {
   const {
     totalItems,
-    itemCount,
     itemsPerPage,
     totalPages,
     currentPage,
@@ -58,132 +58,119 @@ export function DataTablePagination({
   }
 
   return (
-    <div className={`flex items-center justify-between px-2 ${className}`}>
-      {/* Items per page selector */}
-      {showItemsPerPage && onItemsPerPageChange && (
-        <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Rows per page</p>
-          <Select
-            value={itemsPerPage.toString()}
-            onValueChange={handleItemsPerPageChange}
-            disabled={isLoading}
+    <div className={`py-3 ${className}`}>
+      {/* Mobile: Compact single-row layout with FAB clearance */}
+      <div className="flex md:hidden items-center gap-3 pr-20">
+        {/* Navigation */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handlePrevious}
+            disabled={currentPage === 1 || isLoading}
+            className="flex items-center justify-center w-8 h-8 rounded-lg border border-white/10 bg-white/[0.03] text-white/70 transition-all hover:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed"
+            aria-label="Previous page"
           >
-            <SelectTrigger className="h-8 w-[70px]">
-              <SelectValue placeholder={itemsPerPage} />
-            </SelectTrigger>
-            <SelectContent side="top">
-              {itemsPerPageOptions.map((pageSize) => (
-                <SelectItem key={pageSize} value={pageSize.toString()}>
-                  {pageSize}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          
+          <div className="flex items-center gap-1 px-2 text-xs text-white/60">
+            <span className="font-medium text-white/90">{currentPage}</span>
+            <span>/</span>
+            <span>{totalPages}</span>
+          </div>
+          
+          <button
+            onClick={handleNext}
+            disabled={currentPage === totalPages || isLoading}
+            className="flex items-center justify-center w-8 h-8 rounded-lg border border-white/10 bg-white/[0.03] text-white/70 transition-all hover:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed"
+            aria-label="Next page"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
-      )}
 
-      {/* Page info */}
-      <div className="flex items-center space-x-6 lg:space-x-8">
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {currentPage} of {totalPages}
-        </div>
-        <div className="flex items-center space-x-2">
-          <p className="text-sm text-muted-foreground">
-            Showing {startItem} to {endItem} of {totalItems} results
-          </p>
-        </div>
+        {/* Items info */}
+        <span className="text-[10px] text-white/40">
+          {startItem}-{endItem} of {totalItems}
+        </span>
       </div>
 
-      {/* Navigation buttons */}
-      <div className="flex items-center space-x-2">
-        <Button
-          variant="outline"
-          className="hidden h-8 w-8 p-0 lg:flex"
-          onClick={() => onPageChange(1)}
-          disabled={currentPage === 1 || isLoading}
-        >
-          <span className="sr-only">Go to first page</span>
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
+      {/* Desktop: Full layout */}
+      <div className="hidden md:flex items-center justify-between">
+        {/* Items per page selector */}
+        {showItemsPerPage && onItemsPerPageChange && (
+          <div className="flex items-center space-x-2">
+            <p className="text-sm font-medium text-white/70">Rows</p>
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={handleItemsPerPageChange}
+              disabled={isLoading}
+            >
+              <SelectTrigger className="h-8 w-[70px]">
+                <SelectValue placeholder={itemsPerPage} />
+              </SelectTrigger>
+              <SelectContent side="top">
+                {itemsPerPageOptions.map((pageSize) => (
+                  <SelectItem key={pageSize} value={pageSize.toString()}>
+                    {pageSize}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Page info */}
+        <div className="flex items-center space-x-4">
+          <div className="text-sm text-white/60">
+            <span className="font-medium text-white/90">{currentPage}</span>
+            <span> / {totalPages}</span>
+            <span className="ml-2 text-white/40">({startItem}-{endItem} of {totalItems})</span>
+          </div>
+        </div>
+
+        {/* Navigation buttons */}
+        <div className="flex items-center space-x-1">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onPageChange(1)}
+            disabled={currentPage === 1 || isLoading}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-            />
-          </svg>
-        </Button>
-        <Button
-          variant="outline"
-          className="h-8 w-8 p-0"
-          onClick={handlePrevious}
-          disabled={currentPage === 1 || isLoading}
-        >
-          <span className="sr-only">Go to previous page</span>
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
+            <span className="sr-only">Go to first page</span>
+            <ChevronsLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handlePrevious}
+            disabled={currentPage === 1 || isLoading}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </Button>
-        <Button
-          variant="outline"
-          className="h-8 w-8 p-0"
-          onClick={handleNext}
-          disabled={currentPage === totalPages || isLoading}
-        >
-          <span className="sr-only">Go to next page</span>
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
+            <span className="sr-only">Go to previous page</span>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleNext}
+            disabled={currentPage === totalPages || isLoading}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </Button>
-        <Button
-          variant="outline"
-          className="hidden h-8 w-8 p-0 lg:flex"
-          onClick={() => onPageChange(totalPages)}
-          disabled={currentPage === totalPages || isLoading}
-        >
-          <span className="sr-only">Go to last page</span>
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
+            <span className="sr-only">Go to next page</span>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onPageChange(totalPages)}
+            disabled={currentPage === totalPages || isLoading}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 5l7 7-7 7M5 5l7 7-7 7"
-            />
-          </svg>
-        </Button>
+            <span className="sr-only">Go to last page</span>
+            <ChevronsRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

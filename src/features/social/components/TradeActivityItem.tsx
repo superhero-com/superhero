@@ -4,6 +4,7 @@ import { memo, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PostHashtagLink from "@/components/social/PostHashtagLink";
 import { Badge } from "@/components/ui/badge";
+import { Plus, RefreshCw } from "lucide-react";
 import { useWallet } from "../../../hooks";
 import { compactTime, fullTimestamp } from "../../../utils/time";
 import { formatCompactNumber } from "../../../utils/number";
@@ -37,6 +38,9 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
   const tokenLabel = item?.token?.symbol || item?.token?.name || "Token";
   const tokenTag = tokenName || tokenLabel;
   const tokenLink = tokenTag ? `/trends/tokens/${encodeURIComponent(tokenTag)}` : "";
+  const copyTradeLink = tokenTag
+    ? `/trends/tokens/${encodeURIComponent(tokenTag)}?trade=buy&amount=${encodeURIComponent(String(item?.volume || ""))}`
+    : "";
 
   const onOpen = useCallback(() => {
     if (tokenLink) navigate(tokenLink);
@@ -63,7 +67,11 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
       role="button"
       aria-label="Open trade"
     >
-      <div className="absolute top-4 right-2 md:top-5 md:right-5 z-10">
+      <div className="absolute top-4 right-2 md:top-5 md:right-5 z-10 flex items-center gap-2">
+        <span className="relative flex h-6 w-6 items-center justify-center rounded-full border border-sky-400/30 bg-sky-500/15 text-sky-200">
+          <RefreshCw className="h-3.5 w-3.5" />
+          <Plus className="absolute h-2.5 w-2.5" />
+        </span>
         <Badge className="border-sky-400/30 bg-sky-500/20 text-sky-200 uppercase tracking-wide">
           Trade
         </Badge>
@@ -109,6 +117,21 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
               </>
             )}
           </div>
+          {copyTradeLink && (
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(copyTradeLink);
+                }}
+                className="text-[13px] font-semibold text-sky-300 hover:text-sky-200 transition-colors"
+                title="Copy Trade"
+              >
+                Copy Trade
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />

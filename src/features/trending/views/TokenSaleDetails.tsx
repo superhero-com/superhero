@@ -1,8 +1,8 @@
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Head from "../../../seo/Head";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { TokensService } from "../../../api/generated/services/TokensService";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { useOwnedTokens } from "../../../hooks/useOwnedTokens";
@@ -34,6 +34,7 @@ import {
 } from "..";
 import { TokenSummary } from "../../bcl/components";
 import { useLiveTokenData } from "../hooks/useLiveTokenData";
+import { useTokenTradeStore } from "../hooks/useTokenTradeStore";
 
 
 // Tab constants
@@ -52,6 +53,7 @@ type TabType =
 export default function TokenSaleDetails() {
   const { tokenName } = useParams<{ tokenName: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { activeAccount } = useAeSdk();
 
   // State
@@ -64,11 +66,22 @@ export default function TokenSaleDetails() {
   const [pendingLastsLong, setPendingLastsLong] = useState(false);
   const { ownedTokens } = useOwnedTokens();
   const [holdersOnly, setHoldersOnly] = useState(true);
+  const tradePrefillAppliedRef = useRef(false);
+  const {
+    switchTradeView,
+    updateTokenA,
+    updateTokenB,
+    updateTokenAFocused,
+  } = useTokenTradeStore();
 
   // Ensure token page starts at top on mount
   useEffect(() => {
     try { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); } catch { window.scrollTo(0, 0); }
   }, []);
+
+  useEffect(() => {
+    tradePrefillAppliedRef.current = false;
+  }, [tokenName]);
 
   // Check if token is newly created (from local storage or state)
   const isTokenNewlyCreated = useMemo(() => {
@@ -136,6 +149,24 @@ export default function TokenSaleDetails() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  useEffect(() => {
+    if (tradePrefillAppliedRef.current) return;
+    const params = new URLSearchParams(location.search);
+    const tradeType = params.get("trade");
+    const amountRaw = params.get("amount");
+    if (tradeType !== "buy" || !amountRaw) return;
+    const amount = Number(amountRaw);
+    if (!Number.isFinite(amount) || amount <= 0) return;
+    switchTradeView(true);
+    updateTokenA(undefined);
+    updateTokenB(amount);
+    updateTokenAFocused(false);
+    tradePrefillAppliedRef.current = true;
+    if (isMobile) {
+      setTradeActionSheet(true);
+    }
+  }, [location.search, isMobile, switchTradeView, updateTokenA, updateTokenB, updateTokenAFocused]);
 
   // Share URL
   const shareUrl = useMemo(() => {

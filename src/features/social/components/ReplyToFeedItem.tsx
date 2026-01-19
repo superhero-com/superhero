@@ -296,7 +296,10 @@ const ReplyToFeedItem = memo(({
               <div className="text-[12px] text-white line-clamp-2">
                 {parentError || !parent
                   ? "Parent unavailable/not visible"
-                  : linkify(parent.content, { knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())) })}
+                  : linkify(parent.content, {
+                    knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())),
+                    hashtagVariant: 'post-inline',
+                    })}
               </div>
               <div className="mt-1 text-[11px] text-white/70">Show post</div>
             </button>
@@ -304,7 +307,10 @@ const ReplyToFeedItem = memo(({
 
           {/* Body */}
           <div className="mt-3 text-[15px] text-foreground leading-snug">
-            {linkify(item.content, { knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())) })}
+            {linkify(item.content, {
+              knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())),
+              hashtagVariant: 'post-inline',
+              })}
           </div>
 
           {/* Media */}

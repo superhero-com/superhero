@@ -43,4 +43,29 @@ export function formatNumber(num: number | string | undefined, decimals = 2) {
   return negative ? `-${formatted}` : formatted;
 }
 
+// Compact formatter for K/M/B notation with configurable precision.
+export function formatCompactNumber(
+  num: number | string | undefined,
+  decimals = 2,
+  compactDecimals = 2,
+) {
+  const n = Number(num);
+  if (!Number.isFinite(n) || n === 0) return '0';
+  const negative = n < 0;
+  const value = Math.abs(n);
+
+  let formatted: string;
+  if (value < 1_000) {
+    formatted = value.toFixed(decimals);
+  } else if (value < 1_000_000) {
+    formatted = `${(value / 1_000).toFixed(compactDecimals)}K`;
+  } else if (value < 1_000_000_000) {
+    formatted = `${(value / 1_000_000).toFixed(compactDecimals)}M`;
+  } else {
+    formatted = `${(value / 1_000_000_000).toFixed(compactDecimals)}B`;
+  }
+
+  return negative ? `-${formatted}` : formatted;
+}
+
 

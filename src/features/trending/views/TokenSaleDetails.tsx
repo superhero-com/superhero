@@ -6,6 +6,7 @@ import { useLocation, useParams } from "react-router-dom";
 import { TokensService } from "../../../api/generated/services/TokensService";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { useOwnedTokens } from "../../../hooks/useOwnedTokens";
+import { useIsMobile } from "@/hooks";
 import TokenNotFound from "../../../components/TokenNotFound";
 
 // Components
@@ -64,7 +65,7 @@ export default function TokenSaleDetails() {
   const [tradeActionSheet, setTradeActionSheet] = useState(false);
   const [performance, setPerformance] = useState<any | null>(null);
   const [pendingLastsLong, setPendingLastsLong] = useState(false);
-  const [isMobile, setIsMobile] = useState<boolean>(() => window.innerWidth < 768);
+  const isMobile = useIsMobile();
   const [showTradePanels, setShowTradePanels] = useState(() => {
     const params = new URLSearchParams(location.search);
     const showTradeParam = params.get("showTrade");
@@ -179,16 +180,6 @@ export default function TokenSaleDetails() {
 
   // Derived states
   const isTokenPending = isTokenNewlyCreated && !token?.sale_address;
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
 
   useEffect(() => {
     if (tradePrefillAppliedRef.current) return;

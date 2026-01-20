@@ -64,6 +64,13 @@ export default function TokenSaleDetails() {
   const [tradeActionSheet, setTradeActionSheet] = useState(false);
   const [performance, setPerformance] = useState<any | null>(null);
   const [pendingLastsLong, setPendingLastsLong] = useState(false);
+  const [showTradePanels, setShowTradePanels] = useState(() => {
+    const params = new URLSearchParams(location.search);
+    const showTradeParam = params.get("showTrade");
+    if (showTradeParam === null) return true;
+    const normalized = showTradeParam.toLowerCase();
+    return !(normalized === "0" || normalized === "false" || normalized === "off");
+  });
   const { ownedTokens } = useOwnedTokens();
   const [holdersOnly, setHoldersOnly] = useState(true);
   const tradePrefillAppliedRef = useRef(false);
@@ -82,6 +89,23 @@ export default function TokenSaleDetails() {
   useEffect(() => {
     tradePrefillAppliedRef.current = false;
   }, [tokenName]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const showTradeParam = params.get("showTrade");
+    if (showTradeParam === null) {
+      setShowTradePanels(true);
+      return;
+    }
+    const normalized = showTradeParam.toLowerCase();
+    setShowTradePanels(!(normalized === "0" || normalized === "false" || normalized === "off"));
+  }, [location.search, tokenName]);
+
+  useEffect(() => {
+    if (!showTradePanels) {
+      setTradeActionSheet(false);
+    }
+  }, [showTradePanels]);
 
   // Check if token is newly created (from local storage or state)
   const isTokenNewlyCreated = useMemo(() => {
@@ -158,6 +182,7 @@ export default function TokenSaleDetails() {
     if (tradeType !== "buy" || !amountRaw) return;
     const amount = Number(amountRaw);
     if (!Number.isFinite(amount) || amount <= 0) return;
+    if (!showTradePanels) return;
     switchTradeView(true);
     updateTokenA(undefined);
     updateTokenB(amount);
@@ -166,7 +191,7 @@ export default function TokenSaleDetails() {
     if (isMobile) {
       setTradeActionSheet(true);
     }
-  }, [location.search, isMobile, switchTradeView, updateTokenA, updateTokenB, updateTokenAFocused]);
+  }, [location.search, isMobile, switchTradeView, updateTokenA, updateTokenB, updateTokenAFocused, showTradePanels]);
 
   // Share URL
   const shareUrl = useMemo(() => {
@@ -210,7 +235,7 @@ export default function TokenSaleDetails() {
           description={`Explore ${tokenName} token, trades, holders and posts.`}
           canonicalPath={`/trends/tokens/${tokenName}`}
         />
-        <LatestTransactionsCarousel />
+        {showTradePanels && <LatestTransactionsCarousel />}
 
         <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-6 mb-6">
           <h2 className="text-xl font-semibold text-white mb-2">
@@ -247,7 +272,7 @@ export default function TokenSaleDetails() {
           identifier: token?.address || token?.sale_address,
         }}
       />
-      <LatestTransactionsCarousel />
+      {showTradePanels && <LatestTransactionsCarousel />}
 
       {/* Deploy Success Message */}
       {showDeployedMessage && (
@@ -284,7 +309,7 @@ export default function TokenSaleDetails() {
               <TokenSaleSidebarSkeleton boilerplate={isTokenPending} />
             ) : (
               <>
-                <TokenTradeCard token={token} />
+                {showTradePanels && <TokenTradeCard token={token} />}
                 <TokenSummary
                   token={token}
                 />
@@ -396,10 +421,12 @@ export default function TokenSaleDetails() {
           </Card>
 
           {/* Chart */}
-          {(isLoading && !token?.sale_address) ? (
-            <TokenCandlestickChartSkeleton boilerplate={isTokenPending} />
-          ) : (
-            <TokenCandlestickChart token={token} className="w-full" />
+          {showTradePanels && (
+            (isLoading && !token?.sale_address) ? (
+              <TokenCandlestickChartSkeleton boilerplate={isTokenPending} />
+            ) : (
+              <TokenCandlestickChart token={token} className="w-full" />
+            )
           )}
           {/* Tabs Section */}
           {/* Tab Headers */}
@@ -469,6 +496,23 @@ export default function TokenSaleDetails() {
                   <h3 className="m-0 text-white/90 font-semibold">
                     Posts for #{String(token.name || token.symbol || '').toUpperCase()}
                   </h3>
+                  <div className="inline-flex items-center rounded-full bg-white/10 border border-white/25 p-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowTradePanels((prev) => !prev)}
+                      aria-pressed={showTradePanels}
+                      className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold tracking-wide transition-colors ${
+                        showTradePanels
+                          ? "bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md"
+                          : "bg-white/10 text-white/80 hover:text-white"
+                      }`}
+                    >
+                      {showTradePanels ? "Trade panels: On" : "Trade panels: Off"}
+                    </button>
+                  </div>
+                </div>
+                <TokenTopicComposer tokenName={(token.name || token.symbol || '').toString()} />
+                <div className="flex items-center justify-center">
                   <div className="inline-flex items-center gap-1 rounded-full bg-white/5 border border-white/15 p-0.5 text-[11px]">
                     <button
                       type="button"
@@ -494,7 +538,6 @@ export default function TokenSaleDetails() {
                     </button>
                   </div>
                 </div>
-                <TokenTopicComposer tokenName={(token.name || token.symbol || '').toString()} />
                 <TokenTopicFeed
                   topicName={`#${String(token.name || token.symbol || '').toLowerCase()}`}
                   displayTokenName={(token.name || token.symbol || '').toString()}
@@ -518,7 +561,7 @@ export default function TokenSaleDetails() {
       </div>
 
       {/* Mobile Trading Bottom Sheet */}
-      {isMobile && (
+      {isMobile && showTradePanels && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
           <div className="flex gap-2">
             <Button
@@ -539,7 +582,7 @@ export default function TokenSaleDetails() {
       )}
 
       {/* Mobile Trading Modal */}
-      {(tradeActionSheet && token?.sale_address) && (
+      {(showTradePanels && tradeActionSheet && token?.sale_address) && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end">
           <div className="w-full bg-white/[0.02] border-t border-white/10 rounded-t-3xl p-6 backdrop-blur-xl">
             <div className="flex justify-between items-center mb-4">

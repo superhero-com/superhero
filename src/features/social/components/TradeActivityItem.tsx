@@ -39,7 +39,7 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
   const tokenTag = tokenName || tokenLabel;
   const tokenLink = tokenTag ? `/trends/tokens/${encodeURIComponent(tokenTag)}` : "";
   const copyTradeLink = tokenTag
-    ? `/trends/tokens/${encodeURIComponent(tokenTag)}?trade=buy&amount=${encodeURIComponent(String(item?.volume || ""))}`
+    ? `/trends/tokens/${encodeURIComponent(tokenTag)}?trade=buy&amount=${encodeURIComponent(String(item?.volume || ""))}&showTrade=1`
     : "";
 
   const onOpen = useCallback(() => {

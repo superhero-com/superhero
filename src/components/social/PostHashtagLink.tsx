@@ -33,7 +33,7 @@ async function fetchTokenForTag(tag: string): Promise<TokenLike | null> {
 
 export default function PostHashtagLink({ tag, label }: PostHashtagLinkProps) {
   const normalized = normalizeTag(tag);
-  const target = `/trends/tokens/${encodeURIComponent(normalized.toUpperCase())}`;
+  const target = `/trends/tokens/${encodeURIComponent(normalized.toUpperCase())}?showTrade=0`;
 
   const { data: token } = useQuery({
     queryKey: ["post-hashtag-token", normalized],

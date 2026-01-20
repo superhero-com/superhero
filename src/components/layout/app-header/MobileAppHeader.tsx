@@ -1,5 +1,6 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import SearchInput from '../../SearchInput';
 import { HeaderLogo, IconSearch } from '../../../icons';
@@ -12,6 +13,10 @@ import { AeButton } from '@/components/ui/ae-button';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
 import { useModal } from '../../../hooks';
 import FooterSection from '../FooterSection';
+import { TokensService } from '../../../api/generated/services/TokensService';
+import { SuperheroApi } from '@/api/backend';
+import TokenLineChart from '@/features/trending/components/TokenLineChart';
+import { formatNumber } from '@/utils/number';
 
 
 
@@ -26,7 +31,7 @@ export default function MobileAppHeader() {
     return themeValue;
   });
 
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const isOnFeed = pathname === '/';
   const { activeAccount } = useAeSdk();
@@ -92,6 +97,43 @@ export default function MobileAppHeader() {
     }
   }, [showOverlay, showSearch]);
 
+  const tokenPathMatch = useMemo(() => pathname.match(/^\/trends\/tokens\/([^/?#]+)/i), [pathname]);
+  const tokenNameParam = useMemo(() => {
+    if (!tokenPathMatch) return '';
+    const encoded = tokenPathMatch[1];
+    try {
+      return decodeURIComponent(encoded);
+    } catch {
+      return encoded;
+    }
+  }, [tokenPathMatch]);
+  const isTokenDetail = Boolean(tokenNameParam);
+
+  const { data: tokenData } = useQuery({
+    queryKey: ["TokensService.findByAddress", tokenNameParam],
+    queryFn: async () => {
+      if (!tokenNameParam) return null;
+      return TokensService.findByAddress({ address: tokenNameParam.toUpperCase() });
+    },
+    enabled: Boolean(tokenNameParam),
+    staleTime: 60 * 1000,
+  });
+
+  const tokenAddress = (tokenData as any)?.sale_address || (tokenData as any)?.address;
+  const { data: tokenPerformance } = useQuery({
+    queryKey: ["mobile-header-token-performance", tokenAddress],
+    queryFn: () => SuperheroApi.getTokenPerformance(String(tokenAddress)),
+    enabled: Boolean(tokenAddress),
+    staleTime: 60 * 1000,
+  });
+
+  const changeRaw = (tokenPerformance as any)?.past_7d?.current_change_percent;
+  const changePercent = Number.isFinite(Number(changeRaw)) ? Number(changeRaw) : null;
+  const priceRaw = Number((tokenData as any)?.price);
+  const priceText = Number.isFinite(priceRaw)
+    ? `$${formatNumber(priceRaw, priceRaw < 1 ? 6 : 2)}`
+    : '—';
+
   // Active route helper for mobile nav buttons
   const isActiveRoute = (path: string) => {
     if (path === '/') return pathname === '/';
@@ -123,10 +165,56 @@ export default function MobileAppHeader() {
       ) : (
         /* Normal Navigation Mode */
         <div className="px-3 flex items-center gap-2 w-full pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))] sm:px-2 sm:gap-1.5">
-          <Link to="/" className="text-[var(--standard-font-color)] flex items-center min-h-[44px] min-w-[44px] no-underline hover:no-underline no-gradient-text" style={{ textDecoration: 'none' }} aria-label={t('labels.superheroHome')}>
-            <HeaderLogo className="h-7 w-auto" />
-          </Link>
-          <div className="flex-grow hidden md:block" />
+          {isTokenDetail ? (
+            <>
+              <button
+                className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 cursor-pointer text-xl font-bold hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
+                onClick={() => navigate(-1)}
+                aria-label={t('labels.back')}
+              >
+                ←
+              </button>
+              <div className="flex-1 min-w-0 grid grid-cols-[minmax(0,1fr)_minmax(64px,88px)_auto] grid-rows-2 items-center gap-x-2">
+                <div className="row-start-1 col-start-1 text-[13px] font-semibold text-white leading-tight line-clamp-2">
+                  #{String((tokenData as any)?.symbol || (tokenData as any)?.name || tokenNameParam || '').toUpperCase()}
+                </div>
+                <div className="row-start-2 col-start-1 flex items-center gap-3 text-[12px] text-white/70">
+                  <span className="text-white/90">{priceText}</span>
+                  {typeof changePercent === "number" ? (
+                    <span className={`font-semibold tabular-nums ${changePercent >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                      {changePercent >= 0 ? "▲" : "▼"} {Math.abs(changePercent).toFixed(2)}%
+                    </span>
+                  ) : (
+                    <span className="text-white/50">—</span>
+                  )}
+                </div>
+                {tokenAddress && (
+                  <div className="row-span-2 col-start-2 flex items-center justify-center h-[24px]">
+                    <TokenLineChart saleAddress={String(tokenAddress)} height={24} hideTimeframe className="h-full w-full" />
+                  </div>
+                )}
+                <button
+                  className="row-span-2 col-start-3 ml-1 px-3.5 py-2 rounded-full text-[12px] font-bold tracking-wide bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md"
+                  onClick={() => {
+                    const params = new URLSearchParams(search);
+                    params.set("showTrade", "1");
+                    params.set("openTrade", "1");
+                    navigate({ pathname, search: params.toString() });
+                  }}
+                  aria-label="Open trade"
+                >
+                  Trade
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Link to="/" className="text-[var(--standard-font-color)] flex items-center min-h-[44px] min-w-[44px] no-underline hover:no-underline no-gradient-text" style={{ textDecoration: 'none' }} aria-label={t('labels.superheroHome')}>
+                <HeaderLogo className="h-7 w-auto" />
+              </Link>
+              <div className="flex-grow hidden md:block" />
+            </>
+          )}
 
           {/* <button
             className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
@@ -147,33 +235,37 @@ export default function MobileAppHeader() {
           )} */}
           {/* Wallet button hidden in the top mobile header */}
           {/* <HeaderWalletButton className="flex-1" /> */}
-          <div className="flex-grow md:hidden" />
+          {!isTokenDetail && (
+            <>
+              <div className="flex-grow md:hidden" />
 
-          <button
-            className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-transparent shadow-none active:shadow-none focus:shadow-none outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0"
-            onClick={(e) => { handleMenuToggle(); try { (e.currentTarget as HTMLButtonElement).blur(); } catch {} }}
-            onTouchEnd={(e) => { try { (e.currentTarget as HTMLButtonElement).blur(); } catch {} }}
-            aria-label={t('labels.openMenu')}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            tabIndex={-1}
-          >
-            <span className="flex items-center gap-2">
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden="true"
+              <button
+                className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-transparent shadow-none active:shadow-none focus:shadow-none outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0"
+                onClick={(e) => { handleMenuToggle(); try { (e.currentTarget as HTMLButtonElement).blur(); } catch {} }}
+                onTouchEnd={(e) => { try { (e.currentTarget as HTMLButtonElement).blur(); } catch {} }}
+                aria-label={t('labels.openMenu')}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+                tabIndex={-1}
               >
-                <path d="M4 6h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M4 12h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M4 18h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-              </svg>
-              {activeAccount && (
-                <AddressAvatar address={activeAccount} size={28} />
-              )}
-            </span>
-          </button>
+                <span className="flex items-center gap-2">
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path d="M4 6h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M4 12h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M4 18h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                  {activeAccount && (
+                    <AddressAvatar address={activeAccount} size={28} />
+                  )}
+                </span>
+              </button>
+            </>
+          )}
         </div>
       )}
 

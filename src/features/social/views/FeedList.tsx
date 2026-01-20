@@ -18,6 +18,7 @@ import ReplyToFeedItem from "../components/ReplyToFeedItem";
 import TokenCreatedFeedItem from "../components/TokenCreatedFeedItem";
 import TokenCreatedActivityItem from "../components/TokenCreatedActivityItem";
 import TradeActivityItem, { TradeActivityItemData } from "../components/TradeActivityItem";
+import TrendingAssetsFeedItem from "../components/TrendingAssetsFeedItem";
 import { PostApiResponse } from "../types";
 import Head from "../../../seo/Head";
 import { CONFIG } from "../../../config";
@@ -27,6 +28,14 @@ import type { TokenDto } from "../../../api/generated/models/TokenDto";
 // Custom hook
 function useUrlQuery() {
   return new URLSearchParams(useLocation().search);
+}
+
+function createSeededRandom(seed: number) {
+  let value = seed;
+  return () => {
+    value = (value * 1664525 + 1013904223) % 0x100000000;
+    return value / 0x100000000;
+  };
 }
 
 export default function FeedList({
@@ -109,6 +118,7 @@ export default function FeedList({
 
   const [localSearch, setLocalSearch] = useState(search);
   const [popularWindow, setPopularWindow] = useState<'24h'|'7d'|'all'>(initialWindow);
+  const trendingInsertSeed = useRef<number>(Math.floor(Math.random() * 0x100000000));
 
   // Keep popularWindow in sync with URL (e.g., browser back/forward or direct URL edits)
   useEffect(() => {
@@ -1052,21 +1062,39 @@ export default function FeedList({
   const renderFeedItems = useMemo(() => {
     const nodes: React.ReactNode[] = [];
     let i = 0;
+    let renderedCount = 0;
+    const rng = createSeededRandom(trendingInsertSeed.current);
+    let nextInsertAt = 5;
+
+    const maybeInsertTrending = () => {
+      if (renderedCount === nextInsertAt) {
+        nodes.push(
+          <TrendingAssetsFeedItem key={`trending-assets-${renderedCount}`} />
+        );
+        const step = 7 + Math.floor(rng() * 9);
+        nextInsertAt += step;
+      }
+    };
+
     while (i < filteredAndSortedList.length) {
       const item = filteredAndSortedList[i];
       if (isTradeItem(item)) {
+        maybeInsertTrending();
         nodes.push(
           <TradeActivityItem key={item.id} item={item} />
         );
         i += 1;
+        renderedCount += 1;
         continue;
       }
       const postId = (item as PostDto).id;
       const isTokenCreated = String(postId).startsWith("token-created:");
 
       if (!isTokenCreated) {
+        maybeInsertTrending();
         nodes.push(renderPostItem(item as PostDto));
         i += 1;
+        renderedCount += 1;
         continue;
       }
 
@@ -1087,6 +1115,7 @@ export default function FeedList({
       const visibleCount = collapsed ? 3 : groupItems.length;
 
       for (let j = 0; j < visibleCount; j += 1) {
+        maybeInsertTrending();
         const gi = groupItems[j];
         const isLastVisible = j === visibleCount - 1;
         const hideDivider = !isLastVisible; // on mobile, never show lines between items, only at the end
@@ -1124,6 +1153,7 @@ export default function FeedList({
             footer={footer}
           />
         );
+        renderedCount += 1;
       }
 
       if (groupItems.length > 3) {
@@ -1145,6 +1175,31 @@ export default function FeedList({
     }
     return nodes;
   }, [filteredAndSortedList, expandedGroups, toggleGroup, renderPostItem]);
+
+  const renderHotFeedItems = useMemo(() => {
+    const nodes: React.ReactNode[] = [];
+    let renderedCount = 0;
+    const rng = createSeededRandom(trendingInsertSeed.current);
+    let nextInsertAt = 5;
+
+    const maybeInsertTrending = () => {
+      if (renderedCount === nextInsertAt) {
+        nodes.push(
+          <TrendingAssetsFeedItem key={`trending-assets-hot-${renderedCount}`} />
+        );
+        const step = 7 + Math.floor(rng() * 9);
+        nextInsertAt += step;
+      }
+    };
+
+    for (const item of filteredAndSortedList) {
+      maybeInsertTrending();
+      nodes.push(renderPostItem(item as PostDto));
+      renderedCount += 1;
+    }
+
+    return nodes;
+  }, [filteredAndSortedList, renderPostItem]);
 
   // Preload PostDetail chunk to avoid first-click lazy load delay
   useEffect(() => {
@@ -1393,7 +1448,7 @@ export default function FeedList({
               popularDataPages: popularData?.pages?.length || 0,
               latestDataForHotPages: latestDataForHot?.pages?.length || 0,
             })} */}
-            {filteredAndSortedList.map((item) => renderPostItem(item as PostDto))}
+            {renderHotFeedItems}
           </>
         )}
       </div>

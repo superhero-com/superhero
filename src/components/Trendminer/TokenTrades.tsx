@@ -58,6 +58,22 @@ export default function TokenTrades({ token }: TokenTradesProps) {
 
         // Handle the response - it should be Pagination type but we need to cast it
         if (response && typeof response === "object" && "items" in response) {
+          const createdCommunityIndex = (response.items as Array<any>)
+             .findIndex((item) => item.tx_type === "create_community");
+
+          // TODO: this is a temporary fix to get the create community transaction
+          // it should be fixed in the backend/database side
+          if (
+            response.items[createdCommunityIndex]
+            && response.items[createdCommunityIndex].tx_hash !== token.create_tx_hash
+          ) {
+            try {
+              const transaction = await TransactionsService.getTransactionByHash({ txHash: token.create_tx_hash });
+              response.items[createdCommunityIndex] = transaction;
+            } catch (error) {
+              console.error("Failed to fetch transaction:", error);
+            }
+          }
           return response as PaginatedTransactionsResponse;
         }
 

@@ -106,6 +106,7 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
                   {linkify(`#${tokenName}`, {
                     knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())),
                     hashtagVariant: 'post-inline',
+                    trendMentions: (item as any)?.trend_mentions,
                     })}
                 </span>
               )}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import PostHashtagLink from '@/components/social/PostHashtagLink';
+import PostHashtagLink, { type TrendMention } from '@/components/social/PostHashtagLink';
 import { formatAddress } from './address';
 
 // URL matcher (external links)
@@ -17,6 +17,7 @@ export function linkify(
   options?: {
     knownChainNames?: Set<string>;
     hashtagVariant?: 'post-inline';
+    trendMentions?: TrendMention[];
   }
 ): React.ReactNode[] {
   if (!text) return [];
@@ -190,6 +191,7 @@ export function linkify(
           <PostHashtagLink
             tag={tag}
             label={m}
+            trendMentions={options?.trendMentions}
             key={`hashtag-${tag}-${idx}-${off}`}
           />
         ) : (

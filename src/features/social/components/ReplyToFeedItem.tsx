@@ -299,6 +299,7 @@ const ReplyToFeedItem = memo(({
                   : linkify(parent.content, {
                     knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())),
                     hashtagVariant: 'post-inline',
+                    trendMentions: (parent as any)?.trend_mentions,
                     })}
               </div>
               <div className="mt-1 text-[11px] text-white/70">Show post</div>
@@ -310,6 +311,7 @@ const ReplyToFeedItem = memo(({
             {linkify(item.content, {
               knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())),
               hashtagVariant: 'post-inline',
+              trendMentions: (item as any)?.trend_mentions,
               })}
           </div>
 

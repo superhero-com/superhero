@@ -10,6 +10,7 @@ import { useAeSdk } from "../hooks";
 import { Decimal } from "../libs/decimal";
 import Spinner from "../components/Spinner";
 import { getPairsByTokenUsd, getTokenWithUsd } from "../libs/dexBackend";
+import { useSectionTheme } from "@/components/layout/AppLayout";
 
 interface TokenData {
   address: string;
@@ -41,6 +42,7 @@ export default function TokenDetail() {
   const { activeNetwork } = useAeSdk();
   const { tokenAddress } = useParams();
   const navigate = useNavigate();
+  const { colors } = useSectionTheme();
   const [token, setToken] = useState<TokenData | null>(null);
   const [tokenMetaData, setTokenMetaData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -172,7 +174,8 @@ export default function TokenDetail() {
                 }
                 variant="secondary-dark"
                 size="medium"
-                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                style={{ background: colors.gradient }}
               >
                 Swap
               </AeButton>
@@ -182,7 +185,8 @@ export default function TokenDetail() {
                 }
                 variant="secondary-dark"
                 size="medium"
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                style={{ background: colors.gradient }}
               >
                 Add Liquidity
               </AeButton>
@@ -192,7 +196,8 @@ export default function TokenDetail() {
                 }
                 variant="secondary-dark"
                 size="medium"
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                style={{ background: colors.gradient }}
               >
                 Pools ({tokenDetails?.pairs_count || 0})
               </AeButton>
@@ -202,7 +207,8 @@ export default function TokenDetail() {
                 }
                 variant="secondary-dark"
                 size="medium"
-                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                style={{ background: colors.gradient }}
               >
                 Transactions
               </AeButton>

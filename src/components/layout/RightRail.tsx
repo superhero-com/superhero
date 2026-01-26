@@ -171,6 +171,11 @@ export default function RightRail({
         </div>
       </div> */}
 
+      {/* Buy AE with ETH widget (compact) */}
+      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none">
+        <BuyAeWidget embedded={true} />
+      </div>
+
 
       {/* Trading Leaderboard promo */}
       <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none mb-4">
@@ -253,11 +258,6 @@ export default function RightRail({
             💬 Chat
           </a>
         </div>
-      </div>
-
-      {/* Buy AE with ETH widget (compact) */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none">
-        <BuyAeWidget embedded={true} />
       </div>
     </div>
   );

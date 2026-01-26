@@ -3,7 +3,7 @@ import { useRoutes } from "react-router-dom";
 import GlobalNewAccountEducation from "./components/GlobalNewAccountEducation";
 import { CollectInvitationLinkCard } from "./features/trending/components/Invitation";
 import ModalProvider from "./components/ModalProvider";
-import { useAeSdk, useAccount, useWalletConnect } from "./hooks";
+import { useAeSdk, useAccount, useIsMobile, useWalletConnect } from "./hooks";
 import { routes } from "./routes";
 import "./styles/genz-components.scss";
 import "./styles/mobile-optimizations.scss";
@@ -32,6 +32,7 @@ const TipModal = React.lazy(
 );
 
 export default function App() {
+  const isMobile = useIsMobile();
   useSuperheroChainNames();
   const { initSdk, sdkInitialized, activeAccount } = useAeSdk();
   const { loadAccountData } = useAccount();
@@ -89,7 +90,8 @@ export default function App() {
       <Suspense fallback={<div className="loading-fallback" />}>
         <div className="app-routes-container">{useRoutes(routes as any)}</div>
       </Suspense>
-      <FeedbackButton />
+      {/* TODO: Disable feedback button on mobile for now */}
+      {!isMobile && <FeedbackButton />}
     </div>
   );
 }

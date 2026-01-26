@@ -1,19 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MessageSquare, X } from 'lucide-react';
+import { useIsMobile } from '@/hooks';
 
 export default function FeedbackButton() {
   const [isHovered, setIsHovered] = useState(false);
   const [showMobilePopup, setShowMobilePopup] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const isMobile = useIsMobile();
 
   const handleClick = () => {
     if (isMobile && !showMobilePopup) {

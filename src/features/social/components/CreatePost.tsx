@@ -1,5 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import PostForm from './PostForm';
+import { useIsMobile } from '@/hooks';
 
 interface CreatePostProps {
   onClose?: () => void;
@@ -18,10 +19,10 @@ const CreatePost = forwardRef<CreatePostRef, CreatePostProps>(
   ({ onClose, onSuccess, className = '', onTextChange, autoFocus, onPostCreated }, ref) => {
     const postFormRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const isMobileViewport = useIsMobile();
 
     useImperativeHandle(ref, () => ({
       focus: () => {
-        const isMobileViewport = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
         const el = containerRef.current;
         if (!el) {
           try { postFormRef.current?.focus({ immediate: true, preventScroll: false, scroll: 'none' }); } catch {}

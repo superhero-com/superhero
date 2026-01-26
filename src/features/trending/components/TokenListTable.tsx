@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useTranslation } from 'react-i18next';
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import TokenListTableRow from "./TokenListTableRow";
 import TokenRowSkeleton from "./TokenRowSkeleton";
+import { useIsMobile } from "@/hooks";
 
 type OrderByOption = 'market_cap' | 'newest' | 'oldest' | 'holders_count' | 'trending_score' | 'name' | 'price';
 type OrderDirection = 'ASC' | 'DESC';
@@ -95,14 +96,7 @@ export default function TokenListTable({ pages, loading, showCollectionColumn, o
   );
 
   // Detect mobile viewport to map the "Market cap" header to market_cap sorting
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const mm = typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)') : null;
-    const handler = () => setIsMobile(!!mm?.matches);
-    handler();
-    if (mm?.addEventListener) mm.addEventListener('change', handler);
-    return () => mm?.removeEventListener?.('change', handler);
-  }, []);
+  const isMobile = useIsMobile();
 
   const isEmptyLoading = !!loading && !allItems?.length;
 

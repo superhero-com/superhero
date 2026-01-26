@@ -2,7 +2,7 @@ import { TokenDto } from "@/api/generated/models/TokenDto";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Head from "../../../seo/Head";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { TokensService } from "../../../api/generated/services/TokensService";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { useOwnedTokens } from "../../../hooks/useOwnedTokens";
@@ -55,6 +55,7 @@ type TabType =
 export default function TokenSaleDetails() {
   const { tokenName } = useParams<{ tokenName: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const { activeAccount } = useAeSdk();
 
   // State
@@ -83,6 +84,15 @@ export default function TokenSaleDetails() {
     updateTokenB,
     updateTokenAFocused,
   } = useTokenTradeStore();
+
+  const closeTradeActionSheet = () => {
+    setTradeActionSheet(false);
+    const params = new URLSearchParams(location.search);
+    if (params.has("openTrade")) {
+      params.delete("openTrade");
+      navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
+    }
+  };
 
   // Ensure token page starts at top on mount
   useEffect(() => {
@@ -584,7 +594,7 @@ export default function TokenSaleDetails() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setTradeActionSheet(false)}
+                onClick={closeTradeActionSheet}
                 className="text-white"
               >
                 ×
@@ -601,7 +611,7 @@ export default function TokenSaleDetails() {
             )}
             <TokenTradeCard
               token={token}
-              onClose={() => setTradeActionSheet(false)}
+              onClose={closeTradeActionSheet}
             />
           </div>
         </div>

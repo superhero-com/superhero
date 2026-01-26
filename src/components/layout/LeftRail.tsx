@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { SuperheroApi } from "../../api/backend";
 import { useAeSdk } from "../../hooks";
 import WebSocketClient from "../../libs/WebSocketClient";
+import { formatCompactNumber } from "../../utils/number";
 
 interface TrendingTag {
   tag: string;
@@ -273,12 +274,7 @@ export default function LeftRail() {
   };
 
   const formatMarketCap = (amount: number): string => {
-    if (amount >= 1000000) {
-      return `$${(amount / 1000000).toFixed(1)}M`;
-    } else if (amount >= 1000) {
-      return `$${(amount / 1000).toFixed(1)}K`;
-    }
-    return `$${amount.toFixed(0)}`;
+    return `$${formatCompactNumber(amount, 0, 1)}`;
   };
 
   const enhancedTips = [

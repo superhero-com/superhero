@@ -9,6 +9,7 @@ import { TX_FUNCTIONS } from "@/utils/constants";
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
 import AppSelect, { Item as AppSelectItem } from "@/components/inputs/AppSelect";
 import Spinner from "@/components/Spinner";
+import { formatCompactNumber } from "@/utils/number";
 
 // Pagination response interface
 interface PaginatedTransactionsResponse {
@@ -58,6 +59,22 @@ export default function TokenTrades({ token }: TokenTradesProps) {
 
         // Handle the response - it should be Pagination type but we need to cast it
         if (response && typeof response === "object" && "items" in response) {
+          const createdCommunityIndex = (response.items as Array<any>)
+             .findIndex((item) => item.tx_type === "create_community");
+
+          // TODO: this is a temporary fix to get the create community transaction
+          // it should be fixed in the backend/database side
+          if (
+            response.items[createdCommunityIndex]
+            && response.items[createdCommunityIndex].tx_hash !== token.create_tx_hash
+          ) {
+            try {
+              const transaction = await TransactionsService.getTransactionByHash({ txHash: token.create_tx_hash });
+              response.items[createdCommunityIndex] = transaction;
+            } catch (error) {
+              console.error("Failed to fetch transaction:", error);
+            }
+          }
           return response as PaginatedTransactionsResponse;
         }
 
@@ -173,19 +190,6 @@ export default function TokenTrades({ token }: TokenTradesProps) {
     }
   };
 
-  // Helper function to format volume
-  const formatVolume = (volume: string | number): string => {
-    if (!volume) return "0";
-    const num = typeof volume === "string" ? parseFloat(volume) : volume;
-    if (!isFinite(num)) return "0";
-
-    // Use a simple formatting approach similar to Decimal.prettify()
-    if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";
-    if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
-    if (num >= 1e3) return (num / 1e3).toFixed(2) + "K";
-    return num.toFixed(2);
-  };
-
 
   // Handle page updates
   const updatePage = (page: number) => {
@@ -259,7 +263,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
                     Volume:
                   </div>
                   <div className="text-white text-xs font-medium">
-                    {formatVolume(transaction.volume)}
+                    {formatCompactNumber(transaction.volume, 2, 2)}
                   </div>
                 </div>
 

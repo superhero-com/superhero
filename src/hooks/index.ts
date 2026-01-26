@@ -13,6 +13,7 @@ export { useTransactionStatus, useMultipleTransactionStatus } from './useTransac
 export { useChart } from './useChart';
 export { useOwnedTokens } from './useOwnedTokens';
 export { usePortfolioValue } from './usePortfolioValue';
+export { useIsMobile } from './useIsMobile';
 
 // Re-export atoms for direct usage if needed
 export * from '../atoms/walletAtoms';

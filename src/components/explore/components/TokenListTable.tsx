@@ -22,7 +22,9 @@ interface TokenListTableProps {
       | "24hchange"
       | "24hvolume"
       | "7dchange"
-      | "7dvolume";
+      | "7dvolume"
+      | "30dchange"
+      | "30dvolume";
     asc: boolean;
   };
   onSortChange: (
@@ -37,6 +39,8 @@ interface TokenListTableProps {
       | "24hvolume"
       | "7dchange"
       | "7dvolume"
+      | "30dchange"
+      | "30dvolume"
   ) => void;
   search: string;
   onSearchChange: (value: string) => void;
@@ -62,7 +66,7 @@ export function TokenListTable({
     return performanceChartTimeframe;
   }, [performanceChartTimeframe]);
 
-  const handleSort = (key: 'pairs_count' | 'name' | 'symbol' | 'created_at' | 'price' | 'tvl' | '24hchange' | '24hvolume' | '7dchange' | '7dvolume') => {
+  const handleSort = (key: 'pairs_count' | 'name' | 'symbol' | 'created_at' | 'price' | 'tvl' | '24hchange' | '24hvolume' | '7dchange' | '7dvolume' | '30dchange' | '30dvolume') => {
     console.log("key:", key);
     onSortChange(key);
   };
@@ -192,6 +196,8 @@ export function TokenListTable({
                   <AppSelectItem value="24hvolume">24h Volume</AppSelectItem>
                   <AppSelectItem value="7dchange">7d Change</AppSelectItem>
                   <AppSelectItem value="7dvolume">7d Volume</AppSelectItem>
+                  <AppSelectItem value="30dchange">30d Change</AppSelectItem>
+                  <AppSelectItem value="30dvolume">30d Volume</AppSelectItem>
                   <AppSelectItem value="created_at">Created At</AppSelectItem>
                 </AppSelect>
               </div>

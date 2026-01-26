@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { cn } from '../lib/utils';
+import { useIsMobile } from '@/hooks';
 
 // AENS domain constant - could be imported from utils/address.ts if needed
 const AE_AENS_DOMAIN = '.chain';
@@ -16,6 +17,7 @@ export function Truncate({ str, fixed = false, right = false, className }: Trunc
   const textRef = useRef<HTMLDivElement>(null);
   const [overflowAmount, setOverflowAmount] = useState<number>(0);
   const [animationDuration, setAnimationDuration] = useState<number>(10);
+  const isMobile = useIsMobile();
 
   // Extract name component (remove .chain domain if present)
   const nameComponent = useMemo(() => {
@@ -39,10 +41,8 @@ export function Truncate({ str, fixed = false, right = false, className }: Trunc
         // Minimum 4s, maximum 16s duration
         // More overflow = longer duration for smoother animation
         // Mobile screens (< 768px) get slightly longer durations for better UX
-        const isMobile = window.innerWidth < 768;
         const baseMultiplier = isMobile ? 0.08 : 0.06; // Slower on mobile
         const calculatedDuration = Math.min(16, Math.max(4, overflow * baseMultiplier));
-        console.log(`Truncate animation: overflow=${overflow}px, isMobile=${isMobile}, duration=${calculatedDuration}s`);
         setAnimationDuration(calculatedDuration);
       }
     };
@@ -56,7 +56,7 @@ export function Truncate({ str, fixed = false, right = false, className }: Trunc
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [nameComponent, fixed]);
+  }, [nameComponent, fixed, isMobile]);
 
   return (
     <div

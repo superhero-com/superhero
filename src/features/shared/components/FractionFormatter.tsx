@@ -1,10 +1,5 @@
 import React from 'react';
-
-export interface FormattedFractionalPrice {
-  number: string;
-  zerosCount?: string;
-  significantDigits?: string;
-}
+import type { FormattedFractionalPrice } from '@/utils/types';
 
 interface FractionFormatterProps {
   fractionalPrice: FormattedFractionalPrice;

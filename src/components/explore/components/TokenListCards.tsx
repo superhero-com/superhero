@@ -23,7 +23,9 @@ interface TokenListCardsProps {
     | "24hchange"
     | "24hvolume"
     | "7dchange"
-    | "7dvolume";
+    | "7dvolume"
+    | "30dchange"
+    | "30dvolume";
     asc: boolean;
   };
   onSortChange: (
@@ -38,6 +40,8 @@ interface TokenListCardsProps {
       | "24hvolume"
       | "7dchange"
       | "7dvolume"
+      | "30dchange"
+      | "30dvolume"
   ) => void;
   search: string;
   onSearchChange: (value: string) => void;
@@ -75,6 +79,8 @@ export function TokenListCards({
       | "24hvolume"
       | "7dchange"
       | "7dvolume"
+      | "30dchange"
+      | "30dvolume"
   ) => {
     onSortChange(key);
   };
@@ -129,6 +135,8 @@ export function TokenListCards({
                   <AppSelectItem value="24hvolume">24h Volume</AppSelectItem>
                   <AppSelectItem value="7dchange">7d Change</AppSelectItem>
                   <AppSelectItem value="7dvolume">7d Volume</AppSelectItem>
+                  <AppSelectItem value="30dchange">30d Change</AppSelectItem>
+                  <AppSelectItem value="30dvolume">30d Volume</AppSelectItem>
                 </AppSelect>
               </div>
 

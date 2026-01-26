@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import PostHashtagLink, { type TrendMention } from '@/components/social/PostHashtagLink';
 import { formatAddress } from './address';
 
 // URL matcher (external links)
@@ -11,7 +12,14 @@ const ACCOUNT_TAG_REGEX = /@?(ak_[A-Za-z0-9]+)/gi;
 // Hashtags like #TOKEN, #TREND-123, #ROCK-N-ROLL; allow letters, numbers, and dashes only
 const HASHTAG_REGEX = /#([A-Za-z0-9-]{1,50})/g;
 
-export function linkify(text: string, options?: { knownChainNames?: Set<string> }): React.ReactNode[] {
+export function linkify(
+  text: string,
+  options?: {
+    knownChainNames?: Set<string>;
+    hashtagVariant?: 'post-inline';
+    trendMentions?: TrendMention[];
+  }
+): React.ReactNode[] {
   if (!text) return [];
   let raw = String(text);
   
@@ -179,20 +187,29 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
       if (off > last) finalParts.push(segment.slice(last, off));
       const target = `/trends/tokens/${tag.toUpperCase()}`;
       finalParts.push(
-        <Link
-          to={target}
-          key={`hashtag-${tag}-${idx}-${off}`}
-          className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
-          style={{
-            WebkitTextFillColor: 'currentColor',
-            WebkitBackgroundClip: 'initial',
-            backgroundClip: 'initial',
-            background: 'none',
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {m}
-        </Link>
+        options?.hashtagVariant === 'post-inline' ? (
+          <PostHashtagLink
+            tag={tag}
+            label={m}
+            trendMentions={options?.trendMentions}
+            key={`hashtag-${tag}-${idx}-${off}`}
+          />
+        ) : (
+          <Link
+            to={target}
+            key={`hashtag-${tag}-${idx}-${off}`}
+            className="text-[var(--neon-teal)] underline-offset-2 hover:underline break-words"
+            style={{
+              WebkitTextFillColor: 'currentColor',
+              WebkitBackgroundClip: 'initial',
+              backgroundClip: 'initial',
+              background: 'none',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {m}
+          </Link>
+        )
       );
       last = off + m.length;
       return m;
@@ -267,7 +284,7 @@ export function linkify(text: string, options?: { knownChainNames?: Set<string> 
   return withLineBreaks;
 }
 
-export function formatUrl(url: string): string {
+function formatUrl(url: string): string {
   try {
     const withProtocol = url.startsWith('http') ? url : `https://${url}`;
     const u = new URL(withProtocol);
@@ -279,7 +296,7 @@ export function formatUrl(url: string): string {
   }
 }
 
-export function truncateEnd(text: string, max: number): string {
+function truncateEnd(text: string, max: number): string {
   if (text.length <= max) return text;
   return text.slice(0, Math.max(0, max - 1)) + '…';
 }

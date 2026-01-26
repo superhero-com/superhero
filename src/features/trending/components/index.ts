@@ -12,3 +12,9 @@ export { default as TrendminerBanner } from './TrendminerBanner';
 
 // Skeleton components
 export * from './Skeletons';
+
+// Leaderboard components
+export * from './leaderboard/LeaderboardFilters';
+export * from './leaderboard/LeaderboardTable';
+export * from './leaderboard/LeaderboardCard';
+export * from './leaderboard/LeaderboardSkeleton';

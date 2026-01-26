@@ -107,7 +107,7 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
                 const balance = await provider.getBalance(userAddress);
                 const balanceFormatted = new BigNumber(balance.toString())
                   .shiftedBy(-18)
-                  .toFixed(4);
+                  .toFixed(6, BigNumber.ROUND_DOWN);
                 newEthBalances[asset.symbol] = balanceFormatted;
               } else {
                 // ERC-20 token
@@ -127,7 +127,7 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
                   const balance = await Promise.race([balancePromise, timeoutPromise]);
                   const balanceFormatted = new BigNumber(balance.toString())
                     .shiftedBy(-asset.decimals)
-                    .toFixed(4);
+                    .toFixed(6, BigNumber.ROUND_DOWN);
                   newEthBalances[asset.symbol] = balanceFormatted;
                 } catch (error) {
                   console.error(`Error fetching balance for ${asset.symbol}:`, error);
@@ -204,7 +204,7 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
               const balance = await getTokenBalance(currentSdk, 'AE', currentAeAccount as `ak_${string}`);
               const balanceFormatted = new BigNumber(balance.toString())
                 .shiftedBy(-18)
-                .toFixed(4);
+                .toFixed(6, BigNumber.ROUND_DOWN);
               newAeBalances[asset.symbol] = balanceFormatted;
             } else {
               // AEX-9 token - check middleware first, fallback to contract call
@@ -213,7 +213,7 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
                 // Use middleware data
                 const balanceFormatted = new BigNumber(middlewareBalance.amount)
                   .shiftedBy(-middlewareBalance.decimals)
-                  .toFixed(4);
+                  .toFixed(6, BigNumber.ROUND_DOWN);
                 newAeBalances[asset.symbol] = balanceFormatted;
               } else {
                 // Fallback to contract call for tokens not in middleware
@@ -221,7 +221,7 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
                   const balance = await getTokenBalance(currentSdk, asset.aeAddress, currentAeAccount as `ak_${string}`);
                   const balanceFormatted = new BigNumber(balance.toString())
                     .shiftedBy(-asset.decimals)
-                    .toFixed(4);
+                    .toFixed(6, BigNumber.ROUND_DOWN);
                   newAeBalances[asset.symbol] = balanceFormatted;
                 } catch (contractError) {
                   console.warn(`Contract call failed for ${asset.symbol}, setting balance to 0:`, contractError);
@@ -246,13 +246,13 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
                 const balance = await getTokenBalance(currentSdk, 'AE', currentAeAccount as `ak_${string}`);
                 const balanceFormatted = new BigNumber(balance.toString())
                   .shiftedBy(-18)
-                  .toFixed(4);
+                  .toFixed(6, BigNumber.ROUND_DOWN);
                 newAeBalances[asset.symbol] = balanceFormatted;
               } else {
                 const balance = await getTokenBalance(currentSdk, asset.aeAddress, currentAeAccount as `ak_${string}`);
                 const balanceFormatted = new BigNumber(balance.toString())
                   .shiftedBy(-asset.decimals)
-                  .toFixed(4);
+                  .toFixed(6, BigNumber.ROUND_DOWN);
                 newAeBalances[asset.symbol] = balanceFormatted;
               }
             } catch (fallbackError) {

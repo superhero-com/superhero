@@ -17,13 +17,25 @@ import PostSkeleton from "../components/PostSkeleton";
 import ReplyToFeedItem from "../components/ReplyToFeedItem";
 import TokenCreatedFeedItem from "../components/TokenCreatedFeedItem";
 import TokenCreatedActivityItem from "../components/TokenCreatedActivityItem";
+import TradeActivityItem, { TradeActivityItemData } from "../components/TradeActivityItem";
+import TrendingAssetsFeedItem from "../components/TrendingAssetsFeedItem";
 import { PostApiResponse } from "../types";
 import Head from "../../../seo/Head";
 import { CONFIG } from "../../../config";
+import { useLatestTransactions } from "../../../hooks/useLatestTransactions";
+import type { TokenDto } from "../../../api/generated/models/TokenDto";
 
 // Custom hook
 function useUrlQuery() {
   return new URLSearchParams(useLocation().search);
+}
+
+function createSeededRandom(seed: number) {
+  let value = seed;
+  return () => {
+    value = (value * 1664525 + 1013904223) % 0x100000000;
+    return value / 0x100000000;
+  };
 }
 
 export default function FeedList({
@@ -39,6 +51,7 @@ export default function FeedList({
   // Use ref to track current sortBy to avoid stale closure in callbacks
   // Initialize with default value since sortBy isn't defined yet
   const sortByRef = useRef<string>("hot");
+  const { latestTransactions } = useLatestTransactions();
   
   // Only render homepage SEO meta when actually on the homepage
   const isHomepage = location.pathname === "/";
@@ -105,6 +118,7 @@ export default function FeedList({
 
   const [localSearch, setLocalSearch] = useState(search);
   const [popularWindow, setPopularWindow] = useState<'24h'|'7d'|'all'>(initialWindow);
+  const trendingInsertSeed = useRef<number>(Math.floor(Math.random() * 0x100000000));
 
   // Keep popularWindow in sync with URL (e.g., browser back/forward or direct URL edits)
   useEffect(() => {
@@ -151,6 +165,17 @@ export default function FeedList({
       created_at: createdAt,
     } as PostDto;
   }, []);
+
+  type TradeFeedItem = TradeActivityItemData & {
+    kind: "trade";
+    account: string;
+    token: TokenDto | null;
+  };
+
+  type FeedItem = PostDto | TradeFeedItem;
+
+  const isTradeItem = (item: FeedItem): item is TradeFeedItem =>
+    Boolean((item as TradeFeedItem)?.kind === "trade");
 
   // Activities (token-created) fetched in parallel with smaller initial batch + pagination
   const {
@@ -205,6 +230,32 @@ export default function FeedList({
       return true;
     });
   }, [activitiesPages]);
+
+  const tradeList = useMemo<TradeFeedItem[]>(() => {
+    const seenIds = new Set<string>();
+    return (latestTransactions || [])
+      .filter((tx) => String(tx?.tx_type || "").toLowerCase() === "buy")
+      .map((tx) => {
+        const fallbackId = `${tx?.created_at || ""}:${tx?.account || tx?.address || ""}:${tx?.volume || ""}`;
+        const id = `trade:${tx?.tx_hash || tx?.id || fallbackId}`;
+        return {
+          kind: "trade" as const,
+          id,
+          created_at: tx?.created_at || new Date().toISOString(),
+          tx_hash: tx?.tx_hash || "",
+          tx_type: tx?.tx_type || "buy",
+          account: tx?.account || tx?.address || "",
+          volume: tx?.volume || "0",
+          priceUsd: (tx as any)?.buy_price?.usd ?? (tx as any)?.price_data?.usd ?? (tx as any)?.price ?? "",
+          token: (tx as any)?.token || null,
+        };
+      })
+      .filter((item) => {
+        if (!item.id || seenIds.has(item.id)) return false;
+        seenIds.add(item.id);
+        return true;
+      });
+  }, [latestTransactions]);
 
   // Live updates for token-created via websocket
   useEffect(() => {
@@ -738,7 +789,7 @@ export default function FeedList({
   }, [sortBy, latestData, activitiesPages, queryClient, localSearch, filterBy]);
 
   // Combine posts with token-created events and sort by created_at DESC
-  const combinedList = useMemo(() => {
+  const combinedList = useMemo<FeedItem[]>(() => {
     if (sortBy === "hot") {
       // For hot: popular posts first, then latest posts (filtered to exclude popular ones)
       const combined = [...popularList, ...latestListForHot];
@@ -757,6 +808,7 @@ export default function FeedList({
     // This ensures cached/prefetched data shows immediately
     let postsToUse = list;
     let activitiesToUse = activityList;
+    let tradesToUse = tradeList;
     
     // If queries don't have data yet, try to get cached data
     if ((!latestData || latestData.pages.length === 0) && bothQueriesReady) {
@@ -785,7 +837,7 @@ export default function FeedList({
     const merged: PostDto[] = [];
     
     // Add activities first, then regular posts, skipping duplicates
-    for (const item of [...activitiesToUse, ...postsToUse]) {
+    for (const item of [...activitiesToUse, ...tradesToUse, ...postsToUse]) {
       const id = String(item?.id || '');
       if (id && !seenIds.has(id)) {
         seenIds.add(id);
@@ -798,7 +850,7 @@ export default function FeedList({
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     });
-  }, [list, activityList, sortBy, popularList, latestListForHot, bothQueriesReady, latestData, activitiesPages, queryClient, localSearch, filterBy]);
+  }, [list, activityList, tradeList, sortBy, popularList, latestListForHot, bothQueriesReady, latestData, activitiesPages, queryClient, localSearch, filterBy]);
 
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {
@@ -815,16 +867,27 @@ export default function FeedList({
     if (localSearch.trim()) {
       const searchTerm = localSearch.toLowerCase();
       filtered = filtered.filter(
-        (item) =>
-          (item.content && item.content.toLowerCase().includes(searchTerm)) ||
-          (item.topics &&
-            item.topics.some((topic) =>
-              topic.toLowerCase().includes(searchTerm)
-            )) ||
-          (item.sender_address &&
-            item.sender_address.toLowerCase().includes(searchTerm)) ||
-          (chainNames?.[item.sender_address] &&
-            chainNames[item.sender_address].toLowerCase().includes(searchTerm))
+        (item) => {
+          if (isTradeItem(item)) {
+            const tokenName = item.token?.name || "";
+            const tokenSymbol = item.token?.symbol || "";
+            const account = item.account || "";
+            const chainName = chainNames?.[account] || "";
+            const combined = `${tokenName} ${tokenSymbol} ${account} ${chainName}`.toLowerCase();
+            return combined.includes(searchTerm);
+          }
+          return (
+            (item.content && item.content.toLowerCase().includes(searchTerm)) ||
+            (item.topics &&
+              item.topics.some((topic) =>
+                topic.toLowerCase().includes(searchTerm)
+              )) ||
+            (item.sender_address &&
+              item.sender_address.toLowerCase().includes(searchTerm)) ||
+            (chainNames?.[item.sender_address] &&
+              chainNames[item.sender_address].toLowerCase().includes(searchTerm))
+          );
+        }
       );
     }
     
@@ -838,11 +901,14 @@ export default function FeedList({
     if (filterBy === "withMedia") {
       filtered = filtered.filter(
         (item) =>
-          item.media && Array.isArray(item.media) && item.media.length > 0
+          !isTradeItem(item) &&
+          (item as PostDto).media &&
+          Array.isArray((item as PostDto).media) &&
+          (item as PostDto).media.length > 0
       );
     } else if (filterBy === "withComments") {
       filtered = filtered.filter((item) => {
-        return (item.total_comments ?? 0) > 0;
+        return !isTradeItem(item) && ((item as PostDto).total_comments ?? 0) > 0;
       });
     }
 
@@ -980,25 +1046,55 @@ export default function FeedList({
   }, []);
 
   // Grouped render: collapse consecutive token-created items (>3) with a toggle pill
+  const renderPostItem = useCallback(
+    (post: PostDto) => (
+      <ReplyToFeedItem
+        key={post.id}
+        item={post}
+        commentCount={post.total_comments ?? 0}
+        allowInlineRepliesToggle={false}
+        onOpenPost={handleItemClick}
+      />
+    ),
+    [handleItemClick]
+  );
+
   const renderFeedItems = useMemo(() => {
     const nodes: React.ReactNode[] = [];
     let i = 0;
+    let renderedCount = 0;
+    const rng = createSeededRandom(trendingInsertSeed.current);
+    let nextInsertAt = 5;
+
+    const maybeInsertTrending = () => {
+      if (renderedCount === nextInsertAt) {
+        nodes.push(
+          <TrendingAssetsFeedItem key={`trending-assets-${renderedCount}`} />
+        );
+        const step = 7 + Math.floor(rng() * 9);
+        nextInsertAt += step;
+      }
+    };
+
     while (i < filteredAndSortedList.length) {
       const item = filteredAndSortedList[i];
-      const postId = item.id;
+      if (isTradeItem(item)) {
+        maybeInsertTrending();
+        nodes.push(
+          <TradeActivityItem key={item.id} item={item} />
+        );
+        i += 1;
+        renderedCount += 1;
+        continue;
+      }
+      const postId = (item as PostDto).id;
       const isTokenCreated = String(postId).startsWith("token-created:");
 
       if (!isTokenCreated) {
-        nodes.push(
-          <ReplyToFeedItem
-            key={postId}
-            item={item}
-            commentCount={item.total_comments ?? 0}
-            allowInlineRepliesToggle={false}
-            onOpenPost={handleItemClick}
-          />
-        );
+        maybeInsertTrending();
+        nodes.push(renderPostItem(item as PostDto));
         i += 1;
+        renderedCount += 1;
         continue;
       }
 
@@ -1007,7 +1103,8 @@ export default function FeedList({
       const groupItems: PostDto[] = [];
       while (
         i < filteredAndSortedList.length &&
-        String(filteredAndSortedList[i].id).startsWith("token-created:")
+        !isTradeItem(filteredAndSortedList[i] as FeedItem) &&
+        String((filteredAndSortedList[i] as PostDto).id).startsWith("token-created:")
       ) {
         groupItems.push(filteredAndSortedList[i] as PostDto);
         i += 1;
@@ -1018,6 +1115,7 @@ export default function FeedList({
       const visibleCount = collapsed ? 3 : groupItems.length;
 
       for (let j = 0; j < visibleCount; j += 1) {
+        maybeInsertTrending();
         const gi = groupItems[j];
         const isLastVisible = j === visibleCount - 1;
         const hideDivider = !isLastVisible; // on mobile, never show lines between items, only at the end
@@ -1055,6 +1153,7 @@ export default function FeedList({
             footer={footer}
           />
         );
+        renderedCount += 1;
       }
 
       if (groupItems.length > 3) {
@@ -1075,7 +1174,32 @@ export default function FeedList({
       }
     }
     return nodes;
-  }, [filteredAndSortedList, handleItemClick, expandedGroups, toggleGroup]);
+  }, [filteredAndSortedList, expandedGroups, toggleGroup, renderPostItem]);
+
+  const renderHotFeedItems = useMemo(() => {
+    const nodes: React.ReactNode[] = [];
+    let renderedCount = 0;
+    const rng = createSeededRandom(trendingInsertSeed.current);
+    let nextInsertAt = 5;
+
+    const maybeInsertTrending = () => {
+      if (renderedCount === nextInsertAt) {
+        nodes.push(
+          <TrendingAssetsFeedItem key={`trending-assets-hot-${renderedCount}`} />
+        );
+        const step = 7 + Math.floor(rng() * 9);
+        nextInsertAt += step;
+      }
+    };
+
+    for (const item of filteredAndSortedList) {
+      maybeInsertTrending();
+      nodes.push(renderPostItem(item as PostDto));
+      renderedCount += 1;
+    }
+
+    return nodes;
+  }, [filteredAndSortedList, renderPostItem]);
 
   // Preload PostDetail chunk to avoid first-click lazy load delay
   useEffect(() => {
@@ -1324,15 +1448,7 @@ export default function FeedList({
               popularDataPages: popularData?.pages?.length || 0,
               latestDataForHotPages: latestDataForHot?.pages?.length || 0,
             })} */}
-            {filteredAndSortedList.map((item) => (
-              <ReplyToFeedItem
-                key={item.id}
-                item={item}
-                commentCount={item.total_comments ?? 0}
-                allowInlineRepliesToggle={false}
-                onOpenPost={handleItemClick}
-              />
-            ))}
+            {renderHotFeedItems}
           </>
         )}
       </div>

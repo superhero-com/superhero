@@ -26,7 +26,7 @@ function integrateTrapezoidal(f: (x: number) => number, aStart: number, bEnd: nu
 }
 
 // Core price integrator (returns aettos)
-export function calculatePrice(totalSupplyAettos: BigNumber, countAettos: BigNumber): BigNumber {
+function calculatePrice(totalSupplyAettos: BigNumber, countAettos: BigNumber): BigNumber {
   const totalSupplyInDecimals = totalSupplyAettos.div(DECIMALS).toNumber();
   const countInDecimals = countAettos.div(DECIMALS).toNumber();
   const f = (x: number) => a * Math.exp(k * x) - c;
@@ -56,29 +56,6 @@ export function calculateTokensFromAE(totalSupplyAettos: BigNumber, aeAmount: nu
   return new BigNumber(mid);
 }
 
-// For selling: find token amount to sell in order to receive a given AE amount
-export function calculateTokensToSellFromAE(totalSupplyAettos: BigNumber, aeAmount: number, tolerance = 1e-3): BigNumber {
-  const priceAettos = toDecimals(aeAmount, 18);
-  const maxIterations = 1000;
-  const f = (x: number) => a * Math.exp(k * x) - c;
-  const totalSupplyInDecimals = totalSupplyAettos.div(DECIMALS).toNumber();
-  const priceInDecimals = priceAettos.div(DECIMALS).toNumber();
-
-  let low = 0;
-  let high = Math.min(totalSupplyInDecimals, 1e12); // can't sell more than supply
-  let mid = 0;
-  let iterations = 0;
-  while (iterations < maxIterations) {
-    mid = (low + high) / 2;
-    const integralValue = integrateTrapezoidal(f, totalSupplyInDecimals - mid, totalSupplyInDecimals);
-    if (Math.abs(integralValue - priceInDecimals) < tolerance) break;
-    if (integralValue < priceInDecimals) low = mid; else high = mid;
-    iterations += 1;
-  }
-  // Return number of tokens (not scaled by DECIMALS)
-  return new BigNumber(mid);
-}
-
 export function calculateBuyPrice(totalSupplyAettos: BigNumber, countAettos: BigNumber): BigNumber {
   return calculatePrice(totalSupplyAettos, countAettos);
 }
@@ -90,11 +67,3 @@ export function calculateSellReturn(totalSupplyAettos: BigNumber, sellTokensAett
 export function calculateBuyPriceWithAffiliationFee(totalSupplyAettos: BigNumber, countAettos: BigNumber): BigNumber {
   return calculateBuyPrice(totalSupplyAettos, countAettos).multipliedBy(1.005);
 }
-
-export function priceAtSupplyAE(totalSupplyAettos: BigNumber, tokenDecimals = 18): number {
-  const oneToken = toDecimals(1, tokenDecimals);
-  const costAettos = calculateBuyPrice(totalSupplyAettos, oneToken);
-  return toAe(costAettos);
-}
-
-

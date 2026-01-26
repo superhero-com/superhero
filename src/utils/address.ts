@@ -82,7 +82,7 @@ export function formatAddress(address: string, length = 6, truncate = false): st
 /**
  * Gets the endpoint type for explorer URLs based on hash prefix
  */
-export function getEndpointByHash(hash: string): string | undefined {
+function getEndpointByHash(hash: string): string | undefined {
   const { valid, prefix } = validateHash(hash);
   if (valid && prefix) {
     return ADDRESS_TYPES[prefix];
@@ -108,14 +108,6 @@ export function prepareExplorerUrl(
 export function isAccountAddress(address: string): boolean {
   const { valid, prefix } = validateHash(address);
   return valid && prefix === Encoding.AccountAddress;
-}
-
-/**
- * Checks if an address is a contract address
- */
-export function isContractAddress(address: string): boolean {
-  const { valid, prefix } = validateHash(address);
-  return valid && prefix === Encoding.ContractAddress;
 }
 
 /**

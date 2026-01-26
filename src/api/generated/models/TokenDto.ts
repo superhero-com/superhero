@@ -33,5 +33,6 @@ export type TokenDto = {
     volume: string;
     amount: PriceDto;
     unit_price: PriceDto;
+    create_tx_hash?: string;
 };
 

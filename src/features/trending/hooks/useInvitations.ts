@@ -61,13 +61,25 @@ export function useInvitations() {
   }, []);
 
   const getInvitationRevokeStatus = useCallback((invitee: string): ITransaction | boolean => {
-    return (
-      transactionList.find(
-        (tx) =>
-          tx?.tx?.function === TX_FUNCTIONS.register_invitation_code &&
-          tx?.tx?.arguments?.[0]?.value === invitee
-      ) || recentlyRevokedInvitations.includes(invitee)
-    );
+    const revokeTx =
+      transactionList.find((tx) => {
+        if (tx?.tx?.function !== TX_FUNCTIONS.revoke_invitation_code) return false;
+
+        const arg0 = tx?.tx?.arguments?.[0]?.value;
+
+        // Middleware can return either:
+        // - { type: "address", value: "ak_..." }
+        // - { type: "list", value: [{ type: "address", value: "ak_..." }, ...] }
+        if (typeof arg0 === 'string') return arg0 === invitee;
+
+        if (Array.isArray(arg0)) {
+          return arg0.some((item: any) => item?.value === invitee || item === invitee);
+        }
+
+        return false;
+      }) ?? false;
+
+    return revokeTx || recentlyRevokedInvitations.includes(invitee);
   }, [transactionList, recentlyRevokedInvitations]);
 
   const determineInvitationStatus = useCallback((
@@ -227,6 +239,8 @@ export function useInvitations() {
       
       setRecentlyRevokedInvitations((prev) => [...prev, invitation.invitee]);
       removeStoredInvite(invitation.invitee as `ak_${string}`, invitation.secretKey);
+      // Kick a refresh so on-chain revoke tx can be picked up as soon as middleware serves it.
+      triggerRefresh();
     } catch (error: any) {
       console.error("Failed to revoke invitation:", error);
       if (error.message?.includes("INVITATION_NOT_REGISTERED")) {

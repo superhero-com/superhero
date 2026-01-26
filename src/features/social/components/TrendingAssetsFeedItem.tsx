@@ -160,7 +160,7 @@ export default function TrendingAssetsFeedItem() {
                         height={40}
                         hideTimeframe={true}
                         timeframe="7d"
-                        className="h-10 w-full"
+                        className="h-10 w-full pointer-events-none"
                       />
                     )}
                   </div>

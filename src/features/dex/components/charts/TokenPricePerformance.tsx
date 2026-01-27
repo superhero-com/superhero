@@ -242,17 +242,22 @@ export default function TokenPricePerformance({
     const minTime = timeFrameHours === Infinity ? 0 : now - (timeFrameHours * 3600);
 
     // Convert data format - TradingView expects Unix timestamps in seconds
-    const rawData = chartData.labels
+    const allDataPoints = chartData.labels
       .map((timestamp, index) => {
         // Ensure timestamp is in seconds (not milliseconds)
         const timeInSeconds = timestamp > 1e10 ? Math.floor(timestamp / 1000) : timestamp;
         return {
           time: timeInSeconds as any,
           value: Number(chartData.data[index]) || 0,
+          originalTime: timeInSeconds,
         };
       })
+      .sort((a, b) => a.originalTime - b.originalTime);
+
+    // Filter data to only include points within the selected timeframe
+    const rawData = allDataPoints
       .filter((item) => timeFrameHours === Infinity || item.time >= minTime)
-      .sort((a, b) => a.time - b.time); // Ensure data is sorted by time
+      .map(({ time, value }) => ({ time, value }));
 
     // Remove duplicate timestamps and ensure strict ascending order
     const formattedData: typeof rawData = [];
@@ -281,6 +286,28 @@ export default function TokenPricePerformance({
       // Fit content
       if (chartRef.current) {
         chartRef.current.timeScale().fitContent();
+      }
+    } else {
+      // If no data in timeframe, show a flat line at the last known price
+      const lastKnownPoint = allDataPoints
+        .filter((item) => item.originalTime < minTime)
+        .pop(); // Get the last item (most recent before timeframe)
+
+      if (lastKnownPoint) {
+        // Create a flat line spanning the entire timeframe
+        const flatLineData = [
+          { time: minTime as any, value: lastKnownPoint.value },
+          { time: now as any, value: lastKnownPoint.value },
+        ];
+        seriesRef.current.setData(flatLineData);
+        
+        // Fit content
+        if (chartRef.current) {
+          chartRef.current.timeScale().fitContent();
+        }
+      } else {
+        // No data at all, clear chart
+        seriesRef.current.setData([]);
       }
     }
   }, [chartData, selectedTimeFrame, isBarChart]);

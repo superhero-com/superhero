@@ -174,7 +174,7 @@ export default function MobileAppHeader() {
               >
                 ←
               </button>
-              <div className="flex-1 min-w-0 grid grid-cols-[minmax(0,1fr)_minmax(64px,88px)_auto] grid-rows-2 items-center gap-x-2">
+              <div className="flex-1 min-w-0 grid grid-cols-[minmax(0,1fr)_auto] grid-rows-2 items-center gap-x-2">
                 <div className="row-start-1 col-start-1 text-[13px] font-semibold text-white leading-tight line-clamp-2">
                   #{String((tokenData as any)?.symbol || (tokenData as any)?.name || tokenNameParam || '').toUpperCase()}
                 </div>
@@ -188,13 +188,8 @@ export default function MobileAppHeader() {
                     <span className="text-white/50">—</span>
                   )}
                 </div>
-                {tokenAddress && (
-                  <div className="row-span-2 col-start-2 flex items-center justify-center h-[24px]">
-                    <TokenLineChart saleAddress={String(tokenAddress)} height={24} hideTimeframe className="h-full w-full" />
-                  </div>
-                )}
                 <button
-                  className="row-span-2 col-start-3 ml-1 px-3.5 py-2 rounded-full text-[12px] font-bold tracking-wide bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md"
+                  className="row-span-2 col-start-2 ml-1 px-3.5 py-2 rounded-full text-[12px] font-bold tracking-wide bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-black shadow-md"
                   onClick={() => {
                     const params = new URLSearchParams(search);
                     params.set("showTrade", "1");

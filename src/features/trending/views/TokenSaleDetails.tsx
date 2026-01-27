@@ -1,6 +1,6 @@
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import Head from "../../../seo/Head";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { TokensService } from "../../../api/generated/services/TokensService";
@@ -28,6 +28,7 @@ import { Plus } from "lucide-react";
 
 // Feature components
 import TokenCandlestickChart from "@/components/charts/TokenCandlestickChart";
+import TokenLineChart from "@/features/trending/components/TokenLineChart";
 import {
   TokenCandlestickChartSkeleton,
   TokenRanking,
@@ -78,6 +79,7 @@ export default function TokenSaleDetails() {
   const [holdersOnly, setHoldersOnly] = useState(true);
   const [showComposer, setShowComposer] = useState(false);
   const tradePrefillAppliedRef = useRef(false);
+  const tradeTouchHandledRef = useRef(false);
   const {
     switchTradeView,
     updateTokenA,
@@ -187,6 +189,29 @@ export default function TokenSaleDetails() {
       ...(tokenData || {}),
     };
   }, [tokenData, _token]);
+  const tokenAddress = (token as any)?.sale_address || (token as any)?.address;
+  const tokenHeaderTitle = useMemo(() => {
+    const raw = String(token?.symbol || token?.name || tokenName || '');
+    return raw ? `#${raw.toUpperCase()}` : '#TOKEN';
+  }, [token?.symbol, token?.name, tokenName]);
+  const openTradePanel = () => {
+    const params = new URLSearchParams(location.search);
+    params.set("showTrade", "1");
+    params.set("openTrade", "1");
+    navigate({ pathname: location.pathname, search: params.toString() });
+  };
+  const handleTradeClick = () => {
+    if (tradeTouchHandledRef.current) {
+      tradeTouchHandledRef.current = false;
+      return;
+    }
+    openTradePanel();
+  };
+  const handleTradePointerUp = (event: PointerEvent<HTMLButtonElement>) => {
+    if (event.pointerType !== "touch") return;
+    tradeTouchHandledRef.current = true;
+    openTradePanel();
+  };
 
   // Derived states
   const isTokenPending = isTokenNewlyCreated && !token?.sale_address;
@@ -290,6 +315,33 @@ export default function TokenSaleDetails() {
         }}
       />
       {!isMobile && showTradePanels && <LatestTransactionsCarousel />}
+
+      {isMobile && tokenAddress && (
+        <button
+          type="button"
+          onClick={handleTradeClick}
+          onPointerUp={handleTradePointerUp}
+          className="w-full mb-4 mt-2 rounded-2xl border border-emerald-400/30 bg-gradient-to-r from-emerald-500/10 via-emerald-400/5 to-transparent px-4 py-3 text-left shadow-[0_8px_24px_rgba(16,185,129,0.18)] transition-all duration-200 hover:border-emerald-300/60 hover:shadow-[0_10px_28px_rgba(16,185,129,0.28)] active:scale-[0.99]"
+          aria-label="Open trade"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-white">{tokenHeaderTitle}</span>
+            <span className="text-emerald-400 text-sm font-semibold">▲</span>
+          </div>
+          <div className="mt-2 h-6 w-full">
+            <TokenLineChart
+              saleAddress={String(tokenAddress)}
+              height={24}
+              hideTimeframe
+              showCrosshair
+              allTime
+              showDateLegend
+              allowParentClick
+              className="h-full w-full"
+            />
+          </div>
+        </button>
+      )}
 
       {/* Deploy Success Message */}
       {showDeployedMessage && (
@@ -439,6 +491,33 @@ export default function TokenSaleDetails() {
             </Card>
           )}
 
+          {!isMobile && !showTradePanels && tokenAddress && (
+            <button
+              type="button"
+              onClick={handleTradeClick}
+              onPointerUp={handleTradePointerUp}
+              className="w-full rounded-2xl border border-emerald-400/30 bg-gradient-to-r from-emerald-500/10 via-emerald-400/5 to-transparent px-4 py-3 text-left shadow-[0_8px_24px_rgba(16,185,129,0.18)] transition-all duration-200 hover:border-emerald-300/60 hover:shadow-[0_10px_28px_rgba(16,185,129,0.28)] active:scale-[0.99]"
+              aria-label="Open trade"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-white">{tokenHeaderTitle}</span>
+                <span className="text-emerald-400 text-sm font-semibold">▲</span>
+              </div>
+              <div className="mt-2 h-6 w-full">
+                <TokenLineChart
+                  saleAddress={String(tokenAddress)}
+                  height={24}
+                  hideTimeframe
+                  showCrosshair
+                  allTime
+                  showDateLegend
+                  allowParentClick
+                  className="h-full w-full"
+                />
+              </div>
+            </button>
+          )}
+
           {/* Chart */}
           {showTradePanels && !isMobile && (
             (isLoading && !token?.sale_address) ? (
@@ -510,7 +589,7 @@ export default function TokenSaleDetails() {
             )}
 
             {activeTab === TAB_CHAT && (
-              <div className="grid gap-3">
+              <div className="grid">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                 {!isMobile && (
                   <h3 className="m-0 text-white/90 font-semibold">

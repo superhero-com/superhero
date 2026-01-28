@@ -21,6 +21,7 @@ import {
   refreshInvitationsAtom,
   type InvitationInfo,
   type InvitationStatus,
+  type ClaimedInfo,
 } from '../../../atoms/invitationAtoms';
 import {
   TX_FUNCTIONS,
@@ -100,9 +101,13 @@ export function useInvitations() {
     transaction: ITransaction
   ): InvitationStatus => {
     const revokeStatus = getInvitationRevokeStatus(invitee);
-    const claimed = claimedInvitations[invitee];
+    const claimedData = claimedInvitations[invitee];
+    const claimed = !!claimedData;
     const status = determineInvitationStatus(claimed, revokeStatus);
     const secretKey = getInvitationSecretKey(invitee);
+
+    // Extract claimed info if available
+    const claimedInfo = typeof claimedData === 'object' ? claimedData as ClaimedInfo : null;
 
     return {
       hash: transaction.hash,
@@ -116,6 +121,11 @@ export function useInvitations() {
         revokeTxHash: revokeStatus.hash,
       }),
       claimed,
+      ...(claimedInfo && {
+        claimedBy: claimedInfo.claimedBy,
+        claimedAt: claimedInfo.claimedAt ? moment(claimedInfo.claimedAt).format(DATE_LONG) : undefined,
+        claimTxHash: claimedInfo.claimTxHash,
+      }),
       secretKey,
     };
   }, [getInvitationRevokeStatus, claimedInvitations, determineInvitationStatus, getInvitationSecretKey]);
@@ -306,9 +316,21 @@ export function useInvitations() {
             const inviteeTransactions = await loadAccountInvitations(invitation.invitee);
             inviteeTransactions.forEach((tx: ITransaction) => {
               if (tx?.tx?.function === TX_FUNCTIONS.redeem_invitation_code) {
+                // The claimer's wallet address is passed as the second argument to redeemInvitationCode(secretKey, claimerAddress).
+                // The callerId is the invitation keypair address (invitee), NOT the actual claimer.
+                const claimerAddress = tx.tx?.arguments?.[1]?.value as string | undefined;
+                
+                // Always mark as claimed when we see a redeem tx. If we can't extract claimer details,
+                // fall back to boolean `true` (the atom type supports ClaimedInfo | boolean).
                 setClaimedInvitations((prev) => ({
                   ...prev,
-                  [invitation.invitee]: true,
+                  [invitation.invitee]: claimerAddress
+                    ? {
+                        claimedBy: claimerAddress,
+                        claimedAt: tx.microTime,
+                        claimTxHash: tx.hash,
+                      } as ClaimedInfo
+                    : true,
                 }));
               }
             });

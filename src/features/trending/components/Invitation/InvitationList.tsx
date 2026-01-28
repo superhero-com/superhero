@@ -2,15 +2,6 @@ import { useState } from "react";
 import { useAeSdk } from "../../../../hooks/useAeSdk";
 import AeButton from "../../../../components/AeButton";
 import { Badge } from "../../../../components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "../../../../components/ui/dialog";
-import { Checkbox } from "../../../../components/ui/checkbox";
-import CopyText from "../../../../components/ui/CopyText";
 import { cn } from "../../../../lib/utils";
 import AddressChip from "../../../../components/AddressChip";
 import { Decimal } from "../../../../libs/decimal";
@@ -29,11 +20,17 @@ export default function InvitationList() {
   const [revokingInvitationInvitee, setRevokingInvitationInvitee] = useState<
     string | null
   >(null);
-  const [showInvitationDialog, setShowInvitationDialog] = useState(false);
-  const [selectedInvitation, setSelectedInvitation] =
-    useState<any | null>(null);
-  const [linkHasBeenCopied, setLinkHasBeenCopied] = useState(false);
-  const [closeBlockedPulse, setCloseBlockedPulse] = useState(false);
+  const [copiedInvitee, setCopiedInvitee] = useState<string | null>(null);
+
+  const handleCopyLink = async (invitee: string, secretKey: string) => {
+    try {
+      await navigator.clipboard.writeText(prepareInviteLink(secretKey));
+      setCopiedInvitee(invitee);
+      setTimeout(() => setCopiedInvitee(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    }
+  };
 
   const handleRevokeInvitation = async (invitation: any) => {
     setRevokingInvitationInvitee(invitation.invitee);
@@ -47,18 +44,6 @@ export default function InvitationList() {
     } finally {
       setRevokingInvitationInvitee(null);
     }
-  };
-
-  const showInvitationLink = (invitation: any) => {
-    setSelectedInvitation(invitation);
-    setShowInvitationDialog(true);
-    setLinkHasBeenCopied(false);
-  };
-
-  const pulseCloseBlocked = () => {
-    setCloseBlockedPulse(false);
-    requestAnimationFrame(() => setCloseBlockedPulse(true));
-    window.setTimeout(() => setCloseBlockedPulse(false), 500);
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -100,7 +85,7 @@ export default function InvitationList() {
             {/* Desktop Table Header - Hidden on mobile */}
             <div className="hidden md:grid grid-cols-[auto_1fr_120px_120px_140px] gap-4 px-4 py-3 text-xs font-medium text-white/60 border-b border-white/10">
               <div>#</div>
-              <div>Invitee</div>
+              <div>Details</div>
               <div>Amount</div>
               <div>Status</div>
               <div className="text-right">Actions</div>
@@ -119,15 +104,79 @@ export default function InvitationList() {
                     {invitations.length - index}
                   </div>
 
-                  {/* Invitee */}
+                  {/* Details - show actual invitee for claimed, awaiting for others */}
                   <div className="min-w-0">
-                    <div className="font-mono text-sm text-white truncate">
-                      <AddressChip address={invitation.invitee} />
-                    </div>
-                    {invitation.date && (
-                      <div className="text-xs text-white/50 mt-1">
-                        {invitation.date}
-                      </div>
+                    {invitation.status === "claimed" ? (
+                      <>
+                        <div className="text-[10px] text-green-400/80 font-medium mb-1">
+                          {invitation.claimedBy ? "Invitee" : "Claimed"}
+                        </div>
+                        {invitation.claimedBy ? (
+                          <div className="font-mono text-sm text-white truncate">
+                            <AddressChip 
+                              address={invitation.claimedBy} 
+                              linkToProfile 
+                            />
+                          </div>
+                        ) : (
+                          <div className="text-xs text-white/50">
+                            Invitation was claimed
+                          </div>
+                        )}
+                        {invitation.claimedAt && (
+                          <div className="text-xs text-white/50 mt-1">
+                            Claimed on {invitation.claimedAt}
+                          </div>
+                        )}
+                      </>
+                    ) : invitation.status === "revoked" ? (
+                      <>
+                        <div className="text-[10px] text-red-400/80 font-medium mb-1">Revoked</div>
+                        <div className="text-xs text-white/50">
+                          No one claimed this invite
+                        </div>
+                        {invitation.revokedAt && (
+                          <div className="text-xs text-white/50 mt-1">
+                            Revoked on {invitation.revokedAt}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-[10px] text-yellow-400/80 font-medium mb-1">Awaiting claim</div>
+                        <div className="text-xs text-white/50 mb-1">
+                          Share the link to invite someone
+                        </div>
+                        {invitation.secretKey && (
+                          <button
+                            onClick={() => handleCopyLink(invitation.invitee, invitation.secretKey!)}
+                            className={cn(
+                              "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs",
+                              "bg-white/5 border border-white/10 backdrop-blur-sm",
+                              "transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:bg-white/10",
+                              "cursor-pointer relative overflow-hidden",
+                              copiedInvitee === invitation.invitee && "bg-green-500/20 border-green-500/30"
+                            )}
+                            title="Click to copy link"
+                          >
+                            <span className="text-yellow-400">🔗</span>
+                            <span className="font-mono text-[10px] text-white/80 truncate max-w-[140px]">
+                              {prepareInviteLink(invitation.secretKey).slice(0, 25)}...
+                            </span>
+                            <span className={cn(
+                              "text-xs",
+                              copiedInvitee === invitation.invitee ? "text-green-400" : "opacity-60"
+                            )}>
+                              {copiedInvitee === invitation.invitee ? "✓" : "📋"}
+                            </span>
+                          </button>
+                        )}
+                        {invitation.date && (
+                          <div className="text-xs text-white/50 mt-1">
+                            Created on {invitation.date}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -163,18 +212,6 @@ export default function InvitationList() {
 
                   {/* Actions */}
                   <div className="flex gap-2 justify-end">
-                    {!loading &&
-                      invitation.status === "created" &&
-                      invitation.secretKey && (
-                        <AeButton
-                          onClick={() => showInvitationLink(invitation)}
-                          variant="ghost"
-                          size="small"
-                          className="text-xs"
-                        >
-                          Link
-                        </AeButton>
-                      )}
                     {invitation.status === "created" && (
                       <AeButton
                         onClick={() => handleRevokeInvitation(invitation)}
@@ -209,17 +246,77 @@ export default function InvitationList() {
                     </Badge>
                   </div>
 
-                  {/* Invitee Address and Amount Row */}
+                  {/* Details and Amount Row */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1 min-w-0">
-                      <div className="text-xs text-white/60 font-medium">Invitee</div>
-                      <div className="font-mono text-sm text-white">
-                        <AddressChip address={invitation.invitee} />
-                      </div>
-                      {invitation.date && (
-                        <div className="text-xs text-white/50">
-                          {invitation.date}
-                        </div>
+                      {invitation.status === "claimed" ? (
+                        <>
+                          <div className="text-xs text-green-400/80 font-medium">
+                            {invitation.claimedBy ? "Invitee" : "Claimed"}
+                          </div>
+                          {invitation.claimedBy ? (
+                            <div className="font-mono text-sm text-white">
+                              <AddressChip 
+                                address={invitation.claimedBy} 
+                                linkToProfile 
+                              />
+                            </div>
+                          ) : (
+                            <div className="text-xs text-white/50">
+                              Invitation was claimed
+                            </div>
+                          )}
+                          {invitation.claimedAt && (
+                            <div className="text-xs text-white/50">
+                              {invitation.claimedAt}
+                            </div>
+                          )}
+                        </>
+                      ) : invitation.status === "revoked" ? (
+                        <>
+                          <div className="text-xs text-red-400/80 font-medium">Revoked</div>
+                          <div className="text-xs text-white/50">
+                            Not claimed
+                          </div>
+                          {invitation.revokedAt && (
+                            <div className="text-xs text-white/50">
+                              {invitation.revokedAt}
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-xs text-yellow-400/80 font-medium">Awaiting</div>
+                          <div className="text-xs text-white/50 mb-1">
+                            Share the link
+                          </div>
+                          {invitation.secretKey && (
+                            <button
+                              onClick={() => handleCopyLink(invitation.invitee, invitation.secretKey!)}
+                              className={cn(
+                                "inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px]",
+                                "bg-white/5 border border-white/10 backdrop-blur-sm",
+                                "transition-all duration-300 hover:bg-white/10",
+                                "cursor-pointer relative overflow-hidden",
+                                copiedInvitee === invitation.invitee && "bg-green-500/20 border-green-500/30"
+                              )}
+                              title="Click to copy link"
+                            >
+                              <span className="text-yellow-400 text-xs">🔗</span>
+                              <span className="font-mono text-white/80 truncate max-w-[80px]">
+                                {prepareInviteLink(invitation.secretKey).slice(0, 15)}...
+                              </span>
+                              <span className={copiedInvitee === invitation.invitee ? "text-green-400" : "opacity-60"}>
+                                {copiedInvitee === invitation.invitee ? "✓" : "📋"}
+                              </span>
+                            </button>
+                          )}
+                          {invitation.date && (
+                            <div className="text-xs text-white/50 mt-1">
+                              Created on {invitation.date}
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                     <div className="space-y-1">
@@ -245,19 +342,9 @@ export default function InvitationList() {
                     </div>
                   </div>
 
-                  {/* Actions */}
+                  {/* Actions - only Revoke button */}
                   {invitation.status === "created" && (
                     <div className="flex gap-2 pt-2">
-                      {!loading && invitation.secretKey && (
-                        <AeButton
-                          onClick={() => showInvitationLink(invitation)}
-                          variant="primary"
-                          size="small"
-                          className="text-xs flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-                        >
-                          Copy Link
-                        </AeButton>
-                      )}
                       <AeButton
                         onClick={() => handleRevokeInvitation(invitation)}
                         disabled={
@@ -280,94 +367,6 @@ export default function InvitationList() {
           </div>
         )}
       </div>
-
-      {/* Invitation Link Dialog */}
-      <Dialog
-        open={showInvitationDialog}
-        onOpenChange={(open) => {
-          if (!open && !linkHasBeenCopied) {
-            pulseCloseBlocked();
-            return;
-          }
-          setShowInvitationDialog(open);
-          if (!open) {
-            setSelectedInvitation(null);
-            setLinkHasBeenCopied(false);
-            setCloseBlockedPulse(false);
-          }
-        }}
-      >
-        <DialogContent
-          className="max-w-md"
-          hideClose={!linkHasBeenCopied}
-          onEscapeKeyDown={(e) => {
-            if (!linkHasBeenCopied) {
-              e.preventDefault();
-              pulseCloseBlocked();
-            }
-          }}
-          onInteractOutside={(e) => {
-            if (!linkHasBeenCopied) {
-              e.preventDefault();
-              pulseCloseBlocked();
-            }
-          }}
-        >
-          <DialogHeader className="text-center">
-            <DialogTitle className="text-xl mb-2">Copy Invite Link</DialogTitle>
-            <DialogDescription className="text-sm text-white/70 mb-4">
-              Share this link with someone to invite them. They can use it to
-              claim their reward.
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedInvitation?.secretKey && (
-            <div className="space-y-4">
-              <CopyText
-                value={prepareInviteLink(selectedInvitation.secretKey)}
-                bordered
-                className="w-full"
-              />
-
-              <div className="flex items-center gap-3 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                <span className="text-2xl">⚠️</span>
-                <span className="text-sm text-yellow-200 font-medium">
-                  Warning: Only share this link with trusted individuals
-                </span>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="link-copied"
-                  checked={linkHasBeenCopied}
-                  onCheckedChange={(checked) =>
-                    setLinkHasBeenCopied(checked === true)
-                  }
-                />
-                <label
-                  htmlFor="link-copied"
-                  className={`text-sm text-white/80 cursor-pointer rounded-lg px-2 py-1 transition-colors ${
-                    closeBlockedPulse && !linkHasBeenCopied
-                      ? "animate-shake bg-red-500/10 border border-red-500/30"
-                      : ""
-                  }`}
-                >
-                  I have copied the link
-                </label>
-              </div>
-
-              <AeButton
-                onClick={() => setShowInvitationDialog(false)}
-                disabled={!linkHasBeenCopied}
-                className="w-full"
-                size="large"
-              >
-                Close
-              </AeButton>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

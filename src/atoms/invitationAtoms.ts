@@ -20,6 +20,9 @@ export interface InvitationStatus {
   revokedAt?: string;
   revokeTxHash?: string;
   claimed: boolean;
+  claimedBy?: string; // Address of the user who claimed the invite
+  claimedAt?: string; // When the invite was claimed
+  claimTxHash?: string; // Transaction hash of the claim
   secretKey?: string;
 }
 
@@ -29,8 +32,13 @@ export const invitationListAtom = atomWithStorage<InvitationInfo[]>('invite_list
 // Current invitation code from URL
 export const invitationCodeAtom = atomWithStorage<string | undefined>('invite_code', undefined);
 
-// Claimed invitations cache
-export const claimedInvitationsAtom = atom<Record<string, boolean>>({});
+// Claimed invitations cache - stores claimer info
+export interface ClaimedInfo {
+  claimedBy: string;
+  claimedAt?: number;
+  claimTxHash?: string;
+}
+export const claimedInvitationsAtom = atom<Record<string, ClaimedInfo | boolean>>({});
 
 // Recently revoked invitations (for optimistic UI updates)
 export const recentlyRevokedInvitationsAtom = atom<string[]>([]);

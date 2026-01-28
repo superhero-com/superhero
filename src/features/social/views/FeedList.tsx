@@ -1064,7 +1064,7 @@ export default function FeedList({
     let i = 0;
     let renderedCount = 0;
     const rng = createSeededRandom(trendingInsertSeed.current);
-    let nextInsertAt = 5;
+    let nextInsertAt = 2;
 
     const maybeInsertTrending = () => {
       if (renderedCount === nextInsertAt) {
@@ -1180,7 +1180,7 @@ export default function FeedList({
     const nodes: React.ReactNode[] = [];
     let renderedCount = 0;
     const rng = createSeededRandom(trendingInsertSeed.current);
-    let nextInsertAt = 5;
+    let nextInsertAt = 2;
 
     const maybeInsertTrending = () => {
       if (renderedCount === nextInsertAt) {

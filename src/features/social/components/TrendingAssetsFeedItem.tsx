@@ -10,11 +10,6 @@ import { TrendingUp } from "lucide-react";
 const ITEM_LIMIT = 4;
 const FETCH_LIMIT = 12;
 
-type TokenPerformanceItem = {
-  token: TokenDto;
-  changePercent: number | null;
-};
-
 function getTokenAddress(token: TokenDto) {
   return token.sale_address || token.address || "";
 }
@@ -42,53 +37,17 @@ export default function TrendingAssetsFeedItem() {
     return Array.isArray(items) ? items : [];
   }, [tokensData]);
 
-  const tokenAddresses = useMemo(
-    () => tokens.map(getTokenAddress).filter(Boolean),
-    [tokens]
+  const topTokens = useMemo(() => tokens.slice(0, ITEM_LIMIT), [tokens]);
+
+  const isLoading = tokensLoading;
+  const hasItems = topTokens.length > 0;
+  const skeletonItems: Array<TokenDto | null> = Array.from(
+    { length: ITEM_LIMIT },
+    () => null
   );
-
-  const { data: performanceData, isLoading: performanceLoading } = useQuery<
-    TokenPerformanceItem[]
-  >({
-    queryKey: ["feed-trending-assets", "performance", tokenAddresses.join("|")],
-    enabled: tokenAddresses.length > 0,
-    queryFn: async () => {
-      const results = await Promise.all(
-        tokens.map(async (token) => {
-          const tokenAddress = getTokenAddress(token);
-          if (!tokenAddress) return null;
-          const performance = await SuperheroApi.getTokenPerformance(tokenAddress).catch(
-            () => null
-          );
-          const changeRaw = (performance as any)?.past_7d?.current_change_percent;
-          const parsedChange = Number(changeRaw);
-          const changePercent = Number.isFinite(parsedChange) ? parsedChange : null;
-          return {
-            token,
-            changePercent,
-          } as TokenPerformanceItem;
-        })
-      );
-
-      return results
-        .filter((item): item is TokenPerformanceItem =>
-          Boolean(item && typeof item.changePercent === "number")
-        )
-        .sort(
-          (a, b) =>
-            (b.changePercent ?? Number.NEGATIVE_INFINITY) -
-            (a.changePercent ?? Number.NEGATIVE_INFINITY)
-        );
-    },
-    staleTime: 60 * 1000,
-  });
-
-  const items = useMemo<TokenPerformanceItem[]>(() => {
-    return performanceData ? performanceData.slice(0, ITEM_LIMIT) : [];
-  }, [performanceData]);
-
-  const isLoading = tokensLoading || performanceLoading;
-  const hasItems = items.length > 0;
+  const itemsToRender: Array<TokenDto | null> = isLoading
+    ? skeletonItems
+    : topTokens;
 
   if (!isLoading && !hasItems) {
     return null;
@@ -104,8 +63,7 @@ export default function TrendingAssetsFeedItem() {
           </h3>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {(isLoading ? Array.from({ length: ITEM_LIMIT }) : items).map(
-            (item, index) => {
+          {itemsToRender.map((item, index) => {
               if (!item) {
                 return (
                   <div
@@ -119,11 +77,19 @@ export default function TrendingAssetsFeedItem() {
                 );
               }
 
-              const token = item.token;
+              const token = item;
               const tokenLabel = token.symbol || token.name || "Unknown";
               const tokenAddress = getTokenAddress(token);
-              const changePercent = item.changePercent ?? 0;
-              const isPositive = changePercent >= 0;
+              const changeRaw = (
+                token as TokenDto & {
+                  performance?: {
+                    past_7d?: { current_change_percent?: number | string };
+                  };
+                }
+              ).performance?.past_7d?.current_change_percent;
+              const parsedChange = Number(changeRaw);
+              const changePercent = Number.isFinite(parsedChange) ? parsedChange : null;
+              const isPositive = changePercent !== null ? changePercent >= 0 : true;
               const tokenHref = `/trends/tokens/${encodeURIComponent(
                 token.name || token.address || token.symbol || tokenLabel
               )}`;
@@ -147,10 +113,16 @@ export default function TrendingAssetsFeedItem() {
                     <div
                       className={cn(
                         "text-[12px] font-semibold tabular-nums",
-                        isPositive ? "text-emerald-400" : "text-rose-400"
+                        changePercent === null
+                          ? "text-white/60"
+                          : isPositive
+                            ? "text-emerald-400"
+                            : "text-rose-400"
                       )}
                     >
-                      {`${isPositive ? "+" : "-"}${formatChange(changePercent)}`}
+                      {changePercent === null
+                        ? "--"
+                        : `${isPositive ? "+" : "-"}${formatChange(changePercent)}`}
                     </div>
                   </div>
                   <div className="mt-3 h-10">

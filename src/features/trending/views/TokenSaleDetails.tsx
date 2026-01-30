@@ -371,34 +371,9 @@ export default function TokenSaleDetails() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Desktop Sidebar (Left Column) */}
-        {!isMobile && (
-          <div className="lg:col-span-1 flex flex-col gap-6">
-            {!token?.sale_address ? (
-              <TokenSaleSidebarSkeleton boilerplate={isTokenPending} />
-            ) : (
-              <>
-                {showTradePanels && <TokenTradeCard token={token} />}
-                <TokenSummary
-                  token={token}
-                />
-                <TokenRanking token={token} />
-                {/* Quali.chat CTA - old design cards */}
-                <TokenChat
-                  token={{
-                    name: String(token.name || token.symbol || ''),
-                    address: String((token as any).sale_address || (token as any).address || (token as any).token_address || ''),
-                  }}
-                  mode="ctaOnly"
-                />
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Main Content (Right Column on Desktop, Full Width on Mobile) */}
+        {/* Main Content (Left Column on Desktop, Full Width on Mobile) */}
         <div
-          className={`${isMobile ? "col-span-1 mb-8" : "lg:col-span-2"
+          className={`${isMobile ? "col-span-1 mb-8" : "lg:col-span-2 lg:col-start-1"
             } flex flex-col gap-6`}
         >
           {/* Token Header */}
@@ -662,6 +637,31 @@ export default function TokenSaleDetails() {
             {activeTab === TAB_HOLDERS && <TokenHolders token={token} />}
           </div>
         </div>
+
+        {/* Desktop Sidebar (Right Column) */}
+        {!isMobile && (
+          <div className="lg:col-span-1 lg:col-start-3 flex flex-col gap-6">
+            {!token?.sale_address ? (
+              <TokenSaleSidebarSkeleton boilerplate={isTokenPending} />
+            ) : (
+              <>
+                {showTradePanels && <TokenTradeCard token={token} />}
+                <TokenSummary
+                  token={token}
+                />
+                <TokenRanking token={token} />
+                {/* Quali.chat CTA - old design cards */}
+                <TokenChat
+                  token={{
+                    name: String(token.name || token.symbol || ''),
+                    address: String((token as any).sale_address || (token as any).address || (token as any).token_address || ''),
+                  }}
+                  mode="ctaOnly"
+                />
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Mobile Trading Modal */}

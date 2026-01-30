@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { TokenDto } from '@/api/generated';
 import WebSocketClient from '@/libs/WebSocketClient';
+import { useActiveChain } from '@/hooks/useActiveChain';
 
 export interface ILiveTokenData {
   token: TokenDto;
@@ -20,8 +21,10 @@ export function useLiveTokenData({ token, onUpdate }: ILiveTokenData) {
 
   const subscriptionRef = useRef<(() => void) | null>(null);
   const queryClient = useQueryClient();
+  const { selectedChain } = useActiveChain();
 
   useEffect(() => {
+    if (selectedChain !== 'aeternity') return;
     if (!token?.sale_address) return;
     subscriptionRef.current = WebSocketClient.subscribeForTokenUpdates(
       token.sale_address,
@@ -32,20 +35,20 @@ export function useLiveTokenData({ token, onUpdate }: ILiveTokenData) {
             ...newComingTokenData.data,
           };
 
-          queryClient.setQueryData(['TokensService.findByAddress', token.sale_address], newTokenData);
-          queryClient.setQueryData(['TokensService.findByAddress', token.symbol], newTokenData);
+          queryClient.setQueryData(['TokensService.findByAddress', selectedChain, token.sale_address], newTokenData);
+          queryClient.setQueryData(['TokensService.findByAddress', selectedChain, token.symbol], newTokenData);
 
           queryClient.refetchQueries({
-            queryKey: ['TokensService.listTokenRankings', token.sale_address],
+            queryKey: ['TokensService.listTokenRankings', selectedChain, token.sale_address],
           });
 
           queryClient
             .refetchQueries({
-              queryKey: ['TokensService.getHolders', token.sale_address],
+              queryKey: ['TokensService.getHolders', selectedChain, token.sale_address],
             })
             .then(() => {
               queryClient.refetchQueries({
-                queryKey: ['TokensService.findByAddress', token.symbol],
+                queryKey: ['TokensService.findByAddress', selectedChain, token.symbol],
               });
             });
 
@@ -58,7 +61,7 @@ export function useLiveTokenData({ token, onUpdate }: ILiveTokenData) {
     return () => {
       subscriptionRef.current?.();
     };
-  }, [token?.sale_address, token?.symbol, queryClient, onUpdate]);
+  }, [token?.sale_address, token?.symbol, queryClient, onUpdate, selectedChain]);
 
   return {
     tokenData,

@@ -12,6 +12,16 @@ import { CONFIG } from "../../../config";
 import { useAccount } from "../../../hooks/useAccount";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { GifSelectorDialog } from "./GifSelectorDialog";
+import { useActiveChain } from "@/hooks/useActiveChain";
+import { useSolanaWallet } from "@/chains/solana/hooks/useSolanaWallet";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { ensureBase58Signature } from "@/chains/solana/utils/signatureUtils";
+import {
+  buildPostInstruction,
+  MAX_URI_BYTES,
+  sha256,
+} from "@/chains/solana/solanaPosting/program";
+import { TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 
 interface PostFormProps {
   // Common props
@@ -81,6 +91,8 @@ const PROMPTS: string[] = [
 const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => void }, PostFormProps>((props, ref) => {
   const { t } = useTranslation('forms');
   const { t: tSocial } = useTranslation('social');
+  const { t: tCommon } = useTranslation('common');
+
   const {
     onClose,
     onSuccess,
@@ -100,9 +112,13 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     minHeight = "60px",
     autoFocus = false,
   } = props;
+  const { selectedChain } = useActiveChain();
+  const solanaWallet = useSolanaWallet();
   const { sdk } = useAeSdk();
   const { activeAccount, chainNames } = useAccount();
   const queryClient = useQueryClient();
+  const isSolana = selectedChain === 'solana';
+  const activeAddress = isSolana ? solanaWallet.publicKey?.toBase58() : activeAccount;
 
   useImperativeHandle(ref, () => ({
     focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => {
@@ -248,11 +264,11 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       return () => mediaQuery.removeEventListener('change', handleChange);
     } else {
       // Fallback for older browsers (MediaQueryList type)
-      const legacyHandler = (mq: MediaQueryList) => {
-        setIsDesktopViewport(mq.matches);
+      const legacyHandler = (e: MediaQueryListEvent) => {
+        setIsDesktopViewport(e.matches);
       };
-      mediaQuery.addListener(legacyHandler);
-      return () => mediaQuery.removeListener(legacyHandler);
+      mediaQuery.addListener(legacyHandler as any);
+      return () => mediaQuery.removeListener(legacyHandler as any);
     }
   }, []);
 
@@ -329,10 +345,72 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
     // Do not auto-append the required hashtag; the Post button is disabled until present
     const trimmed = text.trim();
     if (!trimmed) return;
-    if (!activeAccount) return;
+    if (!activeAddress) return;
 
     setIsSubmitting(true);
     try {
+      if (isSolana) {
+        if (!solanaWallet.publicKey || !solanaWallet.connection) return;
+
+        const parent = (!isPost && postId) ? String(postId) : undefined;
+        const payload = {
+          text: trimmed,
+          media: mediaUrls,
+          type: isPost ? 'post' : 'comment',
+          ...(parent ? { parent } : {}),
+        };
+        const raw = new TextEncoder().encode(JSON.stringify(payload));
+        const contentHash32 = await sha256(raw);
+        if (raw.length > MAX_URI_BYTES) {
+          throw new Error('Post content too large. Try shortening text or media.');
+        }
+
+        const ix = await buildPostInstruction({
+          author: solanaWallet.publicKey,
+          uri: JSON.stringify(payload),
+          contentHash32,
+          clientNonce: BigInt(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)),
+        });
+
+        const { blockhash, lastValidBlockHeight } = await solanaWallet.connection.getLatestBlockhash('confirmed');
+        const messageV0 = new TransactionMessage({
+          payerKey: solanaWallet.publicKey,
+          recentBlockhash: blockhash,
+          instructions: [ix],
+        }).compileToV0Message();
+
+        const tx = new VersionedTransaction(messageV0);
+        let signature: string;
+        if (solanaWallet.signTransaction) {
+          const signedTx = await solanaWallet.signTransaction(tx);
+          signature = await solanaWallet.connection.sendRawTransaction(signedTx.serialize(), {
+            skipPreflight: import.meta.env.DEV,
+            maxRetries: 3,
+          });
+        } else {
+          signature = await solanaWallet.sendTransaction(tx, solanaWallet.connection, {
+            skipPreflight: import.meta.env.DEV,
+            maxRetries: 3,
+          });
+        }
+
+        const base58Signature = ensureBase58Signature(signature);
+        await solanaWallet.connection.confirmTransaction(
+          { signature: base58Signature, blockhash, lastValidBlockHeight },
+          'confirmed',
+        );
+
+        if (!isMountedRef.current) return;
+        setText("");
+        setMediaUrls([]);
+        setShowEmoji(false);
+        setShowGif(false);
+        onSuccess?.();
+        if (isPost) onPostCreated?.();
+        else onCommentAdded?.();
+        return;
+      }
+
       const contract = await sdk.initializeContract({
         aci: TIPPING_V3_ACI as any,
         address: CONFIG.CONTRACT_V3_ADDRESS as `ct_${string}`,
@@ -361,7 +439,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         const optimisticPost: any = {
           id: newPostId,
           content: trimmed,
-          sender_address: activeAccount,
+          sender_address: activeAddress,
           media: mediaUrls,
           total_comments: 0,
           created_at: new Date().toISOString(),
@@ -424,7 +502,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         
         // First, collect all active latest feed queries to avoid duplicate updates
         const activeLatestQueries = queryClient.getQueryCache()
-          .findAll({ queryKey: ["posts"], exact: false })
+          .findAll({ queryKey: ["posts", selectedChain], exact: false })
           .filter((query) => {
             const key = query.queryKey as any[];
             return key.length >= 2 && key[1]?.sortBy === "latest";
@@ -438,7 +516,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         
         // Also update the default latest feed query if it wasn't already updated
         // This ensures the query is updated even if it doesn't exist in cache yet
-        const defaultKey: any[] = ["posts", { limit: 10, sortBy: "latest", search: "", filterBy: "all" }];
+        const defaultKey: any[] = ["posts", selectedChain, { limit: 10, sortBy: "latest", search: "", filterBy: "all" }];
         const defaultKeyStr = JSON.stringify(defaultKey);
         if (!updatedKeys.has(defaultKeyStr)) {
           updateLatestFeedCache(defaultKey);
@@ -446,7 +524,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         
         // Optimistically prepend the new post to the topic feed cache so it appears immediately
         if (requiredHashtag && !requiredMissing) {
-          const topicKey = ["topic-by-name", (requiredHashtag || '').toLowerCase()];
+          const topicKey = ["topic-by-name", selectedChain, (requiredHashtag || '').toLowerCase()];
           queryClient.setQueryData(topicKey, (old: any) => {
             const prevPosts = Array.isArray(old?.posts) ? old.posts : [];
             // Check if post already exists to prevent duplicates
@@ -476,14 +554,14 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
           if (attempt >= maxRetries) {
             // Final attempt after max retries - invalidate and refetch latest feed queries
             if (isMountedRef.current) {
-              queryClient.invalidateQueries({ queryKey: ["posts"], exact: false });
+              queryClient.invalidateQueries({ queryKey: ["posts", selectedChain], exact: false });
               queryClient.refetchQueries({ 
-                queryKey: ["posts"],
+                queryKey: ["posts", selectedChain],
                 type: 'active',
               });
               // Also invalidate topic feed if applicable
               if (requiredHashtag && !requiredMissing) {
-                queryClient.invalidateQueries({ queryKey: ["topic-by-name", (requiredHashtag || '').toLowerCase()] });
+                queryClient.invalidateQueries({ queryKey: ["topic-by-name", selectedChain, (requiredHashtag || '').toLowerCase()] });
               }
             }
             return;
@@ -503,16 +581,16 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
               .then(() => {
                 // Post found - invalidate and refetch queries to get fresh data
                 if (isMountedRef.current) {
-                  queryClient.invalidateQueries({ queryKey: ["posts"], exact: false });
+                  queryClient.invalidateQueries({ queryKey: ["posts", selectedChain], exact: false });
                   queryClient.refetchQueries({ 
-                    queryKey: ["posts"],
+                    queryKey: ["posts", selectedChain],
                     type: 'active',
                   });
                   // Also invalidate topic feed if applicable
                   if (requiredHashtag && !requiredMissing) {
-                    queryClient.invalidateQueries({ queryKey: ["topic-by-name", (requiredHashtag || '').toLowerCase()] });
+                    queryClient.invalidateQueries({ queryKey: ["topic-by-name", selectedChain, (requiredHashtag || '').toLowerCase()] });
                     queryClient.refetchQueries({ 
-                      queryKey: ["topic-by-name", (requiredHashtag || '').toLowerCase()],
+                      queryKey: ["topic-by-name", selectedChain, (requiredHashtag || '').toLowerCase()],
                       type: 'active',
                     });
                   }
@@ -555,7 +633,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         const optimisticReply: any = {
           id: newReplyId,
           content: trimmed,
-          sender_address: activeAccount,
+          sender_address: activeAddress,
           media: mediaUrls,
           total_comments: 0,
           created_at: new Date().toISOString(),
@@ -633,7 +711,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         // CRITICAL: Update ALL active query keys FIRST, using their exact key format
         // This ensures we catch DirectReplies and other components that use the raw ID
         const updatedKeys = new Set<string>();
-        const allPostCommentQueries = queryClient.getQueryCache().findAll({ queryKey: ["post-comments"], exact: false });
+        const allPostCommentQueries = queryClient.getQueryCache().findAll({ queryKey: ["post-comments", selectedChain], exact: false });
         
         if (process.env.NODE_ENV === 'development') {
           console.log('[PostForm] Updating replies cache:', {
@@ -669,7 +747,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         });
         
         // Update ALL active comment-replies query keys
-        queryClient.getQueryCache().findAll({ queryKey: ["comment-replies"], exact: false }).forEach((query) => {
+        queryClient.getQueryCache().findAll({ queryKey: ["comment-replies", selectedChain], exact: false }).forEach((query) => {
           const key = query.queryKey as any[];
           const queryPostId = key[1];
           if (idsMatch(queryPostId, normalizedPostId) || idsMatch(queryPostId, postId)) {
@@ -684,12 +762,12 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         // Also explicitly update common key formats as fallback (even if query doesn't exist yet)
         // This ensures the reply appears immediately when the component mounts
         const fallbackKeys = [
-          ["post-comments", normalizedPostId, "infinite"],
-          ["post-comments", normalizedPostId],
-          ["comment-replies", normalizedPostId],
-          ["post-comments", postId, "infinite"],
-          ["post-comments", postId],
-          ["comment-replies", postId],
+          ["post-comments", selectedChain, normalizedPostId, "infinite"],
+          ["post-comments", selectedChain, normalizedPostId],
+          ["comment-replies", selectedChain, normalizedPostId],
+          ["post-comments", selectedChain, postId, "infinite"],
+          ["post-comments", selectedChain, postId],
+          ["comment-replies", selectedChain, postId],
         ];
         
         fallbackKeys.forEach((key) => {
@@ -717,7 +795,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         
         const updateParentPostCommentCount = () => {
           // Update all post queries that might contain the parent post
-          queryClient.getQueryCache().findAll({ queryKey: ["posts"], exact: false }).forEach((query) => {
+          queryClient.getQueryCache().findAll({ queryKey: ["posts", selectedChain], exact: false }).forEach((query) => {
             const key = query.queryKey as any[];
             queryClient.setQueryData(key, (old: any) => {
               if (!old || !old.pages) return old;
@@ -736,7 +814,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
           });
           
           // Also check single post queries for both formats
-          queryClient.setQueryData(["post", normalizedPostId], (old: any) => {
+          queryClient.setQueryData(["post", selectedChain, normalizedPostId], (old: any) => {
             if (old && matchesParentId(old.id)) {
               return { ...old, total_comments: (old.total_comments || 0) + 1 };
             }
@@ -746,7 +824,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
           // Only update postId query if it's different from normalizedPostId (as strings)
           // Compare original strings, not normalized versions, since normalization is idempotent
           if (postId !== normalizedPostId) {
-            queryClient.setQueryData(["post", postId], (old: any) => {
+            queryClient.setQueryData(["post", selectedChain, postId], (old: any) => {
               if (old && matchesParentId(old.id)) {
                 return { ...old, total_comments: (old.total_comments || 0) + 1 };
               }
@@ -759,7 +837,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         updateParentPostCommentCount();
         
         // Invalidate descendant count queries so they refetch with the new reply
-        queryClient.invalidateQueries({ queryKey: ["post-desc-count"], exact: false });
+        queryClient.invalidateQueries({ queryKey: ["post-desc-count", selectedChain], exact: false });
         
         // Poll backend until comment is confirmed or max retries reached
         // Backend needs time to process blockchain transaction and update database
@@ -775,14 +853,14 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
           if (attempt >= maxRetries) {
             // Final attempt after max retries
             if (isMountedRef.current) {
-              queryClient.invalidateQueries({ queryKey: ["post-comments", normalizedPostId] });
-              queryClient.invalidateQueries({ queryKey: ["comment-replies", normalizedPostId] });
+              queryClient.invalidateQueries({ queryKey: ["post-comments", selectedChain, normalizedPostId] });
+              queryClient.invalidateQueries({ queryKey: ["comment-replies", selectedChain, normalizedPostId] });
               queryClient.refetchQueries({ 
-                queryKey: ["post-comments", normalizedPostId],
+                queryKey: ["post-comments", selectedChain, normalizedPostId],
                 type: 'active',
               });
               queryClient.refetchQueries({ 
-                queryKey: ["comment-replies", normalizedPostId],
+                queryKey: ["comment-replies", selectedChain, normalizedPostId],
                 type: 'active',
               });
             }
@@ -798,15 +876,15 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
               return;
             }
             
-            queryClient.invalidateQueries({ queryKey: ["post-comments", normalizedPostId] });
-            queryClient.invalidateQueries({ queryKey: ["comment-replies", normalizedPostId] });
+            queryClient.invalidateQueries({ queryKey: ["post-comments", selectedChain, normalizedPostId] });
+            queryClient.invalidateQueries({ queryKey: ["comment-replies", selectedChain, normalizedPostId] });
             Promise.all([
               queryClient.refetchQueries({ 
-                queryKey: ["post-comments", normalizedPostId],
+                queryKey: ["post-comments", selectedChain, normalizedPostId],
                 type: 'active',
               }),
               queryClient.refetchQueries({ 
-                queryKey: ["comment-replies", normalizedPostId],
+                queryKey: ["comment-replies", selectedChain, normalizedPostId],
                 type: 'active',
               })
             ]).then(() => {
@@ -816,7 +894,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
               }
               
               // Check if backend has processed the comment by verifying it exists in the refetched list
-              const cachedComments = queryClient.getQueryData<any[]>(["comment-replies", normalizedPostId]);
+              const cachedComments = queryClient.getQueryData<any[]>(["comment-replies", selectedChain, normalizedPostId]);
               const commentExists = cachedComments?.some((c: any) => c?.id === newReplyId);
               
               // If comment exists in backend response, we're done
@@ -872,7 +950,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       // Also refetch any topic feeds related to this hashtag so other viewers update quickly
       try {
         if (requiredHashtag) {
-          queryClient.invalidateQueries({ queryKey: ["topic-by-name"] });
+          queryClient.invalidateQueries({ queryKey: ["topic-by-name", selectedChain] });
         }
       } catch {}
     } finally {
@@ -889,17 +967,17 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
   if (placeholder) {
     currentPlaceholder = placeholder;
   } else if (isPost) {
-    currentPlaceholder = activeAccount
+    currentPlaceholder = activeAddress
       ? PROMPTS[promptIndex]
       : t('connectWalletToPost');
   } else {
-    currentPlaceholder = activeAccount
+    currentPlaceholder = activeAddress
       ? t('writeReply')
       : t('connectWalletToReply');
   }
 
   // If not connected and it's a reply, show simple message
-  if (!activeAccount && !isPost) {
+  if (!activeAddress && !isPost) {
     return (
       <div
         className={`mx-auto mb-5 md:mb-4 ${className}`}
@@ -909,7 +987,13 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
             <p className="text-sm">{t('pleaseConnectWalletToReply')}</p>
           </div>
           <div className="mt-3 flex justify-center">
-            <ConnectWalletButton block className="w-full md:w-auto" />
+            {isSolana ? (
+              <WalletMultiButton className="w-full md:w-auto justify-center rounded-xl !bg-[#1161FE] hover:!bg-[#0d4fd6]">
+                {tCommon('buttons.connectWallet')}
+              </WalletMultiButton>
+            ) : (
+              <ConnectWalletButton block className="w-full md:w-auto" />
+            )}
           </div>
         </div>
       </div>
@@ -924,10 +1008,10 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
       <div className="bg-transparent border-none p-0 rounded-xl transition-all duration-300 relative shadow-none md:bg-gradient-to-br md:from-white/8 md:to-white/3 md:border md:border-white/10 md:outline md:outline-1 md:outline-white/10 md:rounded-2xl md:p-4 md:backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="relative">
           <div className="flex flex-col gap-3 md:grid md:grid-cols-[56px_1fr] md:gap-x-0 md:gap-y-3">
-            {activeAccount && (
+            {activeAddress && (
               <div className="hidden md:block">
                 <AddressAvatarWithChainName
-                  address={activeAccount}
+                  address={activeAddress}
                   size={40}
                   overlaySize={20}
                   isHoverEnabled={true}
@@ -936,7 +1020,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                 />
               </div>
             )}
-            <div className={activeAccount ? "md:col-start-2" : "md:col-span-2"}>
+            <div className={activeAddress ? "md:col-start-2" : "md:col-span-2"}>
               <div className="relative">
                 <textarea
                   ref={textareaRef}
@@ -1118,7 +1202,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                         </button>
                       </div>
                     )}
-                    {activeAccount ? (
+                    {activeAddress ? (
                       <AeButton
                         type="submit"
                         loading={isSubmitting}
@@ -1134,7 +1218,13 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                             : tSocial('postReply')}
                       </AeButton>
                     ) : (
-                      <ConnectWalletButton className="rounded-full" />
+                      isSolana ? (
+                        <WalletMultiButton className="rounded-full !bg-[#1161FE] hover:!bg-[#0d4fd6]">
+                          {tCommon('buttons.connectWallet')}
+                        </WalletMultiButton>
+                      ) : (
+                        <ConnectWalletButton className="rounded-full" />
+                      )
                     )}
                   </div>
                 </div>
@@ -1203,7 +1293,7 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                 </button>
               </div>
             )}
-              {activeAccount ? (
+              {activeAddress ? (
                 <AeButton
                   type="submit"
                   loading={isSubmitting}
@@ -1219,7 +1309,13 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
                       : tSocial('postReply')}
                 </AeButton>
               ) : (
-                <ConnectWalletButton block className="w-full rounded-xl md:rounded-full" />
+                isSolana ? (
+                  <WalletMultiButton className="w-full rounded-xl md:rounded-full !bg-[#1161FE] hover:!bg-[#0d4fd6]">
+                    {tCommon('buttons.connectWallet')}
+                  </WalletMultiButton>
+                ) : (
+                  <ConnectWalletButton block className="w-full rounded-xl md:rounded-full" />
+                )
               )}
             </div>
           </div>

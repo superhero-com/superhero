@@ -16,6 +16,7 @@ import ConnectWalletButton from '../../../components/ConnectWalletButton';
 import { Input } from '../../../components/ui/input';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useCommunityFactory } from '../../../hooks/useCommunityFactory';
+import { useActiveChain } from '@/hooks/useActiveChain';
 import type {
   CollectionId,
   IAllowedNameChars,
@@ -48,6 +49,19 @@ interface TokenMetaInfo {
 }
 
 export default function CreateTokenView() {
+  const { selectedChain } = useActiveChain();
+  if (selectedChain === 'solana') {
+    return (
+      <div className="max-w-[min(1200px,100%)] mx-auto min-h-screen text-white px-4">
+        <div className="py-16 text-center">
+          <h2 className="text-2xl font-bold mb-3">Solana token creation</h2>
+          <p className="text-white/70">
+            Token creation for Solana is not configured in this build yet.
+          </p>
+        </div>
+      </div>
+    );
+  }
   const navigate = useNavigate();
   const location = useLocation();
   const { activeAccount, sdk } = useAeSdk();

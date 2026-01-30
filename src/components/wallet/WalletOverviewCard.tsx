@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import CopyText from "@/components/ui/CopyText";
 
 import { useAeSdk } from "@/hooks/useAeSdk";
+import { useActiveChain } from "@/hooks/useActiveChain";
 import { useAccountBalances } from "@/hooks/useAccountBalances";
 import { AccountTokensService } from "@/api/generated/services/AccountTokensService";
 import { Decimal } from "@/libs/decimal";
@@ -17,15 +18,20 @@ type WalletOverviewCardProps = {
   selectedCurrency?: Currency;
   prices?: Record<string, number> | null;
   className?: string;
+  assetLabel?: string;
+  assetSymbol?: string;
 };
 
 export default function WalletOverviewCard({
   selectedCurrency = "usd",
   prices = null,
   className,
+  assetLabel,
+  assetSymbol,
 }: WalletOverviewCardProps) {
   const navigate = useNavigate();
   const { activeAccount, currentBlockHeight } = useAeSdk();
+  const { selectedChain } = useActiveChain();
   const { decimalBalance, loadAccountData } = useAccountBalances(activeAccount);
   
   // Immediately reload balance when account changes
@@ -86,7 +92,7 @@ export default function WalletOverviewCard({
       >
         <div className="py-1">
           <div className="text-[13px] text-[var(--light-font-color)] uppercase tracking-wide mb-1">
-            AE Price
+            {assetLabel || (selectedChain === 'solana' ? 'SOL Price' : 'AE Price')}
           </div>
           <div className="text-2xl font-extrabold text-[var(--standard-font-color)]">
             {prices?.[selectedCurrency]
@@ -164,7 +170,7 @@ export default function WalletOverviewCard({
             contentClassName="px-2 pb-0"
             secondary={(
               <div className="text-[11px] text-[var(--light-font-color)]">
-                {balanceAe.toLocaleString(undefined, { maximumFractionDigits: 6 })} AE
+              {balanceAe.toLocaleString(undefined, { maximumFractionDigits: 6 })} {assetSymbol || (selectedChain === 'solana' ? 'SOL' : 'AE')}
                 {aeFiat != null && (
                   <>
                     {" "}

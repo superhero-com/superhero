@@ -1,6 +1,6 @@
 import { useAccount } from '@/hooks';
 import BigNumber from 'bignumber.js';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { Decimal } from '../../../libs/decimal';
@@ -21,6 +21,7 @@ import {
 } from '../libs/tokenTradeContract';
 import { CONFIG } from '../../../config';
 import { useTokenTradeStore } from './useTokenTradeStore';
+import { useActiveChain } from '@/hooks/useActiveChain';
 
 // Constants from Vue implementation
 const PROTOCOL_DAO_AFFILIATION_FEE = 0.05;
@@ -31,6 +32,10 @@ interface UseTokenTradeProps {
 }
 
 export function useTokenTrade({ token }: UseTokenTradeProps) {
+  const { selectedChain } = useActiveChain();
+  if (selectedChain === 'solana') {
+    return useSolanaTokenTrade({ token });
+  }
   const { sdk, activeAccount, staticAeSdk } = useAeSdk();
   const queryClient = useQueryClient();
   
@@ -425,5 +430,67 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     placeTokenTradeOrder,
     buy,
     sell,
+  };
+}
+
+function useSolanaTokenTrade({ token }: UseTokenTradeProps) {
+  const [tokenA, setTokenA] = useState<number | undefined>();
+  const [tokenB, setTokenB] = useState<number | undefined>();
+  const [tokenAFocused, setTokenAFocused] = useState(true);
+  const [isBuying, setIsBuying] = useState(true);
+  const [loadingTransaction, setLoadingTransaction] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | undefined>();
+  const [slippage, setSlippage] = useState(0.5);
+
+  const resetFormState = () => {
+    setTokenA(undefined);
+    setTokenB(undefined);
+    setErrorMessage(undefined);
+  };
+
+  const switchTradeView = (buying: boolean) => {
+    setIsBuying(buying);
+    setTokenAFocused(true);
+  };
+
+  const setTokenAmount = (value?: number, isTokenA: boolean = true) => {
+    if (isTokenA) setTokenA(value);
+    else setTokenB(value);
+  };
+
+  const placeTokenTradeOrder = async () => {
+    setLoadingTransaction(true);
+    setErrorMessage('Solana trading is not configured yet.');
+    setLoadingTransaction(false);
+  };
+
+  return {
+    tokenA,
+    tokenB,
+    tokenAFocused,
+    isBuying,
+    isAllowSelling: true,
+    loadingTransaction,
+    nextPrice: Decimal.ZERO,
+    userBalance: "0",
+    slippage,
+    errorMessage,
+    successTxData: undefined,
+    averageTokenPrice: Decimal.ZERO,
+    priceImpactDiff: Decimal.ZERO,
+    priceImpactPercent: Decimal.ZERO,
+    estimatedNextTokenPriceImpactDifferenceFormattedPercentage: "0%",
+    protocolTokenReward: Decimal.ZERO,
+    spendableAeBalance: Decimal.ZERO,
+    isInsufficientBalance: false,
+    contractInstances: null,
+    resetFormState,
+    switchTradeView,
+    updateToken: () => {},
+    setTokenAmount,
+    setSlippage,
+    placeTokenTradeOrder,
+    buy: async () => {},
+    sell: async () => {},
   };
 }

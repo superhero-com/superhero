@@ -10,6 +10,7 @@ import {
   profileAtom,
   pinnedItemsAtom,
   chainNamesAtom,
+  selectedChainAtom,
   verifiedUrlsAtom,
   graylistedUrlsAtom,
   tokenInfoAtom,
@@ -31,6 +32,7 @@ export const useWallet = () => {
   const [profile, setProfile] = useAtom(profileAtom);
   const [pinnedItems, setPinnedItems] = useAtom(pinnedItemsAtom);
   const [chainNames, setChainNames] = useAtom(chainNamesAtom);
+  const [selectedChain, setSelectedChain] = useAtom(selectedChainAtom);
   const [verifiedUrls, setVerifiedUrls] = useAtom(verifiedUrlsAtom);
   const [graylistedUrls, setGraylistedUrls] = useAtom(graylistedUrlsAtom);
   const [tokenInfo, setTokenInfo] = useAtom(tokenInfoAtom);
@@ -80,6 +82,7 @@ export const useWallet = () => {
     profile,
     pinnedItems,
     chainNames,
+    selectedChain,
     verifiedUrls,
     graylistedUrls,
     tokenInfo,
@@ -95,6 +98,7 @@ export const useWallet = () => {
     setProfile,
     setPinnedItems,
     setChainNames,
+    setSelectedChain,
     setVerifiedUrls,
     setGraylistedUrls,
     setTokenInfo,

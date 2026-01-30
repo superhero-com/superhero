@@ -1,7 +1,8 @@
 import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { SuperheroApi } from "@/api/backend";
+import { useActiveChain } from "@/hooks/useActiveChain";
+import { useChainAdapter } from "@/chains/useChainAdapter";
 import type { TokenDto } from "@/api/generated";
 import TokenLineChart from "@/features/trending/components/TokenLineChart";
 import { cn } from "@/lib/utils";
@@ -19,12 +20,14 @@ function formatChange(changePercent: number) {
 }
 
 export default function TrendingAssetsFeedItem() {
+  const { selectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
   const { data: tokensData, isLoading: tokensLoading } = useQuery<{
     items?: TokenDto[];
   }>({
-    queryKey: ["feed-trending-assets", "tokens"],
+    queryKey: ["feed-trending-assets", selectedChain, "tokens"],
     queryFn: () =>
-      SuperheroApi.listTokens({
+      chainAdapter.listTokens({
         orderBy: "trending_score",
         orderDirection: "DESC",
         limit: FETCH_LIMIT,

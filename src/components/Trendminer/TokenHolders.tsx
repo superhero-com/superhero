@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { TokensService } from "@/api/generated/services/TokensService";
+import { useActiveChain } from "@/hooks/useActiveChain";
+import { useChainAdapter } from "@/chains/useChainAdapter";
 import { TokenHolderDto } from "@/api/generated/models/TokenHolderDto";
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import { Decimal } from "@/libs/decimal";
-import { toAe } from "@aeternity/aepp-sdk";
 import AddressChip from "../AddressChip";
 import TokenPriceFormatter from "@/features/shared/components/TokenPriceFormatter";
 import AddressAvatarWithChainName from "@/@components/Address/AddressAvatarWithChainName";
@@ -28,6 +28,8 @@ interface TokenHoldersProps {
 export default function TokenHolders({ token }: TokenHoldersProps) {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const { selectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
 
   // Fetch holders using React Query with server-side pagination
   const {
@@ -38,6 +40,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
   } = useQuery<PaginatedHoldersResponse>({
     queryKey: [
       "TokensService.getHolders",
+      selectedChain,
       token?.sale_address,
       itemsPerPage,
       currentPage,
@@ -51,8 +54,7 @@ export default function TokenHolders({ token }: TokenHoldersProps) {
       }
 
       try {
-        const response = await TokensService.listTokenHolders({
-          address: token.sale_address,
+        const response = await chainAdapter.listTokenHolders(token.sale_address, {
           limit: itemsPerPage,
           page: currentPage,
         });

@@ -4,6 +4,9 @@ import { useAeSdk, useWalletConnect, useModal } from '../hooks';
 import Favicon from '../svg/favicon.svg?react';
 import { AeButton } from './ui/ae-button';
 import { cn } from '@/lib/utils';
+import { useActiveChain } from '@/hooks/useActiveChain';
+import { useSolanaWallet } from '@/chains/solana/hooks/useSolanaWallet';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 type Props = {
   label?: string;
@@ -19,9 +22,20 @@ export function ConnectWalletButton({ label, block, style, className, variant = 
   const { activeAccount } = useAeSdk()
   const { connectWallet, connectingWallet } = useWalletConnect()
   const { openModal } = useModal();
+  const { selectedChain } = useActiveChain();
+  const solanaWallet = useSolanaWallet();
   
   const displayLabel = label || t('buttons.connectWallet');
   const connectingText = t('buttons.connecting');
+
+  if (selectedChain === 'solana') {
+    if (solanaWallet.publicKey) return null;
+    return (
+      <WalletMultiButton className={cn("w-full justify-center rounded-xl text-sm !bg-[#1161FE] hover:!bg-[#0d4fd6]", className)}>
+        {displayLabel.toUpperCase()}
+      </WalletMultiButton>
+    );
+  }
 
   if (activeAccount) return null;
   

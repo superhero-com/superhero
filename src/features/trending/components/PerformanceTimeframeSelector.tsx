@@ -13,7 +13,6 @@ export default function PerformanceTimeframeSelector() {
   const handleUpdate = (newValue: PriceMovementTimeframe) => {
     setValue(newValue);
     setIsOpen(false);
-    console.log('newValue', newValue);
   };
 
   return (

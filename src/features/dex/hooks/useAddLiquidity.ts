@@ -200,7 +200,6 @@ export function useAddLiquidity() {
       }));
 
     } catch (error) {
-      console.error('Error computing pair preview:', error);
       setState(prev => ({ ...prev, pairPreview: null }));
     }
   }
@@ -524,8 +523,6 @@ export function useAddLiquidity() {
         throw new Error('Transaction failed - no hash returned');
       }
     } catch (error: any) {
-      console.error('Remove liquidity error:', error);
-      
       const errorMsg = errorToUserMessage(error);
       setState(prev => ({ ...prev, error: errorMsg, loading: false }));
 

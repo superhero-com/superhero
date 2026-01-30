@@ -92,7 +92,6 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       const _token = DexService.getDexTokenByAddress({ address });
       return _token;
     } catch (error) {
-      console.warn('[SwapForm] Failed to fetch token from middleware:', address, error);
       return null;
     }
   }, []);
@@ -232,12 +231,10 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
 
     // Additional validation before executing swap
     if (routeInfo.path.length === 0) {
-      console.error('No valid route found for swap');
       return;
     }
 
     if (error) {
-      console.error('Cannot execute swap with existing quote error:', error);
       return;
     }
 

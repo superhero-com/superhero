@@ -10,9 +10,7 @@ export default function TxQueue() {
   
   useEffect(() => {
     if (!id) return;
-    
-    console.log("Transaction", location.search, id);
-    
+
     // Parse query parameters
     const query = Object.fromEntries(new URLSearchParams(location.search).entries());
     

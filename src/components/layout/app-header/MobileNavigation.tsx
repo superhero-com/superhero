@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SearchInput from '../../SearchInput';
 import { HeaderLogo, IconSearch, IconMobileMenu } from '../../../icons';
-import HeaderWalletButton from './HeaderWalletButton';
 import { getNavigationItems } from './navigationItems';
 
 export default function MobileNavigation() {

@@ -28,7 +28,6 @@ export class AeWebSocketService {
         this.ws = new WebSocket(this.wsUrl);
         
         this.ws.onopen = () => {
-          console.log('[Bridge WebSocket] Connected');
           this.reconnectAttempts = 0;
           this.reconnectDelay = 1000;
           resolve();
@@ -39,17 +38,14 @@ export class AeWebSocketService {
             const message: AeWebSocketMessage = JSON.parse(event.data);
             this.handleMessage(message);
           } catch (error) {
-            console.warn('[Bridge WebSocket] Failed to parse message:', error);
           }
         };
 
         this.ws.onclose = () => {
-          console.log('[Bridge WebSocket] Disconnected');
           this.attemptReconnect();
         };
 
         this.ws.onerror = (error) => {
-          console.error('[Bridge WebSocket] Error:', error);
           if (this.reconnectAttempts === 0) {
             reject(new Error('Failed to connect to WebSocket'));
           }
@@ -146,7 +142,6 @@ export class AeWebSocketService {
         try {
           callback(message);
         } catch (error) {
-          console.error('[Bridge WebSocket] Callback error:', error);
         }
       });
     }
@@ -154,18 +149,14 @@ export class AeWebSocketService {
 
   private attemptReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('[Bridge WebSocket] Max reconnection attempts reached');
       return;
     }
 
     this.reconnectAttempts++;
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
 
-    console.log(`[Bridge WebSocket] Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);
-    
     setTimeout(() => {
       this.connect().catch(error => {
-        console.error('[Bridge WebSocket] Reconnection failed:', error);
       });
     }, delay);
   }

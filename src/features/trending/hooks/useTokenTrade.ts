@@ -181,8 +181,6 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       store.isBuying,
       !store.isBuying
     );
-    console.log('calculatedTokenB', calculatedTokenB);
-
     store.updateTokenB(calculatedTokenB);
   }, [store.tokenA, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
 

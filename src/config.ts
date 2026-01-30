@@ -77,12 +77,6 @@ const envWsUrl = ((import.meta as any)?.env?.VITE_SUPERHERO_WS_URL ||
 const envSolanaApiUrl = ((import.meta as any)?.env?.VITE_SOLANA_API_URL ||
   (typeof process !== 'undefined' && (process as any).env?.VITE_SOLANA_API_URL)) as string | undefined;
 
-// Debug logging in development
-if (typeof window !== 'undefined' && (import.meta as any)?.env?.MODE === 'development') {
-  console.log('[Config] VITE_SUPERHERO_API_URL from import.meta.env:', envApiUrl);
-  console.log('[Config] All VITE_ env vars:', Object.keys((import.meta as any)?.env || {}).filter(k => k.startsWith('VITE_')));
-}
-
 declare global {
   interface Window {
     __SUPERCONFIG__?: Partial<AppConfig>;
@@ -124,13 +118,3 @@ export const CONFIG: AppConfig = {
   // Ensure POPULAR_FEED_ENABLED defaults to true if not explicitly set
   POPULAR_FEED_ENABLED: runtimeConfig.POPULAR_FEED_ENABLED ?? defaultConfig.POPULAR_FEED_ENABLED ?? true,
 };
-
-// Debug logging in development - always log to help debug
-if (typeof window !== 'undefined') {
-  const mode = (import.meta as any)?.env?.MODE;
-  console.log('[Config Debug] MODE:', mode);
-  console.log('[Config Debug] envApiUrl:', envApiUrl);
-  console.log('[Config Debug] runtimeConfig.SUPERHERO_API_URL:', runtimeConfig.SUPERHERO_API_URL);
-  console.log('[Config Debug] Final CONFIG.SUPERHERO_API_URL:', CONFIG.SUPERHERO_API_URL);
-  console.log('[Config Debug] import.meta.env keys:', Object.keys((import.meta as any)?.env || {}));
-}

@@ -456,9 +456,6 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
           created = fetchedPost;
         } catch (error) {
           // Backend might not have processed it yet (404), use optimistic post
-          if (process.env.NODE_ENV === 'development') {
-            console.log('[PostForm] Backend not ready yet, using optimistic post:', error);
-          }
           // Continue with optimisticPost
         }
         
@@ -650,9 +647,6 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
           newReply = fetchedReply;
         } catch (error) {
           // Backend might not have processed it yet (404), use optimistic reply
-          if (process.env.NODE_ENV === 'development') {
-            console.log('[PostForm] Backend not ready yet, using optimistic reply:', error);
-          }
           // Continue with optimisticReply
         }
         
@@ -713,16 +707,6 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
         const updatedKeys = new Set<string>();
         const allPostCommentQueries = queryClient.getQueryCache().findAll({ queryKey: ["post-comments", selectedChain], exact: false });
         
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[PostForm] Updating replies cache:', {
-            postId,
-            normalizedPostId,
-            newReplyId,
-            foundQueries: allPostCommentQueries.length,
-            queryKeys: allPostCommentQueries.map(q => q.queryKey),
-          });
-        }
-        
         allPostCommentQueries.forEach((query) => {
           const key = query.queryKey as any[];
           const queryPostId = key[1];
@@ -733,14 +717,8 @@ const PostForm = forwardRef<{ focus: (opts?: { immediate?: boolean; preventScrol
               updatedKeys.add(keyStr);
               if (key[2] === "infinite") {
                 updateInfiniteQuery(key);
-                if (process.env.NODE_ENV === 'development') {
-                  console.log('[PostForm] Updated infinite query:', key);
-                }
               } else {
                 updateArrayQuery(key);
-                if (process.env.NODE_ENV === 'development') {
-                  console.log('[PostForm] Updated array query:', key);
-                }
               }
             }
           }

@@ -351,7 +351,6 @@ export default function UserProfile({
         const eventAddress = (detail.address || "").trim().toLowerCase();
         const currentAddress = (effectiveAddress || "").trim().toLowerCase();
         if (eventAddress !== currentAddress) {
-          console.log("[UserProfile] Bio post event for different address:", eventAddress, "current:", currentAddress);
           return;
         }
         const submittedBio = (detail.bio || "").trim();
@@ -359,8 +358,6 @@ export default function UserProfile({
           console.warn("[UserProfile] Bio post event missing bio text");
           return;
         }
-        
-        console.log("[UserProfile] Received bio post event, updating optimistically:", submittedBio);
         
         // Update optimistic bio state immediately - this will make bio appear right away
         setOptimisticBio(submittedBio);

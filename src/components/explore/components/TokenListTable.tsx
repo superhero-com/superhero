@@ -67,7 +67,6 @@ export function TokenListTable({
   }, [performanceChartTimeframe]);
 
   const handleSort = (key: 'pairs_count' | 'name' | 'symbol' | 'created_at' | 'price' | 'tvl' | '24hchange' | '24hvolume' | '7dchange' | '7dvolume' | '30dchange' | '30dvolume') => {
-    console.log("key:", key);
     onSortChange(key);
   };
 

@@ -36,29 +36,11 @@ export default function AddTokens() {
         while (cursor && guard++ < 20) { // hard cap pages to avoid infinite loop
           const r = await fetch(`${base}${cursor.startsWith('/') ? '' : '/'}${cursor}`, { cache: 'no-cache' });
           if (!r.ok) {
-            // Enhanced error logging for new accounts
-            if (r.status === 404) {
-              console.info('[add-tokens] Account not found on middleware:', activeAccount);
-              console.info('[add-tokens] This is normal for new accounts - user needs to bridge ETH first');
-            } else {
-              console.warn('[add-tokens] Failed to fetch account balances:', r.status, r.statusText);
-            }
             break;
           }
           const mdw = await r.json();
           const items: any[] = Array.isArray(mdw?.data) ? mdw.data : [];
-          // eslint-disable-next-line no-console
-          console.info('[add-tokens] MDW page fetched', { cursor, count: items.length });
           for (const it of items) {
-            // eslint-disable-next-line no-console
-            console.info('[add-tokens] MDW item', {
-              contract_id: it?.contract_id,
-              amount: String(it?.amount ?? it?.balance ?? ''),
-              decimals: it?.decimals,
-              token_symbol: it?.token_symbol,
-              token_name: it?.token_name,
-              height: it?.height,
-            });
           }
           for (const it of items) {
             const ct = it?.contract_id;
@@ -73,20 +55,12 @@ export default function AddTokens() {
                   : BigInt(new BigNumber(String(bal)).integerValue(BigNumber.ROUND_DOWN).toFixed(0));
                 if (bn > 0n) {
                   tokensFromMdw.push({ address: String(ct), symbol: sym, name: nm, decimals: decs, balance: fromAettos(bn, decs) });
-                  // eslint-disable-next-line no-console
-                  console.info('[add-tokens] PUSH', { address: String(ct), symbol: sym, bn: bn.toString(), decimals: decs });
                 } else {
-                  // eslint-disable-next-line no-console
-                  console.info('[add-tokens] SKIP_ZERO', { address: String(ct), symbol: sym });
                 }
               } catch (e) {
-                // eslint-disable-next-line no-console
-                console.info('[add-tokens] SKIP_PARSE', { address: String(ct), symbol: sym, error: String(e) });
               }
             }
           }
-          // eslint-disable-next-line no-console
-          console.info('[add-tokens] tokensFromMdw page summary', { count: tokensFromMdw.length });
           cursor = mdw?.next || null;
         }
       } catch { }
@@ -137,18 +111,11 @@ export default function AddTokens() {
         if (!prev) {
           map.set(t.address, { address: t.address, symbol: String(t.symbol || 'TKN'), name: String(t.name || t.symbol || 'Token'), decimals: Number(t.decimals || 18), balance: String(t.balance) });
         } else {
-          // eslint-disable-next-line no-console
-          console.info('[add-tokens] Duplicate token encountered, choosing higher balance', { address: t.address, prev: prev.balance, next: t.balance });
           const nextHigher = new BigNumber(t.balance).isGreaterThan(prev.balance) ? String(t.balance) : prev.balance;
           map.set(t.address, { ...prev, balance: nextHigher });
         }
       }
       const out = Array.from(map.values()).sort((a, b) => a.symbol.localeCompare(b.symbol));
-      // eslint-disable-next-line no-console
-      console.info('[add-tokens] Aggregated MDW tokens', {
-        total: out.length,
-        addresses: out.map((t) => t.address),
-      });
       if (scanSeqRef.current === mySeq) setWalletTokens(out);
 
       // Determine if token has an AE pool (token <> WAE)

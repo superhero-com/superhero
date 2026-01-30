@@ -152,7 +152,6 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
         dao.state!,
         dao.tokenSupply,
       );
-      console.log('vsl', vsl);
     }
 
     if (voteStateLabel && voteState) {
@@ -161,7 +160,6 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
         voteState,
         activeAccount as any,
       );
-      console.log('can vote', canV);
     }
   }, [voteState, vote, dao.tokenSupply, dao.state, voteStateLabel, activeAccount]);
 
@@ -169,8 +167,6 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
     setActionLoading(true);
     try {
       await action();
-    } catch (e) {
-      console.error(e);
     }
     await refreshVoteState();
     await dao.init();
@@ -189,8 +185,6 @@ export function useDaoVote({ tokenSaleAddress, voteAddress, voteId }: UseDaoVote
 
   const voteOption = useCallback(async (option: boolean) => {
     if (!vote || !dao.userTokenBalance || !dao.tokenInstanceRef) {
-
-        console.log('voteOption', vote, dao.userTokenBalance, dao.tokenInstanceRef);
         return
     }
     

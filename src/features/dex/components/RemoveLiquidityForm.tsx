@@ -62,17 +62,6 @@ export default function RemoveLiquidityForm() {
     try {
       const liquidityToRemove = removeAmountForTransaction;
       
-      // Debug logging to understand the balance conversion
-      console.log('=== REMOVE LIQUIDITY DEBUG ===');
-      console.log('selectedPosition.balance (raw):', selectedPosition.balance);
-      console.log('lpAmount (converted):', lpAmount.toString());
-      console.log('lpAmount (max precision):', lpAmount.toStringWithoutPrecision());
-      console.log('percentage:', percentage);
-      console.log('useCustomAmount:', useCustomAmount);
-      console.log('removeAmount:', removeAmount.toString());
-      console.log('removeAmountForTransaction:', removeAmountForTransaction);
-      console.log('=====================================');
-      
       // Determine if this is an AE pair
       const isAePair = selectedPosition.token0 === BridgeConstants.aeternity.default_ae || selectedPosition.token1 === BridgeConstants.aeternity.default_ae;
       
@@ -97,7 +86,6 @@ export default function RemoveLiquidityForm() {
         await onPositionUpdated();
       }
     } catch (error) {
-      console.error('Remove liquidity failed:', error);
       setLoading(false);
     }
   };

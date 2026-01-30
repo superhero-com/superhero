@@ -3,7 +3,9 @@ import { cn } from "@/lib/utils";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
-import { PostDto, PostsService } from "../../../api/generated";
+import type { PostDto } from "../../../api/generated";
+import { useActiveChain } from "@/hooks/useActiveChain";
+import { useChainAdapter } from "@/chains/useChainAdapter";
 import { IconComment } from "../../../icons";
 import { linkify } from "../../../utils/linkify";
 import { formatAddress } from "../../../utils/address";
@@ -32,7 +34,7 @@ interface ReplyToFeedItemProps {
   tokenHolderLabel?: string;
 }
 
-function useParentId(item: PostDto): string | null {
+function useParentId(item: PostDto, chainId: 'aeternity' | 'solana'): string | null {
   return useMemo(() => {
     const extract = (value: unknown): string | null => {
       if (!value) return null;
@@ -41,6 +43,7 @@ function useParentId(item: PostDto): string | null {
       const m = asString.match(/comment[:/]([^\s,;]+)/i);
       const id = m?.[1] || (asString.startsWith("comment:") ? asString.split(":")[1] : null);
       if (!id) return null;
+      if (chainId === 'solana') return id;
       return id.endsWith("_v3") ? id : `${id}_v3`;
     };
 
@@ -73,7 +76,7 @@ function useParentId(item: PostDto): string | null {
       return null;
     };
     return scan((item as any)?.tx_args);
-  }, [item]);
+  }, [item, chainId]);
 }
 
 // X-like post item with optional parent context header
@@ -87,12 +90,14 @@ const ReplyToFeedItem = memo(({
   tokenHolderLabel,
 }: ReplyToFeedItemProps) => {
   const { t } = useTranslation('social');
+  const { selectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
   const postId = item.id;
   const authorAddress = item.sender_address;
   const { chainNames } = useWallet();
   const displayName = chainNames?.[authorAddress] || "Legend";
 
-  const parentId = useParentId(item);
+  const parentId = useParentId(item, selectedChain);
   const [parent, setParent] = useState<PostDto | null>(null);
   const [parentError, setParentError] = useState<Error | null>(null);
 
@@ -104,10 +109,12 @@ const ReplyToFeedItem = memo(({
     error: childError,
     refetch: refetchChildReplies,
   } = useQuery({
-    queryKey: ["post-comments", postId],
+    queryKey: ["post-comments", selectedChain, postId],
     queryFn: async () => {
-      const normalizedId = String(postId).endsWith("_v3") ? String(postId) : `${String(postId)}_v3`;
-      const result = await PostsService.getComments({ id: normalizedId, orderDirection: "ASC", limit: 50 }) as any;
+      const normalizedId = selectedChain === 'aeternity'
+        ? (String(postId).endsWith("_v3") ? String(postId) : `${String(postId)}_v3`)
+        : String(postId);
+      const result = await chainAdapter.listPostComments({ id: normalizedId, orderDirection: "ASC", limit: 50 }) as any;
       return result?.items || [];
     },
     enabled: showReplies,
@@ -119,7 +126,10 @@ const ReplyToFeedItem = memo(({
     async function load() {
       if (!parentId || hideParentContext) return;
       try {
-        const res = await PostsService.getById({ id: parentId });
+        const normalizedId = selectedChain === 'aeternity'
+          ? (String(parentId).endsWith("_v3") ? String(parentId) : `${String(parentId)}_v3`)
+          : String(parentId);
+        const res = await chainAdapter.getPostById(normalizedId);
         if (!cancelled) setParent(res as unknown as PostDto);
       } catch (e: any) {
         if (!cancelled) setParentError(e as Error);
@@ -129,7 +139,7 @@ const ReplyToFeedItem = memo(({
     return () => {
       cancelled = true;
     };
-  }, [parentId, hideParentContext]);
+  }, [parentId, hideParentContext, chainAdapter, selectedChain]);
 
   const handleOpen = useCallback(() => {
     const slugOrId = (item as any)?.slug || String(postId).replace(/_v3$/, "");

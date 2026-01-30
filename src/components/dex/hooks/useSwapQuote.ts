@@ -293,8 +293,6 @@ export function useSwapQuote() {
       paths?: PairDto[][];
     };
   }> {
-    console.log('[dex] Building best path', { tokenIn, tokenOut });
-
     if (isAeToWae(tokenIn, tokenOut)) {
       return { path: [DEX_ADDRESSES.wae] };
     }
@@ -307,13 +305,6 @@ export function useSwapQuote() {
 
       if (!tokenInAddr || !tokenOutAddr) return { path: null };
 
-      console.info('[dex] Building best path', {
-        from: tokenIn.symbol,
-        to: tokenOut.symbol,
-        fromAddr: tokenInAddr,
-        toAddr: tokenOutAddr
-      });
-
       // Use the providers API endpoint to find swap routes
       try {
         const result = await DexPairService.findPairsForTokens({
@@ -321,13 +312,9 @@ export function useSwapQuote() {
           toToken: tokenOutAddr
         });
 
-        console.info('[dex] Querying providers API for routes…');
-        console.log('[dex] Providers API response::', result);
-
         // Check for direct pairs first
         if (result?.hasDirectPath && result?.directPairs?.length) {
           const directPair = result.directPairs[0];
-          console.info('[dex] Direct pair found via providers API', { directPair });
           return {
             path: [tokenInAddr, tokenOutAddr],
             pairData: {
@@ -356,7 +343,6 @@ export function useSwapQuote() {
           }
 
           if (hops[hops.length - 1] === tokenOutAddr) {
-            console.info('[dex] Route found via providers API', { hops });
             return {
               path: hops,
               pairData: {
@@ -367,7 +353,7 @@ export function useSwapQuote() {
           }
         }
       } catch (e) {
-        console.warn('[dex] Providers API route discovery failed, falling back to on-chain', e);
+        // Ignore provider route discovery failures and fall back to on-chain.
       }
 
       // Fallback via contracts
@@ -375,7 +361,6 @@ export function useSwapQuote() {
       const { factory } = await initDexContracts(sdk);
       const direct = await fetchPairReserves(sdk, factory, tokenInAddr, tokenOutAddr);
       if (direct) {
-        console.info('[dex] Direct pair found');
         return { path: [tokenInAddr, tokenOutAddr] };
       }
 
@@ -383,15 +368,11 @@ export function useSwapQuote() {
         const legA = await fetchPairReserves(sdk, factory, tokenInAddr, DEX_ADDRESSES.wae);
         const legB = await fetchPairReserves(sdk, factory, DEX_ADDRESSES.wae, tokenOutAddr);
         if (legA && legB) {
-          console.info('[dex] Two-leg route via WAE found');
           return { path: [tokenInAddr, DEX_ADDRESSES.wae, tokenOutAddr] };
         }
       }
-
-      console.info('[dex] No route found');
       return { path: null };
     } catch (e) {
-      console.warn('[dex] Failed to build path', e);
       return { path: null };
     }
   }
@@ -400,7 +381,6 @@ export function useSwapQuote() {
     params: SwapQuoteParams,
     onQuoteResult?: (result: QuoteResult) => void
   ): Promise<QuoteResult> {
-    console.log('[dex] Refresh quote', { params });
     setError(null);
     const drivingAmount = params.isExactIn ? params.amountIn : params.amountOut;
 
@@ -446,20 +426,12 @@ export function useSwapQuote() {
         return result;
       }
 
-      console.info('[dex] Quoting amount out…', {
-        amountIn: params.amountIn,
-        tokenIn: params.tokenIn.symbol,
-        tokenOut: params.tokenOut.symbol
-      });
-
       const tokenInAddr = getTokenAddress(params.tokenIn);
       const tokenOutAddr = getTokenAddress(params.tokenOut);
 
       const { path, pairData } = await buildBestPath(params.tokenIn, params.tokenOut);
 
       if (!path) throw new Error('No route found');
-
-      console.info('[dex] Using path for quote', { path, pairData });
 
       let amountOut: string | undefined;
       let amountIn: string | undefined;
@@ -502,7 +474,7 @@ export function useSwapQuote() {
           const outAettos = decodedResult[decodedResult.length - 1];
           routerAmountOut = fromAettos(outAettos, params.tokenOut.decimals);
         } catch (e) {
-          console.warn('[dex] Failed to get router amounts_out, using ratio-based calculation', e);
+          // Ignore and fall back to ratio-based calculation.
         }
       } else if (!params.isExactIn && amountIn !== undefined) {
         try {
@@ -511,7 +483,7 @@ export function useSwapQuote() {
           const inAettos = decodedResult[0];
           routerAmountIn = fromAettos(inAettos, params.tokenIn.decimals);
         } catch (e) {
-          console.warn('[dex] Failed to get router amounts_in, using ratio-based calculation', e);
+          // Ignore and fall back to ratio-based calculation.
         }
       }
 
@@ -544,16 +516,6 @@ export function useSwapQuote() {
         priceImpact = undefined;
       }
 
-      console.info('[dex] Quote result', {
-        path,
-        amountIn: params.amountIn || amountIn,
-        amountOut,
-        maxOut,
-        routerAmountOut,
-        routerAmountIn,
-        liquidityStatus
-      });
-
       if (seq === quoteSeqRef.current) {
         setRouteInfo({
           path,
@@ -573,7 +535,6 @@ export function useSwapQuote() {
 
       return { amountOut, amountIn, path, priceImpact, maxOut };
     } catch (e: any) {
-      console.warn('[dex] Quote failed', e);
       if (seq === quoteSeqRef.current) {
         setError(errorToUserMessage(e, { action: 'quote' }));
       }

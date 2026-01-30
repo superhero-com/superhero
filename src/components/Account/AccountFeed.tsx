@@ -1,12 +1,12 @@
-import { PostsService } from "@/api/generated/services/PostsService";
 import ReplyToFeedItem from "@/features/social/components/ReplyToFeedItem";
 import TokenCreatedActivityItem from "@/features/social/components/TokenCreatedActivityItem";
 import PostSkeleton from "@/features/social/components/PostSkeleton";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { SuperheroApi } from "@/api/backend";
 import type { PostDto } from "@/api/generated";
+import { useActiveChain } from "@/hooks/useActiveChain";
+import { useChainAdapter } from "@/chains/useChainAdapter";
 
 interface AccountFeedProps {
   address: string;
@@ -15,6 +15,8 @@ interface AccountFeedProps {
 
 export default function AccountFeed({ address, tab }: AccountFeedProps) {
   const navigate = useNavigate();
+  const { selectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
   const ACTIVITY_PAGE_SIZE = 50;
   // Infinite activities for this profile (smaller initial batch)
   const {
@@ -24,11 +26,11 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
     hasNextPage: hasMoreActivities,
     isFetchingNextPage: fetchingMoreActivities,
   } = useInfiniteQuery<PostDto[], Error>({
-    queryKey: ["profile-activities", address],
+    queryKey: ["profile-activities", selectedChain, address],
     enabled: !!address && tab === "feed",
     initialPageParam: 1,
     queryFn: async ({ pageParam = 1 }) => {
-      const resp = await SuperheroApi.listTokens({
+      const resp = await chainAdapter.listTokens({
         creatorAddress: address,
         orderBy: "created_at",
         orderDirection: "DESC",
@@ -55,11 +57,11 @@ export default function AccountFeed({ address, tab }: AccountFeedProps) {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["profile-posts", address],
+    queryKey: ["profile-posts", selectedChain, address],
     enabled: !!address && tab === "feed",
     initialPageParam: 1,
     queryFn: ({ pageParam = 1 }) =>
-      PostsService.listAll({
+      chainAdapter.listPosts({
         accountAddress: address,
         orderBy: "created_at",
         orderDirection: "DESC",

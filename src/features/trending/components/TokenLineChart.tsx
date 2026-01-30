@@ -8,6 +8,8 @@ import { TransactionHistoricalService } from '../../../api/generated';
 import { performanceChartTimeframeAtom, PriceMovementTimeframe } from '../atoms';
 import { useAtomValue } from 'jotai';
 import { formatNumber } from '@/utils/number';
+import { useActiveChain } from '@/hooks/useActiveChain';
+import { SolanaApi } from '@/chains/solana/backend';
 
 interface TokenLineChartProps {
   saleAddress: string;
@@ -25,7 +27,8 @@ interface TokenLineChartProps {
 
 interface ChartDataItem {
   end_time: string;
-  last_price: number;
+  last_price?: number;
+  value?: string | number;
 }
 
 interface ChartResponse {
@@ -56,16 +59,25 @@ export function TokenLineChart({
   const chartHeight = Math.max(0, height - legendHeight);
   const performanceChartTimeframe = useAtomValue(performanceChartTimeframeAtom);
   const chartTimeframe = timeframe || performanceChartTimeframe;
+  const { selectedChain } = useActiveChain();
+  const isSolana = selectedChain === 'solana';
 
   const { data } = useQuery({
-    queryFn: () =>
-      TransactionHistoricalService.getForPreview({
+    queryFn: () => {
+      if (isSolana) {
+        return SolanaApi.getBclTokenPriceChartsPreview(saleAddress, {
+          interval: chartTimeframe as '1d' | '7d' | '30d',
+        });
+      }
+      return TransactionHistoricalService.getForPreview({
         address: saleAddress,
         interval: chartTimeframe as PriceMovementTimeframe,
-      }),
-    enabled: !!saleAddress && !allTime,
+      });
+    },
+    enabled: !!saleAddress && (!allTime || isSolana),
     queryKey: [
       'TransactionHistoricalService.getForPreview',
+      selectedChain,
       saleAddress,
       chartTimeframe,
     ],
@@ -73,7 +85,7 @@ export function TokenLineChart({
   });
 
   const historyQuery = useInfiniteQuery({
-    queryKey: ['TransactionHistoricalService.getPaginatedHistory', saleAddress],
+    queryKey: ['TransactionHistoricalService.getPaginatedHistory', selectedChain, saleAddress],
     queryFn: ({ pageParam = 1 }) => {
       return TransactionHistoricalService.getPaginatedHistory({
         address: saleAddress,
@@ -89,16 +101,16 @@ export function TokenLineChart({
       return allPages.length + 1;
     },
     initialPageParam: 1,
-    enabled: !!saleAddress && allTime,
+    enabled: !!saleAddress && allTime && !isSolana,
     staleTime: 1000 * 60 * 5,
   });
 
   useEffect(() => {
-    if (!allTime) return;
+    if (!allTime || isSolana) return;
     if (historyQuery.hasNextPage && !historyQuery.isFetching) {
       historyQuery.fetchNextPage();
     }
-  }, [allTime, historyQuery.hasNextPage, historyQuery.isFetching, historyQuery.fetchNextPage]);
+  }, [allTime, isSolana, historyQuery.hasNextPage, historyQuery.isFetching, historyQuery.fetchNextPage]);
 
   const { chartContainer, chart } = useChart({
     height: chartHeight,
@@ -226,7 +238,7 @@ export function TokenLineChart({
       try {
         const time = chartInstance.timeScale().coordinateToTime(x);
         if (time !== null) {
-          chartInstance.setCrosshairPosition(x, 0, { time: time as any });
+          (chartInstance as any).setCrosshairPosition(x, 0, { time });
         }
       } catch (error) {
         console.warn('[TokenLineChart] Error setting crosshair on touchstart:', error);
@@ -248,7 +260,7 @@ export function TokenLineChart({
       try {
         const time = chartInstance.timeScale().coordinateToTime(clampedX);
         if (time !== null) {
-          chartInstance.setCrosshairPosition(clampedX, 0, { time: time as any });
+          (chartInstance as any).setCrosshairPosition(clampedX, 0, { time });
         }
       } catch (error) {
         console.warn('[TokenLineChart] Error setting crosshair on touchmove:', error);
@@ -263,7 +275,7 @@ export function TokenLineChart({
       if (!chartInstance) return;
 
       try {
-        chartInstance.setCrosshairPosition(-1, -1, {});
+        (chartInstance as any).setCrosshairPosition(-1, -1, {});
       } catch (error) {
         console.warn('[TokenLineChart] Error clearing crosshair on touchend:', error);
       }
@@ -284,14 +296,17 @@ export function TokenLineChart({
 
   // Watch for data changes (preview)
   useEffect(() => {
-    if (allTime || !data?.result?.length || !areaSeries.current) {
+    if (allTime && !isSolana) {
+      return;
+    }
+    if (!data?.result?.length || !areaSeries.current) {
       return;
     }
     // Clear existing data first
     areaSeries.current.setData([]);
     // Update with new data
     updateSeriesData(data as ChartResponse);
-  }, [data, allTime]);
+  }, [data, allTime, isSolana]);
 
   // Watch for all-time data changes
   useEffect(() => {
@@ -307,7 +322,7 @@ export function TokenLineChart({
       .map((item) => {
         return {
           time: moment(item.end_time).unix() as UTCTimestamp,
-          value: Number(item.last_price),
+          value: Number(isSolana ? (item as any).value : (item as any).last_price),
         };
       })
       .sort((a, b) => a.time - b.time);

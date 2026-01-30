@@ -6,6 +6,7 @@ import type { TokenDto } from '@/api/generated/models/TokenDto';
 import type { TransactionDto } from '../api/generated/models/TransactionDto';
 import WebSocketClient from '../libs/WebSocketClient';
 import { TransactionsService } from '@/api/generated/services/TransactionsService';
+import { useActiveChain } from './useActiveChain';
 
 // Global state to maintain singleton pattern like Vue composable
 let initialized = false;
@@ -20,11 +21,16 @@ export type TransactionDtoWithToken = TransactionDto & {
 
 export function useLatestTransactions() {
   const queryClient = useQueryClient();
+  const { selectedChain } = useActiveChain();
   const [latestTransactions, setLatestTransactions] = useState<TransactionDtoWithToken[]>([]);
 
 
   // Initialize WebSocket subscription (singleton pattern)
   useEffect(() => {
+    if (selectedChain !== 'aeternity') {
+      setLatestTransactions([]);
+      return () => {};
+    }
 
     if (!initialized) {
       initialized = true;
@@ -36,7 +42,7 @@ export function useLatestTransactions() {
           const pages = [10, 20, 50, 100];
           pages.forEach((page) => {
             queryClient.setQueryData(
-              ["TransactionsService.listTransactions", payload.token.sale_address, page, 1],
+              ["TransactionsService.listTransactions", selectedChain, payload.token.sale_address, page, 1],
               (oldData: Awaited<CustomPagination<TransactionDtoWithToken>> | undefined) => ({
                 meta: {
                   ...(oldData?.meta || {}),
@@ -70,7 +76,7 @@ export function useLatestTransactions() {
       initialized = false;
       unsubscribeLatestTransactions?.();
     };
-  }, []);
+  }, [selectedChain]);
 
 
   return {

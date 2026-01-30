@@ -9,17 +9,22 @@ import { BuyAeWidget } from "../../features/ae-eth-buy";
 import { useWallet } from "../../hooks";
 import { useAddressByChainName } from "../../hooks/useChainName";
 import { useCurrencies } from "@/hooks/useCurrencies";
+import { useActiveChain } from "@/hooks/useActiveChain";
+import { useQuery } from "@tanstack/react-query";
 
 export default function RightRail({
   hidePriceSection = true,
+  hideTrends = false,
 }: {
   hidePriceSection?: boolean;
+  hideTrends?: boolean;
 }) {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
   const { activeAccount } = useAeSdk();
+  const { selectedChain } = useActiveChain();
   const { currentCurrencyCode, setCurrentCurrency, currencyRates } = useCurrencies();
   
   // Resolve chain name if present
@@ -47,6 +52,26 @@ export default function RightRail({
     };
   }, [currencyRates]);
 
+  const { data: solPrices } = useQuery({
+    queryKey: ["sol-price", selectedChain],
+    queryFn: async () => {
+      const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd,eur,cny");
+      if (!res.ok) throw new Error("Failed to fetch SOL price");
+      const json = await res.json();
+      return {
+        usd: json?.solana?.usd ?? null,
+        eur: json?.solana?.eur ?? null,
+        cny: json?.solana?.cny ?? null,
+      };
+    },
+    enabled: selectedChain === 'solana',
+    staleTime: 60 * 1000,
+  });
+
+  const priceLabel = selectedChain === 'solana' ? 'SOL Price' : 'AE Price';
+  const priceSymbol = selectedChain === 'solana' ? 'SOL' : 'AE';
+  const displayPrices = selectedChain === 'solana' ? solPrices : prices;
+
   const address = useWallet().address;
   const accountId = useMemo(
     () => activeAccount || address || "",
@@ -72,7 +97,13 @@ export default function RightRail({
       {/* Network & Wallet Overview - Hidden on own profile */}
       {!isOwnProfile && (
         <div className="bg-white/[0.03] border border-white/10 rounded-[20px] px-5 py-4 shadow-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative overflow-hidden">
-          <WalletOverviewCard key={activeAccount} selectedCurrency={selectedCurrency} prices={prices} />
+          <WalletOverviewCard
+            key={activeAccount}
+            selectedCurrency={selectedCurrency}
+            prices={displayPrices}
+            assetLabel={priceLabel}
+            assetSymbol={priceSymbol}
+          />
         </div>
       )}
 
@@ -84,7 +115,7 @@ export default function RightRail({
               📈
             </span>
             <h4 className="m-0 text-base font-bold text-[var(--standard-font-color)] flex-1">
-              AE Price
+              {priceLabel}
             </h4>
             <div className="flex gap-1">
               {(["usd", "eur", "cny"] as const).map((currency) => (
@@ -107,8 +138,8 @@ export default function RightRail({
             <div className="flex justify-between items-center mb-4">
               <div>
                 <div className="text-xl font-bold text-[var(--standard-font-color)] mb-1">
-                  {prices?.[selectedCurrency]
-                    ? formatPrice(prices[selectedCurrency], selectedCurrency)
+                  {displayPrices?.[selectedCurrency]
+                    ? formatPrice(displayPrices[selectedCurrency], selectedCurrency)
                     : "-"}
                 </div>
                 <div className="text-xs font-semibold">
@@ -172,9 +203,11 @@ export default function RightRail({
       </div> */}
 
       {/* Buy AE with ETH widget (compact) */}
-      <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none">
-        <BuyAeWidget embedded={true} />
-      </div>
+      {selectedChain === 'aeternity' && (
+        <div className="bg-white/[0.03] border border-white/10 rounded-[20px] p-4 shadow-none">
+          <BuyAeWidget embedded={true} />
+        </div>
+      )}
 
 
       {/* Trading Leaderboard promo */}

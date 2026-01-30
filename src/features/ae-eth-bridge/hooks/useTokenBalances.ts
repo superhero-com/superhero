@@ -66,7 +66,6 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
 
     // Prevent concurrent fetches
     if (isEthFetchingRef.current) {
-      console.log('[useTokenBalances] Already fetching ETH balances, skipping...');
       return;
     }
 
@@ -75,20 +74,14 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
     const newEthBalances: Record<string, string> = {};
 
     try {
-      console.log('[useTokenBalances] Fetching ETH balances...');
-
       // Try to fetch balances using Ethplorer API first
       try {
-        console.log('[useTokenBalances] Fetching ETH balances via Ethplorer API...');
         const ethplorerData = await fetchAddressInfo(currentEthAccount);
         const ethplorerBalances = getAllTokenBalancesFromEthplorer(ethplorerData, currentAssets, BridgeConstants.ethereum.default_eth);
 
         // Merge Ethplorer balances into newEthBalances
         Object.assign(newEthBalances, ethplorerBalances);
-        console.log('[useTokenBalances] Ethplorer API balances:', ethplorerBalances);
       } catch (ethplorerError) {
-        console.warn('[useTokenBalances] Ethplorer API failed, falling back to contract calls:', ethplorerError);
-
         // Fallback to individual contract calls
         if (!(window as any).ethereum) return;
 
@@ -130,24 +123,20 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
                     .toFixed(6, BigNumber.ROUND_DOWN);
                   newEthBalances[asset.symbol] = balanceFormatted;
                 } catch (error) {
-                  console.error(`Error fetching balance for ${asset.symbol}:`, error);
                   newEthBalances[asset.symbol] = '0';
                 }
               }
             } catch (error) {
-              console.error(`Error fetching ETH balance for ${asset.symbol}:`, error);
               newEthBalances[asset.symbol] = '0';
             }
           })
         );
       }
     } catch (error) {
-      console.error('Error fetching Ethereum balances:', error);
     } finally {
       setEthBalances(newEthBalances);
       setEthLoading(false);
       isEthFetchingRef.current = false;
-      console.log('[useTokenBalances] ETH loading set to false');
     }
   }, [_loadAex9DataFromMdw]);
 
@@ -164,7 +153,6 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
 
     // Prevent concurrent fetches
     if (isAeFetchingRef.current) {
-      console.log('[useTokenBalances] Already fetching AE balances, skipping...');
       return;
     }
 
@@ -173,8 +161,6 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
     const newAeBalances: Record<string, string> = {};
 
     try {
-      console.log('[useTokenBalances] Fetching AE balances...');
-
       // Fetch all AEX-9 balances from middleware API (same approach as useAccountBalances)
       const url = `/v3/accounts/${currentAeAccount}/aex9/balances?limit=100`;
       const middlewareBalances = await _loadAex9DataFromMdw(url, []);
@@ -187,13 +173,6 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
           decimals: balance.decimals
         });
       });
-
-      console.log('================')
-      console.log('================')
-      console.log('================')
-      console.log('middlewareBalances', middlewareBalances);
-      console.log('================')
-      console.log('================')
 
       // Process each asset
       await Promise.all(
@@ -224,19 +203,16 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
                     .toFixed(6, BigNumber.ROUND_DOWN);
                   newAeBalances[asset.symbol] = balanceFormatted;
                 } catch (contractError) {
-                  console.warn(`Contract call failed for ${asset.symbol}, setting balance to 0:`, contractError);
                   newAeBalances[asset.symbol] = '0';
                 }
               }
             }
           } catch (error) {
-            console.error(`Error fetching AE balance for ${asset.symbol}:`, error);
             newAeBalances[asset.symbol] = '0';
           }
         })
       );
     } catch (error) {
-      console.error('Error fetching Aeternity balances from middleware:', error);
       // Fallback to individual contract calls if middleware fails
       try {
         await Promise.all(
@@ -256,19 +232,16 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
                 newAeBalances[asset.symbol] = balanceFormatted;
               }
             } catch (fallbackError) {
-              console.error(`Fallback error for ${asset.symbol}:`, fallbackError);
               newAeBalances[asset.symbol] = '0';
             }
           })
         );
       } catch (fallbackError) {
-        console.error('All fallback methods failed:', fallbackError);
       }
     } finally {
       setAeBalances(newAeBalances);
       setAeLoading(false);
       isAeFetchingRef.current = false;
-      console.log('[useTokenBalances] AE loading set to false');
     }
   }, [_loadAex9DataFromMdw]);
 
@@ -291,7 +264,6 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
 
     // Prevent concurrent fetches
     if (isFetchingRef.current) {
-      console.log('[useTokenBalances] Already fetching, skipping...');
       return;
     }
 
@@ -299,23 +271,18 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
     setLoading(true);
 
     try {
-      console.log('[useTokenBalances] Starting balance fetch...');
       // Fetch both Ethereum and Aeternity balances in parallel
       await Promise.all([fetchEthereumBalances(), fetchAeternityBalances()]);
-      console.log('[useTokenBalances] Balance fetch complete');
     } catch (error) {
-      console.error('Error fetching token balances:', error);
     } finally {
       setLoading(false);
       isFetchingRef.current = false;
-      console.log('[useTokenBalances] Loading set to false');
     }
   }, [fetchEthereumBalances, fetchAeternityBalances]);
 
   // Auto-fetch when Ethereum address changes
   useEffect(() => {
     if (ethAccount) {
-      console.log('[useTokenBalances] ETH address changed, fetching ETH balances');
       fetchEthereumBalances();
     }
   }, [ethAccount]);
@@ -323,7 +290,6 @@ export function useTokenBalances({ assets, direction, aeAccount, ethAccount, sdk
   // Auto-fetch when Aeternity address changes
   useEffect(() => {
     if (aeAccount) {
-      console.log('[useTokenBalances] AE address changed, fetching AE balances');
       fetchAeternityBalances();
     }
   }, [aeAccount]);

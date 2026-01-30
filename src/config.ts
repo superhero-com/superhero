@@ -4,6 +4,7 @@ export type AppConfig = {
   BACKEND_URL: string;
   SUPERHERO_API_URL?: string;
   SUPERHERO_WS_URL?: string;
+  SOLANA_API_URL?: string;
   NODE_URL: string;
   WALLET_URL: string;
   MIDDLEWARE_URL: string;
@@ -33,6 +34,7 @@ const defaultConfig: AppConfig = {
   BACKEND_URL: "https://api.superhero.com",
   SUPERHERO_API_URL: "https://api.superhero.com",
   SUPERHERO_WS_URL: "https://api.superhero.com",
+  SOLANA_API_URL: "",
   NODE_URL: "https://mdw.wordcraft.fun",
   WALLET_URL: "https://wallet.superhero.com",
   MIDDLEWARE_URL: "https://mdw.wordcraft.fun/mdw",
@@ -72,12 +74,8 @@ const envApiUrl = ((import.meta as any)?.env?.VITE_SUPERHERO_API_URL ||
   (typeof process !== 'undefined' && (process as any).env?.VITE_SUPERHERO_API_URL)) as string | undefined;
 const envWsUrl = ((import.meta as any)?.env?.VITE_SUPERHERO_WS_URL || 
   (typeof process !== 'undefined' && (process as any).env?.VITE_SUPERHERO_WS_URL)) as string | undefined;
-
-// Debug logging in development
-if (typeof window !== 'undefined' && (import.meta as any)?.env?.MODE === 'development') {
-  console.log('[Config] VITE_SUPERHERO_API_URL from import.meta.env:', envApiUrl);
-  console.log('[Config] All VITE_ env vars:', Object.keys((import.meta as any)?.env || {}).filter(k => k.startsWith('VITE_')));
-}
+const envSolanaApiUrl = ((import.meta as any)?.env?.VITE_SOLANA_API_URL ||
+  (typeof process !== 'undefined' && (process as any).env?.VITE_SOLANA_API_URL)) as string | undefined;
 
 declare global {
   interface Window {
@@ -116,16 +114,7 @@ export const CONFIG: AppConfig = {
   // Vite env overrides for local builds - MUST come after runtimeConfig to override it
   ...(envApiUrl ? { SUPERHERO_API_URL: envApiUrl } : {}),
   ...(envWsUrl ? { SUPERHERO_WS_URL: envWsUrl } : {}),
+  ...(envSolanaApiUrl ? { SOLANA_API_URL: envSolanaApiUrl } : {}),
   // Ensure POPULAR_FEED_ENABLED defaults to true if not explicitly set
   POPULAR_FEED_ENABLED: runtimeConfig.POPULAR_FEED_ENABLED ?? defaultConfig.POPULAR_FEED_ENABLED ?? true,
 };
-
-// Debug logging in development - always log to help debug
-if (typeof window !== 'undefined') {
-  const mode = (import.meta as any)?.env?.MODE;
-  console.log('[Config Debug] MODE:', mode);
-  console.log('[Config Debug] envApiUrl:', envApiUrl);
-  console.log('[Config Debug] runtimeConfig.SUPERHERO_API_URL:', runtimeConfig.SUPERHERO_API_URL);
-  console.log('[Config Debug] Final CONFIG.SUPERHERO_API_URL:', CONFIG.SUPERHERO_API_URL);
-  console.log('[Config Debug] import.meta.env keys:', Object.keys((import.meta as any)?.env || {}));
-}

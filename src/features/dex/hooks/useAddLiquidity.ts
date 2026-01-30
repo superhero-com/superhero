@@ -200,7 +200,6 @@ export function useAddLiquidity() {
       }));
 
     } catch (error) {
-      console.error('Error computing pair preview:', error);
       setState(prev => ({ ...prev, pairPreview: null }));
     }
   }
@@ -218,27 +217,7 @@ export function useAddLiquidity() {
       const amountAAettos = toAettos(params.amountA, state.decA);
       const amountBAettos = toAettos(params.amountB, state.decB);
       
-      console.log('Raw amounts::', {
-        amountA: params.amountA,
-        amountB: params.amountB,
-        decA: state.decA,
-        decB: state.decB,
-        amountAAettos: amountAAettos.toString(),
-        amountBAettos: amountBAettos.toString()
-      });
-
       let txHash: string;
-
-      console.log('========================')
-      console.log('executeAddLiquidity->router::', router)
-      console.log('executeAddLiquidity->params::', params)
-      console.log('executeAddLiquidity->amountAAettos::', amountAAettos.toString())
-      console.log('executeAddLiquidity->amountBAettos::', amountBAettos.toString())
-      console.log('executeAddLiquidity->currentTime::', Date.now())
-      console.log('executeAddLiquidity->deadline::', Date.now() + params.deadlineMins * 60 * 1000)
-      console.log('executeAddLiquidity->deadlineMinutes::', params.deadlineMins)
-      console.log('executeAddLiquidity->slippagePct::', params.slippagePct)
-      console.log('========================')
       
       // Validate slippage percentage
       if (params.slippagePct < 0 || params.slippagePct >= 100) {
@@ -273,22 +252,7 @@ export function useAddLiquidity() {
         }
         
         // Ensure allowance for the non-AE token
-        console.log('Ensuring token allowance for router...');
         await ensureAllowanceForRouter(sdk, token, address, amountTokenDesired);
-        console.log('Token allowance ensured.');
-        
-        console.log('add_liquidity_ae params::', {
-          token,
-          amountTokenDesired: amountTokenDesired.toString(),
-          minToken: minToken.toString(),
-          minAe: minAe.toString(),
-          address,
-          minimumLiquidity: minimumLiquidity.toString(),
-          deadline: BigInt(Date.now() + params.deadlineMins * 60 * 1000).toString(),
-          amount: amountAeDesired.toString(),
-          slippagePct: params.slippagePct,
-          slippageCheck: `${params.slippagePct}% slippage on ${amountTokenDesired.toString()} = ${minToken.toString()}`
-        });
         
         const res = await router.add_liquidity_ae(
           token,
@@ -324,25 +288,8 @@ export function useAddLiquidity() {
         }
         
         // Ensure allowances for both tokens
-        console.log('Ensuring token allowances for router...');
         await ensureAllowanceForRouter(sdk, params.tokenA, address, amountAAettos);
         await ensureAllowanceForRouter(sdk, params.tokenB, address, amountBAettos);
-        console.log('Token allowances ensured.');
-        
-        console.log('add_liquidity params::', {
-          tokenA: params.tokenA,
-          tokenB: params.tokenB,
-          amountAAettos: amountAAettos.toString(),
-          amountBAettos: amountBAettos.toString(),
-          minAmountA: minAmountA.toString(),
-          minAmountB: minAmountB.toString(),
-          address,
-          minimumLiquidity: minimumLiquidity.toString(),
-          deadline: BigInt(Date.now() + params.deadlineMins * 60 * 1000).toString(),
-          slippagePct: params.slippagePct,
-          slippageCheckA: `${params.slippagePct}% slippage on ${amountAAettos.toString()} = ${minAmountA.toString()}`,
-          slippageCheckB: `${params.slippagePct}% slippage on ${amountBAettos.toString()} = ${minAmountB.toString()}`
-        });
         
         const res = await router.add_liquidity(
           params.tokenA,
@@ -356,8 +303,6 @@ export function useAddLiquidity() {
           BigInt(Date.now() + params.deadlineMins * 60 * 1000),
           { omitUnknown: true }
         );
-        console.log('[useAddLiquidity] add_liquidity res::', providedLiquidity);
-        console.log('[useAddLiquidity] add_liquidity res::', res);
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       }
 
@@ -403,9 +348,6 @@ export function useAddLiquidity() {
       return txHash;
 
     } catch (error) {
-      console.log('========================')
-      console.log('executeAddLiquidity->error::', error)
-      console.log('========================')
       const errorMsg = errorToUserMessage(error, {
         action: 'add-liquidity',
         slippagePct: params.slippagePct,
@@ -446,17 +388,6 @@ export function useAddLiquidity() {
         : toAettos(params.liquidity, 18); // LP tokens are 18 decimals
         // :params.liquidity;
       
-      console.log('========================')
-      console.log('executeRemoveLiquidity->router::', router)
-      console.log('executeRemoveLiquidity->params::', params)
-      console.log('executeRemoveLiquidity->isFullRemoval::', params.isFullRemoval)
-      console.log('executeRemoveLiquidity->rawBalance::', params.rawBalance)
-      console.log('executeRemoveLiquidity->liquidityAmount::', liquidityAmount.toString())
-      console.log('executeRemoveLiquidity->currentTime::', Date.now())
-      console.log('executeRemoveLiquidity->deadline::', Date.now() + params.deadlineMins * 60 * 1000)
-      console.log('executeRemoveLiquidity->deadlineMinutes::', params.deadlineMins)
-      console.log('executeRemoveLiquidity->slippagePct::', params.slippagePct)
-      console.log('========================')
       
       // Validate parameters
       if (liquidityAmount <= 0n) {
@@ -508,23 +439,7 @@ export function useAddLiquidity() {
         }
 
         // Ensure LP token allowance for router
-        console.log('Ensuring LP token allowance for router...');
         await ensurePairAllowanceForRouter(sdk, pairInfo.pairAddress, address, liquidityAmount);
-        console.log('LP token allowance ensured.');
-
-        console.log('remove_liquidity_ae params::', {
-          token,
-          liquidity: liquidityAmount.toString(),
-          minTokenAmount: minTokenAmount.toString(),
-          minAeAmount: minAeAmount.toString(),
-          address,
-          deadline: BigInt(Date.now() + params.deadlineMins * 60 * 1000).toString(),
-          expectedTokenAmount: expectedTokenAmount.toString(),
-          expectedAeAmount: expectedAeAmount.toString(),
-          totalSupply: totalSupply.toString(),
-          reserveToken: reserveToken.toString(),
-          reserveAe: reserveAe.toString()
-        });
 
         const res = await router.remove_liquidity_ae(
           token,
@@ -536,7 +451,6 @@ export function useAddLiquidity() {
           { omitUnknown: true }
         );
 
-        console.log('[useAddLiquidity] remove_liquidity_ae res::', res);
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       } else {
         // Handle token-token pair removal
@@ -570,9 +484,7 @@ export function useAddLiquidity() {
         }
         
         // Ensure LP token allowance for router
-        console.log('Ensuring LP token allowance for router...');
         await ensurePairAllowanceForRouter(sdk, pairInfo.pairAddress, address, liquidityAmount);
-        console.log('LP token allowance ensured.');
         
         const res = await router.remove_liquidity(
           params.tokenA,
@@ -585,7 +497,6 @@ export function useAddLiquidity() {
           { omitUnknown: true }
         );
         
-        console.log('[useAddLiquidity] remove_liquidity res::', res);
         txHash = (res?.hash || res?.tx?.hash || res?.transactionHash || '').toString();
       }
 
@@ -614,8 +525,6 @@ export function useAddLiquidity() {
         throw new Error('Transaction failed - no hash returned');
       }
     } catch (error: any) {
-      console.error('Remove liquidity error:', error);
-      
       const errorMsg = errorToUserMessage(error);
       setState(prev => ({ ...prev, error: errorMsg, loading: false }));
 

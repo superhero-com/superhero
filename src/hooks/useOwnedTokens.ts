@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAeSdk } from "./useAeSdk";
+import { useActiveChain } from "./useActiveChain";
+import { useChainAdapter } from "@/chains/useChainAdapter";
 import { AccountTokensService } from "@/api/generated";
 
 type AccountTokensResponse = {
@@ -40,11 +42,25 @@ function extractTokenLike(item: unknown): OwnedTokenLike | null {
  */
 export function useOwnedTokens() {
   const { activeAccount } = useAeSdk();
+  const { selectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
 
   const { data: ownedTokens = [], isFetching, error } = useQuery<OwnedTokenLike[]>({
-    queryKey: ["AccountTokensService.listTokenHolders", "ownedTokens", activeAccount],
+    queryKey: ["AccountTokensService.listTokenHolders", "ownedTokens", selectedChain, activeAccount],
     queryFn: async (): Promise<OwnedTokenLike[]> => {
       if (!activeAccount) return [];
+
+      if (selectedChain === 'solana') {
+        const resp = await chainAdapter.listTokensPage({
+          ownerAddress: activeAccount,
+          orderBy: "created_at" as any,
+          orderDirection: "DESC",
+          limit: 200,
+          page: 1,
+        }) as AccountTokensResponse;
+        const items = Array.isArray(resp?.items) ? resp.items : [];
+        return items as OwnedTokenLike[];
+      }
 
       const resp = (await AccountTokensService.listTokenHolders({
         address: activeAccount,

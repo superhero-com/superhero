@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { TransactionsService } from "@/api/generated/services/TransactionsService";
+import { useActiveChain } from "@/hooks/useActiveChain";
+import { useChainAdapter } from "@/chains/useChainAdapter";
 import { TokenDto } from "@/api/generated/models/TokenDto";
 import AddressChip from "../AddressChip";
 import PriceDataFormatter from "@/features/shared/components/PriceDataFormatter";
@@ -28,6 +30,8 @@ interface TokenTradesProps {
 export default function TokenTrades({ token }: TokenTradesProps) {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const { selectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
 
   // Fetch transactions using React Query with server-side pagination
   const {
@@ -38,6 +42,7 @@ export default function TokenTrades({ token }: TokenTradesProps) {
   } = useQuery<PaginatedTransactionsResponse>({
     queryKey: [
       "TransactionsService.listTransactions",
+      selectedChain,
       token?.sale_address,
       itemsPerPage,
       currentPage,
@@ -51,6 +56,32 @@ export default function TokenTrades({ token }: TokenTradesProps) {
       }
 
       try {
+        if (selectedChain === 'solana') {
+          const response = await chainAdapter.listTokenTransactions(token.sale_address, {
+            limit: itemsPerPage,
+            page: currentPage,
+          });
+          const items = Array.isArray(response?.items)
+            ? response.items.map((trade: any) => {
+                const unitPriceUsd = Number(trade?.price?.usd || 0);
+                const volume = Number(trade?.volume || 0);
+                return {
+                  tx_hash: trade.signature,
+                  tx_type: trade.type,
+                  account: trade.user_address,
+                  volume: trade.volume,
+                  price_data: trade.price || null,
+                  spent_amount_data: trade.price ? { usd: unitPriceUsd * volume } : null,
+                  created_at: trade.created_at || trade.timestamp,
+                };
+              })
+            : [];
+          return {
+            items,
+            meta: response?.meta || { totalItems: items.length, totalPages: 1, currentPage: 1 },
+          };
+        }
+
         const response = await TransactionsService.listTransactions({
           tokenAddress: token.sale_address,
           limit: itemsPerPage,

@@ -83,7 +83,6 @@
     @apply font-bold text-white;
   }
 
-  /* Use this to avoid legacy .dex-title gradient from Dex.scss */
   .sh-dex-title {
     @apply font-bold;
     color: #ffffff;

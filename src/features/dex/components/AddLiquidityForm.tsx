@@ -91,7 +91,6 @@ export default function AddLiquidityForm() {
       const _token = DexService.getDexTokenByAddress({ address });
       return _token;
     } catch (error) {
-      console.warn('[AddLiquidityForm] Failed to fetch token from middleware:', address, error);
       return null;
     }
   }, [activeNetwork.middlewareUrl]);
@@ -149,7 +148,6 @@ export default function AddLiquidityForm() {
     let cancelled = false;
 
     const initializeTokens = async () => {
-      console.log('[AddLiquidityForm] Initialize tokens');
       const searchParams = new URLSearchParams(location.search);
       const fromParam = searchParams.get('from');
       const toParam = searchParams.get('to');
@@ -287,7 +285,6 @@ export default function AddLiquidityForm() {
   const handleAmountAChange = (newAmountA: string) => {
     setLastEdited("A");
     setAmountA(newAmountA);
-    console.log("changed state.pairPreview", state.pairPreview);
     // Auto-calculate Token B based on ratio using Decimal to avoid float drift
     if (state.pairPreview?.ratioAinB && newAmountA) {
       try {
@@ -308,7 +305,6 @@ export default function AddLiquidityForm() {
   const handleAmountBChange = (newAmountB: string) => {
     setLastEdited("B");
     setAmountB(newAmountB);
-    console.log("changed state.pairPreview", state.pairPreview);
     // Auto-calculate Token A based on ratio using Decimal to avoid float drift
     if (state.pairPreview?.ratioAinB && newAmountB) {
       try {
@@ -399,7 +395,6 @@ export default function AddLiquidityForm() {
         await onPositionUpdated();
       }
     } catch (error) {
-      console.error("Add liquidity failed:", error);
     }
   };
 

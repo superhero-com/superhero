@@ -319,13 +319,6 @@ export async function getTokenBalance(
     const { decodedResult } = await token.balance(owner);
     return BigInt(decodedResult ?? 0);
   } catch (error: any) {
-    // Enhanced error logging for new accounts
-    if (error?.message?.includes('404') || error?.status === 404) {
-      console.info('[dex] Account not found for token balance:', owner);
-      console.info('[dex] This is normal for new accounts - user needs to bridge ETH first');
-    } else {
-      console.warn('[dex] Failed to get token balance:', error?.message || error);
-    }
     return 0n;
   }
 }

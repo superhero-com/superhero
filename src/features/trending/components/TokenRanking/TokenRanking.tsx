@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { SuperheroApi } from '../../../../api/backend';
 import { Decimal } from '../../../../libs/decimal';
-import { toAe } from '@aeternity/aepp-sdk';
 import Spinner from '../../../../components/Spinner';
+import { useActiveChain } from '@/hooks/useActiveChain';
+import { useChainAdapter } from '@/chains/useChainAdapter';
+import { toAe } from '@aeternity/aepp-sdk';
 
 interface TokenRankingProps {
   token: {
@@ -36,6 +37,8 @@ const LIST_SIZE = 5;
 export default function TokenRanking({ token }: TokenRankingProps) {
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [loading, setLoading] = useState(false);
+  const { selectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
 
   // Calculate ranking limit based on token rank (similar to Vue computed)
   const tokenRankingLimit = useMemo(() => {
@@ -54,7 +57,7 @@ export default function TokenRanking({ token }: TokenRankingProps) {
       
       setLoading(true);
       try {
-        const data = await SuperheroApi.listTokenRankings(token.sale_address, {
+        const data = await chainAdapter.listTokenRankings(token.sale_address, {
           limit: tokenRankingLimit,
           page: 1,
         });
@@ -120,7 +123,9 @@ export default function TokenRanking({ token }: TokenRankingProps) {
 
   function getDecimalValue(value: string): Decimal {
     try {
-      // Convert from aettos to AE (assuming 18 decimals)
+      if (selectedChain === 'solana') {
+        return Decimal.from(value);
+      }
       return Decimal.from(toAe(value));
     } catch {
       return Decimal.from(0);

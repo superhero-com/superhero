@@ -2,12 +2,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ReplyToFeedItem from "./ReplyToFeedItem";
 import PostSkeleton from "./PostSkeleton";
-import { PostsService } from "../../../api/generated";
 import AeButton from "../../../components/AeButton";
-import { SuperheroApi } from "../../../api/backend";
-import { TokensService } from "../../../api/generated/services/TokensService";
 import type { TokenHolderDto } from "../../../api/generated/models/TokenHolderDto";
 import { Decimal } from "@/libs/decimal";
+import { useActiveChain } from "@/hooks/useActiveChain";
+import { useChainAdapter } from "@/chains/useChainAdapter";
 
 type TokenTopicFeedProps = {
   topicName: string;
@@ -53,6 +52,8 @@ export default function TokenTopicFeed({
   holdersOnly = true,
   onAutoDisableHoldersOnly,
 }: TokenTopicFeedProps) {
+  const { selectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
   const [autoSwitchedFromHolders, setAutoSwitchedFromHolders] = useState(false);
   const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const baseName = useMemo(() => String(topicName || '').replace(/^#/, ''), [topicName]);
@@ -64,8 +65,8 @@ export default function TokenTopicFeed({
   }, [displayTokenName, topicName]);
 
   const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: ["topic-by-name", lookup],
-    queryFn: () => SuperheroApi.getTopicByName(baseName.toLowerCase()) as Promise<any>,
+    queryKey: ["topic-by-name", selectedChain, lookup],
+    queryFn: () => chainAdapter.getTopicByName(baseName.toLowerCase()) as Promise<any>,
     enabled: Boolean(baseName),
     refetchInterval: 120 * 1000,
   });
@@ -86,15 +87,13 @@ export default function TokenTopicFeed({
   // - filter posts to token holders only
   // - show holder balance badge on each item
   const { data: holdersResponse, isFetching: isFetchingHolders } = useQuery({
-    queryKey: ["TokensService.listTokenHolders-for-topic-feed", tokenSaleAddress],
+    queryKey: ["TokensService.listTokenHolders-for-topic-feed", selectedChain, tokenSaleAddress],
     enabled: !!tokenSaleAddress,
     queryFn: async () => {
       if (!tokenSaleAddress) {
         return { items: [] as TokenHolderDto[] };
       }
-      const response = await TokensService.listTokenHolders({
-        address: tokenSaleAddress,
-        // Large page size to cover most holders, but still bounded
+      const response = await chainAdapter.listTokenHolders(tokenSaleAddress, {
         limit: 500,
         page: 1,
       }) as unknown as { items: TokenHolderDto[] };
@@ -127,9 +126,9 @@ export default function TokenTopicFeed({
 
   // Alternate casing fallback: try original-cased topic if lowercase is empty
   const { data: dataOriginal, isFetching: isFetchingOriginal, refetch: refetchOriginal } = useQuery({
-    queryKey: ["topic-by-name-original", lookupOriginal],
+    queryKey: ["topic-by-name-original", selectedChain, lookupOriginal],
     enabled: !hasFilteredPosts && Boolean(baseName),
-    queryFn: () => SuperheroApi.getTopicByName(baseName) as Promise<any>,
+    queryFn: () => chainAdapter.getTopicByName(baseName) as Promise<any>,
     refetchInterval: 120 * 1000,
   });
 
@@ -142,10 +141,10 @@ export default function TokenTopicFeed({
   // Include replies that reference the hashtag in their content or topics
   const { data: repliesSearch, isFetching: isFetchingReplies, refetch: refetchReplies } = useQuery({
     // Include baseName in queryKey to ensure different case variations get different cache entries
-    queryKey: ["posts-search-hashtag", baseName],
+    queryKey: ["posts-search-hashtag", selectedChain, baseName],
     enabled: Boolean(baseName),
     // Use full-text search for the hashtag to reduce payload to exact mentions
-    queryFn: () => PostsService.listAll({ orderBy: 'created_at', orderDirection: 'DESC', search: `#${baseName}`, limit: 200 }) as unknown as Promise<any>,
+    queryFn: () => chainAdapter.listPosts({ orderBy: 'created_at', orderDirection: 'DESC', search: `#${baseName}`, limit: 200 }) as unknown as Promise<any>,
     refetchInterval: 120 * 1000,
   });
   const replyMatches: any[] = useMemo(() => {

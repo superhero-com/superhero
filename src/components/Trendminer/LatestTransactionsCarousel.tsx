@@ -1,14 +1,12 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import {
-  useLatestTransactions,
-} from "@/hooks/useLatestTransactions";
+import { useChainLatestTransactions } from "@/chains/hooks/useChainLatestTransactions";
 import { TX_FUNCTIONS } from "@/utils/constants";
 import { Decimal } from "@/libs/decimal";
 import AddressAvatar from "../AddressAvatar";
 import './LatestTransactionsCarousel.scss';
 
 export default function LatestTransactionsCarousel() {
-  const { latestTransactions } = useLatestTransactions();
+  const { latestTransactions } = useChainLatestTransactions();
   const [itemsToShow, setItemsToShow] = useState(4); // Number of items visible at once for loading state
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -261,8 +259,13 @@ export default function LatestTransactionsCarousel() {
           <div className="transaction-address-row">
             <div className="transaction-address-content">
               <div className="transaction-address-info">
-                <AddressAvatar address={item.address} size={20} />
-                <span>{`${item.address.slice(0, 7)}...${item.address.slice(-4)}`}</span>
+                <AddressAvatar address={item.address || item.account || ''} size={20} />
+                <span>
+                  {(() => {
+                    const addr = item.address || item.account || '';
+                    return addr ? `${addr.slice(0, 7)}...${addr.slice(-4)}` : '—';
+                  })()}
+                </span>
               </div>
               <div
                 className="transaction-type-badge"

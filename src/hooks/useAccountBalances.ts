@@ -1,6 +1,9 @@
 import { useAtom } from "jotai";
 import { aex9BalancesAtom, balanceAtom, chainNamesAtom } from "../atoms/walletAtoms";
 import { useAeSdk } from "./useAeSdk";
+import { useActiveChain } from "./useActiveChain";
+import { useSolanaWallet } from "@/chains/solana/hooks/useSolanaWallet";
+import { PublicKey } from "@solana/web3.js";
 import { useEffect, useMemo, useCallback, useRef } from "react";
 import { Decimal } from "../libs/decimal";
 import { toAe } from "@aeternity/aepp-sdk";
@@ -9,12 +12,20 @@ import { BridgeConstants } from "@/features/ae-eth-bridge";
 
 export const useAccountBalances = (selectedAccount: string) => {
     const { sdk, activeAccount } = useAeSdk();
+    const { selectedChain } = useActiveChain();
+    const { connection } = useSolanaWallet();
     const [chainNames] = useAtom(chainNamesAtom);
     const [_balance, setBalance] = useAtom(balanceAtom);
     const [_aex9Balances, setAex9Balances] = useAtom(aex9BalancesAtom);
 
     const balance = useMemo(() => _balance[selectedAccount] || 0, [_balance, selectedAccount]);
-    const decimalBalance = useMemo(() => Decimal.from((toAe(balance ?? 0))), [balance]);
+    const decimalBalance = useMemo(() => {
+        if (selectedChain === 'solana') {
+            const solValue = Number(balance ?? 0) / 1_000_000_000;
+            return Decimal.from(solValue);
+        }
+        return Decimal.from((toAe(balance ?? 0)));
+    }, [balance, selectedChain]);
 
     const aex9Balances = useMemo(() => _aex9Balances[selectedAccount] || [], [_aex9Balances, selectedAccount]);
 
@@ -30,12 +41,23 @@ export const useAccountBalances = (selectedAccount: string) => {
 
     const getAccountBalance = useCallback(async () => {
         const account = selectedAccountRef.current;
-        if (!account || !sdkRef.current) return;
+        if (!account) return;
+        if (selectedChain === 'solana') {
+            if (!connection) return;
+            try {
+                const pubkey = new PublicKey(account);
+                const lamports = await connection.getBalance(pubkey);
+                setBalance(prev => ({ ...prev, [account]: lamports }));
+            } catch {
+                // ignore invalid base58 addresses
+            }
+            return;
+        }
+        if (!sdkRef.current) return;
         const balance = await sdkRef.current.getBalance(account as any);
-        // Convert balance to number if it's a string
         const balanceNum = typeof balance === 'string' ? Number(balance) : balance;
         setBalance(prev => ({ ...prev, [account]: balanceNum }));
-    }, [setBalance]);
+    }, [setBalance, selectedChain, connection]);
 
     const _loadAex9DataFromMdw = useCallback(async (url: string, items: any[] = []): Promise<any[]> => {
         try {
@@ -65,6 +87,10 @@ export const useAccountBalances = (selectedAccount: string) => {
     const loadAccountAex9Balances = useCallback(async () => {
         const account = selectedAccountRef.current;
         if (!account) return;
+        if (selectedChain === 'solana') {
+            setAex9Balances(prev => ({ ...prev, [account]: [] }));
+            return [];
+        }
         const url = `/v2/aex9/account-balances/${account}?limit=100`;
 
         const balances = await _loadAex9DataFromMdw(url, []);
@@ -89,7 +115,7 @@ export const useAccountBalances = (selectedAccount: string) => {
             ...prev, [account]: balances
         }));
         return balances;
-    }, [_loadAex9DataFromMdw, setAex9Balances]);
+    }, [_loadAex9DataFromMdw, setAex9Balances, selectedChain]);
 
     const loadAccountData = useCallback(async () => {
         const account = selectedAccountRef.current;

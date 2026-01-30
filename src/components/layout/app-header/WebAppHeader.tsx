@@ -4,12 +4,16 @@ import { useTranslation } from 'react-i18next';
 import { HeaderLogo } from '../../../icons';
 import HeaderWalletButton from './HeaderWalletButton';
 import { getNavigationItems } from './navigationItems';
+import { useActiveChain } from '@/hooks/useActiveChain';
+import { useQueryClient } from '@tanstack/react-query';
 
 
 export default function WebAppHeader() {
   const { t: tNav } = useTranslation('navigation');
   const { t } = useTranslation('common');
   const { pathname } = useLocation();
+  const { selectedChain, setSelectedChain } = useActiveChain();
+  const queryClient = useQueryClient();
   const navigationItems = getNavigationItems(tNav);
   
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -44,6 +48,18 @@ export default function WebAppHeader() {
   }, [navigationItems, pathname]);
 
   const isActiveRoute = (path: string) => path === activeNavPath;
+
+  const handleChainToggle = () => {
+    const next = selectedChain === 'aeternity' ? 'solana' : 'aeternity';
+    setSelectedChain(next);
+    queryClient.removeQueries({ queryKey: ["posts"], exact: false });
+    queryClient.removeQueries({ queryKey: ["home-activities"], exact: false });
+    queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
+    queryClient.removeQueries({ queryKey: ["TokensService.listAll"], exact: false });
+    queryClient.removeQueries({ queryKey: ["TokensService.findByAddress"], exact: false });
+  };
+
+  // Dropdown menus removed; show only top-level links
 
   return (
     <aside
@@ -125,7 +141,15 @@ export default function WebAppHeader() {
           })}
       </nav>
 
-      <div className="mt-auto px-4 pb-6">
+      {/* Right area lives inside the boxed header container */}
+      <div className="ml-auto flex items-center gap-4 justify-end mt-auto px-4 pb-6">
+        <button
+          onClick={handleChainToggle}
+          className="px-3 py-1.5 rounded-lg border border-white/20 text-xs font-semibold uppercase tracking-wide text-white/80 hover:text-white hover:bg-white/10 transition"
+          aria-label="Switch blockchain"
+        >
+          {selectedChain === 'aeternity' ? 'Aeternity' : 'Solana'}
+        </button>
         <HeaderWalletButton />
       </div>
     </aside>

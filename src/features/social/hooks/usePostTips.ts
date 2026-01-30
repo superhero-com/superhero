@@ -5,6 +5,7 @@ import { encode, Encoding } from '@aeternity/aepp-sdk';
 import moment from 'moment';
 
 import { useAeSdk } from '@/hooks/useAeSdk';
+import { useActiveChain } from '@/hooks/useActiveChain';
 import { fetchJson } from '@/utils/common';
 import { DATE_LONG } from '@/utils/constants';
 import { fromAettos } from '@/libs/dex';
@@ -59,18 +60,20 @@ async function loadTransactionsFromMdw(mdwBase: string, url: string, acc: Middle
 
 export function usePostTips(postId?: string, receiverAddress?: string) {
   const { activeNetwork } = useAeSdk();
+  const { selectedChain } = useActiveChain();
   const mdwUrl = activeNetwork?.middlewareUrl || '';
 
   const queryKey = useMemo(() => {
     const id = postId ? normalizePostIdV3(postId) : undefined;
     // Include middleware URL so switching networks doesn't reuse cached results from another network.
-    return ['post-tips', mdwUrl, id, receiverAddress] as const;
-  }, [postId, receiverAddress, mdwUrl]);
+    return ['post-tips', selectedChain, mdwUrl, id, receiverAddress] as const;
+  }, [postId, receiverAddress, mdwUrl, selectedChain]);
 
   return useQuery<PostTip[]>({
     queryKey,
-    enabled: Boolean(postId && receiverAddress && mdwUrl),
+    enabled: Boolean(postId && receiverAddress && mdwUrl && selectedChain === 'aeternity'),
     staleTime: 30_000,
+    placeholderData: [],
     queryFn: async () => {
       if (!postId || !receiverAddress) return [];
       const mdw = mdwUrl.replace(/\/$/, '');

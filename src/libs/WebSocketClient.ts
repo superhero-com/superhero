@@ -81,7 +81,6 @@ class WebSocketClient {
         this.socketClient.emit('message', message);
       });
     } catch (error) {
-      console.log(error);
       setTimeout(() => {
         this.handleWebsocketOpen();
       }, WEB_SOCKET_RECONNECT_TIMEOUT);
@@ -161,7 +160,6 @@ class WebSocketClient {
         (subscriberCb) => subscriberCb(data.payload),
       );
     } catch (error) {
-      console.log(error);
     }
   }
 

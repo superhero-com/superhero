@@ -11,7 +11,6 @@ export default function GovernancePolls() {
   const [status, setStatus] = useState<"all" | "open" | "closed">("open");
   const { data: polls, isLoading } = usePolls({ status, search });
 
-  //   console.log(JSON.stringify(polls, null, 2));
   if (isLoading) return <div>Loading...</div>;
 
   return (

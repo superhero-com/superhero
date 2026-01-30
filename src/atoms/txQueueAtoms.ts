@@ -15,7 +15,6 @@ function atomWithBroadcast<Value>(key: string, initialValue: Value) {
   const channel = new BroadcastChannel(key);
 
   channel.onmessage = (event) => {
-    console.log("[atomWithBroadcast] onmessage", event);
     listeners.forEach((l) => l(event));
   };
 

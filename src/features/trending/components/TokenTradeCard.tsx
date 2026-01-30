@@ -14,6 +14,9 @@ import MessageBox from "./MessageBox";
 import TradeTokenInput from "./TradeTokenInput";
 import TransactionConfirmDetailRow from "./TransactionConfirmDetailRow";
 import Spinner from "@/components/Spinner";
+import { useActiveChain } from "@/hooks/useActiveChain";
+import { useSolanaWallet } from "@/chains/solana/hooks/useSolanaWallet";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 
 interface TokenTradeCardProps {
   token: TokenDto;
@@ -25,6 +28,11 @@ export default function TokenTradeCard({
   onClose,
 }: TokenTradeCardProps) {
   const { activeAccount } = useAeSdk();
+  const { selectedChain } = useActiveChain();
+  const solanaWallet = useSolanaWallet();
+  const walletAddress = selectedChain === 'solana'
+    ? solanaWallet.publicKey?.toBase58()
+    : activeAccount;
   const [settingsDialogVisible, setSettingsDialogVisible] = useState(false);
   const [detailsShown, setDetailsShown] = useState(false);
 
@@ -228,8 +236,11 @@ export default function TokenTradeCard({
         </div>
 
         <div className="mt-6 space-y-2">
-          <WalletConnectBtn block />
-          {activeAccount && (
+          {selectedChain === 'solana'
+            ? <WalletMultiButton className="w-full justify-center rounded-2xl !bg-[#1161FE] hover:!bg-[#0d4fd6]" />
+            : <WalletConnectBtn block />
+          }
+          {walletAddress && (
             <Button
               className={cn(
                 "w-full py-4 px-6 rounded-2xl border-none text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",

@@ -7,6 +7,9 @@ import { useState } from "react";
 import { useAddressByChainName } from "@/hooks/useChainName";
 import { useQuery } from "@tanstack/react-query";
 import { TransactionsService } from "@/api/generated/services/TransactionsService";
+import { useActiveChain } from "@/hooks/useActiveChain";
+import { SolanaApi } from "@/chains/solana/backend";
+import { mapSolanaTradeToTransaction } from "@/chains/solana/utils/tokenMapping";
 import {
   DataTable,
   DataTableResponse,
@@ -23,10 +26,27 @@ export default function AccountTrades({ address, tab }: AccountTradesProps) {
   const { address: resolvedAddress } = useAddressByChainName(
     isChainName ? address : undefined
   );
+  const { selectedChain } = useActiveChain();
   const effectiveAddress =
     isChainName && resolvedAddress ? resolvedAddress : (address as string);
 
   const fetchTransactions = async (params: any) => {
+    if (selectedChain === 'solana') {
+      const response = await SolanaApi.listBclTrades({
+        accountAddress: effectiveAddress,
+        limit: params.limit,
+        page: params.page,
+        includes: 'token',
+      });
+      const items = (response?.items || []).map((trade: any) => ({
+        id: trade.signature,
+        ...mapSolanaTradeToTransaction(trade),
+      }));
+      return {
+        items,
+        meta: response?.meta || { totalItems: items.length, totalPages: 1, currentPage: 1 },
+      } as unknown as DataTableResponse<any>;
+    }
     const response = (await TransactionsService.listTransactions({
       ...params,
     })) as unknown as Promise<{ items: any[]; meta?: any }>;

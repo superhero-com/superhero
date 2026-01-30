@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { SuperheroApi } from '../../api/backend';
+import { useActiveChain } from '@/hooks/useActiveChain';
+import { useChainAdapter } from '@/chains/useChainAdapter';
 import './TrendingPillsCarousel.scss';
 
 type TrendingTag = {
@@ -23,6 +24,8 @@ type TokenItem = {
 
 
 export default function TrendingPillsCarousel() {
+  const { selectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
   const [tags, setTags] = useState<TrendingTag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +105,7 @@ export default function TrendingPillsCarousel() {
       setLoading(true);
       setError(null);
       try {
-        const resp = await SuperheroApi.listTrendingTags({
+        const resp = await chainAdapter.listTrendingTags({
           orderBy: 'score',
           orderDirection: 'DESC',
           limit: 50
@@ -118,7 +121,7 @@ export default function TrendingPillsCarousel() {
     }
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, [selectedChain, chainAdapter]);
 
   if (loading) {
     return (

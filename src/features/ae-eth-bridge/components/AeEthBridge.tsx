@@ -99,13 +99,6 @@ const checkUserHasEnoughBalance = (asset: Asset, normalizedAmount: BigNumber, di
 
     // Convert user balance to the same units as normalizedAmount (raw token units)
     const userBalanceBN = new BigNumber(userBalance).shiftedBy(asset.decimals);
-    console.log('Balance check:', {
-        userBalance,
-        userBalanceRaw: userBalanceBN.toString(),
-        normalizedAmount: normalizedAmount.toString(),
-        hasEnough: userBalanceBN.isGreaterThanOrEqualTo(normalizedAmount)
-    });
-
     return userBalanceBN.isGreaterThanOrEqualTo(normalizedAmount);
 };
 
@@ -557,8 +550,6 @@ export function AeEthBridge() {
                 clearTimeout(timeout);
                 setConfirmingMsg(t('bridge.bridgeTransactionConfirmed'));
                 Logger.log('Bridge transaction confirmed');
-                console.log('==== bridgeOutResult==', bridgeOutResult);
-
                 // Add bridge activity to recent activities
                 addActivity({
                     type: 'bridge',

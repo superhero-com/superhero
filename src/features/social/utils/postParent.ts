@@ -1,13 +1,14 @@
 import { PostDto } from '../../../api/generated';
 
 // Find immediate parent id from media/topics/tx_args and normalize to *_v3
-export function extractParentId(post: PostDto | any): string | null {
+export function extractParentId(post: PostDto | any, chainId: 'aeternity' | 'solana' = 'aeternity'): string | null {
   const extract = (value: unknown): string | null => {
     if (!value) return null;
     const asString = String(value);
     const m = asString.match(/comment[:/]([^\s,;]+)/i);
     const id = m?.[1] || (asString.startsWith('comment:') ? asString.split(':')[1] : null);
     if (!id) return null;
+    if (chainId === 'solana') return id;
     return id.endsWith('_v3') ? id : `${id}_v3`;
   };
 

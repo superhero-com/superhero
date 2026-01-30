@@ -153,7 +153,6 @@ export function useWalletConnect() {
             await subscribeAddress();
             setWalletConnected(true);
         } catch (error) {
-            console.log("wallet connect error ::", error);
             disconnectWallet();
         }
         setConnectingWallet(false);
@@ -255,8 +254,6 @@ export function useWalletConnect() {
             return;
         }
 
-
-        console.log("[useWalletConnect] checkWalletConnection activeAccount", activeAccount, walletConnected);
 
         if (
             // route.name !== "tx-queue" &&

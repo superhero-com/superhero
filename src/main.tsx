@@ -10,6 +10,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import ToastProvider from './components/ToastProvider';
 import { AeSdkProvider } from './context/AeSdkProvider';
 import { AePricePollingProvider } from './context/AePricePollingProvider';
+import { SolanaWalletProvider } from './chains/solana/context/SolanaWalletProvider';
 import './i18n';
 import './styles/base.scss';
 import './styles/tailwind.css';
@@ -44,9 +45,11 @@ const queryClient = new QueryClient({
               <ToastProvider>
                 <BrowserRouter>
                   <ErrorBoundary>
-                    <AeSdkProvider>
-                      <App />
-                    </AeSdkProvider>
+                    <SolanaWalletProvider>
+                      <AeSdkProvider>
+                        <App />
+                      </AeSdkProvider>
+                    </SolanaWalletProvider>
                   </ErrorBoundary>
                 </BrowserRouter>
               </ToastProvider>

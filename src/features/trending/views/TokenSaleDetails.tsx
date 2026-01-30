@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import Head from "../../../seo/Head";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { TokensService } from "../../../api/generated/services/TokensService";
+import { useActiveChain } from "@/hooks/useActiveChain";
+import { useChainAdapter } from "@/chains/useChainAdapter";
 import { useAeSdk } from "../../../hooks/useAeSdk";
 import { useOwnedTokens } from "../../../hooks/useOwnedTokens";
 import { useIsMobile } from "@/hooks";
@@ -58,6 +59,8 @@ export default function TokenSaleDetails() {
   const location = useLocation();
   const navigate = useNavigate();
   const { activeAccount } = useAeSdk();
+  const { selectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
 
   // State
   const [activeTab, setActiveTab] = useState<TabType>(TAB_CHAT);
@@ -156,11 +159,11 @@ export default function TokenSaleDetails() {
     data: _token,
     error,
   } = useQuery<TokenDto | null>({
-    queryKey: ["TokensService.findByAddress", tokenName],
+    queryKey: ["TokensService.findByAddress", selectedChain, tokenName],
     queryFn: async () => {
       if (!tokenName) throw new Error("Token name is required");
       try {
-      const result = await TokensService.findByAddress({ address: tokenName.toUpperCase() });
+      const result = await chainAdapter.findTokenByAddress(tokenName.toUpperCase());
         if (!result) {
           throw new Error("Token not found");
         }

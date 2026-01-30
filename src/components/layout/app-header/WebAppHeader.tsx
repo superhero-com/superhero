@@ -5,7 +5,6 @@ import { HeaderLogo } from '../../../icons';
 import HeaderWalletButton from './HeaderWalletButton';
 import { getNavigationItems } from './navigationItems';
 
-
 export default function WebAppHeader() {
   const { t: tNav } = useTranslation('navigation');
   const { t } = useTranslation('common');
@@ -38,8 +37,6 @@ export default function WebAppHeader() {
     return pathname.startsWith(path);
   };
 
-  // Dropdown menus removed; show only top-level links
-
   return (
     <header className="sticky top-0 z-[1000] hidden md:block border-b" style={{ 
       backgroundColor: 'rgba(12, 12, 20, 0.5)',
@@ -59,44 +56,29 @@ export default function WebAppHeader() {
             .map((item: any) => {
               const commonClass = `no-underline font-medium px-3 py-2 rounded-lg transition-all duration-200 relative`;
 
-              // Special: add dropdown for Trends only
-              const isTrendsWithChildren = item.id === 'trending' && Array.isArray(item.children) && item.children.length > 0;
+              // For Trends: render as simple link (no dropdown)
+              const isTrends = item.id === 'trending';
 
-              if (isTrendsWithChildren) {
+              if (isTrends) {
+                const isActive = isActiveRoute(item.path);
                 return (
-                  <div key={item.id} className="relative group">
-                    <Link
-                      to={item.path}
-                      className={commonClass}
-                      style={{
-                        color: isActiveRoute(item.path) ? 'var(--custom-links-color)' : 'var(--light-font-color)',
-                        backgroundColor: isActiveRoute(item.path) ? 'rgba(0,255,157,0.1)' : 'transparent',
-                      }}
-                    >
-                      {item.label}
-                      <span className="ml-1">▾</span>
-                      {isActiveRoute(item.path) && (
-                        <span 
-                          className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
-                          style={{ backgroundColor: 'var(--custom-links-color)' }}
-                        />
-                      )}
-                    </Link>
-
-                    {/* Dropdown */}
-                    <div className="hidden group-hover:block absolute left-0 top-full mt-2 min-w-[220px] rounded-xl border border-white/10 bg-[var(--background-color)] shadow-[0_12px_32px_rgba(0,0,0,0.35)] py-2 z-[1001]">
-                      {item.children.map((child: any) => (
-                        <Link
-                          key={child.id}
-                          to={child.path}
-                          className="no-underline flex items-center gap-2 px-4 py-2 text-[var(--light-font-color)] hover:text-[var(--standard-font-color)] hover:bg-white/10"
-                        >
-                          <span className="w-5 text-center">{child.icon}</span>
-                          <span className="text-sm font-medium">{child.label}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
+                  <Link
+                    key={item.id}
+                    to={item.path}
+                    className={commonClass}
+                    style={{
+                      color: isActive ? 'var(--custom-links-color)' : 'var(--light-font-color)',
+                      backgroundColor: isActive ? 'rgba(0,255,157,0.1)' : 'transparent',
+                    }}
+                  >
+                    {item.label}
+                    {isActive && (
+                      <span 
+                        className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
+                        style={{ backgroundColor: 'var(--custom-links-color)' }}
+                      />
+                    )}
+                  </Link>
                 );
               }
 
@@ -162,8 +144,8 @@ export default function WebAppHeader() {
             })}
         </nav>
 
-        {/* Right area lives inside the boxed header container */}
-        <div className="ml-auto flex items-center gap-4 justify-end">
+        {/* Right area: Wallet button */}
+        <div className="ml-auto flex items-center gap-3 justify-end">
           <HeaderWalletButton />
         </div>
       </div>

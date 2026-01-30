@@ -80,7 +80,7 @@ export default function PostHashtagLink({ tag, label, trendMentions }: PostHasht
   // TODO: We should use 24h performance, but it is not present for most of the tokens.
   const performanceData = matchedMention?.performance || (performance as any);
   const changeRaw = (performanceData as any)?.past_7d?.current_change_percent;
-  const hasChange = typeof changeRaw === "number";
+  const hasChange = (typeof changeRaw === "number" && changeRaw !== 0);
   const changePercent = hasChange ? changeRaw : 0;
   const isPositive = changePercent >= 0;
   const changeText = hasChange ? `${Math.abs(changePercent).toFixed(2)}%` : null;
@@ -89,8 +89,8 @@ export default function PostHashtagLink({ tag, label, trendMentions }: PostHasht
     <Link
       to={target}
       className={cn(
-        "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full",
-        "bg-white/10 border border-white/15 text-white/90 text-[12px] font-semibold",
+        "inline-flex items-center gap-1.5 px-0.5 py-0.5 rounded-full",
+        // "bg-white/10 border border-white/15 text-white/90 text-[12px] font-semibold",
         "hover:bg-white/15 hover:border-white/25 no-underline",
         "outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0",
         "break-words"

@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { PostDto, PostsService } from "../../../api/generated";
 import { IconComment } from "../../../icons";
 import { linkify } from "../../../utils/linkify";
+import { formatAddress } from "../../../utils/address";
 import BlockchainInfoPopover from "./BlockchainInfoPopover";
 import { Badge } from "@/components/ui/badge";
 import { useTransactionStatus } from "@/hooks/useTransactionStatus";
@@ -190,10 +191,10 @@ const ReplyToFeedItem = memo(({
   return (
     <article
       className={cn(
-        "relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 pt-4 pb-5 md:w-full md:mx-0 md:p-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:rounded-2xl md:backdrop-blur-xl transition-colors",
-        !isActive && "cursor-pointer hover:border-white/25 hover:shadow-none",
-        isActive && "bg-white/[0.06] md:bg-white/[0.08] md:border-white/40",
-        isContextMuted && "md:bg-white/[0.03] md:border-white/10"
+        "relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors",
+        !isActive && "cursor-pointer hover:bg-white/[0.04]",
+        isActive && "bg-white/[0.06] border-white/25",
+        isContextMuted && "bg-white/[0.02] border-white/10"
       )}
       onClick={isActive ? undefined : handleOpen}
       role={isActive ? undefined : "button"}
@@ -213,11 +214,11 @@ const ReplyToFeedItem = memo(({
           />
         </div>
       )}
-      {/* Main row: avatar next to name/time like X */}
-      <div className="flex gap-2 md:gap-3 items-start">
+      {/* Main row: avatar left, content right */}
+      <div className="flex gap-3 items-start">
         <div className="flex-shrink-0 pt-0.5">
           <div className="md:hidden">
-            <AddressAvatarWithChainNameFeed address={authorAddress} size={34} overlaySize={16} showAddressAndChainName={false} />
+            <AddressAvatarWithChainNameFeed address={authorAddress} size={36} overlaySize={16} showAddressAndChainName={false} />
           </div>
           <div className="hidden md:block">
             <AddressAvatarWithChainNameFeed address={authorAddress} size={40} overlaySize={20} showAddressAndChainName={false} />
@@ -225,30 +226,32 @@ const ReplyToFeedItem = memo(({
         </div>
 
         <div className="flex-1 min-w-0">
-          {/* Header: name · time */}
-          <div className="flex items-center justify-between gap-2.5">
-            <div className="flex items-baseline gap-2.5 min-w-0">
-              <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
-              <span className="text-white/50 shrink-0">·</span>
-              {item.tx_hash ? (
-                <BlockchainInfoPopover
-                  txHash={(item as any).tx_hash}
-                  createdAt={item.created_at as unknown as string}
-                  sender={(item as any).sender_address}
-                  contract={(item as any).contract_address}
-                  postId={String(item.id)}
-                  triggerContent={
-                    <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>
-                      {compactTime(item.created_at as unknown as string)}
-                    </span>
-                  }
-                />
-              ) : (
-                <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
-              )}
-            </div>
+          {/* Header: name · handle (wide desktop) · time */}
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
+            <span className="hidden 2xl:inline text-[13px] text-white/60 font-mono truncate">@{authorAddress}</span>
+            <span className="text-white/50 shrink-0">·</span>
+            {item.tx_hash ? (
+              <BlockchainInfoPopover
+                txHash={(item as any).tx_hash}
+                createdAt={item.created_at as unknown as string}
+                sender={(item as any).sender_address}
+                contract={(item as any).contract_address}
+                postId={String(item.id)}
+                triggerContent={
+                  <span className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>
+                    {compactTime(item.created_at as unknown as string)}
+                  </span>
+                }
+              />
+            ) : (
+              <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at as unknown as string)}>{compactTime(item.created_at as unknown as string)}</div>
+            )}
           </div>
-          <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{authorAddress}</div>
+
+          <div className="mt-1 text-[12px] text-white/60 font-mono leading-[1.2] truncate 2xl:hidden">
+            {formatAddress(authorAddress, 4, true)}
+          </div>
 
           {/* Trend token holder pill (when viewing a token feed and author holds the token) */}
           {tokenHolderLabel && (
@@ -307,7 +310,7 @@ const ReplyToFeedItem = memo(({
           )}
 
           {/* Body */}
-          <div className="mt-3 text-[15px] text-foreground leading-snug">
+          <div className="mt-2 text-[15px] text-foreground leading-snug">
             {linkify(item.content, {
               knownChainNames: new Set(Object.values(chainNames || {}).map((n) => n?.toLowerCase())),
               hashtagVariant: 'post-inline',
@@ -336,29 +339,28 @@ const ReplyToFeedItem = memo(({
           )}
 
           {/* Actions */}
-          <div className="mt-4 flex items-center justify-between">
-            <div className="inline-flex items-center gap-4 md:gap-2">
+          <div className="mt-3 flex items-center justify-between">
+            <div className="inline-flex items-center gap-5 text-[13px] text-white/70">
+              <button
+                type="button"
+                onClick={(e) => {
+                  if (allowInlineRepliesToggle) {
+                    e.stopPropagation();
+                    toggleReplies();
+                    if (!showReplies) setTimeout(() => refetchChildReplies(), 0);
+                  } else {
+                    e.stopPropagation();
+                    handleOpen();
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 px-0 py-0 rounded-lg bg-transparent border-0 h-auto min-h-0 min-w-0 hover:text-white"
+                aria-expanded={allowInlineRepliesToggle ? showReplies : undefined}
+                aria-controls={`replies-${postId}`}
+              >
+                <MessageCircle className="w-[15px] h-[15px]" strokeWidth={2} />
+                {typeof descendantCount === 'number' ? descendantCount : commentCount}
+              </button>
               <PostTipButton toAddress={authorAddress} postId={String(postId)} />
-            <button
-              type="button"
-              onClick={(e) => {
-                if (allowInlineRepliesToggle) {
-                  e.stopPropagation();
-                  toggleReplies();
-                  if (!showReplies) setTimeout(() => refetchChildReplies(), 0);
-                } else {
-                  // On post pages: do not toggle, just open the post
-                  e.stopPropagation();
-                  handleOpen();
-                }
-              }}
-              className="inline-flex items-center gap-1.5 text-[13px] px-0 py-0 rounded-lg bg-transparent border-0 h-auto min-h-0 min-w-0 md:px-2.5 md:py-1 md:h-[28px] md:min-h-[28px] md:bg-white/[0.04] md:border md:border-white/25 md:hover:border-white/40 md:ring-1 md:ring-white/15 md:hover:ring-white/25 md:transition-colors"
-              aria-expanded={allowInlineRepliesToggle ? showReplies : undefined}
-              aria-controls={`replies-${postId}`}
-            >
-              <MessageCircle className="w-[14px] h-[14px]" strokeWidth={2.25} />
-            {typeof descendantCount === 'number' ? descendantCount : commentCount}
-            </button>
             </div>
             <SharePopover postId={item.id} postSlug={(item as any)?.slug} />
           </div>
@@ -391,8 +393,6 @@ const ReplyToFeedItem = memo(({
           )}
         </div>
       </div>
-      {/* Full-bleed divider on mobile */}
-      <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />
     </article>
   );
 });

@@ -192,6 +192,7 @@ export function linkify(
             tag={tag}
             label={m}
             trendMentions={options?.trendMentions}
+            variant="inline"
             key={`hashtag-${tag}-${idx}-${off}`}
           />
         ) : (

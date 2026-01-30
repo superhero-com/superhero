@@ -77,7 +77,7 @@ const TokenCreatedActivityItem = memo(({ item, hideMobileDivider = false, mobile
             <span className="text-white/70 shrink-0">created</span>
             {tokenName && (
               <span className="truncate max-w-[24ch] text-white/90">
-                {linkify(`#${tokenName}`)}
+                {linkify(`#${tokenName}`, { hashtagVariant: 'post-inline' })}
               </span>
             )}
             <span className="text-white/50 shrink-0">·</span>

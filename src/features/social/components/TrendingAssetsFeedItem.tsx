@@ -54,8 +54,8 @@ export default function TrendingAssetsFeedItem() {
   }
 
   return (
-    <div className="w-screen -mx-[calc((100vw-100%)/2)] md:w-full md:mx-0 p-0 md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:backdrop-blur-[20px] md:rounded-[20px]">
-      <div className="p-4 md:p-5">
+    <div className="relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors hover:bg-white/[0.04]">
+      <div className="w-full">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-[15px] md:text-[16px] font-semibold text-white m-0 flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-emerald-300" />

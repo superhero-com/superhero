@@ -11,7 +11,6 @@ export default function WebAppHeader() {
   const { t } = useTranslation('common');
   const { pathname } = useLocation();
   const navigationItems = getNavigationItems(tNav);
-  const isDaoPath = pathname.startsWith('/trends/dao') || pathname.startsWith('/trends/daos');
   
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const themeValue = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
@@ -32,141 +31,103 @@ export default function WebAppHeader() {
     setTheme('dark');
   }, []);
 
-  const isActiveRoute = (path: string) => {
-    if (path === '/') return pathname === '/';
-    if (path === '/trends/daos') return isDaoPath;
-    return pathname.startsWith(path);
-  };
+  const activeNavPath = React.useMemo(() => {
+    const matches = navigationItems
+      .filter((item: any) => !!item?.path && !item?.isExternal)
+      .filter((item: any) =>
+        item.path === '/'
+          ? pathname === '/'
+          : pathname === item.path || pathname.startsWith(`${item.path}/`)
+      )
+      .sort((a: any, b: any) => String(b.path).length - String(a.path).length);
+    return matches[0]?.path || '';
+  }, [navigationItems, pathname]);
 
-  // Dropdown menus removed; show only top-level links
+  const isActiveRoute = (path: string) => path === activeNavPath;
 
   return (
-    <header className="sticky top-0 z-[1000] hidden md:block border-b" style={{ 
-      backgroundColor: 'rgba(12, 12, 20, 0.5)',
-      backdropFilter: 'blur(14px)',
-      WebkitBackdropFilter: 'blur(14px)',
-      borderBottomColor: 'rgba(255, 255, 255, 0.14)',
-      boxShadow: '0 6px 28px rgba(0,0,0,0.35)'
-    }}>
-      <div className="flex items-center gap-6 px-6 h-16 max-w-[min(1400px,100%)] mx-auto md:px-5 md:gap-5">
-        <Link to="/" className="flex items-center no-underline hover:no-underline no-gradient-text" style={{ color: 'var(--standard-font-color)', textDecoration: 'none' }} aria-label={t('labels.superheroHome')}>
+    <aside
+      className="hidden lg:flex fixed left-0 top-0 h-screen w-64 flex-col border-r z-[1000]"
+      style={{
+        backgroundColor: 'rgba(12, 12, 20, 0.6)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderRightColor: 'rgba(255, 255, 255, 0.12)',
+      }}
+      aria-label="Primary"
+    >
+      <div className="flex items-center h-16 px-6">
+        <Link
+          to="/"
+          className="flex items-center no-underline hover:no-underline no-gradient-text"
+          style={{ color: 'var(--standard-font-color)', textDecoration: 'none' }}
+          aria-label={t('labels.superheroHome')}
+        >
           <HeaderLogo className="h-8 w-auto" />
         </Link>
+      </div>
 
-        <nav className="flex items-center gap-6 flex-grow md:gap-5 relative">
-          {navigationItems
-            .filter((item: any) => !!item && !!item.id)
-            .map((item: any) => {
-              const commonClass = `no-underline font-medium px-3 py-2 rounded-lg transition-all duration-200 relative`;
+      <nav className="flex flex-col gap-1 px-3" aria-label="Main">
+        {navigationItems
+          .filter((item: any) => !!item && !!item.id)
+          .map((item: any) => {
+            const commonClass =
+              "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors duration-200 text-[15px] font-medium";
+            const isActive = isActiveRoute(item.path);
+            const activeStyles = {
+              color: 'var(--standard-font-color)',
+              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            };
+            const idleStyles = {
+              color: 'var(--light-font-color)',
+              backgroundColor: 'transparent',
+            };
 
-              // Special: add dropdown for Trends only
-              const isTrendsWithChildren = item.id === 'trending' && Array.isArray(item.children) && item.children.length > 0;
-
-              if (isTrendsWithChildren) {
-                return (
-                  <div key={item.id} className="relative group">
-                    <Link
-                      to={item.path}
-                      className={commonClass}
-                      style={{
-                        color: isActiveRoute(item.path) ? 'var(--custom-links-color)' : 'var(--light-font-color)',
-                        backgroundColor: isActiveRoute(item.path) ? 'rgba(0,255,157,0.1)' : 'transparent',
-                      }}
-                    >
-                      {item.label}
-                      <span className="ml-1">▾</span>
-                      {isActiveRoute(item.path) && (
-                        <span 
-                          className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
-                          style={{ backgroundColor: 'var(--custom-links-color)' }}
-                        />
-                      )}
-                    </Link>
-
-                    {/* Dropdown */}
-                    <div className="hidden group-hover:block absolute left-0 top-full mt-2 min-w-[220px] rounded-xl border border-white/10 bg-[var(--background-color)] shadow-[0_12px_32px_rgba(0,0,0,0.35)] py-2 z-[1001]">
-                      {item.children.map((child: any) => (
-                        <Link
-                          key={child.id}
-                          to={child.path}
-                          className="no-underline flex items-center gap-2 px-4 py-2 text-[var(--light-font-color)] hover:text-[var(--standard-font-color)] hover:bg-white/10"
-                        >
-                          <span className="w-5 text-center">{child.icon}</span>
-                          <span className="text-sm font-medium">{child.label}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
-
-              if (item.isExternal) {
-                return (
-                  <a
-                    key={item.id}
-                    href={item.path}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={`${commonClass} ${
-                      isActiveRoute(item.path) 
-                        ? 'after:content-["\"\"] after:absolute after:-bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-5 after:h-0.5 after:rounded-sm'
-                        : ''
-                    }`}
-                    style={{
-                      color: isActiveRoute(item.path) ? 'var(--custom-links-color)' : 'var(--light-font-color)',
-                      backgroundColor: isActiveRoute(item.path) ? 'rgba(0,255,157,0.1)' : 'transparent',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActiveRoute(item.path)) {
-                        e.currentTarget.style.color = 'var(--standard-font-color)';
-                        e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActiveRoute(item.path)) {
-                        e.currentTarget.style.color = 'var(--light-font-color)';
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }
-                    }}
-                  >
-                    {item.label}
-                    {isActiveRoute(item.path) && (
-                      <span 
-                        className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
-                        style={{ backgroundColor: 'var(--custom-links-color)' }}
-                      />
-                    )}
-                  </a>
-                );
-              }
-
+            if (item.isExternal) {
               return (
-                <Link
+                <a
                   key={item.id}
-                  to={item.path}
-                  className={commonClass}
-                  style={{
-                    color: isActiveRoute(item.path) ? 'var(--custom-links-color)' : 'var(--light-font-color)',
-                    backgroundColor: isActiveRoute(item.path) ? 'rgba(0,255,157,0.1)' : 'transparent',
+                  href={item.path}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`${commonClass} no-gradient-text`}
+                  style={isActive ? activeStyles : idleStyles}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = 'var(--standard-font-color)';
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = 'var(--light-font-color)';
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
                   }}
                 >
-                  {item.label}
-                  {isActiveRoute(item.path) && (
-                    <span 
-                      className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-sm"
-                      style={{ backgroundColor: 'var(--custom-links-color)' }}
-                    />
-                  )}
-                </Link>
+                  <span className="text-lg w-6 text-center">{item.icon}</span>
+                  <span className="truncate">{item.label}</span>
+                </a>
               );
-            })}
-        </nav>
+            }
 
-        {/* Right area lives inside the boxed header container */}
-        <div className="ml-auto flex items-center gap-4 justify-end">
-          <HeaderWalletButton />
-        </div>
+            return (
+              <Link
+                key={item.id}
+                to={item.path}
+                className={`${commonClass} no-gradient-text`}
+                style={isActive ? activeStyles : idleStyles}
+              >
+                <span className="text-lg w-6 text-center">{item.icon}</span>
+                <span className="truncate">{item.label}</span>
+              </Link>
+            );
+          })}
+      </nav>
+
+      <div className="mt-auto px-4 pb-6">
+        <HeaderWalletButton />
       </div>
-    </header>
+    </aside>
   );
 }

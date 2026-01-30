@@ -11,6 +11,11 @@
     /* Navigation is now fixed, no padding needed */
     padding-top: 0;
   }
+
+  @media (min-width: 1024px) {
+    /* Offset for the fixed left navigation (matches lg breakpoint) */
+    padding-left: 16rem;
+  }
 }
 
 .app-routes-container {

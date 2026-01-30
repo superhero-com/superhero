@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import SearchInput from '../../SearchInput';
 import { HeaderLogo, IconSearch, IconMobileMenu } from '../../../icons';
 import HeaderWalletButton from './HeaderWalletButton';
+import { getNavigationItems } from './navigationItems';
 
 export default function MobileNavigation() {
   const [showOverlay, setShowOverlay] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const { t: tNav } = useTranslation('navigation');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const t = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
     return t;
   });
   const { pathname } = useLocation();
   const isOnFeed = pathname === '/';
+  const navigationItems = getNavigationItems(tNav);
 
   const handleSearchToggle = () => {
     setShowSearch(!showSearch);
@@ -33,8 +37,22 @@ export default function MobileNavigation() {
     setShowSearch(false);
   };
 
+  const activeNavPath = React.useMemo(() => {
+    const matches = navigationItems
+      .filter((item: any) => !!item?.path && !item?.isExternal)
+      .filter((item: any) =>
+        item.path === '/'
+          ? pathname === '/'
+          : pathname === item.path || pathname.startsWith(`${item.path}/`)
+      )
+      .sort((a: any, b: any) => String(b.path).length - String(a.path).length);
+    return matches[0]?.path || '';
+  }, [navigationItems, pathname]);
+
+  const isActiveRoute = (path: string) => path === activeNavPath;
+
   return (
-    <div className="z-[101] fixed top-0 left-0 right-0 w-full bg-[rgba(var(--background-color-rgb),0.95)] backdrop-blur-[20px] border-b border-white/10 shadow-[0_2px_20px_rgba(0,0,0,0.1)] md:hidden pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))]">
+    <div className="z-[101] fixed top-0 left-0 right-0 w-full bg-[rgba(var(--background-color-rgb),0.95)] backdrop-blur-[20px] border-b border-white/10 shadow-[0_2px_20px_rgba(0,0,0,0.1)] lg:hidden pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))]">
       {/* Search Mode */}
       {showSearch ? (
         <div className="px-3 flex items-center gap-3 w-full pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))]">
@@ -109,32 +127,42 @@ export default function MobileNavigation() {
             </div>
 
             <nav className="flex flex-col py-4 px-6 gap-2 flex-1 sm:py-3 sm:px-5 sm:gap-1.5">
-              <Link to="/" onClick={handleNavigationClick} className="flex items-center py-4 px-5 bg-white/5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] gap-4 hover:bg-white/10 hover:translate-x-1 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px] sm:gap-3">
-                <span className="text-xl w-6 text-center sm:text-lg sm:w-5">🏠</span>
-                <span className="text-base sm:text-[15px]">Feed</span>
-              </Link>
-              <Link to="/trends" onClick={handleNavigationClick} className="flex items-center py-4 px-5 bg-white/5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] gap-4 hover:bg-white/10 hover:translate-x-1 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px] sm:gap-3">
-                <span className="text-xl w-6 text-center sm:text-lg sm:w-5">📈</span>
-                <span className="text-base sm:text-[15px]">Trends</span>
-              </Link>
-              <Link to="/trends/invite" onClick={handleNavigationClick} className="flex items-center py-4 px-5 bg-white/5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] gap-4 hover:bg-white/10 hover:translate-x-1 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px] sm:gap-3">
-                <span className="text-xl w-6 text-center sm:text-lg sm:w-5">🎁</span>
-                <span className="text-base sm:text-[15px]">Invite & Earn</span>
-              </Link>
-              <Link to="/landing" onClick={handleNavigationClick} className="flex items-center py-4 px-5 bg-white/5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] gap-4 hover:bg-white/10 hover:translate-x-1 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px] sm:gap-3">
-                <span className="text-xl w-6 text-center sm:text-lg sm:w-5">ℹ️</span>
-                <span className="text-base sm:text-[15px]">Info</span>
-              </Link>
-              <a
-                href="https://github.com/aeternity/superhero-ui"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center py-4 px-5 bg-white/5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] gap-4 hover:bg-white/10 hover:translate-x-1 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px] sm:gap-3"
-                onClick={handleNavigationClick}
-              >
-                <span className="text-xl w-6 text-center sm:text-lg sm:w-5">🐙</span>
-                <span className="text-base sm:text-[15px]">GitHub</span>
-              </a>
+              {navigationItems
+                .filter((item: any) => !!item && !!item.id)
+                .map((item: any) => {
+                  const isActive = isActiveRoute(item.path);
+                  const baseClass =
+                    "flex items-center py-4 px-5 rounded-xl text-[var(--standard-font-color)] no-underline font-medium transition-all duration-200 min-h-[56px] gap-4 hover:bg-white/10 hover:translate-x-1 active:bg-white/15 active:translate-x-0.5 active:scale-[0.98] sm:py-3.5 sm:px-4 sm:min-h-[52px] sm:gap-3";
+                  const activeClass = isActive ? "bg-white/15" : "bg-white/5";
+
+                  if (item.isExternal) {
+                    return (
+                      <a
+                        key={item.id}
+                        href={item.path}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`${baseClass} ${activeClass}`}
+                        onClick={handleNavigationClick}
+                      >
+                        <span className="text-xl w-6 text-center sm:text-lg sm:w-5">{item.icon}</span>
+                        <span className="text-base sm:text-[15px]">{item.label}</span>
+                      </a>
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={item.id}
+                      to={item.path}
+                      onClick={handleNavigationClick}
+                      className={`${baseClass} ${activeClass}`}
+                    >
+                      <span className="text-xl w-6 text-center sm:text-lg sm:w-5">{item.icon}</span>
+                      <span className="text-base sm:text-[15px]">{item.label}</span>
+                    </Link>
+                  );
+                })}
             </nav>
           </div>
         </div>

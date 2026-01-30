@@ -28,6 +28,7 @@ interface PostHashtagLinkProps {
   tag: string;
   label: string;
   trendMentions?: TrendMention[];
+  variant?: "pill" | "inline";
 }
 
 function normalizeTag(tag: string) {
@@ -46,7 +47,7 @@ async function fetchTokenForTag(tag: string): Promise<TokenLike | null> {
   return match || items[0] || null;
 }
 
-export default function PostHashtagLink({ tag, label, trendMentions }: PostHashtagLinkProps) {
+export default function PostHashtagLink({ tag, label, trendMentions, variant = "pill" }: PostHashtagLinkProps) {
   const normalized = normalizeTag(tag);
   const target = `/trends/tokens/${encodeURIComponent(normalized.toUpperCase())}?showTrade=0`;
 
@@ -89,11 +90,10 @@ export default function PostHashtagLink({ tag, label, trendMentions }: PostHasht
     <Link
       to={target}
       className={cn(
-        "inline-flex items-center gap-1.5 px-0.5 py-0.5 rounded-full",
-        // "bg-white/10 border border-white/15 text-white/90 text-[12px] font-semibold",
-        "hover:bg-white/15 hover:border-white/25 no-underline",
-        "outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0",
-        "break-words"
+        variant === "pill"
+          ? "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-white/90 text-[12px] font-semibold hover:bg-white/15 hover:border-white/25"
+          : "inline-flex items-baseline gap-1 text-[var(--neon-teal)] underline-offset-2 hover:underline text-[13px] font-medium",
+        "no-underline outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 break-words"
       )}
       style={{ outline: "none" }}
       onClick={(e) => e.stopPropagation()}

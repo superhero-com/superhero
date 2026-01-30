@@ -1373,7 +1373,7 @@ export default function FeedList({
   ]);
 
   const content = (
-    <div className="w-full">
+    <div className="w-full md:border md:border-white/10 md:rounded-2xl md:overflow-hidden">
       {isHomepage && (
         <Head
           title="Superhero.com – The All‑in‑One Social + Crypto App"
@@ -1434,7 +1434,7 @@ export default function FeedList({
         </div>
       </div>
 
-      <div className="w-full flex flex-col gap-0 md:gap-2 md:mx-0">
+      <div className="w-full flex flex-col gap-0 md:mx-0">
         {renderEmptyState()}
         {/* Non-hot: existing renderer - show feed if we have data, even while refetching */}
         {sortBy !== "hot" && (latestData?.pages.length > 0 || activityList.length > 0) && renderFeedItems}
@@ -1544,7 +1544,7 @@ export default function FeedList({
   );
 
   return standalone ? (
-    <Shell right={<RightRail hideTrends />} containerClassName="max-w-[1080px] mx-auto">
+    <Shell right={<RightRail />} containerClassName="max-w-[1080px] mx-auto">
       {content}
     </Shell>
   ) : (

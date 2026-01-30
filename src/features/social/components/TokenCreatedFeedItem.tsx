@@ -52,7 +52,7 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
   return (
     <article
       className={cn(
-        "relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 pt-4 pb-5 md:w-full md:mx-0 md:p-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-[var(--glass-border)] md:rounded-2xl md:backdrop-blur-xl transition-colors hover:border-white/25 hover:shadow-none"
+        "relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors hover:bg-white/[0.04]"
       )}
       onClick={handleOpen}
       role="button"
@@ -131,7 +131,6 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
           </div>
         </div>
       </div>
-      <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />
     </article>
   );
 });

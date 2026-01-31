@@ -67,71 +67,84 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
       role="button"
       aria-label="Open trade"
     >
-      <div className="absolute top-4 right-2 md:top-5 md:right-5 z-10 flex items-center gap-2">
-        <span className="relative flex h-6 w-6 items-center justify-center rounded-full border border-sky-400/30 bg-sky-500/15 text-sky-200">
-          <RefreshCw className="h-3.5 w-3.5" />
-          <Plus className="absolute h-2.5 w-2.5" />
-        </span>
-        <Badge className="border-sky-400/30 bg-sky-500/20 text-sky-200 uppercase tracking-wide">
-          Trade
-        </Badge>
-      </div>
-      <div className="flex gap-2 md:gap-3 items-start">
-        <div className="flex-shrink-0 pt-0.5">
-          <div className="md:hidden">
-            <AddressAvatarWithChainNameFeed address={account} size={34} overlaySize={16} showAddressAndChainName={false} />
-          </div>
-          <div className="hidden md:block">
-            <AddressAvatarWithChainNameFeed address={account} size={40} overlaySize={20} showAddressAndChainName={false} />
-          </div>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2.5">
-            <div className="flex items-baseline gap-2.5 min-w-0">
-              <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
-              <span className="text-white/50 shrink-0">·</span>
-              <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at)}>
-                {compactTime(item.created_at)}
-              </div>
-            </div>
-          </div>
-          <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{account}</div>
-          <div className="mt-3 text-[15px] text-foreground leading-snug flex flex-wrap items-center gap-1">
-            <span className="text-white/80">Just opened a new position.</span>
-            <span className="text-white/80">Bought</span>
-            <span className="font-semibold text-white">{volumeText}</span>
-            <span className="text-white/60">of</span>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-[24px] md:text-3xl font-semibold text-white truncate">
             {tokenTag ? (
               <PostHashtagLink tag={tokenTag} label={`#${tokenTag}`} variant="inline" />
             ) : (
-              <span className="text-white/80">{tokenLabel}</span>
-            )}
-            {priceFraction && (
-              <>
-                <span className="text-white/60">at</span>
-                <span className="text-white/80 inline-flex items-center gap-0.5">
-                  <span>$</span>
-                  <FractionFormatter fractionalPrice={priceFraction} />
-                  .
-                </span>
-              </>
+              <span className="text-white">{tokenLabel}</span>
             )}
           </div>
-          {copyTradeLink && (
-            <div className="mt-3 flex justify-end">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(copyTradeLink);
-                }}
-                className="text-[13px] font-semibold text-sky-300 hover:text-sky-200 transition-colors"
-                title="Copy Trade"
-              >
-                Copy Trade
-              </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-6 w-6 items-center justify-center rounded-full border border-sky-400/30 bg-sky-500/15 text-sky-200">
+            <RefreshCw className="h-3.5 w-3.5" />
+            <Plus className="absolute h-2.5 w-2.5" />
+          </span>
+          <Badge className="border-sky-400/30 bg-sky-500/20 text-sky-200 uppercase tracking-wide">
+            Trade
+          </Badge>
+        </div>
+      </div>
+
+      <div className="mt-4 bg-white/[0.03] border border-white/10 rounded-lg p-3 transition-none shadow-none">
+        <div className="flex gap-2 md:gap-3 items-start">
+          <div className="flex-shrink-0 pt-0.5">
+            <div className="md:hidden">
+              <AddressAvatarWithChainNameFeed address={account} size={34} overlaySize={16} showAddressAndChainName={false} />
             </div>
-          )}
+            <div className="hidden md:block">
+              <AddressAvatarWithChainNameFeed address={account} size={40} overlaySize={20} showAddressAndChainName={false} />
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2.5">
+              <div className="flex items-baseline gap-2.5 min-w-0">
+                <div className="text-[15px] font-semibold text-white truncate">{displayName}</div>
+                <span className="text-white/50 shrink-0">·</span>
+                <div className="text-[12px] text-white/70 whitespace-nowrap shrink-0" title={fullTimestamp(item.created_at)}>
+                  {compactTime(item.created_at)}
+                </div>
+              </div>
+            </div>
+            <div className="mt-1 text-[9px] md:text-[10px] text-white/65 font-mono leading-[1.2] truncate">{account}</div>
+            <div className="mt-3 text-[15px] text-foreground leading-snug flex flex-wrap items-center gap-1">
+              <span className="text-white/80">Just opened a new position.</span>
+              <span className="text-white/80">Bought</span>
+              <span className="font-semibold text-white">{volumeText}</span>
+              <span className="text-white/60">of</span>
+              {tokenTag ? (
+                <PostHashtagLink tag={tokenTag} label={`#${tokenTag}`} variant="inline" />
+              ) : (
+                <span className="text-white/80">{tokenLabel}</span>
+              )}
+              {priceFraction && (
+                <>
+                  <span className="text-white/60">at</span>
+                  <span className="text-white/80 inline-flex items-center gap-0.5">
+                    <span>$</span>
+                    <FractionFormatter fractionalPrice={priceFraction} />.
+                  </span>
+                </>
+              )}
+            </div>
+            {copyTradeLink && (
+              <div className="mt-3 flex justify-end">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(copyTradeLink);
+                  }}
+                  className="text-[13px] font-semibold text-sky-300 hover:text-sky-200 transition-colors"
+                  title="Copy Trade"
+                >
+                  Copy Trade
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </article>

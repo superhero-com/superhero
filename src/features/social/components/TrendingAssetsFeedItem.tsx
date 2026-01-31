@@ -99,15 +99,23 @@ export default function TrendingAssetsFeedItem() {
                   key={`trending-asset-${tokenAddress || tokenLabel}-${index}`}
                   to={tokenHref}
                   className={cn(
-                    "rounded-2xl border border-white/10 bg-white/[0.04] p-3",
-                    "hover:bg-white/[0.08] hover:border-white/20 transition-colors",
+                    "group rounded-2xl border border-white/10 bg-white/[0.04] p-3",
+                    "hover:bg-white/[0.06] hover:border-white/15 transition-colors",
                     "no-underline"
                   )}
                   onClick={(event) => event.stopPropagation()}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <div className="text-[13px] font-semibold text-white/90 truncate">
-                      <span className="text-white/60 mr-0.5">#</span>
+                  <div
+                    className="text-[13px] font-semibold text-[var(--neon-blue)] truncate group-hover:underline underline-offset-2"
+                    style={{
+                      background: "none",
+                      WebkitTextFillColor: "currentColor",
+                      WebkitBackgroundClip: "initial",
+                      backgroundClip: "initial",
+                    }}
+                  >
+                      <span className="text-[var(--neon-blue)] mr-0.5">#</span>
                       {tokenLabel}
                     </div>
                     <div

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HeaderLogo } from '../../../icons';
@@ -16,23 +16,10 @@ export default function WebAppHeader() {
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
   
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const themeValue = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
-    return themeValue;
-  });
-
-  const toggleTheme = useCallback(() => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    try { localStorage.setItem('theme', next); } catch { }
-    setTheme(next);
-  }, [theme]);
-
   useEffect(() => {
     // force theme to be dark
     document.documentElement.dataset.theme = 'dark';
     localStorage.setItem('theme', 'dark');
-    setTheme('dark');
   }, []);
 
   const sidebarItems = useMemo(() => {

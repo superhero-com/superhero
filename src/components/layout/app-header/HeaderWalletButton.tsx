@@ -48,10 +48,10 @@ export default function HeaderWalletButton() {
 
   // If connected, show user info with clickable avatar and separate menu button
   return (
-    <div className="inline-flex items-center gap-3">
+    <div className="inline-flex items-center gap-3 max-w-full">
       <button
         onClick={handleProfileClick}
-        className="cursor-pointer hover:opacity-80 transition-opacity rounded-lg px-1 py-0.5 hover:bg-white/5"
+        className="cursor-pointer hover:opacity-80 transition-opacity rounded-lg px-1 py-0.5 hover:bg-white/5 max-w-[210px] overflow-hidden"
         aria-label="View profile"
       >
         <AddressAvatarWithChainName
@@ -60,12 +60,12 @@ export default function HeaderWalletButton() {
           address={activeAccount}
           size={36}
           overlaySize={18}
-          showBalance={true}
+          showBalance={false}
           showAddressAndChainName={false}
           showPrimaryOnly={true}
           hideFallbackName={true}
-          contentClassName="px-2 pb-0"
-          className="w-auto"
+          contentClassName="px-2 pb-0 max-w-[160px] overflow-hidden"
+          className="w-full max-w-[210px]"
         />
       </button>
 
@@ -80,7 +80,12 @@ export default function HeaderWalletButton() {
           </button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent className="min-w-[560px] p-4" align="end">
+        <DropdownMenuContent
+          className="min-w-[320px] max-w-[360px] p-4 z-[1101]"
+          align="center"
+          side="top"
+          sideOffset={8}
+        >
           <AddressAvatarWithChainName
             key={activeAccount}
             isHoverEnabled={false}

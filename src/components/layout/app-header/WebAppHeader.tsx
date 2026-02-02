@@ -1,9 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HeaderLogo } from '../../../icons';
 import HeaderWalletButton from './HeaderWalletButton';
 import { getNavigationItems } from './navigationItems';
+import { useAeSdk } from '../../../hooks/useAeSdk';
+import { useModal } from '../../../hooks';
 
 
 export default function WebAppHeader() {
@@ -11,28 +13,30 @@ export default function WebAppHeader() {
   const { t } = useTranslation('common');
   const { pathname } = useLocation();
   const navigationItems = getNavigationItems(tNav);
+  const { activeAccount } = useAeSdk();
+  const { openModal } = useModal();
   
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const themeValue = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
-    return themeValue;
-  });
-
-  const toggleTheme = useCallback(() => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    try { localStorage.setItem('theme', next); } catch { }
-    setTheme(next);
-  }, [theme]);
-
   useEffect(() => {
     // force theme to be dark
     document.documentElement.dataset.theme = 'dark';
     localStorage.setItem('theme', 'dark');
-    setTheme('dark');
   }, []);
 
+  const sidebarItems = useMemo(() => {
+    const items = [...navigationItems];
+    items.push({
+      id: "account",
+      label: "Account",
+      path: activeAccount ? `/users/${activeAccount}` : "",
+      icon: "👤",
+    });
+    return items;
+  }, [navigationItems, activeAccount]);
+
+  const handleConnect = useCallback(() => openModal({ name: 'connect-wallet' }), [openModal]);
+
   const activeNavPath = React.useMemo(() => {
-    const matches = navigationItems
+    const matches = sidebarItems
       .filter((item: any) => !!item?.path && !item?.isExternal)
       .filter((item: any) =>
         item.path === '/'
@@ -41,7 +45,7 @@ export default function WebAppHeader() {
       )
       .sort((a: any, b: any) => String(b.path).length - String(a.path).length);
     return matches[0]?.path || '';
-  }, [navigationItems, pathname]);
+  }, [sidebarItems, pathname]);
 
   const isActiveRoute = (path: string) => path === activeNavPath;
 
@@ -68,11 +72,11 @@ export default function WebAppHeader() {
       </div>
 
       <nav className="flex flex-col gap-1 px-3" aria-label="Main">
-        {navigationItems
+        {sidebarItems
           .filter((item: any) => !!item && !!item.id)
           .map((item: any) => {
             const commonClass =
-              "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors duration-200 text-[15px] font-medium";
+              "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors duration-200 text-[18px] font-medium";
             const isActive = isActiveRoute(item.path);
             const activeStyles = {
               color: 'var(--standard-font-color)',
@@ -82,6 +86,21 @@ export default function WebAppHeader() {
               color: 'var(--light-font-color)',
               backgroundColor: 'transparent',
             };
+
+            if (item.id === "account" && !activeAccount) {
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`${commonClass} no-gradient-text text-left`}
+                  style={idleStyles}
+                  onClick={handleConnect}
+                >
+                  <span className="text-lg w-6 text-center">{item.icon}</span>
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
+            }
 
             if (item.isExternal) {
               return (

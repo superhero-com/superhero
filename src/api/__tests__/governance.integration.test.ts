@@ -96,7 +96,6 @@ describe('GovernanceApi Integration Tests', () => {
       pollId = polls.data[0]?.poll;
       if (!pollId) {
         // Skip test if no polls available
-        console.log('No polls available for testing');
         return;
       }
       
@@ -209,7 +208,6 @@ describe('GovernanceApi Integration Tests', () => {
       pollId = polls.data[0]?.poll;
       if (!pollId) {
         // Skip test if no polls available
-        console.log('No polls available for testing');
         return;
       }
       
@@ -321,7 +319,6 @@ describe('GovernanceApi Integration Tests', () => {
       pollId = polls.data[0]?.poll;
       if (!pollId) {
         // Skip test if no polls available
-        console.log('No polls available for testing');
         return;
       }
       
@@ -369,7 +366,6 @@ describe('GovernanceApi Integration Tests', () => {
       pollId = polls.data[0]?.poll;
       if (!pollId) {
         // Skip test if no polls available
-        console.log('No polls available for testing');
         return;
       }
       

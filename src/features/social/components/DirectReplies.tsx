@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { PostsService, PostDto } from '../../../api/generated';
+import type { PostDto } from '../../../api/generated';
+import { useActiveChain } from '@/hooks/useActiveChain';
+import { useChainAdapter } from '@/chains/useChainAdapter';
 import ReplyToFeedItem from './ReplyToFeedItem';
 
 export default function DirectReplies({
@@ -10,6 +12,11 @@ export default function DirectReplies({
   id: string;
   onOpenPost: (postId: string) => void;
 }) {
+  const { selectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
+  const commentId = selectedChain === 'aeternity'
+    ? `${String(id).replace(/_v3$/,'')}_v3`
+    : id;
   const {
     data,
     isLoading,
@@ -19,9 +26,9 @@ export default function DirectReplies({
     isFetchingNextPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['post-comments', id, 'infinite'],
+    queryKey: ['post-comments', selectedChain, commentId, 'infinite'],
     queryFn: ({ pageParam = 1 }) =>
-      PostsService.getComments({ id: `${String(id).replace(/_v3$/,'')}_v3`, orderDirection: 'ASC', page: pageParam, limit: 50 }) as any,
+      chainAdapter.listPostComments({ id: commentId, orderDirection: 'ASC', page: pageParam, limit: 50 }) as any,
     getNextPageParam: (lastPage: any) => {
       const meta = lastPage?.meta;
       if (meta?.currentPage && meta?.totalPages && meta.currentPage < meta.totalPages) return meta.currentPage + 1;

@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Head from '../../../seo/Head';
 import { useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { PostsService, PostDto } from '../../../api/generated';
+import type { PostDto } from '../../../api/generated';
 import AeButton from '../../../components/AeButton';
 import LeftRail from '../../../components/layout/LeftRail';
 import RightRail from '../../../components/layout/RightRail';
@@ -12,7 +12,8 @@ import ReplyToFeedItem from '../components/ReplyToFeedItem';
 // PostTipButton is intentionally not imported here as it's not used on detail page
 import DirectReplies from '../components/DirectReplies';
 import CommentForm from '../components/CommentForm';
-import { resolvePostByKey } from '../utils/resolvePost';
+import { useActiveChain } from '@/hooks/useActiveChain';
+import { useChainAdapter } from '@/chains/useChainAdapter';
 import { Decimal } from '@/libs/decimal';
 import { usePostTipSummary } from '../hooks/usePostTipSummary';
 import { usePostTips } from '../hooks/usePostTips';
@@ -26,6 +27,8 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { activeNetwork } = useAeSdk();
+  const { selectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
 
   // Query for post data using new PostsService
   const {
@@ -34,11 +37,11 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     error: postError,
     refetch: refetchPost
   } = useQuery({
-    queryKey: ['post', slug],
+    queryKey: ['post', selectedChain, slug],
     queryFn: async () => {
       const key = String(slug || '');
       if (!key) throw new Error('Missing post identifier');
-      return resolvePostByKey(key);
+      return chainAdapter.getPostByKey(key);
     },
     enabled: !!slug,
     refetchInterval: 120 * 1000, // Auto-refresh every 2 minutes
@@ -56,9 +59,9 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
 
 
   // Resolve full ancestors iteratively
-  const parentId = postData ? extractParentId(postData as any) : null;
+  const parentId = postData ? extractParentId(postData as any, selectedChain) : null;
   const { data: ancestors = [] } = useQuery<PostDto[]>({
-    queryKey: ['post-ancestors', (postData as any)?.id, parentId],
+    queryKey: ['post-ancestors', selectedChain, (postData as any)?.id, parentId],
     enabled: !!postData,
     refetchInterval: 120 * 1000,
     queryFn: async () => {
@@ -68,10 +71,10 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
       let safety = 0;
       while (currentId && !seen.has(currentId) && safety < 100) {
         seen.add(currentId);
-        const p = (await PostsService.getById({ id: currentId })) as unknown as PostDto;
+        const p = (await chainAdapter.getPostById(currentId)) as unknown as PostDto;
         // unshift so the oldest ancestor is first
         chain.unshift(p);
-        currentId = extractParentId(p as any);
+        currentId = extractParentId(p as any, selectedChain);
         safety += 1;
       }
       return chain;
@@ -92,11 +95,14 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   // Compute total descendant comments (all levels) for current post
   // Use postData.id in cache key for consistency (same post regardless of slug/ID navigation)
   const { data: descendantCount } = useQuery<number>({
-    queryKey: ['post-desc-count', postData?.id],
+    queryKey: ['post-desc-count', selectedChain, postData?.id],
     enabled: !!postData?.id,
     refetchInterval: 120 * 1000,
     queryFn: async () => {
-      const normalize = (id: string) => (String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`);
+      const normalize = (id: string) => {
+        if (selectedChain === 'solana') return String(id);
+        return String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`;
+      };
       const postIdForQuery = postData!.id;
       const queue: string[] = [normalize(String(postIdForQuery))];
       let total = 0;
@@ -110,7 +116,7 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
         while (true) {
           if (requestBudget <= 0) break;
           requestBudget -= 1;
-          const res: any = await PostsService.getComments({ id: current, orderDirection: 'ASC', page, limit: 50 });
+          const res: any = await chainAdapter.listPostComments({ id: current, orderDirection: 'ASC', page, limit: 50 });
           const items: PostDto[] = res?.items || [];
           total += items.length;
           // enqueue children that have further replies
@@ -138,10 +144,10 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     refetchPost();
     // Refresh replies list keys used by DirectReplies and any legacy comment queries
     if (currentPostId) {
-      queryClient.refetchQueries({ queryKey: ['post-comments', currentPostId, 'infinite'] });
-      queryClient.refetchQueries({ queryKey: ['post-comments', currentPostId] });
+      queryClient.refetchQueries({ queryKey: ['post-comments', selectedChain, currentPostId, 'infinite'] });
+      queryClient.refetchQueries({ queryKey: ['post-comments', selectedChain, currentPostId] });
     }
-  }, [refetchPost, queryClient, currentPostId]);
+  }, [refetchPost, queryClient, currentPostId, selectedChain]);
 
   // Render helpers
   const renderLoadingState = () => (

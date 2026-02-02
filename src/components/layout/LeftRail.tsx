@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { SuperheroApi } from "../../api/backend";
 import { useAeSdk } from "../../hooks";
 import WebSocketClient from "../../libs/WebSocketClient";
 import { formatCompactNumber } from "../../utils/number";
+import { useActiveChain } from "@/hooks/useActiveChain";
+import { useChainAdapter } from "@/chains/useChainAdapter";
+import { SuperheroApi } from "../../api/backend";
+import { SolanaApi } from "@/chains/solana/backend";
 
 interface TrendingTag {
   tag: string;
@@ -31,6 +34,8 @@ interface LiveTransaction {
 
 export default function LeftRail() {
   const { sdk, currentBlockHeight } = useAeSdk();
+  const { selectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
   const navigate = useNavigate();
   const location = useLocation();
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -63,7 +68,7 @@ export default function LeftRail() {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, []);
+  }, [chainAdapter, selectedChain]);
 
   // Enhanced time formatting with emoji and block height
   const formatTime = (date: Date) => {
@@ -96,12 +101,12 @@ export default function LeftRail() {
     async function loadTrendingData() {
       try {
         const [tagsResp, tokensResp, statsResp] = await Promise.all([
-          SuperheroApi.listTrendingTags({
+          chainAdapter.listTrendingTags({
             orderBy: "score",
             orderDirection: "DESC",
             limit: 10,
           }),
-          SuperheroApi.listTokens({
+          chainAdapter.listTokens({
             orderBy: "market_cap",
             orderDirection: "DESC",
             limit: 5,
@@ -121,14 +126,22 @@ export default function LeftRail() {
 
             const tokens = tokensResp?.items ?? [];
             // Ensure token data is properly formatted
-            const formattedTokens = tokens.map((token: any) => ({
-              ...token,
-              price: token.price ? Number(token.price) : null,
-              market_cap: token.market_cap ? Number(token.market_cap) : 0,
-              holders_count: token.holders_count
-                ? Number(token.holders_count)
-                : 0,
-            }));
+            const formattedTokens = tokens.map((token: any) => {
+              const priceData = token.price_data || token.last_price;
+              const marketCapData = token.market_cap_data || token.market_cap;
+              const price =
+                priceData?.usd ?? priceData?.ae ?? token.price ?? null;
+              const marketCap =
+                marketCapData?.usd ?? marketCapData ?? token.market_cap ?? 0;
+              return {
+                ...token,
+                price: price != null ? Number(price) : null,
+                market_cap: marketCap != null ? Number(marketCap) : 0,
+                holders_count: token.holders_count
+                  ? Number(token.holders_count)
+                  : 0,
+              };
+            });
             setTopTokens(formattedTokens);
 
             setMarketStats(statsResp);
@@ -154,13 +167,37 @@ export default function LeftRail() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedChain]);
 
   // Load live transactions
   useEffect(() => {
     let cancelled = false;
     async function loadLiveTransactions() {
       try {
+        if (selectedChain === 'solana') {
+          const [txResp, createdResp] = await Promise.all([
+            SolanaApi.listBclTrades({ limit: 5, page: 1, includes: 'token' }),
+            SolanaApi.listBclTokens({ orderBy: 'created_at', orderDirection: 'DESC', limit: 3, page: 1 }),
+          ]);
+
+          if (!cancelled) {
+            const txItems = (txResp?.items ?? []).map((t: any) => ({
+              sale_address: t.token_sale_address || t.token?.token_sale_address || "",
+              token_name: t.token?.name || "Unknown Token",
+              type: String(t.type || "").toUpperCase(),
+              created_at: t.created_at || t.timestamp || new Date().toISOString(),
+            }));
+            const createdItems = (createdResp?.items ?? []).map((t: any) => ({
+              sale_address: t.token_sale_address || t.sale_address || t.address || "",
+              token_name: t.name || "Unknown Token",
+              type: "CREATED",
+              created_at: t.created_at || new Date().toISOString(),
+            }));
+            setLiveTransactions([...createdItems, ...txItems].slice(0, 8));
+          }
+          return;
+        }
+
         const [txResp, createdResp] = await Promise.all([
           SuperheroApi.fetchJson("/api/transactions?limit=5"),
           SuperheroApi.fetchJson(
@@ -193,7 +230,8 @@ export default function LeftRail() {
     loadLiveTransactions();
 
     // WebSocket subscriptions for real-time updates
-    const unsub1 = WebSocketClient.subscribeForTokenHistories("TokenTransaction", (tx) => {
+    const unsub1 = selectedChain === 'aeternity'
+      ? WebSocketClient.subscribeForTokenHistories("TokenTransaction", (tx) => {
       setLiveTransactions((prev) =>
         [
           {
@@ -205,9 +243,11 @@ export default function LeftRail() {
           ...prev,
         ].slice(0, 8)
       );
-    });
+      })
+      : () => {};
 
-    const unsub2 = WebSocketClient.subscribeForTokenHistories("TokenCreated", (payload) => {
+    const unsub2 = selectedChain === 'aeternity'
+      ? WebSocketClient.subscribeForTokenHistories("TokenCreated", (payload) => {
       setLiveTransactions((prev) =>
         [
           {
@@ -219,7 +259,8 @@ export default function LeftRail() {
           ...prev,
         ].slice(0, 8)
       );
-    });
+      })
+      : () => {};
 
     return () => {
       cancelled = true;

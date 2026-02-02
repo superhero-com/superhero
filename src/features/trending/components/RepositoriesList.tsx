@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SuperheroApi } from '../../../api/backend';
+import { useActiveChain } from '@/hooks/useActiveChain';
+import { useChainAdapter } from '@/chains/useChainAdapter';
 import { Input } from '../../../components/ui/input';
 import AeButton from '../../../components/AeButton';
 import { cn } from '../../../lib/utils';
@@ -72,6 +73,8 @@ function hasToken(repo: Repository): boolean {
 
 export default function RepositoriesList({ className }: RepositoriesListProps) {
   const navigate = useNavigate();
+  const { selectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<'score' | 'source'>('score');
   const [isLoading, setIsLoading] = useState(true);
@@ -95,7 +98,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
   const fetchTrendingRepositories = async () => {
     try {
       setIsLoading(true);
-      const response = await SuperheroApi.listTrendingTags({
+      const response = await chainAdapter.listTrendingTags({
         orderBy: sortBy,
         orderDirection: 'DESC',
         limit: 20, // shouldn't be bigger than the tokens list as it can break the scroll
@@ -112,7 +115,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
 
   useEffect(() => {
     fetchTrendingRepositories();
-  }, [searchDebounced, sortBy, search]);
+  }, [searchDebounced, sortBy, search, selectedChain, chainAdapter]);
 
   return (
     <div className={cn('repositories-list ', className)}>

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { SuperheroApi } from "@/api/backend";
+import { useActiveChain } from "@/hooks/useActiveChain";
+import { useChainAdapter } from "@/chains/useChainAdapter";
 import { cn } from "@/lib/utils";
 
 type TokenLike = {
@@ -35,8 +36,8 @@ function normalizeTag(tag: string) {
   return String(tag || "").replace(/^#/, "").toLowerCase();
 }
 
-async function fetchTokenForTag(tag: string): Promise<TokenLike | null> {
-  const resp = await SuperheroApi.listTokens({ search: tag, limit: 5 });
+async function fetchTokenForTag(tag: string, listTokens: (params: any) => Promise<any>): Promise<TokenLike | null> {
+  const resp = await listTokens({ search: tag, limit: 5 });
   const items = Array.isArray(resp?.items) ? resp.items : [];
   const normalized = normalizeTag(tag);
   const match = items.find((token: TokenLike) => {
@@ -48,6 +49,8 @@ async function fetchTokenForTag(tag: string): Promise<TokenLike | null> {
 }
 
 export default function PostHashtagLink({ tag, label, trendMentions, variant = "pill" }: PostHashtagLinkProps) {
+  const { selectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
   const normalized = normalizeTag(tag);
   const target = `/trends/tokens/${encodeURIComponent(normalized.toUpperCase())}?showTrade=0`;
 
@@ -60,8 +63,8 @@ export default function PostHashtagLink({ tag, label, trendMentions, variant = "
   const hasMentionAddress = Boolean(matchedMention?.sale_address || matchedMention?.address);
 
   const { data: token } = useQuery({
-    queryKey: ["post-hashtag-token", normalized],
-    queryFn: () => fetchTokenForTag(normalized),
+    queryKey: ["post-hashtag-token", selectedChain, normalized],
+    queryFn: () => fetchTokenForTag(normalized, chainAdapter.listTokens),
     staleTime: 5 * 60 * 1000,
     enabled: Boolean(normalized) && (!matchedMention || !hasMentionAddress),
   });
@@ -72,8 +75,8 @@ export default function PostHashtagLink({ tag, label, trendMentions, variant = "
     (token as TokenLike | null)?.address ||
     (token as TokenLike | null)?.sale_address;
   const { data: performance } = useQuery({
-    queryKey: ["post-hashtag-performance", tokenAddress],
-    queryFn: () => SuperheroApi.getTokenPerformance(String(tokenAddress)),
+    queryKey: ["post-hashtag-performance", selectedChain, tokenAddress],
+    queryFn: () => chainAdapter.getTokenPerformance(String(tokenAddress)),
     staleTime: 60 * 1000,
     enabled: Boolean(tokenAddress) && !matchedMention?.performance,
   });

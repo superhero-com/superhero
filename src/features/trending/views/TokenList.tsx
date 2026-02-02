@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { TokenListTable, TrendminerBanner, PerformanceTimeframeSelector } from "..";
-import { TokensService } from "../../../api/generated";
+import { useActiveChain } from "@/hooks/useActiveChain";
+import { useChainAdapter } from "@/chains/useChainAdapter";
 import LatestTransactionsCarousel from "../../../components/Trendminer/LatestTransactionsCarousel";
 import TrendingPillsCarousel from "../../../components/Trendminer/TrendingPillsCarousel";
 import RepositoriesList from "../components/RepositoriesList";
@@ -39,6 +40,8 @@ type CollectionOption = 'all' | string; // Can be 'all' or specific collection a
 
 export default function TokenList() {
   const { activeAccount } = useAccount();
+  const { selectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
 
   const [collection, setCollection] = useState<CollectionOption>('all');
   const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.marketCap); // Default to trending score like Vue
@@ -114,7 +117,7 @@ export default function TokenList() {
     useInfiniteQuery({
       initialPageParam: 1,
       queryFn: ({ pageParam = 1 }) =>
-        TokensService.listAll({
+        chainAdapter.listTokensPage({
           orderBy: orderByMapped as any,
           orderDirection: finalOrderDirection,
           collection: collection === 'all' ? undefined : (collection as any),
@@ -129,6 +132,7 @@ export default function TokenList() {
           : lastPageParam + 1,
       queryKey: [
         "TokensService.listAll",
+        selectedChain,
         orderBy,
         orderByMapped,
         finalOrderDirection,

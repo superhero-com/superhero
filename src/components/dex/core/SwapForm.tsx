@@ -54,9 +54,7 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
   })
 
   useEffect(() => {
-    console.log('[SwapForm] Pair found:', pair, tokenIn?.address, tokenOut?.address);
     if (pair) {
-      console.log('[SwapForm] Pair found:', pair);
       onPairSelected?.(pair);
     }
   }, [pair, onPairSelected]);
@@ -96,7 +94,6 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       const _token = DexService.getDexTokenByAddress({ address });
       return _token;
     } catch (error) {
-      console.warn('[SwapForm] Failed to fetch token from middleware:', address, error);
       return null;
     }
   }, [activeNetwork.middlewareUrl]);
@@ -154,7 +151,6 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
     let cancelled = false;
 
     const initializeTokens = async () => {
-      console.log('[SwapForm] Initialize tokens');
       const searchParams = new URLSearchParams(location.search);
       const fromParam = searchParams.get('from');
       const toParam = searchParams.get('to');
@@ -215,7 +211,6 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
       tokenOut,
       isExactIn
     };
-    console.log("call debouncedQuote::", params);
     debouncedQuote(params, handleQuoteResult);
   }, [isExactIn, amountIn, tokenIn, tokenOut]);
   // }, [isExactIn, amountIn, tokenIn, tokenOut, debouncedQuote]);
@@ -246,12 +241,10 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
 
     // Additional validation before executing swap
     if (routeInfo.path.length === 0) {
-      console.error('No valid route found for swap');
       return;
     }
 
     if (error) {
-      console.error('Cannot execute swap with existing quote error:', error);
       return;
     }
 
@@ -278,9 +271,6 @@ export default function SwapForm({ onPairSelected, onFromTokenSelected }: SwapFo
         setShowConfirm(false);
       }
     } catch (error) {
-      console.error('Swap failed:', error);
-      console.log("======")
-      console.log('Swap failed message:', error.message || error);
     }
   };
 

@@ -113,7 +113,6 @@ function BuyAeWidgetContent({
       }
     } catch (error) {
       setEthBridgeError("Failed to fetch ETH balance");
-      console.error("Failed to fetch ETH balance:", error);
       setEthBalance(null);
       setEthSpendable(null);
     } finally {
@@ -145,7 +144,6 @@ function BuyAeWidgetContent({
         // Create AE token object
         setAeToken({ ...ae, is_ae: true, address: 'AE', symbol: 'AE' });
       } catch (e) {
-        console.warn('[BuyAeWidget] Failed to load tokens:', e);
       }
     };
     
@@ -230,12 +228,8 @@ function BuyAeWidgetContent({
         bridgeOptions,
         (status: BridgeStatus, message?: string) => {
           setEthBridgeStep(status);
-          console.info(
-            `[Bridge] Status: ${status}${message ? ` - ${message}` : ""}`
-          );
         }
       );
-      console.log("==== result:", result);
 
       if (result.success) {
         // Show success notification
@@ -305,7 +299,7 @@ function BuyAeWidgetContent({
             )
           );
         } catch (toastError) {
-          console.warn("[Bridge] Toast notification failed:", toastError);
+          // ignore toast failures
         }
 
         setEthBridgeStep("completed");

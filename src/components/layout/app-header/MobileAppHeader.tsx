@@ -13,10 +13,11 @@ import { AeButton } from '@/components/ui/ae-button';
 import { useWalletConnect } from '../../../hooks/useWalletConnect';
 import { useModal } from '../../../hooks';
 import FooterSection from '../FooterSection';
-import { TokensService } from '../../../api/generated/services/TokensService';
-import { SuperheroApi } from '@/api/backend';
+import { useActiveChain } from '@/hooks/useActiveChain';
+import { useChainAdapter } from '@/chains/useChainAdapter';
 import TokenLineChart from '@/features/trending/components/TokenLineChart';
 import { formatNumber } from '@/utils/number';
+import { useQueryClient } from '@tanstack/react-query';
 
 
 
@@ -35,6 +36,9 @@ export default function MobileAppHeader() {
   const navigate = useNavigate();
   const isOnFeed = pathname === '/';
   const { activeAccount } = useAeSdk();
+  const { selectedChain, setSelectedChain } = useActiveChain();
+  const chainAdapter = useChainAdapter();
+  const queryClient = useQueryClient();
   const { disconnectWallet, walletInfo } = useWalletConnect();
   const { openModal } = useModal();
 
@@ -69,6 +73,16 @@ export default function MobileAppHeader() {
     if (showSearch) {
       setShowSearch(false);
     }
+  };
+
+  const handleChainToggle = () => {
+    const next = selectedChain === 'aeternity' ? 'solana' : 'aeternity';
+    setSelectedChain(next);
+    queryClient.removeQueries({ queryKey: ["posts"], exact: false });
+    queryClient.removeQueries({ queryKey: ["home-activities"], exact: false });
+    queryClient.removeQueries({ queryKey: ["popular-posts"], exact: false });
+    queryClient.removeQueries({ queryKey: ["TokensService.listAll"], exact: false });
+    queryClient.removeQueries({ queryKey: ["TokensService.findByAddress"], exact: false });
   };
 
   const handleNavigationClick = () => {
@@ -110,10 +124,10 @@ export default function MobileAppHeader() {
   const isTokenDetail = Boolean(tokenNameParam);
 
   const { data: tokenData } = useQuery({
-    queryKey: ["TokensService.findByAddress", tokenNameParam],
+    queryKey: ["TokensService.findByAddress", selectedChain, tokenNameParam],
     queryFn: async () => {
       if (!tokenNameParam) return null;
-      return TokensService.findByAddress({ address: tokenNameParam.toUpperCase() });
+      return chainAdapter.findTokenByAddress(tokenNameParam.toUpperCase());
     },
     enabled: Boolean(tokenNameParam),
     staleTime: 60 * 1000,
@@ -121,8 +135,8 @@ export default function MobileAppHeader() {
 
   const tokenAddress = (tokenData as any)?.sale_address || (tokenData as any)?.address;
   const { data: tokenPerformance } = useQuery({
-    queryKey: ["mobile-header-token-performance", tokenAddress],
-    queryFn: () => SuperheroApi.getTokenPerformance(String(tokenAddress)),
+    queryKey: ["mobile-header-token-performance", selectedChain, tokenAddress],
+    queryFn: () => chainAdapter.getTokenPerformance(String(tokenAddress)),
     enabled: Boolean(tokenAddress),
     staleTime: 60 * 1000,
   });
@@ -207,6 +221,13 @@ export default function MobileAppHeader() {
               <Link to="/" className="text-[var(--standard-font-color)] flex items-center min-h-[44px] min-w-[44px] no-underline hover:no-underline no-gradient-text" style={{ textDecoration: 'none' }} aria-label={t('labels.superheroHome')}>
                 <HeaderLogo className="h-7 w-auto" />
               </Link>
+              <button
+                className="ml-2 px-2.5 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wide border border-white/20 text-white/80 hover:text-white hover:bg-white/10"
+                onClick={handleChainToggle}
+                aria-label="Switch blockchain"
+              >
+                {selectedChain === 'aeternity' ? 'AE' : 'SOL'}
+              </button>
               <div className="flex-grow hidden md:block" />
             </>
           )}

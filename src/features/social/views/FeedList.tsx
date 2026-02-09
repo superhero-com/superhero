@@ -200,15 +200,15 @@ const FeedList = ({
       }).catch(() => ({ items: [] }));
       const items: any[] = resp?.items || [];
       return items
-        .map((t) => ({
-          sale_address: t?.sale_address || t?.address || '',
-          token_name: t?.name || 'Unknown',
-          created_at: t?.created_at || new Date().toISOString(),
+        .map((item) => ({
+          sale_address: item?.sale_address || item?.address || '',
+          token_name: item?.name || 'Unknown',
+          created_at: item?.created_at || new Date().toISOString(),
           creator_address:
-            t?.creator_address
-            || t?.creatorAddress
-            || (t?.creator && (t?.creator.address || t?.creator))
-            || t?.owner_address
+            item?.creator_address
+            || item?.creatorAddress
+            || (item?.creator && (item?.creator.address || item?.creator))
+            || item?.owner_address
             || '',
         }))
         .map(mapTokenCreatedToPost);
@@ -344,15 +344,15 @@ const FeedList = ({
           }).catch(() => ({ items: [] }));
           const items: any[] = resp?.items || [];
           return items
-            .map((t) => ({
-              sale_address: t?.sale_address || t?.address || '',
-              token_name: t?.name || 'Unknown',
-              created_at: t?.created_at || new Date().toISOString(),
+            .map((item) => ({
+              sale_address: item?.sale_address || item?.address || '',
+              token_name: item?.name || 'Unknown',
+              created_at: item?.created_at || new Date().toISOString(),
               creator_address:
-                t?.creator_address
-                || t?.creatorAddress
-                || (t?.creator && (t?.creator.address || t?.creator))
-                || t?.owner_address
+                item?.creator_address
+                || item?.creatorAddress
+                || (item?.creator && (item?.creator.address || item?.creator))
+                || item?.owner_address
                 || '',
             }))
             .map(mapTokenCreatedToPost);

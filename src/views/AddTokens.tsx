@@ -88,10 +88,10 @@ export default function AddTokens() {
         const listed = await getListedTokens();
         const pairs = await getPairs(false);
         const candidates = new Map<string, { address: string; symbol?: string; name?: string; decimals?: number }>();
-        for (const t of listed || []) {
-          if (t?.address) {
-            candidates.set(t.address, {
-              address: t.address, symbol: t.symbol, name: t.name, decimals: t.decimals,
+        for (const item of listed || []) {
+          if (item?.address) {
+            candidates.set(item.address, {
+              address: item.address, symbol: item.symbol, name: item.name, decimals: item.decimals,
             });
           }
         }
@@ -101,18 +101,18 @@ export default function AddTokens() {
           if (t0) candidates.set(t0, { address: t0, symbol: p.token0Symbol });
           if (t1) candidates.set(t1, { address: t1, symbol: p.token1Symbol });
         }
-        for (const t of candidates.values()) {
+        for (const item of candidates.values()) {
           try {
-            const c = await sdk.initializeContract({ aci: ACI.AEX9, address: t.address });
+            const c = await sdk.initializeContract({ aci: ACI.AEX9, address: item.address as `ct_${string}` });
             const { decodedResult: bal } = await c.balance(activeAccount);
             const bn = BigInt(bal ?? 0);
             if (bn > 0n) {
               // Enrich meta
-              let sym = t.symbol || 'TKN';
-              let nm = t.name || sym;
-              let dec = Number(t.decimals ?? 0) || 18;
+              let sym = item.symbol || 'TKN';
+              let nm = item.name || sym;
+              let dec = Number(item.decimals ?? 0) || 18;
               try {
-                if (!t.decimals) {
+                if (!item.decimals) {
                   const { decodedResult: meta } = await c.meta_info();
                   sym = meta?.symbol || sym;
                   nm = meta?.name || nm;
@@ -120,7 +120,7 @@ export default function AddTokens() {
                 }
               } catch { }
               tokensFromMdw.push({
-                address: t.address, symbol: String(sym), name: String(nm), decimals: dec, balance: fromAettos(bn, dec),
+                address: item.address, symbol: String(sym), name: String(nm), decimals: dec, balance: fromAettos(bn, dec),
               });
             }
           } catch { }
@@ -129,15 +129,15 @@ export default function AddTokens() {
 
       // De-duplicate by address and set; keep max balance if dup (debug logs)
       const map = new Map<string, { address: string; symbol: string; name: string; decimals: number; balance: string }>();
-      for (const t of tokensFromMdw) {
-        const prev = map.get(t.address);
+      for (const item of tokensFromMdw) {
+        const prev = map.get(item.address);
         if (!prev) {
-          map.set(t.address, {
-            address: t.address, symbol: String(t.symbol || 'TKN'), name: String(t.name || t.symbol || 'Token'), decimals: Number(t.decimals || 18), balance: String(t.balance),
+          map.set(item.address, {
+            address: item.address, symbol: String(item.symbol || 'TKN'), name: String(item.name || item.symbol || 'Token'), decimals: Number(item.decimals || 18), balance: String(item.balance),
           });
         } else {
-          const nextHigher = new BigNumber(t.balance).isGreaterThan(prev.balance) ? String(t.balance) : prev.balance;
-          map.set(t.address, { ...prev, balance: nextHigher });
+          const nextHigher = new BigNumber(item.balance).isGreaterThan(prev.balance) ? String(item.balance) : prev.balance;
+          map.set(item.address, { ...prev, balance: nextHigher });
         }
       }
       const out = Array.from(map.values()).sort((a, b) => a.symbol.localeCompare(b.symbol));
@@ -146,11 +146,11 @@ export default function AddTokens() {
       // Determine if token has an AE pool (token <> WAE)
       try {
         const { factory } = await initDexContracts(sdk);
-        const entries = await Promise.all(out.map(async (t) => {
+        const entries = await Promise.all(out.map(async (item) => {
           try {
-            const addr = await getPairAddress(sdk, factory, t.address, DEX_ADDRESSES.wae);
-            return [t.address, !!addr] as const;
-          } catch { return [t.address, false] as const; }
+            const addr = await getPairAddress(sdk, factory, item.address, DEX_ADDRESSES.wae);
+            return [item.address, !!addr] as const;
+          } catch { return [item.address, false] as const; }
         }));
         const existsMap: Record<string, boolean> = {};
         for (const [k, v] of entries) existsMap[k] = v;
@@ -167,7 +167,7 @@ export default function AddTokens() {
 
   const filtered = useMemo(() => {
     const term = filter.trim().toLowerCase();
-    return walletTokens.filter((t) => !term || t.symbol.toLowerCase().includes(term) || t.address.toLowerCase().includes(term) || (t.name || '').toLowerCase().includes(term));
+    return walletTokens.filter((item) => !term || item.symbol.toLowerCase().includes(term) || item.address.toLowerCase().includes(term) || (item.name || '').toLowerCase().includes(term));
   }, [walletTokens, filter]);
 
   return (
@@ -207,34 +207,34 @@ export default function AddTokens() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((t) => (
-              <tr key={t.address} className="border-b border-white/10 hover:bg-white/5">
+            {filtered.map((item) => (
+              <tr key={item.address} className="border-b border-white/10 hover:bg-white/5">
                 <td className="p-3">
-                  <span className="text-white font-medium">{t.symbol}</span>
+                  <span className="text-white font-medium">{item.symbol}</span>
                   {' '}
                   <span className="text-white/60 text-xs">
                     (
-                    {t.name}
+                    {item.name}
                     )
                   </span>
                 </td>
-                <td className="p-3 font-mono text-xs text-white/80">{t.address}</td>
-                <td className="text-right p-3 text-white">{t.balance}</td>
+                <td className="p-3 font-mono text-xs text-white/80">{item.address}</td>
+                <td className="text-right p-3 text-white">{item.balance}</td>
                 <td className="text-center p-3">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    poolExists[t.address]
+                    poolExists[item.address]
                       ? 'bg-green-500/20 text-green-400'
                       : 'bg-gray-500/20 text-gray-400'
                   }`}
                   >
-                    {poolExists[t.address] ? t('exists') : t('notFound')}
+                    {poolExists[item.address] ? t('exists') : t('notFound')}
                   </span>
                 </td>
                 <td className="text-right p-3">
                   <div className="flex gap-1 justify-end">
-                    {poolExists[t.address] ? (
+                    {poolExists[item.address] ? (
                       <AeButton
-                        onClick={() => navigate(`/pool/add?from=AE&to=${t.address}`)}
+                        onClick={() => navigate(`/pool/add?from=AE&to=${item.address}`)}
                         variant="secondary-dark"
                         size="small"
                       >
@@ -242,7 +242,7 @@ export default function AddTokens() {
                       </AeButton>
                     ) : (
                       <AeButton
-                        onClick={() => navigate(`/pool/deploy?token=${t.address}`)}
+                        onClick={() => navigate(`/pool/deploy?token=${item.address}`)}
                         title={tDex('createNewPoolAndLiquidity')}
                         variant="secondary-dark"
                         size="small"
@@ -251,7 +251,7 @@ export default function AddTokens() {
                       </AeButton>
                     )}
                     <AeButton
-                      onClick={() => navigate(`/defi/swap?from=AE&to=${t.address}`)}
+                      onClick={() => navigate(`/defi/swap?from=AE&to=${item.address}`)}
                       variant="secondary-dark"
                       size="small"
                     >

@@ -1,5 +1,5 @@
 import React, {
-  useCallback, useEffect, useRef, useState,
+  useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import moment from 'moment';
@@ -93,77 +93,82 @@ export const TokenLineChart = ({
     staleTime: 1000 * 60 * 5,
   });
 
+  const { hasNextPage, isFetching, fetchNextPage } = historyQuery;
   useEffect(() => {
     if (!allTime) return () => {};
-    if (historyQuery.hasNextPage && !historyQuery.isFetching) {
-      historyQuery.fetchNextPage();
+    if (hasNextPage && !isFetching) {
+      fetchNextPage();
     }
     return () => {};
-  }, [allTime, historyQuery]);
+  }, [allTime, hasNextPage, isFetching, fetchNextPage]);
+
+  const chartOptions = useMemo(() => ({
+    grid: {
+      horzLines: {
+        visible: false,
+      },
+      vertLines: {
+        visible: false,
+      },
+    },
+    timeScale: {
+      visible: showTimeScale,
+      borderVisible: false,
+      ticksVisible: showTimeScale,
+      timeVisible: true,
+      secondsVisible: false,
+      tickMarkFormatter: showTimeScale
+        ? (time: any) => {
+          if (typeof time === 'number') {
+            return moment.unix(time).format('D');
+          }
+          if (time?.year && time?.month && time?.day) {
+            return moment({ year: time.year, month: time.month - 1, day: time.day }).format('D');
+          }
+          return '';
+        }
+        : undefined,
+    },
+    crosshair: {
+      vertLine: {
+        visible: showCrosshair,
+        color: 'rgba(52, 211, 153, 1)',
+        width: 2,
+      },
+      horzLine: {
+        visible: false,
+      },
+    },
+    handleScale: false,
+  }), [showTimeScale, showCrosshair]);
+
+  const onChartReady = useCallback((chartInstance: IChartApi) => {
+    chartApiRef.current = chartInstance;
+    const seriesOptions: AreaSeriesPartialOptions = {
+      priceLineVisible: false,
+      lineColor: 'rgb(245, 158, 11)',
+      topColor: 'rgba(245, 158, 11, 0.2)',
+      bottomColor: 'rgba(245, 158, 11, 0.01)',
+      lineWidth: 2,
+      crosshairMarkerVisible: false,
+      baseLineVisible: true,
+    };
+
+    areaSeries.current = chartInstance.addSeries(AreaSeries, seriesOptions);
+    areaSeries.current!.priceScale().applyOptions({
+      visible: false,
+      ticksVisible: false,
+    });
+
+    chartInstance.timeScale().fitContent();
+    setLoading(false);
+    setChartReady(true);
+  }, []);
 
   const { chartContainer, chart } = useChart({
     height: chartHeight,
-    chartOptions: {
-      grid: {
-        horzLines: {
-          visible: false,
-        },
-        vertLines: {
-          visible: false,
-        },
-      },
-      timeScale: {
-        visible: showTimeScale,
-        borderVisible: false,
-        ticksVisible: showTimeScale,
-        timeVisible: true,
-        secondsVisible: false,
-        tickMarkFormatter: showTimeScale
-          ? (time: any) => {
-            if (typeof time === 'number') {
-              return moment.unix(time).format('D');
-            }
-            if (time?.year && time?.month && time?.day) {
-              return moment({ year: time.year, month: time.month - 1, day: time.day }).format('D');
-            }
-            return '';
-          }
-          : undefined,
-      },
-      crosshair: {
-        vertLine: {
-          visible: showCrosshair,
-          color: 'rgba(52, 211, 153, 1)',
-          width: 2,
-        },
-        horzLine: {
-          visible: false,
-        },
-      },
-      handleScale: false,
-    },
-    onChartReady: (chartInstance) => {
-      chartApiRef.current = chartInstance;
-      const seriesOptions: AreaSeriesPartialOptions = {
-        priceLineVisible: false,
-        lineColor: 'rgb(245, 158, 11)',
-        topColor: 'rgba(245, 158, 11, 0.2)',
-        bottomColor: 'rgba(245, 158, 11, 0.01)',
-        lineWidth: 2,
-        crosshairMarkerVisible: false,
-        baseLineVisible: true,
-      };
-
-      areaSeries.current = chartInstance.addSeries(AreaSeries, seriesOptions);
-      areaSeries.current.priceScale().applyOptions({
-        visible: false, // disables auto scaling based on visible content
-        ticksVisible: false,
-      });
-
-      chartInstance.timeScale().fitContent();
-      setLoading(false);
-      setChartReady(true);
-    },
+    chartOptions,
+    onChartReady,
   });
 
   useEffect(() => {

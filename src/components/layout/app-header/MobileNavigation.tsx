@@ -19,8 +19,8 @@ const MobileNavigation = () => {
   };
   const [showSearch, setShowSearch] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const t = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
-    return t;
+    const themeValue = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
+    return themeValue;
   });
   const { pathname } = useLocation();
   const isOnFeed = pathname === '/';

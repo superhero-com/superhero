@@ -85,7 +85,7 @@ const LeftRail = () => {
               score: Number(it.score ?? it.value ?? 0),
               source: it.source || it.platform || undefined,
             }));
-            setTrendingTags(mappedTags.filter((t) => t.tag));
+            setTrendingTags(mappedTags.filter((tag) => tag.tag));
 
             setMarketStats(statsResp);
           } catch {

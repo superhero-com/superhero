@@ -27,10 +27,10 @@ const BackToTop = ({ threshold, bottomOffset = 32 }: BackToTopProps) => {
     };
     compute();
     // Recompute after a tick and on resize to catch layout shifts
-    const t = window.setTimeout(compute, 0);
+    const timeoutId = window.setTimeout(compute, 0);
     window.addEventListener('resize', compute);
     return () => {
-      window.clearTimeout(t);
+      window.clearTimeout(timeoutId);
       window.removeEventListener('resize', compute);
     };
   }, [threshold]);

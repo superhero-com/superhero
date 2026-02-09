@@ -10,11 +10,7 @@ export type AppConfig = {
   DEX_BACKEND_URL?: string;
   MAINNET_DEX_BACKEND_URL?: string;
   TESTNET_DEX_BACKEND_URL?: string;
-  CONTRACT_V1_ADDRESS: string;
-  CONTRACT_V2_ADDRESS: string;
   CONTRACT_V3_ADDRESS: string;
-  WORD_REGISTRY_ADDRESS: string;
-  PROFILE_REGISTRY_ADDRESS?: Encoded.ContractAddress;
   LANDING_ENABLED: boolean;
   WORDBAZAAR_ENABLED: boolean;
   POPULAR_FEED_ENABLED: boolean;
@@ -22,11 +18,8 @@ export type AppConfig = {
   GOVERNANCE_API_URL: string;
   GOVERNANCE_CONTRACT_ADDRESS: Encoded.ContractAddress;
   EXPLORER_URL?: string;
-  IMGUR_API_CLIENT_ID?: string;
   GIPHY_API_KEY?: string;
   UNFINISHED_FEATURES?: string;
-  COMMIT_HASH?: string;
-  BONDING_CURVE_18_DECIMALS_ADDRESS?: string;
 };
 
 const defaultConfig: AppConfig = {
@@ -38,20 +31,11 @@ const defaultConfig: AppConfig = {
   MIDDLEWARE_URL: "https://mdw.wordcraft.fun/mdw",
   JITSI_DOMAIN: "meet.jit.si",
   EXPLORER_URL: "https://aescan.io",
-  IMGUR_API_CLIENT_ID: "",
   GIPHY_API_KEY: process.env.VITE_GIPHY_API_KEY ?? 'P16yBDlSeEfcrJfp1rwnamtEZmQHxHNM',
-  COMMIT_HASH: "",
   DEX_BACKEND_URL: "https://dex-backend-mainnet.prd.service.aepps.com",
   MAINNET_DEX_BACKEND_URL: "https://dex-backend-mainnet.prd.service.aepps.com",
   TESTNET_DEX_BACKEND_URL: "https://dex-backend-testnet.prd.service.aepps.com",
   CONTRACT_V3_ADDRESS: "ct_2Hyt9ZxzXra5NAzhePkRsDPDWppoatVD7CtHnUoHVbuehwR8Nb",
-  CONTRACT_V33333_ADDRESS:
-    "ct_WscpdLQf6ZZxoVqrsEwUwmuAEdzEkJii5W5TzG84rVgHeK6BW",
-
-  CONTRACT_V1_ADDRESS: "",
-  CONTRACT_V2_ADDRESS: "",
-  WORD_REGISTRY_ADDRESS: "",
-  PROFILE_REGISTRY_ADDRESS: "",
   LANDING_ENABLED: false,
   WORDBAZAAR_ENABLED: false,
   POPULAR_FEED_ENABLED: true,
@@ -61,8 +45,6 @@ const defaultConfig: AppConfig = {
     "ct_ouZib4wT9cNwgRA1pxgA63XEUd8eQRrG8PcePDEYogBc1VYTq",
 
   UNFINISHED_FEATURES: "",
-
-  BONDING_CURVE_18_DECIMALS_ADDRESS: "",
 };
 
 // Allow local development overrides via Vite env vars set at build time

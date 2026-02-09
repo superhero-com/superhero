@@ -10,20 +10,20 @@ import { cn } from '../../../lib/utils';
 import FractionFormatter from '../../shared/components/FractionFormatter';
 import LivePriceFormatter from '../../shared/components/LivePriceFormatter';
 import { useTokenTrade } from '../hooks/useTokenTrade';
-import ImpactBadge from './ImpactBadge';
-import MessageBox from './MessageBox';
+import { ImpactBadge } from './ImpactBadge';
+import { MessageBox } from './MessageBox';
 import TradeTokenInput from './TradeTokenInput';
-import TransactionConfirmDetailRow from './TransactionConfirmDetailRow';
+import { TransactionConfirmDetailRow } from './TransactionConfirmDetailRow';
 
 interface TokenTradeCardProps {
   token: TokenDto;
   onClose?: () => void;
 }
 
-export default function TokenTradeCard({
+const TokenTradeCard = ({
   token,
   onClose,
-}: TokenTradeCardProps) {
+}: TokenTradeCardProps) => {
   const { activeAccount } = useAeSdk();
   const [settingsDialogVisible, setSettingsDialogVisible] = useState(false);
   const [detailsShown, setDetailsShown] = useState(false);
@@ -31,7 +31,6 @@ export default function TokenTradeCard({
   const {
     tokenA,
     tokenB,
-    tokenAFocused,
     isBuying,
     loadingTransaction,
     errorMessage,
@@ -58,7 +57,8 @@ export default function TokenTradeCard({
     if (settingsDialogVisible) {
       setSlippageInput(String(slippage ?? 0));
     }
-    // Intentionally not depending on `slippage` to avoid overwriting user typing while dialog is open.
+    // Intentionally not depending on `slippage`
+    // to avoid overwriting user typing while dialog is open.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settingsDialogVisible]);
 
@@ -85,6 +85,12 @@ export default function TokenTradeCard({
   };
 
   const currentStepText = isBuying ? '' : '1/2';
+  let priceImpactPrefix: string;
+  if (priceImpactDiff.isZero) {
+    priceImpactPrefix = '';
+  } else {
+    priceImpactPrefix = isBuying ? '+' : '-';
+  }
 
   if (!token?.sale_address) {
     return null;
@@ -141,7 +147,6 @@ export default function TokenTradeCard({
           token={token}
           tokenA={tokenA}
           tokenB={tokenB}
-          tokenAFocused={tokenAFocused}
           isBuying={isBuying}
           userBalance={userBalance}
           spendableAeBalance={spendableAeBalance}
@@ -167,6 +172,7 @@ export default function TokenTradeCard({
           {detailsShown && (
             <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-4 mb-5 backdrop-blur-[10px] space-y-2">
               <button
+                type="button"
                 onClick={() => setDetailsShown(!detailsShown)}
                 className="text-sm text-[#4ecdc4] hover:text-white transition-colors"
               >
@@ -178,6 +184,7 @@ export default function TokenTradeCard({
                   {Number(slippage ?? 0).toFixed(2)}
                   %
                   <button
+                    type="button"
                     onClick={() => setSettingsDialogVisible(true)}
                     className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#4ecdc4] hover:-translate-y-0.5 active:translate-y-0"
                   >
@@ -194,7 +201,7 @@ export default function TokenTradeCard({
                   )}
                 >
                   <div className="flex items-center">
-                    {priceImpactDiff.isZero ? '' : isBuying ? '+' : '-'}
+                    {priceImpactPrefix}
                     <FractionFormatter
                       fractionalPrice={formatFractionalPrice(priceImpactDiff)}
                     />
@@ -222,6 +229,7 @@ export default function TokenTradeCard({
 
           {!detailsShown && (
             <button
+              type="button"
               onClick={() => setDetailsShown(true)}
               className="text-sm text-[#4ecdc4] hover:text-white transition-colors"
             >
@@ -316,10 +324,11 @@ export default function TokenTradeCard({
               Settings
             </h3>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-white/60 mb-2">
+              <label htmlFor="slippage-input" className="block text-sm font-medium text-white/60 mb-2">
                 Slippage Tolerance (%)
               </label>
               <input
+                id="slippage-input"
                 type="text"
                 inputMode="decimal"
                 value={slippageInput}
@@ -362,4 +371,6 @@ export default function TokenTradeCard({
       )}
     </div>
   );
-}
+};
+
+export default TokenTradeCard;

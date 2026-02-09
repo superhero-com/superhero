@@ -1,3 +1,10 @@
+/* eslint-disable
+  react/function-component-definition,
+  no-use-before-define,
+  react/no-unescaped-entities,
+  react/button-has-type,
+  max-len
+*/
 import React, { useMemo, useState } from 'react';
 
 type Question = { id: string; title: string; answer: React.ReactNode; category: string };

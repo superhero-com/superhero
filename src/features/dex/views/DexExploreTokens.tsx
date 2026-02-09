@@ -14,13 +14,13 @@ interface PaginatedResponse<T> {
   };
 }
 
-export default function DexExploreTokens() {
+const DexExploreTokens = () => {
   const [sort, setSort] = useState<'pairs_count' | 'name' | 'symbol' | 'created_at' | 'price' | 'tvl' | '24hchange' | '24hvolume' | '7dchange' | '7dvolume' | '30dchange' | '30dvolume'>(
     '30dvolume',
   );
   const [sortDirection, setSortDirection] = useState<'ASC' | 'DESC'>('DESC');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit] = useState(10);
   const [search, setSearch] = useState('');
 
   const handleSortChange = (key: typeof sort) => {
@@ -110,6 +110,7 @@ export default function DexExploreTokens() {
             <div className="flex items-center gap-1.5 md:gap-2 order-1 md:order-2 flex-wrap justify-center md:justify-start">
               {/* Previous Page Button */}
               <button
+                type="button"
                 onClick={() => setPage(page - 1)}
                 disabled={page === 1}
                 className={`py-2 px-2 md:px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-sm md:text-[13px] font-medium transition-all duration-300 outline-none min-w-[80px] md:min-w-auto ${page === 1
@@ -135,6 +136,7 @@ export default function DexExploreTokens() {
 
               {/* Next Page Button */}
               <button
+                type="button"
                 onClick={() => setPage(page + 1)}
                 disabled={page >= Math.ceil(data.meta.totalItems / limit)}
                 className={`py-2 px-2 md:px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-sm md:text-[13px] font-medium transition-all duration-300 outline-none min-w-[60px] md:min-w-auto ${page >= Math.ceil(data.meta.totalItems / limit)
@@ -162,4 +164,6 @@ export default function DexExploreTokens() {
       </div>
     </div>
   );
-}
+};
+
+export default DexExploreTokens;

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { CONFIG } from '../config';
 
-export default function Conference() {
+const Conference = () => {
   const { room } = useParams();
   const src = useMemo(() => {
     const opts = 'jitsi_meet_external_api_id=0&config.disableDeepLinking=false';
@@ -19,4 +19,6 @@ export default function Conference() {
       />
     </div>
   );
-}
+};
+
+export default Conference;

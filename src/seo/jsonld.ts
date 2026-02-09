@@ -1,3 +1,9 @@
+function truncate(s: string, n: number): string {
+  const str = (s || '').trim();
+  if (str.length <= n) return str;
+  return `${str.slice(0, Math.max(0, n - 1))}…`;
+}
+
 export function websiteSchema(opts: { origin?: string }) {
   const origin = opts.origin || 'https://superhero.com';
   return {
@@ -96,10 +102,4 @@ export function cryptoCurrencySchema(token: {
     symbol: token.symbol,
     identifier: token.identifier,
   } as const;
-}
-
-function truncate(s: string, n: number): string {
-  const str = (s || '').trim();
-  if (str.length <= n) return str;
-  return `${str.slice(0, Math.max(0, n - 1))}…`;
 }

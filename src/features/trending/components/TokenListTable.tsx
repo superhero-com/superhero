@@ -55,6 +55,14 @@ const SortableColumnHeader = ({
     }
   };
 
+  const displayDirection = getDisplayDirection();
+  let activeDirectionIndicator: string;
+  if (isRankHeader) {
+    activeDirectionIndicator = displayDirection;
+  } else {
+    activeDirectionIndicator = displayDirection === 'DESC' ? '↓' : '↑';
+  }
+
   return (
     <th
       className={`${className} cursor-pointer hover:opacity-75 transition-opacity select-none`}
@@ -65,7 +73,7 @@ const SortableColumnHeader = ({
         {children}
         {isActive && (
           <span className="text-[#1161FE] text-xs">
-            {isRankHeader ? getDisplayDirection() : (getDisplayDirection() === 'DESC' ? '↓' : '↑')}
+            {activeDirectionIndicator}
           </span>
         )}
       </div>
@@ -86,14 +94,18 @@ interface TokenListTableProps {
   onLoadMore?: () => void;
 }
 
-export default function TokenListTable({
+const TokenListTable = ({
   pages, loading, showCollectionColumn, orderBy, orderDirection, onSort, rankOffset = 0, hasNextPage, isFetching, onLoadMore,
-}: TokenListTableProps) {
+}: TokenListTableProps) => {
   const { t } = useTranslation('common');
 
   const allItems = useMemo(
     () => (pages?.length ? pages.map((page) => page.items).flat() : []),
     [pages],
+  );
+  const skeletonRows = useMemo(
+    () => Array.from({ length: 12 }, (_, idx) => `row-${idx + 1}`),
+    [],
   );
 
   // Detect mobile viewport to map the "Market cap" header to market_cap sorting
@@ -174,8 +186,8 @@ export default function TokenListTable({
 
         {loading && !allItems?.length ? (
           <tbody className="token-list-skeleton">
-            {Array.from({ length: 12 }).map((_, index) => (
-              <TokenRowSkeleton key={index} />
+            {skeletonRows.map((rowKey) => (
+              <TokenRowSkeleton key={rowKey} />
             ))}
           </tbody>
         ) : (
@@ -196,6 +208,7 @@ export default function TokenListTable({
       {hasNextPage && onLoadMore && (
         <div className="md:hidden text-center pt-2 pb-3">
           <button
+            type="button"
             onClick={() => onLoadMore()}
             disabled={isFetching}
             className={`${isFetching
@@ -417,4 +430,6 @@ export default function TokenListTable({
       </style>
     </div>
   );
-}
+};
+
+export default TokenListTable;

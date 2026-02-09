@@ -18,194 +18,6 @@ export const DEX_ADDRESSES = {
   aeeth: 'ct_ryTY1mxqjCjq1yBn9i6HDaCSdA6thXUFZTA84EMzbWd1SLKdh', //
 };
 
-// Minimal ACIs (only the entrypoints we use)
-const RouterContract = {
-  functions: [
-    {
-      name: 'factory', arguments: [], returns: 'address', stateful: false, payable: false,
-    },
-    {
-      name: 'get_amounts_out',
-      arguments: [
-        { name: 'amount_in', type: 'int' },
-        { name: 'path', type: { list: ['address'] } },
-      ],
-      returns: { list: ['int'] },
-      stateful: false,
-      payable: false,
-    },
-    {
-      name: 'get_amounts_in',
-      arguments: [
-        { name: 'amount_out', type: 'int' },
-        { name: 'path', type: { list: ['address'] } },
-      ],
-      returns: { list: ['int'] },
-      stateful: false,
-      payable: false,
-    },
-    {
-      name: 'swap_exact_tokens_for_tokens',
-      arguments: [
-        { name: 'amount_in', type: 'int' },
-        { name: 'amount_out_min', type: 'int' },
-        { name: 'path', type: { list: ['address'] } },
-        { name: 'to', type: 'address' },
-        { name: 'deadline', type: 'int' },
-        { name: 'callback_opt', type: { option: ['address'] } },
-      ],
-      returns: { list: ['int'] },
-      stateful: true,
-      payable: false,
-    },
-    {
-      name: 'swap_tokens_for_exact_tokens',
-      arguments: [
-        { name: 'amount_out', type: 'int' },
-        { name: 'amount_in_max', type: 'int' },
-        { name: 'path', type: { list: ['address'] } },
-        { name: 'to', type: 'address' },
-        { name: 'deadline', type: 'int' },
-        { name: 'callback_opt', type: { option: ['address'] } },
-      ],
-      returns: { list: ['int'] },
-      stateful: true,
-      payable: false,
-    },
-    {
-      name: 'swap_exact_ae_for_tokens',
-      arguments: [
-        { name: 'amount_out_min', type: 'int' },
-        { name: 'path', type: { list: ['address'] } },
-        { name: 'to', type: 'address' },
-        { name: 'deadline', type: 'int' },
-        { name: 'callback_opt', type: { option: ['address'] } },
-      ],
-      returns: { list: ['int'] },
-      stateful: true,
-      payable: true,
-    },
-    {
-      name: 'swap_tokens_for_exact_ae',
-      arguments: [
-        { name: 'amount_out', type: 'int' },
-        { name: 'amount_in_max', type: 'int' },
-        { name: 'path', type: { list: ['address'] } },
-        { name: 'to', type: 'address' },
-        { name: 'deadline', type: 'int' },
-        { name: 'callback_opt', type: { option: ['address'] } },
-      ],
-      returns: { list: ['int'] },
-      stateful: true,
-      payable: false,
-    },
-    {
-      name: 'swap_exact_tokens_for_ae',
-      arguments: [
-        { name: 'amount_in', type: 'int' },
-        { name: 'amount_out_min', type: 'int' },
-        { name: 'path', type: { list: ['address'] } },
-        { name: 'to', type: 'address' },
-        { name: 'deadline', type: 'int' },
-        { name: 'callback_opt', type: { option: ['address'] } },
-      ],
-      returns: { list: ['int'] },
-      stateful: true,
-      payable: false,
-    },
-    {
-      name: 'swap_ae_for_exact_tokens',
-      arguments: [
-        { name: 'amount_out', type: 'int' },
-        { name: 'path', type: { list: ['address'] } },
-        { name: 'to', type: 'address' },
-        { name: 'deadline', type: 'int' },
-        { name: 'callback_opt', type: { option: ['address'] } },
-      ],
-      returns: { list: ['int'] },
-      stateful: true,
-      payable: true,
-    },
-  ],
-  kind: 'contract_main',
-  name: 'AedexV2Router',
-  payable: true,
-};
-
-const FactoryContract = {
-  functions: [
-    {
-      name: 'get_pair',
-      arguments: [
-        { name: 'token_a', type: 'address' },
-        { name: 'token_b', type: 'address' },
-      ],
-      returns: { option: ['address'] },
-      stateful: false,
-      payable: false,
-    },
-  ],
-  kind: 'contract_main',
-  name: 'AedexV2Factory',
-  payable: false,
-};
-
-const PairContract = {
-  functions: [
-    {
-      name: 'token0', arguments: [], returns: 'address', stateful: false, payable: false,
-    },
-    {
-      name: 'get_reserves',
-      arguments: [],
-      returns: { record: [{ name: 'reserve0', type: 'int' }, { name: 'reserve1', type: 'int' }, { name: 'block_timestamp_last', type: 'int' }] },
-      stateful: false,
-      payable: false,
-    },
-  ],
-  kind: 'contract_main',
-  name: 'AedexV2Pair',
-  payable: false,
-};
-
-const Aex9Contract = {
-  functions: [
-    {
-      name: 'meta_info', arguments: [], returns: { record: [{ name: 'name', type: 'string' }, { name: 'symbol', type: 'string' }, { name: 'decimals', type: 'int' }] }, stateful: false, payable: false,
-    },
-    {
-      name: 'allowance',
-      arguments: [{ name: 'allowance_accounts', type: { record: [{ name: 'from_account', type: 'address' }, { name: 'for_account', type: 'address' }] } }],
-      returns: { option: ['int'] },
-      stateful: false,
-      payable: false,
-    },
-    {
-      name: 'create_allowance',
-      arguments: [
-        { name: 'for_account', type: 'address' },
-        { name: 'value', type: 'int' },
-      ],
-      returns: 'unit',
-      stateful: true,
-      payable: false,
-    },
-    {
-      name: 'change_allowance',
-      arguments: [
-        { name: 'for_account', type: 'address' },
-        { name: 'value_change', type: 'int' },
-      ],
-      returns: 'unit',
-      stateful: true,
-      payable: false,
-    },
-  ],
-  kind: 'contract_interface',
-  name: 'IAEX9Minimal',
-  payable: false,
-};
-
 // Match aepp-sdk's expected ACI format (raw contract object or array with contract entries)
 export const ACI = {
   Router: RouterAci,
@@ -237,10 +49,13 @@ export async function initDexContracts(sdk: any, routerAddress?: string): Promis
     try {
       const { decodedResult } = await router.factory();
       factoryAddress = typeof decodedResult === 'string' ? decodedResult : (decodedResult?.$options?.address ?? null);
-    } catch {}
+    } catch (error: any) {
+      console.error(error);
+    }
     if (!factoryAddress) factoryAddress = DEX_ADDRESSES.factory;
     let factory = await sdk.initializeContract({ aci: ACI.Factory, address: factoryAddress });
-    // In some environments (tests/mocks), router.factory may return a placeholder address without methods.
+    // In some environments (tests/mocks),
+    // router.factory may return a placeholder address without methods.
     // Fallback to known factory address if the instance doesn't expose required entrypoints.
     if (!factory || typeof (factory as any).get_pair !== 'function') {
       factory = await sdk.initializeContract({ aci: ACI.Factory, address: DEX_ADDRESSES.factory });
@@ -272,7 +87,13 @@ export function subSlippage(amount: bigint, slippagePct: number): bigint {
   return amount - (amount * scaledTenthPercent) / 1000n;
 }
 
-export async function ensureAllowanceForRouter(sdk: any, tokenAddress: string, owner: string, needed: bigint, routerAddress?: string): Promise<void> {
+export async function ensureAllowanceForRouter(
+  sdk: any,
+  tokenAddress: string,
+  owner: string,
+  needed: bigint,
+  routerAddress?: string,
+): Promise<void> {
   const token = await sdk.initializeContract({ aci: ACI.AEX9, address: tokenAddress });
   const forAccount = (routerAddress || DEX_ADDRESSES.router).replace('ct_', 'ak_');
   const { decodedResult } = await token.allowance({ from_account: owner, for_account: forAccount });
@@ -325,6 +146,7 @@ export async function getTokenBalance(
     const { decodedResult } = await token.balance(owner);
     return BigInt(decodedResult ?? 0);
   } catch (error: any) {
+    console.error(error);
     return 0n;
   }
 }
@@ -378,7 +200,12 @@ export function estimateRemovalMinimums(
 }
 
 // Pair helpers and liquidity flows
-export async function getPairAddress(sdk: any, factory: any, tokenA: string, tokenB: string): Promise<string | null> {
+export async function getPairAddress(
+  sdk: any,
+  factory: any,
+  tokenA: string,
+  tokenB: string,
+): Promise<string | null> {
   try {
     const { decodedResult } = await factory.get_pair(tokenA, tokenB);
     return decodedResult || null;
@@ -392,7 +219,12 @@ export async function getPairInfo(
   factory: any,
   tokenA: string,
   tokenB: string,
-): Promise<{ pairAddress: string; totalSupply: bigint | null; reserveA: bigint; reserveB: bigint } | null> {
+): Promise<{
+  pairAddress: string;
+  totalSupply: bigint | null;
+  reserveA: bigint;
+  reserveB: bigint;
+} | null> {
   const addr = await getPairAddress(sdk, factory, tokenA, tokenB);
   if (!addr) return null;
   const pair = await sdk.initializeContract({ aci: ACI.Pair, address: addr });

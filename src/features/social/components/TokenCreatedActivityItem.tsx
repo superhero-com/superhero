@@ -1,6 +1,6 @@
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
 import { memo, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { linkify } from '../../../utils/linkify';
 import { useWallet } from '../../../hooks';
 import type { PostDto } from '../../../api/generated';
@@ -11,7 +11,8 @@ interface TokenCreatedActivityItemProps {
   item: PostDto;
   hideMobileDivider?: boolean;
   mobileTight?: boolean; // reduce vertical padding on mobile for middle items in a group
-  footer?: React.ReactNode; // optional mobile-only footer area (e.g., Show more) rendered just above divider
+  // optional mobile-only footer area (e.g., Show more) rendered just above divider
+  footer?: React.ReactNode;
   mobileNoTopPadding?: boolean;
   mobileNoBottomPadding?: boolean;
   mobileTightTop?: boolean; // apply pt-0.5 on mobile
@@ -42,7 +43,13 @@ function useTokenName(item: PostDto): string | null {
 }
 
 const TokenCreatedActivityItem = memo(({
-  item, hideMobileDivider = false, mobileTight = false, footer, mobileNoTopPadding = false, mobileNoBottomPadding = false, mobileTightTop = false, mobileTightBottom = false,
+  item,
+  hideMobileDivider = false,
+  mobileTight = false, footer,
+  mobileNoTopPadding = false,
+  mobileNoBottomPadding = false,
+  mobileTightTop = false,
+  mobileTightBottom = false,
 }: TokenCreatedActivityItemProps) => {
   const navigate = useNavigate();
   const { chainNames } = useWallet();
@@ -57,16 +64,17 @@ const TokenCreatedActivityItem = memo(({
 
   return (
     <article
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-element-to-interactive-role
       role="button"
       tabIndex={0}
       onClick={(e) => { e.stopPropagation(); onOpen(); }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
-      className={`token-activity relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 ${mobileNoTopPadding ? 'pt-0' : ((mobileTightTop || mobileTight) ? 'pt-0.5' : 'pt-2')} ${mobileNoBottomPadding ? 'pb-0' : ((mobileTightBottom || mobileTight) ? 'pb-0.5' : 'pb-2')} md:w-full md:mx-0 md:py-1 md:px-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-transparent md:hover:border-white/25 md:rounded-[12px] md:backdrop-blur-xl transition-colors hover:shadow-none`}
+      className={`token-activity relative w-[100dvw] ml-[calc(50%-50dvw)] mr-[calc(50%-50dvw)] px-2 ${mobileNoTopPadding && 'pt-0'} ${((mobileTightTop || mobileTight) ? 'pt-0.5' : 'pt-2')} ${mobileNoBottomPadding && 'pb-0'} ${((mobileTightBottom || mobileTight) ? 'pb-0.5' : 'pb-2')} md:w-full md:mx-0 md:py-1 md:px-5 bg-transparent md:bg-[var(--glass-bg)] md:border md:border-transparent md:hover:border-white/25 md:rounded-[12px] md:backdrop-blur-xl transition-colors hover:shadow-none`}
       aria-label={tokenName ? `Open trend ${tokenName}` : 'Open trend'}
     >
       <div className="flex items-center justify-between gap-3 md:h-8">
         <div className="flex items-center gap-1 min-w-0">
-          <AddressAvatarWithChainName address={creator} size={20} overlaySize={12} showAddressAndChainName={false} variant="feed" />
+          <AddressAvatarWithChainName address={creator} size={20} showAddressAndChainName={false} variant="feed" />
           <div className="flex items-center gap-1 min-w-0 text-[13px] leading-[1.2]">
             <a
               href={`/users/${creator}`}
@@ -106,7 +114,8 @@ const TokenCreatedActivityItem = memo(({
           {footer}
         </div>
       )}
-      {/* Full-bleed divider on mobile for visual rhythm (can be hidden for middle items or when followed by footer) */}
+      {/* Full-bleed divider on mobile for visual rhythm
+      (can be hidden for middle items or when followed by footer) */}
       {!hideMobileDivider && (
         <div className="md:hidden pointer-events-none absolute bottom-0 left-[calc(50%-50dvw)] w-[100dvw] h-px bg-white/10" />
       )}

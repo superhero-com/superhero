@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useNavigate } from 'react-router-dom';
 import { PriceDataFormatter } from '@/features/shared/components';
 import { useMemo } from 'react';

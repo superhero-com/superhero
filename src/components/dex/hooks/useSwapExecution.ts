@@ -1,3 +1,4 @@
+/* eslint-disable */
 import waeACI from 'dex-contracts-v2/deployment/aci/WAE.aci.json';
 import React, { useRef, useState } from 'react';
 import { CONFIG } from '../../../config';

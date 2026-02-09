@@ -4,7 +4,9 @@ import {
 import { useInfiniteQuery } from '@tanstack/react-query';
 import AeButton from '@/components/AeButton';
 import Spinner from '@/components/Spinner';
-import { TokenListTable, TrendminerBanner, PerformanceTimeframeSelector } from '..';
+import TokenListTable from '../components/TokenListTable';
+import TrendminerBanner from '../components/TrendminerBanner';
+import PerformanceTimeframeSelector from '../components/PerformanceTimeframeSelector';
 import { TokensService } from '../../../api/generated';
 import LatestTransactionsCarousel from '../../../components/Trendminer/LatestTransactionsCarousel';
 import TrendingPillsCarousel from '../../../components/Trendminer/TrendingPillsCarousel';
@@ -17,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../components/ui/select';
-import Head from '../../../seo/Head';
+import { Head } from '../../../seo/Head';
 
 type SelectOptions<T> = Array<{
   title: string;
@@ -38,11 +40,11 @@ const SORT = {
 type OrderByOption = typeof SORT[keyof typeof SORT];
 type CollectionOption = 'all' | string; // Can be 'all' or specific collection addresses
 
-export default function TokenList() {
+const TokenList = () => {
   const { activeAccount } = useAccount();
 
-  const [collection, setCollection] = useState<CollectionOption>('all');
-  const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.marketCap); // Default to trending score like Vue
+  const [collection] = useState<CollectionOption>('all');
+  const [orderBy, setOrderBy] = useState<OrderByOption>(SORT.marketCap);
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
   const [ownedOnly, setOwnedOnly] = useState(false);
   const [search, setSearch] = useState('');
@@ -107,10 +109,13 @@ export default function TokenList() {
     return orderDirection;
   }, [orderBy, orderDirection]);
 
-  const ownerAddress = useMemo(() => (ownedOnly ? activeAccount : undefined), [ownedOnly, activeAccount]);
+  const ownerAddress = useMemo(
+    () => (ownedOnly ? activeAccount : undefined),
+    [ownedOnly, activeAccount],
+  );
 
   const {
-    data, isFetching, fetchNextPage, hasNextPage, refetch,
+    data, isFetching, fetchNextPage, hasNextPage,
   } = useInfiniteQuery({
     initialPageParam: 1,
     queryFn: ({ pageParam = 1 }) => TokensService.listAll({
@@ -122,7 +127,11 @@ export default function TokenList() {
       limit: 20,
       page: pageParam,
     }),
-    getNextPageParam: (lastPage: any, allPages, lastPageParam) => (lastPage?.meta?.currentPage === lastPage?.meta?.totalPages
+    getNextPageParam: (
+      lastPage: any,
+      allPages,
+      lastPageParam,
+    ) => (lastPage?.meta?.currentPage === lastPage?.meta?.totalPages
       ? undefined
       : lastPageParam + 1),
     queryKey: [
@@ -281,6 +290,7 @@ export default function TokenList() {
         <div className="text-center pt-2 pb-4">
           <button
             ref={loadMoreBtn}
+            type="button"
             onClick={() => fetchNextPage()}
             disabled={isFetching}
             className={`px-6 py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isFetching
@@ -299,4 +309,6 @@ export default function TokenList() {
       )}
     </div>
   );
-}
+};
+
+export default TokenList;

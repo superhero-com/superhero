@@ -17,12 +17,11 @@ import SortControls from '../components/SortControls';
 import EmptyState from '../components/EmptyState';
 import PostSkeleton from '../components/PostSkeleton';
 import ReplyToFeedItem from '../components/ReplyToFeedItem';
-import TokenCreatedFeedItem from '../components/TokenCreatedFeedItem';
 import TokenCreatedActivityItem from '../components/TokenCreatedActivityItem';
 import TradeActivityItem, { TradeActivityItemData } from '../components/TradeActivityItem';
 import TrendingAssetsFeedItem from '../components/TrendingAssetsFeedItem';
 import { PostApiResponse } from '../types';
-import Head from '../../../seo/Head';
+import { Head } from '../../../seo/Head';
 import { CONFIG } from '../../../config';
 import { useLatestTransactions } from '../../../hooks/useLatestTransactions';
 import type { TokenDto } from '../../../api/generated/models/TokenDto';
@@ -40,9 +39,9 @@ function createSeededRandom(seed: number) {
   };
 }
 
-export default function FeedList({
+const FeedList = ({
   standalone = true,
-}: { standalone?: boolean } = {}) {
+}: { standalone?: boolean } = {}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const urlQuery = useUrlQuery();
@@ -118,7 +117,7 @@ export default function FeedList({
     sortByRef.current = sortBy;
   }, [sortBy]);
 
-  const [localSearch, setLocalSearch] = useState(search);
+  const [localSearch] = useState(search);
   const [popularWindow, setPopularWindow] = useState<'24h'|'7d'|'all'>(initialWindow);
   const trendingInsertSeed = useRef<number>(Math.floor(Math.random() * 0x100000000));
 
@@ -176,7 +175,7 @@ export default function FeedList({
 
   type FeedItem = PostDto | TradeFeedItem;
 
-  const isTradeItem = (item: FeedItem): item is TradeFeedItem => Boolean((item as TradeFeedItem)?.kind === 'trade');
+  const isTradeItem = useCallback((item: FeedItem): item is TradeFeedItem => Boolean((item as TradeFeedItem)?.kind === 'trade'), []);
 
   // Activities (token-created) fetched in parallel with smaller initial batch + pagination
   const {
@@ -212,7 +211,9 @@ export default function FeedList({
         }))
         .map(mapTokenCreatedToPost);
     },
-    getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === ACTIVITY_PAGE_SIZE ? pages.length + 1 : undefined),
+    getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === ACTIVITY_PAGE_SIZE
+      ? pages.length + 1
+      : undefined),
     // Show cached data immediately, refetch in background
     staleTime: 10000, // Consider data fresh for 10 seconds
     refetchOnMount: false, // Don't block on refetch - show cached data immediately
@@ -274,6 +275,7 @@ export default function FeedList({
         return { ...prev, pages: [newFirst, ...prev.pages.slice(1)] };
       });
     });
+    // eslint-disable-next-line consistent-return
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe();
     };
@@ -354,7 +356,9 @@ export default function FeedList({
             .map(mapTokenCreatedToPost);
         },
         initialPageParam: 1,
-        getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === ACTIVITY_PAGE_SIZE ? pages.length + 1 : undefined),
+        getNextPageParam: (lastPage, pages) => (lastPage && lastPage.length === ACTIVITY_PAGE_SIZE
+          ? pages.length + 1
+          : undefined),
       });
 
       // Prefetch posts in the background for faster loading (only first page, no search/filter)
@@ -426,7 +430,8 @@ export default function FeedList({
       const items = lastPage?.items || [];
 
       // Stop if we got an empty page AND we've already fetched at least one page
-      // (This handles the case where backend returns wrong totalPages but we've exhausted actual posts)
+      // (This handles the case where backend
+      // returns wrong totalPages but we've exhausted actual posts)
       if (items.length === 0 && allPages.length > 0) {
         return undefined;
       }
@@ -477,19 +482,30 @@ export default function FeedList({
     const lastPageItems = lastPage?.items || [];
 
     // Calculate total items fetched across all pages
-    const totalFetched = popularData.pages.reduce((sum: number, page: any) => sum + (page?.items?.length || 0), 0);
+    const totalFetched = popularData.pages
+      .reduce((sum: number, page: any) => sum + (page?.items?.length || 0), 0);
 
     // Popular posts are exhausted if:
     // 1. The last page returned 0 items (backend indicates no more popular posts), OR
-    // 2. The last page returned fewer items than requested (indicates no more popular posts available), OR
+    // 2. The last page returned fewer items
+    // than requested (indicates no more popular posts available), OR
     // 3. We've reached the last page according to meta (if totalPages seems reasonable < 100), OR
-    // 4. We've fetched all items according to totalItems (only if totalItems seems reasonable < 1000)
+    // 4. We've fetched all items according
+    // to totalItems (only if totalItems seems reasonable < 1000)
     const lastPageEmpty = lastPageItems.length === 0 && popularData.pages.length > 0;
     // If we requested 10 items but got fewer, we've exhausted popular posts
-    const lastPageIncomplete = lastPageItems.length > 0 && lastPageItems.length < 10 && popularData.pages.length > 0;
+    const lastPageIncomplete = (
+      lastPageItems.length > 0
+      && lastPageItems.length < 10
+      && popularData.pages.length > 0
+    );
     // Only trust totalPages if it seems reasonable (popular posts shouldn't be thousands)
     const reasonableTotalPages = meta?.totalPages && meta.totalPages < 100;
-    const reachedLastPage = reasonableTotalPages && meta?.currentPage && meta.currentPage >= meta.totalPages;
+    const reachedLastPage = (
+      reasonableTotalPages
+      && meta?.currentPage
+      && meta.currentPage >= meta.totalPages
+    );
     // Only trust totalItems if it seems reasonable (popular posts shouldn't be thousands)
     const reasonableTotalItems = meta?.totalItems && meta.totalItems < 1000;
     const fetchedAllItems = reasonableTotalItems && totalFetched >= meta.totalItems;
@@ -503,10 +519,11 @@ export default function FeedList({
   // 1. Popular posts are exhausted, OR
   // 2. We have less than 10 popular posts (to fill up to at least 10 posts on initial load)
   // Include popularPostIds in queryKey to ensure fresh filtering when popular posts change
-  // Note: We allow queryEnabled even if popularPostIds is empty (e.g., if popular feed returned 0 posts)
+  // Note: We allow queryEnabled even
+  // if popularPostIds is empty (e.g., if popular feed returned 0 posts)
   // The filtering will just be a no-op in that case
-  // Note: We'll compute hasEnoughPopularPosts after popularList is defined, but for now use a temporary check
-  const queryEnabled = sortBy === 'hot' && popularExhausted;
+  // Note: We'll compute hasEnoughPopularPosts
+  // after popularList is defined, but for now use a temporary check
 
   const {
     data: latestDataForHot,
@@ -538,15 +555,15 @@ export default function FeedList({
       }) as unknown as PostApiResponse;
 
       // Filter out popular posts on the frontend using current popularPostIds
-      const filteredItems = response.items.filter((item: any) => !currentPopularIds.has(String(item.id)));
+      const filteredItems = response.items
+        .filter((item: any) => !currentPopularIds.has(String(item.id)));
 
       return {
         ...response,
         items: filteredItems,
       } as PostApiResponse;
     },
-    getNextPageParam: (lastPage, allPages) => {
-      const lastPageItems = lastPage?.items || [];
+    getNextPageParam: (lastPage) => {
       const meta = lastPage?.meta;
 
       // Always continue fetching based on the original API pagination metadata
@@ -592,7 +609,8 @@ export default function FeedList({
   // Latest posts for hot feed (filtered to exclude popular ones)
   const latestListForHot = useMemo(() => {
     if (!latestDataForHot?.pages) return [];
-    const allItems = ((latestDataForHot.pages as any[]) || []).flatMap((page: any) => page?.items ?? []);
+    const allItems = ((latestDataForHot.pages as any[]) || [])
+      .flatMap((page: any) => page?.items ?? []);
     // Additional deduplication and filtering (in case backend returns popular posts)
     const seenIds = new Set<string>();
     const filtered = allItems.filter((item: any) => {
@@ -603,18 +621,30 @@ export default function FeedList({
     });
 
     return filtered;
-  }, [latestDataForHot, popularPostIds, sortBy]);
+  }, [latestDataForHot, popularPostIds]);
 
   // Auto-fetch latest posts if we have less than 10 popular posts and haven't fetched yet
   useEffect(() => {
-    const popularListLength = popularData?.pages ? ((popularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? []).length : 0;
+    const popularListLength = popularData?.pages
+      ? ((popularData.pages as any[]) || []).flatMap((page: any) => page?.items ?? []).length
+      : 0;
     // Check if latestDataForHot hasn't been fetched yet (undefined or empty pages array)
     // Use falsy check instead of === 0 because undefined !== 0
     const hasNotFetchedLatest = !latestDataForHot?.pages || latestDataForHot.pages.length === 0;
     if (sortBy === 'hot' && queryEnabledWithEnoughPosts && popularListLength < 10 && hasNotFetchedLatest && !fetchingMoreLatestForHot && hasMoreLatestForHot) {
       fetchNextLatestForHot();
     }
-  }, [sortBy, queryEnabledWithEnoughPosts, popularData, popularExhausted, latestDataForHot, fetchingMoreLatestForHot, hasMoreLatestForHot, fetchNextLatestForHot, hasEnoughPopularPosts]);
+  }, [
+    sortBy,
+    queryEnabledWithEnoughPosts,
+    popularData,
+    popularExhausted,
+    latestDataForHot,
+    fetchingMoreLatestForHot,
+    hasMoreLatestForHot,
+    fetchNextLatestForHot,
+    hasEnoughPopularPosts,
+  ]);
 
   // Track if we have data from both queries (cached or fresh)
   // This ensures posts and activities appear together, not incrementally
@@ -638,7 +668,9 @@ export default function FeedList({
     const cachedActivities = queryClient.getQueryData(['home-activities']);
 
     const hasCachedPostsData = cachedPosts && (cachedPosts as any)?.pages?.length > 0;
-    const hasCachedActivitiesData = cachedActivities && (cachedActivities as any)?.pages?.length > 0;
+    const hasCachedActivitiesData = (
+      cachedActivities && (cachedActivities as any)?.pages?.length > 0
+    );
 
     // If we have data from queries OR cached data, show it
     if ((hasPostsData || hasCachedPostsData) && (hasActivitiesData || hasCachedActivitiesData)) {
@@ -653,14 +685,6 @@ export default function FeedList({
     if (sortBy === 'hot') {
       // For hot: popular posts first, then latest posts (filtered to exclude popular ones)
       const combined = [...popularList, ...latestListForHot];
-      // Debug log removed to reduce console spam - uncomment if needed for debugging
-      // if (process.env.NODE_ENV === 'development') {
-      //   console.log('🔍 [DEBUG] combinedList for hot:', {
-      //     popularListCount: popularList.length,
-      //     latestListForHotCount: latestListForHot.length,
-      //     combinedCount: combined.length,
-      //   });
-      // }
       return combined;
     }
 
@@ -675,9 +699,10 @@ export default function FeedList({
       const cachedPosts = queryClient.getQueryData<any>(['posts', {
         limit: 10, sortBy: 'latest', search: '', filterBy: 'all',
       }])
-                         || queryClient.getQueryData<any>(['posts', {
-                           limit: 10, sortBy, search: localSearch, filterBy,
-                         }]);
+        || queryClient.getQueryData<any>(['posts', {
+          limit: 10, sortBy, search: localSearch, filterBy,
+        }]);
+
       if (cachedPosts?.pages) {
         postsToUse = (cachedPosts.pages as any[]).flatMap((page: any) => page?.items ?? []);
       }
@@ -701,6 +726,7 @@ export default function FeedList({
     const merged: PostDto[] = [];
 
     // Add activities first, then regular posts, skipping duplicates
+    // eslint-disable-next-line no-restricted-syntax
     for (const item of [...activitiesToUse, ...tradesToUse, ...postsToUse]) {
       const id = String(item?.id || '');
       if (id && !seenIds.has(id)) {
@@ -714,19 +740,21 @@ export default function FeedList({
       const bt = new Date(b?.created_at || 0).getTime();
       return bt - at;
     });
-  }, [list, activityList, tradeList, sortBy, popularList, latestListForHot, bothQueriesReady, latestData, activitiesPages, queryClient, localSearch, filterBy]);
+  }, [
+    list,
+    activityList,
+    tradeList,
+    sortBy,
+    popularList,
+    latestListForHot,
+    bothQueriesReady,
+    latestData,
+    activitiesPages, queryClient, localSearch, filterBy,
+  ]);
 
   // Memoized filtered list
   const filteredAndSortedList = useMemo(() => {
     let filtered = [...combinedList];
-
-    // Debug logs removed to reduce console spam - uncomment if needed for debugging
-    // if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
-    //   console.log('🔍 [DEBUG] filteredAndSortedList computed:', {
-    //     combinedListCount: combinedList.length,
-    //     filteredCountBefore: filtered.length,
-    //   });
-    // }
 
     if (localSearch.trim()) {
       const searchTerm = localSearch.toLowerCase();
@@ -753,13 +781,6 @@ export default function FeedList({
       );
     }
 
-    // Debug log removed to reduce console spam
-    // if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
-    //   console.log('🔍 [DEBUG] filteredAndSortedList final:', {
-    //     finalCount: filtered.length,
-    //   });
-    // }
-
     if (filterBy === 'withMedia') {
       filtered = filtered.filter(
         (item) => !isTradeItem(item)
@@ -768,11 +789,13 @@ export default function FeedList({
           && (item as PostDto).media.length > 0,
       );
     } else if (filterBy === 'withComments') {
-      filtered = filtered.filter((item) => !isTradeItem(item) && ((item as PostDto).total_comments ?? 0) > 0);
+      filtered = filtered.filter((item) => (
+        !isTradeItem(item) && ((item as PostDto).total_comments ?? 0) > 0
+      ));
     }
 
     return filtered;
-  }, [combinedList, localSearch, filterBy, chainNames]);
+  }, [combinedList, localSearch, filterBy, isTradeItem, chainNames]);
 
   // Memoized event handlers for better performance
   const handleSortChange = useCallback(
@@ -825,7 +848,9 @@ export default function FeedList({
       // Save current feed scroll position before leaving only for post detail
       try {
         sessionStorage.setItem('feedScrollY', String(window.scrollY || 0));
-      } catch {}
+      } catch {
+        // ignore
+      }
       navigate(`/post/${idStr.replace(/_v3$/, '')}`);
     },
     [navigate],
@@ -835,7 +860,9 @@ export default function FeedList({
   const renderEmptyState = () => {
     if (sortBy === 'hot') {
       // Only show loading if we don't have cached data
-      const initialLoading = popularLoading && (!popularData || (popularData as any)?.pages?.length === 0);
+      const initialLoading = (
+        popularLoading && (!popularData || (popularData as any)?.pages?.length === 0
+        ));
       const err = popularError;
       if (err) {
         return <EmptyState type="error" error={err as any} onRetry={() => { refetchPopular(); }} />;
@@ -860,13 +887,18 @@ export default function FeedList({
     }
     // Only show loading if we don't have cached data
     // For latest feed: show cached data immediately if available (from queries or cache)
-    const hasQueryData = latestData && latestData.pages.length > 0 && activitiesPages && activitiesPages.pages.length > 0;
+    const hasQueryData = (
+      latestData
+      && latestData.pages.length > 0
+      && activitiesPages
+      && activitiesPages.pages.length > 0
+    );
     const cachedPosts = queryClient.getQueryData<any>(['posts', {
       limit: 10, sortBy: 'latest', search: '', filterBy: 'all',
     }])
-                       || queryClient.getQueryData<any>(['posts', {
-                         limit: 10, sortBy, search: localSearch, filterBy,
-                       }]);
+      || queryClient.getQueryData<any>(['posts', {
+        limit: 10, sortBy, search: localSearch, filterBy,
+      }]);
     const cachedActivities = queryClient.getQueryData<any>(['home-activities']);
     const hasCachedPostsData = cachedPosts && cachedPosts?.pages?.length > 0;
     const hasCachedActivitiesData = cachedActivities && cachedActivities?.pages?.length > 0;
@@ -874,7 +906,8 @@ export default function FeedList({
 
     const initialLoading = sortBy === 'hot'
       ? (popularLoading && (!popularData || (popularData as any)?.pages?.length === 0))
-      : (!hasCachedData && (latestLoading || activitiesLoading)); // Only show loading if no cached data and actually loading
+      // Only show loading if no cached data and actually loading
+      : (!hasCachedData && (latestLoading || activitiesLoading));
     if (latestError) {
       return <EmptyState type="error" error={latestError as any} onRetry={refetchLatest} />;
     }
@@ -948,6 +981,7 @@ export default function FeedList({
         );
         i += 1;
         renderedCount += 1;
+        // eslint-disable-next-line no-continue
         continue;
       }
       const postId = (item as PostDto).id;
@@ -958,6 +992,7 @@ export default function FeedList({
         nodes.push(renderPostItem(item as PostDto));
         i += 1;
         renderedCount += 1;
+        // eslint-disable-next-line no-continue
         continue;
       }
 
@@ -981,14 +1016,17 @@ export default function FeedList({
         maybeInsertTrending();
         const gi = groupItems[j];
         const isLastVisible = j === visibleCount - 1;
-        const hideDivider = !isLastVisible; // on mobile, never show lines between items, only at the end
+        // on mobile, never show lines between items, only at the end
+        const hideDivider = !isLastVisible;
         const hasMultiple = visibleCount > 1;
         const isFirstVisible = j === 0;
         const isMiddle = j > 0 && !isLastVisible;
-        // Middle items should always be compact (py-1) on mobile; first/last keep default, with special edges.
+        // Middle items should always be compact (py-1) on mobile;
+        // first/last keep default, with special edges.
         const mobileTight = isMiddle;
         const mobileNoTopPadding = false; // keep a minimal top (we'll use tight variants instead)
-        const mobileNoBottomPadding = false; // keep a minimal bottom (we'll use tight variants instead)
+        // keep a minimal bottom (we'll use tight variants instead)
+        const mobileNoBottomPadding = false;
         const mobileTightTop = hasMultiple && isLastVisible; // last: pt-0.5
         const mobileTightBottom = hasMultiple && isFirstVisible; // first: pb-0.5
         const footer = isLastVisible && groupItems.length > 3 ? (
@@ -1041,7 +1079,7 @@ export default function FeedList({
       }
     }
     return nodes;
-  }, [filteredAndSortedList, expandedGroups, toggleGroup, renderPostItem]);
+  }, [filteredAndSortedList, isTradeItem, expandedGroups, renderPostItem, toggleGroup]);
 
   const renderHotFeedItems = useMemo(() => {
     const nodes: React.ReactNode[] = [];
@@ -1059,6 +1097,7 @@ export default function FeedList({
       }
     };
 
+    // eslint-disable-next-line no-restricted-syntax
     for (const item of filteredAndSortedList) {
       maybeInsertTrending();
       nodes.push(renderPostItem(item as PostDto));
@@ -1095,17 +1134,20 @@ export default function FeedList({
   const cachedPostsForLatest = queryClient.getQueryData<any>(['posts', {
     limit: 10, sortBy: 'latest', search: '', filterBy: 'all',
   }])
-                              || queryClient.getQueryData<any>(['posts', {
-                                limit: 10, sortBy, search: localSearch, filterBy,
-                              }]);
+    || queryClient.getQueryData<any>(['posts', {
+      limit: 10, sortBy, search: localSearch, filterBy,
+    }]);
   const cachedActivitiesForLatest = queryClient.getQueryData<any>(['home-activities']);
   const hasCachedPostsForLatest = cachedPostsForLatest && cachedPostsForLatest?.pages?.length > 0;
-  const hasCachedActivitiesForLatest = cachedActivitiesForLatest && cachedActivitiesForLatest?.pages?.length > 0;
+  const hasCachedActivitiesForLatest = (
+    cachedActivitiesForLatest && cachedActivitiesForLatest?.pages?.length > 0
+  );
   const hasCachedDataForLatest = sortBy !== 'hot' && (hasQueryDataForLatest || (hasCachedPostsForLatest && hasCachedActivitiesForLatest));
 
   const initialLoading = sortBy === 'hot'
     ? (popularLoading && (!popularData || (popularData as any)?.pages?.length === 0))
-    : (!hasCachedDataForLatest && (latestLoading || activitiesLoading)); // Only show loading if no cached data and actually loading
+    // Only show loading if no cached data and actually loading
+    : (!hasCachedDataForLatest && (latestLoading || activitiesLoading));
   const [showLoadMore, setShowLoadMore] = useState(false);
   useEffect(() => { setShowLoadMore(false); }, [sortBy]);
   useEffect(() => {
@@ -1115,27 +1157,10 @@ export default function FeedList({
     if (!sentinel) {
       return;
     }
-    // Debug log removed to reduce console spam - uncomment if needed for debugging
-    // if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
-    //   console.log('[Popular Feed] Setting up intersection observer:', {
-    //     hasMorePopular,
-    //     fetchingMorePopular,
-    //     popularExhausted,
-    //     hasMoreLatestForHot,
-    //     fetchingMoreLatestForHot,
-    //     sentinelExists: !!sentinel,
-    //   });
-    // }
+
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
       if (!entry.isIntersecting || fetchingRef.current) {
-        // Debug log removed to reduce console spam
-        // if (process.env.NODE_ENV === 'development' && sortBy === "hot") {
-        //   console.log('[Popular Feed] Intersection observer: not triggering', {
-        //     isIntersecting: entry.isIntersecting,
-        //     fetchingRef: fetchingRef.current,
-        //   });
-        // }
         return;
       }
 
@@ -1149,61 +1174,28 @@ export default function FeedList({
       const tasks: Promise<any>[] = [];
       if (sortBy === 'hot') {
         const lastPage = popularData?.pages?.[popularData.pages.length - 1];
-        const manualHasMore = lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && lastPage.meta.currentPage < lastPage.meta.totalPages;
-        // Debug logs removed to reduce console spam - uncomment if needed for debugging
-        // if (process.env.NODE_ENV === 'development') {
-        //   console.log('🔍 [DEBUG] Intersection Observer TRIGGERED:', {
-        //     hasMorePopular,
-        //     fetchingMorePopular,
-        //     popularExhausted,
-        //     hasMoreLatestForHot,
-        //     fetchingMoreLatestForHot,
-        //     lastPageMeta: lastPage?.meta,
-        //     manualHasMore,
-        //     popularPagesCount: popularData?.pages?.length || 0,
-        //     latestPagesCount: latestDataForHot?.pages?.length || 0,
-        //     queryEnabledWithEnoughPosts,
-        //   });
-        // }
-        // If popular posts are exhausted or we don't have enough, fetch latest posts (prioritize this)
+        const manualHasMore = (
+          lastPage?.meta?.currentPage
+          && lastPage?.meta?.totalPages
+          && lastPage.meta.currentPage < lastPage.meta.totalPages
+        );
+
+        // If popular posts are exhausted or we don't have enough,
+        // fetch latest posts (prioritize this)
         if ((popularExhausted || !hasEnoughPopularPosts) && queryEnabledWithEnoughPosts) {
           // Only fetch if query is enabled, not currently fetching, and there are more pages
           if (hasMoreLatestForHot && !fetchingMoreLatestForHot) {
-            // Debug log removed to reduce console spam
-            // if (process.env.NODE_ENV === 'development') {
-            //   console.log('🔍 [DEBUG] Intersection Observer - FETCHING latest posts');
-            // }
             tasks.push(fetchNextLatestForHot());
           }
-          // Debug log removed to reduce console spam
-          // else if (process.env.NODE_ENV === 'development') {
-          //   console.log('🔍 [DEBUG] Intersection Observer - NOT fetching latest posts:', {
-          //     hasMoreLatestForHot,
-          //     fetchingMoreLatestForHot,
-          //     queryEnabledWithEnoughPosts,
-          //   });
-          // }
-        } else if (!popularExhausted && hasEnoughPopularPosts && (hasMorePopular || manualHasMore) && !fetchingMorePopular) {
+        } else if (
+          !popularExhausted
+          && hasEnoughPopularPosts
+          && (hasMorePopular || manualHasMore)
+          && !fetchingMorePopular
+        ) {
           // Try to fetch popular posts if there are more and we have enough already
-          // Debug log removed to reduce console spam
-          // if (process.env.NODE_ENV === 'development') {
-          //   console.log('🔍 [DEBUG] Intersection Observer - FETCHING popular posts');
-          // }
           tasks.push(fetchNextPopular());
         }
-        // Debug log removed to reduce console spam
-        // else if (process.env.NODE_ENV === 'development') {
-        //   console.log('🔍 [DEBUG] Intersection Observer - NOT fetching (no conditions met):', {
-        //     popularExhausted,
-        //     hasEnoughPopularPosts,
-        //     queryEnabledWithEnoughPosts,
-        //     hasMorePopular,
-        //     manualHasMore,
-        //     fetchingMorePopular,
-        //     hasMoreLatestForHot,
-        //     fetchingMoreLatestForHot,
-        //   });
-        // }
       } else {
         if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
         if (hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
@@ -1213,7 +1205,10 @@ export default function FeedList({
       });
     }, { root: null, rootMargin: '800px 0px', threshold: 0.01 });
     observer.observe(sentinel);
-    return () => observer.disconnect();
+    // eslint-disable-next-line consistent-return
+    return () => {
+      observer.disconnect();
+    };
   }, [
     initialLoading,
     sortBy,
@@ -1306,11 +1301,10 @@ export default function FeedList({
         {/* Non-hot: existing renderer - show feed if we have data, even while refetching */}
         {sortBy !== 'hot' && (latestData?.pages.length > 0 || activityList.length > 0) && renderFeedItems}
 
-        {/* Hot: render popular posts (which seamlessly includes recent posts after popular posts are exhausted) */}
+        {/* Hot: render popular posts (which seamlessly includes
+        recent posts after popular posts are exhausted) */}
         {sortBy === 'hot' && (popularData?.pages.length > 0 || latestDataForHot?.pages.length > 0) && (
-          <>
-            {renderHotFeedItems}
-          </>
+          renderHotFeedItems
         )}
       </div>
 
@@ -1329,14 +1323,27 @@ export default function FeedList({
                 onClick={async () => {
                   if (sortBy === 'hot') {
                     const lastPage = popularData?.pages?.[popularData.pages.length - 1];
-                    const manualHasMore = lastPage?.meta?.currentPage && lastPage?.meta?.totalPages && lastPage.meta.currentPage < lastPage.meta.totalPages;
-                    // If popular posts are exhausted or we don't have enough, fetch latest posts (prioritize this)
-                    if ((popularExhausted || !hasEnoughPopularPosts) && queryEnabledWithEnoughPosts) {
-                      // Only fetch if query is enabled, not currently fetching, and there are more pages
+                    const manualHasMore = (
+                      lastPage?.meta?.currentPage
+                      && lastPage?.meta?.totalPages
+                      && lastPage.meta.currentPage < lastPage.meta.totalPages
+                    );
+                    // If popular posts are exhausted or we don't have enough,
+                    // fetch latest posts (prioritize this)
+                    if (
+                      (popularExhausted || !hasEnoughPopularPosts)
+                      && queryEnabledWithEnoughPosts
+                    ) {
+                      // Only fetch if query is enabled, not currently fetching,
+                      // and there are more pages
                       if (hasMoreLatestForHot && !fetchingMoreLatestForHot) {
                         await fetchNextLatestForHot();
                       }
-                    } else if (!popularExhausted && hasEnoughPopularPosts && (hasMorePopular || manualHasMore) && !fetchingMorePopular) {
+                    } else if (
+                      !popularExhausted
+                      && hasEnoughPopularPosts
+                      && (hasMorePopular || manualHasMore)
+                      && !fetchingMorePopular) {
                       // Try to fetch popular posts if there are more and we have enough already
                       await fetchNextPopular();
                     }
@@ -1344,7 +1351,9 @@ export default function FeedList({
                   }
                   const tasks: Promise<any>[] = [];
                   if (hasMoreLatest && !fetchingMoreLatest) tasks.push(fetchNextLatest());
-                  if (hasMoreActivities && !fetchingMoreActivities) tasks.push(fetchNextActivities());
+                  if (hasMoreActivities && !fetchingMoreActivities) {
+                    tasks.push(fetchNextActivities());
+                  }
                   if (tasks.length > 0) await Promise.all(tasks);
                 }}
                 className="bg-gradient-to-br from-white/10 to-white/5 border border-white/15 rounded-xl px-6 py-3 font-medium transition-all duration-300 ease-cubic-bezier hover:from-white/15 hover:to-white/10 hover:border-white/25 hover:-translate-y-0.5"
@@ -1367,4 +1376,6 @@ export default function FeedList({
   ) : (
     content
   );
-}
+};
+
+export default FeedList;

@@ -3,12 +3,12 @@ import { useAeSdk } from '../../../../hooks/useAeSdk';
 import AeButton from '../../../../components/AeButton';
 import { Badge } from '../../../../components/ui/badge';
 import { cn } from '../../../../lib/utils';
-import AddressChip from '../../../../components/AddressChip';
+import { AddressChip } from '../../../../components/AddressChip';
 import { Decimal } from '../../../../libs/decimal';
 import LivePriceFormatter from '../../../shared/components/LivePriceFormatter';
 import { useInvitations } from '../../hooks/useInvitations';
 
-export default function InvitationList() {
+const InvitationList = () => {
   const { activeAccount } = useAeSdk();
   const {
     invitations,
@@ -39,7 +39,7 @@ export default function InvitationList() {
     } catch (error: any) {
       console.error('Failed to revoke invitation:', error);
       if (error.message?.includes('ALREADY_REDEEMED')) {
-        alert('Invitation already claimed or revoked');
+        console.warn('Invitation already claimed or revoked');
       }
     } finally {
       setRevokingInvitationInvitee(null);
@@ -57,6 +57,98 @@ export default function InvitationList() {
       default:
         return 'outline';
     }
+  };
+
+  const renderInvitationDetails = (invitation: any) => {
+    if (invitation.status === 'claimed') {
+      return (
+        <>
+          <div className="text-[10px] text-green-400/80 font-medium mb-1">
+            {invitation.claimedBy ? 'Invitee' : 'Claimed'}
+          </div>
+          {invitation.claimedBy ? (
+            <div className="font-mono text-sm text-white truncate">
+              <AddressChip
+                address={invitation.claimedBy}
+                linkToProfile
+              />
+            </div>
+          ) : (
+            <div className="text-xs text-white/50">
+              Invitation was claimed
+            </div>
+          )}
+          {invitation.claimedAt && (
+            <div className="text-xs text-white/50 mt-1">
+              Claimed on
+              {' '}
+              {invitation.claimedAt}
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (invitation.status === 'revoked') {
+      return (
+        <>
+          <div className="text-[10px] text-red-400/80 font-medium mb-1">Revoked</div>
+          <div className="text-xs text-white/50">
+            No one claimed this invite
+          </div>
+          {invitation.revokedAt && (
+            <div className="text-xs text-white/50 mt-1">
+              Revoked on
+              {' '}
+              {invitation.revokedAt}
+            </div>
+          )}
+        </>
+      );
+    }
+
+    return (
+      <>
+        <div className="text-[10px] text-yellow-400/80 font-medium mb-1">Awaiting claim</div>
+        <div className="text-xs text-white/50 mb-1">
+          Share the link to invite someone
+        </div>
+        {invitation.secretKey && (
+          <button
+            type="button"
+            onClick={() => handleCopyLink(invitation.invitee, invitation.secretKey!)}
+            className={cn(
+              'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs',
+              'bg-white/5 border border-white/10 backdrop-blur-sm',
+              'transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:bg-white/10',
+              'cursor-pointer relative overflow-hidden',
+              copiedInvitee === invitation.invitee && 'bg-green-500/20 border-green-500/30',
+            )}
+            title="Click to copy link"
+          >
+            <span className="text-yellow-400">🔗</span>
+            <span className="font-mono text-[10px] text-white/80 truncate max-w-[140px]">
+              {prepareInviteLink(invitation.secretKey).slice(0, 25)}
+              ...
+            </span>
+            <span className={cn(
+              'text-xs',
+              copiedInvitee === invitation.invitee ? 'text-green-400' : 'opacity-60',
+            )}
+            >
+              {copiedInvitee === invitation.invitee ? '✓' : '📋'}
+            </span>
+          </button>
+        )}
+        {invitation.date && (
+          <div className="text-xs text-white/50 mt-1">
+            Created on
+            {' '}
+            {invitation.date}
+          </div>
+        )}
+      </>
+    );
   };
 
   if (!activeAccount) return null;
@@ -105,86 +197,7 @@ export default function InvitationList() {
 
               {/* Details - show actual invitee for claimed, awaiting for others */}
               <div className="min-w-0">
-                {invitation.status === 'claimed' ? (
-                  <>
-                    <div className="text-[10px] text-green-400/80 font-medium mb-1">
-                      {invitation.claimedBy ? 'Invitee' : 'Claimed'}
-                    </div>
-                    {invitation.claimedBy ? (
-                      <div className="font-mono text-sm text-white truncate">
-                        <AddressChip
-                          address={invitation.claimedBy}
-                          linkToProfile
-                        />
-                      </div>
-                    ) : (
-                      <div className="text-xs text-white/50">
-                        Invitation was claimed
-                      </div>
-                    )}
-                    {invitation.claimedAt && (
-                    <div className="text-xs text-white/50 mt-1">
-                      Claimed on
-                      {' '}
-                      {invitation.claimedAt}
-                    </div>
-                    )}
-                  </>
-                ) : invitation.status === 'revoked' ? (
-                  <>
-                    <div className="text-[10px] text-red-400/80 font-medium mb-1">Revoked</div>
-                    <div className="text-xs text-white/50">
-                      No one claimed this invite
-                    </div>
-                    {invitation.revokedAt && (
-                    <div className="text-xs text-white/50 mt-1">
-                      Revoked on
-                      {' '}
-                      {invitation.revokedAt}
-                    </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div className="text-[10px] text-yellow-400/80 font-medium mb-1">Awaiting claim</div>
-                    <div className="text-xs text-white/50 mb-1">
-                      Share the link to invite someone
-                    </div>
-                    {invitation.secretKey && (
-                    <button
-                      onClick={() => handleCopyLink(invitation.invitee, invitation.secretKey!)}
-                      className={cn(
-                        'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs',
-                        'bg-white/5 border border-white/10 backdrop-blur-sm',
-                        'transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:bg-white/10',
-                        'cursor-pointer relative overflow-hidden',
-                        copiedInvitee === invitation.invitee && 'bg-green-500/20 border-green-500/30',
-                      )}
-                      title="Click to copy link"
-                    >
-                      <span className="text-yellow-400">🔗</span>
-                      <span className="font-mono text-[10px] text-white/80 truncate max-w-[140px]">
-                        {prepareInviteLink(invitation.secretKey).slice(0, 25)}
-                        ...
-                      </span>
-                      <span className={cn(
-                        'text-xs',
-                        copiedInvitee === invitation.invitee ? 'text-green-400' : 'opacity-60',
-                      )}
-                      >
-                        {copiedInvitee === invitation.invitee ? '✓' : '📋'}
-                      </span>
-                    </button>
-                    )}
-                    {invitation.date && (
-                    <div className="text-xs text-white/50 mt-1">
-                      Created on
-                      {' '}
-                      {invitation.date}
-                    </div>
-                    )}
-                  </>
-                )}
+                {renderInvitationDetails(invitation)}
               </div>
 
               {/* Amount */}
@@ -257,78 +270,95 @@ export default function InvitationList() {
               {/* Details and Amount Row */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1 min-w-0">
-                  {invitation.status === 'claimed' ? (
-                    <>
-                      <div className="text-xs text-green-400/80 font-medium">
-                        {invitation.claimedBy ? 'Invitee' : 'Claimed'}
-                      </div>
-                      {invitation.claimedBy ? (
-                        <div className="font-mono text-sm text-white">
-                          <AddressChip
-                            address={invitation.claimedBy}
-                            linkToProfile
-                          />
+                  {(() => {
+                    if (invitation.status === 'claimed') {
+                      let claimedLabel: string;
+                      if (invitation.claimedBy) claimedLabel = 'Invitee';
+                      else claimedLabel = 'Claimed';
+                      return (
+                        <>
+                          <div className="text-xs text-green-400/80 font-medium">
+                            {claimedLabel}
+                          </div>
+                          {invitation.claimedBy && (
+                            <div className="font-mono text-sm text-white">
+                              <AddressChip
+                                address={invitation.claimedBy}
+                                linkToProfile
+                              />
+                            </div>
+                          )}
+                          {!invitation.claimedBy && (
+                            <div className="text-xs text-white/50">
+                              Invitation was claimed
+                            </div>
+                          )}
+                          {invitation.claimedAt && (
+                            <div className="text-xs text-white/50">
+                              {invitation.claimedAt}
+                            </div>
+                          )}
+                        </>
+                      );
+                    }
+                    if (invitation.status === 'revoked') {
+                      return (
+                        <>
+                          <div className="text-xs text-red-400/80 font-medium">Revoked</div>
+                          <div className="text-xs text-white/50">
+                            Not claimed
+                          </div>
+                          {invitation.revokedAt && (
+                            <div className="text-xs text-white/50">
+                              {invitation.revokedAt}
+                            </div>
+                          )}
+                        </>
+                      );
+                    }
+                    const isCopied = copiedInvitee === invitation.invitee;
+                    return (
+                      <>
+                        <div className="text-xs text-yellow-400/80 font-medium">Awaiting</div>
+                        <div className="text-xs text-white/50 mb-1">
+                          Share the link
                         </div>
-                      ) : (
-                        <div className="text-xs text-white/50">
-                          Invitation was claimed
-                        </div>
-                      )}
-                      {invitation.claimedAt && (
-                      <div className="text-xs text-white/50">
-                        {invitation.claimedAt}
-                      </div>
-                      )}
-                    </>
-                  ) : invitation.status === 'revoked' ? (
-                    <>
-                      <div className="text-xs text-red-400/80 font-medium">Revoked</div>
-                      <div className="text-xs text-white/50">
-                        Not claimed
-                      </div>
-                      {invitation.revokedAt && (
-                      <div className="text-xs text-white/50">
-                        {invitation.revokedAt}
-                      </div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <div className="text-xs text-yellow-400/80 font-medium">Awaiting</div>
-                      <div className="text-xs text-white/50 mb-1">
-                        Share the link
-                      </div>
-                      {invitation.secretKey && (
-                      <button
-                        onClick={() => handleCopyLink(invitation.invitee, invitation.secretKey!)}
-                        className={cn(
-                          'inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px]',
-                          'bg-white/5 border border-white/10 backdrop-blur-sm',
-                          'transition-all duration-300 hover:bg-white/10',
-                          'cursor-pointer relative overflow-hidden',
-                          copiedInvitee === invitation.invitee && 'bg-green-500/20 border-green-500/30',
+                        {invitation.secretKey && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleCopyLink(invitation.invitee, invitation.secretKey!);
+                            }}
+                            className={cn(
+                              'inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px]',
+                              'bg-white/5 border border-white/10 backdrop-blur-sm',
+                              'transition-all duration-300 hover:bg-white/10',
+                              'cursor-pointer relative overflow-hidden',
+                              isCopied && 'bg-green-500/20 border-green-500/30',
+                            )}
+                            title="Click to copy link"
+                          >
+                            <span className="text-yellow-400 text-xs">🔗</span>
+                            <span className="font-mono text-white/80 truncate max-w-[80px]">
+                              {prepareInviteLink(invitation.secretKey).slice(0, 15)}
+                              ...
+                            </span>
+                            <span className={cn(isCopied && 'text-green-400', !isCopied && 'opacity-60')}>
+                              {isCopied && '✓'}
+                              {!isCopied && '📋'}
+                            </span>
+                          </button>
                         )}
-                        title="Click to copy link"
-                      >
-                        <span className="text-yellow-400 text-xs">🔗</span>
-                        <span className="font-mono text-white/80 truncate max-w-[80px]">
-                          {prepareInviteLink(invitation.secretKey).slice(0, 15)}
-                          ...
-                        </span>
-                        <span className={copiedInvitee === invitation.invitee ? 'text-green-400' : 'opacity-60'}>
-                          {copiedInvitee === invitation.invitee ? '✓' : '📋'}
-                        </span>
-                      </button>
-                      )}
-                      {invitation.date && (
-                      <div className="text-xs text-white/50 mt-1">
-                        Created on
-                        {' '}
-                        {invitation.date}
-                      </div>
-                      )}
-                    </>
-                  )}
+                        {invitation.date && (
+                          <div className="text-xs text-white/50 mt-1">
+                            Created on
+                            {' '}
+                            {invitation.date}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
                 <div className="space-y-1">
                   <div className="text-xs text-white/60 font-medium">Amount</div>
@@ -379,4 +409,6 @@ export default function InvitationList() {
       )}
     </div>
   );
-}
+};
+
+export default InvitationList;

@@ -75,13 +75,12 @@ interface AccountPollVoterAuthorResponse {
   delegateeVotes: unknown[];
 }
 
-interface ContractEventRequest {
-  topic: string;
-  poll?: Encoded.ContractAddress;
-}
-
 // Governance API client (aepp-governance backend compatibility)
-async function fetchGovernance<T>(path: string, init?: RequestInit, ignoreOutput?: boolean): Promise<T> {
+async function fetchGovernance<T>(
+  path: string,
+  init?: RequestInit,
+  ignoreOutput?: boolean,
+): Promise<T> {
   const res = await fetch(`${CONFIG.GOVERNANCE_API_URL.replace(/\/$/, '')}/${path}`, init);
   if (!res.ok) throw new Error(`Governance request failed: ${res.status}`);
   if (ignoreOutput) return undefined as T;
@@ -90,7 +89,9 @@ async function fetchGovernance<T>(path: string, init?: RequestInit, ignoreOutput
 
 export const GovernanceApi = {
   // Get poll votes state for a specific address
-  getVotesState: (address: string): Promise<VotesStateResponse> => fetchGovernance<VotesStateResponse>(`votesState/${address}`),
+  getVotesState: (address: string): Promise<VotesStateResponse> => (
+    fetchGovernance<VotesStateResponse>(`votesState/${address}`)
+  ),
 
   // Get delegated power for an account (optionally for a specific poll)
   getDelegatedPower: (address: string, poll?: string): Promise<DelegatedPowerResponse> => {
@@ -99,10 +100,14 @@ export const GovernanceApi = {
   },
 
   // Get poll overview for a specific address
-  getPollOverview: (address: Encoded.ContractAddress): Promise<PollOverviewResponse> => fetchGovernance<PollOverviewResponse>(`pollOverview/${address}`),
+  getPollOverview: (address: Encoded.ContractAddress): Promise<PollOverviewResponse> => (
+    fetchGovernance<PollOverviewResponse>(`pollOverview/${address}`)
+  ),
 
   // Get account poll voter author information
-  getAccountPollVoterAuthor: (address: string): Promise<AccountPollVoterAuthorResponse> => fetchGovernance<AccountPollVoterAuthorResponse>(`accountPollVoterAuthor/${address}`),
+  getAccountPollVoterAuthor: (address: string): Promise<AccountPollVoterAuthorResponse> => (
+    fetchGovernance<AccountPollVoterAuthorResponse>(`accountPollVoterAuthor/${address}`)
+  ),
 
   // Submit contract event
   submitContractEvent: (topic: string, poll?: string): Promise<void> => fetchGovernance<void>('contractEvent', {
@@ -112,7 +117,11 @@ export const GovernanceApi = {
   }, true),
 
   // Get poll ordering (optionally for closed polls)
-  getPollOrdering: (closed: boolean = false): Promise<PollOrderingResponse> => fetchGovernance<PollOrderingResponse>(`pollOrdering?closed=${closed ? 'true' : 'false'}`),
+  getPollOrdering: (closed: boolean = false): Promise<PollOrderingResponse> => (
+    fetchGovernance<PollOrderingResponse>(
+      `pollOrdering?closed=${closed ? 'true' : 'false'}`,
+    )
+  ),
 
   // Get backend version
   getVersion: (): Promise<GovernanceVersion> => fetchGovernance<GovernanceVersion>('version'),

@@ -6,9 +6,10 @@ type LogLevelMethod = (...d: unknown[]) => void;
  * @param {LogLevel} level - Log Level (e.g. log, info, debug, error)
  * @return {LogLevelMethod} Function to write the log with the respective log level prefix.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const createLogLevel = (level: LogLevel): LogLevelMethod => (...d) => {
   if (import.meta.env.DEV) {
-    console.trace(`[${level.toUpperCase()}]`, ...d);
+    d.forEach(() => {});
   }
 };
 

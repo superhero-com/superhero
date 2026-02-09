@@ -8,7 +8,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import { DexPairService, PairDto } from '../../../api/generated';
 import { TokenChip } from '../../../components/TokenChip';
-import PairLineChart from '../components/charts/PairLineChart';
+import { PairLineChart } from '../components/charts/PairLineChart';
 
 // Define the actual API response structure
 interface PaginatedResponse<T> {
@@ -20,9 +20,9 @@ interface PaginatedResponse<T> {
   };
 }
 
-export default function DexExplorePools() {
+const DexExplorePools = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const tokenAddress = searchParams.get('tokenAddress');
   const [sort, setSort] = useState<'transactions_count' | 'created_at'>(
     'transactions_count',
@@ -109,6 +109,7 @@ export default function DexExplorePools() {
 
                   {/* Sort Direction Button */}
                   <button
+                    type="button"
                     onClick={() => setSortDirection(sortDirection === 'ASC' ? 'DESC' : 'ASC')}
                     className={`py-1.5 px-2 rounded-md border border-[var(--glass-border)] backdrop-blur-[10px] transition-all duration-300 text-[13px] font-semibold min-w-[28px] h-7 flex items-center justify-center outline-none hover:scale-105 active:scale-95 ${sortDirection === 'ASC'
                       ? 'bg-[var(--accent-color)] text-white'
@@ -164,6 +165,7 @@ export default function DexExplorePools() {
                   />
                   {search && (
                     <button
+                      type="button"
                       onClick={() => setSearch('')}
                       className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-white/10 border-0 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer text-[var(--light-font-color)] text-[10px] transition-all duration-300 outline-none hover:bg-red-500/20 hover:text-red-400 hover:scale-110 active:scale-95"
                       title="Clear search"
@@ -229,11 +231,20 @@ export default function DexExplorePools() {
                     key={pair.address}
                     className="bg-white/[0.02] border border-[var(--glass-border)] rounded-2xl p-4 backdrop-blur-[10px] cursor-pointer transition-all duration-300 active:scale-[0.98] active:bg-white/[0.05]"
                     onClick={() => navigate(`/defi/explore/pools/${pair.address}`)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        navigate(`/defi/explore/pools/${pair.address}`);
+                      }
+                    }}
                   >
                     {/* Pool Pair Header */}
                     <div className="flex flex-col items-center justify-between mb-3 pb-3 border-b border-white/5">
                       <div className="flex flex-wrap items-center gap-1">
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/defi/explore/tokens/${pair.token0}`);
@@ -246,6 +257,7 @@ export default function DexExplorePools() {
                           /
                         </span>
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/defi/explore/tokens/${pair.token1}`);
@@ -290,6 +302,7 @@ export default function DexExplorePools() {
                     {/* Action Buttons */}
                     <div className="flex gap-2 w-full">
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(
@@ -301,6 +314,7 @@ export default function DexExplorePools() {
                         🔄 Swap
                       </button>
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(
@@ -352,9 +366,18 @@ export default function DexExplorePools() {
                         key={pair.address}
                         className="border-b border-white/5 transition-all duration-300 hover:bg-white/[0.03] cursor-pointer"
                         onClick={() => navigate(`/defi/explore/pools/${pair.address}`)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            navigate(`/defi/explore/pools/${pair.address}`);
+                          }
+                        }}
                       >
                         <td className="py-4 px-3 flex items-center gap-0.5">
                           <button
+                            type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               navigate(`/defi/explore/tokens/${pair.token0}`);
@@ -367,6 +390,7 @@ export default function DexExplorePools() {
                             /
                           </span>
                           <button
+                            type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               navigate(`/defi/explore/tokens/${pair.token1}`);
@@ -396,6 +420,7 @@ export default function DexExplorePools() {
                         <td className="text-center py-4 px-3">
                           <div className="flex gap-1.5 justify-center">
                             <button
+                              type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate(
@@ -407,6 +432,7 @@ export default function DexExplorePools() {
                               Swap
                             </button>
                             <button
+                              type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate(
@@ -450,6 +476,7 @@ export default function DexExplorePools() {
                 <div className="flex items-center gap-1.5 md:gap-2 order-1 md:order-2 flex-wrap justify-center md:justify-start">
                   {/* First Page Button - Desktop Only */}
                   <button
+                    type="button"
                     onClick={() => setPage(1)}
                     disabled={page === 1}
                     className={`hidden md:block py-2 px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium transition-all duration-300 outline-none ${page === 1
@@ -463,6 +490,7 @@ export default function DexExplorePools() {
 
                   {/* Previous Page Button */}
                   <button
+                    type="button"
                     onClick={() => setPage(page - 1)}
                     disabled={page === 1}
                     className={`py-2 px-2 md:px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-sm md:text-[13px] font-medium transition-all duration-300 outline-none min-w-[80px] md:min-w-auto ${page === 1
@@ -488,6 +516,7 @@ export default function DexExplorePools() {
 
                   {/* Next Page Button */}
                   <button
+                    type="button"
                     onClick={() => setPage(page + 1)}
                     disabled={page >= Math.ceil(data.meta.totalItems / limit)}
                     className={`py-2 px-2 md:px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-sm md:text-[13px] font-medium transition-all duration-300 outline-none min-w-[60px] md:min-w-auto ${page >= Math.ceil(data.meta.totalItems / limit)
@@ -501,6 +530,7 @@ export default function DexExplorePools() {
 
                   {/* Last Page Button - Desktop Only */}
                   <button
+                    type="button"
                     onClick={() => setPage(Math.ceil(data.meta.totalItems / limit))}
                     disabled={page >= Math.ceil(data.meta.totalItems / limit)}
                     className={`hidden md:block py-2 px-3 rounded-lg border border-[var(--glass-border)] backdrop-blur-[10px] text-[13px] font-medium transition-all duration-300 outline-none ${page >= Math.ceil(data.meta.totalItems / limit)
@@ -531,4 +561,6 @@ export default function DexExplorePools() {
       </div>
     </div>
   );
-}
+};
+
+export default DexExplorePools;

@@ -56,11 +56,18 @@ export const PoolStatsOverview = ({ pairSummary }: PoolStatsOverviewProps) => {
           />
         </div>
         <div className="text-xs text-white/60 font-medium">
-          {selectedPeriod === '24h'
-            ? 'Last 24 hours'
-            : selectedPeriod === '7d'
-              ? 'Last 7 days'
-              : 'Last 30 days'}
+          {(() => {
+            switch (selectedPeriod) {
+              case '24h':
+                return 'Last 24 hours';
+              case '7d':
+                return 'Last 7 days';
+              case '30d':
+                return 'Last 30 days';
+              default:
+                return 'Last 24 hours';
+            }
+          })()}
         </div>
       </div>
 

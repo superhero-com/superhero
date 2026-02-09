@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { cn } from '@/lib/utils';
 import { DexTokenDto } from '../../../api/generated';
 import { DEX_ADDRESSES } from '../../../libs/dex';

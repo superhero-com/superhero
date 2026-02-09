@@ -10,7 +10,7 @@ import {
   PoolTransactions,
 } from '../components/PoolDetail';
 
-export default function PoolDetail() {
+const PoolDetail = () => {
   const { poolAddress, id } = useParams();
   // Support both :poolAddress (new routes) and :id (legacy routes)
   const address = poolAddress || id;
@@ -56,4 +56,6 @@ export default function PoolDetail() {
       <PoolTransactions poolAddress={address} />
     </div>
   );
-}
+};
+
+export default PoolDetail;

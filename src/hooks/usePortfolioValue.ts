@@ -66,7 +66,8 @@ export function usePortfolioValue({
         // Sort by timestamp descending and get the latest
         const latest = snapshots.length === 1
           ? snapshots[0]
-          : [...snapshots].sort((a, b) => moment(b.timestamp).valueOf() - moment(a.timestamp).valueOf())[0];
+          : [...snapshots]
+            .sort((a, b) => moment(b.timestamp).valueOf() - moment(a.timestamp).valueOf())[0];
 
         return latest;
       } catch (err) {
@@ -99,7 +100,8 @@ export function usePortfolioValue({
       return Decimal.from(data.total_value_ae);
     }
     // For fiat currencies, use total_value_usd if available (including zero values)
-    // Note: total_value_usd contains the value converted to the requested currency (EUR, GBP, etc.), not just USD
+    // Note: total_value_usd contains the value converted
+    // to the requested currency (EUR, GBP, etc.), not just USD
     if (data.total_value_usd != null) {
       return Decimal.from(data.total_value_usd);
     }
@@ -124,22 +126,24 @@ export function usePortfolioValue({
         return `${Number(currentValue).toFixed(4)} AE`;
       }
       const currencyCode = currentCurrencyInfo.code.toUpperCase();
-      // Safely convert to number
-      const valueNumber = typeof currentValue.toNumber === 'function'
-        ? currentValue.toNumber()
-        : typeof currentValue === 'number'
-          ? currentValue
-          : Number(currentValue);
+      let valueNumber: number;
+
+      if (typeof (currentValue as any).toNumber === 'function') {
+        // Handle Decimal.js (or similar) object with toNumber method
+        valueNumber = (currentValue as any).toNumber();
+      } else if (typeof currentValue === 'number') {
+        valueNumber = currentValue;
+      } else {
+        valueNumber = Number(currentValue);
+      }
+
       return valueNumber.toLocaleString('en-US', {
         style: 'currency',
         currency: currencyCode,
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
-    } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[usePortfolioValue] Error formatting value:', error, { currentValue, currency });
-      }
+    } catch {
       return null;
     }
   }, [currentValue, currency, currentCurrencyInfo]);

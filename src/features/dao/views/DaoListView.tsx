@@ -10,7 +10,7 @@ import { TokenDto } from '@/api/generated/models/TokenDto';
 import { Decimal } from '@/libs/decimal';
 import { toAe } from '@/utils/bondingCurve';
 import { LivePriceFormatter } from '@/features/shared/components';
-import AddressChip from '@/components/AddressChip';
+import { AddressChip } from '@/components/AddressChip';
 import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
 import Spinner from '@/components/Spinner';
 
@@ -27,7 +27,7 @@ const SORT = {
 } as const;
 type OrderByOption = (typeof SORT)[keyof typeof SORT];
 
-export default function Daos() {
+const Daos = () => {
   const { activeAccount } = useAeSdk();
   const [search, setSearch] = useState('');
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
@@ -75,7 +75,7 @@ export default function Daos() {
   }, [search]);
 
   const {
-    data, isFetching, fetchNextPage, hasNextPage, refetch, error,
+    data, isFetching, fetchNextPage, hasNextPage, error,
   } = useInfiniteQuery({
     initialPageParam: 1,
     queryFn: ({ pageParam = 1 }) => TokensService.listAll({
@@ -85,9 +85,11 @@ export default function Daos() {
       limit: 20,
       page: pageParam,
     }) as unknown as TokenDto[],
-    getNextPageParam: (lastPage: any, allPages, lastPageParam) => (lastPage?.meta?.currentPage === lastPage?.meta?.totalPages
-      ? undefined
-      : lastPageParam + 1),
+    getNextPageParam: (lastPage: any, allPages, lastPageParam) => (
+      lastPage?.meta?.currentPage === lastPage?.meta?.totalPages
+        ? undefined
+        : lastPageParam + 1
+    ),
     queryKey: [
       'TokensService.listAll',
       orderBy,
@@ -103,23 +105,7 @@ export default function Daos() {
     setOrderDirection('DESC'); // Reset to default direction when using dropdown
   }
 
-  function handleSort(sortKey: OrderByOption) {
-    if (
-      orderBy === sortKey
-      || (orderBy === 'newest' && sortKey === 'holders_count')
-      || (orderBy === 'holders_count' && sortKey === 'newest')
-    ) {
-      if (sortKey === 'newest' || sortKey === 'holders_count') {
-        setOrderBy(orderBy === 'newest' ? 'holders_count' : 'newest');
-      } else {
-        setOrderDirection(orderDirection === 'DESC' ? 'ASC' : 'DESC');
-      }
-    } else {
-      // Set new column with default DESC direction
-      setOrderBy(sortKey);
-      setOrderDirection('DESC');
-    }
-  }
+  // handleSort removed (unused)
 
   const allItems = useMemo(
     () => (data?.pages?.length ? data.pages.map((page) => page.items).flat() : []),
@@ -306,6 +292,7 @@ export default function Daos() {
       {hasNextPage && (
         <div className="text-center pt-2 pb-4">
           <button
+            type="button"
             ref={loadMoreBtn}
             onClick={() => fetchNextPage()}
             disabled={isFetching}
@@ -328,4 +315,6 @@ export default function Daos() {
       )}
     </div>
   );
-}
+};
+
+export default Daos;

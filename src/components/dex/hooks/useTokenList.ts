@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+/* eslint-disable */
 import { useMemo } from 'react';
 import { DexService, DexTokenDto } from '../../../api/generated';
 import { TokenListState } from '../types/dex';

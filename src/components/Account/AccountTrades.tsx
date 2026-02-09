@@ -1,23 +1,30 @@
 import { TX_FUNCTIONS } from '@/utils/constants';
 import { formatLongDate, formatVolume } from '@/utils/common';
 import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter';
-import { useState } from 'react';
 import { useAddressByChainName } from '@/hooks/useChainName';
-import { useQuery } from '@tanstack/react-query';
 import { TransactionsService } from '@/api/generated/services/TransactionsService';
 import {
   DataTable,
   DataTableResponse,
 } from '@/features/shared/components/DataTable/DataTable';
 import Spinner from '@/components/Spinner';
-import AddressChip from '../AddressChip';
+import { AddressChip } from '../AddressChip';
 
 interface AccountTradesProps {
   address: string;
   tab: string;
 }
 
-export default function AccountTrades({ address, tab }: AccountTradesProps) {
+const ErrorComponent = () => (
+  <div className="text-center py-12">
+    <div className="text-red-400 text-lg mb-2">⚠️</div>
+    <div className="text-red-400 text-sm">
+      Failed to load transactions
+    </div>
+  </div>
+);
+
+const AccountTrades = ({ address, tab }: AccountTradesProps) => {
   const isChainName = address?.endsWith('.chain');
   const { address: resolvedAddress } = useAddressByChainName(
     isChainName ? address : undefined,
@@ -50,7 +57,7 @@ export default function AccountTrades({ address, tab }: AccountTradesProps) {
       <div className="divide-y divide-white/5 border border-white/10 rounded-2xl overflow-hidden">
         <DataTable
           queryFn={fetchTransactions}
-          renderRow={({ item: transaction, index }) => {
+          renderRow={({ item: transaction }) => {
             const txType = (transaction?.tx_type || '').toLowerCase();
             const color = ((): 'green' | 'red' | 'yellow' | 'primary' => {
               switch (txType) {
@@ -205,14 +212,7 @@ export default function AccountTrades({ address, tab }: AccountTradesProps) {
           }}
           emptyMessage="No transactions found matching your."
           className="space-y-4 mb-4"
-          errorComponent={(error) => (
-            <div className="text-center py-12">
-              <div className="text-red-400 text-lg mb-2">⚠️</div>
-              <div className="text-red-400 text-sm">
-                Failed to load transactions
-              </div>
-            </div>
-          )}
+          errorComponent={ErrorComponent}
           loadingComponent={(
             <div className="flex items-center justify-center py-12">
               <Spinner className="w-6 h-6" />
@@ -222,4 +222,6 @@ export default function AccountTrades({ address, tab }: AccountTradesProps) {
       </div>
     </div>
   );
-}
+};
+
+export default AccountTrades;

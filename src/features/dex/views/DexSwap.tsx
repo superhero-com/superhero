@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import Head from '../../../seo/Head';
+import { Head } from '../../../seo/Head';
 import { DexTokenDto, PairDto } from '../../../api/generated';
 import SwapForm from '../../../components/dex/core/SwapForm';
 import RecentActivity from '../../../components/dex/supporting/RecentActivity';
-import PoolCandlestickChart from '../components/charts/PoolCandlestickChart';
+import { PoolCandlestickChart } from '../components/charts/PoolCandlestickChart';
 
-export default function DexSwap() {
+const DexSwap = () => {
   const [selectedPair, setSelectedPair] = useState<PairDto | null>(null);
   const [fromToken, setFromToken] = useState<DexTokenDto | null>(null);
   // todo get selected pool address3
@@ -41,4 +41,6 @@ export default function DexSwap() {
       {/* New Account Education hidden on DEX */}
     </div>
   );
-}
+};
+
+export default DexSwap;

@@ -29,7 +29,7 @@ const voteTypes = [
   VOTE_TYPE.DeleteModerator,
 ] as const;
 
-export default function Dao() {
+const Dao = () => {
   const { saleAddress } = useParams();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -65,7 +65,7 @@ export default function Dao() {
     } else {
       try {
         ensureAddress(newVote.value.trim(), Encoding.ContractAddress);
-      } catch (e) {
+      } catch {
         errors.value = 'Subject value must be a valid contract address';
       }
     }
@@ -76,7 +76,7 @@ export default function Dao() {
     } else {
       try {
         ensureString(newVote.description.trim());
-      } catch (e) {
+      } catch {
         errors.description = 'Description must be a valid string';
       }
     }
@@ -87,7 +87,7 @@ export default function Dao() {
     } else {
       try {
         ensureString(newVote.link.trim());
-      } catch (e) {
+      } catch {
         errors.link = 'Link must be a valid string';
       }
     }
@@ -249,7 +249,7 @@ export default function Dao() {
                 )}
               </div>
               <div className="text-sm opacity-80 text-white/80 leading-relaxed">
-                The DAO manages the token's treasury. Holders can create proposals
+                The DAO manages the token&apos;s treasury. Holders can create proposals
                 and vote. Approved proposals can be applied to execute on-chain
                 actions such as payouts.
               </div>
@@ -265,9 +265,9 @@ export default function Dao() {
               <CardContent className="space-y-4">
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium text-white/80 mb-2 block">
+                    <div className="text-sm font-medium text-white/80 mb-2 block">
                       Vote Type
-                    </label>
+                    </div>
                     <Select
                       value={newVote.type}
                       onValueChange={(value) => setNewVote((v) => ({ ...v, type: value as (typeof voteTypes)[number] }))}
@@ -286,9 +286,9 @@ export default function Dao() {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium text-white/80 mb-2 block">
+                    <div className="text-sm font-medium text-white/80 mb-2 block">
                       Subject Value
-                    </label>
+                    </div>
                     <Input
                       placeholder="Subject value (address or data)"
                       value={newVote.value}
@@ -306,9 +306,9 @@ export default function Dao() {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium text-white/80 mb-2 block">
+                    <div className="text-sm font-medium text-white/80 mb-2 block">
                       Description
-                    </label>
+                    </div>
                     <Input
                       placeholder="Description"
                       value={newVote.description || ''}
@@ -326,9 +326,9 @@ export default function Dao() {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium text-white/80 mb-2 block">
+                    <div className="text-sm font-medium text-white/80 mb-2 block">
                       Link
-                    </label>
+                    </div>
                     <Input
                       placeholder="Link"
                       value={newVote.link || ''}
@@ -397,4 +397,6 @@ export default function Dao() {
       )}
     </div>
   );
-}
+};
+
+export default Dao;

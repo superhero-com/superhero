@@ -19,7 +19,7 @@ export const ConnectWalletButton = ({
 }: Props) => {
   const { t } = useTranslation('common');
   const { activeAccount } = useAeSdk();
-  const { connectWallet, connectingWallet } = useWalletConnect();
+  const { connectingWallet } = useWalletConnect();
   const { openModal } = useModal();
 
   const displayLabel = label || t('buttons.connectWallet');
@@ -47,6 +47,15 @@ export const ConnectWalletButton = ({
     'shadow-none',
   );
 
+  let resolvedBaseClasses = baseClasses;
+  if (variant === 'dex') {
+    resolvedBaseClasses = dexClasses;
+  }
+  if (muted) {
+    resolvedBaseClasses = mutedClasses;
+  }
+  const buttonClasses = cn(resolvedBaseClasses, className);
+
   return (
     <AeButton
       onClick={() => openModal({ name: 'connect-wallet' })}
@@ -55,7 +64,7 @@ export const ConnectWalletButton = ({
       variant="ghost"
       size={variant === 'dex' ? 'default' : 'default'}
       fullWidth={block}
-      className={cn(muted ? mutedClasses : (variant === 'dex' ? dexClasses : baseClasses), className)}
+      className={buttonClasses}
       style={style}
     >
       <span className="hidden sm:inline-flex items-center gap-2">

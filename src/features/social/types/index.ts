@@ -20,7 +20,6 @@ export interface PostAvatarProps {
   authorAddress: string;
   chainName?: string;
   size?: number;
-  overlaySize?: number;
 }
 
 export interface SortControlsProps {

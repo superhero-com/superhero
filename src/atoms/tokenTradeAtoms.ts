@@ -61,9 +61,9 @@ export const averageTokenPriceAtom = atom<Decimal>((get) => {
       : Decimal.from(token?.sell_price || 0);
   }
 
-  const _tokenA = Decimal.from(tokenA);
-  const _tokenB = Decimal.from(tokenB);
-  return isBuying ? _tokenA.div(_tokenB) : _tokenB.div(_tokenA);
+  const tokenADecimal = Decimal.from(tokenA);
+  const tokenBDecimal = Decimal.from(tokenB);
+  return isBuying ? tokenADecimal.div(tokenBDecimal) : tokenBDecimal.div(tokenADecimal);
 });
 
 export const priceImpactDiffAtom = atom<Decimal>((get) => {

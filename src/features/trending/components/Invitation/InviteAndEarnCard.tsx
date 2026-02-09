@@ -21,9 +21,9 @@ interface InviteAndEarnCardProps {
   className?: string;
 }
 
-export default function InviteAndEarnCard({
+const InviteAndEarnCard = ({
   className,
-}: InviteAndEarnCardProps) {
+}: InviteAndEarnCardProps) => {
   const { t } = useTranslation('forms');
   const { activeAccount } = useAeSdk();
   const { decimalBalance } = useAccount();
@@ -125,7 +125,7 @@ export default function InviteAndEarnCard({
   }, [linkHasBeenCopied, pulseCloseBlocked]);
 
   return (
-    <div className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
+    <div className={`bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 ${className || ''}`}>
       <div className="flex items-center gap-4 mb-6">
         <div className="text-3xl md:text-4xl lg:text-5xl drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] flex-shrink-0">
           🎯
@@ -282,9 +282,9 @@ export default function InviteAndEarnCard({
 
             {/* Links */}
             <div className="space-y-3 max-h-60 overflow-y-auto">
-              {invitationLinks.map((link, index) => (
+              {invitationLinks.map((link) => (
                 <CopyText
-                  key={index}
+                  key={link}
                   value={link}
                   bordered
                   className="w-full"
@@ -342,4 +342,6 @@ export default function InviteAndEarnCard({
       </Dialog>
     </div>
   );
-}
+};
+
+export default InviteAndEarnCard;

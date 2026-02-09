@@ -66,7 +66,12 @@ function coerceValue(key: keyof AppConfig, v: any): any {
   return v;
 }
 
-const runtimeRaw = (typeof window !== 'undefined' ? window.__SUPERCONFIG__ : undefined) as Partial<AppConfig> | undefined;
+const SUPERCONFIG_KEY = '__SUPERCONFIG__' as const;
+const runtimeRaw = (
+  typeof window !== 'undefined'
+    ? window[SUPERCONFIG_KEY]
+    : undefined
+) as Partial<AppConfig> | undefined;
 const runtimeConfig: Partial<AppConfig> = runtimeRaw
   ? Object.fromEntries(
     Object.entries(runtimeRaw)
@@ -81,5 +86,7 @@ export const CONFIG: AppConfig = {
   // Vite env overrides for local builds - MUST come after runtimeConfig to override it
   ...(envApiUrl ? { SUPERHERO_API_URL: envApiUrl } : {}),
   // Ensure POPULAR_FEED_ENABLED defaults to true if not explicitly set
-  POPULAR_FEED_ENABLED: runtimeConfig.POPULAR_FEED_ENABLED ?? defaultConfig.POPULAR_FEED_ENABLED ?? true,
+  POPULAR_FEED_ENABLED: runtimeConfig.POPULAR_FEED_ENABLED
+    ?? defaultConfig.POPULAR_FEED_ENABLED
+    ?? true,
 };

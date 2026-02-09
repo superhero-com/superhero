@@ -7,11 +7,10 @@ import { getNavigationItems } from './navigationItems';
 import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useModal } from '../../../hooks';
 
-export default function WebAppHeader() {
-  const { t: tNav } = useTranslation('navigation');
+const WebAppHeader = () => {
   const { t } = useTranslation('common');
   const { pathname } = useLocation();
-  const navigationItems = getNavigationItems(tNav);
+  const navigationItems = getNavigationItems();
   const { activeAccount } = useAeSdk();
   const { openModal } = useModal();
 
@@ -145,4 +144,6 @@ export default function WebAppHeader() {
       </div>
     </aside>
   );
-}
+};
+
+export default WebAppHeader;

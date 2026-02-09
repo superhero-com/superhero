@@ -1,7 +1,6 @@
 import React from 'react';
 import { VOTE_TYPE, VoteState } from 'bctsl-sdk';
-import AddressChip from '@/components/AddressChip';
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 
 interface VoteSubjectProps {
   voteState: VoteState;
@@ -28,7 +27,7 @@ function voteTypeHeadline(voteType: VOTE_TYPE): string {
   }
 }
 
-export default function VoteSubject({ voteState }: VoteSubjectProps) {
+const VoteSubject = ({ voteState }: VoteSubjectProps) => {
   const subjectEntries = Object.entries(voteState.metadata.subject);
   const subjectText = voteTypeHeadline(subjectEntries[0][0] as VOTE_TYPE);
   const beneficiary = subjectEntries[0][1][0];
@@ -43,4 +42,6 @@ export default function VoteSubject({ voteState }: VoteSubjectProps) {
 
     </div>
   );
-}
+};
+
+export default VoteSubject;

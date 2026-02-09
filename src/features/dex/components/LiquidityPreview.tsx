@@ -17,7 +17,7 @@ interface LiquidityPreviewProps {
   onSuggestedAmountB?: (amount: string) => void;
 }
 
-export default function LiquidityPreview({
+const LiquidityPreview = ({
   preview,
   tokenA,
   tokenB,
@@ -25,7 +25,7 @@ export default function LiquidityPreview({
   hasError,
   onSuggestedAmountA,
   onSuggestedAmountB,
-}: LiquidityPreviewProps) {
+}: LiquidityPreviewProps) => {
   if (!tokenA || !tokenB) return null;
 
   return (
@@ -109,6 +109,7 @@ export default function LiquidityPreview({
           <div className="flex gap-2 flex-wrap">
             {preview.suggestedAmountB && onSuggestedAmountB && (
               <button
+                type="button"
                 onClick={() => onSuggestedAmountB(preview.suggestedAmountB!)}
                 className="px-3 py-1.5 rounded-lg border border-accent-color bg-teal-500/20 text-accent-color text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-accent-color hover:text-white"
               >
@@ -122,6 +123,7 @@ export default function LiquidityPreview({
 
             {preview.suggestedAmountA && onSuggestedAmountA && (
               <button
+                type="button"
                 onClick={() => onSuggestedAmountA(preview.suggestedAmountA!)}
                 className="px-3 py-1.5 rounded-lg border border-accent-color bg-teal-500/20 text-accent-color text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-accent-color hover:text-white"
               >
@@ -137,4 +139,6 @@ export default function LiquidityPreview({
       )}
     </div>
   );
-}
+};
+
+export default LiquidityPreview;

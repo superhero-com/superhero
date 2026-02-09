@@ -62,8 +62,8 @@ export function useDao({ tokenSaleAddress }: UseDaoProps) {
         const balanceResult = await tokenInstanceRef.current.balance(activeAccount);
         setUserTokenBalance(balanceResult.decodedResult || 0n);
       }
-    } catch (error) {
-      console.error('Error updating DAO state:', error);
+    } catch {
+      // Ignore DAO state update errors
     }
   }, [activeAccount]);
 
@@ -79,8 +79,8 @@ export function useDao({ tokenSaleAddress }: UseDaoProps) {
       }
 
       await updateState();
-    } catch (error) {
-      console.error('Error initializing DAO:', error);
+    } catch {
+      // Ignore DAO init errors
     }
   }, [sdk, tokenSaleAddress, updateState]);
 
@@ -90,8 +90,8 @@ export function useDao({ tokenSaleAddress }: UseDaoProps) {
       const vote = await daoRef.current.addVote(metadata);
       await updateState();
       return vote;
-    } catch (error) {
-      console.error('Error adding vote:', error);
+    } catch {
+      // Ignore vote add errors
       return undefined;
     }
   }, [updateState]);

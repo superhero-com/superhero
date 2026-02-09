@@ -20,7 +20,7 @@ interface UseTokenBalancesProps {
 }
 
 export function useTokenBalances({
-  assets, direction, aeAccount, ethAccount, sdk,
+  assets, aeAccount, ethAccount, sdk,
 }: UseTokenBalancesProps) {
   const [aeBalances, setAeBalances] = useState<Record<string, string>>({});
   const [ethBalances, setEthBalances] = useState<Record<string, string>>({});
@@ -39,13 +39,13 @@ export function useTokenBalances({
   const { activeNetwork } = useAeSdk();
 
   // Helper function to load AEX-9 data from middleware (same as useAccountBalances)
-  const _loadAex9DataFromMdw = useCallback(async (url: string, items: any[] = []) => {
+  const loadAex9DataFromMdw = useCallback(async (url: string, items: any[] = []) => {
     const fetchUrl = `${activeNetwork.middlewareUrl}${url}`;
     const response = await fetch(fetchUrl);
     const data = await response.json();
 
     if (data.next) {
-      return _loadAex9DataFromMdw(data.next, items.concat(data.data));
+      return loadAex9DataFromMdw(data.next, items.concat(data.data));
     }
     return items.concat(data.data);
   }, [activeNetwork.middlewareUrl]);
@@ -81,11 +81,15 @@ export function useTokenBalances({
       // Try to fetch balances using Ethplorer API first
       try {
         const ethplorerData = await fetchAddressInfo(currentEthAccount);
-        const ethplorerBalances = getAllTokenBalancesFromEthplorer(ethplorerData, currentAssets, BridgeConstants.ethereum.default_eth);
+        const ethplorerBalances = getAllTokenBalancesFromEthplorer(
+          ethplorerData,
+          currentAssets,
+          BridgeConstants.ethereum.default_eth,
+        );
 
         // Merge Ethplorer balances into newEthBalances
         Object.assign(newEthBalances, ethplorerBalances);
-      } catch (ethplorerError) {
+      } catch {
         // Fallback to individual contract calls
         if (!(window as any).ethereum) return;
 
@@ -117,30 +121,36 @@ export function useTokenBalances({
 
                   // Simple timeout approach
                   const balancePromise = tokenContract.balanceOf(userAddress);
-                  const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error(`Balance fetch timeout for ${asset.symbol}`)), 8000));
+                  const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(
+                      () => reject(new Error(`Balance fetch timeout for ${asset.symbol}`)),
+                      8000,
+                    );
+                  });
 
                   const balance = await Promise.race([balancePromise, timeoutPromise]);
                   const balanceFormatted = new BigNumber(balance.toString())
                     .shiftedBy(-asset.decimals)
                     .toFixed(6, BigNumber.ROUND_DOWN);
                   newEthBalances[asset.symbol] = balanceFormatted;
-                } catch (error) {
+                } catch {
                   newEthBalances[asset.symbol] = '0';
                 }
               }
-            } catch (error) {
+            } catch {
               newEthBalances[asset.symbol] = '0';
             }
           }),
         );
       }
-    } catch (error) {
+    } catch {
+      // Ignore Ethereum balance fetch errors
     } finally {
       setEthBalances(newEthBalances);
       setEthLoading(false);
       isEthFetchingRef.current = false;
     }
-  }, [_loadAex9DataFromMdw]);
+  }, []);
 
   // Separate function to fetch Aeternity balances
   const fetchAeternityBalances = useCallback(async () => {
@@ -165,7 +175,7 @@ export function useTokenBalances({
     try {
       // Fetch all AEX-9 balances from middleware API (same approach as useAccountBalances)
       const url = `/v3/accounts/${currentAeAccount}/aex9/balances?limit=100`;
-      const middlewareBalances = await _loadAex9DataFromMdw(url, []);
+      const middlewareBalances = await loadAex9DataFromMdw(url, []);
 
       // Create a map of contract addresses to balances for quick lookup
       const balanceMap = new Map();
@@ -204,17 +214,17 @@ export function useTokenBalances({
                     .shiftedBy(-asset.decimals)
                     .toFixed(6, BigNumber.ROUND_DOWN);
                   newAeBalances[asset.symbol] = balanceFormatted;
-                } catch (contractError) {
+                } catch {
                   newAeBalances[asset.symbol] = '0';
                 }
               }
             }
-          } catch (error) {
+          } catch {
             newAeBalances[asset.symbol] = '0';
           }
         }),
       );
-    } catch (error) {
+    } catch {
       // Fallback to individual contract calls if middleware fails
       try {
         await Promise.all(
@@ -233,19 +243,20 @@ export function useTokenBalances({
                   .toFixed(6, BigNumber.ROUND_DOWN);
                 newAeBalances[asset.symbol] = balanceFormatted;
               }
-            } catch (fallbackError) {
+            } catch {
               newAeBalances[asset.symbol] = '0';
             }
           }),
         );
-      } catch (fallbackError) {
+      } catch {
+        // Ignore fallback errors
       }
     } finally {
       setAeBalances(newAeBalances);
       setAeLoading(false);
       isAeFetchingRef.current = false;
     }
-  }, [_loadAex9DataFromMdw]);
+  }, [loadAex9DataFromMdw]);
 
   // Main function that calls both individual functions
   const fetchBalances = useCallback(async () => {
@@ -275,7 +286,8 @@ export function useTokenBalances({
     try {
       // Fetch both Ethereum and Aeternity balances in parallel
       await Promise.all([fetchEthereumBalances(), fetchAeternityBalances()]);
-    } catch (error) {
+    } catch {
+      // Ignore balance fetch errors
     } finally {
       setLoading(false);
       isFetchingRef.current = false;
@@ -287,14 +299,14 @@ export function useTokenBalances({
     if (ethAccount) {
       fetchEthereumBalances();
     }
-  }, [ethAccount]);
+  }, [ethAccount, fetchEthereumBalances]);
 
   // Auto-fetch when Aeternity address changes
   useEffect(() => {
     if (aeAccount) {
       fetchAeternityBalances();
     }
-  }, [aeAccount]);
+  }, [aeAccount, fetchAeternityBalances]);
 
   return {
     aeBalances,

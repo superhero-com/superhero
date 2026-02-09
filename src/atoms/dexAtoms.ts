@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { DexTokenDto } from '@/api/generated';

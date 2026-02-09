@@ -1,4 +1,4 @@
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import AeButton from '@/components/AeButton';
 import { useNavigate } from 'react-router-dom';
 import { useMemo, useState } from 'react';
@@ -9,14 +9,12 @@ interface LeaderboardCardProps {
   rank: number;
   item: LeaderboardItem;
   timeframeLabel: string;
-  metricLabel: string;
 }
 
 export const LeaderboardCard = ({
   rank,
   item,
   timeframeLabel,
-  metricLabel,
 }: LeaderboardCardProps) => {
   const navigate = useNavigate();
 
@@ -34,10 +32,32 @@ export const LeaderboardCard = ({
   const sellTrades = Number(item.sell_count || 0);
   const createdTokens = Number(item.created_tokens_count || 0);
   const ownedTrends = Number(item.owned_trends_count || 0);
-  const sparkline = item.portfolio_value_usd_sparkline ?? [];
+  const sparkline = useMemo(
+    () => item.portfolio_value_usd_sparkline ?? [],
+    [item.portfolio_value_usd_sparkline],
+  );
 
   const hasSparkline = Array.isArray(sparkline) && sparkline.length > 1;
   const [isChartHovered, setIsChartHovered] = useState(false);
+  const roiIsNaN = Number.isNaN(roiPct);
+  const mddIsNaN = Number.isNaN(mddPct);
+  const pnlClassName = useMemo(() => {
+    if (pnlUsd < 0) return 'text-red-400';
+    if (pnlUsd > 0) return 'text-emerald-400';
+    return 'text-white';
+  }, [pnlUsd]);
+  const roiClassName = useMemo(() => {
+    if (roiIsNaN) return 'text-white/40';
+    if (roiPct < 0) return 'text-red-300';
+    if (roiPct > 0) return 'text-emerald-300';
+    return 'text-white/70';
+  }, [roiIsNaN, roiPct]);
+  const roiPrefix = useMemo(() => {
+    if (roiPct > 0) return '+';
+    if (roiPct < 0) return '-';
+    return '';
+  }, [roiPct]);
+  const roiDisplay = roiIsNaN ? '--' : `${roiPrefix}${Math.abs(roiPct).toFixed(2)}%`;
 
   const latestPoint = useMemo(() => {
     if (!hasSparkline) return null;
@@ -112,7 +132,6 @@ export const LeaderboardCard = ({
             address={item.address}
             showPrimaryOnly
             showBalance={false}
-            truncateAddress
             isHoverEnabled={false}
             contentClassName="pb-0 px-2"
           />
@@ -128,13 +147,7 @@ export const LeaderboardCard = ({
             PnL (USD)
           </span>
           <span
-            className={`text-xl sm:text-2xl font-semibold ${
-              pnlUsd < 0
-                ? 'text-red-400'
-                : pnlUsd > 0
-                  ? 'text-emerald-400'
-                  : 'text-white'
-            }`}
+            className={`text-xl sm:text-2xl font-semibold ${pnlClassName}`}
           >
             {pnlUsd < 0 ? '-$' : '$'}
             {Math.abs(pnlUsd).toLocaleString('en-US', {
@@ -143,25 +156,13 @@ export const LeaderboardCard = ({
             })}
           </span>
           <span
-            className={`text-[10px] sm:text-[11px] ${
-              isNaN(roiPct)
-                ? 'text-white/40'
-                : roiPct < 0
-                  ? 'text-red-300'
-                  : roiPct > 0
-                    ? 'text-emerald-300'
-                    : 'text-white/70'
-            }`}
+            className={`text-[10px] sm:text-[11px] ${roiClassName}`}
           >
             {timeframeLabel}
             {' '}
             ROI
             {' '}
-            {isNaN(roiPct)
-              ? '--'
-              : `${roiPct > 0 ? '+' : roiPct < 0 ? '-' : ''}${Math.abs(
-                roiPct,
-              ).toFixed(2)}%`}
+            {roiDisplay}
           </span>
         </div>
         {/* Portfolio value sparkline */}
@@ -253,7 +254,7 @@ export const LeaderboardCard = ({
             MDD
           </span>
           <span className="text-xs font-mono text-white">
-            {isNaN(mddPct) ? '--' : `${mddPct.toFixed(2)}%`}
+            {mddIsNaN ? '--' : `${mddPct.toFixed(2)}%`}
           </span>
         </div>
         <div className="flex flex-col gap-1">

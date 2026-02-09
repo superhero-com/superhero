@@ -3,7 +3,7 @@ import React, {
 } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  AreaChart, Area, XAxis, YAxis, ResponsiveContainer,
+  AreaChart, Area, ResponsiveContainer,
 } from 'recharts';
 import moment from 'moment';
 import { SuperheroApi } from '@/api/backend';
@@ -61,16 +61,12 @@ const MIN_START_DATE = moment('2025-01-01T00:00:00Z');
 interface RechartsChartProps {
   data: Array<{ time: number; timestamp: number; value: number; date: Date }>;
   onHover: (price: number | null, time: number | null) => void;
-  convertTo: string;
-  currentCurrencyInfo: { code: string };
 }
 
 // Recharts component with touch support - simplified with default styling
 const RechartsChart: React.FC<RechartsChartProps> = ({
   data,
   onHover,
-  convertTo,
-  currentCurrencyInfo,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [crosshairX, setCrosshairX] = useState<number | null>(null);
@@ -86,7 +82,7 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
   // Use native event listeners to allow preventDefault
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) return () => {};
 
     // Update crosshair position and find Y coordinate from SVG path
     const updateCrosshair = (x: number) => {
@@ -96,8 +92,9 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
       const clampedX = Math.max(0, Math.min(x, rect.width));
 
       // Find the closest data point based on time position
-      const firstTime = data[0].time;
-      const lastTime = data[data.length - 1].time;
+      const [firstPoint] = data;
+      const { time: firstTime } = firstPoint;
+      const { time: lastTime } = data[data.length - 1];
 
       // Calculate X position as percentage of container width
       const xPercent = Math.max(0, Math.min(1, clampedX / rect.width));
@@ -106,8 +103,8 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
 
       // Find closest point by time
       let closestIndex = 0;
-      let minDiff = Math.abs(data[0].time - targetTime);
-      for (let i = 1; i < data.length; i++) {
+      let minDiff = Math.abs(firstTime - targetTime);
+      for (let i = 1; i < data.length; i += 1) {
         const diff = Math.abs(data[i].time - targetTime);
         if (diff < minDiff) {
           minDiff = diff;
@@ -131,13 +128,10 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
             let strokePath: SVGPathElement | null = null;
 
             // Strategy 1: Look for path with 'curve' in class name (most reliable)
-            for (const path of paths) {
+            strokePath = paths.find((path) => {
               const className = path.getAttribute('class') || '';
-              if (className.includes('curve')) {
-                strokePath = path;
-                break;
-              }
-            }
+              return className.includes('curve');
+            }) || null;
 
             // Strategy 2: If not found, identify by path characteristics
             // The stroke path typically has a smaller bounding box height than the fill area
@@ -152,20 +146,22 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               // Sort by height ascending - the smallest is likely the stroke
               pathBounds.sort((a, b) => a.height - b.height);
 
+              const svgHeight = svg.getBoundingClientRect().height;
               // Use the path with smallest height, but make sure it's not too small (at least 10px)
               // and not at the very bottom (fill area typically starts near bottom)
-              for (const { path: p } of pathBounds) {
+              const candidate = pathBounds.find(({ path: p }) => {
                 const bbox = p.getBBox();
                 // Stroke path should be near the top/middle, not at the bottom
-                if (bbox.height < svg.getBoundingClientRect().height * 0.9 && bbox.y < svg.getBoundingClientRect().height * 0.8) {
-                  strokePath = p;
-                  break;
-                }
+                return bbox.height < svgHeight * 0.9 && bbox.y < svgHeight * 0.8;
+              });
+              if (candidate) {
+                strokePath = candidate.path;
               }
             }
 
             // Strategy 3: Fallback to second path (stroke usually comes after fill in DOM order)
             if (!strokePath && paths.length > 1) {
+              // eslint-disable-next-line prefer-destructuring
               strokePath = paths[1];
             }
 
@@ -189,7 +185,10 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
                 const plotAreaLeft = fillBBox.x;
                 const plotAreaWidth = fillBBox.width;
                 const relativeX = plotAreaLeft + (xPercent * plotAreaWidth);
-                const clampedRelativeX = Math.max(plotAreaLeft, Math.min(plotAreaLeft + plotAreaWidth, relativeX));
+                const clampedRelativeX = Math.max(
+                  plotAreaLeft,
+                  Math.min(plotAreaLeft + plotAreaWidth, relativeX),
+                );
 
                 // Set crosshair X position
                 const crosshairXPos = svgRect.left - containerBounds.left + clampedRelativeX;
@@ -208,7 +207,8 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
                 const tolerance = 1.0; // pixels - slightly relaxed for performance
 
                 // Binary search with fewer iterations for better performance
-                for (let iteration = 0; iteration < 30; iteration++) {
+                // eslint-disable-next-line no-plusplus
+                for (let iteration = 0; iteration < 30; iteration += 1) {
                   const mid = (low + high) / 2;
                   const pathPoint = fillPath.getPointAtLength(mid);
                   const xDistance = Math.abs(pathPoint.x - clampedRelativeX);
@@ -234,7 +234,7 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
                   const refineEnd = Math.min(pathLength, bestLength + refineRange);
 
                   // Reduced from 200 to 50 iterations
-                  for (let i = 0; i <= 50; i++) {
+                  for (let i = 0; i <= 50; i += 1) {
                     const length = refineStart + (refineEnd - refineStart) * (i / 50);
                     const pathPoint = fillPath.getPointAtLength(length);
                     const xDistance = Math.abs(pathPoint.x - clampedRelativeX);
@@ -257,8 +257,6 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               // This accounts for Recharts margins/padding
               const plotAreaLeft = pathBBox.x;
               const plotAreaWidth = pathBBox.width;
-              const plotAreaTop = pathBBox.y;
-              const plotAreaHeight = pathBBox.height;
 
               // Calculate X position within the plot area using the actual mouse position
               // Use xPercent (from mouse position) instead of pointXPercent (from data point time)
@@ -287,7 +285,7 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               const tolerance = 0.5; // pixels - slightly relaxed for performance
 
               // Binary search with fewer iterations
-              for (let iteration = 0; iteration < 30; iteration++) {
+              for (let iteration = 0; iteration < 30; iteration += 1) {
                 const mid = (low + high) / 2;
                 const pathPoint = strokePath.getPointAtLength(mid);
                 const distance = pathPoint.x - clampedRelativeX;
@@ -315,15 +313,15 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               const refineRange = pathLength * refinePercent;
               const refineLengthStart = Math.max(
                 0,
-                (bestPoint.x - pathStartX) / pathBBox.width * pathLength - refineRange,
+                ((bestPoint.x - pathStartX) / pathBBox.width) * pathLength - refineRange,
               );
               const refineLengthEnd = Math.min(
                 pathLength,
-                (bestPoint.x - pathStartX) / pathBBox.width * pathLength + refineRange,
+                ((bestPoint.x - pathStartX) / pathBBox.width) * pathLength + refineRange,
               );
 
               // Reduced from 100 to 30 iterations
-              for (let i = 0; i <= 30; i++) {
+              for (let i = 0; i <= 30; i += 1) {
                 const length = Math.max(0, Math.min(
                   pathLength,
                   refineLengthStart + (refineLengthEnd - refineLengthStart) * (i / 30),
@@ -348,10 +346,15 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               } else {
                 // Fallback: calculate Y from data value if path-based calculation fails
                 // This ensures crosshair still appears even if path detection has issues
-                const valueRange = Math.max(...data.map((d) => d.value)) - Math.min(...data.map((d) => d.value));
+                const valueRange = Math.max(
+                  ...data.map((d) => d.value),
+                ) - Math.min(...data.map((d) => d.value));
                 if (valueRange > 0) {
-                  const normalizedValue = (point.value - Math.min(...data.map((d) => d.value))) / valueRange;
-                  const fallbackY = containerTop + (1 - normalizedValue) * (containerBottom - containerTop) * 0.8 + containerTop * 0.1;
+                  const normalizedValue = (
+                    point.value - Math.min(...data.map((d) => d.value))
+                  ) / valueRange;
+                  const fallbackY = containerTop + (1 - normalizedValue)
+                    * (containerBottom - containerTop) * 0.8 + containerTop * 0.1;
                   setCrosshairY(Math.max(containerTop, Math.min(containerBottom, fallbackY)));
                 }
               }
@@ -361,10 +364,14 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
               setCrosshairX(fallbackX);
 
               // Calculate Y from data value
-              const valueRange = Math.max(...data.map((d) => d.value)) - Math.min(...data.map((d) => d.value));
+              const values = data.map((d) => d.value);
+              const valueRange = Math.max(...values) - Math.min(...values);
               if (valueRange > 0) {
-                const normalizedValue = (point.value - Math.min(...data.map((d) => d.value))) / valueRange;
-                const fallbackY = svgRect.top - containerBounds.top + svgRect.height * (1 - normalizedValue) * 0.8 + svgRect.height * 0.1;
+                const minVal = Math.min(...values);
+                const normalizedValue = (point.value - minVal) / valueRange;
+                const fallbackY = svgRect.top - containerBounds.top
+                  + svgRect.height * (1 - normalizedValue) * 0.8
+                  + svgRect.height * 0.1;
                 setCrosshairY(Math.max(0, Math.min(svgRect.height, fallbackY)));
               }
             }
@@ -479,7 +486,7 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
   // Prevent SVG elements from receiving focus
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) return () => {};
 
     const disableSVGFocus = () => {
       const svg = container.querySelector('svg');
@@ -571,13 +578,14 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
   );
 };
 
-export default function AccountPortfolio({ address }: AccountPortfolioProps) {
+const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
   const portfolioDataRef = useRef<PortfolioSnapshot[] | undefined>(undefined);
   const convertToRef = useRef<string>('ae');
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('1m');
   const [useCurrentCurrency, setUseCurrentCurrency] = useState(false);
   const [hoveredPrice, setHoveredPrice] = useState<{ price: number; time: number } | null>(null);
   const [animatedValue, setAnimatedValue] = useState<number | null>(null);
+  const animatedValueRef = useRef<number | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const animationStartRef = useRef<number | null>(null);
   const animationStartValueRef = useRef<number | null>(null);
@@ -596,6 +604,10 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
   const queryClient = useQueryClient();
 
+  useEffect(() => {
+    animatedValueRef.current = animatedValue;
+  }, [animatedValue]);
+
   // Keep convertTo ref up to date
   useEffect(() => {
     convertToRef.current = convertTo;
@@ -603,7 +615,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
   // Detect coarse pointer (mobile/tablet) for tooltip behavior
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return;
+    if (typeof window === 'undefined' || !window.matchMedia) return () => {};
     const mql = window.matchMedia('(pointer: coarse)');
     const setFromMql = () => setIsCoarsePointer(!!mql.matches);
     setFromMql();
@@ -639,7 +651,14 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
   // Position tooltip manually on mobile
   useEffect(() => {
-    if (!useTouchPopover || !tooltipOpen || !tooltipButtonRef.current || !tooltipContentRef.current) return;
+    if (
+      !useTouchPopover
+      || !tooltipOpen
+      || !tooltipButtonRef.current
+      || !tooltipContentRef.current
+    ) {
+      return () => {};
+    }
 
     const positionTooltip = () => {
       const button = tooltipButtonRef.current;
@@ -774,7 +793,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
 
       // Sort by timestamp ascending
-      const sorted = snapshots.sort((a, b) => moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf());
+      const sorted = snapshots.sort(
+        (a, b) => moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf(),
+      );
 
       // Filter to ensure one point per interval period
       // Group snapshots by their interval period and take the latest one in each period
@@ -782,7 +803,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       const periodMap = new Map<number, PortfolioSnapshot>();
       const nowUnix = moment().unix();
 
-      for (const snapshot of sorted) {
+      sorted.forEach((snapshot) => {
         const timestamp = moment(snapshot.timestamp).unix();
         // Calculate which interval period this timestamp belongs to
         const periodStart = Math.floor(timestamp / intervalSeconds) * intervalSeconds;
@@ -810,14 +831,15 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
           // Keep the one closer to the period start, or the later one if equidistant
           if (currentDistance < existingDistance
-                || (currentDistance === existingDistance && timestamp > existingTime)) {
+              || (currentDistance === existingDistance && timestamp > existingTime)) {
             periodMap.set(periodStart, snapshot);
           }
         }
-      }
+      });
 
       // Convert map values back to array and sort
-      const filtered = Array.from(periodMap.values()).sort((a, b) => moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf());
+      const filtered = Array.from(periodMap.values())
+        .sort((a, b) => moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf());
 
       // Store raw data for current value extraction (before filtering)
       // This ensures consistency across all timeframes
@@ -887,7 +909,12 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           date: moment(snapshot.timestamp).toDate(),
         };
       })
-      .filter((item): item is { time: number; timestamp: number; value: number; date: Date } => item !== null);
+      .filter((item): item is {
+        time: number;
+        timestamp: number;
+        value: number;
+        date: Date;
+      } => item !== null);
 
     // Add current portfolio value from the independent query (usePortfolioValue)
     // This ensures consistency across all timeframes by always using the same current value source
@@ -897,23 +924,30 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         if (convertTo === 'ae') {
           currentValue = currentPortfolioSnapshot.total_value_ae;
         } else {
-          currentValue = currentPortfolioSnapshot.total_value_usd ?? currentPortfolioSnapshot.total_value_ae;
+          currentValue = currentPortfolioSnapshot.total_value_usd
+            ?? currentPortfolioSnapshot.total_value_ae;
         }
 
-        if (currentValue !== null && !isNaN(currentValue) && isFinite(currentValue)) {
+        if (currentValue !== null
+          && !Number.isNaN(currentValue)
+          && Number.isFinite(currentValue)
+        ) {
           const lastPoint = data.length > 0 ? data[data.length - 1] : null;
 
           // Only add/update if the last point is in the past (not at or after current time)
           if (!lastPoint || lastPoint.time < nowUnix) {
             if (lastPoint) {
               const valueDiff = Math.abs(lastPoint.value - currentValue);
-              const valueDiffPercent = lastPoint.value > 0 ? (valueDiff / lastPoint.value) * 100 : 0;
+              const valueDiffPercent = lastPoint.value > 0
+                ? (valueDiff / lastPoint.value) * 100
+                : 0;
 
               // For daily intervals (1M, ALL), be more conservative:
               // Only add a new point if value changed significantly (> 0.1% or > 1 AE)
               // Otherwise, just update the timestamp to keep the line flat
               const isDailyInterval = dateRange.interval >= 86400; // Daily or longer intervals
-              const significantChange = valueDiffPercent > 0.1 || valueDiff > 1; // More than 0.1% or 1 AE change
+              // More than 0.1% or 1 AE change
+              const significantChange = valueDiffPercent > 0.1 || valueDiff > 1;
 
               if (valueDiff < 0.000001) {
                 // Same value (within floating point precision), always update value to current
@@ -976,8 +1010,8 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             }
           }
         }
-      } catch (error) {
-        console.warn('Failed to add current portfolio value to chart:', error);
+      } catch {
+        // Swallow error to avoid blocking chart rendering.
       }
     }
 
@@ -993,7 +1027,9 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       if (convertTo === 'ae') {
         return Decimal.from(currentPortfolioSnapshot.total_value_ae);
       }
-      return Decimal.from(currentPortfolioSnapshot.total_value_usd ?? currentPortfolioSnapshot.total_value_ae);
+      return Decimal.from(
+        currentPortfolioSnapshot.total_value_usd ?? currentPortfolioSnapshot.total_value_ae,
+      );
     } catch {
       return null;
     }
@@ -1054,16 +1090,17 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     let closestSnapshot: PortfolioSnapshot | null = null;
     let minDistance = Infinity;
 
-    for (const snapshot of portfolioData) {
+    portfolioData.forEach((snapshot) => {
       const snapshotTime = moment(snapshot.timestamp).unix();
       const distance = Math.abs(snapshotTime - hoverTime);
       if (distance < minDistance) {
         minDistance = distance;
         closestSnapshot = snapshot;
       }
-    }
+    });
 
-    // Use PNL data from the closest snapshot (which includes range from startDate to that timestamp)
+    // Use PNL data from the closest snapshot
+    // (which includes range from startDate to that timestamp)
     if (closestSnapshot?.total_pnl) {
       return {
         percentage: closestSnapshot.total_pnl.percentage,
@@ -1133,13 +1170,14 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             const snapshots = (Array.isArray(response) ? response : []) as PortfolioSnapshot[];
 
             // Sort by timestamp ascending
-            const sorted = snapshots.sort((a, b) => moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf());
+            const sorted = snapshots
+              .sort((a, b) => moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf());
 
             // Filter to ensure one point per interval period
             const intervalSeconds = prefetchDateRange.interval;
             const periodMap = new Map<number, PortfolioSnapshot>();
 
-            for (const snapshot of sorted) {
+            sorted.forEach((snapshot) => {
               const timestamp = moment(snapshot.timestamp).unix();
               const periodStart = Math.floor(timestamp / intervalSeconds) * intervalSeconds;
 
@@ -1156,9 +1194,10 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                   periodMap.set(periodStart, snapshot);
                 }
               }
-            }
+            });
 
-            return Array.from(periodMap.values()).sort((a, b) => moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf());
+            return Array.from(periodMap.values())
+              .sort((a, b) => moment(a.timestamp).valueOf() - moment(b.timestamp).valueOf());
           },
           staleTime: 5 * 60 * 1000, // 5 minutes
           gcTime: 30 * 60 * 1000, // Keep cached data for 30 minutes
@@ -1237,7 +1276,12 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
     if (hoveredPrice) return true;
 
     // Portfolio value and PNL are ready when we have both, regardless of chart data
-    return currentPortfolioValue !== null && currentPortfolioValue !== undefined && pnlData !== null && !isPnlLoading;
+    return (
+      currentPortfolioValue !== null
+      && currentPortfolioValue !== undefined
+      && pnlData !== null
+      && !isPnlLoading
+    );
   }, [hoveredPrice, currentPortfolioValue, pnlData, isPnlLoading]);
 
   // Calculate display value - show as soon as value and PNL are ready (don't wait for chart)
@@ -1274,7 +1318,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       animationFrameRef.current = null;
     }
 
-    const startValue = animatedValue ?? displayValue;
+    const startValue = animatedValueRef.current ?? displayValue;
     const targetValue = displayValue;
     const duration = 400; // 400ms animation duration
 
@@ -1312,6 +1356,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
 
     animationFrameRef.current = requestAnimationFrame(animate);
 
+    // eslint-disable-next-line consistent-return
     return () => {
       if (animationFrameRef.current !== null) {
         cancelAnimationFrame(animationFrameRef.current);
@@ -1319,6 +1364,148 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       }
     };
   }, [displayValue]);
+
+  const renderValueDisplay = () => {
+    if (animatedValue === null) {
+      return (
+        <>
+          <span className="font-light opacity-0">AE</span>
+          {' '}
+          <span className="font-extrabold opacity-0">0.00</span>
+        </>
+      );
+    }
+
+    if (convertTo === 'ae') {
+      try {
+        const value = Number(animatedValue);
+        const formatted = value >= 1
+          ? value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          : Decimal.from(animatedValue).prettify();
+        return (
+          <>
+            <span className="font-light">AE</span>
+            {' '}
+            <span className="font-extrabold">{formatted}</span>
+          </>
+        );
+      } catch {
+        const value = Number(animatedValue);
+        const formatted = value >= 1 ? value.toFixed(2) : value.toFixed(4);
+        return (
+          <>
+            <span className="font-light">AE</span>
+            {' '}
+            <span className="font-extrabold">{formatted}</span>
+          </>
+        );
+      }
+    }
+
+    try {
+      const fiatValue = typeof animatedValue === 'number' ? animatedValue : Number(animatedValue);
+      const currencyCode = currentCurrencyInfo.code.toUpperCase();
+      // Format number separately to extract currency symbol
+      const formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currencyCode,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      const parts = formatter.formatToParts(fiatValue);
+      const currencySymbol = parts.find((p) => p.type === 'currency')?.value || '$';
+      const amount = parts
+        .filter((p) => p.type !== 'currency')
+        .map((p) => p.value)
+        .join('');
+      return (
+        <>
+          <span className="font-light">{currencySymbol}</span>
+          <span className="font-extrabold">{amount}</span>
+        </>
+      );
+    } catch {
+      const amount = Number(animatedValue).toFixed(2);
+      return (
+        <>
+          <span className="font-light">$</span>
+          <span className="font-extrabold">{amount}</span>
+        </>
+      );
+    }
+  };
+
+  const getPnlClassName = (pnl: any) => {
+    if (!pnl) return 'text-white/60';
+    const pnlGain = convertTo === 'ae' ? pnl.gain.ae : pnl.gain.usd;
+    if (pnlGain > 0) return 'text-green-400';
+    if (pnlGain < 0) return 'text-red-400';
+    return 'text-white/60';
+  };
+
+  const renderPnlValue = (pnl: any) => {
+    if (!pnl) return null;
+    if (convertTo === 'ae') {
+      if (pnl.gain.ae === 0) return '0 AE';
+
+      const formattedGain = pnl.gain.ae >= 1
+        ? pnl.gain.ae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : Decimal.from(pnl.gain.ae).prettify();
+
+      return (
+        <>
+          {pnl.gain.ae >= 0 ? '+' : ''}
+          {formattedGain}
+          {' '}
+          AE
+          {' '}
+          <span className="text-white/60">
+            (
+            {pnl.percentage >= 0 ? '+' : ''}
+            {pnl.percentage.toFixed(2)}
+            %)
+          </span>
+        </>
+      );
+    }
+
+    if (pnl.gain.usd === 0) {
+      return pnl.gain.usd.toLocaleString('en-US', {
+        style: 'currency',
+        currency: currentCurrencyInfo.code,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+
+    const formattedUsd = pnl.gain.usd.toLocaleString('en-US', {
+      style: 'currency',
+      currency: currentCurrencyInfo.code,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    return (
+      <>
+        {pnl.gain.usd > 0 ? '+' : ''}
+        {formattedUsd}
+        {' '}
+        <span className="text-white/60">
+          (
+          {pnl.percentage >= 0 ? '+' : ''}
+          {pnl.percentage.toFixed(2)}
+          %)
+        </span>
+      </>
+    );
+  };
+
+  let activePnlData: typeof hoverPnlData | typeof pnlData | null = null;
+  if (hoveredPrice && hoverPnlData) {
+    activePnlData = hoverPnlData;
+  } else if (valueAndPnlReady && pnlData) {
+    activePnlData = pnlData;
+  }
 
   if (isError) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -1331,9 +1518,10 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
             </div>
             <div className="text-red-400 text-sm mb-3">Failed to load portfolio data</div>
             {process.env.NODE_ENV === 'development' && (
-            <div className="text-red-300 text-xs mb-3 opacity-75">{errorMessage}</div>
+              <div className="text-red-300 text-xs mb-3 opacity-75">{errorMessage}</div>
             )}
             <button
+              type="button"
               onClick={() => refetch()}
               className="px-4 py-2 text-sm font-semibold rounded-lg border border-white/20 hover:border-white/40 transition-colors bg-white/[0.05] hover:bg-white/[0.08] text-white/80 hover:text-white"
             >
@@ -1371,17 +1559,20 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                   {tooltipOpen && (
                     <>
                       {/* Backdrop to close on click outside */}
-                      <div
+                      <button
+                        type="button"
                         className="fixed inset-0 z-[99]"
+                        aria-label="Close tooltip"
                         onClick={() => setTooltipOpen(false)}
                       />
                       {/* Tooltip content */}
                       <div
                         ref={tooltipContentRef}
                         className="max-w-[320px] rounded-xl border border-white/10 bg-white/10 text-white/90 backdrop-blur-md shadow-lg ring-1 ring-black/5 px-3 py-2 text-[12px] leading-relaxed z-[100]"
-                        onClick={(e) => e.stopPropagation()}
                       >
-                        Portfolio value shows the combined worth of AE balance and trend tokens held in this wallet. The chart tracks how this value changes over time.
+                        Portfolio value shows the combined worth of AE balance and trend tokens
+                        {' '}
+                        held in this wallet. The chart tracks how this value changes over time.
                       </div>
                     </>
                   )}
@@ -1405,13 +1596,16 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                       alignOffset={0}
                       className="max-w-[320px] z-[100]"
                     >
-                      Portfolio value shows the combined worth of AE balance and trend tokens held in this wallet. The chart tracks how this value changes over time.
+                      Portfolio value shows the combined worth of AE balance and trend tokens
+                      {' '}
+                      held in this wallet. The chart tracks how this value changes over time.
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
             </div>
             <button
+              type="button"
               onClick={() => setUseCurrentCurrency(!useCurrentCurrency)}
               className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-white/20 hover:border-white/40 transition-colors bg-white/[0.05] hover:bg-white/[0.08] text-white/80 hover:text-white"
             >
@@ -1420,209 +1614,20 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           </div>
           <div className="mb-2 min-h-[3.5rem]">
             <span className={`text-3xl md:text-4xl ${hoveredPrice ? 'text-green-400' : 'text-white'} block min-h-[2.5rem] leading-tight`}>
-              {animatedValue !== null ? (
-                convertTo === 'ae'
-                  ? (() => {
-                    try {
-                      const value = Number(animatedValue);
-                      // If value is above 1 AE, show 2 decimals
-                      if (value >= 1) {
-                        return (
-                          <>
-                            <span className="font-light">AE</span>
-                            {' '}
-                            <span className="font-extrabold">{value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                          </>
-                        );
-                      }
-                      // Otherwise use prettify for values below 1 AE
-                      return (
-                        <>
-                          <span className="font-light">AE</span>
-                          {' '}
-                          <span className="font-extrabold">{Decimal.from(animatedValue).prettify()}</span>
-                        </>
-                      );
-                    } catch {
-                      const value = Number(animatedValue);
-                      // If value is above 1 AE, show 2 decimals
-                      if (value >= 1) {
-                        return (
-                          <>
-                            <span className="font-light">AE</span>
-                            {' '}
-                            <span className="font-extrabold">{value.toFixed(2)}</span>
-                          </>
-                        );
-                      }
-                      return (
-                        <>
-                          <span className="font-light">AE</span>
-                          {' '}
-                          <span className="font-extrabold">{value.toFixed(4)}</span>
-                        </>
-                      );
-                    }
-                  })()
-                  : (() => {
-                    try {
-                      const fiatValue = typeof animatedValue === 'number' ? animatedValue : Number(animatedValue);
-                      const currencyCode = currentCurrencyInfo.code.toUpperCase();
-                      // Format number separately to extract currency symbol
-                      const formatter = new Intl.NumberFormat('en-US', {
-                        style: 'currency',
-                        currency: currencyCode,
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      });
-                      const parts = formatter.formatToParts(fiatValue);
-                      const currencySymbol = parts.find((p) => p.type === 'currency')?.value || '$';
-                      const amount = parts.filter((p) => p.type !== 'currency').map((p) => p.value).join('');
-                      return (
-                        <>
-                          <span className="font-light">{currencySymbol}</span>
-                          <span className="font-extrabold">{amount}</span>
-                        </>
-                      );
-                    } catch {
-                      const amount = Number(animatedValue).toFixed(2);
-                      return (
-                        <>
-                          <span className="font-light">$</span>
-                          <span className="font-extrabold">{amount}</span>
-                        </>
-                      );
-                    }
-                  })()
-              ) : (
-                <>
-                  <span className="font-light opacity-0">AE</span>
-                  {' '}
-                  <span className="font-extrabold opacity-0">0.00</span>
-                </>
-              )}
+              {renderValueDisplay()}
             </span>
 
             {/* Profit/Loss Display */}
             <div className="mt-1 mb-1 flex flex-col md:flex-row md:items-center md:justify-between gap-1">
               <div className="flex items-center gap-2 text-sm">
-                {hoveredPrice && hoverPnlData ? (
-                  <>
-                    <span className="text-white/60">Profit/Loss:</span>
-                    <span className={`font-semibold ${
-                      hoverPnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] === 0
-                        ? 'text-white/60'
-                        : hoverPnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] >= 0
-                          ? 'text-green-400'
-                          : 'text-red-400'
-                    }`}
-                    >
-                      {convertTo === 'ae' ? (
-                        <>
-                          {hoverPnlData.gain.ae === 0 ? (
-                            <>0 AE</>
-                          ) : (
-                            <>
-                              {hoverPnlData.gain.ae >= 0 ? '+' : ''}
-                              {hoverPnlData.gain.ae >= 1
-                                ? hoverPnlData.gain.ae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                                : Decimal.from(hoverPnlData.gain.ae).prettify()}
-                              {' AE '}
-                              <span className="text-white/60">
-                                (
-                                {hoverPnlData.percentage >= 0 ? '+' : ''}
-                                {hoverPnlData.percentage.toFixed(2)}
-                                %)
-                              </span>
-                            </>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          {hoverPnlData.gain.usd === 0 ? (
-                            <>
-                              {hoverPnlData.gain.usd.toLocaleString('en-US', {
-                                style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2,
-                              })}
-                            </>
-                          ) : (
-                            <>
-                              {hoverPnlData.gain.usd >= 0 ? '+' : ''}
-                              {hoverPnlData.gain.usd.toLocaleString('en-US', {
-                                style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2,
-                              })}
-                              {' '}
-                              <span className="text-white/60">
-                                (
-                                {hoverPnlData.percentage >= 0 ? '+' : ''}
-                                {hoverPnlData.percentage.toFixed(2)}
-                                %)
-                              </span>
-                            </>
-                          )}
-                        </>
-                      )}
-                    </span>
-                  </>
-                ) : valueAndPnlReady && pnlData ? (
-                  <>
-                    <span className="text-white/60">Profit/Loss:</span>
-                    <span className={`font-semibold ${
-                      pnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] === 0
-                        ? 'text-white/60'
-                        : pnlData.gain[convertTo === 'ae' ? 'ae' : 'usd'] >= 0
-                          ? 'text-green-400'
-                          : 'text-red-400'
-                    }`}
-                    >
-                      {convertTo === 'ae' ? (
-                        <>
-                          {pnlData.gain.ae === 0 ? (
-                            <>0 AE</>
-                          ) : (
-                            <>
-                              {pnlData.gain.ae >= 0 ? '+' : ''}
-                              {pnlData.gain.ae >= 1
-                                ? pnlData.gain.ae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                                : Decimal.from(pnlData.gain.ae).prettify()}
-                              {' AE '}
-                              <span className="text-white/60">
-                                (
-                                {pnlData.percentage >= 0 ? '+' : ''}
-                                {pnlData.percentage.toFixed(2)}
-                                %)
-                              </span>
-                            </>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          {pnlData.gain.usd === 0 ? (
-                            <>
-                              {pnlData.gain.usd.toLocaleString('en-US', {
-                                style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2,
-                              })}
-                            </>
-                          ) : (
-                            <>
-                              {pnlData.gain.usd >= 0 ? '+' : ''}
-                              {pnlData.gain.usd.toLocaleString('en-US', {
-                                style: 'currency', currency: currentCurrencyInfo.code, minimumFractionDigits: 2, maximumFractionDigits: 2,
-                              })}
-                              {' '}
-                              <span className="text-white/60">
-                                (
-                                {pnlData.percentage >= 0 ? '+' : ''}
-                                {pnlData.percentage.toFixed(2)}
-                                %)
-                              </span>
-                            </>
-                          )}
-                        </>
-                      )}
-                    </span>
-                  </>
-                ) : null}
+                <span className="text-white/60">Profit/Loss:</span>
+                {activePnlData ? (
+                  <span className={`font-semibold ${getPnlClassName(activePnlData)}`}>
+                    {renderPnlValue(activePnlData)}
+                  </span>
+                ) : (
+                  <span className="text-white/40">-</span>
+                )}
               </div>
 
               <div className="text-sm text-white/60 md:text-right">
@@ -1640,6 +1645,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
         <div className="p-4 w-full">
           <div
             className="h-[180px] relative w-full focus:outline-none focus-visible:outline-none"
+            role="presentation"
             tabIndex={-1}
             style={{
               width: '100%',
@@ -1663,6 +1669,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
                 e.target.blur();
               }
             }}
+            onKeyDown={() => {}}
             onTouchStart={(e) => {
               // Prevent focus on touch
               e.currentTarget.blur();
@@ -1671,31 +1678,37 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
               }
             }}
           >
-            {isLoading || !valueAndPnlReady ? (
-              <div className="absolute inset-0 flex items-start justify-center pt-10 z-10 px-4 md:px-6">
-                <div className="inline-flex items-center gap-1 text-white text-xs font-medium">
-                  <Spinner className="w-8 h-8" />
-                  <span>Loading portfolio data...</span>
+            {(() => {
+              if (isLoading || !valueAndPnlReady) {
+                return (
+                  <div className="absolute inset-0 flex items-start justify-center pt-10 z-10 px-4 md:px-6">
+                    <div className="inline-flex items-center gap-1 text-white text-xs font-medium">
+                      <Spinner className="w-8 h-8" />
+                      <span>Loading portfolio data...</span>
+                    </div>
+                  </div>
+                );
+              }
+              if (rechartsData.length > 0) {
+                return (
+                  <RechartsChart
+                    data={rechartsData}
+                    onHover={(price, time) => {
+                      if (price !== null && time !== null) {
+                        setHoveredPrice({ price, time });
+                      } else {
+                        setHoveredPrice(null);
+                      }
+                    }}
+                  />
+                );
+              }
+              return (
+                <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none z-10 px-4 md:px-6">
+                  <div className="text-white/60">No portfolio data available</div>
                 </div>
-              </div>
-            ) : rechartsData.length > 0 ? (
-              <RechartsChart
-                data={rechartsData}
-                onHover={(price, time) => {
-                  if (price !== null && time !== null) {
-                    setHoveredPrice({ price, time });
-                  } else {
-                    setHoveredPrice(null);
-                  }
-                }}
-                convertTo={convertTo}
-                currentCurrencyInfo={currentCurrencyInfo}
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none z-10 px-4 md:px-6">
-                <div className="text-white/60">No portfolio data available</div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         </div>
 
@@ -1704,6 +1717,7 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
           <div className="flex gap-2 justify-center">
             {(Object.keys(TIME_RANGES) as TimeRange[]).map((range) => (
               <button
+                type="button"
                 key={range}
                 onClick={() => setSelectedTimeRange(range)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
@@ -1720,4 +1734,6 @@ export default function AccountPortfolio({ address }: AccountPortfolioProps) {
       </div>
     </div>
   );
-}
+};
+
+export default AccountPortfolio;

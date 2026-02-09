@@ -50,5 +50,5 @@ export function getSecretKeyByInvitee(inviter: string, invitee: string): string 
 }
 
 export function prepareInviteLink(secretKey: string) {
-  return `${location.protocol}//${location.host}#invite_code=${secretKey}`;
+  return `${window.location.protocol}//${window.location.host}#invite_code=${secretKey}`;
 }

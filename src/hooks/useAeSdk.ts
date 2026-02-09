@@ -1,13 +1,12 @@
-import { useContext, useEffect, useMemo } from 'react';
-import { WalletInfo } from 'node_modules/@aeternity/aepp-sdk/es/aepp-wallet-communication/rpc/types';
-import { useAtom } from 'jotai';
+import { useContext, useMemo } from 'react';
+import { useAtomValue } from 'jotai';
 import { activeAccountAtom } from '@/atoms/accountAtoms';
 import { walletInfoAtom } from '../atoms/walletAtoms';
 import { AeSdkContext } from '../context/AeSdkProvider';
 
 export const useAeSdk = () => {
-  const [walletInfo, setWalletInfo] = useAtom<WalletInfo | undefined>(walletInfoAtom);
-  const [activeAccount, setActiveAccount] = useAtom<string | undefined>(activeAccountAtom);
+  const walletInfo = useAtomValue(walletInfoAtom);
+  const activeAccount = useAtomValue(activeAccountAtom);
 
   const context = useContext(AeSdkContext);
   if (!context) {

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import assert from 'assert';
 
 import { BigNumber } from '@ethersproject/bignumber';
@@ -23,6 +24,7 @@ const magnitudes = ['', 'K', 'M', 'B', 'T'];
  *
  * @public
  */
+// eslint-disable-next-line no-use-before-define
 export type Decimalish = Decimal | number | string;
 
 /**

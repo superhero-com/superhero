@@ -7,10 +7,9 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useIsMobile } from '@/hooks';
 import { Plus } from 'lucide-react';
 import TokenCandlestickChart from '@/components/charts/TokenCandlestickChart';
-import TokenLineChart from '@/features/trending/components/TokenLineChart';
-import Head from '../../../seo/Head';
+import { TokenLineChart } from '@/features/trending/components/TokenLineChart';
+import { Head } from '../../../seo/Head';
 import { TokensService } from '../../../api/generated/services/TokensService';
-import { useAeSdk } from '../../../hooks/useAeSdk';
 import { useOwnedTokens } from '../../../hooks/useOwnedTokens';
 import TokenNotFound from '../../../components/TokenNotFound';
 
@@ -30,12 +29,10 @@ import {
 import ShareModal from '../../../components/ui/ShareModal';
 
 // Feature components
-import {
-  TokenCandlestickChartSkeleton,
-  TokenRanking,
-  TokenSaleSidebarSkeleton,
-  TokenTradeCard,
-} from '..';
+import TokenCandlestickChartSkeleton from '../components/Skeletons/TokenCandlestickChartSkeleton';
+import TokenSaleSidebarSkeleton from '../components/Skeletons/TokenSaleSidebarSkeleton';
+import TokenRanking from '../components/TokenRanking/TokenRanking';
+import TokenTradeCard from '../components/TokenTradeCard';
 import { TokenSummary } from '../../bcl/components';
 import { useLiveTokenData } from '../hooks/useLiveTokenData';
 import { useTokenTradeStore } from '../hooks/useTokenTradeStore';
@@ -53,11 +50,10 @@ type TabType =
   | typeof TAB_HOLDERS;
 
 //
-export default function TokenSaleDetails() {
+const TokenSaleDetails = () => {
   const { tokenName } = useParams<{ tokenName: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const { activeAccount } = useAeSdk();
 
   // State
   const [activeTab, setActiveTab] = useState<TabType>(TAB_CHAT);
@@ -65,7 +61,7 @@ export default function TokenSaleDetails() {
   const [showDeployedMessage, setShowDeployedMessage] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [tradeActionSheet, setTradeActionSheet] = useState(false);
-  const [performance, setPerformance] = useState<any | null>(null);
+  const [performance] = useState<any | null>(null);
   const [pendingLastsLong, setPendingLastsLong] = useState(false);
   const isMobile = useIsMobile();
   const [showTradePanels, setShowTradePanels] = useState(() => {
@@ -164,8 +160,8 @@ export default function TokenSaleDetails() {
           throw new Error('Token not found');
         }
         return result;
-      } catch (error) {
-        console.error('Error fetching token:', error);
+      } catch (err) {
+        console.error('Error fetching token:', err);
         throw new Error('Token not found');
       }
     },
@@ -241,9 +237,9 @@ export default function TokenSaleDetails() {
 
     // `useOwnedTokens` returns the nested `row.token` objects from
     // `/api/accounts/{address}/tokens`, so we can match directly by address.
-    const tokenAddress = String((token as any)?.address || '').toLowerCase();
+    const tokenAddressValue = String((token as any)?.address || '').toLowerCase();
     const tokenSaleAddress = String((token as any)?.sale_address || '').toLowerCase();
-    const target = tokenSaleAddress || tokenAddress;
+    const target = tokenSaleAddress || tokenAddressValue;
     if (!target) return false;
 
     return ownedTokens.some((t: any) => {
@@ -251,7 +247,7 @@ export default function TokenSaleDetails() {
       const sale = String(t?.sale_address || '').toLowerCase();
       return addr === target || sale === target;
     });
-  }, [activeAccount, token, ownedTokens]);
+  }, [token, ownedTokens]);
 
   // Render error state (token not found)
   if (isError && !isTokenNewlyCreated) {
@@ -380,8 +376,11 @@ export default function TokenSaleDetails() {
                     <div className="flex items-center gap-3 flex-1">
                       <div className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-lg w-48 h-8" />
                       <div className="flex items-center gap-2">
-                        {Array.from({ length: isTokenPending ? 1 : 2 }).map((_, index) => (
-                          <div key={index} className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-full px-3 py-1 w-20 h-6" />
+                        {(isTokenPending ? ['pending'] : ['first', 'second']).map((type) => (
+                          <div
+                            key={`skeleton-badge-${type}`}
+                            className="bg-gradient-to-r from-white/10 via-white/20 to-white/10 bg-[length:200%_100%] animate-skeleton-loading rounded-full px-3 py-1 w-20 h-6"
+                          />
                         ))}
                       </div>
                     </div>
@@ -500,6 +499,7 @@ export default function TokenSaleDetails() {
           <div className="flex border-b border-white/10">
             {isMobile && (
               <button
+                type="button"
                 onClick={() => setActiveTab(TAB_DETAILS)}
                 className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_DETAILS
                   ? 'text-white border-b-2 border-[#4ecdc4]'
@@ -510,6 +510,7 @@ export default function TokenSaleDetails() {
               </button>
             )}
             <button
+              type="button"
               onClick={() => setActiveTab(TAB_CHAT)}
               className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_CHAT
                 ? 'text-white border-b-2 border-[#4ecdc4]'
@@ -519,6 +520,7 @@ export default function TokenSaleDetails() {
               Posts
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab(TAB_TRANSACTIONS)}
               className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_TRANSACTIONS
                 ? 'text-white border-b-2 border-[#4ecdc4]'
@@ -528,6 +530,7 @@ export default function TokenSaleDetails() {
               {isMobile ? 'History' : 'Transactions'}
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab(TAB_HOLDERS)}
               className={`flex-1 px-4 py-3 text-[10px] font-bold transition-colors ${activeTab === TAB_HOLDERS
                 ? 'text-white border-b-2 border-[#4ecdc4]'
@@ -639,7 +642,7 @@ export default function TokenSaleDetails() {
         {!isMobile && (
           <div className="lg:col-span-1 lg:col-start-3 flex flex-col gap-6">
             {!token?.sale_address ? (
-              <TokenSaleSidebarSkeleton boilerplate={isTokenPending} />
+              <TokenSaleSidebarSkeleton />
             ) : (
               <>
                 {showTradePanels && <TokenTradeCard token={token} />}
@@ -721,4 +724,6 @@ export default function TokenSaleDetails() {
       )}
     </div>
   );
-}
+};
+
+export default TokenSaleDetails;

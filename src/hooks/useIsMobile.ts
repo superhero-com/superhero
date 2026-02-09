@@ -16,7 +16,7 @@ export function useIsMobile(breakpoint = DEFAULT_BREAKPOINT) {
   const [isMobile, setIsMobile] = useState(getMatches);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return () => {};
 
     if (typeof window.matchMedia === 'function') {
       const mediaQuery = window.matchMedia(query);

@@ -1,3 +1,7 @@
+/* eslint-disable
+  react/function-component-definition,
+  no-nested-ternary
+*/
 import React, { useEffect, useMemo, useState } from 'react';
 import { Wordcloud } from '@visx/wordcloud';
 import { SuperheroApi } from '../../api/backend';

@@ -1,7 +1,7 @@
 import React, {
-  useMemo, useState, useRef, useEffect,
+  useMemo, useState, useRef, useEffect, useId,
 } from 'react';
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { encode, Encoded, Encoding } from '@aeternity/aepp-sdk';
 import { useAtom } from 'jotai';
 import { useQueryClient } from '@tanstack/react-query';
@@ -11,15 +11,21 @@ import { Decimal } from '../../libs/decimal';
 import AeButton from '../AeButton';
 import { IconDiamond } from '../../icons';
 import { useChainName } from '../../hooks/useChainName';
-import { useToast } from '../ToastProvider';
-import { tipStatusAtom, type TipPhase, makeTipKey } from '../../atoms/tipAtoms';
+import { tipStatusAtom, makeTipKey } from '../../atoms/tipAtoms';
 
-export default function TipModal({ toAddress, onClose, payload }: { toAddress: string; onClose: () => void; payload?: string }) {
+const TipModal = ({
+  toAddress,
+  onClose,
+  payload,
+}: {
+  toAddress: string;
+  onClose: () => void;
+  payload?: string;
+}) => {
   const { sdk, activeAccount, activeNetwork } = useAeSdk();
   const { balance } = useAccount();
   const { chainName } = useChainName(toAddress);
-  const toast = useToast();
-  const [tipStatus, setTipStatus] = useAtom(tipStatusAtom);
+  const [, setTipStatus] = useAtom(tipStatusAtom);
   const queryClient = useQueryClient();
 
   const aeBalanceAe = useMemo(() => {
@@ -34,6 +40,7 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const amountInputId = useId();
 
   // Refs to track polling timers and component mount status
   const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
@@ -42,18 +49,19 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
   // Cleanup effect to clear all timers on unmount
   useEffect(() => {
     isMountedRef.current = true;
+    const timeouts = timeoutRefs.current;
     return () => {
       isMountedRef.current = false;
       // Clear all pending timeouts
-      timeoutRefs.current.forEach((timeoutId) => clearTimeout(timeoutId));
-      timeoutRefs.current.clear();
+      timeouts.forEach((timeoutId) => clearTimeout(timeoutId));
+      timeouts.clear();
     };
   }, []);
 
   const insufficient = useMemo(() => {
     if (!amount) return false;
     const v = Number(amount);
-    if (!isFinite(v) || v <= 0) return true;
+    if (!Number.isFinite(v) || v <= 0) return true;
     try {
       return Decimal.from(amount).gt(aeBalanceAe);
     } catch {
@@ -69,6 +77,9 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
 
   async function handleSend() {
     if (disabled) return;
+    setSending(true);
+    setError(null);
+    setTxHash(null);
     // Close the tipping modal before opening the wallet confirmation to avoid stacked modals
     const value = toAettos(amount, 18);
     // Derive postId from payload when in TIP_POST mode so external button can reflect state
@@ -87,18 +98,28 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
         },
       );
       const hash = res?.hash || res?.transactionHash || res?.tx?.hash || null;
+      setTxHash(hash);
       if (tipKey) {
-        setTipStatus((s) => ({ ...s, [tipKey]: { status: 'success', updatedAt: Date.now() } }));
+        setTipStatus((s) => ({
+          ...s,
+          [tipKey]: { status: 'success', updatedAt: Date.now() },
+        }));
         // Ensure the button reflects the new total immediately by optimistically updating cache
         // Normalize postId the same way usePostTipSummary does to ensure cache key matches
-        const normalizePostIdV3 = (postId: string): string => (String(postId).endsWith('_v3') ? String(postId) : `${postId}_v3`);
+        const normalizePostIdV3 = (postId: string): string => (
+          String(postId).endsWith('_v3') ? String(postId) : `${postId}_v3`
+        );
         const idV3 = postIdForKey ? normalizePostIdV3(postIdForKey) : null;
         if (idV3) {
           // Read the cache value ONCE before any optimistic updates to ensure accurate expectedTotal calculation
           // This prevents issues when multiple tips are sent rapidly - each tip calculates expectedTotal
           // based on the actual backend value, not an optimistically updated value from a previous tip
-          const currentCacheData = queryClient.getQueryData<{ totalTips?: string }>(['post-tip-summary', idV3]);
-          const baseTotal = currentCacheData?.totalTips != null ? Number(currentCacheData.totalTips) : 0;
+          const currentCacheData = queryClient.getQueryData<{ totalTips?: string }>(
+            ['post-tip-summary', idV3],
+          );
+          const baseTotal = currentCacheData?.totalTips != null
+            ? Number(currentCacheData.totalTips)
+            : 0;
           const baseTotalNum = Number.isFinite(baseTotal) ? baseTotal : 0;
           const delta = Number(amount);
           const deltaNum = Number.isFinite(delta) ? delta : 0;
@@ -109,11 +130,14 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
           // Optimistic bump: add the sent amount to current cached summary if present
           // This ensures immediate UI update before backend processes the transaction
           // Using updater function ensures React Query properly detects the change
-          queryClient.setQueryData<{ totalTips?: string }>(['post-tip-summary', idV3], (old) => {
-            const currentNum = old?.totalTips != null ? Number(old.totalTips) : 0;
-            const sum = (Number.isFinite(currentNum) ? currentNum : 0) + deltaNum;
-            return { totalTips: String(sum) } as { totalTips?: string };
-          });
+          queryClient.setQueryData<{ totalTips?: string }>(
+            ['post-tip-summary', idV3],
+            (old) => {
+              const currentNum = old?.totalTips != null ? Number(old.totalTips) : 0;
+              const sum = (Number.isFinite(currentNum) ? currentNum : 0) + deltaNum;
+              return { totalTips: String(sum) } as { totalTips?: string };
+            },
+          );
 
           // Poll backend until tip is confirmed or max retries reached
           // Backend needs time to process blockchain transaction and update database
@@ -215,6 +239,7 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
         timeoutRefs.current.add(successResetTimeoutId);
       }
     } catch (e: any) {
+      setError(e?.message || 'Failed to send tip.');
       if (tipKey) {
         setTipStatus((s) => ({ ...s, [tipKey]: { status: 'error', updatedAt: Date.now() } }));
         const errorResetTimeoutId = setTimeout(() => {
@@ -231,6 +256,8 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
         }, 2500);
         timeoutRefs.current.add(errorResetTimeoutId);
       }
+    } finally {
+      setSending(false);
     }
   }
 
@@ -301,10 +328,11 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
         </div>
 
         <div className="grid gap-2">
-          <label className="grid gap-1">
+          <label htmlFor={amountInputId} className="grid gap-1">
             <span className="text-xs text-white/70">Amount (AE)</span>
             <div className="flex items-center gap-2">
               <input
+                id={amountInputId}
                 type="text"
                 inputMode="decimal"
                 value={amount}
@@ -363,4 +391,6 @@ export default function TipModal({ toAddress, onClose, payload }: { toAddress: s
       </div>
     </div>
   );
-}
+};
+
+export default TipModal;

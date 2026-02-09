@@ -13,10 +13,10 @@ interface AccountOwnedTokensProps {
   tab: string;
 }
 
-export default function AccountOwnedTokens({
+const AccountOwnedTokens = ({
   address,
   tab,
-}: AccountOwnedTokensProps) {
+}: AccountOwnedTokensProps) => {
   // Owned tokens with balances (account tokens endpoint)
   const [ownedOrderDirection, setOwnedOrderDirection] = useState<
     'ASC' | 'DESC'
@@ -45,6 +45,7 @@ export default function AccountOwnedTokens({
           <div>Token</div>
           <div>Price</div>
           <button
+            type="button"
             className="text-left hover:opacity-80"
             onClick={() => setOwnedOrderDirection(
               ownedOrderDirection === 'DESC' ? 'ASC' : 'DESC',
@@ -74,7 +75,6 @@ export default function AccountOwnedTokens({
                 )}`
                 : undefined;
               const balance = item?.balance ?? item?.holder_balance ?? item?.amount;
-              const balanceData = item?.balance_data;
               const priceData = token?.price_data;
 
               return (
@@ -203,4 +203,6 @@ export default function AccountOwnedTokens({
       </div>
     </div>
   );
-}
+};
+
+export default AccountOwnedTokens;

@@ -14,6 +14,14 @@ type Option = {
   disabled?: boolean;
 };
 
+// Named wrapper export for convenience
+export const Item = ({
+  className,
+  ...rest
+}: React.ComponentProps<typeof BaseSelectItem>) => (
+  <BaseSelectItem className={className} {...rest} />
+);
+
 export interface AppSelectProps {
   value?: string;
   defaultValue?: string;
@@ -32,7 +40,7 @@ export interface AppSelectProps {
   children?: React.ReactNode;
 }
 
-export default function AppSelect(props: AppSelectProps) {
+const AppSelect = (props: AppSelectProps) => {
   const {
     value,
     defaultValue,
@@ -49,14 +57,24 @@ export default function AppSelect(props: AppSelectProps) {
   } = props;
 
   return (
-    <BaseSelect value={value} defaultValue={defaultValue} onValueChange={onValueChange} disabled={disabled}>
+    <BaseSelect
+      value={value}
+      defaultValue={defaultValue}
+      onValueChange={onValueChange}
+      disabled={disabled}
+    >
       <BaseSelectTrigger className={cn(triggerClassName)}>
         <BaseSelectValue placeholder={placeholder} />
       </BaseSelectTrigger>
       <BaseSelectContent className={cn(contentClassName)} side={side} align={align}>
         {options
           ? options.map((opt) => (
-            <Item key={opt.value} value={opt.value} disabled={opt.disabled} className={itemClassName}>
+            <Item
+              key={opt.value}
+              value={opt.value}
+              disabled={opt.disabled}
+              className={itemClassName}
+            >
               {opt.label}
             </Item>
           ))
@@ -64,7 +82,6 @@ export default function AppSelect(props: AppSelectProps) {
       </BaseSelectContent>
     </BaseSelect>
   );
-}
+};
 
-// Named wrapper export for convenience
-export const Item = ({ className, ...rest }: React.ComponentProps<typeof BaseSelectItem>) => <BaseSelectItem className={className} {...rest} />;
+export default AppSelect;

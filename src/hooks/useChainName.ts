@@ -57,7 +57,7 @@ export function useChainName(accountAddress: string) {
   }, [chainNames]);
 
   useEffect(() => {
-    if (!accountAddress) return;
+    if (!accountAddress) return () => {};
 
     // Clear any pending timeouts/intervals
     if (timeoutRef.current) {
@@ -120,7 +120,7 @@ export function useChainName(accountAddress: string) {
         }, 1000); // Small delay to batch requests
       }
 
-      return;
+      return () => {};
     }
 
     // Address has no name - check if we should fetch
@@ -214,7 +214,7 @@ export function useSuperheroChainNames() {
   }, [chainNames]);
 
   useEffect(() => {
-    if (!activeAccount) return;
+    if (!activeAccount) return () => {};
 
     async function loadChainNameForAccount(accountAddress: string) {
       if (!accountAddress || fetchingRef.current) return;
@@ -274,10 +274,10 @@ export function useAddressByChainName(chainNameInput?: string) {
   const address = useMemo(() => {
     if (!chainNameInput) return null;
     const target = chainNameInput.toLowerCase();
-    for (const [addr, name] of Object.entries(chainNames)) {
-      if ((name || '').toLowerCase() === target) return addr;
-    }
-    return null;
+    const match = Object.entries(chainNames).find(
+      ([, name]) => (name || '').toLowerCase() === target,
+    );
+    return match ? match[0] : null;
   }, [chainNames, chainNameInput]);
   return { address };
 }

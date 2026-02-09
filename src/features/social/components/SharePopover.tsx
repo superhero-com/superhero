@@ -18,9 +18,9 @@ type SharePopoverProps = {
   label?: string; // copy context: 'post' (default) or custom like 'trend'
 };
 
-export default function SharePopover({
+const SharePopover = ({
   postId, postSlug, className, urlOverride, label = 'post',
-}: SharePopoverProps) {
+}: SharePopoverProps) => {
   const { t } = useTranslation('social');
   const shareLabel = label === 'post' ? t('sharePost') : t('shareComment');
   const url = useMemo(() => {
@@ -53,7 +53,11 @@ export default function SharePopover({
           className="flex items-center gap-3 py-2.5 px-3 text-[14px] hover:bg-white/10 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
-            try { navigator.clipboard.writeText(url); } catch {}
+            try {
+              navigator.clipboard.writeText(url);
+            } catch {
+              // Ignore clipboard errors
+            }
           }}
         >
           <LinkIcon className="w-4 h-4 opacity-85" />
@@ -68,7 +72,11 @@ export default function SharePopover({
             if (nav?.share) {
               nav.share({ url, title: t('superheroPost') }).catch(() => {});
             } else {
-              try { navigator.clipboard.writeText(url); } catch {}
+              try {
+                navigator.clipboard.writeText(url);
+              } catch {
+                // Ignore clipboard errors
+              }
             }
           }}
         >
@@ -78,4 +86,6 @@ export default function SharePopover({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
+
+export default SharePopover;

@@ -20,10 +20,13 @@ export const modalActionsAtom = atom(
 
     switch (action.type) {
       case 'open':
-        set(openedModalsAtom, [...currentModals, { ...action.modal, key: modalCounter++ }]);
+        set(openedModalsAtom, [...currentModals, { ...action.modal, key: modalCounter }]);
+        modalCounter += 1;
         break;
       case 'close':
         set(openedModalsAtom, currentModals.filter((m) => m.key !== action.key));
+        break;
+      default:
         break;
     }
   },

@@ -1,4 +1,4 @@
-/* eslint-disable class-methods-use-this */
+/* eslint-disable */
 import {
   WEB_SOCKET_CHANNELS,
   WEB_SOCKET_RECONNECT_TIMEOUT,

@@ -24,12 +24,12 @@ const TokenLabel = ({ children }: { children: React.ReactNode }) => (
   </span>
 );
 
-export default function TokenListTableRow({
+const TokenListTableRow = ({
   token,
   useCollectionRank = false,
   showCollectionColumn = false,
   rank,
-}: TokenListTableRowProps) {
+}: TokenListTableRowProps) => {
   const tokenAddress = useMemo(() => token.address, [token.address]);
 
   const collectionRank = useCollectionRank ? (token as any).collection_rank : rank;
@@ -288,4 +288,6 @@ export default function TokenListTableRow({
       </tr>
     </>
   );
-}
+};
+
+export default TokenListTableRow;

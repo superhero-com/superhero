@@ -48,9 +48,9 @@ export const GifSelectorDialog = ({
       if (CONFIG.GIPHY_API_KEY) {
         url.searchParams.set('api_key', CONFIG.GIPHY_API_KEY);
       }
-      const { data, pagination } = await fetchJson(url.toString());
+      const { data: responseData, pagination } = await fetchJson(url.toString());
       return {
-        results: data.map(({ images, id }: any) => ({
+        results: responseData.map(({ images, id }: any) => ({
           id, // Use Giphy's unique ID
           still: images?.fixed_width_still?.url,
           animated: images?.fixed_width?.url,
@@ -80,9 +80,9 @@ export const GifSelectorDialog = ({
 
   // Auto-load more when reaching bottom using IntersectionObserver
   useEffect(() => {
-    if (!('IntersectionObserver' in window)) return;
+    if (!('IntersectionObserver' in window)) return () => {};
     const sentinel = sentinelRef.current;
-    if (!sentinel) return;
+    if (!sentinel) return () => {};
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -152,7 +152,7 @@ export const GifSelectorDialog = ({
             <div className="flex flex-row gap-2">
               {mediaUrls.map((url, index) => (
                 <div
-                  key={index}
+                  key={url}
                   className="relative rounded-lg overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.2)] w-32"
                 >
                   {/.mp4$|.webm$|.mov$/i.test(url) ? (
@@ -160,7 +160,9 @@ export const GifSelectorDialog = ({
                       src={url}
                       controls
                       className="w-full h-20 object-cover block"
-                    />
+                    >
+                      <track kind="captions" />
+                    </video>
                   ) : (
                     <img
                       src={url}
@@ -201,6 +203,14 @@ export const GifSelectorDialog = ({
                 <div
                   key={result.id}
                   onClick={() => handleGifClick(result)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      handleGifClick(result);
+                    }
+                  }}
                   className="relative w-full cursor-pointer bg-white/5 rounded-lg transition-all duration-200 active:scale-95 sm:hover:scale-105 sm:hover:shadow-lg sm:hover:shadow-primary-400/20 sm:hover:ring-2 sm:hover:ring-primary-400/50 hover:z-20 overflow-visible"
                   style={{ paddingBottom: '100%' }}
                 >
@@ -215,7 +225,9 @@ export const GifSelectorDialog = ({
                         playsInline
                         preload="metadata"
                         className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none"
-                      />
+                      >
+                        <track kind="captions" />
+                      </video>
                     ) : (
                       <img
                         src={result.animated || result.still}
@@ -241,6 +253,7 @@ export const GifSelectorDialog = ({
         {/* Fixed Confirm Button */}
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-gray-900 via-gray-900 to-transparent border-t border-white/10">
           <button
+            type="button"
             onClick={() => onOpenChange(false)}
             className="w-full px-6 py-3 rounded-full bg-[#1161FE] text-white font-semibold text-sm uppercase tracking-wide transition-all duration-300 hover:bg-[#0d4fd8] hover:shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0"
           >

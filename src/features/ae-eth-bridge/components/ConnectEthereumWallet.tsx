@@ -12,13 +12,13 @@ interface ConnectEthereumWalletProps {
     className?: string;
 }
 
-export default function ConnectEthereumWallet({
+const ConnectEthereumWallet = ({
   onConnected,
   onDisconnected,
   onError,
   disabled = false,
   className = '',
-}: ConnectEthereumWalletProps) {
+}: ConnectEthereumWalletProps) => {
   const { t } = useTranslation('dex');
   const { open } = useAppKit();
   const { address: ethereumAddress } = useAppKitAccount();
@@ -61,6 +61,7 @@ export default function ConnectEthereumWallet({
   if (ethereumAddress) {
     return (
       <button
+        type="button"
         onClick={handleDisconnect}
         disabled={disabled}
         className={`text-xs text-red-400 hover:text-red-300 transition-colors ${
@@ -85,4 +86,6 @@ export default function ConnectEthereumWallet({
       {t('bridge.connectEthereumWallet')}
     </Button>
   );
-}
+};
+
+export default ConnectEthereumWallet;

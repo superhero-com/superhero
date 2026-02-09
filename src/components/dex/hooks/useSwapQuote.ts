@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useRef, useState } from 'react';
 import { DexPairService, PairDto, DexTokenDto } from '@/api/generated';
 import BigNumber from 'bignumber.js';

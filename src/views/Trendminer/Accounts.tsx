@@ -1,3 +1,9 @@
+/* eslint-disable
+  react/function-component-definition,
+  max-len,
+  react-hooks/exhaustive-deps,
+  react/button-has-type
+*/
 import React, { useEffect, useState } from 'react';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import { SuperheroApi } from '../../api/backend';

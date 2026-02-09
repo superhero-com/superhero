@@ -17,10 +17,12 @@ const jsonPlugin = (): Plugin => ({
     if (id.endsWith('.json') && id.startsWith('dex-contracts-v2/')) {
       try {
         // Try to resolve using Node's module resolution
-        const resolvedPath = require.resolve(id, { paths: [process.cwd(), importer ? path.dirname(importer) : process.cwd()] });
+        const resolvedPath = require.resolve(id, {
+          paths: [process.cwd(), importer ? path.dirname(importer) : process.cwd()],
+        });
         // Return the resolved path - Vite's JSON plugin will handle loading it
         return resolvedPath;
-      } catch (e) {
+      } catch {
         // If require.resolve fails, try manual resolution
         const parts = id.split(/[/\\]/);
         const packageName = parts[0];
@@ -40,10 +42,6 @@ export default defineConfig(({ mode }) => {
   // Load all envs from the app directory (where .env is located)
   const envDir = __dirname;
   const env = loadEnv(mode, envDir, '');
-  console.log('[Vite Config] Loading env from:', envDir);
-  console.log('[Vite Config] Mode:', mode);
-  console.log('[Vite Config] VITE_SUPERHERO_API_URL:', env.VITE_SUPERHERO_API_URL);
-
   return {
     plugins: [react(), svgr(), jsonPlugin()],
     ssr: {
@@ -75,7 +73,10 @@ export default defineConfig(({ mode }) => {
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: '@use "./src/styles/variables.scss" as *; @use "./src/styles/mixins.scss" as *;',
+          additionalData: [
+            '@use "./src/styles/variables.scss" as *;',
+            '@use "./src/styles/mixins.scss" as *;',
+          ].join(' '),
         },
       },
     },

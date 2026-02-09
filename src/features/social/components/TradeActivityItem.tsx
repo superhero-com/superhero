@@ -1,4 +1,4 @@
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { cn } from '@/lib/utils';
 import { memo, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -59,12 +59,20 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
 
   return (
     <article
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-element-to-interactive-role
+      role="button"
+      tabIndex={0}
       className={cn(
         'relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors',
         'cursor-pointer hover:bg-white/[0.04]',
       )}
       onClick={onOpen}
-      role="button"
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onOpen();
+        }
+      }}
       aria-label="Open trade"
     >
       <div className="flex items-start justify-between gap-3">
@@ -92,10 +100,10 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
         <div className="flex w-full max-w-[280px] items-start gap-2.5 rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
           <div className="flex-shrink-0 pt-0.5">
             <div className="md:hidden">
-              <AddressAvatarWithChainName address={account} size={34} overlaySize={16} showAddressAndChainName={false} variant="feed" />
+              <AddressAvatarWithChainName address={account} size={34} showAddressAndChainName={false} variant="feed" />
             </div>
             <div className="hidden md:block">
-              <AddressAvatarWithChainName address={account} size={40} overlaySize={20} showAddressAndChainName={false} variant="feed" />
+              <AddressAvatarWithChainName address={account} size={40} showAddressAndChainName={false} variant="feed" />
             </div>
           </div>
           <div className="min-w-0">

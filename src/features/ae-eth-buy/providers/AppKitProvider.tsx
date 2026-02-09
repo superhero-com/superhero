@@ -1,6 +1,7 @@
 import { createAppKit } from '@reown/appkit/react';
 import { EthersAdapter } from '@reown/appkit-adapter-ethers';
 import { AppKitNetwork, mainnet, sepolia } from '@reown/appkit/networks';
+import type { ReactNode } from 'react';
 import { BRIDGE_CONSTANTS } from '../constants';
 
 // WalletConnect / Reown project ID (must be provided via env)
@@ -77,4 +78,4 @@ createAppKit({
   },
 });
 
-export const AppKitProvider = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+export const AppKitProvider = ({ children }: { children: ReactNode }) => children;

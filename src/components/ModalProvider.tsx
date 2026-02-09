@@ -11,7 +11,7 @@ const VisuallyHidden: React.FC<{ children: React.ReactNode }> = ({ children }) =
   </span>
 );
 
-export default function ModalProvider({ registry }: { registry: Registry }) {
+const ModalProvider = ({ registry }: { registry: Registry }) => {
   const { openedModals, closeModal } = useModal();
 
   return (
@@ -23,7 +23,6 @@ export default function ModalProvider({ registry }: { registry: Registry }) {
 
         return (
           <Dialog.Root
-
             key={modalName}
             open={isOpen}
             onOpenChange={(open) => {
@@ -55,4 +54,6 @@ export default function ModalProvider({ registry }: { registry: Registry }) {
       })}
     </>
   );
-}
+};
+
+export default ModalProvider;

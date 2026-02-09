@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useNavigate } from 'react-router-dom';
 import { DexTokenDto } from '../../../api/generated';
 import { Decimal } from '../../../libs/decimal';

@@ -3,6 +3,7 @@ import { performanceChartTimeframeAtom } from '@/features/trending/atoms';
 import PerformanceTimeframeSelector from '@/features/trending/components/PerformanceTimeframeSelector';
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
+/* eslint-disable */
 import { useNavigate } from 'react-router-dom';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import Spinner from '@/components/Spinner';

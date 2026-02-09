@@ -10,15 +10,15 @@ interface FiatPriceFormatterProps {
 
 const DEFAULT_CURRENCY_SYMBOL = '$';
 
-export default function FiatPriceFormatter({
+const FiatPriceFormatter = ({
   fiatPrice,
   currencySymbol = DEFAULT_CURRENCY_SYMBOL,
   className = '',
-}: FiatPriceFormatterProps) {
-  return (
-    <div className={`inline-flex items-center ${className}`}>
-      <div className={className}>{currencySymbol}</div>
-      <FractionFormatter fractionalPrice={formatFractionalPrice(fiatPrice)} />
-    </div>
-  );
-}
+}: FiatPriceFormatterProps) => (
+  <div className={`inline-flex items-center ${className}`}>
+    <div className={className}>{currencySymbol}</div>
+    <FractionFormatter fractionalPrice={formatFractionalPrice(fiatPrice)} />
+  </div>
+);
+
+export default FiatPriceFormatter;

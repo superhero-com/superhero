@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { MessageSquare, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks';
 
-export default function FeedbackButton() {
+const FeedbackButton = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [showMobilePopup, setShowMobilePopup] = useState(false);
   const isMobile = useIsMobile();
@@ -21,6 +21,7 @@ export default function FeedbackButton() {
   return (
     <>
       <button
+        type="button"
         onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -48,15 +49,21 @@ export default function FeedbackButton() {
 
       {/* Mobile Popup */}
       {showMobilePopup && (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm md:hidden"
-          onClick={() => setShowMobilePopup(false)}
-        >
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm md:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default"
+            aria-label="Close feedback modal"
+            onClick={() => setShowMobilePopup(false)}
+          />
           <div
             className="bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-2xl p-6 max-w-sm w-full shadow-2xl relative backdrop-blur-xl"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            tabIndex={-1}
           >
             <button
+              type="button"
               onClick={() => setShowMobilePopup(false)}
               className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/10 transition-colors"
               aria-label="Close"
@@ -87,12 +94,14 @@ export default function FeedbackButton() {
 
             <div className="flex gap-3">
               <button
+                type="button"
                 onClick={() => setShowMobilePopup(false)}
                 className="flex-1 px-4 py-2.5 rounded-xl border border-white/20 bg-white/5 text-white font-medium hover:bg-white/10 transition-colors backdrop-blur-sm"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={() => {
                   window.open('https://github.com/superhero-com/superhero/issues', '_blank', 'noopener,noreferrer');
                   setShowMobilePopup(false);
@@ -111,4 +120,6 @@ export default function FeedbackButton() {
       )}
     </>
   );
-}
+};
+
+export default FeedbackButton;

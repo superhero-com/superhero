@@ -5,7 +5,6 @@ import PriceFormatter from './PriceFormatter';
 
 interface LivePriceFormatterProps {
   aePrice: Decimal;
-  fiatPrice?: Decimal;
   symbol?: string;
   watchPrice?: boolean;
   watchKey?: string;
@@ -18,9 +17,8 @@ interface LivePriceFormatterProps {
 
 // Mock fiat conversion - in a real app, this would come from a currency service
 
-export default function LivePriceFormatter({
+const LivePriceFormatter = ({
   aePrice,
-  fiatPrice,
   symbol,
   watchPrice = true,
   watchKey,
@@ -29,9 +27,9 @@ export default function LivePriceFormatter({
   hideSymbol = false,
   row = false,
   className = '',
-}: LivePriceFormatterProps) {
+}: LivePriceFormatterProps) => {
   const { getFiat } = useCurrencies();
-  const computedFiatPrice = useMemo(() => getFiat(aePrice), [aePrice, fiatPrice]);
+  const computedFiatPrice = useMemo(() => getFiat(aePrice), [aePrice, getFiat]);
 
   return (
     <PriceFormatter
@@ -47,4 +45,6 @@ export default function LivePriceFormatter({
       className={className}
     />
   );
-}
+};
+
+export default LivePriceFormatter;

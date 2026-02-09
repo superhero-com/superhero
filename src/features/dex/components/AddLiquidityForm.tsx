@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { TokenChip } from '@/components/TokenChip';
 import Spinner from '@/components/Spinner';
 import { DEX_ADDRESSES } from '../../../libs/dex';
-import ConnectWalletButton from '../../../components/ConnectWalletButton';
+import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
 import { useAddLiquidity } from '../hooks';
 import { useTokenList } from '../../../components/dex/hooks/useTokenList';
 import { useTokenBalances } from '../../../components/dex/hooks/useTokenBalances';
@@ -19,14 +19,12 @@ import LiquiditySuccessNotification from '../../../components/dex/core/Liquidity
 import { Decimal } from '../../../libs/decimal';
 
 import { useAccount, useDex } from '../../../hooks';
-import { useAeSdk } from '../../../hooks/useAeSdk';
 import { usePool } from '../context/PoolProvider';
 
-export default function AddLiquidityForm() {
+const AddLiquidityForm = () => {
   const { t } = useTranslation('common');
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
-  const { activeNetwork } = useAeSdk();
   const location = useLocation();
   const navigate = useNavigate();
   const {
@@ -63,39 +61,42 @@ export default function AddLiquidityForm() {
   }>({ amountA: '', amountB: '' });
 
   // Helper function to find token by symbol or contract address
-  const findToken = (identifier: string): DexTokenDto | null => {
+  const findToken = useCallback((identifier: string): DexTokenDto | null => {
     if (!identifier || !tokens.length) return null;
 
     // First try to find by symbol (case insensitive)
     const bySymbol = tokens.find(
-      (t) => t.symbol.toLowerCase() === identifier.toLowerCase(),
+      (token) => token.symbol.toLowerCase() === identifier.toLowerCase(),
     );
     if (bySymbol) return bySymbol;
 
     // Then try to find by contract address
     const byAddress = tokens.find(
-      (t) => t.address === identifier || t.address === identifier.toLowerCase(),
+      (token) => token.address === identifier || token.address === identifier.toLowerCase(),
     );
     if (byAddress) return byAddress;
 
     // For AE, check if it's the native token
     if (identifier.toLowerCase() === 'ae') {
-      const aeToken = tokens.find((t) => t.is_ae);
+      const aeToken = tokens.find((token) => token.is_ae);
       if (aeToken) return aeToken;
     }
 
     return null;
-  };
+  }, [tokens]);
 
   // Function to fetch token metadata from middleware
-  const fetchTokenFromMiddleware = useCallback(async (address: string): Promise<DexTokenDto | null> => {
-    try {
-      const _token = DexService.getDexTokenByAddress({ address });
-      return _token;
-    } catch (error) {
-      return null;
-    }
-  }, [activeNetwork.middlewareUrl]);
+  const fetchTokenFromMiddleware = useCallback(
+    async (tokenAddress: string): Promise<DexTokenDto | null> => {
+      try {
+        const tokenResult = DexService.getDexTokenByAddress({ address: tokenAddress });
+        return tokenResult;
+      } catch {
+        return null;
+      }
+    },
+    [],
+  );
 
   // Helper function to find token by address or symbol
   const findTokenByAddressOrSymbol = useCallback(async (identifier: string): Promise<DexTokenDto | null> => {
@@ -103,23 +104,26 @@ export default function AddLiquidityForm() {
 
     // If identifier is 'AE', find the AE token
     if (identifier === 'AE') {
-      return tokens.find((t) => t.is_ae) || null;
+      return tokens.find((token) => token.is_ae) || null;
     }
 
     // First, try to find in the local token list
-    const localToken = tokens.find((t) => t.address === identifier);
-    if (localToken) return localToken;
+    const token = tokens.find((tokenItem) => tokenItem.address === identifier);
+    if (token) return token;
 
     // If not found locally and it looks like a contract address, fetch from middleware
     if (identifier.startsWith('ct_')) {
-      return await fetchTokenFromMiddleware(identifier);
+      return fetchTokenFromMiddleware(identifier);
     }
 
     return null;
   }, [tokens, fetchTokenFromMiddleware]);
 
   // Function to update URL parameters based on current token selection
-  const updateUrlParams = useCallback((newTokenA: DexTokenDto | null, newTokenB: DexTokenDto | null) => {
+  const updateUrlParams = useCallback((
+    newTokenA: DexTokenDto | null,
+    newTokenB: DexTokenDto | null,
+  ) => {
     const searchParams = new URLSearchParams(location.search);
 
     // Update or remove 'from' parameter (tokenA)
@@ -169,7 +173,7 @@ export default function AddLiquidityForm() {
         }
       } else if (!tokenA && !fromParam && !selectedTokenA) {
         // Default: AE as input token
-        const ae = tokens.find((t) => t.is_ae) || null;
+        const ae = tokens.find((token) => token.is_ae) || null;
         setTokenA(ae || tokens[0] || null);
       }
 
@@ -196,10 +200,20 @@ export default function AddLiquidityForm() {
 
     initializeTokens();
 
+    // eslint-disable-next-line consistent-return
     return () => {
       cancelled = true;
     };
-  }, [tokens, location.search, tokenA, tokenB, selectedTokenA, selectedTokenB, findTokenByAddressOrSymbol, findToken]);
+  }, [
+    tokens,
+    location.search,
+    tokenA,
+    tokenB,
+    selectedTokenA,
+    selectedTokenB,
+    findTokenByAddressOrSymbol,
+    findToken,
+  ]);
 
   // Sync tokens from Pool context when a position is selected for adding liquidity
   useEffect(() => {
@@ -220,7 +234,7 @@ export default function AddLiquidityForm() {
     if (nextB && nextBId !== currentBId) {
       setTokenB(nextB);
     }
-  }, [tokens, currentAction, selectedTokenA, selectedTokenB]);
+  }, [tokens, currentAction, selectedTokenA, selectedTokenB, tokenA, tokenB, findToken]);
 
   // Update URL parameters when tokens change (after initial load)
   useEffect(() => {
@@ -280,8 +294,10 @@ export default function AddLiquidityForm() {
           setAmountA(calculatedAmountA);
         }
       }
-    } catch {}
-  }, [state.pairPreview, lastEdited]);
+    } catch {
+      // Ignore invalid ratio values
+    }
+  }, [state.pairPreview, lastEdited, amountA, amountB]);
 
   // Handle Token A amount change and auto-calculate Token B
   const handleAmountAChange = (newAmountA: string) => {
@@ -296,7 +312,9 @@ export default function AddLiquidityForm() {
           ? '0'
           : amountANum.div(ratio).toString();
         setAmountB(calculatedAmountB);
-      } catch {}
+      } catch {
+        // Ignore invalid ratio values
+      }
     } else if (!newAmountA) {
       // Clear Token B when Token A is cleared
       setAmountB('');
@@ -316,7 +334,9 @@ export default function AddLiquidityForm() {
           ? '0'
           : amountBNum.mul(ratio).toString();
         setAmountA(calculatedAmountA);
-      } catch {}
+      } catch {
+        // Ignore invalid ratio values
+      }
     } else if (!newAmountB) {
       // Clear Token A when Token B is cleared
       setAmountA('');
@@ -325,12 +345,12 @@ export default function AddLiquidityForm() {
 
   const filteredTokensA = useMemo(() => {
     const term = searchA.trim().toLowerCase();
-    const matches = (t: DexTokenDto) => !term
-      || t.symbol.toLowerCase().includes(term)
-      || (t.address || '').toLowerCase().includes(term);
-    const ae = tokens.find((t) => t.is_ae);
-    const wae = tokens.find((t) => t.address === DEX_ADDRESSES.wae);
-    const rest = tokens.filter((t) => t !== ae && t !== wae).filter(matches);
+    const matches = (token: DexTokenDto) => !term
+      || token.symbol.toLowerCase().includes(term)
+      || (token.address || '').toLowerCase().includes(term);
+    const ae = tokens.find((token) => token.is_ae);
+    const wae = tokens.find((token) => token.address === DEX_ADDRESSES.wae);
+    const rest = tokens.filter((token) => token !== ae && token !== wae).filter(matches);
     const out: DexTokenDto[] = [];
     if (ae && matches(ae)) out.push(ae);
     if (wae && matches(wae)) out.push(wae);
@@ -340,12 +360,12 @@ export default function AddLiquidityForm() {
 
   const filteredTokensB = useMemo(() => {
     const term = searchB.trim().toLowerCase();
-    const matches = (t: DexTokenDto) => !term
-      || t.symbol.toLowerCase().includes(term)
-      || (t.address || '').toLowerCase().includes(term);
-    const ae = tokens.find((t) => t.is_ae);
-    const wae = tokens.find((t) => t.address === DEX_ADDRESSES.wae);
-    const rest = tokens.filter((t) => t !== ae && t !== wae).filter(matches);
+    const matches = (token: DexTokenDto) => !term
+      || token.symbol.toLowerCase().includes(term)
+      || (token.address || '').toLowerCase().includes(term);
+    const ae = tokens.find((token) => token.is_ae);
+    const wae = tokens.find((token) => token.address === DEX_ADDRESSES.wae);
+    const rest = tokens.filter((token) => token !== ae && token !== wae).filter(matches);
     const out: DexTokenDto[] = [];
     if (ae && matches(ae)) out.push(ae);
     if (wae && matches(wae)) out.push(wae);
@@ -394,7 +414,8 @@ export default function AddLiquidityForm() {
         // Refresh positions after successful transaction
         await onPositionUpdated();
       }
-    } catch (error) {
+    } catch {
+      // Ignore execution errors here; UI already shows notifications.
     }
   };
 
@@ -440,6 +461,7 @@ export default function AddLiquidityForm() {
         <div className="flex gap-2 items-center">
           {currentAction === 'add' && (
             <button
+              type="button"
               onClick={clearSelection}
               className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
             >
@@ -449,6 +471,7 @@ export default function AddLiquidityForm() {
 
           <DexSettings title={t('titles.liquiditySettings')}>
             <button
+              type="button"
               aria-label="open-settings"
               className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
             >
@@ -542,6 +565,7 @@ export default function AddLiquidityForm() {
       {/* Insufficient Balance Warning */}
       {(hasInsufficientBalanceA || hasInsufficientBalanceB) && (
         <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
+          {/* eslint-disable-next-line no-nested-ternary */}
           {hasInsufficientBalanceA && hasInsufficientBalanceB ? (
             <>
               Insufficient balance for both
@@ -589,6 +613,7 @@ export default function AddLiquidityForm() {
       {/* Add Liquidity Button */}
       {address ? (
         <button
+          type="button"
           onClick={() => setShowConfirm(true)}
           disabled={isAddDisabled}
           className={`w-full px-6 py-3 sm:px-5 sm:py-3 rounded-full border-none text-white cursor-pointer text-base font-semibold tracking-wide uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
@@ -642,4 +667,6 @@ export default function AddLiquidityForm() {
       />
     </div>
   );
-}
+};
+
+export default AddLiquidityForm;

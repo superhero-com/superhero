@@ -22,7 +22,7 @@ interface LiquidityConfirmationProps {
   loading: boolean;
 }
 
-export default function LiquidityConfirmation({
+const LiquidityConfirmation = ({
   show,
   onClose,
   onConfirm,
@@ -34,7 +34,7 @@ export default function LiquidityConfirmation({
   deadlineMins,
   pairPreview,
   loading,
-}: LiquidityConfirmationProps) {
+}: LiquidityConfirmationProps) => {
   if (!tokenA || !tokenB) return null;
 
   return (
@@ -48,7 +48,10 @@ export default function LiquidityConfirmation({
               Confirm Add Liquidity
             </Dialog.Title>
             <Dialog.Close asChild>
-              <button className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-base hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0">
+              <button
+                type="button"
+                className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-base hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0"
+              >
                 ✕
               </button>
             </Dialog.Close>
@@ -166,6 +169,7 @@ export default function LiquidityConfirmation({
           {/* Action Buttons */}
           <div className="flex gap-3">
             <button
+              type="button"
               onClick={onClose}
               disabled={loading}
               className={`flex-1 px-5 py-3 rounded-full border border-white/10 bg-white/[0.02] text-white text-sm font-semibold cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out ${
@@ -175,6 +179,7 @@ export default function LiquidityConfirmation({
               Cancel
             </button>
             <button
+              type="button"
               onClick={onConfirm}
               disabled={loading}
               className={`flex-[2] px-5 py-3 rounded-full border-none text-white text-sm font-semibold cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center justify-center gap-2 ${
@@ -196,4 +201,6 @@ export default function LiquidityConfirmation({
 
     </Dialog.Root>
   );
-}
+};
+
+export default LiquidityConfirmation;

@@ -14,7 +14,7 @@ interface HeroBannerCarouselProps {
   onStartPosting?: () => void;
 }
 
-export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouselProps = {}) {
+const HeroBannerCarousel = ({ onStartPosting }: HeroBannerCarouselProps = {}) => {
   const [hidden, setHidden] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -34,12 +34,16 @@ export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouse
       if (!until) return;
       const ts = Date.parse(until);
       if (!Number.isNaN(ts) && ts > Date.now()) setHidden(true);
-    } catch {}
+    } catch {
+      // Ignore localStorage read failures
+    }
   }, []);
 
   // Update selected index when carousel changes
   useEffect(() => {
-    if (!emblaApi) return;
+    if (!emblaApi) {
+      return () => {};
+    }
 
     const onSelect = () => {
       setSelectedIndex(emblaApi.selectedScrollSnap());
@@ -70,7 +74,9 @@ export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouse
     try {
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
       localStorage.setItem(DISMISS_KEY, expiresAt.toISOString());
-    } catch {}
+    } catch {
+      // Ignore localStorage write failures
+    }
     setHidden(true);
     // Dispatch custom event so parent components can react
     window.dispatchEvent(new CustomEvent('heroBannerDismissed'));
@@ -192,8 +198,8 @@ export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouse
       <div className="carousel-controls">
         {[0, 1, 2].map((index) => (
           <button
-            key={index}
             type="button"
+            key={index}
             onClick={() => scrollTo(index)}
             className={`carousel-dot ${selectedIndex === index ? 'active' : ''}`}
             aria-label={`Go to slide ${index + 1}`}
@@ -202,4 +208,6 @@ export default function HeroBannerCarousel({ onStartPosting }: HeroBannerCarouse
       </div>
     </div>
   );
-}
+};
+
+export default HeroBannerCarousel;

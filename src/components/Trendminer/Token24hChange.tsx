@@ -8,11 +8,11 @@ interface Token24hChangeProps {
   } | null;
 }
 
-export default function Token24hChange({
+const Token24hChange = ({
   tokenAddress,
   createdAt,
   performance24h,
-}: Token24hChangeProps) {
+}: Token24hChangeProps) => {
   // Check if token is new (created less than 24 hours ago)
   const isNewToken = () => {
     const createdDate = new Date(createdAt);
@@ -34,7 +34,7 @@ export default function Token24hChange({
   const isPositive = changePercent >= 0;
 
   return (
-    <div className="flex items-center">
+    <div className="flex items-center" data-token-address={tokenAddress}>
       {isNewToken() ? (
         <span className="px-1 py-1 rounded text-xs font-semibold text-white bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] uppercase tracking-wide">
           NEW
@@ -53,4 +53,6 @@ export default function Token24hChange({
       )}
     </div>
   );
-}
+};
+
+export default Token24hChange;

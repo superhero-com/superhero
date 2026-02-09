@@ -3,7 +3,7 @@ import { useAeSdk } from './useAeSdk';
 import { useChainName } from './useChainName';
 
 export const useAccount = () => {
-  const { sdk, activeAccount, activeNetwork } = useAeSdk();
+  const { activeAccount } = useAeSdk();
   const accountBalances = useAccountBalances(activeAccount);
   const { chainName } = useChainName(activeAccount);
 

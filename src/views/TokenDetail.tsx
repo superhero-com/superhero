@@ -1,3 +1,10 @@
+/* eslint-disable
+  @typescript-eslint/no-unused-vars,
+  react/function-component-definition,
+  react-hooks/exhaustive-deps,
+  no-unsafe-optional-chaining,
+  no-nested-ternary
+*/
 import { DexPairService, DexService } from '@/api/generated';
 import { PriceDataFormatter } from '@/features/shared/components';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';

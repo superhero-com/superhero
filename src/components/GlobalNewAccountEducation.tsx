@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useWallet } from '../hooks';
 
-export default function GlobalNewAccountEducation() {
+const GlobalNewAccountEducation = () => {
   const {
-    address, balance, isNewAccount, setIsNewAccount,
+    address, isNewAccount, setIsNewAccount,
   } = useWallet();
   const [isDismissed, setIsDismissed] = useState(false);
 
@@ -93,6 +93,7 @@ export default function GlobalNewAccountEducation() {
             </div>
           </div>
           <button
+            type="button"
             onClick={handleDismiss}
             style={{
               background: 'rgba(255,255,255,0.1)',
@@ -174,7 +175,10 @@ export default function GlobalNewAccountEducation() {
         {/* Action buttons */}
         <div style={{ display: 'flex', gap: 8 }}>
           <button
-            onClick={() => window.location.href = '/defi'}
+            type="button"
+            onClick={() => {
+              window.location.href = '/defi';
+            }}
             style={{
               flex: 1,
               padding: '8px 12px',
@@ -200,6 +204,7 @@ export default function GlobalNewAccountEducation() {
             🎯 Go to DEX
           </button>
           <button
+            type="button"
             onClick={handleDismiss}
             style={{
               padding: '8px 12px',
@@ -247,4 +252,6 @@ export default function GlobalNewAccountEducation() {
       </style>
     </div>
   );
-}
+};
+
+export default GlobalNewAccountEducation;

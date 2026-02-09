@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 import {
   BrowserWindowMessageConnection,
   walletDetector,
@@ -10,7 +11,7 @@ import { IS_FRAMED_AEPP, IS_MOBILE, IS_SAFARI } from '../utils/constants';
 import { useAeSdk } from './useAeSdk';
 import { createDeepLinkUrl } from '../utils/url';
 import { validateHash } from '../utils/address';
-import configs from '../configs';
+import { configs } from '../configs';
 import type { Wallet, Wallets, NetworkId } from '../utils/types';
 import { walletInfoAtom } from '../atoms/walletAtoms';
 import { useAccount } from './useAccount';
@@ -30,7 +31,7 @@ export function useWalletConnect() {
   const location = useLocation();
   const navigate = useNavigate();
   const {
-    sdk, aeSdk, scanForAccounts, addStaticAccount, setActiveAccount, setAccounts, activeAccount,
+    aeSdk, scanForAccounts, addStaticAccount, setActiveAccount, setAccounts, activeAccount,
   } = useAeSdk();
 
   // Get available networks from config
@@ -41,14 +42,11 @@ export function useWalletConnect() {
     async function checkAddressWalletConnection() {
       const query = Object.fromEntries(new URLSearchParams(location.search).entries());
 
-      // alert(JSON.stringify(query));
-
       if (query.address && !activeAccount) {
         const address = query.address as string;
         const addressValidation = validateHash(address);
 
         if (!addressValidation.valid) {
-          alert('Invalid Aeternity address');
           navigate({ search: '' });
           return;
         }
@@ -58,7 +56,7 @@ export function useWalletConnect() {
       }
     }
     checkAddressWalletConnection();
-  }, [location.search]);
+  }, [activeAccount, addStaticAccount, location.search, navigate]);
 
   // Cleanup any pending wallet detection when this hook's owner unmounts
   useEffect(() => () => {
@@ -124,8 +122,10 @@ export function useWalletConnect() {
     window.location = addressDeepLink;
   }
 
+  // eslint-disable-next-line consistent-return
   async function connectWallet() {
-    // when trying to connect to the wallet all states should be reset and sdk should be disconnected
+    // when trying to connect to the wallet all states should be reset
+    // and sdk should be disconnected
     setWalletConnected(false);
     setWalletInfo(undefined);
     setActiveAccount(undefined);
@@ -133,9 +133,10 @@ export function useWalletConnect() {
 
     try {
       await aeSdk.disconnectWallet();
-    } catch (error) {
-      //
+    } catch {
+      // It's valid to have no previous wallet session on first connect attempt.
     }
+
     setConnectingWallet(true);
     wallet.current ??= await scanForWallets();
 
@@ -145,12 +146,12 @@ export function useWalletConnect() {
     }
 
     try {
-      const _walletInfo = await aeSdk.connectToWallet(wallet.current.getConnection());
-      setWalletInfo(_walletInfo);
+      const newWalletInfo = await aeSdk.connectToWallet(wallet.current.getConnection());
+      setWalletInfo(newWalletInfo);
 
       await subscribeAddress();
       setWalletConnected(true);
-    } catch (error) {
+    } catch {
       disconnectWallet();
     }
     setConnectingWallet(false);
@@ -183,7 +184,7 @@ export function useWalletConnect() {
     setAccounts([]);
     try {
       await aeSdk.disconnectWallet();
-    } catch (error) {
+    } catch {
       //
     }
   }

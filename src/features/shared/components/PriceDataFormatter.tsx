@@ -25,13 +25,13 @@ interface PriceDataFormatterProps {
  * using the existing PriceFormatter component. It handles currency conversion
  * and proper decimal formatting.
  */
-export default function PriceDataFormatter({
+const PriceDataFormatter = ({
   priceData,
   bignumber = false,
   rowOnSm = false,
   watchKey,
   ...props
-}: PriceDataFormatterProps) {
+}: PriceDataFormatterProps) => {
   const { currentCurrencyCode, getFiat } = useCurrencies();
 
   const aePrice = useMemo(() => {
@@ -76,4 +76,6 @@ export default function PriceDataFormatter({
       {...props}
     />
   );
-}
+};
+
+export default PriceDataFormatter;

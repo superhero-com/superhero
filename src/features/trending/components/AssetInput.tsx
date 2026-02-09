@@ -59,6 +59,14 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
 
   const fiatPrice = useMemo(() => getFiat(isCoin ? Decimal.from(modelValue) : aeValue), [modelValue, aeValue, isCoin, getFiat]);
 
+  const formatMoney = (value: string): string => {
+    if (!value || value === '') return '';
+
+    // Keep display unformatted to avoid conflicts between thousands separators (",")
+    // and decimal separator on some iOS locales (",").
+    return value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
+  };
+
   // Update internal value when modelValue changes (similar to Vue watcher)
   useEffect(() => {
     const value = String(modelValue);
@@ -103,14 +111,6 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
     return sanitized;
   };
 
-  const formatMoney = (value: string): string => {
-    if (!value || value === '') return '';
-
-    // Keep display unformatted to avoid conflicts between thousands separators (",")
-    // and decimal separator on some iOS locales (",").
-    return value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
     const normalizedRawValue = rawValue.replace(/,/g, '.');
@@ -144,12 +144,6 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
 
   const inputAssetSymbol = isCoin ? AETERNITY_TOKEN_BASE_DATA.symbol : tokenSymbol;
   const hasError = error || errorMessages.length > 0;
-
-  // Format fiat price (simplified - would need to integrate with actual currency service)
-  const formatFiatPrice = (value: Decimal): string => {
-    if (value.isZero) return '0.00';
-    return `$${value.prettify(2)}`;
-  };
 
   return (
     <div
@@ -191,7 +185,6 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
               'shadow-none',
             )}
             placeholder="0.00"
-            autoFocus
           />
           <div className="symbol mt-1 whitespace-nowrap font-bold text-sm text-white/90">
             {inputAssetSymbol}
@@ -241,8 +234,8 @@ const AssetInput = forwardRef<AssetInputRef, AssetInputProps>(({
 
         {errorMessages.length > 0 && (
           <div className="text-red-400 text-sm mt-1">
-            {errorMessages.map((message, index) => (
-              <div key={index}>{message}</div>
+            {errorMessages.map((message) => (
+              <div key={message}>{message}</div>
             ))}
           </div>
         )}

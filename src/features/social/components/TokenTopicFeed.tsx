@@ -42,7 +42,7 @@ type TokenTopicFeedProps = {
   onAutoDisableHoldersOnly?: () => void;
 };
 
-export default function TokenTopicFeed({
+const TokenTopicFeed = ({
   topicName,
   showHeader = false,
   displayTokenName,
@@ -52,7 +52,7 @@ export default function TokenTopicFeed({
   tokenSymbol,
   holdersOnly = true,
   onAutoDisableHoldersOnly,
-}: TokenTopicFeedProps) {
+}: TokenTopicFeedProps) => {
   const [autoSwitchedFromHolders, setAutoSwitchedFromHolders] = useState(false);
   const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const baseName = useMemo(() => String(topicName || '').replace(/^#/, ''), [topicName]);
@@ -72,19 +72,20 @@ export default function TokenTopicFeed({
     refetchInterval: 120 * 1000,
   });
 
-  const posts: any[] = Array.isArray((data as any)?.posts) ? (data as any).posts : [];
+  const posts: any[] = useMemo(
+    () => (Array.isArray((data as any)?.posts) ? (data as any).posts : []),
+    [data],
+  );
   const postCount: number | undefined = typeof (data as any)?.post_count === 'number' ? (data as any).post_count : undefined;
 
   // Build a unified hashtag regex early to check if posts match the filter
   // Exclude matches where the hashtag is followed by a hyphen and more characters
   // (e.g., #superhero should not match #superhero-devs)
-  const hashtagRegex = useMemo(
-    () =>
+  const hashtagRegex = useMemo(() => (
     // Match the hashtag only if it's not followed by a hyphen and more characters
     // The negative lookahead checks: not (word char OR hyphen followed by at least one char)
-      new RegExp(`(^|[^A-Za-z0-9_])#${escapeRegExp(baseName)}(?![A-Za-z0-9_]|-[A-Za-z0-9_])`, 'i'),
-    [baseName],
-  );
+    new RegExp(`(^|[^A-Za-z0-9_])#${escapeRegExp(baseName)}(?![A-Za-z0-9_]|-[A-Za-z0-9_])`, 'i')
+  ), [baseName]);
 
   // Optional: load holders for this Trend token so we can:
   // - filter posts to token holders only
@@ -117,10 +118,10 @@ export default function TokenTopicFeed({
     const items: TokenHolderDto[] = Array.isArray((holdersResponse as any)?.items)
       ? (holdersResponse as any).items
       : [];
-    for (const h of items) {
-      if (!h?.address) continue;
+    items.forEach((h) => {
+      if (!h?.address) return;
       map.set(String(h.address).toLowerCase(), h);
-    }
+    });
     return map;
   }, [holdersResponse]);
 
@@ -164,11 +165,11 @@ export default function TokenTopicFeed({
     const altPostsFiltered = altPosts.filter((p: any) => hashtagRegex.test(String(p?.content || p?.text || p?.title || '')));
     const merged = [...postsFiltered, ...altPostsFiltered, ...replyMatches];
     const byKey = new Map<string, any>();
-    for (const p of merged) {
+    merged.forEach((p: any) => {
       const key = String((p as any)?.id ?? (p as any)?.slug ?? '');
-      if (!key) continue;
+      if (!key) return;
       if (!byKey.has(key)) byKey.set(key, p);
-    }
+    });
     return Array.from(byKey.values()).sort((a: any, b: any) => {
       const at = new Date(a?.created_at || 0).getTime();
       const bt = new Date(b?.created_at || 0).getTime();
@@ -234,8 +235,8 @@ export default function TokenTopicFeed({
             Fetching latest posts...
           </div>
         </div>
-        {Array.from({ length: 2 }).map((_, i) => (
-          <PostSkeleton key={i} />
+        {['skeleton-1', 'skeleton-2'].map((key) => (
+          <PostSkeleton key={key} />
         ))}
       </div>
     );
@@ -402,4 +403,6 @@ export default function TokenTopicFeed({
       </div>
     </div>
   );
-}
+};
+
+export default TokenTopicFeed;

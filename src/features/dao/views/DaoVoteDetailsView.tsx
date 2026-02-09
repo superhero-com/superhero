@@ -16,7 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 
 // Custom Components
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import TokenSummary from '@/features/bcl/components/TokenSummary';
 import VoteSubject from '@/features/dao/components/VoteSubject';
 import VotersTable from '@/features/dao/components/VotersTable';
@@ -24,19 +24,18 @@ import TokenRanking from '@/features/trending/components/TokenRanking';
 import TokenTradeCard from '@/features/trending/components/TokenTradeCard';
 import Spinner from '@/components/Spinner';
 
-export default function DaoVoteDetailsView() {
-  const { saleAddress, voteAddress, voteId } = useParams<{
-    saleAddress: string;
-    voteAddress: string;
-    voteId: string;
-  }>();
+type DaoVoteDetailsParams = {
+  saleAddress: string;
+  voteAddress: string;
+  voteId: string;
+};
 
+const DaoVoteDetailsContent = ({
+  saleAddress,
+  voteAddress,
+  voteId,
+}: DaoVoteDetailsParams) => {
   const { currentBlockHeight } = useAeSdk();
-
-  // Validate parameters
-  if (!saleAddress || !voteAddress || !voteId) {
-    return <div className="text-red-400 p-4">Missing required parameters</div>;
-  }
 
   ensureAddress(saleAddress, Encoding.ContractAddress);
   ensureString(saleAddress);
@@ -52,7 +51,6 @@ export default function DaoVoteDetailsView() {
     canWithdraw,
     canApply,
     voteYesPercentage,
-    voteStakeYesPercentage,
     userVoteOrLockedInfo,
     actionLoading,
     voteOption,
@@ -409,4 +407,22 @@ export default function DaoVoteDetailsView() {
       </div>
     </div>
   );
-}
+};
+
+const DaoVoteDetailsView = () => {
+  const { saleAddress, voteAddress, voteId } = useParams<DaoVoteDetailsParams>();
+
+  if (!saleAddress || !voteAddress || !voteId) {
+    return <div className="text-red-400 p-4">Missing required parameters</div>;
+  }
+
+  return (
+    <DaoVoteDetailsContent
+      saleAddress={saleAddress}
+      voteAddress={voteAddress}
+      voteId={voteId}
+    />
+  );
+};
+
+export default DaoVoteDetailsView;

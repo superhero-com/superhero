@@ -22,7 +22,9 @@ function getInstallItems() {
   const isIOS = /iPhone|iPad|iPod/i.test(ua);
   const isMobile = isAndroid || isIOS || /Mobi/i.test(ua);
   const isFirefox = /Firefox\//i.test(ua);
-  const isChromeFamily = (/Chrome\//i.test(ua) || /Chromium\//i.test(ua)) && !/Edg\//i.test(ua) && !/OPR\//i.test(ua);
+  const isChromeFamily = (
+    /Chrome\//i.test(ua) || /Chromium\//i.test(ua)
+  ) && !/Edg\//i.test(ua) && !/OPR\//i.test(ua);
 
   const LINKS = {
     chrome: 'https://chrome.google.com/webstore/detail/superhero-wallet/mnhmmkepfddpifjkamaligfeemcbhdne',
@@ -55,7 +57,7 @@ function getInstallItems() {
   };
 }
 
-export default function ConnectWalletModal({ onClose }: Props) {
+const ConnectWalletModal = ({ onClose }: Props) => {
   const { connectWallet, connectingWallet } = useWalletConnect();
 
   const install = useMemo(() => getInstallItems(), []);
@@ -149,4 +151,6 @@ export default function ConnectWalletModal({ onClose }: Props) {
 
     </div>
   );
-}
+};
+
+export default ConnectWalletModal;

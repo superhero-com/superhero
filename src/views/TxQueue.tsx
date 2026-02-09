@@ -3,32 +3,35 @@ import { useParams, useLocation } from 'react-router-dom';
 import { useAtom } from 'jotai';
 import { transactionsQueueAtom } from '../atoms/txQueueAtoms';
 
-export default function TxQueue() {
+const TxQueue = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const [transactionsQueue, setTransactionsQueue] = useAtom(transactionsQueueAtom);
+  const [, setTransactionsQueue] = useAtom(transactionsQueueAtom);
 
   useEffect(() => {
-    if (!id) return;
+    let timer: number | undefined;
+    if (id) {
+      // Parse query parameters
+      const query = Object.fromEntries(new URLSearchParams(location.search).entries());
 
-    // Parse query parameters
-    const query = Object.fromEntries(new URLSearchParams(location.search).entries());
+      // Update the transactions queue
+      setTransactionsQueue((prevQueue) => ({
+        ...prevQueue,
+        [id]: {
+          ...prevQueue[id], // Keep existing data
+          ...query, // Merge in new query data
+        } as any, // Using any here because query can contain various properties
+      }));
 
-    // Update the transactions queue
-    setTransactionsQueue((prevQueue) => ({
-      ...prevQueue,
-      [id]: {
-        ...prevQueue[id], // Keep existing data
-        ...query, // Merge in new query data
-      } as any, // Using any here because query can contain various properties
-    }));
+      // Close current tab after a short delay
+      timer = window.setTimeout(() => {
+        window.close();
+      }, 200);
+    }
 
-    // Close current tab after a short delay
-    const timer = window.setTimeout(() => {
-      window.close();
-    }, 200);
-
-    return () => window.clearTimeout(timer);
+    return () => {
+      if (timer) window.clearTimeout(timer);
+    };
   }, [id, location.search, setTransactionsQueue]);
 
   return (
@@ -36,4 +39,6 @@ export default function TxQueue() {
       <div className="text-white/80 text-lg">Processing transaction…</div>
     </div>
   );
-}
+};
+
+export default TxQueue;

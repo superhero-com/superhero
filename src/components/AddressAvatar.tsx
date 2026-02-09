@@ -33,13 +33,13 @@ export const JDENTICON_CONFIG = {
   backColor: '#12121bff',
 };
 
-export default function AddressAvatar({
+const AddressAvatar = ({
   address,
   size = 24,
   className = '',
   borderRadius = '50%',
   style = {},
-}: AddressAvatarProps) {
+}: AddressAvatarProps) => {
   // Generate avatar SVG using dicebear or jdenticon based on address
   const avatarSvg = useMemo(() => {
     // Handle undefined/null address
@@ -58,8 +58,7 @@ export default function AddressAvatar({
       }
       // Use jdenticon for non-.chain addresses
       return jdenticon.toSvg(address, (avatarSize * 0.95), JDENTICON_CONFIG);
-    } catch (error) {
-      console.warn('Failed to generate avatar:', error);
+    } catch {
       return null;
     }
   }, [address, size]);
@@ -85,7 +84,7 @@ export default function AddressAvatar({
     } else if (typeof size === 'string' && size.includes('%')) {
       fontSize = '0.4em';
     } else if (typeof size === 'string' && size.includes('px')) {
-      const pxValue = parseInt(size.replace('px', ''));
+      const pxValue = parseInt(size.replace('px', ''), 10);
       fontSize = `${pxValue * 0.4}px`;
     }
 
@@ -100,13 +99,14 @@ export default function AddressAvatar({
       style={{
         width: typeof size === 'string' ? size : `${size}px`,
         height: typeof size === 'string' ? size : `${size}px`,
-        borderRadius: '50%',
+        borderRadius,
         ...style,
       }}
     >
       {avatarSvg ? (
         <span
           className="custom-address w-full h-full object-cover"
+          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: avatarSvg }}
         />
       ) : (
@@ -126,4 +126,6 @@ export default function AddressAvatar({
       )}
     </div>
   );
-}
+};
+
+export default AddressAvatar;

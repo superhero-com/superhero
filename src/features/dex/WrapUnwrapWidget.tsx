@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
-import ConnectWalletButton from '../../components/ConnectWalletButton';
+import { ConnectWalletButton } from '../../components/ConnectWalletButton';
 import { useSwapExecution } from '../../components/dex/hooks/useSwapExecution';
 import { useTokenBalances } from '../../components/dex/hooks/useTokenBalances';
 import { useAccount } from '../../hooks';
@@ -14,10 +14,9 @@ import Spinner from '../../components/Spinner';
 
 interface WrapUnwrapWidgetProps {
   className?: string;
-  style?: React.CSSProperties;
 }
 
-export const WrapUnwrapWidget = ({ className, style }: WrapUnwrapWidgetProps) => {
+export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
   const { t } = useTranslation('common');
   const { activeAccount, loadAccountData } = useAccount();
   const { wrapBalances } = useTokenBalances(null, null);
@@ -47,11 +46,11 @@ export const WrapUnwrapWidget = ({ className, style }: WrapUnwrapWidgetProps) =>
         if (amount.gt(balance)) {
           setError(`Insufficient ${mode === 'wrap' ? 'AE' : 'WAE'} balance. You need ${amount.prettify()} but only have ${balance.prettify()}`);
         }
-      } catch (e) {
+      } catch {
         // Invalid amount format, ignore
       }
     }
-  }, [currentAmount, currentBalance]);
+  }, [currentAmount, currentBalance, mode]);
 
   const handleAmountChange = (value: string) => {
     const raw = value.replace(/,/g, '.');
@@ -109,8 +108,8 @@ export const WrapUnwrapWidget = ({ className, style }: WrapUnwrapWidgetProps) =>
 
       // Execute the swap (which will use wrap/unwrap internally)
       await executeSwap({
-        tokenIn,
-        tokenOut,
+        tokenIn: tokenIn as any, // TODO: define types
+        tokenOut: tokenOut as any,
         amountIn: currentAmount,
         amountOut: currentAmount, // 1:1 ratio
         path: [], // Will be handled by executeSwap
@@ -121,7 +120,7 @@ export const WrapUnwrapWidget = ({ className, style }: WrapUnwrapWidgetProps) =>
 
       // Clear the input and reload account data on success
       setCurrentAmount('');
-      void loadAccountData();
+      loadAccountData();
     } catch (e: any) {
       setError(e.message || `Failed to ${mode} tokens`);
     }
@@ -212,11 +211,11 @@ export const WrapUnwrapWidget = ({ className, style }: WrapUnwrapWidgetProps) =>
         <CardContent className="p-4">
           {/* Label and Balance Row */}
           <div className="flex flex-row flex-wrap gap-2 items-center mb-3">
-            <label className="text-sm font-semibold text-white/60 uppercase tracking-wider">
+            <div className="text-sm font-semibold text-white/60 uppercase tracking-wider">
               Amount to
               {' '}
               {mode}
-            </label>
+            </div>
 
             {currentBalance && (
               <div className="flex items-center gap-2 text-xs text-white/60">

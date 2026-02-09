@@ -22,7 +22,7 @@ export function useLiveTokenData({ token, onUpdate }: ILiveTokenData) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!token?.sale_address) return;
+    if (!token?.sale_address) return () => {};
     subscriptionRef.current = WebSocketClient.subscribeForTokenUpdates(
       token.sale_address,
       (newComingTokenData: any) => {

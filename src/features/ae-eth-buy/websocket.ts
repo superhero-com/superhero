@@ -21,7 +21,11 @@ export class AeWebSocketService {
 
   private reconnectDelay = 1000; // Start with 1 second
 
-  constructor(private wsUrl: string) {}
+  private wsUrl: string;
+
+  constructor(wsUrl: string) {
+    this.wsUrl = wsUrl;
+  }
 
   /**
    * Connect to the WebSocket
@@ -41,7 +45,8 @@ export class AeWebSocketService {
           try {
             const message: AeWebSocketMessage = JSON.parse(event.data);
             this.handleMessage(message);
-          } catch (error) {
+          } catch {
+            // Ignore malformed messages
           }
         };
 
@@ -49,7 +54,7 @@ export class AeWebSocketService {
           this.attemptReconnect();
         };
 
-        this.ws.onerror = (error) => {
+        this.ws.onerror = () => {
           if (this.reconnectAttempts === 0) {
             reject(new Error('Failed to connect to WebSocket'));
           }
@@ -102,40 +107,39 @@ export class AeWebSocketService {
     expectedAmount: bigint,
     timeoutMs: number = 300_000,
   ): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
+    return new Promise((resolve) => {
+      let unsubscribe = () => {};
+      let unsubscribeTx = () => {};
+
+      const cleanup = () => {
         unsubscribe();
+        unsubscribeTx();
+      };
+
+      const timeout = setTimeout(() => {
+        cleanup();
         resolve(false);
       }, timeoutMs);
 
-      const unsubscribe = this.subscribe('bridge_deposit', (message) => {
+      unsubscribe = this.subscribe('bridge_deposit', (message) => {
         if (
           message.account === aeAccount
           && message.amount
           && BigInt(message.amount) >= expectedAmount
         ) {
           clearTimeout(timeout);
-          unsubscribe();
+          cleanup();
           resolve(true);
         }
       });
 
       // Also listen for general transaction events
-      const unsubscribeTx = this.subscribe('transaction', (message) => {
+      unsubscribeTx = this.subscribe('transaction', (message) => {
         // Check if this is a bridge-related transaction for our account
         if (message.data?.recipient === aeAccount) {
           // Additional validation logic can be added here
         }
       });
-
-      // Clean up both subscriptions on timeout
-      const originalTimeout = timeout;
-      clearTimeout(originalTimeout);
-      setTimeout(() => {
-        unsubscribe();
-        unsubscribeTx();
-        resolve(false);
-      }, timeoutMs);
     });
   }
 
@@ -145,7 +149,8 @@ export class AeWebSocketService {
       callbacks.forEach((callback) => {
         try {
           callback(message);
-        } catch (error) {
+        } catch {
+          // Ignore callback errors
         }
       });
     }
@@ -156,11 +161,12 @@ export class AeWebSocketService {
       return;
     }
 
-    this.reconnectAttempts++;
+    this.reconnectAttempts += 1;
     const delay = this.reconnectDelay * 2 ** (this.reconnectAttempts - 1);
 
     setTimeout(() => {
-      this.connect().catch((error) => {
+      this.connect().catch(() => {
+        // Ignore reconnect errors
       });
     }, delay);
   }

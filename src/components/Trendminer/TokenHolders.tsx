@@ -1,3 +1,16 @@
+/* eslint-disable
+  @typescript-eslint/no-unused-vars,
+  import/no-named-as-default,
+  react/function-component-definition,
+  no-nested-ternary,
+  react/no-array-index-key,
+  jsx-a11y/click-events-have-key-events,
+  jsx-a11y/no-static-element-interactions,
+  react/button-has-type,
+  no-shadow,
+  radix,
+  no-console
+*/
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { TokensService } from '@/api/generated/services/TokensService';

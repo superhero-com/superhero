@@ -5,7 +5,7 @@ import { Decimal } from '@/libs/decimal';
 import { useCurrencies } from '@/hooks/useCurrencies';
 import { COIN_SYMBOL } from '@/utils/constants';
 
-export default function GlobalStatsAnalytics() {
+const GlobalStatsAnalytics = () => {
   const { getFiat, currentCurrencyInfo } = useCurrencies();
 
   // Helper function to format dates as YYYY-MM-DD (equivalent to moment().format('YYYY-MM-DD'))
@@ -47,30 +47,40 @@ export default function GlobalStatsAnalytics() {
     [todayTradeVolume],
   );
 
-  // Helper function to format fiat values (matching Vue component)
-  const formatFiat = (value: Decimal): string => `${currentCurrencyInfo.symbol} ${value.shorten()}`;
-
   // Stats items with both AE amounts and fiat values (matching Vue component structure)
-  const statsItems = useMemo((): { name: string; value: string | number; fiat?: string }[] => [
-    {
-      name: 'Total Market Cap',
-      value: last24HoursData ? `${totalMarketCapValue.shorten()} ${COIN_SYMBOL}` : '-',
-      fiat: formatFiat(getFiat(totalMarketCapValue)),
-    },
-    {
-      name: 'Volume (7d)',
-      value: todayTradeVolume ? `${last7DaysTradeVolumeValue?.shorten()} ${COIN_SYMBOL}` : '-',
-      fiat: formatFiat(getFiat(last7DaysTradeVolumeValue)),
-    },
-    {
-      name: 'Unique tokens',
-      value: last24HoursData ? `${last24HoursData?.total_tokens ?? '-'}` : '-',
-    },
-    {
-      name: 'Created tokens (24h)',
-      value: last24HoursData?.total_created_tokens ?? '-',
-    },
-  ], [totalMarketCapValue, last7DaysTradeVolumeValue, last24HoursData, getFiat, formatFiat, currentCurrencyInfo]);
+  const statsItems = useMemo((): { name: string; value: string | number; fiat?: string }[] => {
+    const formatFiat = (value: Decimal): string => (
+      `${currentCurrencyInfo.symbol} ${value.shorten()}`
+    );
+
+    return [
+      {
+        name: 'Total Market Cap',
+        value: last24HoursData ? `${totalMarketCapValue.shorten()} ${COIN_SYMBOL}` : '-',
+        fiat: formatFiat(getFiat(totalMarketCapValue)),
+      },
+      {
+        name: 'Volume (7d)',
+        value: todayTradeVolume ? `${last7DaysTradeVolumeValue?.shorten()} ${COIN_SYMBOL}` : '-',
+        fiat: formatFiat(getFiat(last7DaysTradeVolumeValue)),
+      },
+      {
+        name: 'Unique tokens',
+        value: last24HoursData ? `${last24HoursData?.total_tokens ?? '-'}` : '-',
+      },
+      {
+        name: 'Created tokens (24h)',
+        value: last24HoursData?.total_created_tokens ?? '-',
+      },
+    ];
+  }, [
+    totalMarketCapValue,
+    last7DaysTradeVolumeValue,
+    last24HoursData,
+    getFiat,
+    todayTradeVolume,
+    currentCurrencyInfo.symbol,
+  ]);
 
   // Check if data is loading
   // const isLoading = !todayTradeVolume || !last24HoursData;
@@ -92,4 +102,6 @@ export default function GlobalStatsAnalytics() {
       ))}
     </div>
   );
-}
+};
+
+export default GlobalStatsAnalytics;

@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import {
+  useCallback, useEffect, useRef, useState,
+} from 'react';
 import {
   createChart,
   IChartApi,
@@ -23,13 +25,13 @@ export function useChart({
   const chart = useRef<IChartApi | null>(null);
   const [isDarkMode] = useState(true); // For now, assuming dark mode
 
-  const resizeHandler = () => {
+  const resizeHandler = useCallback(() => {
     if (!chart.current || !chartContainer.current) return;
     const dimensions = chartContainer.current.getBoundingClientRect();
     chart.current.resize(dimensions.width, height);
-  };
+  }, [height]);
 
-  const initChart = () => {
+  const initChart = useCallback(() => {
     if (!chartContainer.current || chart.current) return;
 
     const defaultChartOptions: DeepPartial<ChartOptions> = {
@@ -69,7 +71,7 @@ export function useChart({
     chart.current = chartInstance;
 
     onChartReady?.(chartInstance);
-  };
+  }, [chartOptions, height, isDarkMode, onChartReady]);
 
   useEffect(() => {
     initChart();
@@ -82,7 +84,7 @@ export function useChart({
       }
       window.removeEventListener('resize', resizeHandler);
     };
-  }, [height]);
+  }, [initChart, resizeHandler]);
 
   // Update chart colors when dark mode changes
   useEffect(() => {

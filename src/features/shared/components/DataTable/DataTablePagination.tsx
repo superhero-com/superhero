@@ -3,7 +3,14 @@ import { Button } from '../../../../components/ui/button';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '../../../../components/ui/select';
-import { DataTableMeta } from './DataTable';
+
+export interface DataTableMeta {
+  totalItems: number;
+  itemCount: number;
+  itemsPerPage: number;
+  totalPages: number;
+  currentPage: number;
+}
 
 export interface DataTablePaginationProps {
   meta: DataTableMeta;
@@ -26,7 +33,6 @@ export const DataTablePagination = ({
 }: DataTablePaginationProps) => {
   const {
     totalItems,
-    itemCount,
     itemsPerPage,
     totalPages,
     currentPage,
@@ -45,7 +51,7 @@ export const DataTablePagination = ({
   };
 
   const handleItemsPerPageChange = (value: string) => {
-    const newItemsPerPage = parseInt(value);
+    const newItemsPerPage = parseInt(value, 10);
     if (onItemsPerPageChange) {
       onItemsPerPageChange(newItemsPerPage);
     }

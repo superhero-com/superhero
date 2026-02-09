@@ -5,7 +5,7 @@ import { Decimal } from '@/libs/decimal';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useWallet } from '@/hooks';
 import { formatAddress } from '@/utils/address';
-import Head from '../../../seo/Head';
+import { Head } from '../../../seo/Head';
 import { PostsService, PostDto } from '../../../api/generated';
 import AeButton from '../../../components/AeButton';
 import LeftRail from '../../../components/layout/LeftRail';
@@ -20,7 +20,85 @@ import { resolvePostByKey } from '../utils/resolvePost';
 import { usePostTipSummary } from '../hooks/usePostTipSummary';
 import { usePostTips } from '../hooks/usePostTips';
 
-export default function PostDetail({ standalone = true }: { standalone?: boolean } = {}) {
+const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: string }) => {
+  const { chainNames } = useWallet();
+  const postId = String(post?.id || '');
+  const receiver = String(post?.sender_address || post?.senderAddress || '');
+
+  const { data: summary } = usePostTipSummary(postId);
+  const total = summary?.totalTips != null ? Number(summary.totalTips) : 0;
+  const totalAe = Number.isFinite(total) ? total : 0;
+
+  const { data: tips = [], isLoading } = usePostTips(postId, receiver);
+  const top = tips.slice(0, 10);
+  const explorerBase = (explorerUrl || '').replace(/\/$/, '');
+
+  return (
+    <div className="border border-white/10 rounded-2xl p-3 sm:p-4 bg-white/[0.05] backdrop-blur-[10px]">
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-sm text-white/70">
+          Total tipped:
+          {' '}
+          <span className="text-white font-semibold">{Decimal.from(String(totalAe)).prettify()}</span>
+          {' '}
+          AE
+        </div>
+        <div className="text-xs text-white/50">{tips.length ? `${tips.length} tips` : ''}</div>
+      </div>
+
+      {isLoading && <div className="text-sm text-white/60">Loading tips…</div>}
+      {!isLoading && tips.length === 0 && (
+        <div className="text-sm text-white/60">No tips yet.</div>
+      )}
+
+      {!isLoading && tips.length > 0 && (
+        <div className="grid gap-2">
+          {top.map((t) => (
+            <div key={t.hash} className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <Link
+                  to={`/users/${t.sender}`}
+                  className="text-sm text-white truncate hover:underline"
+                  title={t.sender}
+                >
+                  {chainNames?.[t.sender] || formatAddress(t.sender, 3, true)}
+                </Link>
+                <div className="text-xs text-white/50 truncate">{t.date}</div>
+              </div>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="text-sm text-white font-semibold">
+                  {Decimal.from(t.amountAe).prettify()}
+                  {' '}
+                  AE
+                </div>
+                {explorerBase && (
+                  <a
+                    className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa]"
+                    href={`${explorerBase}/transactions/${t.hash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+          {tips.length > top.length && (
+            <div className="text-xs text-white/50 pt-1">
+              Showing latest
+              {top.length}
+              {' '}
+              tips.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -47,7 +125,8 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
 
   const isLoading = isPostLoading;
   const error = postError;
-  // Ensure detail page scrolls to top when opened (initial), we'll center the current post after data loads
+  // Ensure detail page scrolls to top when opened (initial),
+  // we'll center the current post after data loads
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -59,26 +138,30 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     enabled: !!postData,
     refetchInterval: 120 * 1000,
     queryFn: async () => {
-      const chain: PostDto[] = [];
-      const seen = new Set<string>();
-      let currentId: string | null = parentId || null;
-      let safety = 0;
-      while (currentId && !seen.has(currentId) && safety < 100) {
+      const fetchChain = async (
+        currentId: string | null,
+        chain: PostDto[],
+        seen: Set<string>,
+        safety: number,
+      ): Promise<PostDto[]> => {
+        if (!currentId || seen.has(currentId) || safety >= 100) {
+          return chain;
+        }
         seen.add(currentId);
         const p = (await PostsService.getById({ id: currentId })) as unknown as PostDto;
         // unshift so the oldest ancestor is first
-        chain.unshift(p);
-        currentId = extractParentId(p as any);
-        safety += 1;
-      }
-      return chain;
+        const nextChain = [p, ...chain];
+        const nextId = extractParentId(p as any);
+        return fetchChain(nextId, nextChain, seen, safety + 1);
+      };
+      return fetchChain(parentId || null, [], new Set<string>(), 0);
     },
   });
 
   // Center the current post in the viewport once it's rendered
   const currentPostRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    if (!postData) return;
+    if (!postData) return () => {};
     // Defer to the end of the frame to ensure layout is ready
     const id = window.requestAnimationFrame(() => {
       currentPostRef.current?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
@@ -95,36 +178,38 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
     queryFn: async () => {
       const normalize = (id: string) => (String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`);
       const postIdForQuery = postData!.id;
-      const queue: string[] = [normalize(String(postIdForQuery))];
-      let total = 0;
-      let requestBudget = 200; // safety cap
-      while (queue.length > 0 && requestBudget > 0) {
-        const current = queue.shift()!;
-        // paginate through comments for this id
-        let page = 1;
-        // loop pages
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-          if (requestBudget <= 0) break;
-          requestBudget -= 1;
-          const res: any = await PostsService.getComments({
-            id: current, orderDirection: 'ASC', page, limit: 50,
-          });
-          const items: PostDto[] = res?.items || [];
-          total += items.length;
-          // enqueue children that have further replies
-          for (const child of items) {
-            if ((child.total_comments ?? 0) > 0) {
-              queue.push(normalize(String(child.id)));
-            }
-          }
-          const meta = res?.meta;
-          if (!meta?.currentPage || !meta?.totalPages || meta.currentPage >= meta.totalPages) break;
-          page = meta.currentPage + 1;
+      const requestBudgetRef = { value: 200 };
+
+      const fetchAllPages = async (
+        current: string,
+        page = 1,
+        acc: PostDto[] = [],
+      ): Promise<PostDto[]> => {
+        if (requestBudgetRef.value <= 0) return acc;
+        requestBudgetRef.value -= 1;
+        const res: any = await PostsService.getComments({
+          id: current, orderDirection: 'ASC', page, limit: 50,
+        });
+        const items: PostDto[] = res?.items || [];
+        const nextAcc = acc.concat(items);
+        const meta = res?.meta;
+        if (!meta?.currentPage || !meta?.totalPages || meta.currentPage >= meta.totalPages) {
+          return nextAcc;
         }
-      }
-      // Do not count the root itself, only descendants counted in total
-      return total;
+        return fetchAllPages(current, meta.currentPage + 1, nextAcc);
+      };
+
+      const processQueue = async (queue: string[], total = 0): Promise<number> => {
+        if (queue.length === 0 || requestBudgetRef.value <= 0) return total;
+        const [current, ...rest] = queue;
+        const items = await fetchAllPages(current);
+        const childIds = items
+          .filter((child) => (child.total_comments ?? 0) > 0)
+          .map((child) => normalize(String(child.id)));
+        return processQueue(rest.concat(childIds), total + items.length);
+      };
+
+      return processQueue([normalize(String(postIdForQuery))]);
     },
   });
 
@@ -251,82 +336,6 @@ export default function PostDetail({ standalone = true }: { standalone?: boolean
   ) : (
     content
   );
-}
-
-const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: string }) => {
-  const { chainNames } = useWallet();
-  const postId = String(post?.id || '');
-  const receiver = String(post?.sender_address || post?.senderAddress || '');
-
-  const { data: summary } = usePostTipSummary(postId);
-  const total = summary?.totalTips != null ? Number(summary.totalTips) : 0;
-  const totalAe = Number.isFinite(total) ? total : 0;
-
-  const { data: tips = [], isLoading } = usePostTips(postId, receiver);
-  const top = tips.slice(0, 10);
-  const explorerBase = (explorerUrl || '').replace(/\/$/, '');
-
-  return (
-    <div className="border border-white/10 rounded-2xl p-3 sm:p-4 bg-white/[0.05] backdrop-blur-[10px]">
-      <div className="flex items-center justify-between mb-3">
-        <div className="text-sm text-white/70">
-          Total tipped:
-          {' '}
-          <span className="text-white font-semibold">{Decimal.from(String(totalAe)).prettify()}</span>
-          {' '}
-          AE
-        </div>
-        <div className="text-xs text-white/50">{tips.length ? `${tips.length} tips` : ''}</div>
-      </div>
-
-      {isLoading && <div className="text-sm text-white/60">Loading tips…</div>}
-      {!isLoading && tips.length === 0 && (
-        <div className="text-sm text-white/60">No tips yet.</div>
-      )}
-
-      {!isLoading && tips.length > 0 && (
-        <div className="grid gap-2">
-          {top.map((t) => (
-            <div key={t.hash} className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <Link
-                  to={`/users/${t.sender}`}
-                  className="text-sm text-white truncate hover:underline"
-                  title={t.sender}
-                >
-                  {chainNames?.[t.sender] || formatAddress(t.sender, 3, true)}
-                </Link>
-                <div className="text-xs text-white/50 truncate">{t.date}</div>
-              </div>
-              <div className="flex items-center gap-3 flex-shrink-0">
-                <div className="text-sm text-white font-semibold">
-                  {Decimal.from(t.amountAe).prettify()}
-                  {' '}
-                  AE
-                </div>
-                {explorerBase && (
-                  <a
-                    className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa]"
-                    href={`${explorerBase}/transactions/${t.hash}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    View
-                  </a>
-                )}
-              </div>
-            </div>
-          ))}
-          {tips.length > top.length && (
-            <div className="text-xs text-white/50 pt-1">
-              Showing latest
-              {top.length}
-              {' '}
-              tips.
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
 };
+
+export default PostDetail;

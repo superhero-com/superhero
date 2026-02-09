@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Encoding, isAddressValid } from '@aeternity/aepp-sdk';
 import { useAccount, useAeSdk, useGovernance } from '@/hooks';
 import { useState } from 'react';

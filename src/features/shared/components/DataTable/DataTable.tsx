@@ -34,7 +34,7 @@ export interface DataTableProps<T> {
   itemsPerPage?: number;
 }
 
-export function DataTable<T>({
+export const DataTable = <T, >({
   queryFn,
   renderRow,
   initialParams = {},
@@ -44,7 +44,7 @@ export function DataTable<T>({
   errorComponent,
   showPagination = true,
   itemsPerPage = 10,
-}: DataTableProps<T>) {
+}: DataTableProps<T>) => {
   const [params, setParams] = useState<DataTableParams>({
     page: 1,
     limit: itemsPerPage,
@@ -66,10 +66,6 @@ export function DataTable<T>({
 
   const handlePageChange = (page: number) => {
     setParams((prev) => ({ ...prev, page }));
-  };
-
-  const handleParamsChange = (newParams: Partial<DataTableParams>) => {
-    setParams((prev) => ({ ...prev, ...newParams, page: 1 }));
   };
 
   // Expose methods for parent components
@@ -102,6 +98,7 @@ export function DataTable<T>({
               {error instanceof Error ? error.message : 'An unknown error occurred'}
             </p>
             <button
+              type="button"
               onClick={() => refetch()}
               className="mt-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
             >
@@ -127,11 +124,17 @@ export function DataTable<T>({
     <div className={`space-y-2 ${className}`}>
       {/* Data Table Content */}
       <div className="space-y-2">
-        {data.items.map((item, index) => (
-          <div key={index}>
-            {renderRow({ item, index })}
-          </div>
-        ))}
+        {data.items.map((item, index) => {
+          const rowKey = (item as any).id
+            ?? (item as any).address
+            ?? (item as any).hash
+            ?? JSON.stringify(item);
+          return (
+            <div key={rowKey}>
+              {renderRow({ item, index })}
+            </div>
+          );
+        })}
       </div>
 
       {/* Pagination */}
@@ -144,7 +147,7 @@ export function DataTable<T>({
       )}
     </div>
   );
-}
+};
 
 // Hook for using DataTable with external state management
 export function useDataTable<T>(

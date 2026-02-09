@@ -20,8 +20,7 @@ export const addTokenToEthereumWallet = async (asset: Asset) => {
       },
     });
     return wasAdded;
-  } catch (error) {
-    console.error(error);
+  } catch {
     return false;
   }
 };

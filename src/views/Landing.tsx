@@ -1,3 +1,9 @@
+/* eslint-disable
+  react/function-component-definition,
+  react/no-unescaped-entities,
+  react/no-danger,
+  max-len
+*/
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';

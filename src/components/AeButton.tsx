@@ -12,7 +12,7 @@ export interface AeButtonProps extends Omit<ShadcnAeButtonProps, 'variant' | 'si
   style?: React.CSSProperties;
 }
 
-export default function AeButton({
+const AeButton = ({
   children,
   variant = 'primary',
   size = 'md',
@@ -29,7 +29,7 @@ export default function AeButton({
   className = '',
   style = {},
   ...props
-}: AeButtonProps) {
+}: AeButtonProps) => {
   // Map legacy variants to new shadcn variants
   const variantMap: Record<string, ShadcnAeButtonProps['variant']> = {
     primary: 'default',
@@ -83,4 +83,6 @@ export default function AeButton({
       {children}
     </ShadcnAeButton>
   );
-}
+};
+
+export default AeButton;

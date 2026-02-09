@@ -1,4 +1,3 @@
-import { useAccount } from '@/hooks';
 import BigNumber from 'bignumber.js';
 import { useCallback, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -17,7 +16,6 @@ import {
   setupContractInstance,
   fetchUserTokenBalance,
   getTokenSymbolName,
-  getContractInstances,
 } from '../libs/tokenTradeContract';
 import { CONFIG } from '../../../config';
 import { useTokenTradeStore } from './useTokenTradeStore';
@@ -56,7 +54,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       console.error('Error calculating bonding curve price:', error);
       store.updateNextPrice(Decimal.ZERO);
     }
-  }, []);
+  }, [store]);
 
   // Calculate token cost based on bonding curve
   const calculateTokenCost = useCallback((amount?: number, _isBuying = false, _isUsingToken = false): number => {
@@ -152,7 +150,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     if (fetchedUserBalance !== undefined) {
       store.updateUserBalance(fetchedUserBalance);
     }
-  }, [fetchedUserBalance]);
+  }, [fetchedUserBalance, store]);
 
   // Watch tokenA changes and calculate tokenB automatically
   useEffect(() => {
@@ -175,7 +173,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       !store.isBuying,
     );
     store.updateTokenB(calculatedTokenB);
-  }, [store.tokenA, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
+  }, [store, store.tokenA, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
 
   // Watch tokenB changes and calculate tokenA automatically
   useEffect(() => {
@@ -197,7 +195,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     );
 
     store.updateTokenA(calculatedTokenA);
-  }, [store.tokenB, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
+  }, [store, store.tokenB, store.isBuying, store.tokenAFocused, calculateTokenCost, contractInstances?.tokenSaleInstance]);
 
   const resetFormState = useCallback(() => {
     store.resetFormData(true);
@@ -236,6 +234,28 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
     ) / 100;
   }, [store.isBuying, store.tokenA, store.tokenB]);
 
+  // Handle transaction completion
+  const onTransactionComplete = useCallback(async () => {
+    queryClient.invalidateQueries({
+      queryKey: ['TokensService.findByAddress', token.sale_address],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ['MiddlewareService.getTxsByScope', token.sale_address],
+    });
+
+    // Refetch user balance
+    if (contractInstances?.tokenSaleInstance && activeAccount) {
+      const balance = await fetchUserTokenBalance(
+        contractInstances.tokenSaleInstance,
+        token,
+        activeAccount,
+      );
+      store.updateUserBalance(balance);
+      return balance;
+    }
+    return '0';
+  }, [queryClient, contractInstances?.tokenSaleInstance, activeAccount, token, store]);
+
   // Buy tokens
   const buy = useCallback(async () => {
     errorMessage.current = undefined;
@@ -258,7 +278,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       ) as any;
 
       const mints: any[] = buyResult.decodedEvents.filter((data: any) => data.name === 'Mint');
-      const _userBalance = await onTransactionComplete();
+      const userBalanceValue = await onTransactionComplete();
       const protocolSymbol = await getTokenSymbolName(
         mints[0].contract.address,
         CONFIG.MIDDLEWARE_URL,
@@ -273,13 +293,13 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
         symbol: token.symbol || '',
         protocolReward: Decimal.from(toAe(mints[0].args[1])),
         protocolSymbol,
-        userBalance: Decimal.from(_userBalance),
+        userBalance: Decimal.from(userBalanceValue),
       });
     } catch (error: any) {
       errorMessage.current = error?.message;
     }
     store.updateLoadingTransaction(false);
-  }, [contractInstances?.tokenSaleInstance, store, token.symbol]);
+  }, [contractInstances?.tokenSaleInstance, store, token.symbol, onTransactionComplete]);
 
   // Sell tokens
   const sell = useCallback(async () => {
@@ -309,7 +329,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
         store.slippage,
       ) as any;
 
-      const _userBalance = await onTransactionComplete();
+      const userBalanceValue = await onTransactionComplete();
       store.updateSuccessTxData({
         isBuying: false,
         destAmount: Decimal.from(
@@ -319,7 +339,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
           toAe(sellResult.decodedEvents.find((data: any) => data.name === 'Sell').args[0]),
         ),
         symbol: token.symbol || '',
-        userBalance: Decimal.from(_userBalance),
+        userBalance: Decimal.from(userBalanceValue),
       });
 
       await onTransactionComplete();
@@ -327,29 +347,7 @@ export function useTokenTrade({ token }: UseTokenTradeProps) {
       errorMessage.current = error?.message;
     }
     store.updateLoadingTransaction(false);
-  }, [contractInstances?.tokenSaleInstance, store, token.symbol]);
-
-  // Handle transaction completion
-  const onTransactionComplete = useCallback(async () => {
-    queryClient.invalidateQueries({
-      queryKey: ['TokensService.findByAddress', token.sale_address],
-    });
-    queryClient.invalidateQueries({
-      queryKey: ['MiddlewareService.getTxsByScope', token.sale_address],
-    });
-
-    // Refetch user balance
-    if (contractInstances?.tokenSaleInstance && activeAccount) {
-      const balance = await fetchUserTokenBalance(
-        contractInstances.tokenSaleInstance,
-        token,
-        activeAccount,
-      );
-      store.updateUserBalance(balance);
-      return balance;
-    }
-    return '0';
-  }, [queryClient, token.sale_address, contractInstances?.tokenSaleInstance, activeAccount, token, store]);
+  }, [contractInstances?.tokenSaleInstance, store, token.symbol, onTransactionComplete]);
 
   const placeTokenTradeOrder = useCallback(async (tokenToTrade: TokenDto) => {
     store.updateLoadingTransaction(true);

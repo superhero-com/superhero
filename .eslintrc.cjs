@@ -93,6 +93,8 @@ module.exports = {
       namedComponents: 'arrow-function',
       unnamedComponents: 'arrow-function',
     }],
+    'jsx-a11y/control-has-associated-label': 'warn',
+    'jsx-a11y/label-has-associated-control': 'warn',
 
     // Developer-experience tweaks
     'max-len': ['warn', {

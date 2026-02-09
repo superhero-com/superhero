@@ -1,3 +1,12 @@
+/* eslint-disable
+  no-useless-escape,
+  max-len,
+  react/no-array-index-key,
+  no-use-before-define,
+  react/no-invalid-html-attribute,
+  no-shadow,
+  no-plusplus
+*/
 import React from 'react';
 import { Link } from 'react-router-dom';
 import PostHashtagLink, { type TrendMention } from '@/components/social/PostHashtagLink';

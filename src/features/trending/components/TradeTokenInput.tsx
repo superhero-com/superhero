@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ChevronDown, ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown } from 'lucide-react';
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import { Button } from '../../../components/ui/button';
 import { cn } from '../../../lib/utils';
@@ -10,7 +10,6 @@ interface TradeTokenInputProps {
   token?: TokenDto;
   tokenA?: number;
   tokenB?: number;
-  tokenAFocused: boolean;
   isBuying: boolean;
   userBalance: string;
   spendableAeBalance: Decimal;
@@ -23,11 +22,10 @@ interface TradeTokenInputProps {
   isInsufficientBalance?: boolean;
 }
 
-export default function TradeTokenInput({
+const TradeTokenInput = ({
   token,
   tokenA,
   tokenB,
-  tokenAFocused,
   isBuying,
   userBalance,
   spendableAeBalance,
@@ -38,7 +36,7 @@ export default function TradeTokenInput({
   onToggleTradeView,
   readonly = false,
   isInsufficientBalance = false,
-}: TradeTokenInputProps) {
+}: TradeTokenInputProps) => {
   const handleTokenAUpdate = (value: string) => {
     // Allow empty string, partial decimals like "0." or "."
     if (value === '' || value === '.') {
@@ -48,8 +46,8 @@ export default function TradeTokenInput({
 
     const numValue = parseFloat(value);
     // Only update if it's a valid number or allow partial input
-    if (!isNaN(numValue) || value.endsWith('.')) {
-      onTokenAChange(isNaN(numValue) ? undefined : numValue);
+    if (!Number.isNaN(numValue) || value.endsWith('.')) {
+      onTokenAChange(Number.isNaN(numValue) ? undefined : numValue);
     }
   };
 
@@ -62,8 +60,8 @@ export default function TradeTokenInput({
 
     const numValue = parseFloat(value);
     // Only update if it's a valid number or allow partial input
-    if (!isNaN(numValue) || value.endsWith('.')) {
-      onTokenBChange(isNaN(numValue) ? undefined : numValue);
+    if (!Number.isNaN(numValue) || value.endsWith('.')) {
+      onTokenBChange(Number.isNaN(numValue) ? undefined : numValue);
     }
   };
 
@@ -71,13 +69,14 @@ export default function TradeTokenInput({
   const tokenBAeValue = useMemo(() => {
     if (!tokenB || !token) return Decimal.ZERO;
     const tokenAmount = Decimal.from(tokenB);
-    // Use price_data.ae if available, otherwise fall back to token.price
+    // Use price_data.ae if available, otherwise fall back to token.price, else Decimal.ZERO
     const priceData = token.price_data as any;
-    const perTokenAe = priceData?.ae
-      ? Decimal.from(priceData.ae)
-      : token.price
-        ? Decimal.from(token.price)
-        : Decimal.ZERO;
+    let perTokenAe = Decimal.ZERO;
+    if (priceData?.ae) {
+      perTokenAe = Decimal.from(priceData.ae);
+    } else if (token.price) {
+      perTokenAe = Decimal.from(token.price);
+    }
     return tokenAmount.mul(perTokenAe);
   }, [tokenB, token]);
 
@@ -87,11 +86,14 @@ export default function TradeTokenInput({
     // When selling, tokenA is the token amount, convert to AE
     const tokenAmount = Decimal.from(tokenA);
     const priceData = token.price_data as any;
-    const perTokenAe = priceData?.ae
-      ? Decimal.from(priceData.ae)
-      : token.price
-        ? Decimal.from(token.price)
-        : Decimal.ZERO;
+
+    let perTokenAe = Decimal.ZERO;
+    if (priceData?.ae) {
+      perTokenAe = Decimal.from(priceData.ae);
+    } else if (token.price) {
+      perTokenAe = Decimal.from(token.price);
+    }
+
     return tokenAmount.mul(perTokenAe);
   }, [tokenA, token, isBuying]);
 
@@ -148,4 +150,6 @@ export default function TradeTokenInput({
       />
     </div>
   );
-}
+};
+
+export default TradeTokenInput;

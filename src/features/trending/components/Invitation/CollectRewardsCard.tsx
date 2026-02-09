@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, {
+  useState, useEffect, useCallback, useMemo,
+} from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { useAeSdk } from '@/hooks/useAeSdk';
@@ -9,7 +11,6 @@ import Spinner from '@/components/Spinner';
 
 const MIN_INVITEES = 4;
 const MIN_SPENT_AE = 10;
-const AETTOS_DECIMALS = 18;
 
 type UniqueInviteesState =
   | 'ThresholdReached'
@@ -25,7 +26,7 @@ function isThresholdReachedState(state: unknown): boolean {
 function getWaitingForInvitations(state: unknown): [unknown, unknown] | null {
   if (!state || typeof state !== 'object') return null;
   const waiting = (state as any).WaitingForInvitations;
-  return Array.isArray(waiting) && waiting.length === 2 ? waiting : null;
+  return Array.isArray(waiting) && waiting.length === 2 ? (waiting as [unknown, unknown]) : null;
 }
 
 function normalizeAddressSetToArray(value: unknown): string[] {
@@ -64,13 +65,7 @@ function normalizeAddressToAettosEntries(value: unknown): Array<[string, string]
   return [];
 }
 
-interface CollectRewardsCardProps {
-  className?: string;
-}
-
-export default function CollectRewardsCard({
-  className,
-}: CollectRewardsCardProps) {
+const CollectRewardsCard = () => {
   const { sdk, activeAccount } = useAeSdk();
 
   // State
@@ -118,7 +113,8 @@ export default function CollectRewardsCard({
 
     try {
       const affiliationTreasury = await getAffiliationTreasury(sdk as any);
-      const inviteeData: UniqueInviteesState = await affiliationTreasury.getUniqueInvitee(activeAccount);
+      const inviteeData: UniqueInviteesState = await affiliationTreasury
+        .getUniqueInvitee(activeAccount);
 
       if (isThresholdReachedState(inviteeData)) {
         setThresholdReached(true);
@@ -143,18 +139,23 @@ export default function CollectRewardsCard({
       const reachedCount = reachedAddresses.length;
       const inProgressCount = waitingEntries.length;
 
-      const progressItems: Array<{ address: string; spentAe: Decimal; progressPct: number; reached: boolean }> = [];
+      const progressItems: Array<{
+        address: string;
+        spentAe: Decimal;
+        progressPct: number;
+        reached: boolean;
+      }> = [];
 
-      for (const addr of reachedAddresses) {
+      reachedAddresses.forEach((addr) => {
         progressItems.push({
           address: addr,
           spentAe: Decimal.from(MIN_SPENT_AE),
           progressPct: 100,
           reached: true,
         });
-      }
+      });
 
-      for (const [addr, aettosStr] of waitingEntries) {
+      waitingEntries.forEach(([addr, aettosStr]) => {
         // aettosStr should already be in 18-decimals (aettos), same format Decimal expects
         const spent = Decimal.fromBigNumberString(aettosStr);
         const pct = Math.max(
@@ -167,7 +168,7 @@ export default function CollectRewardsCard({
           progressPct: Number.isFinite(pct) ? pct : 0,
           reached: false,
         });
-      }
+      });
 
       // Sort: reached first, then highest spend
       progressItems.sort((a, b) => {
@@ -232,6 +233,20 @@ export default function CollectRewardsCard({
     calculateAccumulatedRewards,
     calculateUniqueInvitees,
   ]);
+
+  const collectButtonContent = useMemo(() => {
+    if (collectingReward) {
+      return (
+        <div className="flex items-center justify-center gap-3">
+          <Spinner className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6" />
+          Withdrawing...
+        </div>
+      );
+    }
+    if (!thresholdReached) return 'Not eligible yet';
+    if (accumulatedRewardsAe.lte(Decimal.ZERO)) return 'No rewards yet';
+    return 'Collect rewards';
+  }, [collectingReward, thresholdReached, accumulatedRewardsAe]);
 
   return (
     <div className="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6 md:p-8 lg:p-10 relative overflow-hidden min-h-0 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-pink-400 before:via-purple-400 before:to-blue-400 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100">
@@ -364,6 +379,7 @@ export default function CollectRewardsCard({
 
             {/* Collect Button */}
             <button
+              type="button"
               onClick={onCollectReward}
               disabled={collectingReward || !isEligibleForRewards}
               className={`w-full p-4 md:p-5 lg:p-6 text-sm md:text-base font-bold uppercase tracking-wider break-words whitespace-normal min-h-12 rounded-xl transition-all duration-300 ${isEligibleForRewards
@@ -371,22 +387,13 @@ export default function CollectRewardsCard({
                 : 'opacity-50 cursor-not-allowed bg-gray-600 transform-none'
               }`}
             >
-              {collectingReward ? (
-                <div className="flex items-center justify-center gap-3">
-                  <Spinner className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6" />
-                  Withdrawing...
-                </div>
-              ) : !thresholdReached ? (
-                'Not eligible yet'
-              ) : accumulatedRewardsAe.lte(Decimal.ZERO) ? (
-                'No rewards yet'
-              ) : (
-                'Collect rewards'
-              )}
+              {collectButtonContent}
             </button>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default CollectRewardsCard;

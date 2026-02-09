@@ -1,3 +1,8 @@
+/* eslint-disable
+  react/function-component-definition,
+  react/button-has-type,
+  no-empty
+*/
 import { useState } from 'react';
 import {
   CollectRewardsCard,

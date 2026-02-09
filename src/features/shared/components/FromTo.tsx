@@ -17,7 +17,7 @@ type FromToProps = {
   toTokenNode: React.ReactNode;
 };
 
-export default function FromTo(props: FromToProps) {
+const FromTo = (props: FromToProps) => {
   const {
     embedded = false,
     fromLabel = 'From',
@@ -44,15 +44,16 @@ export default function FromTo(props: FromToProps) {
       {/* From */}
       <div className={`${sectionBase} ${sectionBg} mb-2`}>
         <div className="flex justify-between items-center mb-2 min-w-0">
-          <label className="text-xs text-white/60 font-medium uppercase tracking-wider flex-shrink-0">
+          <div className="text-xs text-white/60 font-medium uppercase tracking-wider flex-shrink-0">
             {fromLabel}
-          </label>
+          </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {fromBalanceText && (
               <span className="text-xs text-white/60">{fromBalanceText}</span>
             )}
             {onMaxClick && (
               <button
+                type="button"
                 onClick={onMaxClick}
                 disabled={!!maxDisabled}
                 className={`text-[10px] text-[#4ecdc4] bg-transparent border border-[#4ecdc4] rounded px-1.5 py-0.5 cursor-pointer uppercase tracking-wider hover:bg-[#4ecdc4]/10 transition-all duration-300 flex-shrink-0 ${maxDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -88,9 +89,9 @@ export default function FromTo(props: FromToProps) {
       {/* To */}
       <div className={`${sectionBase} ${sectionBg} mb-4 sm:mb-5`}>
         <div className="flex justify-between items-center mb-2 min-w-0">
-          <label className="text-xs text-white/60 font-medium uppercase tracking-wider flex-shrink-0">
+          <div className="text-xs text-white/60 font-medium uppercase tracking-wider flex-shrink-0">
             {toLabel}
-          </label>
+          </div>
           {/* Right side descriptor slot could be added here if needed */}
         </div>
 
@@ -103,4 +104,6 @@ export default function FromTo(props: FromToProps) {
       </div>
     </div>
   );
-}
+};
+
+export default FromTo;

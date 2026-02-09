@@ -1,5 +1,4 @@
-import isFQDN from 'is-fqdn';
-import configs from '../configs';
+import { configs } from '../configs';
 
 export function createDeepLinkUrl({ type, callbackUrl, ...params }: Record<string, string>) {
   const url = new URL(`${configs.wallet.url}/${type}`);

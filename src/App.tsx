@@ -33,7 +33,7 @@ const TipModal = React.lazy(
   () => import('./components/modals/TipModal'),
 );
 
-export default function App() {
+const App = () => {
   const isMobile = useIsMobile();
   useSuperheroChainNames();
   const { initSdk, sdkInitialized, activeAccount } = useAeSdk();
@@ -44,13 +44,13 @@ export default function App() {
 
   useEffect(() => {
     initSdk();
-  }, []);
+  }, [initSdk]);
 
   useEffect(() => {
     if (sdkInitialized) {
       checkWalletConnection();
     }
-  }, [sdkInitialized]);
+  }, [checkWalletConnection, sdkInitialized]);
 
   // Keep the ref updated with the latest loadAccountData function
   useEffect(() => {
@@ -59,13 +59,17 @@ export default function App() {
 
   // setup intervals for periodic data refresh
   useEffect(() => {
-    if (!activeAccount) return;
-    // Note: Initial load is handled by useAccountBalances hook when account changes
-    // This interval is just for periodic refreshes
-    const interval = setInterval(() => {
-      loadAccountDataRef.current();
-    }, 10000);
-    return () => clearInterval(interval);
+    let interval: ReturnType<typeof setInterval> | undefined;
+    if (activeAccount) {
+      // Note: Initial load is handled by useAccountBalances hook when account changes
+      // This interval is just for periodic refreshes
+      interval = setInterval(() => {
+        loadAccountDataRef.current();
+      }, 10000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [activeAccount]);
 
   return (
@@ -96,4 +100,6 @@ export default function App() {
       {!isMobile && <FeedbackButton />}
     </div>
   );
-}
+};
+
+export default App;

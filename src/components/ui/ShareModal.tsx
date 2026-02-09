@@ -10,25 +10,22 @@ interface ShareModalProps {
   title?: string;
 }
 
-export default function ShareModal({
+const ShareModal = ({
   isOpen,
   onClose,
   shareUrl,
   title = 'Share Token',
-}: ShareModalProps) {
+}: ShareModalProps) => {
   if (!isOpen) return null;
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   return (
-    <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      onClick={handleBackdropClick}
-    >
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <button
+        type="button"
+        className="absolute inset-0 cursor-default"
+        aria-label="Close modal"
+        onClick={onClose}
+      />
       <div className={cn(
         'bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.1)]',
         'w-full max-w-md mx-auto',
@@ -43,6 +40,7 @@ export default function ShareModal({
               {title}
             </h2>
             <button
+              type="button"
               onClick={onClose}
               className="w-8 h-8 rounded-full bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-colors flex items-center justify-center"
               aria-label="Close modal"
@@ -55,9 +53,9 @@ export default function ShareModal({
         {/* Content */}
         <div className="px-6 pb-4">
           <div className="mb-4">
-            <label className="block text-sm font-medium text-white/60 mb-2">
+            <div className="block text-sm font-medium text-white/60 mb-2">
               Share this token with others:
-            </label>
+            </div>
             <CopyText
               value={shareUrl}
               className="w-full"
@@ -72,12 +70,14 @@ export default function ShareModal({
             </div>
             <div className="flex gap-2">
               <button
+                type="button"
                 onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent('Check out this token!')}`)}
                 className="flex-1 px-3 py-2 bg-[#1DA1F2]/20 border border-[#1DA1F2]/30 text-[#1DA1F2] rounded-lg hover:bg-[#1DA1F2]/30 transition-colors text-sm font-medium"
               >
                 🐦 Twitter
               </button>
               <button
+                type="button"
                 onClick={() => window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent('Check out this token!')}`)}
                 className="flex-1 px-3 py-2 bg-[#0088cc]/20 border border-[#0088cc]/30 text-[#0088cc] rounded-lg hover:bg-[#0088cc]/30 transition-colors text-sm font-medium"
               >
@@ -100,4 +100,6 @@ export default function ShareModal({
       </div>
     </div>
   );
-}
+};
+
+export default ShareModal;

@@ -1,21 +1,19 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import SearchInput from '../../SearchInput';
 import { HeaderLogo, IconSearch, IconMobileMenu } from '../../../icons';
 import { getNavigationItems } from './navigationItems';
 
-export default function MobileNavigation() {
+const MobileNavigation = () => {
   const [showOverlay, setShowOverlay] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const { t: tNav } = useTranslation('navigation');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const t = (document.documentElement.dataset.theme as 'light' | 'dark' | undefined) || 'dark';
     return t;
   });
   const { pathname } = useLocation();
   const isOnFeed = pathname === '/';
-  const navigationItems = getNavigationItems(tNav);
+  const navigationItems = getNavigationItems();
 
   const handleSearchToggle = () => {
     setShowSearch(!showSearch);
@@ -54,6 +52,7 @@ export default function MobileNavigation() {
       {showSearch ? (
         <div className="px-3 flex items-center gap-3 w-full pt-[env(safe-area-inset-top)] h-[calc(var(--mobile-navigation-height)+env(safe-area-inset-top))]">
           <button
+            type="button"
             className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 cursor-pointer text-xl font-bold hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
             onClick={() => setShowSearch(false)}
             aria-label="Back"
@@ -73,11 +72,16 @@ export default function MobileNavigation() {
           <div className="flex-grow" />
 
           <button
+            type="button"
             className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
             onClick={() => {
               const next = theme === 'dark' ? 'light' : 'dark';
               document.documentElement.dataset.theme = next;
-              try { localStorage.setItem('theme', next); } catch { }
+              try {
+                localStorage.setItem('theme', next);
+              } catch {
+                // Ignore localStorage write failures
+              }
               setTheme(next);
             }}
             aria-label="Toggle theme"
@@ -87,6 +91,7 @@ export default function MobileNavigation() {
 
           {isOnFeed && (
             <button
+              type="button"
               className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
               onClick={handleSearchToggle}
               aria-label="Search"
@@ -96,6 +101,7 @@ export default function MobileNavigation() {
           )}
 
           <button
+            type="button"
             className="bg-transparent border-none text-[var(--standard-font-color)] flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 text-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 active:bg-white/20 active:scale-95"
             onClick={handleMenuToggle}
             aria-label="Open Menu"
@@ -108,11 +114,18 @@ export default function MobileNavigation() {
 
       {/* Navigation Overlay */}
       {showOverlay && (
-        <div className="fixed inset-0 bg-black/80 flex items-start justify-end z-[1000] sm:items-start sm:justify-center" onClick={() => setShowOverlay(false)}>
-          <div className="z-[1001] text-[var(--light-font-color)] relative w-full max-w-[320px] h-screen bg-[var(--background-color)] flex flex-col overflow-y-auto sm:max-w-full sm:w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/80 flex items-start justify-end z-[1000] sm:items-start sm:justify-center">
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default"
+            onClick={() => setShowOverlay(false)}
+            aria-label="Close menu overlay"
+          />
+          <div className="z-[1001] text-[var(--light-font-color)] relative w-full max-w-[320px] h-screen bg-[var(--background-color)] flex flex-col overflow-y-auto sm:max-w-full sm:w-full">
             <div className="flex items-center justify-between h-[70px] px-6 border-b border-white/10 sm:px-5 flex-shrink-0">
               <h2 className="m-0 text-xl font-semibold text-[var(--standard-font-color)] sm:text-lg">Menu</h2>
               <button
+                type="button"
                 className="bg-white/10 border-none text-[var(--standard-font-color)] w-11 h-11 rounded-full flex items-center justify-center text-lg cursor-pointer transition-all duration-200 hover:bg-white/20 focus:bg-white/20 active:scale-95 sm:w-10 sm:h-10 sm:text-base"
                 onClick={() => setShowOverlay(false)}
                 aria-label="Close menu"
@@ -163,4 +176,6 @@ export default function MobileNavigation() {
       )}
     </div>
   );
-}
+};
+
+export default MobileNavigation;

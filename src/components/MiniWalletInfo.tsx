@@ -7,7 +7,7 @@ import { AeButton } from './ui/ae-button';
 
 type Props = { block?: boolean } & React.HTMLAttributes<HTMLDivElement>;
 
-export default function MiniWalletInfo({ block, style, ...rest }: Props) {
+const MiniWalletInfo = ({ block, style, ...rest }: Props) => {
   const { t } = useTranslation('common');
   const { disconnectWallet } = useWalletConnect();
   const { address, balance } = useWallet();
@@ -39,7 +39,10 @@ export default function MiniWalletInfo({ block, style, ...rest }: Props) {
       </div>
       <div className="ml-auto">
         <AeButton
-          onClick={() => { disconnectWallet(); try { window.location.reload(); } catch {} }}
+          onClick={() => {
+            disconnectWallet();
+            window.location.reload();
+          }}
           variant="ghost"
           size="xs"
           className="h-8 px-2 border border-border/20 hover:bg-accent"
@@ -49,4 +52,6 @@ export default function MiniWalletInfo({ block, style, ...rest }: Props) {
       </div>
     </div>
   );
-}
+};
+
+export default MiniWalletInfo;

@@ -59,7 +59,7 @@ export const PoolCandlestickChart = ({
     enabled: !!pairAddress,
   });
   const [intervalBy, setIntervalBy] = useState<Interval>(intervals[3]); // Default to 1h
-  const [useCurrentCurrency, setUseCurrentCurrency] = useState(false);
+  const [useCurrentCurrency] = useState(false);
   const [fromToken, setFromToken] = useState<'token0' | 'token1'>('token0');
   const [currentCandlePrice, setCurrentCandlePrice] = useState<CandlePrice | null>(null);
   const [currentCandleVolume, setCurrentCandleVolume] = useState<number>(0);
@@ -92,7 +92,9 @@ export const PoolCandlestickChart = ({
 
   const currentCandleMovePercentage = useMemo(() => {
     if (!currentCandlePrice) return '0.00';
-    const percentage = Number((currentCandlePrice.close - currentCandlePrice.open) / currentCandlePrice.open) * 100;
+    const percentage = Number(
+      (currentCandlePrice.close - currentCandlePrice.open) / currentCandlePrice.open,
+    ) * 100;
 
     if (Math.abs(percentage) < 0.01) {
       return percentage.toFixed(3);
@@ -105,31 +107,6 @@ export const PoolCandlestickChart = ({
     [currentCandlePrice],
   );
 
-  const fetchHistoricalData = useCallback(async () => {
-    if (!pairAddress) return;
-
-    setIsLoading(true);
-    setHasError(false);
-
-    try {
-      const result = await DexPairService.getPaginatedHistory({
-        address: pairAddress,
-        interval: intervalBy.value,
-        convertTo: convertTo as any,
-        limit: 100,
-        page: 1,
-        fromToken,
-      });
-
-      updateSeriesData([result]);
-    } catch (error) {
-      console.error('Failed to fetch historical data:', error);
-      setHasError(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [pairAddress, intervalBy.value, convertTo, fromToken]);
-
   // Helper function to safely clamp large numbers for lightweight-charts
   const parseVolume = (value: string): number => {
     try {
@@ -137,7 +114,7 @@ export const PoolCandlestickChart = ({
         return 0;
       }
       const parsed = Number(Decimal.from(value).div(Decimal.from(10 ** 18)).prettify());
-      return isFinite(parsed) && !isNaN(parsed) ? parsed : 0;
+      return Number.isFinite(parsed) && !Number.isNaN(parsed) ? parsed : 0;
     } catch (error) {
       console.warn('Error parsing volume:', value, error);
       return 0;
@@ -151,11 +128,11 @@ export const PoolCandlestickChart = ({
       return fallback;
     }
     const parsed = Number(value);
-    const rsult = isFinite(parsed) && !isNaN(parsed) ? parsed : fallback;
-    if (rsult > 90071992547409) {
+    const result = Number.isFinite(parsed) && !Number.isNaN(parsed) ? parsed : fallback;
+    if (result > 90071992547409) {
       return 90071992547409;
     }
-    return rsult;
+    return result;
   };
 
   // Helper function to format large numbers for display
@@ -243,27 +220,36 @@ export const PoolCandlestickChart = ({
     }
   }, []);
 
-  const { chartContainer, chart } = useChart({
-    height,
-    chartOptions: {
-      layout: {
-        textColor: 'white',
-        background: {
-          topColor: 'rgba(0, 0, 0, 0.00)',
-          bottomColor: 'rgba(0, 0, 0, 0.13)',
-          type: ColorType.VerticalGradient,
-        },
-      },
-      localization: {
-        timeFormatter: (time: any) => moment.unix(time).format('MMM DD, HH:mm'),
-      },
-    },
-    onChartReady: (chartInstance) => {
-      initializeSeries(chartInstance, false); // false = don't remove existing series
-    },
-  });
+  const fetchHistoricalData = useCallback(async () => {
+    if (!pairAddress) return;
 
-  const initializeSeries = useCallback((chartInstance: any, shouldRemoveExisting = true) => {
+    setIsLoading(true);
+    setHasError(false);
+
+    try {
+      const result = await DexPairService.getPaginatedHistory({
+        address: pairAddress,
+        interval: intervalBy.value,
+        convertTo: convertTo as any,
+        limit: 100,
+        page: 1,
+        fromToken,
+      });
+
+      updateSeriesData([result]);
+    } catch (error) {
+      console.error('Failed to fetch historical data:', error);
+      setHasError(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [pairAddress, intervalBy.value, convertTo, fromToken, updateSeriesData]);
+
+  const initializeSeries = useCallback((
+    chartInstance: any,
+    containerEl?: HTMLDivElement | null,
+    shouldRemoveExisting = true,
+  ) => {
     // Clear existing series only if we're reinitializing and they exist
     if (shouldRemoveExisting) {
       if (candlestickSeries.current) {
@@ -387,7 +373,7 @@ export const PoolCandlestickChart = ({
       touchHandlersCleanup.current = null;
     }
 
-    const container = chartContainer.current;
+    const container = containerEl;
     if (container) {
       const handleTouchStart = (e: TouchEvent) => {
         e.preventDefault();
@@ -461,12 +447,28 @@ export const PoolCandlestickChart = ({
     marketCapSeries.current = marketCapSeriesInstance;
   }, [fromToken, pair, convertTo]);
 
+  const { chartContainer, chart } = useChart({
+    height,
+    chartOptions: {
+      layout: {
+        textColor: 'white',
+        background: {
+          topColor: 'rgba(0, 0, 0, 0.00)',
+          bottomColor: 'rgba(0, 0, 0, 0.13)',
+          type: ColorType.VerticalGradient,
+        },
+      },
+      localization: {
+        timeFormatter: (time: any) => moment.unix(time).format('MMM DD, HH:mm'),
+      },
+    },
+    onChartReady: (chartInstance) => {
+      initializeSeries(chartInstance, chartContainer.current, false);
+    },
+  });
+
   const handleIntervalChange = (interval: Interval) => {
     setIntervalBy(interval);
-  };
-
-  const handleCurrencyToggle = () => {
-    setUseCurrentCurrency(!useCurrentCurrency);
   };
 
   const handleFlipPair = () => {
@@ -476,9 +478,10 @@ export const PoolCandlestickChart = ({
   // Reinitialize chart series when fromToken or pair changes
   useEffect(() => {
     if (chart) {
-      initializeSeries(chart, true); // true = remove existing series before creating new ones
+      // true = remove existing series before creating new ones
+      initializeSeries(chart, chartContainer.current, true);
     }
-  }, [chart, initializeSeries]);
+  }, [chart, chartContainer, initializeSeries]);
 
   // Fetch data when dependencies change
   useEffect(() => {
@@ -487,7 +490,7 @@ export const PoolCandlestickChart = ({
 
   // WebSocket subscription for real-time updates
   useEffect(() => {
-    if (!pairAddress) return;
+    if (!pairAddress) return () => {};
 
     subscription.current = WebSocketClient.subscribeForTokenHistories(
       `PairTransaction::${pairAddress}`,
@@ -499,8 +502,12 @@ export const PoolCandlestickChart = ({
         const currentMarketCapData = marketCapSeries.current.data();
 
         const latestCandle = currentData.length ? currentData[currentData.length - 1] : null;
-        const latestVolume = currentVolumeData.length ? currentVolumeData[currentVolumeData.length - 1] : null;
-        const latestMarketCap = currentMarketCapData.length ? currentMarketCapData[currentMarketCapData.length - 1] : null;
+        const latestVolume = currentVolumeData.length
+          ? currentVolumeData[currentVolumeData.length - 1]
+          : null;
+        const latestMarketCap = currentMarketCapData.length
+          ? currentMarketCapData[currentMarketCapData.length - 1]
+          : null;
 
         const currentPrice = safeParseNumber(tx.data?.buy_price?.[convertTo], 0);
         const currentTime = Math.floor(Date.now() / 1000);
@@ -614,6 +621,7 @@ export const PoolCandlestickChart = ({
                 token={fromToken === 'token0' ? pair?.token1 : pair?.token0}
               />
               <button
+                type="button"
                 onClick={handleFlipPair}
                 className="bg-white/10 border border-border rounded-lg px-2 py-0 text-muted-foreground text-xs font-medium cursor-pointer backdrop-blur-sm transition-all duration-200 ease-in-out flex items-center gap-1 hover:bg-white/15 hover:scale-105"
                 title="Flip trading pair"

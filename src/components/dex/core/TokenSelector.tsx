@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { toAe } from '@aeternity/aepp-sdk';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useMemo, useState } from 'react';

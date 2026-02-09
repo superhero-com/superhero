@@ -20,7 +20,6 @@ interface PairLineChartProps {
   pairAddres: string;
   height?: number;
   hideTimeframe?: boolean;
-  timeframe?: string;
 }
 
 interface ChartDataItem {
@@ -103,17 +102,7 @@ export const PairLineChart = ({
   });
 
   // Watch for data changes
-  useEffect(() => {
-    if (!data?.result?.length || !areaSeries.current) {
-      return;
-    }
-    // Clear existing data first
-    areaSeries.current.setData([]);
-    // Update with new data
-    updateSeriesData(data as ChartResponse);
-  }, [data]);
-
-  function updateSeriesData(chartData: ChartResponse) {
+  const updateSeriesData = React.useCallback((chartData: ChartResponse) => {
     // Chart library constraints
     const MAX_CHART_VALUE = 90071992547409.91;
     const MIN_CHART_VALUE = -90071992547409.91;
@@ -144,19 +133,29 @@ export const PairLineChart = ({
       .sort((a, b) => a.time - b.time);
 
     // if formattedData less than 10 generate more data with same value but with time - 1 hour
-    if (formattedData.length < 10) {
-      for (let i = 0; i < 10 - formattedData.length; i++) {
-        const lastItem = formattedData[0];
-        formattedData.unshift({
-          time: (lastItem.time - 3600) as UTCTimestamp,
-          value: lastItem.value,
-        });
-      }
+    const missingCount = 10 - formattedData.length;
+    if (missingCount > 0) {
+      const firstItem = formattedData[0];
+      const extras = Array.from({ length: missingCount }, (_, idx) => ({
+        time: (firstItem.time - 3600 * (missingCount - idx)) as UTCTimestamp,
+        value: firstItem.value,
+      }));
+      formattedData.unshift(...extras);
     }
 
     areaSeries.current?.setData(formattedData);
     chart?.timeScale().fitContent();
-  }
+  }, [chart]);
+
+  useEffect(() => {
+    if (!data?.result?.length || !areaSeries.current) {
+      return;
+    }
+    // Clear existing data first
+    areaSeries.current.setData([]);
+    // Update with new data
+    updateSeriesData(data as ChartResponse);
+  }, [data, updateSeriesData]);
 
   if (loading) {
     return (

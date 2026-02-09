@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { PRICE_MOVEMENT_TIMEFRAMES } from '@/utils/constants';
 import { performanceChartTimeframeAtom, PriceMovementTimeframe } from '../atoms';
 
-export default function PerformanceTimeframeSelector() {
+const PerformanceTimeframeSelector = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [value, setValue] = useAtom(performanceChartTimeframeAtom);
 
@@ -22,6 +22,7 @@ export default function PerformanceTimeframeSelector() {
             return (
               <button
                 key={timeframe}
+                type="button"
                 onClick={() => handleUpdate(timeframe)}
                 className={`flex-1 px-2 py-2 h-10 text-xs rounded-lg border transition-all duration-300 focus:outline-none ${
                   isActive
@@ -39,6 +40,7 @@ export default function PerformanceTimeframeSelector() {
       {/* Desktop/Tablet: Existing dropdown */}
       <div className="relative hidden sm:block">
         <button
+          type="button"
           onClick={() => setIsOpen(!isOpen)}
           className="px-2 py-2 h-10 bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-lg text-xs focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05] w-full sm:w-auto flex items-center justify-between gap-2"
         >
@@ -56,9 +58,11 @@ export default function PerformanceTimeframeSelector() {
         {isOpen && (
           <>
             {/* Backdrop */}
-            <div
+            <button
+              type="button"
               className="fixed inset-0 z-10"
               onClick={() => setIsOpen(false)}
+              aria-label="Close timeframe menu"
             />
 
             {/* Menu */}
@@ -69,6 +73,7 @@ export default function PerformanceTimeframeSelector() {
                   .map((timeframe) => (
                     <button
                       key={timeframe}
+                      type="button"
                       onClick={() => handleUpdate(timeframe)}
                       className="w-full px-2 py-1.5 text-left text-xs text-white hover:bg-white/10 transition-colors"
                     >
@@ -82,4 +87,6 @@ export default function PerformanceTimeframeSelector() {
       </div>
     </div>
   );
-}
+};
+
+export default PerformanceTimeframeSelector;

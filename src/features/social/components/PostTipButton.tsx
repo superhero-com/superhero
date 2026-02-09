@@ -8,7 +8,7 @@ import { tipStatusAtom, makeTipKey } from '../../../atoms/tipAtoms';
 import { usePostTipSummary } from '../hooks/usePostTipSummary';
 import Spinner from '../../../components/Spinner';
 
-export default function PostTipButton({ toAddress, postId }: { toAddress: string; postId: string }) {
+const PostTipButton = ({ toAddress, postId }: { toAddress: string; postId: string }) => {
   const { openModal } = useModal();
   const [tipStatus] = useAtom(tipStatusAtom);
   const key = makeTipKey(toAddress, postId);
@@ -31,6 +31,12 @@ export default function PostTipButton({ toAddress, postId }: { toAddress: string
     return s.replace(/\.0+$/, '').replace(/(\.\d*[1-9])0+$/, '$1');
   }, [totalAe]);
 
+  const buttonLabel = useMemo(() => {
+    if (isPending) return 'Sending';
+    if (isSuccess) return 'Tipped';
+    return formatted ? `${formatted} AE` : 'Tip';
+  }, [formatted, isPending, isSuccess]);
+
   const handleTip = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     const payload = buildTipPostPayload(postId);
@@ -52,7 +58,9 @@ export default function PostTipButton({ toAddress, postId }: { toAddress: string
       )}
       {isSuccess && <Check className="w-[14px] h-[14px]" />}
       {!isPending && !isSuccess && <IconDiamond className="w-[14px] h-[14px]" />}
-      {isPending ? 'Sending' : isSuccess ? 'Tipped' : (formatted ? `${formatted} AE` : 'Tip')}
+      {buttonLabel}
     </button>
   );
-}
+};
+
+export default PostTipButton;

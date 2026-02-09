@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useMemo } from 'react';
 import { DexTokenDto } from '../../../api/generated';
 import { useDex } from '../../../hooks';

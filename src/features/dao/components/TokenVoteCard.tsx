@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 
 // Custom Components
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import Spinner from '@/components/Spinner';
 import VoteSubject from './VoteSubject';
 
@@ -19,11 +19,11 @@ interface TokenVoteCardProps {
   saleAddress: Encoded.ContractAddress;
 }
 
-export default function TokenVoteCard({
+const TokenVoteCard = ({
   address,
   voteId,
   saleAddress,
-}: TokenVoteCardProps) {
+}: TokenVoteCardProps) => {
   const navigate = useNavigate();
   const { currentBlockHeight } = useAeSdk();
 
@@ -115,4 +115,6 @@ export default function TokenVoteCard({
       </CardContent>
     </Card>
   );
-}
+};
+
+export default TokenVoteCard;

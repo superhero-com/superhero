@@ -33,7 +33,7 @@ interface RankingData {
 
 const LIST_SIZE = 5;
 
-export default function TokenRanking({ token }: TokenRankingProps) {
+const TokenRanking = ({ token }: TokenRankingProps) => {
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -80,10 +80,24 @@ export default function TokenRanking({ token }: TokenRankingProps) {
     };
   }, [token.sale_address, tokenRankingLimit]);
 
-  const rankingTokens = rankingData?.items || [];
+  const rankingTokens = useMemo(() => rankingData?.items || [], [rankingData]);
+
+  function getDecimalValue(value: string): Decimal {
+    try {
+      // Convert from aettos to AE (assuming 18 decimals)
+      return Decimal.from(toAe(value));
+    } catch {
+      return Decimal.from(0);
+    }
+  }
 
   // Find current token rank from ranking data or use prop
-  const tokenRank = useMemo(() => rankingTokens.find((item) => item.sale_address === token.sale_address)?.rank || token.rank || 1, [rankingTokens, token.sale_address, token.rank]);
+  const tokenRank = useMemo(() => rankingTokens
+    .find(
+      (item) => item.sale_address === token.sale_address,
+    )?.rank
+      || token.rank
+      || 1, [rankingTokens, token.sale_address, token.rank]);
 
   // Calculate tokens ahead to level up
   const tokensAhead = useMemo(() => {
@@ -114,20 +128,14 @@ export default function TokenRanking({ token }: TokenRankingProps) {
     return difference.gte(0) ? difference.shorten().replace('.00', '') : '0';
   }, [closestChaser, token.total_supply]);
 
-  function getDecimalValue(value: string): Decimal {
-    try {
-      // Convert from aettos to AE (assuming 18 decimals)
-      return Decimal.from(toAe(value));
-    } catch {
-      return Decimal.from(0);
-    }
-  }
-
   function getShortenValue(value: string): string {
     return getDecimalValue(value).shorten();
   }
 
-  function calculateDifference(currentSupply: string, compareSupply: string): { value: string; isPositive: boolean } {
+  function calculateDifference(
+    currentSupply: string,
+    compareSupply: string,
+  ): { value: string; isPositive: boolean } {
     const current = getDecimalValue(currentSupply);
     const compare = getDecimalValue(compareSupply);
 
@@ -151,6 +159,29 @@ export default function TokenRanking({ token }: TokenRankingProps) {
       </div>
     );
   }
+  const renderSupplyValue = (item: RankingToken, difference: { value: string; isPositive: boolean } | null) => {
+    if (item.sale_address === token.sale_address) {
+      return (
+        <span className="text-white">
+          {getShortenValue(item.total_supply)}
+        </span>
+      );
+    }
+    if (difference) {
+      return (
+        <span className={difference.isPositive ? 'text-red-400' : 'text-green-400'}>
+          {difference.isPositive ? '+' : '-'}
+          {difference.value}
+        </span>
+      );
+    }
+    return (
+      <span className="text-white/60">
+        {getShortenValue(item.total_supply)}
+      </span>
+    );
+  };
+
   return (
     <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
       {/* Header */}
@@ -191,10 +222,10 @@ export default function TokenRanking({ token }: TokenRankingProps) {
         <div className="flex items-center gap-1">
           <span>MC Rank</span>
           <div className="relative group">
-            {/* <button className="rounded-full bg-white/10 text-white/60 text-sm items-center justify-center hover:bg-white/20 transition-colors">
-              ?
-            </button> */}
-            <button className="p-2 rounded-full bg-white/[0.05] border border-white/10 text-white cursor-pointer text-base">
+            <button
+              type="button"
+              className="rounded-full bg-white/[0.05] border border-white/10 text-white cursor-pointer text-base"
+            >
               !
             </button>
             <div className="absolute bottom-6 left-0 bg-white/10 border border-white/20 rounded-lg p-2 text-xs text-white/80 backdrop-blur-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
@@ -209,7 +240,9 @@ export default function TokenRanking({ token }: TokenRankingProps) {
       <div className="space-y-2">
         {rankingTokens.map((item) => {
           const isCurrentToken = item.sale_address === token.sale_address;
-          const difference = token.total_supply ? calculateDifference(token.total_supply, item.total_supply) : null;
+          const difference = token.total_supply
+            ? calculateDifference(token.total_supply, item.total_supply)
+            : null;
 
           return (
 
@@ -242,20 +275,7 @@ export default function TokenRanking({ token }: TokenRankingProps) {
               </div>
 
               <div className="text-right font-semibold">
-                {isCurrentToken ? (
-                  <span className="text-white">
-                    {getShortenValue(item.total_supply)}
-                  </span>
-                ) : difference ? (
-                  <span className={difference.isPositive ? 'text-red-400' : 'text-green-400'}>
-                    {difference.isPositive ? '+' : '-'}
-                    {difference.value}
-                  </span>
-                ) : (
-                  <span className="text-white/60">
-                    {getShortenValue(item.total_supply)}
-                  </span>
-                )}
+                {renderSupplyValue(item, difference)}
               </div>
             </Link>
           );
@@ -269,4 +289,6 @@ export default function TokenRanking({ token }: TokenRankingProps) {
       )}
     </div>
   );
-}
+};
+
+export default TokenRanking;

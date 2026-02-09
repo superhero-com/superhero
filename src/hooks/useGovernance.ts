@@ -157,7 +157,7 @@ export const useGovernance = () => {
 
   // Set delegation mutation
   const useSetDelegation = () => useMutation({
-    mutationFn: async (to: Encoded.AccountAddress) => {
+    mutationFn: async (delegateTo: Encoded.AccountAddress) => {
       if (!activeAccount) throw new Error('No wallet connected');
 
       const registry = await Contract.initialize<{
@@ -168,7 +168,7 @@ export const useGovernance = () => {
               address: CONFIG.GOVERNANCE_CONTRACT_ADDRESS,
             });
 
-      await registry.delegate(to);
+      await registry.delegate(delegateTo);
       await GovernanceApi.submitContractEvent('Delegation');
     },
     onSuccess: () => {

@@ -2,7 +2,7 @@ import React, {
   useEffect, useRef, useState, useCallback,
 } from 'react';
 import {
-  createChart, IChartApi, ISeriesApi, LineData, HistogramData, ColorType, LineSeries, HistogramSeries,
+  createChart, IChartApi, ISeriesApi, ColorType, LineSeries, HistogramSeries,
 } from 'lightweight-charts';
 import AppSelect, { Item as AppSelectItem } from '@/components/inputs/AppSelect';
 import AeButton from '../../../../components/AeButton';
@@ -36,14 +36,14 @@ type TimeFrame = keyof typeof TIME_FRAMES;
 
 const BAR_CHART_TYPES = ['TVL', 'Volume', 'Fees', 'Locked'];
 
-export default function TokenPricePerformance({
+const TokenPricePerformance = ({
   availableGraphTypes,
   initialChart,
   initialTimeFrame = 'MAX',
   pairId,
   tokenId,
   className = '',
-}: TokenPricePerformanceProps) {
+}: TokenPricePerformanceProps) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<any> | null>(null);
@@ -128,6 +128,7 @@ export default function TokenPricePerformance({
         try {
           const time = chart.timeScale().coordinateToTime(x);
           if (time !== null) {
+            // @ts-expect-error - time is not used
             chart.setCrosshairPosition(x, 0, { time: time as any });
           }
         } catch (error) {
@@ -150,6 +151,7 @@ export default function TokenPricePerformance({
         try {
           const time = chart.timeScale().coordinateToTime(clampedX);
           if (time !== null) {
+            // @ts-expect-error - time is not used
             chart.setCrosshairPosition(clampedX, 0, { time: time as any });
           }
         } catch (error) {
@@ -163,6 +165,7 @@ export default function TokenPricePerformance({
         if (!chart) return;
 
         try {
+          // @ts-expect-error - time is not used
           chart.setCrosshairPosition(-1, -1, {});
         } catch (error) {
           console.warn('[TokenPricePerformance] Error clearing crosshair on touchend:', error);
@@ -199,6 +202,57 @@ export default function TokenPricePerformance({
     };
   }, []);
 
+  const updateChartData = useCallback(() => {
+    if (!seriesRef.current || !chartData.labels.length) return;
+
+    const now = Date.now() / 1000;
+    const timeFrameHours = TIME_FRAMES[selectedTimeFrame];
+    const minTime = timeFrameHours === Infinity ? 0 : now - (timeFrameHours * 3600);
+
+    // Convert data format - TradingView expects Unix timestamps in seconds
+    const rawData = chartData.labels
+      .map((timestamp, index) => {
+        // Ensure timestamp is in seconds (not milliseconds)
+        const timeInSeconds = timestamp > 1e10 ? Math.floor(timestamp / 1000) : timestamp;
+        return {
+          time: timeInSeconds as any,
+          value: Number(chartData.data[index]) || 0,
+        };
+      })
+      .filter((item) => timeFrameHours === Infinity || item.time >= minTime)
+      .sort((a, b) => a.time - b.time); // Ensure data is sorted by time
+
+    // Remove duplicate timestamps and ensure strict ascending order
+    const formattedData: typeof rawData = [];
+    let lastTime = 0;
+
+    rawData.forEach((item) => {
+      if (item.time > lastTime) {
+        formattedData.push(item);
+        lastTime = item.time;
+      } else if (item.time === lastTime && formattedData.length > 0) {
+        // If timestamp is the same, update the value of the last item
+        formattedData[formattedData.length - 1].value = item.value;
+      } else if (item.time === lastTime) {
+        // If it's the first item with this timestamp, add a small increment
+        formattedData.push({
+          time: (lastTime + 1) as any,
+          value: item.value,
+        });
+        lastTime += 1;
+      }
+    });
+
+    if (formattedData.length > 0) {
+      seriesRef.current.setData(formattedData);
+
+      // Fit content
+      if (chartRef.current) {
+        chartRef.current.timeScale().fitContent();
+      }
+    }
+  }, [chartData, selectedTimeFrame]);
+
   // Update series when chart type changes
   useEffect(() => {
     if (!chartRef.current) return;
@@ -231,63 +285,12 @@ export default function TokenPricePerformance({
 
     // Update chart data
     updateChartData();
-  }, [selectedChart.type, isBarChart]);
+  }, [selectedChart.type, isBarChart, updateChartData]);
 
   // Update chart data when timeframe changes
   useEffect(() => {
     updateChartData();
-  }, [chartData]);
-
-  const updateChartData = useCallback(() => {
-    if (!seriesRef.current || !chartData.labels.length) return;
-
-    const now = Date.now() / 1000;
-    const timeFrameHours = TIME_FRAMES[selectedTimeFrame];
-    const minTime = timeFrameHours === Infinity ? 0 : now - (timeFrameHours * 3600);
-
-    // Convert data format - TradingView expects Unix timestamps in seconds
-    const rawData = chartData.labels
-      .map((timestamp, index) => {
-        // Ensure timestamp is in seconds (not milliseconds)
-        const timeInSeconds = timestamp > 1e10 ? Math.floor(timestamp / 1000) : timestamp;
-        return {
-          time: timeInSeconds as any,
-          value: Number(chartData.data[index]) || 0,
-        };
-      })
-      .filter((item) => timeFrameHours === Infinity || item.time >= minTime)
-      .sort((a, b) => a.time - b.time); // Ensure data is sorted by time
-
-    // Remove duplicate timestamps and ensure strict ascending order
-    const formattedData: typeof rawData = [];
-    let lastTime = 0;
-
-    for (const item of rawData) {
-      if (item.time > lastTime) {
-        formattedData.push(item);
-        lastTime = item.time;
-      } else if (item.time === lastTime && formattedData.length > 0) {
-        // If timestamp is the same, update the value of the last item
-        formattedData[formattedData.length - 1].value = item.value;
-      } else if (item.time === lastTime) {
-        // If it's the first item with this timestamp, add a small increment
-        formattedData.push({
-          time: (lastTime + 1) as any,
-          value: item.value,
-        });
-        lastTime += 1;
-      }
-    }
-
-    if (formattedData.length > 0) {
-      seriesRef.current.setData(formattedData);
-
-      // Fit content
-      if (chartRef.current) {
-        chartRef.current.timeScale().fitContent();
-      }
-    }
-  }, [chartData, selectedTimeFrame, isBarChart]);
+  }, [updateChartData]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -324,7 +327,7 @@ export default function TokenPricePerformance({
   // Fetch data on mount and when dependencies change
   useEffect(() => {
     fetchData();
-  }, [pairId, tokenId]);
+  }, [fetchData]);
 
   const handleTimeFrameChange = (timeFrame: TimeFrame) => {
     setSelectedTimeFrame(timeFrame);
@@ -417,4 +420,6 @@ export default function TokenPricePerformance({
       </div>
     </div>
   );
-}
+};
+
+export default TokenPricePerformance;

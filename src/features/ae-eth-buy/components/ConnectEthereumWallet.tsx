@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useAppKit, useDisconnect, useAppKitAccount } from '@reown/appkit/react';
 
 interface ConnectEthereumWalletProps {
@@ -27,7 +28,6 @@ export const ConnectEthereumWallet = ({
     try {
       await open({ view: 'Connect' });
     } catch (error: any) {
-      console.error('Failed to open wallet modal:', error);
       if (onError) {
         onError(error.message || 'Failed to connect wallet');
       }
@@ -41,12 +41,17 @@ export const ConnectEthereumWallet = ({
         onDisconnected();
       }
     } catch (error: any) {
-      console.error('Failed to disconnect wallet:', error);
       if (onError) {
         onError(error.message || 'Failed to disconnect wallet');
       }
     }
   };
+
+  useEffect(() => {
+    if (isConnected && ethAddress && onConnected) {
+      onConnected([ethAddress]);
+    }
+  }, [isConnected, ethAddress, onConnected]);
 
   // If showing connected state and wallet is connected
   if (showConnectedState && isConnected && ethAddress) {
@@ -69,12 +74,14 @@ export const ConnectEthereumWallet = ({
           </span>
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={handleConnect}
               className="text-xs text-[#4ecdc4] hover:text-[#3ab3aa] bg-[#4ecdc4]/10 hover:bg-[#4ecdc4]/20 border border-[#4ecdc4]/30 hover:border-[#4ecdc4]/50 rounded-lg px-2 py-1 transition-all duration-200 font-medium"
             >
               Switch
             </button>
             <button
+              type="button"
               onClick={handleDisconnect}
               className="text-xs text-red-400 hover:text-red-300 bg-red-400/10 hover:bg-red-400/20 border border-red-400/30 hover:border-red-400/50 rounded-lg px-2 py-1 transition-all duration-200 font-medium"
             >
@@ -89,6 +96,7 @@ export const ConnectEthereumWallet = ({
   // Default: show connect button
   return (
     <button
+      type="button"
       onClick={handleConnect}
       disabled={disabled}
       className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${

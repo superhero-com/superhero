@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import Head from '../../../seo/Head';
+import { Head } from '../../../seo/Head';
 import {
   LeaderboardFilters,
   LeaderboardCard,
@@ -18,7 +18,7 @@ import {
   LEADERBOARD_METRIC_OPTIONS,
 } from '../constants/leaderboard';
 
-export default function LeaderboardView() {
+const LeaderboardView = () => {
   const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>('7d');
   const [metric, setMetric] = useState<LeaderboardMetric>('pnl');
   const [page, setPage] = useState(1);
@@ -208,4 +208,6 @@ export default function LeaderboardView() {
       </div>
     </div>
   );
-}
+};
+
+export default LeaderboardView;

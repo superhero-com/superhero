@@ -21,12 +21,16 @@ export async function resolvePostByKey(key: string): Promise<PostDto> {
   // 1) Direct
   try {
     return (await PostsService.getById({ id: normalized })) as unknown as PostDto;
-  } catch {}
+  } catch {
+    // Ignore lookup failures; fallback below
+  }
   // 2) Try with _v3 for numeric ids or keys that already look like ids
   if (isLikelyNumericId(normalized) || normalized.endsWith('_v3')) {
     try {
       return (await PostsService.getById({ id: ensureV3(normalized) })) as unknown as PostDto;
-    } catch {}
+    } catch {
+      // Ignore lookup failures; fallback below
+    }
   }
   // 3) Fallback: search and refetch by id
   try {
@@ -41,6 +45,8 @@ export async function resolvePostByKey(key: string): Promise<PostDto> {
     if (first?.id) {
       return (await PostsService.getById({ id: String(first.id) })) as unknown as PostDto;
     }
-  } catch {}
+  } catch {
+    // Ignore lookup failures; fallback below
+  }
   throw new Error('Post not found');
 }

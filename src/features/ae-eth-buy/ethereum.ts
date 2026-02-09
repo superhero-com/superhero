@@ -7,7 +7,9 @@ import { BRIDGE_CONSTANTS, BRIDGE_ABI } from './constants';
  * Ensure Ethereum provider is available and connected
  * @param walletProvider - Optional WalletConnect/AppKit provider
  */
-export async function ensureEthProvider(walletProvider?: Eip1193Provider): Promise<BrowserProvider> {
+export async function ensureEthProvider(
+  walletProvider?: Eip1193Provider,
+): Promise<BrowserProvider> {
   // If walletProvider is provided (from AppKit/WalletConnect), use it
   if (walletProvider) {
     return new BrowserProvider(walletProvider, {
@@ -28,7 +30,7 @@ export async function ensureEthProvider(walletProvider?: Eip1193Provider): Promi
   try {
     // Request account access
     await anyWindow.ethereum.request({ method: 'eth_requestAccounts' });
-  } catch (error) {
+  } catch {
     throw new Error('User denied account access');
   }
 
@@ -63,7 +65,10 @@ export async function ensureCorrectNetwork(provider: BrowserProvider): Promise<v
  * @param provider - Ethereum provider
  * @param accountAddress - Optional specific account address to check balance for
  */
-export async function getEthBalance(provider: BrowserProvider, accountAddress?: string): Promise<string> {
+export async function getEthBalance(
+  provider: BrowserProvider,
+  accountAddress?: string,
+): Promise<string> {
   let address: string;
 
   if (accountAddress) {

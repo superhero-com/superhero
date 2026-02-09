@@ -10,10 +10,10 @@ interface AccountCreatedTokenProps {
   tab: string;
 }
 
-export default function AccountCreatedToken({
+const AccountCreatedToken = ({
   address,
   tab,
-}: AccountCreatedTokenProps) {
+}: AccountCreatedTokenProps) => {
   const { t } = useTranslation('trending');
   // Token list sorting state shared by Owned/Created
   const [orderBy, setOrderBy] = useState<
@@ -80,7 +80,9 @@ export default function AccountCreatedToken({
             setPage(1);
           }
         }}
-        rankOffset={((createdResp?.meta?.currentPage || page) - 1) * (createdResp?.meta?.itemsPerPage || limit)}
+        rankOffset={(
+          (createdResp?.meta?.currentPage || page) - 1
+        ) * (createdResp?.meta?.itemsPerPage || limit)}
       />
       <div className="mt-2">
         {createdResp?.meta && (
@@ -97,4 +99,6 @@ export default function AccountCreatedToken({
       </div>
     </div>
   );
-}
+};
+
+export default AccountCreatedToken;

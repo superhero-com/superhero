@@ -8,7 +8,7 @@ interface CopyTextProps {
   bordered?: boolean;
 }
 
-export default function CopyText({ value, className = '', bordered = false }: CopyTextProps) {
+const CopyText = ({ value, className = '', bordered = false }: CopyTextProps) => {
   const { t } = useTranslation('common');
   const [copied, setCopied] = useState(false);
 
@@ -17,8 +17,8 @@ export default function CopyText({ value, className = '', bordered = false }: Co
       await navigator.clipboard.writeText(value);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
+    } catch {
+      // Ignore clipboard failures
     }
   };
 
@@ -39,6 +39,7 @@ export default function CopyText({ value, className = '', bordered = false }: Co
         />
       </div>
       <button
+        type="button"
         onClick={handleCopy}
         className={cn(
           'px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200',
@@ -63,4 +64,6 @@ export default function CopyText({ value, className = '', bordered = false }: Co
       </button>
     </div>
   );
-}
+};
+
+export default CopyText;

@@ -7,7 +7,7 @@ interface DexSettingsProps {
   title?: string;
 }
 
-export default function DexSettings({ children, title = 'DEX Settings' }: DexSettingsProps) {
+const DexSettings = ({ children, title = 'DEX Settings' }: DexSettingsProps) => {
   const {
     slippagePct, deadlineMins, setSlippage, setDeadline,
   } = useDex();
@@ -17,13 +17,13 @@ export default function DexSettings({ children, title = 'DEX Settings' }: DexSet
 
   const handleSave = () => {
     const newSlippage = parseFloat(tempSlippage);
-    const newDeadline = parseInt(tempDeadline);
+    const newDeadline = parseInt(tempDeadline, 10);
 
-    if (!isNaN(newSlippage) && newSlippage > 0 && newSlippage <= 50) {
+    if (!Number.isNaN(newSlippage) && newSlippage > 0 && newSlippage <= 50) {
       setSlippage(newSlippage);
     }
 
-    if (!isNaN(newDeadline) && newDeadline > 0 && newDeadline <= 180) {
+    if (!Number.isNaN(newDeadline) && newDeadline > 0 && newDeadline <= 180) {
       setDeadline(newDeadline);
     }
 
@@ -51,7 +51,10 @@ export default function DexSettings({ children, title = 'DEX Settings' }: DexSet
               {title}
             </Dialog.Title>
             <Dialog.Close asChild>
-              <button className="px-2.5 py-1.5 rounded-lg bg-white/10 border border-glass-border text-standard-font-color cursor-pointer text-sm">
+              <button
+                type="button"
+                className="px-2.5 py-1.5 rounded-lg bg-white/10 border border-glass-border text-standard-font-color cursor-pointer text-sm"
+              >
                 ✕
               </button>
             </Dialog.Close>
@@ -65,6 +68,7 @@ export default function DexSettings({ children, title = 'DEX Settings' }: DexSet
             <div className="flex gap-2 mb-2">
               {[0.1, 0.5, 1.0].map((preset) => (
                 <button
+                  type="button"
                   key={preset}
                   onClick={() => setTempSlippage(preset.toString())}
                   className={`px-3 py-2 rounded-lg border cursor-pointer text-xs font-medium transition-all duration-200 ${
@@ -106,6 +110,7 @@ export default function DexSettings({ children, title = 'DEX Settings' }: DexSet
             <div className="flex gap-2 mb-2">
               {[10, 20, 30].map((preset) => (
                 <button
+                  type="button"
                   key={preset}
                   onClick={() => setTempDeadline(preset.toString())}
                   className={`px-3 py-2 rounded-lg border cursor-pointer text-xs font-medium transition-all duration-200 ${
@@ -142,12 +147,14 @@ export default function DexSettings({ children, title = 'DEX Settings' }: DexSet
           {/* Action Buttons */}
           <div className="flex gap-3">
             <button
+              type="button"
               onClick={handleCancel}
               className="flex-1 px-5 py-3 rounded-xl border border-white/10 bg-white/5 text-standard-font-color text-sm font-semibold cursor-pointer transition-all duration-300"
             >
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleSave}
               className="flex-1 px-5 py-3 rounded-xl border-none bg-button-gradient text-white text-sm font-bold cursor-pointer transition-all duration-300"
             >
@@ -158,4 +165,6 @@ export default function DexSettings({ children, title = 'DEX Settings' }: DexSet
       </Dialog.Portal>
     </Dialog.Root>
   );
-}
+};
+
+export default DexSettings;

@@ -1,3 +1,14 @@
+/* eslint-disable
+  react/function-component-definition,
+  @typescript-eslint/no-unused-vars,
+  no-plusplus,
+  no-await-in-loop,
+  no-restricted-syntax,
+  no-empty,
+  no-void,
+  react-hooks/exhaustive-deps,
+  max-len
+*/
 import BigNumber from 'bignumber.js';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';

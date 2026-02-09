@@ -13,7 +13,10 @@ import { ICommunityFactorySchema } from '../utils/types';
 import { useAeSdk } from './useAeSdk';
 
 export function useCommunityFactory() {
-  const [activeFactorySchema, setActiveFactorySchema] = useAtom(activeFactorySchemaAtom);
+  const [
+    activeFactorySchema,
+    setActiveFactorySchema,
+  ] = useAtom<ICommunityFactorySchema | null>(activeFactorySchemaAtom);
   const { sdk } = useAeSdk();
 
   // Computed values equivalent to Vue's computed properties
@@ -42,9 +45,9 @@ export function useCommunityFactory() {
     _sdk?: AeSdkAepp | AeSdk,
   ): Promise<CommunityFactory> => {
     // Use current state if available, otherwise load fresh
-    let _factorySchema = activeFactorySchema;
-    if (!_factorySchema) {
-      _factorySchema = await loadFactorySchema();
+    let newFactorySchema = activeFactorySchema;
+    if (!newFactorySchema) {
+      newFactorySchema = await loadFactorySchema();
     }
 
     const targetSdk = _sdk ?? sdk;
@@ -53,7 +56,7 @@ export function useCommunityFactory() {
       throw new Error('SDK not available');
     }
 
-    return initCommunityFactory(targetSdk, _factorySchema.address);
+    return initCommunityFactory(targetSdk, newFactorySchema.address);
   }, [sdk, activeFactorySchema, loadFactorySchema]);
 
   const getAffiliationTreasury = useCallback(async (

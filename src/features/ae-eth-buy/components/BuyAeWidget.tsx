@@ -12,7 +12,8 @@ import { useToast } from '../../../components/ToastProvider';
 import { CONFIG } from '../../../config';
 import { errorToUserMessage } from '../../../libs/errorMessages';
 import { ensureEthProvider, getEthBalance } from '../ethereum';
-import { BridgeOptions, BridgeService, BridgeStatus } from '../index';
+import { BridgeService } from '../service';
+import { BridgeOptions, BridgeStatus } from '../types';
 import { AppKitProvider } from '../providers/AppKitProvider';
 import { ConnectEthereumWallet } from './ConnectEthereumWallet';
 
@@ -53,7 +54,6 @@ const BuyAeWidgetContent = ({
   const [liquidityExceeded, setLiquidityExceeded] = useState(false);
   const [maxAvailable, setMaxAvailable] = useState<string | undefined>(undefined);
 
-  const bridgeService = BridgeService.getInstance();
   const { refreshQuote, routeInfo } = useSwapQuote();
 
   // Fetch ETH balance
@@ -71,7 +71,8 @@ const BuyAeWidgetContent = ({
       const balanceEth = formatEther(balanceWei);
       setEthBalance(balanceEth);
 
-      // Estimate a conservative gas reserve for the bridge tx so "Max" won’t exceed spendable funds.
+      // Estimate a conservative gas reserve
+      // for the bridge tx so "Max" won’t exceed spendable funds.
       try {
         if (activeAccount?.startsWith('ak_')) {
           const signer = await provider.getSigner();
@@ -97,7 +98,8 @@ const BuyAeWidgetContent = ({
           setEthSpendable(balanceEth);
         }
       } catch {
-        // If estimation fails, still reserve a conservative fee budget (feeData × default gas limit).
+        // If estimation fails, still reserve
+        // a conservative fee budget (feeData × default gas limit).
         try {
           const feeData = await provider.getFeeData();
           const feePerGas = feeData.gasPrice ?? feeData.maxFeePerGas ?? 0n;
@@ -111,7 +113,7 @@ const BuyAeWidgetContent = ({
           setEthSpendable(balanceEth);
         }
       }
-    } catch (error) {
+    } catch {
       setEthBridgeError('Failed to fetch ETH balance');
       setEthBalance(null);
       setEthSpendable(null);
@@ -145,7 +147,8 @@ const BuyAeWidgetContent = ({
         setAeToken({
           ...ae, is_ae: true, address: 'AE', symbol: 'AE',
         });
-      } catch (e) {
+      } catch {
+        setEthBridgeError('Failed to load token data');
       }
     };
 
@@ -169,7 +172,7 @@ const BuyAeWidgetContent = ({
       setEthBridgeOutAe('');
       setLiquidityExceeded(false);
       setMaxAvailable(undefined);
-      return;
+      return () => {};
     }
 
     const timer = setTimeout(async () => {
@@ -194,7 +197,7 @@ const BuyAeWidgetContent = ({
     }, 300); // 300ms delay to avoid too many requests
 
     return () => clearTimeout(timer);
-  }, [ethBridgeIn, aeEthToken, aeToken]);
+  }, [ethBridgeIn, aeEthToken, aeToken, refreshQuote]);
 
   // Monitor liquidity status from routeInfo
   useEffect(() => {
@@ -224,10 +227,10 @@ const BuyAeWidgetContent = ({
         walletProvider: walletProvider || undefined,
       };
 
-      const result = await bridgeService.bridgeEthToAe(
+      const result = await BridgeService.bridgeEthToAe(
         sdk as any,
         bridgeOptions,
-        (status: BridgeStatus, message?: string) => {
+        (status: BridgeStatus) => {
           setEthBridgeStep(status);
         },
       );
@@ -297,7 +300,7 @@ const BuyAeWidgetContent = ({
               ),
             ),
           );
-        } catch (toastError) {
+        } catch {
           // ignore toast failures
         }
 
@@ -442,26 +445,25 @@ const BuyAeWidgetContent = ({
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-white/60">Bridge Status</span>
             <span
-              className={`text-sm font-semibold ${ethBridgeStep === 'completed'
-                ? 'text-green-400'
-                : ethBridgeStep === 'failed'
-                  ? 'text-red-400'
-                  : 'text-yellow-400'
-              }`}
+              className={`text-sm font-semibold ${(() => {
+                switch (ethBridgeStep) {
+                  case 'completed':
+                    return 'text-green-400';
+                  case 'failed':
+                    return 'text-red-400';
+                  default:
+                    return 'text-yellow-400';
+                }
+              })()}`}
             >
-              {ethBridgeStep === 'connecting'
-                ? 'Connecting to wallets'
-                : ethBridgeStep === 'bridging'
-                  ? 'Bridging ETH → æETH'
-                  : ethBridgeStep === 'waiting'
-                    ? 'Waiting for æETH deposit'
-                    : ethBridgeStep === 'swapping'
-                      ? 'Swapping æETH → AE'
-                      : ethBridgeStep === 'completed'
-                        ? 'Completed successfully'
-                        : ethBridgeStep === 'failed'
-                          ? 'Failed'
-                          : 'Processing'}
+              {{
+                connecting: 'Connecting to wallets',
+                bridging: 'Bridging ETH → æETH',
+                waiting: 'Waiting for æETH deposit',
+                swapping: 'Swapping æETH → AE',
+                completed: 'Completed successfully',
+                failed: 'Failed',
+              }[ethBridgeStep] ?? 'Processing'}
             </span>
           </div>
 
@@ -514,6 +516,7 @@ const BuyAeWidgetContent = ({
           {/* Bridge Button - Only show when both wallets are connected */}
           {ethConnected && (
             <button
+              type="button"
               onClick={handleEthBridge}
               disabled={isDisabledWithBalanceCheck}
               className={`w-full mt-4 py-3 sm:py-4 px-4 sm:px-6 rounded-2xl border-none text-white cursor-pointer text-sm sm:text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isDisabledWithBalanceCheck
@@ -524,15 +527,20 @@ const BuyAeWidgetContent = ({
               {ethBridgeProcessing ? (
                 <div className="flex items-center justify-center gap-2">
                   <Spinner className="w-4 h-4" />
-                  {ethBridgeStep === 'connecting'
-                    ? 'Connecting…'
-                    : ethBridgeStep === 'bridging'
-                      ? 'Bridging…'
-                      : ethBridgeStep === 'waiting'
-                        ? 'Waiting for æETH…'
-                        : ethBridgeStep === 'swapping'
-                          ? 'Swapping…'
-                          : 'Processing…'}
+                  {(() => {
+                    switch (ethBridgeStep) {
+                      case 'connecting':
+                        return 'Connecting…';
+                      case 'bridging':
+                        return 'Bridging…';
+                      case 'waiting':
+                        return 'Waiting for æETH…';
+                      case 'swapping':
+                        return 'Swapping…';
+                      default:
+                        return 'Processing…';
+                    }
+                  })()}
                 </div>
               ) : (
                 'Buy AE with ETH'

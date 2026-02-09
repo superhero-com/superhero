@@ -21,6 +21,13 @@ const AeCard = React.forwardRef<
 
   const hoverClasses = hover ? 'hover:-translate-y-1' : '';
 
+  let background: string | undefined;
+  if (variant === 'glass') {
+    background = 'radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.06), transparent 40%), rgba(255, 255, 255, 0.03)';
+  } else if (variant === 'gradient') {
+    background = 'var(--card-gradient)';
+  }
+
   return (
     <div
       ref={ref}
@@ -31,11 +38,7 @@ const AeCard = React.forwardRef<
         className,
       )}
       style={{
-        background: variant === 'glass'
-          ? 'radial-gradient(1200px 400px at -20% -40%, rgba(255,255,255,0.06), transparent 40%), rgba(255, 255, 255, 0.03)'
-          : variant === 'gradient'
-            ? 'var(--card-gradient)'
-            : undefined,
+        background,
         backdropFilter: variant === 'glass' ? 'blur(12px)' : undefined,
         WebkitBackdropFilter: variant === 'glass' ? 'blur(12px)' : undefined,
         ...props.style,
@@ -61,7 +64,7 @@ AeCardHeader.displayName = 'AeCardHeader';
 const AeCardTitle = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => (
+>(({ className, children, ...props }, ref) => (
   <h3
     ref={ref}
     className={cn(
@@ -69,7 +72,9 @@ const AeCardTitle = React.forwardRef<
       className,
     )}
     {...props}
-  />
+  >
+    {children}
+  </h3>
 ));
 AeCardTitle.displayName = 'AeCardTitle';
 

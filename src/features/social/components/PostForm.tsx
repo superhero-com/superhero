@@ -1,4 +1,4 @@
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import React, {
   forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState,
 } from 'react';
@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import TIPPING_V3_ACI from 'tipping-contract/generated/Tipping_v3.aci.json';
 import AeButton from '../../../components/AeButton';
-import ConnectWalletButton from '../../../components/ConnectWalletButton';
+import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
 import { IconClose, IconGif, IconSmile } from '../../../icons';
 // @ts-ignore
 import { PostsService } from '../../../api/generated';
@@ -17,7 +17,6 @@ import { GifSelectorDialog } from './GifSelectorDialog';
 
 interface PostFormProps {
   // Common props
-  onClose?: () => void;
   onSuccess?: () => void;
   className?: string;
   onTextChange?: (text: string) => void;
@@ -40,7 +39,6 @@ interface PostFormProps {
   showEmojiPicker?: boolean;
   showGifInput?: boolean;
   characterLimit?: number;
-  minHeight?: string;
   autoFocus?: boolean;
 }
 
@@ -84,7 +82,6 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   const { t } = useTranslation('forms');
   const { t: tSocial } = useTranslation('social');
   const {
-    onClose,
     onSuccess,
     className = '',
     onTextChange,
@@ -99,12 +96,17 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     showEmojiPicker = true,
     showGifInput = true,
     characterLimit = 280,
-    minHeight = '60px',
     autoFocus = false,
   } = props;
   const { sdk } = useAeSdk();
-  const { activeAccount, chainNames } = useAccount();
+  const { activeAccount } = useAccount();
   const queryClient = useQueryClient();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const emojiBtnRef = useRef<HTMLButtonElement>(null);
+  const gifBtnRef = useRef<HTMLButtonElement>(null);
+  // Refs to track polling timers and component mount status
+  const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
+  const isMountedRef = useRef(true);
 
   useImperativeHandle(ref, () => ({
     focus: (opts?: { immediate?: boolean; preventScroll?: boolean; scroll?: 'none' | 'start' | 'center' }) => {
@@ -115,6 +117,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
           const ps = opts?.preventScroll ?? true;
           (textareaRef.current as any).focus?.({ preventScroll: ps });
         } catch {
+          // Ignore focus errors
           textareaRef.current.focus();
         }
         // Optional scroll mode
@@ -122,7 +125,9 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
         if (mode !== 'none') {
           try {
             textareaRef.current.scrollIntoView({ behavior: 'smooth', block: mode });
-          } catch {}
+          } catch {
+            // Ignore scroll errors
+          }
         }
       };
       if (opts?.immediate) run();
@@ -137,16 +142,19 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   const [showGif, setShowGif] = useState(false);
   const [promptIndex, setPromptIndex] = useState(0);
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const emojiBtnRef = useRef<HTMLButtonElement>(null);
-  const gifBtnRef = useRef<HTMLButtonElement>(null);
-  // Refs to track polling timers and component mount status
-  const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
-  const isMountedRef = useRef(true);
-
   // Shared ID normalization function - ensures consistent ID format across the component
   const normalizeId = (id: string): string => (String(id).endsWith('_v3') ? String(id) : `${String(id)}_v3`);
-  const [overlayComputed, setOverlayComputed] = useState<{ paddingTop: number; paddingRight: number; paddingBottom: number; paddingLeft: number; fontFamily: string; fontSize: string; fontWeight: string; lineHeight: string; letterSpacing: string; } | null>(null);
+  const [overlayComputed, setOverlayComputed] = useState<{
+    paddingTop: number;
+    paddingRight: number;
+    paddingBottom: number;
+    paddingLeft: number;
+    fontFamily: string;
+    fontSize: string;
+    fontWeight: string;
+    lineHeight: string;
+    letterSpacing: string;
+  } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDesktopViewport, setIsDesktopViewport] = useState(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
@@ -162,11 +170,12 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   // Cleanup effect to clear all timers on unmount
   useEffect(() => {
     isMountedRef.current = true;
+    const timeoutSet = timeoutRefs.current;
     return () => {
       isMountedRef.current = false;
       // Clear all pending timeouts
-      timeoutRefs.current.forEach((timeoutId) => clearTimeout(timeoutId));
-      timeoutRefs.current.clear();
+      timeoutSet.forEach((timeoutId) => clearTimeout(timeoutId));
+      timeoutSet.clear();
     };
   }, []);
 
@@ -219,7 +228,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
       if (emojiBtnRef.current && emojiBtnRef.current.contains(target)) return;
       if (gifBtnRef.current && gifBtnRef.current.contains(target)) return;
       const popovers = document.querySelectorAll('.popover');
-      for (const p of Array.from(popovers)) if (p.contains(target)) return;
+      const isInsidePopover = Array.from(popovers).some((p) => p.contains(target));
+      if (isInsidePopover) return;
       setShowEmoji(false);
       // setShowGif(false);
     }
@@ -231,7 +241,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
   // Use useEffect to listen for window resize events instead of calling matchMedia on every render
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-      return;
+      return () => {};
     }
 
     const mediaQuery = window.matchMedia('(min-width: 768px)');
@@ -251,7 +261,9 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
     const legacyHandler = (mq: MediaQueryList) => {
       setIsDesktopViewport(mq.matches);
     };
+    // @ts-ignore
     mediaQuery.addListener(legacyHandler);
+    // @ts-ignore
     return () => mediaQuery.removeListener(legacyHandler);
   }, []);
 
@@ -374,7 +386,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
           // Try to fetch the actual post from backend, but use optimistic one if it fails
           const fetchedPost = await PostsService.getById({ id: newPostId });
           created = fetchedPost;
-        } catch (error) {
+        } catch {
           // Backend might not have processed it yet (404), use optimistic post
           // Continue with optimisticPost
         }
@@ -565,7 +577,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
           // Try to fetch the actual reply from backend, but use optimistic one if it fails
           const fetchedReply = await PostsService.getById({ id: newReplyId });
           newReply = fetchedReply;
-        } catch (error) {
+        } catch {
           // Backend might not have processed it yet (404), use optimistic reply
           // Continue with optimisticReply
         }
@@ -581,7 +593,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
               };
             }
             // Check if reply already exists in any page to avoid duplicates
-            const exists = old.pages.some((page: any) => page?.items?.some((item: any) => item?.id === newReplyId));
+            const exists = old.pages
+              .some((page: any) => page?.items?.some((item: any) => item?.id === newReplyId));
             if (exists) return old;
 
             // Append to the last page (newest items) since replies are ordered ASC
@@ -616,7 +629,9 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
         };
 
         // Helper to check if two IDs match (handles both normalized and non-normalized)
-        const idsMatch = (id1: string, id2: string): boolean => normalizeId(id1) === normalizeId(id2) || id1 === id2;
+        const idsMatch = (id1: string, id2: string): boolean => (
+          normalizeId(id1) === normalizeId(id2) || id1 === id2
+        );
 
         // CRITICAL: Update ALL active query keys FIRST, using their exact key format
         // This ensures we catch DirectReplies and other components that use the raw ID
@@ -678,7 +693,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
 
         // Optimistically update parent post's comment count
         // Update parent post in cache if it exists (for both normalized and original formats)
-        // Normalize parent ID once to use consistently (both normalizedPostId and postId should normalize to the same value)
+        // Normalize parent ID once to use consistently
+        // (both normalizedPostId and postId should normalize to the same value)
         const normalizedParentId = normalizeId(normalizedPostId);
 
         // Helper to check if an ID matches the parent (handles both normalized and non-normalized)
@@ -844,7 +860,9 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
         if (requiredHashtag) {
           queryClient.invalidateQueries({ queryKey: ['topic-by-name'] });
         }
-      } catch {}
+      } catch {
+        // Ignore GIF preload errors
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -899,10 +917,8 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                 <AddressAvatarWithChainName
                   address={activeAccount}
                   size={40}
-                  overlaySize={20}
                   isHoverEnabled
                   showAddressAndChainName={false}
-                  className=""
                 />
               </div>
             )}
@@ -1095,13 +1111,15 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                         disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
                         className="relative bg-[#1161FE] border-none text-white font-black px-6 py-3 rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none md:min-h-[44px] md:text-base"
                       >
-                        {isSubmitting
-                          ? isPost
-                            ? tSocial('posting')
-                            : tSocial('posting')
-                          : isPost
-                            ? tSocial('post')
-                            : tSocial('postReply')}
+                        {(() => {
+                          if (isSubmitting) {
+                            return tSocial('posting');
+                          }
+                          if (isPost) {
+                            return tSocial('post');
+                          }
+                          return tSocial('postReply');
+                        })()}
                       </AeButton>
                     ) : (
                       <ConnectWalletButton className="rounded-full" />
@@ -1116,7 +1134,7 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                 <div className="flex flex-row gap-3 pb-2">
                   {mediaUrls.map((url, index) => (
                     <div
-                      key={index}
+                      key={`media-${url}`}
                       className="relative rounded-xl overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.25)] flex-shrink-0 w-[200px] md:w-[180px]"
                     >
                       {/.mp4$|.webm$|.mov$/i.test(url) ? (
@@ -1124,7 +1142,9 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                           src={url}
                           controls
                           className="w-full h-[200px] md:h-[180px] object-cover block"
-                        />
+                        >
+                          <track kind="captions" />
+                        </video>
                       ) : (
                         <img
                           src={url}
@@ -1180,13 +1200,15 @@ const PostForm = forwardRef<{ focus:(opts?: { immediate?: boolean; preventScroll
                   disabled={!text.trim() || (requiredHashtag ? requiredMissing : false)}
                   className="relative bg-[#1161FE] border-none text-white font-black px-5 py-2 rounded-xl md:rounded-full cursor-pointer transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.25)] hover:bg-[#1161FE] hover:-translate-y-px disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none w-full md:w-auto md:px-6 md:py-3 md:min-h-[44px] md:text-base"
                 >
-                  {isSubmitting
-                    ? isPost
-                      ? tSocial('posting')
-                      : tSocial('posting')
-                    : isPost
-                      ? tSocial('post')
-                      : tSocial('postReply')}
+                  {(() => {
+                    if (isSubmitting) {
+                      return tSocial('posting');
+                    }
+                    if (isPost) {
+                      return tSocial('post');
+                    }
+                    return tSocial('postReply');
+                  })()}
                 </AeButton>
               ) : (
                 <ConnectWalletButton block className="w-full rounded-xl md:rounded-full" />

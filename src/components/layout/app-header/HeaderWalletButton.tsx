@@ -1,4 +1,4 @@
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { AeButton } from '@/components/ui/ae-button';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -12,17 +12,17 @@ import { useWalletConnect } from '../../../hooks/useWalletConnect';
 import Favicon from '../../../svg/favicon.svg?react';
 import { IconThreeDots } from '../../../icons';
 
-export default function HeaderWalletButton() {
+const HeaderWalletButton = () => {
   const { t } = useTranslation('common');
   const { activeAccount } = useAeSdk();
-  const { disconnectWallet, walletInfo } = useWalletConnect();
+  const { disconnectWallet } = useWalletConnect();
   const { openModal } = useModal();
   const { decimalBalance } = useAccount();
   const navigate = useNavigate();
   const handleConnect = () => openModal({ name: 'connect-wallet' });
   const handleLogout = () => {
     disconnectWallet();
-    try { window.location.reload(); } catch {}
+    window.location.reload();
   };
   const handleProfileClick = () => {
     if (activeAccount) {
@@ -51,6 +51,7 @@ export default function HeaderWalletButton() {
   return (
     <div className="inline-flex items-center gap-3 max-w-full">
       <button
+        type="button"
         onClick={handleProfileClick}
         className="cursor-pointer hover:opacity-80 transition-opacity rounded-lg px-1 py-0.5 hover:bg-white/5 max-w-[210px] overflow-hidden"
         aria-label="View profile"
@@ -60,7 +61,6 @@ export default function HeaderWalletButton() {
           isHoverEnabled={false}
           address={activeAccount}
           size={36}
-          overlaySize={18}
           showBalance={false}
           showAddressAndChainName={false}
           showPrimaryOnly
@@ -73,6 +73,7 @@ export default function HeaderWalletButton() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
+            type="button"
             className="p-1.5 rounded-lg border border-solid border-white/30 hover:bg-white/10 hover:border-white/40 active:bg-white/15 transition-colors cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px]"
             style={{ borderWidth: '1px' }}
             aria-label="Account menu"
@@ -92,7 +93,6 @@ export default function HeaderWalletButton() {
             isHoverEnabled={false}
             address={activeAccount}
             size={40}
-            overlaySize={18}
             showAddressAndChainName
             truncateAddress={false}
             contentClassName="px-3 pb-2"
@@ -122,4 +122,6 @@ export default function HeaderWalletButton() {
       </DropdownMenu>
     </div>
   );
-}
+};
+
+export default HeaderWalletButton;

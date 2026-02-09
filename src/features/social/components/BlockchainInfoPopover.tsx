@@ -73,7 +73,9 @@ export const BlockchainInfoPopover = ({
     if (e) e.stopPropagation();
     try {
       await navigator.clipboard.writeText(value);
-    } catch {}
+    } catch {
+      // Ignore clipboard errors
+    }
   }, []);
 
   return (
@@ -90,9 +92,7 @@ export const BlockchainInfoPopover = ({
           aria-label="Blockchain info"
           title="Blockchain info"
         >
-          {triggerContent ? (
-            <>{triggerContent}</>
-          ) : (
+          {triggerContent || (
             <>
               <ShieldCheck className="w-[14px] h-[14px] opacity-80" strokeWidth={2.25} />
               {showLabel && (
@@ -148,7 +148,13 @@ export const BlockchainInfoPopover = ({
             <div className="text-xs text-white/70">Tx hash</div>
             <div className="flex items-center justify-end gap-2 min-w-0">
               <a href={txUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD] truncate" onClick={(e) => e.stopPropagation()}>{shortHash}</a>
-              <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none" onClick={(e) => handleCopy(txHash, e)}>Copy</button>
+              <button
+                type="button"
+                className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none"
+                onClick={(e) => handleCopy(txHash, e)}
+              >
+                Copy
+              </button>
             </div>
           </div>
           {sender && (
@@ -158,7 +164,13 @@ export const BlockchainInfoPopover = ({
                 <a href={senderUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD] truncate" onClick={(e) => e.stopPropagation()}>
                   {`${sender.slice(0, 6)}...${sender.slice(-4)}`}
                 </a>
-                <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none" onClick={(e) => handleCopy(sender!, e)}>Copy</button>
+                <button
+                  type="button"
+                  className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none"
+                  onClick={(e) => handleCopy(sender!, e)}
+                >
+                  Copy
+                </button>
               </div>
             </div>
           )}
@@ -169,7 +181,13 @@ export const BlockchainInfoPopover = ({
                 <a href={contractUrl} target="_blank" rel="noreferrer" className="text-xs underline-offset-2 hover:underline no-gradient-text text-[#0099FD] hover:text-[#0099FD] truncate" onClick={(e) => e.stopPropagation()}>
                   {`${contract.slice(0, 6)}...${contract.slice(-4)}`}
                 </a>
-                <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none" onClick={(e) => handleCopy(contract!, e)}>Copy</button>
+                <button
+                  type="button"
+                  className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none"
+                  onClick={(e) => handleCopy(contract!, e)}
+                >
+                  Copy
+                </button>
               </div>
             </div>
           )}
@@ -178,7 +196,13 @@ export const BlockchainInfoPopover = ({
               <div className="text-xs text-white/70">Post ID</div>
               <div className="flex items-center justify-end gap-2 min-w-0">
                 <div className="text-xs text-white/90 truncate min-h-0">{postId}</div>
-                <button className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none" onClick={(e) => handleCopy(postId, e)}>Copy</button>
+                <button
+                  type="button"
+                  className="text-[11px] whitespace-nowrap opacity-80 hover:opacity-100 min-h-0 min-w-0 h-auto px-0 py-0 leading-none"
+                  onClick={(e) => handleCopy(postId, e)}
+                >
+                  Copy
+                </button>
               </div>
             </div>
           )}
@@ -206,13 +230,5 @@ export const BlockchainInfoPopover = ({
     </DropdownMenu>
   );
 };
-
-function safeStringify(value: unknown): string {
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-}
 
 export default BlockchainInfoPopover;

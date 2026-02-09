@@ -43,6 +43,16 @@ export const AddressChip = ({
 
   const isActive = activeAccount === address;
   const isAccount = isAccountAddress(address);
+  let titleText = address;
+  if (copyable) {
+    titleText = 'Click to copy address';
+  } else if (linkToExplorer) {
+    titleText = 'Click to view in explorer';
+  }
+  const addressTextClass = (() => {
+    if (!isAccount) return large ? 'text-sm font-semibold' : 'text-xs font-semibold';
+    return large ? 'text-xs font-light font-mono' : 'text-[10px] font-light font-mono';
+  })();
 
   const handleChipClick = useCallback(async () => {
     if (onClick) {
@@ -78,7 +88,7 @@ export const AddressChip = ({
       )}
       style={style}
       onClick={handleChipClick}
-      title={copyable ? 'Click to copy address' : linkToExplorer ? 'Click to view in explorer' : address}
+      title={titleText}
     >
       {/* Avatar */}
       {!hideAvatar && (
@@ -93,9 +103,7 @@ export const AddressChip = ({
       {/* Address text */}
       <span className={cn(
         'tracking-wide whitespace-nowrap',
-        isAccount
-          ? (large ? 'text-xs font-light font-mono' : 'text-[10px] font-light font-mono')
-          : (large ? 'text-sm font-semibold' : 'text-xs font-semibold'),
+        addressTextClass,
       )}
       >
         {formatAddress(address, large ? 6 : 3, true)}

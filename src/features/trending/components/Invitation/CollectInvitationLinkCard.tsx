@@ -5,8 +5,8 @@ import {
 } from 'react';
 import { useLocation } from 'react-router-dom';
 
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
-import ConnectWalletButton from '@/components/ConnectWalletButton';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
+import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import { AeButton } from '@/components/ui/ae-button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,9 +22,9 @@ interface CollectInvitationLinkCardProps {
   className?: string;
 }
 
-export default function CollectInvitationLinkCard({
+const CollectInvitationLinkCard = ({
   className,
-}: CollectInvitationLinkCardProps) {
+}: CollectInvitationLinkCardProps) => {
   const location = useLocation();
   const {
     sdk, staticAeSdk, activeAccount, activeNetwork, nodes,
@@ -69,15 +69,15 @@ export default function CollectInvitationLinkCard({
     try {
       const account = new MemoryAccount(invitationCode);
 
-      const sdk = new AeSdk({
+      const tempSdk = new AeSdk({
         onCompiler: new CompilerHttp('https://v7.compiler.aepps.com'),
         nodes,
         ttl: 10000,
         accounts: [account],
       });
-      sdk.selectNode(activeNetwork.name);
+      tempSdk.selectNode(activeNetwork.name);
 
-      const affiliationTreasury = await getAffiliationTreasury(sdk);
+      const affiliationTreasury = await getAffiliationTreasury(tempSdk);
       const invitation = await affiliationTreasury.getInvitationCode(
         account.address,
       );
@@ -103,7 +103,7 @@ export default function CollectInvitationLinkCard({
     } finally {
       setLoadingInvitation(false);
     }
-  }, [invitationCode, getAffiliationTreasury]);
+  }, [invitationCode, getAffiliationTreasury, activeNetwork.name, nodes]);
 
   /**
    * Claims or revokes the invitation reward
@@ -181,7 +181,7 @@ export default function CollectInvitationLinkCard({
     if (!didMountRef.current) {
       didMountRef.current = true;
       setIsCollapsed(false);
-      return;
+      return () => {};
     }
 
     if (successMessage) {
@@ -196,11 +196,12 @@ export default function CollectInvitationLinkCard({
     // If we still have an invitation code, keep expanded
     if (invitationCode) {
       setIsCollapsed(false);
-      return;
+      return () => {};
     }
 
     // Collapse when navigating to different routes after initial mount
     setIsCollapsed(true);
+    return () => {};
   }, [location.pathname, successMessage, resetInviteCode, invitationCode]);
 
   // Toggle app-level layout class so routes below don't add extra spacing
@@ -242,7 +243,7 @@ export default function CollectInvitationLinkCard({
             </h3>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="hidden sm:inline">View invitation</span>
-              <button className="p-4 rounded-full hover:bg-accent transition-colors">
+              <button type="button" className="p-4 rounded-full hover:bg-accent transition-colors">
                 <ChevronDown className="w-4 h-4" />
               </button>
             </div>
@@ -254,6 +255,7 @@ export default function CollectInvitationLinkCard({
           <CardContent className="p-6 relative">
             {/* Collapse button */}
             <button
+              type="button"
               onClick={() => setIsCollapsed(true)}
               className="absolute top-4 right-4 p-4 rounded-full hover:bg-accent transition-colors"
             >
@@ -368,4 +370,6 @@ export default function CollectInvitationLinkCard({
       )}
     </div>
   );
-}
+};
+
+export default CollectInvitationLinkCard;

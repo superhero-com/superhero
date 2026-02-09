@@ -37,12 +37,18 @@ const SortControls = memo(
     }
 
     // Helper function to get the display title
+    const getPopularLabel = (window: '24h' | '7d' | 'all') => {
+      if (window === '24h') return 'Today';
+      if (window === '7d') return 'This week';
+      return 'All time';
+    };
+
     const getMobileTitle = () => {
       if (sortBy === 'latest') {
         return 'Latest';
       }
       // Popular feed
-      const timeLabel = popularWindow === '24h' ? 'Today' : popularWindow === '7d' ? 'This week' : 'All time';
+      const timeLabel = getPopularLabel(popularWindow);
       return `Popular ${timeLabel.toLowerCase()}`;
     };
 
@@ -52,13 +58,19 @@ const SortControls = memo(
         onSortChange('latest');
       } else if (option === 'this-week') {
         onSortChange('hot');
-        onPopularWindowChange && onPopularWindowChange('7d');
+        if (onPopularWindowChange) {
+          onPopularWindowChange('7d');
+        }
       } else if (option === 'all-time') {
         onSortChange('hot');
-        onPopularWindowChange && onPopularWindowChange('all');
+        if (onPopularWindowChange) {
+          onPopularWindowChange('all');
+        }
       } else if (option === 'today') {
         onSortChange('hot');
-        onPopularWindowChange && onPopularWindowChange('24h');
+        if (onPopularWindowChange) {
+          onPopularWindowChange('24h');
+        }
       }
     };
 
@@ -69,7 +81,10 @@ const SortControls = memo(
           <div className="flex items-center justify-between border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] px-4 pt-3 pb-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 text-base font-bold text-white tracking-tight [text-shadow:none] [background:none] [-webkit-text-fill-color:white] hover:opacity-80 transition-opacity focus:outline-none">
+                <button
+                  type="button"
+                  className="flex items-center gap-2 text-base font-bold text-white tracking-tight [text-shadow:none] [background:none] [-webkit-text-fill-color:white] hover:opacity-80 transition-opacity focus:outline-none"
+                >
                   <span>{getMobileTitle()}</span>
                   <ChevronDown className="h-4 w-4 text-white/70" />
                 </button>
@@ -180,11 +195,16 @@ const SortControls = memo(
           <div className="inline-flex items-center gap-1 bg-white/5 rounded-full p-0.5 border border-white/10 ml-auto">
             {(['24h', '7d', 'all'] as const).map((tf) => {
               const isActive = popularWindow === tf;
-              const label = tf === '24h' ? 'Today' : tf === '7d' ? 'This week' : 'All time';
+              const label = getPopularLabel(tf);
               return (
                 <button
+                  type="button"
                   key={tf}
-                  onClick={() => onPopularWindowChange && onPopularWindowChange(tf)}
+                  onClick={() => {
+                    if (onPopularWindowChange) {
+                      onPopularWindowChange(tf);
+                    }
+                  }}
                   className={cn(
                     'px-3 py-1.5 text-[11px] rounded-full border transition-all duration-300',
                     isActive

@@ -1,9 +1,9 @@
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { cn } from '@/lib/utils';
 import { memo, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { linkify } from '../../../utils/linkify';
-import BlockchainInfoPopover from './BlockchainInfoPopover';
+import { BlockchainInfoPopover } from './BlockchainInfoPopover';
 import SharePopover from './SharePopover';
 import { useWallet } from '../../../hooks';
 import type { PostDto } from '../../../api/generated';
@@ -55,7 +55,13 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
         'relative w-full px-3 md:px-4 py-4 md:py-5 border-b border-white/10 bg-transparent transition-colors hover:bg-white/[0.04]',
       )}
       onClick={handleOpen}
-      role="button"
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handleOpen();
+        }
+      }}
+      tabIndex={0}
       aria-label="Open post"
     >
       {item.tx_hash && (
@@ -75,10 +81,10 @@ const TokenCreatedFeedItem = memo(({ item, onOpenPost }: TokenCreatedFeedItemPro
       <div className="flex gap-2 md:gap-3 items-start">
         <div className="flex-shrink-0 pt-0.5">
           <div className="md:hidden">
-            <AddressAvatarWithChainName address={authorAddress} size={34} overlaySize={16} showAddressAndChainName={false} variant="feed" />
+            <AddressAvatarWithChainName address={authorAddress} size={34} showAddressAndChainName={false} variant="feed" />
           </div>
           <div className="hidden md:block">
-            <AddressAvatarWithChainName address={authorAddress} size={40} overlaySize={20} showAddressAndChainName={false} variant="feed" />
+            <AddressAvatarWithChainName address={authorAddress} size={40} showAddressAndChainName={false} variant="feed" />
           </div>
         </div>
 

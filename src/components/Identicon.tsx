@@ -2,7 +2,13 @@ import React from 'react';
 // @ts-ignore - multiavatar doesn't have types but works fine
 import multiavatar from '@multiavatar/multiavatar';
 
-export default function Identicon({ address, size = 32, name }: { address: string; size?: number; name?: string }) {
+type IdenticonProps = {
+  address: string;
+  size?: number;
+  name?: string;
+};
+
+const Identicon = ({ address, size = 32, name }: IdenticonProps) => {
   // Check if this is a .chain name (has a name and it's not 'Legend')
   const isChainName = name && name !== 'Legend' && name !== address;
 
@@ -21,6 +27,7 @@ export default function Identicon({ address, size = 32, name }: { address: strin
             transition: 'transform .15s ease, box-shadow .15s ease',
           }}
           className="identicon-img"
+          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: svgString }}
         />
         <style>
@@ -45,6 +52,7 @@ export default function Identicon({ address, size = 32, name }: { address: strin
           transition: 'transform .15s ease, box-shadow .15s ease',
         }}
         className="identicon-img"
+        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: svgString }}
       />
       <style>
@@ -54,4 +62,6 @@ export default function Identicon({ address, size = 32, name }: { address: strin
       </style>
     </span>
   );
-}
+};
+
+export default Identicon;

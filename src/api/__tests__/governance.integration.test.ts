@@ -94,8 +94,7 @@ describe('GovernanceApi Integration Tests', () => {
       // First get a list of polls to find a valid poll ID
       const polls = await GovernanceApi.getPollOrdering(false);
 
-      let pollId: Encoded.ContractAddress;
-      pollId = polls.data[0]?.poll;
+      const pollId: Encoded.ContractAddress = polls.data[0]?.poll;
       if (!pollId) {
         // Skip test if no polls available
         return;
@@ -206,8 +205,7 @@ describe('GovernanceApi Integration Tests', () => {
       // First get a list of polls to find a valid poll ID
       const polls = await GovernanceApi.getPollOrdering(false);
 
-      let pollId: Encoded.ContractAddress;
-      pollId = polls.data[0]?.poll;
+      const pollId: Encoded.ContractAddress | undefined = polls.data[0]?.poll;
       if (!pollId) {
         // Skip test if no polls available
         return;
@@ -317,8 +315,7 @@ describe('GovernanceApi Integration Tests', () => {
     it('should fetch delegated power for a specific poll', async () => {
       const polls = await GovernanceApi.getPollOrdering(false);
 
-      let pollId: Encoded.ContractAddress;
-      pollId = polls.data[0]?.poll;
+      const pollId: Encoded.ContractAddress | undefined = polls.data[0]?.poll;
       if (!pollId) {
         // Skip test if no polls available
         return;
@@ -364,8 +361,7 @@ describe('GovernanceApi Integration Tests', () => {
       const topic = 'RevokeVote';
       const polls = await GovernanceApi.getPollOrdering(false);
 
-      let pollId: Encoded.ContractAddress;
-      pollId = polls.data[0]?.poll;
+      const pollId: Encoded.ContractAddress | undefined = polls.data[0]?.poll;
       if (!pollId) {
         // Skip test if no polls available
         return;

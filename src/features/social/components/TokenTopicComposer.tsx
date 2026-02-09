@@ -4,9 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import { SuperheroApi } from '../../../api/backend';
 import PostForm from './PostForm';
 
-export default function TokenTopicComposer({
+const TokenTopicComposer = ({
   tokenName, isReply = false, postId, onSuccess,
-}: { tokenName: string; isReply?: boolean; postId?: string; onSuccess?: () => void; }) {
+}: { tokenName: string; isReply?: boolean; postId?: string; onSuccess?: () => void; }) => {
   const { t } = useTranslation('forms');
   const canonical = useMemo(() => `#${String(tokenName || '').toLowerCase()}`, [tokenName]);
   const uppercaseTag = useMemo(() => `#${String(tokenName || '').toUpperCase()}`, [tokenName]);
@@ -31,4 +31,6 @@ export default function TokenTopicComposer({
       className="mt-2"
     />
   );
-}
+};
+
+export default TokenTopicComposer;

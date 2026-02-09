@@ -82,7 +82,7 @@ export function ensureString(value: unknown): asserts value is string {
 export function formatVolume(volume: string | number): string {
   if (!volume) return '0';
   const num = typeof volume === 'string' ? parseFloat(volume) : volume;
-  if (!isFinite(num)) return '0';
+  if (!Number.isFinite(num)) return '0';
   if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
   if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
   if (num >= 1e3) return `${(num / 1e3).toFixed(2)}K`;

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 import { Input } from './ui/input';
 
-export default function SearchInput() {
+const SearchInput = () => {
   const navigate = useNavigate();
   const { search } = useLocation();
   const params = new URLSearchParams(search);
@@ -29,4 +28,6 @@ export default function SearchInput() {
       />
     </form>
   );
-}
+};
+
+export default SearchInput;

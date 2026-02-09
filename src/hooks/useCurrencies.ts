@@ -43,7 +43,8 @@ export function useCurrencies() {
   );
 
   const loadCurrencyRates = useCallback(async () => {
-    // Rates are normally handled by AePricePollingProvider, but keep this as an imperative fallback.
+    // Rates are normally handled by AePricePollingProvider,
+    // but keep this as an imperative fallback.
     try {
       const raw = await SuperheroApi.getCurrencyRates();
       if (!raw || typeof raw !== 'object' || Object.keys(raw).length === 0) {
@@ -91,7 +92,8 @@ export function useCurrencies() {
    * @param value - AE amount as Decimal
    * @returns Converted fiat amount as Decimal
    */
-  const getFiat = useCallback((value: Decimal): Decimal => value?.mul(currentCurrencyRate), [currentCurrencyRate]);
+  const getFiat = useCallback((value: Decimal): Decimal => value
+    ?.mul(currentCurrencyRate), [currentCurrencyRate]);
 
   /**
    * Gets formatted fiat value from PriceDto for current active currency
@@ -126,7 +128,9 @@ export function useCurrencies() {
    * @param value - AE amount as Decimal
    * @returns Formatted currency string
    */
-  const getFormattedFiat = useCallback((value: Decimal): string => formatCurrency(getFiat(value)), [formatCurrency, getFiat]);
+  const getFormattedFiat = useCallback((value: Decimal): string => formatCurrency(
+    getFiat(value),
+  ), [formatCurrency, getFiat]);
 
   /**
    * Like getFormattedFiat but rounds small fractions to avoid displaying tiny amounts

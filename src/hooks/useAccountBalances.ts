@@ -10,7 +10,7 @@ import { Decimal } from '../libs/decimal';
 import { DEX_ADDRESSES, getTokenBalance } from '../libs/dex';
 
 export const useAccountBalances = (selectedAccount: string) => {
-  const { sdk, activeAccount } = useAeSdk();
+  const { sdk } = useAeSdk();
   const [chainNames] = useAtom(chainNamesAtom);
   const [_balance, setBalance] = useAtom(balanceAtom);
   const [_aex9Balances, setAex9Balances] = useAtom(aex9BalancesAtom);
@@ -18,7 +18,10 @@ export const useAccountBalances = (selectedAccount: string) => {
   const balance = useMemo(() => _balance[selectedAccount] || 0, [_balance, selectedAccount]);
   const decimalBalance = useMemo(() => Decimal.from((toAe(balance ?? 0))), [balance]);
 
-  const aex9Balances = useMemo(() => _aex9Balances[selectedAccount] || [], [_aex9Balances, selectedAccount]);
+  const aex9Balances = useMemo(
+    () => _aex9Balances[selectedAccount] || [],
+    [_aex9Balances, selectedAccount],
+  );
 
   // Use refs to store stable references and avoid recreating callbacks
   const sdkRef = useRef(sdk);
@@ -33,13 +36,13 @@ export const useAccountBalances = (selectedAccount: string) => {
   const getAccountBalance = useCallback(async () => {
     const account = selectedAccountRef.current;
     if (!account || !sdkRef.current) return;
-    const balance = await sdkRef.current.getBalance(account as any);
+    const accountBalance = await sdkRef.current.getBalance(account as any);
     // Convert balance to number if it's a string
-    const balanceNum = typeof balance === 'string' ? Number(balance) : balance;
+    const balanceNum = typeof accountBalance === 'string' ? Number(accountBalance) : accountBalance;
     setBalance((prev) => ({ ...prev, [account]: balanceNum }));
   }, [setBalance]);
 
-  const _loadAex9DataFromMdw = useCallback(async (url: string, items: any[] = []): Promise<any[]> => {
+  const loadAex9DataFromMdw = useCallback(async (url: string, items: any[] = []): Promise<any[]> => {
     try {
       // Check if url is already a full URL (absolute) or a relative path
       const fetchUrl = url.startsWith('http://') || url.startsWith('https://')
@@ -55,7 +58,7 @@ export const useAccountBalances = (selectedAccount: string) => {
       const data = await response.json();
 
       if (data.next) {
-        return _loadAex9DataFromMdw(data.next, items.concat(data.data || []));
+        return loadAex9DataFromMdw(data.next, items.concat(data.data || []));
       }
       return items.concat(data.data || []);
     } catch (error) {
@@ -66,10 +69,10 @@ export const useAccountBalances = (selectedAccount: string) => {
 
   const loadAccountAex9Balances = useCallback(async () => {
     const account = selectedAccountRef.current;
-    if (!account) return;
+    if (!account) return [];
     const url = `/v2/aex9/account-balances/${account}?limit=100`;
 
-    const balances = await _loadAex9DataFromMdw(url, []);
+    const balances = await loadAex9DataFromMdw(url, []);
 
     // Check if WAE is already in the middleware response
     const hasWae = balances.some((b) => b.contract_id === DEX_ADDRESSES.wae);
@@ -91,7 +94,7 @@ export const useAccountBalances = (selectedAccount: string) => {
       ...prev, [account]: balances,
     }));
     return balances;
-  }, [_loadAex9DataFromMdw, setAex9Balances]);
+  }, [loadAex9DataFromMdw, setAex9Balances]);
 
   const loadAccountData = useCallback(async () => {
     const account = selectedAccountRef.current;

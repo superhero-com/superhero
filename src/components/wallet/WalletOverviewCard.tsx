@@ -2,9 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { Separator } from '@/components/ui/separator';
-import CopyText from '@/components/ui/CopyText';
 
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useAccountBalances } from '@/hooks/useAccountBalances';
@@ -19,14 +18,58 @@ type WalletOverviewCardProps = {
   className?: string;
 };
 
-export default function WalletOverviewCard({
+const formatPrice = (value: number, currency: string): string => {
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6,
+  });
+  try {
+    return formatter.format(value);
+  } catch {
+    return value.toFixed(2);
+  }
+};
+
+const getTokenLabelSafe = (item: any): string => {
+  try {
+    const token = item?.token || {};
+    const label = item?.token_symbol
+      || item?.symbol
+      || token?.symbol
+      || item?.token_name
+      || item?.name
+      || token?.name
+      || item?.address
+      || token?.address;
+    if (typeof label === 'string') return label;
+    return 'Token';
+  } catch {
+    return 'Token';
+  }
+};
+
+const getBalanceLabelSafe = (item: any): string => {
+  try {
+    const token = item?.token || item || {};
+    const decimals = Number(token?.decimals ?? 18);
+    const raw = item?.balance ?? item?.holder_balance ?? item?.amount ?? item?.token_balance;
+    if (raw == null) return '-';
+    return Decimal.from(raw).div(10 ** decimals).prettify();
+  } catch {
+    return '-';
+  }
+};
+
+const WalletOverviewCard = ({
   selectedCurrency = 'usd',
   prices = null,
   className,
-}: WalletOverviewCardProps) {
+}: WalletOverviewCardProps) => {
   const navigate = useNavigate();
   const { activeAccount, currentBlockHeight } = useAeSdk();
-  const { decimalBalance, loadAccountData } = useAccountBalances(activeAccount);
+  const { decimalBalance } = useAccountBalances(activeAccount);
 
   // Immediately reload balance when account changes
   // Note: loadAccountData is already called by useAccountBalances when selectedAccount changes
@@ -39,7 +82,9 @@ export default function WalletOverviewCard({
   useEffect(() => {
     try {
       localStorage.setItem('walletCard.open', open ? '1' : '0');
-    } catch {}
+    } catch {
+      // Ignore persistence errors (e.g. private mode)
+    }
   }, [open]);
 
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
@@ -142,7 +187,10 @@ export default function WalletOverviewCard({
               aria-label={open ? 'Collapse wallet' : 'Expand wallet'}
               aria-expanded={open}
               className="bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[10px] cursor-pointer transition-all duration-200 hover:bg-white/10 text-[var(--light-font-color)]"
-              onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpen((v) => !v);
+              }}
             >
               {open ? '▲' : '▼'}
             </button>
@@ -154,7 +202,6 @@ export default function WalletOverviewCard({
             isHoverEnabled={false}
             address={activeAccount}
             size={36}
-            overlaySize={18}
             showBalance={false}
             showAddressAndChainName={false}
             showPrimaryOnly
@@ -212,7 +259,11 @@ export default function WalletOverviewCard({
               type="button"
               className="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 bg-white/10 text-white hover:bg-white/20 border border-white/20"
               onClick={async () => {
-                try { await navigator.clipboard.writeText(activeAccount); } catch {}
+                try {
+                  await navigator.clipboard.writeText(activeAccount);
+                } catch {
+                  // Ignore clipboard errors
+                }
               }}
             >
               📋 Copy address
@@ -236,12 +287,15 @@ export default function WalletOverviewCard({
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                {topHoldings.map((it: any, idx: number) => {
+                {topHoldings.map((it: any) => {
                   const label = getTokenLabelSafe(it);
                   const balanceLabel = getBalanceLabelSafe(it);
                   return (
-                    <div key={idx} className="flex items-center justify-between text-sm">
-                      <div className="truncate font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent" title={label}>
+                    <div key={`${label}-${balanceLabel}`} className="flex items-center justify-between text-sm">
+                      <div
+                        className="truncate font-bold bg-gradient-to-r from-orange-400 to-yellow-500 bg-clip-text text-transparent"
+                        title={label}
+                      >
                         <span className="text-white/60 text-[.85em] mr-0.5 align-baseline">#</span>
                         <span className="font-bold">{(label || '').toString()}</span>
                       </div>
@@ -267,60 +321,6 @@ export default function WalletOverviewCard({
       )}
     </div>
   );
-}
+};
 
-function formatPrice(value: number, currency: string): string {
-  const formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency.toUpperCase(),
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 6,
-  });
-  try {
-    return formatter.format(value);
-  } catch {
-    return value.toFixed(2);
-  }
-}
-
-function formatCompact(value: number): string {
-  try {
-    // Use Intl compact notation when available
-    return new Intl.NumberFormat(undefined, {
-      notation: 'compact',
-      maximumFractionDigits: 2,
-    }).format(Number(value));
-  } catch {
-    return String(value);
-  }
-}
-
-function getTokenLabelSafe(item: any): string {
-  try {
-    const token = item?.token || {};
-    const label = item?.token_symbol
-      || item?.symbol
-      || token?.symbol
-      || item?.token_name
-      || item?.name
-      || token?.name
-      || item?.address
-      || token?.address;
-    if (typeof label === 'string') return label;
-    return 'Token';
-  } catch {
-    return 'Token';
-  }
-}
-
-function getBalanceLabelSafe(item: any): string {
-  try {
-    const token = item?.token || item || {};
-    const decimals = Number(token?.decimals ?? 18);
-    const raw = item?.balance ?? item?.holder_balance ?? item?.amount ?? item?.token_balance;
-    if (raw == null) return '-';
-    return Decimal.from(raw).div(10 ** decimals).prettify();
-  } catch {
-    return '-';
-  }
-}
+export default WalletOverviewCard;

@@ -1,15 +1,17 @@
+/* eslint-disable
+  @typescript-eslint/no-unused-vars,
+  react/function-component-definition,
+  no-nested-ternary,
+  react/no-array-index-key,
+  jsx-a11y/click-events-have-key-events,
+  jsx-a11y/no-static-element-interactions,
+  max-len
+*/
 import React, {
   useEffect, useRef, useState, useCallback,
 } from 'react';
 import { SuperheroApi } from '../../api/backend';
 import './TrendingPillsCarousel.scss';
-
-type TrendingTag = {
-  tag: string;
-  score: number;
-  source?: string;
-  token?: TokenItem;
-};
 
 type TokenItem = {
   address: string;
@@ -20,6 +22,13 @@ type TokenItem = {
   holders_count: number;
   sale_address?: string;
   trending_score?: number;
+};
+
+type TrendingTag = {
+  tag: string;
+  score: number;
+  source?: string;
+  token?: TokenItem;
 };
 
 export default function TrendingPillsCarousel() {

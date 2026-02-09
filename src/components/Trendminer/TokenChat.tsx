@@ -1,4 +1,4 @@
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import {
   useCallback, useEffect, useRef, useState,
 } from 'react';
@@ -28,7 +28,7 @@ const MessageSkeleton = () => (
 );
 
 // Individual message component
-const MessageItem = ({ message, index }: { message: QualiMessage; index: number }) => {
+const MessageItem = ({ message }: { message: QualiMessage }) => {
   const formatTimestamp = (ts?: number) => {
     if (!ts) return '';
     try {
@@ -38,14 +38,15 @@ const MessageItem = ({ message, index }: { message: QualiMessage; index: number 
     }
   };
 
-  function parseAddress(address: string) {
-    if (address.startsWith('@')) {
-      address = address.slice(1);
+  function parseAddress(rawAddress: string) {
+    let parsedAddress = rawAddress;
+    if (parsedAddress.startsWith('@')) {
+      parsedAddress = parsedAddress.slice(1);
     }
-    if (address.includes(':')) {
-      address = address.split(':')[0];
+    if (parsedAddress.includes(':')) {
+      [parsedAddress] = parsedAddress.split(':');
     }
-    return address;
+    return parsedAddress;
   }
 
   return (
@@ -89,6 +90,8 @@ const EmptyState = () => (
   </div>
 );
 
+const loadingSkeletonKeys = ['skeleton-1', 'skeleton-2', 'skeleton-3'];
+
 // Add chat CTAs component (reimagined layout)
 const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) => {
   const roomName = (token.name || '').replace(/-/g, '');
@@ -115,7 +118,9 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
             holders
           </h4>
           <p className="text-white/70 text-xs leading-relaxed">
-            Buy this token to join the exclusive chat rooms. Your wallet proves ownership; access is token‑gated.
+            Buy this token to join the exclusive chat rooms.
+            {' '}
+            Your wallet proves ownership; access is token‑gated.
           </p>
         </div>
       </div>
@@ -180,7 +185,7 @@ const AddCommentCTA = ({ token }: { token: { name: string; address: string } }) 
   );
 };
 
-export default function TokenChat({ token, mode = 'full' }: Props) {
+const TokenChat = ({ token, mode = 'full' }: Props) => {
   const [state, setState] = useState<ChatState>({
     messages: [],
     from: undefined,
@@ -354,18 +359,17 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
 
       {showMessages && !state.error && (
         <div className="grid gap-2">
-          {state.messages.map((message, index) => (
+          {state.messages.map((message) => (
             <MessageItem
-              key={`${message.sender}-${message.timestamp}-${index}`}
+              key={`${message.sender}-${message.timestamp}-${message.content?.body || ''}`}
               message={message}
-              index={index}
             />
           ))}
 
           {state.loading && (
             <>
-              {Array.from({ length: 3 }, (_, i) => (
-                <MessageSkeleton key={`skeleton-${i}`} />
+              {loadingSkeletonKeys.map((key) => (
+                <MessageSkeleton key={key} />
               ))}
             </>
           )}
@@ -392,4 +396,6 @@ export default function TokenChat({ token, mode = 'full' }: Props) {
       )}
     </div>
   );
-}
+};
+
+export default TokenChat;

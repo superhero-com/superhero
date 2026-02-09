@@ -72,6 +72,12 @@ const MobileInput = forwardRef<HTMLInputElement | HTMLSelectElement, MobileInput
     const iconClasses = cn(
       'absolute flex items-center justify-center text-white/60 pointer-events-none z-10 min-w-6 text-center',
     );
+    const selectValue = (
+      props as React.SelectHTMLAttributes<HTMLSelectElement>
+    ).value as string | undefined;
+    const handleSelectChange = (value: string) => {
+      (props as any).onChange?.({ target: { value } } as any);
+    };
 
     return (
       <div className={cn('flex flex-col gap-2 w-full', className)}>
@@ -99,8 +105,8 @@ const MobileInput = forwardRef<HTMLInputElement | HTMLSelectElement, MobileInput
 
           {as === 'select' ? (
             <AppSelect
-              value={(props as React.SelectHTMLAttributes<HTMLSelectElement>).value as string | undefined}
-              onValueChange={(v) => (props as any).onChange?.({ target: { value: v } } as any)}
+              value={selectValue}
+              onValueChange={handleSelectChange}
               triggerClassName={baseInputClasses}
             >
               {React.Children.map(children, (child) => {

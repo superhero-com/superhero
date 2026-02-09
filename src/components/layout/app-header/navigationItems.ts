@@ -1,5 +1,4 @@
-import configs from '@/configs';
-import { TFunction } from 'i18next';
+import { configs } from '@/configs';
 
 export interface NavigationItem {
   id: string;
@@ -9,7 +8,7 @@ export interface NavigationItem {
   isExternal?: boolean;
 }
 
-export const getNavigationItems = (t: TFunction): NavigationItem[] => [
+export const getNavigationItems = (): NavigationItem[] => [
   {
     id: 'home',
     label: 'Home',

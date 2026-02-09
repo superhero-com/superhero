@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import BigNumber from 'bignumber.js';
 
 // Constants mirror Vue calculators

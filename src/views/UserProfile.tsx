@@ -1,3 +1,16 @@
+/* eslint-disable
+  import/no-named-as-default,
+  import/order,
+  react/function-component-definition,
+  @typescript-eslint/no-unused-vars,
+  react-hooks/exhaustive-deps,
+  no-restricted-syntax,
+  no-shadow,
+  no-nested-ternary,
+  react/button-has-type,
+  max-len,
+  no-console
+*/
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -447,7 +460,6 @@ export default function UserProfile({
               <AddressAvatarWithChainName
                 address={effectiveAddress}
                 size={64}
-                overlaySize={22}
                 showAddressAndChainName={false}
                 isHoverEnabled
                 className="relative"

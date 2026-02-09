@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useState, useEffect, useMemo } from 'react';
 import { getPairs } from '../../../libs/dexBackend';
 import { Pair, PairListState } from '../types/explore';

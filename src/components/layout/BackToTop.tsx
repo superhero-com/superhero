@@ -5,7 +5,7 @@ type BackToTopProps = {
   bottomOffset?: number; // px from viewport bottom when fixed
 };
 
-export default function BackToTop({ threshold, bottomOffset = 32 }: BackToTopProps) {
+const BackToTop = ({ threshold, bottomOffset = 32 }: BackToTopProps) => {
   const [visible, setVisible] = useState(false);
   const [leftOffset, setLeftOffset] = useState<number>(16);
   const [computedThreshold, setComputedThreshold] = useState<number>(threshold ?? 400);
@@ -15,7 +15,7 @@ export default function BackToTop({ threshold, bottomOffset = 32 }: BackToTopPro
   useEffect(() => {
     if (threshold != null) {
       setComputedThreshold(threshold);
-      return;
+      return () => {};
     }
     const compute = () => {
       const el = document.querySelector('.right-rail-bleed') as HTMLElement | null;
@@ -95,4 +95,6 @@ export default function BackToTop({ threshold, bottomOffset = 32 }: BackToTopPro
       </button>
     </div>
   );
-}
+};
+
+export default BackToTop;

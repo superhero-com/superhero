@@ -55,7 +55,7 @@ export const TokenChip = ({
         setTimeout(() => setTextCopied(false), 1000);
       }
     }
-  }, [tokenData?.address, copyable, onClick]);
+  }, [tokenData, copyable, onClick]);
 
   const formatAddress = (addr: string, length: number = 6) => {
     if (!addr) return '';
@@ -64,6 +64,16 @@ export const TokenChip = ({
   };
 
   if (!tokenData) return null;
+
+  const isAeToken = tokenData?.address === DEX_ADDRESSES.wae
+    || tokenData?.is_ae
+    || address === DEX_ADDRESSES.wae;
+  let tokenSymbol = tokenData?.symbol || address || 'TOKEN';
+  if (isLoading) {
+    tokenSymbol = '...';
+  } else if (isAeToken) {
+    tokenSymbol = 'AE';
+  }
 
   return (
     <Badge
@@ -84,13 +94,7 @@ export const TokenChip = ({
         large ? 'text-sm' : 'text-xs',
       )}
       >
-        {isLoading
-          ? '...'
-          : (
-            (tokenData?.address == DEX_ADDRESSES.wae || tokenData?.is_ae || address == DEX_ADDRESSES.wae)
-              ? 'AE'
-              : tokenData?.symbol
-                            || address || 'TOKEN')}
+        {tokenSymbol}
       </span>
 
       {/* Token Name (if different from symbol) */}

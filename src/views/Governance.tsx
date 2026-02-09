@@ -10,7 +10,7 @@ import AeButton from '../components/AeButton';
 
 type TabType = 'polls' | 'vote' | 'account' | 'create';
 
-export default function Governance() {
+const Governance = () => {
   const { id: pollId } = useParams();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>('polls');
@@ -83,4 +83,6 @@ export default function Governance() {
       {activeTab === 'create' && <GovernanceCreate />}
     </Shell>
   );
-}
+};
+
+export default Governance;

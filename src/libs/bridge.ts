@@ -30,12 +30,18 @@ export async function ensureEthProvider() {
   const anyWindow = window as any;
   if (!anyWindow.ethereum) throw new Error('No Ethereum provider found');
   const provider = new BrowserProvider(anyWindow.ethereum);
-  const network = await provider.getNetwork();
+  await provider.getNetwork();
   // Optional: prompt to switch to Ethereum mainnet if different
   return provider;
 }
 
-export async function bridgeEthToAe({ amountEth, aeAccount }: { amountEth: string; aeAccount: string }) {
+export async function bridgeEthToAe({
+  amountEth,
+  aeAccount,
+}: {
+  amountEth: string;
+  aeAccount: string;
+}) {
   const provider = await ensureEthProvider();
   const signer = await provider.getSigner();
   const bridge = new Contract(BRIDGE_CONSTANTS.ethBridgeAddress, BRIDGE_ABI as any, signer);

@@ -1,1 +1,1 @@
-export { default } from './ImpactBadge';
+export { default as ImpactBadge } from './ImpactBadge';

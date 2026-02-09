@@ -27,7 +27,9 @@ export const AspectMedia = ({
 
   useEffect(() => {
     const el = mediaRef.current as any;
-    if (!el) return;
+    if (!el) {
+      return () => {};
+    }
 
     const onLoad = () => {
       const w = isVideo ? el.videoWidth : el.naturalWidth;
@@ -50,6 +52,7 @@ export const AspectMedia = ({
   return (
     <div className={`inline-block max-w-full rounded-xl overflow-hidden ${className}`} style={ratioStyle}>
       {isVideo ? (
+        // eslint-disable-next-line jsx-a11y/media-has-caption
         <video
           ref={mediaRef as any}
           src={src}

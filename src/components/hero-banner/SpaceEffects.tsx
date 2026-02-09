@@ -4,36 +4,6 @@ interface SpaceEffectsProps {
   supernovaColor: string;
 }
 
-export default function SpaceEffects({ supernovaColor }: SpaceEffectsProps) {
-  return (
-    <div className="banner-space">
-      <div className="banner-aurora" />
-      <div
-        className="banner-supernova"
-        style={{
-          background: `radial-gradient(circle at 50% 50%, rgba(255,255,255,.95) 0 6%, ${supernovaColor} 20%, rgba(255,255,255,.0) 70%)`,
-        }}
-      />
-      <div
-        className="banner-supernova banner-supernova--2"
-        style={{
-          background: `radial-gradient(circle at 50% 50%, rgba(255,255,255,.95) 0 6%, ${supernovaColor} 20%, rgba(255,255,255,.0) 70%)`,
-        }}
-      />
-      <div className="banner-comet" />
-      <div className="banner-planet">
-        <div className="banner-ring" />
-        <span className="banner-token" />
-        <span className="banner-token t2" />
-        <span className="banner-token t3" />
-      </div>
-      <div className="banner-grid" />
-      <StarsFar />
-      <StarsNear />
-    </div>
-  );
-}
-
 // Far stars layer
 const StarsFar = () => (
   <svg
@@ -139,3 +109,33 @@ const StarsNear = () => (
     </g>
   </svg>
 );
+
+const SpaceEffects = ({ supernovaColor }: SpaceEffectsProps) => (
+  <div className="banner-space">
+    <div className="banner-aurora" />
+    <div
+      className="banner-supernova"
+      style={{
+        background: `radial-gradient(circle at 50% 50%, rgba(255,255,255,.95) 0 6%, ${supernovaColor} 20%, rgba(255,255,255,.0) 70%)`,
+      }}
+    />
+    <div
+      className="banner-supernova banner-supernova--2"
+      style={{
+        background: `radial-gradient(circle at 50% 50%, rgba(255,255,255,.95) 0 6%, ${supernovaColor} 20%, rgba(255,255,255,.0) 70%)`,
+      }}
+    />
+    <div className="banner-comet" />
+    <div className="banner-planet">
+      <div className="banner-ring" />
+      <span className="banner-token" />
+      <span className="banner-token t2" />
+      <span className="banner-token t3" />
+    </div>
+    <div className="banner-grid" />
+    <StarsFar />
+    <StarsNear />
+  </div>
+);
+
+export default SpaceEffects;

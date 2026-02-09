@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { formatAddress, validateHash } from '../utils/address';
 import { cn } from '../lib/utils';
-import Truncate from './Truncate';
+import { Truncate } from './Truncate';
 
 interface AddressFormattedProps {
   address: string;
@@ -24,11 +24,16 @@ export const AddressFormatted = ({
 }: AddressFormattedProps) => {
   const maxLength = 3;
 
-  const prepareChunk = (chunk: string): string => (chunk.length === maxLength ? chunk : `${chunk}${' '.repeat(maxLength - chunk.length)}`);
+  const prepareChunk = (chunk: string): string => (
+    chunk.length === maxLength ? chunk : `${chunk}${' '.repeat(maxLength - chunk.length)}`
+  );
 
   const isAddress = useMemo(() => validateHash(address).valid, [address]);
 
-  const addressChunks = useMemo(() => address?.match(/.{1,3}/g)?.map(prepareChunk) || [], [address]);
+  const addressChunks = useMemo(
+    () => address?.match(/.{1,3}/g)?.map(prepareChunk) || [],
+    [address],
+  );
 
   const cssVariables = useMemo(() => ({
     '--column-width': `${100 / columnCount}%`,
@@ -69,9 +74,9 @@ export const AddressFormatted = ({
         )}
         style={cssVariables}
       >
-        {addressChunks.map((chunk, index) => (
+        {addressChunks.map((chunk) => (
           <span
-            key={index}
+            key={`${address}-${chunk}`}
             className={cn(
               'flex-none whitespace-nowrap text-left',
               alignRight && 'text-right whitespace-pre-wrap',

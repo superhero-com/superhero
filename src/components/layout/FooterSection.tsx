@@ -4,7 +4,7 @@ import { MessageSquare } from 'lucide-react';
 import { useAtomValue } from 'jotai';
 import { currencyRatesAtom, currencyRatesLastErrorAtAtom, currencyRatesUpdatedAtAtom } from '@/atoms/currencyAtoms';
 
-export default function FooterSection({ compact = false }: { compact?: boolean }) {
+const FooterSection = ({ compact = false }: { compact?: boolean }) => {
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [apiStatus, setApiStatus] = useState<{
     backend: 'online' | 'offline' | 'checking';
@@ -56,12 +56,26 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
     setApiStatus((prev) => ({ ...prev, backend: derivedBackendStatus }));
   }, [derivedBackendStatus]);
 
-  const statusEmoji = (s: 'online' | 'offline' | 'checking') => (s === 'online' ? '🟢' : s === 'offline' ? '🔴' : '🟡');
-  const statusColor = (s: 'online' | 'offline' | 'checking') => (s === 'online'
-    ? 'var(--neon-green)'
-    : s === 'offline'
-      ? 'var(--neon-pink)'
-      : 'var(--neon-yellow)');
+  const statusEmoji = (s: 'online' | 'offline' | 'checking') => {
+    switch (s) {
+      case 'online':
+        return '🟢';
+      case 'offline':
+        return '🔴';
+      default:
+        return '🟡';
+    }
+  };
+  const statusColor = (s: 'online' | 'offline' | 'checking') => {
+    switch (s) {
+      case 'online':
+        return 'var(--neon-green)';
+      case 'offline':
+        return 'var(--neon-pink)';
+      default:
+        return 'var(--neon-yellow)';
+    }
+  };
 
   return (
     <footer className={`${compact ? 'border-t mt-3 py-3' : 'border-t mt-6 py-4 md:py-5 md:mt-8'}`} style={{ borderTopColor: 'var(--search-nav-border-color)' }}>
@@ -154,4 +168,6 @@ export default function FooterSection({ compact = false }: { compact?: boolean }
       {/* No BackToTop in footer; it is rendered inside the right rail only */}
     </footer>
   );
-}
+};
+
+export default FooterSection;

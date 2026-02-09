@@ -1,5 +1,5 @@
 import React, {
-  useEffect, useRef, useState, useCallback,
+  useEffect, useMemo, useRef, useState, useCallback,
 } from 'react';
 import {
   useLatestTransactions,
@@ -9,13 +9,18 @@ import { Decimal } from '@/libs/decimal';
 import AddressAvatar from '../AddressAvatar';
 import './LatestTransactionsCarousel.scss';
 
-export default function LatestTransactionsCarousel() {
+const LatestTransactionsCarousel = () => {
   const { latestTransactions } = useLatestTransactions();
-  const [itemsToShow, setItemsToShow] = useState(4); // Number of items visible at once for loading state
+  // Number of items visible at once for loading state
+  const [itemsToShow, setItemsToShow] = useState(4);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
+  const skeletonKeys = useMemo(
+    () => Array.from({ length: itemsToShow }, () => crypto.randomUUID()),
+    [itemsToShow],
+  );
 
   // Responsive breakpoints for loading state and screen width tracking
   const updateResponsiveValues = useCallback(() => {
@@ -93,8 +98,8 @@ export default function LatestTransactionsCarousel() {
       <div className="latest-transactions-carousel">
         <div className="transactions-carousel-container">
           <div className="transactions-loading">
-            {[...Array(itemsToShow)].map((_, i) => (
-              <div key={i} className="transaction-skeleton">
+            {skeletonKeys.map((key) => (
+              <div key={key} className="transaction-skeleton">
                 <div className="skeleton-content">
                   {/* Address Avatar & Address - First Row */}
                   <div className="skeleton-address-row">
@@ -227,7 +232,7 @@ export default function LatestTransactionsCarousel() {
     };
   }
 
-  const renderItem = (item: any, index: number) => {
+  const renderItem = (item: any) => {
     const type = normalizeType(item);
     const tokenName = item.token?.name
       || item.token_name
@@ -240,9 +245,13 @@ export default function LatestTransactionsCarousel() {
       || item.address;
     const volume = item.volume || item.amount?.ae || '0';
 
+    const itemKey = item.tx_hash
+      || item.id
+      || `${saleAddress || 'item'}-${item.address || 'addr'}-${item.created_at || ''}`;
+
     return (
       <div
-        key={`${saleAddress || 'item'}-${index}`}
+        key={itemKey}
         className="transaction-card"
         style={{
           background: type.cardBg,
@@ -254,6 +263,13 @@ export default function LatestTransactionsCarousel() {
             )}`;
           }
         }}
+        onKeyDown={(event) => {
+          if ((event.key === 'Enter' || event.key === ' ') && saleAddress) {
+            window.location.href = `/trends/tokens/${encodeURIComponent(tokenName)}`;
+          }
+        }}
+        role="button"
+        tabIndex={0}
       >
         <div className="transaction-card-content">
           {/* Address Avatar & Address - First Row */}
@@ -315,4 +331,6 @@ export default function LatestTransactionsCarousel() {
       </div>
     </div>
   );
-}
+};
+
+export default LatestTransactionsCarousel;

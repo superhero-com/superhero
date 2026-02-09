@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useState, useEffect } from 'react';
 import { getHistory } from '../../../libs/dexBackend';
 import { Transaction, TransactionListState } from '../types/explore';

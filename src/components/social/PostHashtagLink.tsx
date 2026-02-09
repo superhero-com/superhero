@@ -47,9 +47,12 @@ async function fetchTokenForTag(tag: string): Promise<TokenLike | null> {
   return match || items[0] || null;
 }
 
-export default function PostHashtagLink({
-  tag, label, trendMentions, variant = 'pill',
-}: PostHashtagLinkProps) {
+const PostHashtagLink = ({
+  tag,
+  label,
+  trendMentions,
+  variant = 'pill',
+}: PostHashtagLinkProps) => {
   const normalized = normalizeTag(tag);
   const target = `/trends/tokens/${encodeURIComponent(normalized.toUpperCase())}?showTrade=0`;
 
@@ -119,4 +122,6 @@ export default function PostHashtagLink({
       )}
     </Link>
   );
-}
+};
+
+export default PostHashtagLink;

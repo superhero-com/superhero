@@ -13,7 +13,14 @@ export async function waitForAeEthDeposit(
   pollIntervalMs: number = 6000,
 ): Promise<boolean> {
   const startTime = Date.now();
-  while (Date.now() - startTime < timeoutMs) {
+  const delay = (ms: number) => new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
+  const poll = async (): Promise<boolean> => {
+    if (Date.now() - startTime >= timeoutMs) {
+      return false;
+    }
     try {
       const currentBalance = await getTokenBalance(sdk, DEX_ADDRESSES.aeeth, aeAccount);
 
@@ -24,15 +31,16 @@ export async function waitForAeEthDeposit(
       if (actualIncrease >= (expectedIncrease - tolerance)) {
         return true;
       }
-    } catch (error) {
+    } catch {
       // Continue polling despite errors
     }
 
     // Wait before next poll
-    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
-  }
+    await delay(pollIntervalMs);
+    return poll();
+  };
 
-  return false;
+  return poll();
 }
 
 /**
@@ -43,7 +51,7 @@ export async function getAeEthBalance(sdk: AeSdk, aeAccount: string): Promise<bi
     throw new Error('æternity SDK not available');
   }
 
-  return await getTokenBalance(sdk, DEX_ADDRESSES.aeeth, aeAccount);
+  return getTokenBalance(sdk, DEX_ADDRESSES.aeeth, aeAccount);
 }
 
 /**
@@ -57,7 +65,7 @@ export async function hasMinimumAeEthBalance(
   try {
     const balance = await getAeEthBalance(sdk, aeAccount);
     return balance >= minAmount;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { VoteState } from 'bctsl-sdk';
 import { Decimal } from '@/libs/decimal';
-import AddressChip from '@/components/AddressChip';
+import { AddressChip } from '@/components/AddressChip';
 
 interface VotersTableProps {
   voteState: VoteState;
@@ -14,18 +14,18 @@ interface VoterItem {
   choice: boolean;
 }
 
-export default function VotersTable({ voteState, token }: VotersTableProps) {
+const VotersTable = ({ voteState, token }: VotersTableProps) => {
   const items = useMemo((): VoterItem[] => {
     const voterItems: VoterItem[] = [];
 
     if (voteState?.vote_accounts) {
-      for (const [address, vote] of voteState.vote_accounts.entries()) {
+      voteState.vote_accounts.forEach((vote, address) => {
         voterItems.push({
           address,
           amount: vote[0],
           choice: vote[1],
         });
-      }
+      });
     }
 
     return voterItems;
@@ -51,8 +51,8 @@ export default function VotersTable({ voteState, token }: VotersTableProps) {
       {/* Mobile Card Layout */}
       <div className="block sm:hidden">
         <div className="divide-y divide-white/5">
-          {items.map((item, index) => (
-            <div key={index} className="p-3 hover:bg-white/5 transition-colors duration-200">
+          {items.map((item) => (
+            <div key={item.address} className="p-3 hover:bg-white/5 transition-colors duration-200">
               <div className="space-y-2">
                 {/* Voter Address */}
                 <div>
@@ -105,8 +105,8 @@ export default function VotersTable({ voteState, token }: VotersTableProps) {
             </tr>
           </thead>
           <tbody>
-            {items.map((item, index) => (
-              <tr key={index} className="border-b border-white/5 hover:bg-white/5 transition-colors duration-200">
+            {items.map((item) => (
+              <tr key={item.address} className="border-b border-white/5 hover:bg-white/5 transition-colors duration-200">
                 <td className="p-3 lg:p-4">
                   <AddressChip address={item.address} linkToExplorer />
                 </td>
@@ -139,4 +139,6 @@ export default function VotersTable({ voteState, token }: VotersTableProps) {
       </div>
     </div>
   );
-}
+};
+
+export default VotersTable;

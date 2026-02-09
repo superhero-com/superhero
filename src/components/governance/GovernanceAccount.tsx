@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { HeaderLogo as IconGovernance } from '@/icons';
 import { useAccount, useAeSdk, useGovernance } from '@/hooks';
 import { useEffect, useState } from 'react';

@@ -88,7 +88,12 @@ const TX_TYPE_CONFIG = {
 } as const;
 
 /* --- Small reusable copy pill with feedback --- */
-const CopyPill: React.FC<{ text: string; icon?: React.ReactNode; label: string; className?: string }> = ({
+const CopyPill: React.FC<{
+  text: string;
+  icon?: React.ReactNode;
+  label: string;
+  className?: string;
+}> = ({
   text,
   icon,
   label,
@@ -104,7 +109,9 @@ const CopyPill: React.FC<{ text: string; icon?: React.ReactNode; label: string; 
           await navigator.clipboard.writeText(text);
           setCopied(true);
           setTimeout(() => setCopied(false), 1200);
-        } catch { }
+        } catch {
+          /* No-op */
+        }
       }}
       className={[
         'inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-mono',
@@ -184,14 +191,22 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
     [transaction.created_at],
   );
 
-  const formatTokenAmount = (amount: string, decimals: number) => {
-    const num = Decimal.from(amount);
-    // const divisor = Math.pow(10, decimals);
-    // const result = num.div(divisor);
-    return Decimal.from(amount).div(10 ** decimals).prettify();
-  };
+  const formatTokenAmount = (amount: string, decimals: number) => Decimal
+    .from(amount).div(10 ** decimals).prettify();
 
-  const dividerAccent = isLiquidityTransaction ? 'from-teal-500/20' : hasSwapInfo ? 'from-blue-500/20' : 'from-gray-500/20';
+  let dividerAccent = 'from-gray-500/20';
+  if (isLiquidityTransaction) {
+    dividerAccent = 'from-teal-500/20';
+  } else if (hasSwapInfo) {
+    dividerAccent = 'from-blue-500/20';
+  }
+
+  let ringColor = 'ring-foreground/10';
+  if (isLiquidityTransaction) {
+    ringColor = 'ring-teal-500/20';
+  } else if (hasSwapInfo) {
+    ringColor = 'ring-blue-500/20';
+  }
 
   return (
     <AeCard
@@ -201,11 +216,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({ transaction })
         'transition-all duration-300 hover:-translate-y-0.5',
         'border border-border/60 bg-gradient-to-br from-background/60 to-background/30',
         'backdrop-blur-xl',
-        isLiquidityTransaction
-          ? 'ring-1 ring-teal-500/20'
-          : hasSwapInfo
-            ? 'ring-1 ring-blue-500/20'
-            : 'ring-1 ring-foreground/10',
+        `ring-1 ${ringColor}`,
       ].join(' ')}
     >
       {/* top accent line */}

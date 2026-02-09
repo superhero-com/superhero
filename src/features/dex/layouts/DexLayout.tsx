@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './DexLayout.scss';
 
@@ -76,7 +76,7 @@ interface DexLayoutProps {
   children: React.ReactNode;
 }
 
-export default function DexLayout({ children }: DexLayoutProps) {
+const DexLayout = ({ children }: DexLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isExploreExpanded, setIsExploreExpanded] = useState(false);
@@ -116,6 +116,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
   const renderMobileNavigationButton = (item: NavigationItem) => (
     <button
       key={item.id}
+      type="button"
       onClick={() => handleNavigation(item.path)}
       className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-200 ${
         isActiveRoute(item.path)
@@ -133,61 +134,6 @@ export default function DexLayout({ children }: DexLayoutProps) {
     </button>
   );
 
-  const renderNavigationButton = (item: NavigationItem) => (
-    <button
-      key={item.id}
-      onClick={() => handleNavigation(item.path)}
-      className={`dex-nav-button ${isActiveRoute(item.path) ? 'active' : ''}`}
-      title={item.description}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        padding: '16px 20px',
-        borderRadius: 16,
-        border: isActiveRoute(item.path)
-          ? '2px solid var(--accent-color, #4caf50)'
-          : '1px solid var(--glass-border, rgba(255, 255, 255, 0.1))',
-        background: isActiveRoute(item.path)
-          ? 'var(--glass-bg, rgba(76, 175, 80, 0.1))'
-          : 'rgba(255, 255, 255, 0.02)',
-        backdropFilter: 'blur(10px)',
-        color: isActiveRoute(item.path)
-          ? 'var(--standard-font-color, #ffffff)'
-          : 'var(--light-font-color, #9aa)',
-        cursor: 'pointer',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        textAlign: 'left',
-        width: '100%',
-        position: 'relative',
-        overflow: 'hidden',
-        fontSize: '14px',
-        fontWeight: '500',
-        boxShadow: 'none',
-        transform: 'none',
-      }}
-    >
-      {/* Active indicator */}
-      {isActiveRoute(item.path) && (
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: 4,
-            background: 'var(--accent-color, #4caf50)',
-            borderRadius: '0 2px 2px 0',
-          }}
-        />
-      )}
-      <span className="dex-nav-icon" style={{ fontSize: '18px' }}>
-        {item.icon}
-      </span>
-      <span className="dex-nav-label">{item.label}</span>
-    </button>
-  );
-
   return (
     <>
       <div className="min-h-screen w-full max-w-[min(1400px,100%)] mx-auto flex flex-col pb-24 md:pb-0">
@@ -198,6 +144,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
               {navigationItems.map((item) => (
                 <button
                   key={item.id}
+                  type="button"
                   onClick={() => handleNavigation(item.path)}
                   aria-label={item.label}
                   title={item.description}
@@ -243,6 +190,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
                 {exploreItems.map((item) => (
                   <button
                     key={item.id}
+                    type="button"
                     onClick={() => handleNavigation(item.path)}
                     aria-label={item.label}
                     title={item.description}
@@ -300,6 +248,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
                 return (
                   <button
                     key={item.id}
+                    type="button"
                     onClick={handleExploreToggle}
                     className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-200 ${
                       isExploreActive()
@@ -325,6 +274,7 @@ export default function DexLayout({ children }: DexLayoutProps) {
             <>
               {exploreItems.map((item) => renderMobileNavigationButton(item))}
               <button
+                type="button"
                 onClick={handleCloseExplore}
                 className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all duration-200 text-destructive hover:bg-destructive/10"
                 title="Close explore menu"
@@ -342,4 +292,6 @@ export default function DexLayout({ children }: DexLayoutProps) {
       </div>
     </>
   );
-}
+};
+
+export default DexLayout;

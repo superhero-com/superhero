@@ -1,4 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback, useEffect, useRef, useState,
+} from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import moment from 'moment';
 import {
@@ -92,11 +94,12 @@ export const TokenLineChart = ({
   });
 
   useEffect(() => {
-    if (!allTime) return;
+    if (!allTime) return () => {};
     if (historyQuery.hasNextPage && !historyQuery.isFetching) {
       historyQuery.fetchNextPage();
     }
-  }, [allTime, historyQuery.hasNextPage, historyQuery.isFetching, historyQuery.fetchNextPage]);
+    return () => {};
+  }, [allTime, historyQuery]);
 
   const { chartContainer, chart } = useChart({
     height: chartHeight,
@@ -165,7 +168,7 @@ export const TokenLineChart = ({
 
   useEffect(() => {
     if (!showCrosshair || !chartReady || !chartApiRef.current || !areaSeries.current) {
-      return;
+      return () => {};
     }
 
     const chartInstance = chartApiRef.current;
@@ -200,11 +203,11 @@ export const TokenLineChart = ({
     return () => {
       chartInstance.unsubscribeCrosshairMove(handleMove);
     };
-  }, [showCrosshair, chartReady, saleAddress, chartTimeframe, allTime]);
+  }, [showCrosshair, chartReady, saleAddress, chartTimeframe, allTime, chartContainer]);
 
   useEffect(() => {
     if (!showCrosshair || !chartReady || !chartApiRef.current || !chartContainer.current) {
-      return;
+      return () => {};
     }
 
     const chartInstance = chartApiRef.current;
@@ -278,29 +281,9 @@ export const TokenLineChart = ({
       container.removeEventListener('touchend', handleTouchEnd);
       container.removeEventListener('touchcancel', handleTouchEnd);
     };
-  }, [showCrosshair, chartReady, allTime, allowParentClick]);
+  }, [showCrosshair, chartReady, allTime, allowParentClick, chartContainer]);
 
-  // Watch for data changes (preview)
-  useEffect(() => {
-    if (allTime || !data?.result?.length || !areaSeries.current) {
-      return;
-    }
-    // Clear existing data first
-    areaSeries.current.setData([]);
-    // Update with new data
-    updateSeriesData(data as ChartResponse);
-  }, [data, allTime]);
-
-  // Watch for all-time data changes
-  useEffect(() => {
-    if (!allTime || !areaSeries.current || !historyQuery.data?.pages?.length) {
-      return;
-    }
-    areaSeries.current.setData([]);
-    updateSeriesDataFromHistory(historyQuery.data.pages);
-  }, [allTime, historyQuery.data?.pages]);
-
-  function updateSeriesData(chartData: ChartResponse) {
+  const updateSeriesData = useCallback((chartData: ChartResponse) => {
     const formattedData = chartData.result
       .map((item) => ({
         time: moment(item.end_time).unix() as UTCTimestamp,
@@ -310,7 +293,8 @@ export const TokenLineChart = ({
 
     // if formattedData less than 10 generate more data with same value but with time - 1 hour
     if (formattedData.length < 10) {
-      for (let i = 0; i < 10 - formattedData.length; i++) {
+      const missingCount = 10 - formattedData.length;
+      for (let i = 0; i < missingCount; i += 1) {
         const lastItem = formattedData[0];
         formattedData.unshift({
           time: (lastItem.time - 3600) as UTCTimestamp,
@@ -324,9 +308,9 @@ export const TokenLineChart = ({
     }
     areaSeries.current?.setData(formattedData);
     chart?.timeScale().fitContent();
-  }
+  }, [chart]);
 
-  function updateSeriesDataFromHistory(pages: any[]) {
+  const updateSeriesDataFromHistory = useCallback((pages: any[]) => {
     const merged = pages.reduce((acc, page) => [...acc, ...page], [] as any[]);
     if (!merged.length) return;
 
@@ -348,7 +332,29 @@ export const TokenLineChart = ({
     }
     areaSeries.current?.setData(formattedData);
     chart?.timeScale().fitContent();
-  }
+  }, [chart]);
+
+  // Watch for data changes (preview)
+  useEffect(() => {
+    if (allTime || !data?.result?.length || !areaSeries.current) {
+      return () => {};
+    }
+    // Clear existing data first
+    areaSeries.current.setData([]);
+    // Update with new data
+    updateSeriesData(data as ChartResponse);
+    return () => {};
+  }, [data, allTime, updateSeriesData]);
+
+  // Watch for all-time data changes
+  useEffect(() => {
+    if (!allTime || !areaSeries.current || !historyQuery.data?.pages?.length) {
+      return () => {};
+    }
+    areaSeries.current.setData([]);
+    updateSeriesDataFromHistory(historyQuery.data.pages);
+    return () => {};
+  }, [allTime, historyQuery.data?.pages, updateSeriesDataFromHistory]);
 
   if (loading) {
     return (

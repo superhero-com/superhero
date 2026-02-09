@@ -1,18 +1,14 @@
-import React from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 
-interface TokenSaleSidebarSkeletonProps {
-  /** Whether to show a simplified boilerplate version */
-  boilerplate?: boolean;
-}
-
-export default function TokenSaleSidebarSkeleton({
-  boilerplate = false,
-}: TokenSaleSidebarSkeletonProps) {
+const TokenSaleSidebarSkeleton = () => {
   const skeletonClass = cn(
     'bg-gradient-to-r from-white/10 via-white/20 to-white/10',
     'bg-[length:200%_100%] animate-skeleton-loading rounded',
+  );
+  const makeKeys = (count: number, prefix: string) => Array.from(
+    { length: count },
+    (_, idx) => `${prefix}-${idx + 1}`,
   );
 
   return (
@@ -48,8 +44,8 @@ export default function TokenSaleSidebarSkeleton({
 
           {/* Stats grid */}
           <div className="grid grid-cols-2 gap-2">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="border border-white/10 p-2 rounded">
+            {makeKeys(4, 'stat').map((key) => (
+              <div key={key} className="border border-white/10 p-2 rounded">
                 <div className={cn(skeletonClass, 'h-4 opacity-50')} />
                 <div className={cn(skeletonClass, 'h-4 mt-2')} />
               </div>
@@ -58,8 +54,8 @@ export default function TokenSaleSidebarSkeleton({
 
           {/* Additional info lines */}
           <div className="flex flex-col gap-2 mt-3">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className={cn(skeletonClass, 'h-4 opacity-70')} />
+            {makeKeys(4, 'info-line').map((key) => (
+              <div key={key} className={cn(skeletonClass, 'h-4 opacity-70')} />
             ))}
           </div>
         </CardContent>
@@ -69,12 +65,14 @@ export default function TokenSaleSidebarSkeleton({
       <Card className="mt-2 bg-white/[0.02] border-white/10">
         <CardContent className="p-4">
           <div className="flex flex-col gap-2">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <div key={index} className={cn(skeletonClass, 'h-8')} />
+            {makeKeys(5, 'rank-row').map((key) => (
+              <div key={key} className={cn(skeletonClass, 'h-8')} />
             ))}
           </div>
         </CardContent>
       </Card>
     </div>
   );
-}
+};
+
+export default TokenSaleSidebarSkeleton;

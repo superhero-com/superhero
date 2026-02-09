@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
 import { BridgeConstants } from '@/features/ae-eth-bridge/constants';
 import { CONFIG } from '../../../config';
@@ -13,14 +13,13 @@ import { AddLiquidityState, LiquidityExecutionParams, RemoveLiquidityExecutionPa
 import {
   providedLiquidityAtom, useAccount, useAeSdk, useDex, useRecentActivities,
 } from '../../../hooks';
-import { Decimal } from '../../../libs/decimal';
 
 export function useAddLiquidity() {
-  const [providedLiquidity, setProvidedLiquidity] = useAtom(providedLiquidityAtom);
+  useAtom(providedLiquidityAtom);
 
   const { sdk } = useAeSdk();
   const { activeAccount: address } = useAccount();
-  const { slippagePct, deadlineMins } = useDex();
+  useDex();
   const { addActivity } = useRecentActivities();
   const toast = useToast();
 
@@ -49,7 +48,7 @@ export function useAddLiquidity() {
     return value < 1n ? 1n : value;
   }
 
-  async function fetchTokenMeta(addr: string): Promise<{ decimals: number; symbol: string }> {
+  const fetchTokenMeta = useCallback(async (addr: string): Promise<{ decimals: number; symbol: string }> => {
     if (addr === 'AE') {
       return { decimals: 18, symbol: 'AE' };
     }
@@ -59,7 +58,7 @@ export function useAddLiquidity() {
       decimals: Number(decodedResult.decimals ?? 18),
       symbol: decodedResult.symbol || decodedResult.name || 'TKN',
     };
-  }
+  }, [sdk]);
 
   // Update token metadata when tokens change
   useEffect(() => {
@@ -76,7 +75,7 @@ export function useAddLiquidity() {
           symbolA: state.tokenA === 'AE' ? 'AE' : '',
         }));
       });
-  }, [state.tokenA]);
+  }, [state.tokenA, fetchTokenMeta]);
 
   useEffect(() => {
     if (!state.tokenB || state.tokenB === 'AE') return;
@@ -92,14 +91,9 @@ export function useAddLiquidity() {
           symbolB: state.tokenB === 'AE' ? 'AE' : '',
         }));
       });
-  }, [state.tokenB]);
+  }, [state.tokenB, fetchTokenMeta]);
 
-  // Compute pair preview when amounts or tokens change
-  useEffect(() => {
-    computePairPreview();
-  }, [state.tokenA, state.tokenB, state.amountA, state.amountB, state.decA, state.decB]);
-
-  async function computePairPreview() {
+  const computePairPreview = useCallback(async () => {
     try {
       if (!state.tokenA || !state.tokenB) {
         setState((prev) => ({
@@ -204,10 +198,25 @@ export function useAddLiquidity() {
           suggestedAmountB,
         },
       }));
-    } catch (error) {
+    } catch {
       setState((prev) => ({ ...prev, pairPreview: null }));
     }
-  }
+  }, [
+    sdk,
+    state.tokenA,
+    state.tokenB,
+    state.amountA,
+    state.amountB,
+    state.decA,
+    state.decB,
+    state.symbolA,
+    state.symbolB,
+  ]);
+
+  // Compute pair preview when amounts or tokens change
+  useEffect(() => {
+    computePairPreview();
+  }, [computePairPreview]);
 
   async function executeAddLiquidity(params: LiquidityExecutionParams, options?: { suppressToast?: boolean }) {
     if (!address) {
@@ -217,7 +226,7 @@ export function useAddLiquidity() {
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      const { router, factory } = await initDexContracts(sdk);
+      const { router } = await initDexContracts(sdk);
 
       const amountAAettos = toAettos(params.amountA, state.decA);
       const amountBAettos = toAettos(params.amountB, state.decB);

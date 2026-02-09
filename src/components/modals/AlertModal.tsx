@@ -2,9 +2,17 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import AeButton from '../AeButton';
 
-export default function AlertModal({
-  title, body, failure, onClose,
-}: { title?: string; body?: string; failure?: boolean; onClose: () => void }) {
+const AlertModal = ({
+  title,
+  body,
+  failure,
+  onClose,
+}: {
+  title?: string;
+  body?: string;
+  failure?: boolean;
+  onClose: () => void;
+}) => {
   const { t } = useTranslation('common');
   return (
     <div>
@@ -15,4 +23,6 @@ export default function AlertModal({
       </div>
     </div>
   );
-}
+};
+
+export default AlertModal;

@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, {
+  useCallback, useState, useEffect, useMemo,
+} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Decimal } from '@/libs/decimal';
 import { SuperheroApi } from '../../../api/backend';
 import { Input } from '../../../components/ui/input';
-import AeButton from '../../../components/AeButton';
 import { cn } from '../../../lib/utils';
 
 interface Repository {
@@ -24,11 +25,6 @@ interface Repository {
 interface RepositoriesListProps {
   className?: string;
 }
-
-const sortBySelectItems = [
-  { value: 'score' as const, name: 'Most Trending' },
-  { value: 'source' as const, name: 'Source' },
-];
 
 // Debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -70,10 +66,10 @@ function hasToken(repo: Repository): boolean {
   );
 }
 
-export default function RepositoriesList({ className }: RepositoriesListProps) {
+const RepositoriesList = ({ className }: RepositoriesListProps) => {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState<'score' | 'source'>('score');
+  const [sortBy] = useState<'score' | 'source'>('score');
   const [isLoading, setIsLoading] = useState(true);
   const [repositoriesResponse, setRepositoriesResponse] = useState<any>(null);
 
@@ -92,7 +88,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
     }
   };
 
-  const fetchTrendingRepositories = async () => {
+  const fetchTrendingRepositories = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await SuperheroApi.listTrendingTags({
@@ -100,7 +96,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
         orderDirection: 'DESC',
         limit: 20, // shouldn't be bigger than the tokens list as it can break the scroll
         page: 1,
-        search: search || undefined,
+        search: searchDebounced || undefined,
       });
       setRepositoriesResponse(response);
     } catch (error) {
@@ -108,11 +104,11 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [sortBy, searchDebounced]);
 
   useEffect(() => {
     fetchTrendingRepositories();
-  }, [searchDebounced, sortBy, search]);
+  }, [fetchTrendingRepositories]);
 
   return (
     <div className={cn('repositories-list ', className)}>
@@ -153,8 +149,8 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
       {/* Loading State */}
       {isLoading && (
         <div className="flex flex-col gap-2">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <div key={index} className="animate-pulse">
+          {['row-1', 'row-2', 'row-3', 'row-4', 'row-5'].map((rowKey) => (
+            <div key={rowKey} className="animate-pulse">
               <div className="px-4 py-2.5">
                 {/* Single Line Layout Skeleton */}
                 <div className="flex items-center justify-between gap-3">
@@ -254,6 +250,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
                   <div className="flex-shrink-0">
                     {hasToken(repo) ? (
                       <button
+                        type="button"
                         className="px-2 py-1 rounded-lg border-none text-white cursor-pointer text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -264,6 +261,7 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
                       </button>
                     ) : (
                       <button
+                        type="button"
                         className="px-2 py-1 rounded-lg border-none text-white cursor-pointer text-xs font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -283,4 +281,6 @@ export default function RepositoriesList({ className }: RepositoriesListProps) {
 
     </div>
   );
-}
+};
+
+export default RepositoriesList;

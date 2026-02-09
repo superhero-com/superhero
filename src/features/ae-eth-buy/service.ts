@@ -21,7 +21,7 @@ import {
  * Bridge service for ETH to AE operations
  */
 export class BridgeService {
-  private static instance: BridgeService | null = null;
+  private static instance: any = null;
 
   public static getInstance(): BridgeService {
     if (!BridgeService.instance) {
@@ -33,7 +33,7 @@ export class BridgeService {
   /**
    * Bridge ETH to AE with optional automatic swap
    */
-  async bridgeEthToAe(
+  public static async bridgeEthToAe(
     sdk: AeSdk,
     options: BridgeOptions,
     onProgress?: BridgeProgressCallback,
@@ -57,7 +57,7 @@ export class BridgeService {
 
     try {
       // Validate inputs
-      this.validateBridgeOptions(options);
+      BridgeService.validateBridgeOptions(options);
 
       updateStatus('connecting', 'Connecting to Ethereum wallet...');
 
@@ -94,7 +94,7 @@ export class BridgeService {
         updateStatus('swapping', 'Swapping æETH to AE...');
 
         try {
-          swapTxHash = await this.swapAeEthToAe(
+          swapTxHash = await BridgeService.swapAeEthToAe(
             sdk,
             aeAccount,
             expectedIncrease,
@@ -139,7 +139,7 @@ export class BridgeService {
   /**
    * Swap æETH to AE on æternity DEX
    */
-  private async swapAeEthToAe(
+  private static async swapAeEthToAe(
     sdk: AeSdk,
     aeAccount: string,
     amountAeEth: bigint,
@@ -176,7 +176,7 @@ export class BridgeService {
   /**
    * Validate bridge options
    */
-  private validateBridgeOptions(options: BridgeOptions): void {
+  private static validateBridgeOptions(options: BridgeOptions): void {
     const { amountEth, aeAccount } = options;
 
     if (!amountEth || Number(amountEth) <= 0) {

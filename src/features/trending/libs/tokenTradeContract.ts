@@ -3,7 +3,6 @@ import {
 } from '@aeternity/aepp-sdk';
 import { BondingCurveTokenSale, initAffiliationTokenGatingTokenSale, toTokenDecimals } from 'bctsl-sdk';
 import { TokenDto } from '@/api/generated/models/TokenDto';
-import { CONFIG } from '../../../config';
 import { fetchJson } from '../../../utils/common';
 
 // Contract instances cache
@@ -43,18 +42,18 @@ export async function setupContractInstance(
  * Fetch user token balance
  */
 export async function fetchUserTokenBalance(
-  tokenSaleInstance: BondingCurveTokenSale,
+  saleInstance: BondingCurveTokenSale,
   token: TokenDto,
   activeAccount: string,
 ): Promise<string> {
-  if (!tokenSaleInstance) {
+  if (!saleInstance) {
     throw new Error('Contract not initialized');
   }
 
   let balance = '0';
 
   try {
-    const tokenContract = await tokenSaleInstance.tokenContractInstance();
+    const tokenContract = await saleInstance.tokenContractInstance();
     if (activeAccount) {
       const result: { decodedResult?: bigint } = await tokenContract.balance(activeAccount);
 

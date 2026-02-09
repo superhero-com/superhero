@@ -11,7 +11,7 @@ interface TokenSelectProps {
   onClose: () => void;
 }
 
-export default function TokenSelect({ open, onSelect, onClose }: TokenSelectProps) {
+const TokenSelect = ({ open, onSelect, onClose }: TokenSelectProps) => {
   const { tokenInfo } = useWallet();
   const tokens = Object.entries(tokenInfo || {});
 
@@ -69,4 +69,6 @@ export default function TokenSelect({ open, onSelect, onClose }: TokenSelectProp
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default TokenSelect;

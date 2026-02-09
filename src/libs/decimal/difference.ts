@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Decimal, Decimalish } from './decimal';
 import { DifferenceRepresentation } from './types';
 

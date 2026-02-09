@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { SuperheroApi } from '../../api/backend';
 import { useAeSdk } from '../../hooks';
-import WebSocketClient from '../../libs/WebSocketClient';
 import { formatCompactNumber } from '../../utils/number';
 
 interface TrendingTag {
@@ -11,42 +10,14 @@ interface TrendingTag {
   source?: string;
 }
 
-interface TokenItem {
-  address: string;
-  name: string;
-  symbol: string;
-  price: number;
-  market_cap: number;
-  holders_count: number;
-  sale_address?: string;
-  trending_score?: number;
-}
-
-interface LiveTransaction {
-  sale_address: string;
-  token_name: string;
-  type: string;
-  created_at: string;
-}
-
-export default function LeftRail() {
-  const { sdk, currentBlockHeight } = useAeSdk();
+const LeftRail = () => {
+  const { currentBlockHeight } = useAeSdk();
   const navigate = useNavigate();
-  const location = useLocation();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showTips, setShowTips] = useState(false);
-  const [showLiveFeed, setShowLiveFeed] = useState(true);
   const [trendingTags, setTrendingTags] = useState<TrendingTag[]>([]);
-  const [liveTransactions, setLiveTransactions] = useState<LiveTransaction[]>(
-    [],
-  );
   const [marketStats, setMarketStats] = useState<any>(null);
-  const [topTokens, setTopTokens] = useState<TokenItem[]>([]);
-  const [priceAlerts, setPriceAlerts] = useState<
-    Array<{ token: string; price: number; change: number }>
-  >([]);
   // Removed local API status (moved to footer)
 
   // Timer, online status, and block height
@@ -95,16 +66,11 @@ export default function LeftRail() {
     let cancelled = false;
     async function loadTrendingData() {
       try {
-        const [tagsResp, tokensResp, statsResp] = await Promise.all([
+        const [tagsResp, statsResp] = await Promise.all([
           SuperheroApi.listTrendingTags({
             orderBy: 'score',
             orderDirection: 'DESC',
             limit: 10,
-          }),
-          SuperheroApi.listTokens({
-            orderBy: 'market_cap',
-            orderDirection: 'DESC',
-            limit: 5,
           }),
           SuperheroApi.fetchJson('/api/analytics/past-24-hours'),
         ]);
@@ -119,33 +85,17 @@ export default function LeftRail() {
             }));
             setTrendingTags(mappedTags.filter((t) => t.tag));
 
-            const tokens = tokensResp?.items ?? [];
-            // Ensure token data is properly formatted
-            const formattedTokens = tokens.map((token: any) => ({
-              ...token,
-              price: token.price ? Number(token.price) : null,
-              market_cap: token.market_cap ? Number(token.market_cap) : 0,
-              holders_count: token.holders_count
-                ? Number(token.holders_count)
-                : 0,
-            }));
-            setTopTokens(formattedTokens);
-
             setMarketStats(statsResp);
-          } catch (parseError) {
-            console.error('Failed to parse trending data:', parseError);
+          } catch {
             // Set empty arrays as fallback
             setTrendingTags([]);
-            setTopTokens([]);
             setMarketStats(null);
           }
         }
-      } catch (error) {
-        console.error('Failed to load trending data:', error);
+      } catch {
         // Set empty arrays as fallback
         if (!cancelled) {
           setTrendingTags([]);
-          setTopTokens([]);
           setMarketStats(null);
         }
       }
@@ -156,117 +106,10 @@ export default function LeftRail() {
     };
   }, []);
 
-  // Load live transactions
-  useEffect(() => {
-    let cancelled = false;
-    async function loadLiveTransactions() {
-      try {
-        const [txResp, createdResp] = await Promise.all([
-          SuperheroApi.fetchJson('/api/transactions?limit=5'),
-          SuperheroApi.fetchJson(
-            '/api/tokens?order_by=created_at&order_direction=DESC&limit=3',
-          ),
-        ]);
-
-        if (!cancelled) {
-          try {
-            const txItems = txResp?.items ?? [];
-            const createdItems = (createdResp?.items ?? []).map((t: any) => ({
-              sale_address: t.sale_address || t.address || '',
-              token_name: t.name || 'Unknown Token',
-              type: 'CREATED',
-              created_at: t.created_at || new Date().toISOString(),
-            }));
-            setLiveTransactions([...createdItems, ...txItems].slice(0, 8));
-          } catch (parseError) {
-            console.error('Failed to parse live transactions:', parseError);
-            setLiveTransactions([]);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load live transactions:', error);
-        if (!cancelled) {
-          setLiveTransactions([]);
-        }
-      }
-    }
-    loadLiveTransactions();
-
-    // WebSocket subscriptions for real-time updates
-    const unsub1 = WebSocketClient.subscribeForTokenHistories('TokenTransaction', (tx) => {
-      setLiveTransactions((prev) => [
-        {
-          sale_address: tx?.sale_address || tx?.token_address || '',
-          token_name: tx?.token_name || 'Unknown',
-          type: 'TRADE',
-          created_at: new Date().toISOString(),
-        },
-        ...prev,
-      ].slice(0, 8));
-    });
-
-    const unsub2 = WebSocketClient.subscribeForTokenHistories('TokenCreated', (payload) => {
-      setLiveTransactions((prev) => [
-        {
-          sale_address: payload?.sale_address || payload?.address || '',
-          token_name: payload?.name || 'New Token',
-          type: 'CREATED',
-          created_at: payload?.created_at || new Date().toISOString(),
-        },
-        ...prev,
-      ].slice(0, 8));
-    });
-
-    return () => {
-      cancelled = true;
-      unsub1();
-      unsub2();
-    };
-  }, []);
-
   // API status moved to footer
-
-  // Simulate price alerts (in real app, this would come from user preferences)
-  useEffect(() => {
-    const alerts = [
-      { token: 'AE', price: 0.15, change: 2.5 },
-      { token: 'SUPER', price: 0.08, change: -1.2 },
-      { token: 'MEME', price: 0.003, change: 15.7 },
-    ];
-    setPriceAlerts(alerts);
-  }, []);
-
-  const handleQuickAction = (action: string) => {
-    switch (action) {
-      case 'explore':
-        navigate('/pool/add-tokens');
-        break;
-      case 'bridge':
-        navigate('/dex');
-        break;
-      case 'nfts':
-        navigate('/trends');
-        break;
-      case 'trending':
-        navigate('/trends');
-        break;
-      case 'governance':
-        navigate('/voting');
-        break;
-      case 'meet':
-        navigate('/meet');
-        break;
-      default:
-        break;
-    }
-  };
 
   const handleTrendingTopic = (topic: string) => {
     navigate(`/trends?q=${encodeURIComponent(topic)}`);
-  };
-
-  const handleTokenClick = (token: TokenItem) => {
-    navigate(`/trends/tokens/${token.name}`);
   };
 
   const formatMarketCap = (amount: number): string => `$${formatCompactNumber(amount, 0, 1)}`;
@@ -443,6 +286,7 @@ export default function LeftRail() {
             Live Trending
           </h4>
           <button
+            type="button"
             style={{
               background: 'none',
               border: 'none',
@@ -480,8 +324,9 @@ export default function LeftRail() {
 
         <div style={{ display: 'grid', gap: '8px' }}>
           {trendingTags.slice(0, 6).map((tag, index) => (
-            <div
-              key={index}
+            <button
+              type="button"
+              key={tag.tag}
               className="trending-topic"
               style={{
                 padding: '8px 12px',
@@ -525,7 +370,7 @@ export default function LeftRail() {
                 {index + 1}
               </span>
               {tag.tag}
-            </div>
+            </button>
           ))}
         </div>
       </div>
@@ -538,13 +383,19 @@ export default function LeftRail() {
 
       {/* Enhanced Pro Tips */}
       <div className="genz-card">
-        <div
+        <button
+          type="button"
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
             marginBottom: '16px',
             cursor: 'pointer',
+            width: '100%',
+            textAlign: 'left',
+            background: 'transparent',
+            border: 'none',
+            padding: 0,
           }}
           onClick={() => setShowTips(!showTips)}
           title="Click to expand tips"
@@ -566,7 +417,7 @@ export default function LeftRail() {
           >
             ▼
           </span>
-        </div>
+        </button>
 
         <div
           style={{
@@ -578,8 +429,8 @@ export default function LeftRail() {
             transition: 'max-height 0.3s ease',
           }}
         >
-          {enhancedTips.map((tip, index) => (
-            <div key={index} style={{ marginBottom: '12px' }}>
+          {enhancedTips.map((tip) => (
+            <div key={`${tip.category}-${tip.text}`} style={{ marginBottom: '12px' }}>
               <div
                 className="pro-tip"
                 style={
@@ -587,24 +438,19 @@ export default function LeftRail() {
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: '8px',
-                    cursor: 'pointer',
                     padding: '8px',
                     borderRadius: '8px',
                     transition: 'background 0.2s ease',
                     '--tip-color': tip.color,
                   } as React.CSSProperties
                 }
-                onClick={() => {
-                  // Show expanded tip in a toast or modal
-                  alert(`${tip.icon} ${tip.category}: ${tip.expanded}`);
-                }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'transparent';
                 }}
-                title={`${tip.category}: Click for more details`}
+                title={`${tip.category}: ${tip.text}`}
               >
                 <strong style={{ color: tip.color, fontSize: '14px' }}>
                   {tip.icon}
@@ -649,30 +495,27 @@ export default function LeftRail() {
         </div>
       </div>
 
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
+      <style>
+        {`
           @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
           }
-          
-          
+
           @keyframes slideIn {
-            from { 
-              opacity: 0; 
-              transform: translateX(-20px); 
+            from {
+              opacity: 0;
+              transform: translateX(-20px);
             }
-            to { 
-              opacity: 1; 
-              transform: translateX(0); 
+            to {
+              opacity: 1;
+              transform: translateX(0);
             }
           }
-          
-          // Spinner styles removed - use Spinner component instead
-        `,
-        }}
-      />
+        `}
+      </style>
     </div>
   );
-}
+};
+
+export default LeftRail;

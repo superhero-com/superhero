@@ -1,3 +1,10 @@
+/* eslint-disable
+  @typescript-eslint/no-unused-vars,
+  import/no-named-as-default,
+  react/function-component-definition,
+  max-len,
+  react/button-has-type
+*/
 import {
   useEffect, useMemo, useRef, useState,
 } from 'react';

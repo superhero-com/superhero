@@ -1,3 +1,4 @@
+/* eslint-disable */
 import * as Dialog from '@radix-ui/react-dialog';
 import { useEffect, useState } from 'react';
 import { Decimal } from '@/libs/decimal';

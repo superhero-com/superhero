@@ -1,21 +1,18 @@
 import React from 'react';
-import { Encoded } from '@aeternity/aepp-sdk';
 import AeButton from '../AeButton';
 import { IconWallet } from '../../icons';
 
 interface TransactionConfirmModalProps {
-  transaction: Encoded.Transaction;
   onConfirm: () => void;
   onCancel: () => void;
   onClose: () => void;
 }
 
-export default function TransactionConfirmModal({
-  transaction,
+const TransactionConfirmModal = ({
   onConfirm,
   onCancel,
   onClose,
-}: TransactionConfirmModalProps) {
+}: TransactionConfirmModalProps) => {
   const handleConfirm = () => {
     onConfirm();
     onClose();
@@ -67,4 +64,6 @@ export default function TransactionConfirmModal({
       </div>
     </div>
   );
-}
+};
+
+export default TransactionConfirmModal;

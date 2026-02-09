@@ -42,11 +42,12 @@ export const Head = (props: HeadProps) => {
 
   const ogImageUrl = getAbsoluteImageUrl(ogImage);
 
-  const jsonLdArray = Array.isArray(jsonLd)
-    ? jsonLd
-    : jsonLd
-      ? [jsonLd]
-      : [];
+  let jsonLdArray: Array<Record<string, any>> = [];
+  if (Array.isArray(jsonLd)) {
+    jsonLdArray = jsonLd;
+  } else if (jsonLd) {
+    jsonLdArray = [jsonLd];
+  }
 
   return (
     <Helmet>
@@ -76,8 +77,8 @@ export const Head = (props: HeadProps) => {
       <meta name="twitter:image" content={ogImageUrl} />
 
       {/* JSON-LD */}
-      {jsonLdArray.map((schema, idx) => (
-        <script key={idx} type="application/ld+json">
+      {jsonLdArray.map((schema) => (
+        <script key={JSON.stringify(schema)} type="application/ld+json">
           {JSON.stringify(schema)}
         </script>
       ))}

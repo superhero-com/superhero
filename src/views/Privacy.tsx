@@ -1,15 +1,28 @@
+/* eslint-disable max-len, react/no-unescaped-entities */
 import React from 'react';
 import { AeButton } from '@/components/ui/ae-button';
 import { useNavigate } from 'react-router-dom';
 import FooterSection from '../components/layout/FooterSection';
 
-export default function Privacy() {
+const Privacy = () => {
   const navigate = useNavigate();
   return (
     <>
       <div className="max-w-[980px] mx-auto p-4">
         <div className="mb-4">
-          <AeButton onClick={() => { (window.history.length > 1) ? navigate(-1) : navigate('/'); }} variant="ghost" size="sm" outlined className="!border !border-solid !border-white/15 hover:!border-white/35">
+          <AeButton
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate('/');
+              }
+            }}
+            variant="ghost"
+            size="sm"
+            outlined
+            className="!border !border-solid !border-white/15 hover:!border-white/35"
+          >
             ← Back
           </AeButton>
         </div>
@@ -186,4 +199,6 @@ export default function Privacy() {
       </div>
     </>
   );
-}
+};
+
+export default Privacy;

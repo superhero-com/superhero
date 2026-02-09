@@ -11,7 +11,9 @@ export const useDex = () => {
     setSlippagePct(clampedValue);
     try {
       localStorage.setItem('dex:slippage', String(clampedValue));
-    } catch { }
+    } catch {
+      // Ignore storage errors
+    }
   }, [setSlippagePct]);
 
   const setDeadline = useCallback((value: number) => {
@@ -19,7 +21,9 @@ export const useDex = () => {
     setDeadlineMins(clampedValue);
     try {
       localStorage.setItem('dex:deadline', String(clampedValue));
-    } catch { }
+    } catch {
+      // Ignore storage errors
+    }
   }, [setDeadlineMins]);
 
   // TODO: should improve this, it should come from a cached API

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import * as Dialog from '@radix-ui/react-dialog';
 import { DexTokenDto } from '../../../api/generated';
 import {

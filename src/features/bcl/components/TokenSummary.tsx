@@ -1,24 +1,22 @@
 import React from 'react';
-import AddressChip from '@/components/AddressChip';
+import { AddressChip } from '@/components/AddressChip';
 import { PriceDto } from '@/api/generated';
 import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter';
 import { toAe } from '@aeternity/aepp-sdk';
 import { TokenDto } from '@/api/generated/models/TokenDto';
-import AddressAvatarWithChainName from '@/@components/Address/AddressAvatarWithChainName';
+import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import LivePriceFormatter from '../../shared/components/LivePriceFormatter';
 import { Decimal } from '../../../libs/decimal';
 
 interface TokenSummaryProps {
   token: TokenDto;
-  holders?: any[];
   className?: string;
 }
 
-export default function TokenSummary({
+const TokenSummary = ({
   token,
-  holders,
   className = '',
-}: TokenSummaryProps) {
+}: TokenSummaryProps) => {
   const getShortenValue = (value: string | number): string => Decimal.from(toAe(value)).shorten();
 
   const formatLongDate = (dateString: string): string => new Date(dateString).toLocaleDateString('en-US', {
@@ -146,7 +144,7 @@ export default function TokenSummary({
       <div className="text-sm text-white/60 leading-relaxed mb-6 bg-white/[0.05] border border-white/10 rounded-2xl p-4 backdrop-blur-[10px]">
         This token uses a bonding curve: buying mints new tokens at a higher
         price; selling burns tokens and returns AE along the curve. A portion of
-        trades feeds the token's DAO treasury for proposals and payouts.
+        trades feeds the token&apos;s DAO treasury for proposals and payouts.
       </div>
 
       {/* Action Buttons */}
@@ -180,4 +178,6 @@ export default function TokenSummary({
       </div>
     </div>
   );
-}
+};
+
+export default TokenSummary;

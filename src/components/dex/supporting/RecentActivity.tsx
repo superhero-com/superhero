@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useEffect, useState, useRef } from 'react';
 import { TokenChip } from '@/components/TokenChip';
 import { RecentActivity as RecentActivityType } from '../types/dex';

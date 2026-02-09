@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TokenDto } from '@/api/generated/models/TokenDto';
 import { TransactionsService } from '@/api/generated/services/TransactionsService';
@@ -65,7 +65,7 @@ export function useLatestTransactions() {
       initialized = false;
       unsubscribeLatestTransactions?.();
     };
-  }, []);
+  }, [queryClient]);
 
   return {
     latestTransactions,

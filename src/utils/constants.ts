@@ -1,4 +1,5 @@
-import configs from '../configs';
+/* eslint-disable max-len */
+import { configs } from '../configs';
 import { INetwork, ICurrency } from './types';
 
 export const SETTINGS = configs;
@@ -7,8 +8,6 @@ export const SETTINGS = configs;
  * Nodes returns different values when connecting to the Hyperchains.
  */
 const NETWORK_ID_MAINNET = 'ae_mainnet';
-const NETWORK_ID_TESTNET = 'ae_uat';
-
 export const NETWORK_MAINNET: INetwork = configs.networks[NETWORK_ID_MAINNET];
 
 export const DATE_LONG = 'YYYY-MM-DD HH:mm';

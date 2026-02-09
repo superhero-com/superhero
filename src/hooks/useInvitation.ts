@@ -38,25 +38,12 @@ function writeAllInvitations(list: InvitationInfo[]) {
   localStorage.setItem(LS_KEY_INVITE_LIST, JSON.stringify(list));
 }
 
-function addGeneratedInvites(
-  inviter: Encoded.AccountAddress,
-  items: Array<{ invitee: Encoded.AccountAddress; secretKey: string; amount: number }>,
-) {
-  const now = Date.now();
-  const list = readAllInvitations();
-  items.forEach(({ invitee, secretKey, amount }) => {
-    list.unshift({
-      inviter, invitee, secretKey, amount, date: now,
-    });
-  });
-  writeAllInvitations(list);
-}
-
 function getActiveAccountInviteList(inviter: Encoded.AccountAddress): InvitationInfo[] {
   return readAllInvitations().filter((x) => x.inviter === inviter);
 }
 
 function prepareInviteLink(secretKey: string): string {
+  // eslint-disable-next-line no-restricted-globals
   return `${location.protocol}//${location.host}#${INVITE_CODE_QUERY_KEY}=${secretKey}`;
 }
 
@@ -91,7 +78,10 @@ export function useInvitation() {
   }, [invitationList, activeAccount]);
 
   // Generate invite keys function
-  const generateInviteKeys = useCallback(async (amount: number, invitesNumber = 1): Promise<string[]> => {
+  const generateInviteKeys = useCallback(async (
+    amount: number,
+    invitesNumber = 1,
+  ): Promise<string[]> => {
     if (!activeAccount) {
       throw new Error('No active account available');
     }
@@ -184,7 +174,7 @@ export function useInvitation() {
         navigate('/', { replace: true }); // Navigate to home route
       }
     }
-  }, [location.hash, navigate]);
+  }, [location, location.hash, navigate]);
 
   return {
     invitationCode,

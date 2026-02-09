@@ -1,6 +1,7 @@
 import { formatFractionalPrice } from '@/utils/common';
 import { COIN_SYMBOL } from '@/utils/constants';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { TokenDto } from '@/api/generated/models/TokenDto';
 import Spinner from '@/components/Spinner';
 import { Button } from '../../../components/ui/button';
@@ -24,6 +25,7 @@ const TokenTradeCard = ({
   token,
   onClose,
 }: TokenTradeCardProps) => {
+  const { t } = useTranslation('dex');
   const { activeAccount } = useAeSdk();
   const [settingsDialogVisible, setSettingsDialogVisible] = useState(false);
   const [detailsShown, setDetailsShown] = useState(false);
@@ -140,7 +142,7 @@ const TokenTradeCard = ({
       {/* Content */}
       <div>
         {errorMessage && (
-          <MessageBox color="error" title="Oops" text={errorMessage} />
+          <MessageBox color="error" title={t('common:messages.oops')} text={errorMessage} />
         )}
 
         <TradeTokenInput
@@ -160,7 +162,7 @@ const TokenTradeCard = ({
 
         <div className="mt-4 space-y-2">
           {!averageTokenPrice.isZero && !averageTokenPrice.infinite && (
-            <TransactionConfirmDetailRow label="Avg Token Price">
+            <TransactionConfirmDetailRow label={t('avgTokenPrice')}>
               <LivePriceFormatter
                 aePrice={averageTokenPrice}
                 watchPrice={false}
@@ -176,10 +178,10 @@ const TokenTradeCard = ({
                 onClick={() => setDetailsShown(!detailsShown)}
                 className="text-sm text-[#4ecdc4] hover:text-white transition-colors"
               >
-                {detailsShown ? 'Hide Details' : 'Show Details'}
+                {detailsShown ? t('hideDetails') : t('showDetails')}
               </button>
 
-              <TransactionConfirmDetailRow label="Allowed Slippage">
+              <TransactionConfirmDetailRow label={t('allowedSlippage')}>
                 <div className="flex items-center gap-2">
                   {Number(slippage ?? 0).toFixed(2)}
                   %
@@ -193,7 +195,7 @@ const TokenTradeCard = ({
                 </div>
               </TransactionConfirmDetailRow>
 
-              <TransactionConfirmDetailRow label="Price Impact">
+              <TransactionConfirmDetailRow label={t('priceImpact')}>
                 <div
                   className={cn(
                     'flex items-center gap-4',
@@ -219,7 +221,7 @@ const TokenTradeCard = ({
               </TransactionConfirmDetailRow>
 
               {isBuying && (
-                <TransactionConfirmDetailRow label="Protocol Token Reward">
+                <TransactionConfirmDetailRow label={t('protocolTokenReward')}>
                   ~
                   {protocolTokenReward}
                 </TransactionConfirmDetailRow>
@@ -233,7 +235,7 @@ const TokenTradeCard = ({
               onClick={() => setDetailsShown(true)}
               className="text-sm text-[#4ecdc4] hover:text-white transition-colors"
             >
-              Show Details
+              {t('showDetails')}
             </button>
           )}
         </div>
@@ -255,11 +257,11 @@ const TokenTradeCard = ({
               {loadingTransaction ? (
                 <div className="flex items-center justify-center gap-2">
                   <Spinner className="w-4 h-4" />
-                  <span>Confirm in wallet</span>
+                  <span>{t('social:confirmInWallet')}</span>
                   {currentStepText && <span>{currentStepText}</span>}
                 </div>
               ) : (
-                'Place Order'
+                t('placeOrder')
               )}
             </Button>
           )}
@@ -272,14 +274,14 @@ const TokenTradeCard = ({
             className="w-full mt-2 py-4 px-6 rounded-2xl border border-white/10 bg-white/10 text-white cursor-pointer text-base font-bold tracking-wider uppercase transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/20"
             onClick={onClose}
           >
-            Cancel
+            {t('settings.cancel')}
           </Button>
         )}
 
         {successTxData && (
           <div className="mt-4">
             <MessageBox
-              title="Success"
+              title={t('trending:success')}
               text=""
               color="success"
               closable
@@ -287,17 +289,19 @@ const TokenTradeCard = ({
             >
               <div>
                 <span>
-                  {successTxData.isBuying ? 'Bought' : 'Sold'}
+                  {successTxData.isBuying ? t('bought') : t('sold')}
                   {' '}
                   {successTxData.destAmount.prettify()}
                   {' '}
                   {successTxData.symbol}
                   {' '}
-                  for
+                  {t('forLabel')}
                   {' '}
                   {successTxData.sourceAmount.prettify()}
                   {' '}
-                  AE. New balance:
+                  AE.
+                  {' '}
+                  {t('newBalance')}
                   {' '}
                   {successTxData.userBalance.prettify()}
                 </span>

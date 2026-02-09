@@ -1,5 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { useId, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Spinner from '@/components/Spinner';
 import { Asset, Direction } from '../types';
 
@@ -37,6 +38,7 @@ const BridgeTokenSelector = ({
   aeBalances = {},
   ethBalances = {},
 }: BridgeTokenSelectorProps) => {
+  const { t } = useTranslation('dex');
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const triggerId = useId();
@@ -101,7 +103,7 @@ const BridgeTokenSelector = ({
                       {getTokenDisplayName(selected, direction)}
                     </>
                   ) : (
-                    'Select Token'
+                    <>{t('bridge.selectToken')}</>
                   )}
                   <span className="opacity-70">▼</span>
                 </>
@@ -117,7 +119,7 @@ const BridgeTokenSelector = ({
           {/* Header */}
           <div className="flex justify-between items-center mb-4 sm:mb-5">
             <Dialog.Title className="font-bold text-lg sm:text-xl m-0 sh-dex-title">
-              Select a token
+              {t('bridge.selectAToken')}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
@@ -132,7 +134,7 @@ const BridgeTokenSelector = ({
           {/* Search Input */}
           <div className="relative mb-4 sm:mb-5">
             <input
-              placeholder="Search by name, symbol, or address"
+              placeholder={t('searchTokenPlaceholder')}
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               className="w-full py-3.5 pr-12 pl-4 rounded-2xl bg-white/[0.08] text-white border border-white/15 text-base backdrop-blur-[10px] transition-all duration-300 ease-out box-border focus:border-[#00ff9d] focus:shadow-[0_0_0_2px_rgba(0,255,157,0.2)] focus:outline-none"
@@ -160,7 +162,7 @@ const BridgeTokenSelector = ({
               letterSpacing: '0.5px',
             }}
             >
-              Token
+              {t('bridge.token')}
             </span>
             <span style={{
               fontSize: 14,
@@ -170,7 +172,7 @@ const BridgeTokenSelector = ({
               letterSpacing: '0.5px',
             }}
             >
-              Balance
+              {t('bridge.balance')}
             </span>
           </div>
 
@@ -282,11 +284,11 @@ const BridgeTokenSelector = ({
                     </div>
 
                     <div className="text-white/60 font-medium tracking-wider" style={{ fontSize: 10 }}>
-                      on
-                      {' '}
-                      {direction === Direction.AeternityToEthereum ? 'Aeternity' : 'Ethereum'}
-                      {' '}
-                      Blockchain
+                      {t('bridge.onBlockchain', {
+                        network: direction === Direction.AeternityToEthereum
+                          ? t('bridge.aeternity')
+                          : t('bridge.ethereum'),
+                      })}
                     </div>
 
                   </div>
@@ -303,9 +305,9 @@ const BridgeTokenSelector = ({
               }}
               >
                 <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.5 }}>🔍</div>
-                <div style={{ fontWeight: 600, marginBottom: 4 }}>No tokens found</div>
+                <div style={{ fontWeight: 600, marginBottom: 4 }}>{t('noTokensFound')}</div>
                 <div style={{ fontSize: 12, opacity: 0.8 }}>
-                  Try adjusting your search term
+                  {t('bridge.tryAdjustingSearchTerm')}
                 </div>
               </div>
             )}
@@ -325,7 +327,7 @@ const BridgeTokenSelector = ({
               opacity: 0.7,
             }}
             >
-              Bridge tokens between Aeternity and Ethereum networks
+              {t('bridge.bridgeTokensDescription')}
             </div>
           </div>
         </Dialog.Content>

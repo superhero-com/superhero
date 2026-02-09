@@ -9,7 +9,7 @@ import {
 import { routes } from './routes';
 import './styles/genz-components.scss';
 import './styles/mobile-optimizations.scss';
-import AppHeader from './components/layout/app-header';
+import { AppHeader } from './components/layout/app-header';
 import { useSuperheroChainNames } from './hooks/useChainName';
 import FeedbackButton from './components/FeedbackButton';
 

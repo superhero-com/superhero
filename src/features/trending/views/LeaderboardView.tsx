@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Head } from '../../../seo/Head';
 import {
@@ -19,6 +20,7 @@ import {
 } from '../constants/leaderboard';
 
 const LeaderboardView = () => {
+  const { t } = useTranslation('trending');
   const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>('7d');
   const [metric, setMetric] = useState<LeaderboardMetric>('pnl');
   const [page, setPage] = useState(1);
@@ -68,8 +70,8 @@ const LeaderboardView = () => {
   return (
     <div className="max-w-[min(1536px,100%)] mx-auto min-h-screen text-white px-4 py-4">
       <Head
-        title="Superhero.com – Trading Leaderboard"
-        description="Discover top performing trading assets on Superhero based on on-chain performance."
+        title={t('leaderboardPageTitle')}
+        description={t('explore:leaderboardDescription')}
         canonicalPath="/trends/leaderboard"
       />
 
@@ -99,13 +101,13 @@ const LeaderboardView = () => {
         {/* Error state */}
         {isError && (
           <div className="bg-red-500/10 border border-red-500/40 text-red-200 text-sm rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
-            <span>Unable to load leaderboard. Please try again.</span>
+            <span>{t('unableToLoadLeaderboard')}</span>
             <button
               type="button"
               onClick={() => refetch()}
               className="px-3 py-1.5 rounded-lg bg-red-500/70 text-xs font-semibold hover:bg-red-500/90"
             >
-              Retry
+              {t('retry')}
             </button>
           </div>
         )}
@@ -128,19 +130,18 @@ const LeaderboardView = () => {
           {!isLoading && !isFetching && items.length === 0 && !isError && (
             <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
               <h2 className="text-base font-semibold text-white">
-                No top traders for this view yet
+                {t('noTopTraders')}
               </h2>
               <p className="text-sm text-white/70 max-w-md">
-                The leaderboard highlights wallets with strong on-chain trading performance
-                over the selected timeframe.
+                {t('leaderboardHighlights')}
               </p>
               <ul className="text-xs text-white/50 space-y-1 max-w-md list-disc list-inside text-left sm:text-center sm:list-none sm:space-y-0 sm:space-x-3 sm:flex sm:justify-center sm:flex-wrap">
-                <li>Trade trend tokens regularly to build up your volume.</li>
-                <li>Keep your PnL and ROI positive over time.</li>
-                <li>Own and hold trending tokens to grow your AUM.</li>
+                <li>{t('leaderboardTip1')}</li>
+                <li>{t('leaderboardTip2')}</li>
+                <li>{t('leaderboardTip3')}</li>
               </ul>
               <p className="text-xs text-white/40 mt-1">
-                Try a different timeframe or metric, then come back as your on-chain activity grows.
+                {t('tryDifferentTimeframe')}
               </p>
             </div>
           )}

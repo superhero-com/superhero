@@ -2,6 +2,7 @@ import React, {
   useMemo, useState, useCallback, useEffect, useRef,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { PostsService } from '../../../api/generated';
 import type { PostDto } from '../../../api/generated';
@@ -42,6 +43,7 @@ function createSeededRandom(seed: number) {
 const FeedList = ({
   standalone = true,
 }: { standalone?: boolean } = {}) => {
+  const { t } = useTranslation('social');
   const navigate = useNavigate();
   const location = useLocation();
   const urlQuery = useUrlQuery();
@@ -1238,8 +1240,8 @@ const FeedList = ({
     <div className="w-full md:border md:border-white/10 md:rounded-2xl md:overflow-hidden">
       {isHomepage && (
         <Head
-          title="Superhero.com – The All‑in‑One Social + Crypto App"
-          description="Discover crypto-native conversations, trending tokens, and on-chain activity. Join the æternity-powered social network."
+          title={t('feedPageTitle')}
+          description={t('explore:feedDescription')}
           canonicalPath="/"
         />
       )}

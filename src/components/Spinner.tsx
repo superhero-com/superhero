@@ -1,15 +1,18 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface SpinnerProps {
   className?: string;
 }
 
-const Spinner = ({ className = 'w-5 h-5' }: SpinnerProps) => (
+const Spinner = ({ className = 'w-5 h-5' }: SpinnerProps) => {
+  const { t } = useTranslation('common');
+  return (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 160 160"
     className={className}
-    aria-label="loading"
+    aria-label={t('aria.loading')}
   >
     <g opacity="0.66" />
     <path
@@ -50,6 +53,7 @@ const Spinner = ({ className = 'w-5 h-5' }: SpinnerProps) => (
       </path>
     </g>
   </svg>
-);
+  );
+};
 
 export default Spinner;

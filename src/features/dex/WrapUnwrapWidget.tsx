@@ -17,7 +17,7 @@ interface WrapUnwrapWidgetProps {
 }
 
 export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'dex']);
   const { activeAccount, loadAccountData } = useAccount();
   const { wrapBalances } = useTokenBalances(null, null);
   const { executeSwap, loading } = useSwapExecution();
@@ -261,7 +261,7 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
             <Input
               type="text"
               inputMode="decimal"
-              placeholder="0.0"
+              placeholder={t('placeholders.amount')}
               value={currentAmount}
               onChange={(e) => handleAmountChange(e.target.value)}
               disabled={isLoading}
@@ -295,13 +295,14 @@ export const WrapUnwrapWidget = ({ className }: WrapUnwrapWidgetProps) => {
               : 'bg-[#1161FE] shadow-[0_8px_25px_rgba(17,97,254,0.4)] hover:-translate-y-0.5 active:translate-y-0',
           )}
         >
+          {/* eslint-disable-next-line no-nested-ternary */}
           {isLoading ? (
             <div className="flex items-center justify-center gap-2">
               <Spinner className="w-4 h-4" />
-              {mode === 'wrap' ? 'Wrapping…' : 'Unwrapping…'}
+              {mode === 'wrap' ? t('dex:wrapping') : t('dex:unwrapping')}
             </div>
           ) : (
-            `${mode === 'wrap' ? 'Wrap AE → WAE' : 'Unwrap WAE → AE'}`
+            mode === 'wrap' ? t('dex:wrapAeToWae') : t('dex:unwrapWaeToAe')
           )}
         </Button>
       ) : (

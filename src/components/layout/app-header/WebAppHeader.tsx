@@ -54,7 +54,7 @@ const WebAppHeader = () => {
         WebkitBackdropFilter: 'blur(16px)',
         borderRightColor: 'rgba(255, 255, 255, 0.12)',
       }}
-      aria-label="Primary"
+      aria-label={t('aria.primary')}
     >
       <div className="flex items-center h-16 px-6">
         <Link
@@ -67,7 +67,7 @@ const WebAppHeader = () => {
         </Link>
       </div>
 
-      <nav className="flex flex-col gap-1 px-3" aria-label="Main">
+      <nav className="flex flex-col gap-1 px-3" aria-label={t('aria.main')}>
         {sidebarItems
           .filter((item: any) => !!item && !!item.id)
           .map((item: any) => {

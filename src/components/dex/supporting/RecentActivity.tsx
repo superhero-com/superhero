@@ -1,25 +1,26 @@
 /* eslint-disable */
 import React, { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { TokenChip } from '@/components/TokenChip';
 import { RecentActivity as RecentActivityType } from '../types/dex';
 import { CONFIG } from '../../../config';
 import {
   useAccount,
   useRecentActivities,
-  useMultipleTransactionStatus,
+  useTransactionStatus,
 } from '../../../hooks';
 
 interface RecentActivityProps {
   recent?: RecentActivityType[]; // Optional prop for backwards compatibility
 }
 
-const activityTypeLabels: Record<RecentActivityType['type'], string> = {
-  swap: 'Swap',
-  wrap: 'Wrap',
-  unwrap: 'Unwrap',
-  bridge: 'ETH Bridge',
-  add_liquidity: 'Add Liquidity',
-  remove_liquidity: 'Remove Liquidity',
+const activityTypeLabelKeys: Record<RecentActivityType['type'], string> = {
+  swap: 'activity.swap',
+  wrap: 'activity.wrap',
+  unwrap: 'activity.unwrap',
+  bridge: 'activity.bridge',
+  add_liquidity: 'activity.addLiquidity',
+  remove_liquidity: 'activity.removeLiquidity',
 };
 
 const activityTypeIcons: Record<RecentActivityType['type'], string> = {
@@ -31,17 +32,17 @@ const activityTypeIcons: Record<RecentActivityType['type'], string> = {
   remove_liquidity: '💧',
 };
 
-function formatTimeAgo(timestamp: number): string {
+function formatTimeAgo(timestamp: number, t: (key: string, opts?: { count?: number }) => string): string {
   const now = Date.now();
   const diff = now - timestamp;
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return 'Just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
+  if (minutes < 1) return t('activity.justNow');
+  if (minutes < 60) return t('activity.minutesAgo', { count: minutes });
+  if (hours < 24) return t('activity.hoursAgo', { count: hours });
+  if (days < 7) return t('activity.daysAgo', { count: days });
   return new Date(timestamp).toLocaleDateString();
 }
 
@@ -63,11 +64,12 @@ const TransactionStatus = ({
   hash?: string;
   status?: RecentActivityType['status'];
 }) => {
+  const { t } = useTranslation('dex');
   if (!hash || !status) {
     return (
       <div className="flex items-center gap-1 text-[10px] font-medium">
         <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-        <span className="text-white/60">Pending</span>
+        <span className="text-white/60">{t('activity.pending')}</span>
       </div>
     );
   }
@@ -76,7 +78,7 @@ const TransactionStatus = ({
     return (
       <div className="flex items-center gap-1 text-[10px] font-medium">
         <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-        <span className="text-red-400">Failed</span>
+        <span className="text-red-400">{t('activity.failed')}</span>
       </div>
     );
   }
@@ -85,7 +87,7 @@ const TransactionStatus = ({
     return (
       <div className="flex items-center gap-1 text-[10px] font-medium">
         <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-        <span className="text-orange-400">Pending</span>
+        <span className="text-orange-400">{t('activity.pending')}</span>
       </div>
     );
   }
@@ -96,10 +98,8 @@ const TransactionStatus = ({
         <span className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_4px_rgba(76,175,80,0.4)]" />
         <span className="text-green-400">
           {status.confirmations && status.confirmations > 0
-            ? `${status.confirmations} conf${
-              status.confirmations === 1 ? '' : 's'
-            }`
-            : 'Confirmed'}
+            ? t('activity.confirmations', { count: status.confirmations }) + (status.confirmations === 1 ? '' : 's')
+            : t('activity.confirmed')}
         </span>
         {status.blockNumber && (
           <span className="text-white/60 opacity-80 ml-1 text-[9px]">
@@ -114,7 +114,7 @@ const TransactionStatus = ({
   return (
     <div className="flex items-center gap-1 text-[10px] font-medium">
       <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-      <span className="text-gray-400">Unknown</span>
+      <span className="text-gray-400">{t('activity.unknown')}</span>
     </div>
   );
 };
@@ -122,6 +122,7 @@ const TransactionStatus = ({
 export default function RecentActivity({
   recent: propRecent,
 }: RecentActivityProps) {
+  const { t } = useTranslation('dex');
   const { activeAccount } = useAccount();
   const {
     getActivitiesForAccount,
@@ -138,20 +139,29 @@ export default function RecentActivity({
     .map((activity) => activity.hash!)
     .slice(0, 10); // Only fetch status for first 10 activities
 
-  // Fetch transaction statuses
-  const { statuses: txStatuses } = useMultipleTransactionStatus(txHashes, {
-    enabled: txHashes.length > 0,
+  const txStatusResults = txHashes.map((hash) => useTransactionStatus(hash));
+
+  // Map txHash -> status for effect and render (hook returns { status, loading, error, refetch })
+  const statusByHash: Record<string, RecentActivityType['status'] | null> = {};
+  txHashes.forEach((hash, i) => {
+    const result = txStatusResults[i];
+    statusByHash[hash] = result?.status ?? null;
   });
 
   // Keep track of last processed statuses to avoid unnecessary updates
-  const lastProcessedStatusesRef = useRef<Record<string, any>>({});
+  const lastProcessedStatusesRef = useRef<Record<string, RecentActivityType['status']>>({});
 
   // Update stored activity statuses when new status data is available
   useEffect(() => {
-    if (!activeAccount || !txStatuses || Object.keys(txStatuses).length === 0) return;
+    if (!activeAccount || txHashes.length === 0) return;
 
-    // Check if statuses have actually changed
-    const statusesChanged = Object.entries(txStatuses).some(
+    const byHash: Record<string, RecentActivityType['status']> = {};
+    txHashes.forEach((hash, i) => {
+      const s = txStatusResults[i]?.status;
+      if (s != null) byHash[hash] = s;
+    });
+
+    const statusesChanged = Object.entries(byHash).some(
       ([txHash, status]) => {
         const lastStatus = lastProcessedStatusesRef.current[txHash];
         return (
@@ -167,13 +177,11 @@ export default function RecentActivity({
 
     if (!statusesChanged) return;
 
-    // Update each activity's status in storage
-    Object.entries(txStatuses).forEach(([txHash, status]) => {
+    Object.entries(byHash).forEach(([txHash, status]) => {
       updateActivityStatus(activeAccount, txHash, status);
-      // Track the processed status
       lastProcessedStatusesRef.current[txHash] = { ...status };
     });
-  }, [txStatuses, activeAccount, updateActivityStatus]);
+  }, [txStatusResults, txHashes, activeAccount, updateActivityStatus]);
 
   const handleClearClick = () => {
     if (!activeAccount) return;
@@ -187,16 +195,16 @@ export default function RecentActivity({
         <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-white/10">
           <span className="text-base">📊</span>
           <span className="text-base font-bold text-white flex-1">
-            Recent Activity
+            {t('activity.recentActivity')}
           </span>
         </div>
         <div className="text-center py-8 px-4 text-white/60">
           <div className="text-[32px] mb-3 opacity-60">🔍</div>
           <div className="text-sm font-semibold mb-1 text-white">
-            No recent activities
+            {t('activity.noRecentActivities')}
           </div>
           <div className="text-xs opacity-80">
-            Your DeFi transactions will appear here
+            {t('activity.defiTransactionsAppearHere')}
           </div>
         </div>
       </div>
@@ -208,7 +216,7 @@ export default function RecentActivity({
       <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-white/10">
         <span className="text-base">📊</span>
         <span className="text-base font-bold text-white flex-1">
-          Recent Activity
+          {t('activity.recentActivity')}
         </span>
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-white/60 bg-white/[0.05] py-0.5 px-2 rounded-xl border border-white/10">
@@ -218,7 +226,7 @@ export default function RecentActivity({
             <button
               onClick={handleClearClick}
               className="flex items-center justify-center w-6 h-6 border-none bg-red-400/10 border border-red-400/20 rounded-md cursor-pointer text-xs transition-all duration-200 ease-out hover:bg-red-400/20 hover:border-red-400/40 hover:scale-105 active:scale-95"
-              title="Clear all activities"
+              title={t('activity.clearAll')}
             >
               🗑️
             </button>
@@ -229,7 +237,7 @@ export default function RecentActivity({
       <div className="flex flex-col gap-2">
         {activities.slice(0, 10).map((activity, i) => {
           const txStatus = activity.hash
-            ? txStatuses[activity.hash]
+            ? statusByHash[activity.hash] ?? undefined
             : undefined;
 
           return (
@@ -244,7 +252,7 @@ export default function RecentActivity({
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="text-[13px] font-semibold text-white mb-0.5">
-                      {activityTypeLabels[activity.type]}
+                      {t(activityTypeLabelKeys[activity.type])}
                     </div>
                     <div className="flex flex-row flex-wrap items-center text-[11px] text-white/60  gap-1.5 mb-1">
                       {activity.tokenIn && activity.tokenOut && (
@@ -264,7 +272,7 @@ export default function RecentActivity({
                         )}
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <div className="text-[10px] text-white/60 font-medium whitespace-nowrap">
-                            {formatTimeAgo(activity.timestamp)}
+                            {formatTimeAgo(activity.timestamp, t)}
                           </div>
                           {activity.hash && CONFIG.EXPLORER_URL && (
                             <a
@@ -275,7 +283,7 @@ export default function RecentActivity({
                               target="_blank"
                               rel="noreferrer"
                               className="flex items-center justify-center w-4 h-4 rounded-md bg-blue-400/10 border border-blue-400/20 no-underline transition-all duration-200 ease-out hover:bg-blue-400/20 hover:border-blue-400/40 hover:scale-110"
-                              title="View on explorer"
+                              title={t('activity.viewOnExplorer')}
                             >
                               <span className="text-[10px] text-[#8bc9ff]">
                                 🔗
@@ -306,7 +314,7 @@ export default function RecentActivity({
               +
               {activities.length - 10}
               {' '}
-              more activities
+              {t('activity.moreActivities')}
             </div>
           </div>
         )}

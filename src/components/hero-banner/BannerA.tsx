@@ -1,20 +1,25 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import BannerContent from './BannerContent';
 
 interface BannerAProps {
   onStartPosting?: () => void;
 }
 
-const BannerA = ({ onStartPosting }: BannerAProps) => (
-  <BannerContent
-    title="Post on‑chain. Tip instantly."
-    description="Share posts that settle on‑chain. Readers tip inline; creators get receipts automatically."
-    chips={['Inline tipping', 'On‑chain receipts']}
-    primaryButtonText="Start posting"
-    primaryButtonOnClick={onStartPosting}
-    secondaryButtonText="How it works"
-    secondaryButtonLink="/faq"
-  />
-);
+const BannerA = ({ onStartPosting }: BannerAProps) => {
+  const { t } = useTranslation('banners');
+  const chips = t('bannerA.chips', { returnObjects: true }) as string[];
+  return (
+    <BannerContent
+      title={t('bannerA.title')}
+      description={t('bannerA.description')}
+      chips={chips}
+      primaryButtonText={t('bannerA.primaryButton')}
+      primaryButtonOnClick={onStartPosting}
+      secondaryButtonText={t('bannerA.secondaryButton')}
+      secondaryButtonLink="/faq"
+    />
+  );
+};
 
 export default BannerA;

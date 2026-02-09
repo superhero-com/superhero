@@ -1,6 +1,7 @@
 import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarWithChainName';
 import { cn } from '@/lib/utils';
 import { memo, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import PostHashtagLink from '@/components/social/PostHashtagLink';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +31,7 @@ interface TradeActivityItemProps {
 }
 
 const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
+  const { t } = useTranslation('social');
   const navigate = useNavigate();
   const { chainNames } = useWallet();
   const account = item.account || item.address || '';
@@ -73,7 +75,7 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
           onOpen();
         }
       }}
-      aria-label="Open trade"
+      aria-label={t('common:aria.openTrade')}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -119,9 +121,9 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-[15px] text-foreground leading-snug flex flex-wrap items-center gap-1 md:mt-1">
-            <span className="text-white/80">Bought</span>
+            <span className="text-white/80">{t('bought')}</span>
             <span className="font-semibold text-white">{volumeText}</span>
-            <span className="text-white/60">of</span>
+            <span className="text-white/60">{t('of')}</span>
             {tokenTag ? (
               <PostHashtagLink tag={tokenTag} label={`#${tokenTag}`} variant="inline" />
             ) : (
@@ -129,7 +131,7 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
             )}
             {priceFraction && (
               <>
-                <span className="text-white/60">at</span>
+                <span className="text-white/60">{t('at')}</span>
                 <span className="text-white/80 inline-flex items-center gap-0.5">
                   <span>$</span>
                   <FractionFormatter fractionalPrice={priceFraction} />
@@ -147,9 +149,9 @@ const TradeActivityItem = memo(({ item }: TradeActivityItemProps) => {
                   navigate(copyTradeLink);
                 }}
                 className="text-[13px] font-semibold text-sky-300 hover:text-sky-200 transition-colors"
-                title="Copy Trade"
+                title={t('copyTrade')}
               >
-                Copy Trade
+                {t('copyTrade')}
               </button>
             </div>
           )}

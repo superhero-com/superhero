@@ -7,6 +7,7 @@ import {
 import PriceDataFormatter from '@/features/shared/components/PriceDataFormatter';
 import { Decimal } from '@/libs/decimal';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface AccountOwnedTokensProps {
   address: string;
@@ -17,6 +18,7 @@ const AccountOwnedTokens = ({
   address,
   tab,
 }: AccountOwnedTokensProps) => {
+  const { t } = useTranslation('common');
   // Owned tokens with balances (account tokens endpoint)
   const [ownedOrderDirection, setOwnedOrderDirection] = useState<
     'ASC' | 'DESC'
@@ -42,21 +44,21 @@ const AccountOwnedTokens = ({
       <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
         {/* Header */}
         <div className="hidden md:grid md:grid-cols-[2fr_1fr_1fr_1fr] gap-3 px-4 py-2.5 border-b border-white/10 text-[11px] font-semibold text-white/60 uppercase tracking-wide">
-          <div>Token</div>
-          <div>Price</div>
+          <div>{t('account.token')}</div>
+          <div>{t('account.price')}</div>
           <button
             type="button"
             className="text-left hover:opacity-80"
             onClick={() => setOwnedOrderDirection(
               ownedOrderDirection === 'DESC' ? 'ASC' : 'DESC',
             )}
-            title="Sort by balance"
+            title={t('titles.sortByBalance')}
           >
             Balance
             {' '}
             {ownedOrderDirection === 'DESC' ? '↓' : '↑'}
           </button>
-          <div>Total Value</div>
+          <div>{t('account.totalValue')}</div>
         </div>
 
         {/* Rows */}
@@ -101,13 +103,13 @@ const AccountOwnedTokens = ({
                     {/* Two columns aligned: Price | Amount (with labels) */}
                     <div className="mt-1 grid grid-cols-2 gap-3 items-start">
                       <div>
-                        <div className="text-white/60 text-xs font-medium mb-0.5">Price</div>
+                        <div className="text-white/60 text-xs font-medium mb-0.5">{t('account.price')}</div>
                         <div className="bg-gradient-to-r text-[12px] from-yellow-400 to-cyan-500 bg-clip-text text-transparent">
                           <PriceDataFormatter watchPrice={false} priceData={priceData} />
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-white/60 text-xs font-medium mb-0.5">Amount</div>
+                        <div className="text-white/60 text-xs font-medium mb-0.5">{t('account.amount')}</div>
                         <div className="bg-gradient-to-r text-[12px] from-cyan-400 to-blue-500 bg-clip-text text-transparent font-medium">
                           {Decimal.from(balance).div(10 ** (token?.decimals || 18)).prettify()}
                         </div>
@@ -180,7 +182,7 @@ const AccountOwnedTokens = ({
               staleTime: 60_000,
             }}
             itemsPerPage={10}
-            emptyMessage="This user doesn't own any Trendminer tokens yet."
+            emptyMessage={t('explore:noOwnedTokens')}
             className="space-y-2 md:space-y-1"
           />
         </div>

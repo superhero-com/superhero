@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useLocation } from 'react-router-dom';
 import { useAtom } from 'jotai';
 import { transactionsQueueAtom } from '../atoms/txQueueAtoms';
 
 const TxQueue = () => {
+  const { t } = useTranslation('transactions');
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const [, setTransactionsQueue] = useAtom(transactionsQueueAtom);
@@ -36,7 +38,7 @@ const TxQueue = () => {
 
   return (
     <div className="h-screen w-screen flex items-center justify-center">
-      <div className="text-white/80 text-lg">Processing transaction…</div>
+      <div className="text-white/80 text-lg">{t('processingTransaction')}</div>
     </div>
   );
 };

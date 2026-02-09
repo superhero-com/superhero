@@ -1,18 +1,20 @@
 /* eslint-disable */
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useGovernance } from '@/hooks';
 import MobileInput from '../MobileInput';
 import MobileCard from '../MobileCard';
 
 export default function GovernancePolls() {
+  const { t } = useTranslation('governance');
   const { usePolls } = useGovernance();
 
   const [search, setSearch] = useState<string>('');
   const [status, setStatus] = useState<'all' | 'open' | 'closed'>('open');
   const { data: polls, isLoading } = usePolls({ status, search });
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>{t('polls.loading')}</div>;
 
   return (
     <div className="min-h-screen">
@@ -30,11 +32,10 @@ export default function GovernancePolls() {
               </div>
               <div className="header-text">
                 <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent m-0 leading-tight">
-                  Governance
+                  {t('polls.title')}
                 </h1>
                 <p className="text-base text-slate-300 font-medium mt-2 mb-0 leading-relaxed">
-                  Shape the future of the ecosystem through community-driven
-                  decisions
+                  {t('polls.subtitle')}
                 </p>
               </div>
             </div>
@@ -53,7 +54,7 @@ export default function GovernancePolls() {
                 >
                   {polls.length}
                   {' '}
-                  {status === 'open' ? 'Active' : 'Closing'}
+                  {status === 'open' ? t('polls.active') : t('polls.closing')}
                 </span>
               </div>
             </div>
@@ -68,8 +69,8 @@ export default function GovernancePolls() {
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="flex-1">
                   <MobileInput
-                    label="Search polls"
-                    placeholder="Find polls by title or description..."
+                    label={t('polls.searchLabel')}
+                    placeholder={t('polls.searchPlaceholder')}
                     value={search}
                     onChange={(e) => {
                       setSearch(e.target.value);
@@ -97,7 +98,7 @@ export default function GovernancePolls() {
                 <div className="lg:w-64">
                   <MobileInput
                     as="select"
-                    label="Filter by status"
+                    label={t('polls.filterByStatus')}
                     value={status}
                     onChange={(e) => {
                       if (
@@ -128,9 +129,9 @@ export default function GovernancePolls() {
                     )}
                     className="transition-all duration-300 focus-within:scale-[1.02] focus-within:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]"
                   >
-                    <option value="all">All polls</option>
-                    <option value="open">🟢 Open polls</option>
-                    <option value="closed">🔴 Closed polls</option>
+                    <option value="all">{t('polls.allPolls')}</option>
+                    <option value="open">{t('polls.openPolls')}</option>
+                    <option value="closed">{t('polls.closedPolls')}</option>
                   </MobileInput>
                 </div>
               </div>
@@ -156,11 +157,10 @@ export default function GovernancePolls() {
                     <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-slate-400 to-slate-500 rounded-full animate-pulse" />
                   </div>
                   <h3 className="m-0 mb-4 text-white text-2xl font-bold">
-                    No polls found
+                    {t('polls.noPollsFound')}
                   </h3>
                   <p className="m-0 text-slate-300 text-base leading-relaxed max-w-md mx-auto">
-                    Try adjusting your search terms or filters to discover
-                    governance polls that match your interests.
+                    {t('polls.noPollsHint')}
                   </p>
                 </div>
               </MobileCard>
@@ -191,7 +191,7 @@ export default function GovernancePolls() {
                                 : 'bg-gradient-to-br from-gray-500/30 to-slate-500/20 text-gray-300 border border-gray-400/40'
                           }`}
                         >
-                          {p.status || 'Unknown'}
+                          {p.status || t('polls.unknown')}
 
                           {p.status?.toLowerCase() === 'open' && (
                             <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-emerald-400/20 rounded-2xl animate-pulse" />
@@ -228,7 +228,7 @@ export default function GovernancePolls() {
                             <span className="text-sm font-semibold">
                               {p.voteCount}
                               {' '}
-                              votes
+                              {t('polls.votes')}
                             </span>
                           </div>
 

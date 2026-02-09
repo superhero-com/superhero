@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { PostsService, PostDto } from '../../../api/generated';
 import ReplyToFeedItem from './ReplyToFeedItem';
@@ -10,6 +11,7 @@ const DirectReplies = ({
   id: string;
   onOpenPost: (postId: string) => void;
 }) => {
+  const { t } = useTranslation(['common', 'social']);
   const {
     data,
     isLoading,
@@ -65,12 +67,12 @@ const DirectReplies = ({
     return () => { cancelled = true; };
   }, [data, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  if (isLoading) return <div className="text-center py-6 text-white/70">Loading replies…</div>;
+  if (isLoading) return <div className="text-center py-6 text-white/70">{t('social:loadingReplies')}</div>;
   if (error) {
     return (
       <div className="text-center py-6">
-        <div className="text-white/70 mb-2">Error loading replies.</div>
-        <button type="button" className="text-sm underline" onClick={() => refetch()}>Retry</button>
+        <div className="text-white/70 mb-2">{t('social:errorLoadingReplies')}</div>
+        <button type="button" className="text-sm underline" onClick={() => refetch()}>{t('common:buttons.retry')}</button>
       </div>
     );
   }

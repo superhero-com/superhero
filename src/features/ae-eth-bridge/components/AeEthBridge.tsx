@@ -152,6 +152,7 @@ export const AeEthBridge = () => {
 
   const [buttonBusy, setButtonBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [confirmPhase, setConfirmPhase] = useState<'allowance' | 'bridge' | null>(null);
   const [confirmingMsg, setConfirmingMsg] = useState('');
   const [bridgeActionSummary, setBridgeActionSummary] = useState<BridgeAction | null>(null);
   const [destination, setDestination] = useState<string>('');
@@ -282,11 +283,11 @@ export const AeEthBridge = () => {
           className="p-0 h-auto text-blue-400"
           onClick={() => window.open(url, '_blank')?.focus()}
         >
-          View Transaction
+          {t('bridge.viewTransaction')}
         </Button>
       </div>,
     );
-  }, [direction, showToast]);
+  }, [direction, showToast, t]);
 
   const showSnackMessage = useCallback((message: string) => {
     showToast(message.substring(0, 100));
@@ -384,6 +385,7 @@ export const AeEthBridge = () => {
       } else {
         try {
           setConfirming(true);
+          setConfirmPhase('allowance');
           setConfirmingMsg(t('bridge.checkingTokenAllowance'));
           Logger.log('Checking allowance for asset:', asset.ethAddress);
           Logger.log('Signer address:', signerAddress);
@@ -501,6 +503,7 @@ export const AeEthBridge = () => {
               }
               showSnackMessage(errorMsg);
               setButtonBusy(false);
+              setConfirmPhase(null);
               setConfirming(false);
               setConfirmingMsg('');
               return;
@@ -531,6 +534,7 @@ export const AeEthBridge = () => {
 
       let timeout: NodeJS.Timeout;
       try {
+        setConfirmPhase('bridge');
         setConfirming(true);
         setConfirmingMsg(t('bridge.confirmBridgeTransaction'));
 
@@ -601,6 +605,7 @@ export const AeEthBridge = () => {
 
         showSnackMessage(errorMsg);
       } finally {
+        setConfirmPhase(null);
         setConfirming(false);
         setConfirmingMsg('');
       }
@@ -706,6 +711,7 @@ export const AeEthBridge = () => {
 
         // Check and handle allowance
         setConfirming(true);
+        setConfirmPhase('allowance');
         setConfirmingMsg(t('bridge.checkingTokenAllowance'));
         let allowance;
         try {
@@ -737,6 +743,7 @@ export const AeEthBridge = () => {
           allowanceTxHash = allowanceCall.hash;
           showTransactionSubmittedMessage(t('bridge.allowanceTransactionSubmitted'), allowanceCall.hash);
         }
+        setConfirmPhase(null);
         setConfirming(false);
         setConfirmingMsg('');
       }
@@ -747,6 +754,7 @@ export const AeEthBridge = () => {
         omitUnknown: true,
       });
 
+      setConfirmPhase('bridge');
       setConfirmingMsg(t('bridge.confirmBridgeTransaction'));
       setConfirming(true);
       const bridgeOutCall = await bridgeContract.bridge_out(
@@ -781,6 +789,7 @@ export const AeEthBridge = () => {
       Logger.error(e);
       showSnackMessage(e.message);
     } finally {
+      setConfirmPhase(null);
       setConfirming(false);
       setConfirmingMsg('');
     }
@@ -1082,7 +1091,7 @@ export const AeEthBridge = () => {
                         onClick={handleCopyTokenAddress}
                         className="text-[10px] text-[#4ecdc4] hover:text-[#3ab3aa]"
                       >
-                        {t('copy', { ns: 'common' })}
+                        {t('actions.copy', { ns: 'common' })}
                       </button>
                     </div>
                   )}
@@ -1129,7 +1138,7 @@ export const AeEthBridge = () => {
                 type="text"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
-                placeholder={direction === Direction.EthereumToAeternity ? 'ak_...' : '0x...'}
+                placeholder={direction === Direction.EthereumToAeternity ? t('bridge.placeholderAddressAe') : t('bridge.placeholderAddressEth')}
                 className={`w-full bg-transparent border-none text-white text-sm font-mono outline-none shadow-none ${!isValidDestination && destination ? 'text-red-400' : ''
                 }`}
               />
@@ -1143,14 +1152,14 @@ export const AeEthBridge = () => {
             <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-3 sm:p-4 mb-4 sm:mb-5 backdrop-blur-[10px]">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm text-white/60">
-                  Transaction Status
+                  {t('bridge.transactionStatus')}
                 </span>
                 <span className="text-sm font-semibold text-yellow-400">
                   {confirming
-                    ? (confirmingMsg === 'Approving allowance' || confirmingMsg === 'Creating allowance' || confirmingMsg === 'Updating allowance'
-                      ? '1️⃣ Approving Token'
-                      : '2️⃣ Executing Bridge')
-                    : 'Processing...'}
+                    ? (confirmPhase === 'allowance'
+                      ? t('bridge.approvingToken')
+                      : t('bridge.executingBridge'))
+                    : t('bridge.processing')}
                 </span>
               </div>
 
@@ -1159,7 +1168,7 @@ export const AeEthBridge = () => {
               </div>
 
               <div className="text-xs text-white/60 text-center">
-                {confirming ? confirmingMsg : 'Preparing transaction...'}
+                {confirming ? confirmingMsg : t('bridge.preparingTransaction')}
               </div>
             </div>
             )}
@@ -1167,8 +1176,8 @@ export const AeEthBridge = () => {
             {/* Warnings */}
             {(!isBridgeContractEnabled || !hasOperatorEnoughBalance) && (
             <div className="text-yellow-400 text-sm py-3 px-3 sm:px-4 bg-yellow-400/10 border border-yellow-400/20 rounded-xl mb-4 sm:mb-5">
-              {!isBridgeContractEnabled && '⚠️ Smart contract has been disabled for this network.'}
-              {!hasOperatorEnoughBalance && '⚠️ Bridge operator has insufficient funds. Please try again later.'}
+              {!isBridgeContractEnabled && t('bridge.smartContractDisabled')}
+              {!hasOperatorEnoughBalance && t('bridge.bridgeOperatorInsufficientFunds')}
             </div>
             )}
 
@@ -1219,7 +1228,7 @@ export const AeEthBridge = () => {
                     <div className="flex items-center justify-center gap-2">
                       <Spinner className="w-4 h-4" />
                       {confirming
-                        ? (confirmingMsg === 'Approving allowance' || confirmingMsg === 'Creating allowance' || confirmingMsg === 'Updating allowance'
+                        ? (confirmPhase === 'allowance'
                           ? t('bridge.approving')
                           : t('bridge.bridging'))
                         : t('bridge.processing')}
@@ -1238,7 +1247,7 @@ export const AeEthBridge = () => {
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
                 <span className="text-2xl">✨</span>
-                Bridge Transaction Submitted
+                {t('bridge.bridgeTransactionSubmitted')}
               </DialogTitle>
             </DialogHeader>
 
@@ -1246,23 +1255,23 @@ export const AeEthBridge = () => {
               <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 mb-4">
                 <div className="flex items-center justify-center gap-2 text-green-400 font-semibold mb-2">
                   <span className="text-2xl">✓</span>
-                  <span>Successfully Submitted</span>
+                  <span>{t('bridge.successfullySubmitted')}</span>
                 </div>
                 <div className="text-xs text-white/60 text-center">
-                  Your bridge transaction has been submitted to the blockchain
+                  {t('bridge.bridgeTransactionSubmittedDescription')}
                 </div>
               </div>
 
               <div className="bg-white/[0.05] border border-white/10 rounded-xl p-3 space-y-2">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-white/60">Direction:</span>
+                  <span className="text-white/60">{t('bridge.directionLabel')}</span>
                   <span className="text-white font-semibold">
                     {isBridgeActionFromAeternity ? t('bridge.bridgeDirection.aeternityToEthereum') : t('bridge.bridgeDirection.ethereumToAeternity')}
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-white/60">Amount:</span>
+                  <span className="text-white/60">{t('bridge.amount')}</span>
                   <span className="text-white font-semibold">
                     {bridgeActionSummary?.amount}
                     {' '}
@@ -1271,7 +1280,7 @@ export const AeEthBridge = () => {
                 </div>
 
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-white/60">Destination:</span>
+                  <span className="text-white/60">{t('bridge.destinationStatusLabel')}</span>
                   <span className="text-white text-xs font-mono truncate max-w-[200px]">
                     {bridgeActionSummary?.destination}
                   </span>
@@ -1281,7 +1290,7 @@ export const AeEthBridge = () => {
               {bridgeActionSummary?.allowanceTxHash && (
                 <div className="bg-white/[0.05] border border-white/10 rounded-xl p-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-white/60 text-sm">Allowance Transaction:</span>
+                    <span className="text-white/60 text-sm">{t('bridge.allowanceTransaction')}</span>
                     <a
                       className="text-[#4ecdc4] hover:text-[#3ab3aa] text-sm font-semibold transition-colors"
                       target="_blank"
@@ -1291,11 +1300,7 @@ export const AeEthBridge = () => {
                         bridgeActionSummary?.allowanceTxHash,
                       )}
                     >
-                      View on
-                      {' '}
-                      {isBridgeActionFromAeternity ? 'ÆScan' : 'Etherscan'}
-                      {' '}
-                      →
+                      {t('bridge.viewOn', { explorer: isBridgeActionFromAeternity ? t('bridge.aescan') : t('bridge.etherscan') })}
                     </a>
                   </div>
                 </div>
@@ -1303,7 +1308,7 @@ export const AeEthBridge = () => {
 
               <div className="bg-white/[0.05] border border-white/10 rounded-xl p-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-white/60 text-sm">Bridge Transaction:</span>
+                  <span className="text-white/60 text-sm">{t('bridge.bridgeTransaction')}</span>
                   <a
                     className="text-[#4ecdc4] hover:text-[#3ab3aa] text-sm font-semibold transition-colors"
                     target="_blank"
@@ -1313,26 +1318,22 @@ export const AeEthBridge = () => {
                       bridgeActionSummary?.bridgeTxHash,
                     )}
                   >
-                    View on
-                    {' '}
-                    {isBridgeActionFromAeternity ? 'ÆScan' : 'Etherscan'}
-                    {' '}
-                    →
+                    {t('bridge.viewOn', { explorer: isBridgeActionFromAeternity ? t('bridge.aescan') : t('bridge.etherscan') })}
                   </a>
                 </div>
               </div>
 
               <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-sm text-white/80 text-center">
-                <div className="font-semibold mb-1">⏳ Processing Time</div>
-                Your tokens will be available in the destination network after the transaction is confirmed and processed (typically 5-15 minutes).
+                <div className="font-semibold mb-1">{t('bridge.processingTime')}</div>
+                {t('bridge.processingTimeDescription')}
               </div>
 
               {!isBridgeActionFromAeternity && (
                 <div className="text-xs text-white/60 bg-white/[0.05] border border-white/10 rounded-xl p-3">
-                  💡 The received tokens should automatically appear in your Superhero Wallet. If they haven't shown up after 15 minutes, try refreshing or reach out on the
+                  {t('bridge.tokensAutoAppear')}
                   {' '}
                   <a href="https://forum.aeternity.com/" target="_blank" rel="noopener noreferrer" className="text-[#4ecdc4] hover:underline">
-                    forum
+                    {t('bridge.forum')}
                   </a>
                   .
                 </div>
@@ -1340,18 +1341,14 @@ export const AeEthBridge = () => {
 
               {isBridgeActionFromAeternity && bridgeActionSummary?.asset.symbol !== 'ETH' && (
                 <div className="text-xs text-white/60 bg-white/[0.05] border border-white/10 rounded-xl p-3">
-                  💡 If you don&apos;t see the tokens, you can
+                  {t('bridge.addTokenToWalletIntro')}
                   {' '}
                   <button
                     type="button"
                     className="text-[#4ecdc4] hover:underline font-semibold"
                     onClick={() => addTokenToEthereumWallet(bridgeActionSummary.asset)}
                   >
-                    add
-                    {' '}
-                    {bridgeActionSummary?.asset.symbol}
-                    {' '}
-                    to your wallet
+                    {t('bridge.addTokenToWalletLink', { symbol: bridgeActionSummary?.asset.symbol ?? '' })}
                   </button>
                   .
                 </div>
@@ -1364,7 +1361,7 @@ export const AeEthBridge = () => {
                 onClick={() => setBridgeActionSummary(null)}
                 className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] text-white font-bold uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5"
               >
-                Close
+                {t('bridge.close')}
               </button>
             </DialogFooter>
           </DialogContent>

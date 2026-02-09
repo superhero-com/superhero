@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import GovernanceAccount from '@/components/governance/GovernanceAccount';
 import GovernancePolls from '@/components/governance/GovernancePolls';
@@ -11,6 +12,7 @@ import AeButton from '../components/AeButton';
 type TabType = 'polls' | 'vote' | 'account' | 'create';
 
 const Governance = () => {
+  const { t } = useTranslation('governance');
   const { id: pollId } = useParams();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>('polls');
@@ -40,7 +42,7 @@ const Governance = () => {
               : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
           }`}
         >
-          📊 Polls
+          {t('tabs.polls')}
         </AeButton>
         {pollId && (
           <AeButton
@@ -51,7 +53,7 @@ const Governance = () => {
                 : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
             }`}
           >
-            🗳️ Vote
+            {t('tabs.vote')}
           </AeButton>
         )}
         <AeButton
@@ -62,7 +64,7 @@ const Governance = () => {
               : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
           }`}
         >
-          👤 My Account
+          {t('tabs.myAccount')}
         </AeButton>
         <AeButton
           onClick={() => setActiveTab('create')}
@@ -72,7 +74,7 @@ const Governance = () => {
               : 'text-slate-400 border-white/10 hover:bg-white/5 hover:border-white/15 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20'
           }`}
         >
-          🆕 Create Poll
+          {t('tabs.createPoll')}
         </AeButton>
       </div>
 

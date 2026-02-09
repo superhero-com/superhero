@@ -17,6 +17,7 @@ import { Encoded, Encoding, toAe } from '@aeternity/aepp-sdk';
 import { useQuery } from '@tanstack/react-query';
 import { VOTE_TYPE, VoteMetadata } from 'bctsl-sdk';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 
 const voteTypes = [
@@ -30,6 +31,7 @@ const voteTypes = [
 ] as const;
 
 const Dao = () => {
+  const { t } = useTranslation('dao');
   const { saleAddress } = useParams();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -61,34 +63,34 @@ const Dao = () => {
 
     // Validate subject value (should be an address)
     if (!newVote.value || newVote.value.trim() === '') {
-      errors.value = 'Subject value is required';
+      errors.value = t('subjectValueRequired');
     } else {
       try {
         ensureAddress(newVote.value.trim(), Encoding.ContractAddress);
       } catch {
-        errors.value = 'Subject value must be a valid contract address';
+        errors.value = t('subjectValueInvalid');
       }
     }
 
     // Validate description (should be a string)
     if (!newVote.description || newVote.description.trim() === '') {
-      errors.description = 'Description is required';
+      errors.description = t('descriptionRequired');
     } else {
       try {
         ensureString(newVote.description.trim());
       } catch {
-        errors.description = 'Description must be a valid string';
+        errors.description = t('descriptionInvalid');
       }
     }
 
     // Validate link (should be a string)
     if (!newVote.link || newVote.link.trim() === '') {
-      errors.link = 'Link is required';
+      errors.link = t('linkRequired');
     } else {
       try {
         ensureString(newVote.link.trim());
       } catch {
-        errors.link = 'Link must be a valid string';
+        errors.link = t('linkInvalid');
       }
     }
 
@@ -122,7 +124,7 @@ const Dao = () => {
       await addVote(metadata as VoteMetadata);
       await updateState();
     } catch (e: any) {
-      setErrorMessage(e?.message || 'Failed to create vote');
+      setErrorMessage(e?.message || t('failedToCreateVote'));
     } finally {
       setCreating(false);
     }
@@ -138,18 +140,20 @@ const Dao = () => {
               <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent leading-tight">
                 {token.name || token.symbol}
                 {' '}
-                [DAO]
+                [
+                {t('badge')}
+                ]
               </h1>
               <Badge
                 variant="secondary"
                 className="bg-gradient-to-r from-slate-600/80 to-slate-700/80 text-white text-xs font-medium px-2.5 py-1 rounded-full border-0 shadow-sm"
               >
-                DAO
+                {t('badge')}
               </Badge>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <div className="flex flex-row gap-2 items-center font-bold text-white">
-                <div className="font-bold opacity-80 text-white/80">Treasury</div>
+                <div className="font-bold opacity-80 text-white/80">{t('treasury')}</div>
                 <div className="font-bold text-white">
                   {token?.dao_balance ? (
                     <LivePriceFormatter
@@ -172,7 +176,7 @@ const Dao = () => {
             to={`/trends/tokens/${encodeURIComponent(saleAddress || '')}`}
             className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
           >
-            ← Back to token sale
+            {t('backToTokenSale')}
           </Link>
           <a
             href={`https://aescan.io/contracts/${encodeURIComponent(
@@ -182,7 +186,7 @@ const Dao = () => {
             rel="noopener noreferrer"
             className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
           >
-            View on æScan ↗
+            {t('viewOnAescan')}
           </a>
         </div>
       </div>
@@ -190,7 +194,7 @@ const Dao = () => {
       {isLoading && (
         <Card className="bg-white/[0.02] border-white/10">
           <CardContent className="p-6">
-            <div className="text-white/80">Loading…</div>
+            <div className="text-white/80">{t('loading')}</div>
           </CardContent>
         </Card>
       )}
@@ -211,7 +215,7 @@ const Dao = () => {
               <div className="flex flex-wrap gap-6 text-sm mb-4">
                 <div>
                   <span className="opacity-75 text-xs text-white/75">
-                    Proposals:
+                    {t('proposals')}
                   </span>
                   {' '}
                   <strong className="text-white">
@@ -223,7 +227,7 @@ const Dao = () => {
                 {token?.holders_count != null && (
                   <div>
                     <span className="opacity-75 text-xs text-white/75">
-                      Holders:
+                      {t('holders')}
                     </span>
                     {' '}
                     <strong className="text-white">
@@ -234,7 +238,7 @@ const Dao = () => {
                 {token?.market_cap != null && (
                   <div className="flex flex-row gap-2 items-center">
                     <span className="opacity-75 text-xs text-white/75">
-                      Market Cap:
+                      {t('marketCap')}
                     </span>
                     {' '}
                     <strong className="text-white">
@@ -249,9 +253,7 @@ const Dao = () => {
                 )}
               </div>
               <div className="text-sm opacity-80 text-white/80 leading-relaxed">
-                The DAO manages the token&apos;s treasury. Holders can create proposals
-                and vote. Approved proposals can be applied to execute on-chain
-                actions such as payouts.
+                {t('intro')}
               </div>
             </CardContent>
           </Card>
@@ -260,20 +262,23 @@ const Dao = () => {
             {/* Create Vote Card */}
             <Card className="bg-white/[0.02] border-white/10">
               <CardHeader>
-                <CardTitle className="text-white">Create Vote</CardTitle>
+                <CardTitle className="text-white">{t('createVote')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-4">
                   <div>
                     <div className="text-sm font-medium text-white/80 mb-2 block">
-                      Vote Type
+                      {t('voteType')}
                     </div>
                     <Select
                       value={newVote.type}
-                      onValueChange={(value) => setNewVote((v) => ({ ...v, type: value as (typeof voteTypes)[number] }))}
+                      onValueChange={(value) => setNewVote((v) => ({
+                        ...v,
+                        type: value as (typeof voteTypes)[number],
+                      }))}
                     >
                       <SelectTrigger className="bg-white/5 border-white/20 text-white">
-                        <SelectValue placeholder="Select vote type" />
+                        <SelectValue placeholder={t('selectVoteType')} />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-900 border-white/20">
                         {voteTypes.map((type) => (
@@ -287,10 +292,10 @@ const Dao = () => {
 
                   <div>
                     <div className="text-sm font-medium text-white/80 mb-2 block">
-                      Subject Value
+                      {t('subjectValue')}
                     </div>
                     <Input
-                      placeholder="Subject value (address or data)"
+                      placeholder={t('subjectValuePlaceholder')}
                       value={newVote.value}
                       onChange={(e) => {
                         setNewVote((v) => ({ ...v, value: e.target.value }));
@@ -307,10 +312,10 @@ const Dao = () => {
 
                   <div>
                     <div className="text-sm font-medium text-white/80 mb-2 block">
-                      Description
+                      {t('description')}
                     </div>
                     <Input
-                      placeholder="Description"
+                      placeholder={t('descriptionPlaceholder')}
                       value={newVote.description || ''}
                       onChange={(e) => {
                         setNewVote((v) => ({ ...v, description: e.target.value }));
@@ -327,10 +332,10 @@ const Dao = () => {
 
                   <div>
                     <div className="text-sm font-medium text-white/80 mb-2 block">
-                      Link
+                      {t('link')}
                     </div>
                     <Input
-                      placeholder="Link"
+                      placeholder={t('linkPlaceholder')}
                       value={newVote.link || ''}
                       onChange={(e) => {
                         setNewVote((v) => ({ ...v, link: e.target.value }));
@@ -356,7 +361,7 @@ const Dao = () => {
                     disabled={creating}
                     className="w-full bg-gradient-to-r from-[#ff6b6b] to-[#4ecdc4] hover:shadow-lg"
                   >
-                    {creating ? 'Creating…' : 'Create vote'}
+                    {creating ? t('creating') : t('createVoteButton')}
                   </Button>
                 </div>
               </CardContent>
@@ -365,7 +370,7 @@ const Dao = () => {
             {/* Votes Card */}
             <Card className="bg-white/[0.02] border-white/10">
               <CardHeader>
-                <CardTitle className="text-white">Votes</CardTitle>
+                <CardTitle className="text-white">{t('votes')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {!state || !state?.votes || Array.from(state?.votes).length === 0 ? (
@@ -375,14 +380,15 @@ const Dao = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-semibold text-white mb-2">No votes yet</h3>
+                    <h3 className="text-lg font-semibold text-white mb-2">{t('noVotesYet')}</h3>
                     <p className="text-white/60 text-sm max-w-xs leading-relaxed">
-                      Be the first to create a proposal and start the democratic process for this token.
+                      {t('noVotesYetDescription')}
                     </p>
                   </div>
                 ) : (
                   Array.from(state?.votes).map((vote: any, index: number) => (
                     <TokenVoteCard
+                      // eslint-disable-next-line react/no-array-index-key
                       key={index}
                       address={vote[1][1]}
                       saleAddress={saleAddress as Encoded.ContractAddress}

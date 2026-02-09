@@ -23,6 +23,7 @@ import { usePool } from '../context/PoolProvider';
 
 const AddLiquidityForm = () => {
   const { t } = useTranslation('common');
+  const { t: tDex } = useTranslation('dex');
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
   const location = useLocation();
@@ -455,7 +456,7 @@ const AddLiquidityForm = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-xl font-bold m-0 sh-dex-title">Add Liquidity</h2>
+          <h2 className="text-xl font-bold m-0 sh-dex-title">{tDex('addLiquidityForm.title')}</h2>
         </div>
 
         <div className="flex gap-2 items-center">
@@ -465,7 +466,7 @@ const AddLiquidityForm = () => {
               onClick={clearSelection}
               className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
             >
-              ✕ Cancel
+              {tDex('addLiquidityForm.cancel')}
             </button>
           )}
 
@@ -475,7 +476,7 @@ const AddLiquidityForm = () => {
               aria-label="open-settings"
               className="px-3 py-2 rounded-xl border border-white/10 bg-white/[0.02] text-white cursor-pointer backdrop-blur-[10px] transition-all duration-300 ease-out text-xs font-medium hover:bg-[#00ff9d] hover:-translate-y-0.5 active:translate-y-0"
             >
-              ⚙️ Settings
+              {tDex('addLiquidityForm.settings')}
             </button>
           </DexSettings>
         </div>
@@ -483,22 +484,24 @@ const AddLiquidityForm = () => {
       <div className="flex-wrap text-sm text-white/60 text-left mb-6 opacity-90">
         {currentAction === 'add' && selectedTokenA && selectedTokenB && (
           <p className="text-xs text-white/60 mt-1">
-            Adding to
+            {tDex('addLiquidityForm.addingTo')}
+            {' '}
             <TokenChip address={selectedTokenA} />
             <span className="text-lg text-light-font-color">/</span>
             <TokenChip address={selectedTokenB} />
-            position
+            {' '}
+            {tDex('addLiquidityForm.position')}
           </p>
         )}
       </div>
       <div className="text-sm text-white/60 text-center mb-6 opacity-90">
-        Provide liquidity to earn trading fees from swaps
+        {tDex('addLiquidityForm.provideLiquidityHint')}
       </div>
 
       {/* Token A Input */}
       <div className="mb-2">
         <TokenInput
-          label="Token A"
+          label={tDex('addLiquidityForm.tokenA')}
           token={tokenA}
           skipToken={tokenB}
           amount={amountA}
@@ -525,7 +528,7 @@ const AddLiquidityForm = () => {
       {/* Token B Input */}
       <div className="mb-5">
         <TokenInput
-          label="Token B"
+          label={tDex('addLiquidityForm.tokenB')}
           token={tokenB}
           skipToken={tokenA}
           amount={amountB}
@@ -567,45 +570,19 @@ const AddLiquidityForm = () => {
         <div className="text-red-400 text-sm py-3 px-4 bg-red-400/10 border border-red-400/20 rounded-xl mb-5 text-center">
           {/* eslint-disable-next-line no-nested-ternary */}
           {hasInsufficientBalanceA && hasInsufficientBalanceB ? (
-            <>
-              Insufficient balance for both
-              {' '}
-              {tokenA?.symbol}
-              {' '}
-              and
-              {' '}
-              {tokenB?.symbol}
-            </>
+            tDex('addLiquidityForm.insufficientBalanceBoth', { symbolA: tokenA?.symbol ?? '', symbolB: tokenB?.symbol ?? '' })
           ) : hasInsufficientBalanceA ? (
-            <>
-              Insufficient
-              {' '}
-              {tokenA?.symbol}
-              {' '}
-              balance. You need
-              {' '}
-              {Decimal.from(amountA || '0').prettify()}
-              {' '}
-              but only
-              have
-              {' '}
-              {balances.in ? Decimal.from(balances.in).prettify() : '0'}
-            </>
+            tDex('addLiquidityForm.insufficientBalanceNeed', {
+              symbol: tokenA?.symbol ?? '',
+              needed: Decimal.from(amountA || '0').prettify(),
+              have: balances.in ? Decimal.from(balances.in).prettify() : '0',
+            })
           ) : (
-            <>
-              Insufficient
-              {' '}
-              {tokenB?.symbol}
-              {' '}
-              balance. You need
-              {' '}
-              {Decimal.from(amountB || '0').prettify()}
-              {' '}
-              but only
-              have
-              {' '}
-              {balances.out ? Decimal.from(balances.out).prettify() : '0'}
-            </>
+            tDex('addLiquidityForm.insufficientBalanceNeed', {
+              symbol: tokenB?.symbol ?? '',
+              needed: Decimal.from(amountB || '0').prettify(),
+              have: balances.out ? Decimal.from(balances.out).prettify() : '0',
+            })
           )}
         </div>
       )}
@@ -625,10 +602,10 @@ const AddLiquidityForm = () => {
           {state.loading ? (
             <div className="flex items-center justify-center gap-2">
               <Spinner className="w-4 h-4" />
-              Confirm in wallet…
+              {t('buttons.confirmInWallet')}
             </div>
           ) : (
-            'Add Liquidity'
+            tDex('addLiquidityForm.addLiquidityButton')
           )}
         </button>
       ) : (

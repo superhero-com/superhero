@@ -54,7 +54,7 @@ const HeaderWalletButton = () => {
         type="button"
         onClick={handleProfileClick}
         className="cursor-pointer hover:opacity-80 transition-opacity rounded-lg px-1 py-0.5 hover:bg-white/5 max-w-[210px] overflow-hidden"
-        aria-label="View profile"
+        aria-label={t('aria.viewProfile')}
       >
         <AddressAvatarWithChainName
           key={activeAccount}
@@ -76,7 +76,7 @@ const HeaderWalletButton = () => {
             type="button"
             className="p-1.5 rounded-lg border border-solid border-white/30 hover:bg-white/10 hover:border-white/40 active:bg-white/15 transition-colors cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px]"
             style={{ borderWidth: '1px' }}
-            aria-label="Account menu"
+            aria-label={t('aria.accountMenu')}
           >
             <IconThreeDots className="w-5 h-5 text-[var(--standard-font-color)]" />
           </button>

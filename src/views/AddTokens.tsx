@@ -12,6 +12,7 @@
 import BigNumber from 'bignumber.js';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import AeButton from '../components/AeButton';
 import DexTabs from '../components/dex/DexTabs';
 import { useToast } from '../components/ToastProvider';
@@ -23,6 +24,8 @@ import {
 import { useAeSdk } from '../hooks';
 
 export default function AddTokens() {
+  const { t } = useTranslation('addTokens');
+  const { t: tDex } = useTranslation('dex');
   const { activeAccount, sdk } = useAeSdk();
   const toast = useToast();
   const navigate = useNavigate();
@@ -170,13 +173,13 @@ export default function AddTokens() {
   return (
     <div className="max-w-[900px] mx-auto py-4 px-4">
       <DexTabs />
-      <h2 className="text-2xl font-bold text-white mb-2">Add tokens from your wallet</h2>
+      <h2 className="text-2xl font-bold text-white mb-2">{t('title')}</h2>
       <p className="text-sm text-white/80 mb-3 leading-relaxed">
-        Detect AEX-9 tokens held by your wallet and quickly create pools or add liquidity for them on the DEX.
+        {t('description')}
       </p>
       <div className="flex gap-2 items-center mb-2">
         <input
-          placeholder="Filter by symbol/address"
+          placeholder={tDex('filterBySymbolAddress')}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="flex-1 px-2 py-1.5 rounded bg-[#1a1a23] text-white border border-gray-600 text-sm focus:outline-none focus:border-purple-400"
@@ -188,7 +191,7 @@ export default function AddTokens() {
           variant="secondary-dark"
           size="small"
         >
-          {loading ? 'Scanning…' : 'Rescan'}
+          {loading ? tDex('scanning') : tDex('rescan')}
         </AeButton>
       </div>
       {error && <div className="text-red-400 mb-2 p-2 bg-red-500/10 rounded border border-red-500/20">{error}</div>}
@@ -196,11 +199,11 @@ export default function AddTokens() {
         <table className="w-full border-collapse bg-white/5 rounded-lg overflow-hidden">
           <thead>
             <tr className="bg-white/10">
-              <th className="text-left p-3 text-sm font-semibold text-white/80">Token</th>
-              <th className="text-left p-3 text-sm font-semibold text-white/80">Address</th>
-              <th className="text-right p-3 text-sm font-semibold text-white/80">Balance</th>
-              <th className="text-center p-3 text-sm font-semibold text-white/80">AE Pool</th>
-              <th className="text-right p-3 text-sm font-semibold text-white/80">Actions</th>
+              <th className="text-left p-3 text-sm font-semibold text-white/80">{t('token')}</th>
+              <th className="text-left p-3 text-sm font-semibold text-white/80">{t('address')}</th>
+              <th className="text-right p-3 text-sm font-semibold text-white/80">{t('balance')}</th>
+              <th className="text-center p-3 text-sm font-semibold text-white/80">{t('aePool')}</th>
+              <th className="text-right p-3 text-sm font-semibold text-white/80">{t('actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -224,7 +227,7 @@ export default function AddTokens() {
                       : 'bg-gray-500/20 text-gray-400'
                   }`}
                   >
-                    {poolExists[t.address] ? 'Exists' : 'Not found'}
+                    {poolExists[t.address] ? t('exists') : t('notFound')}
                   </span>
                 </td>
                 <td className="text-right p-3">
@@ -235,16 +238,16 @@ export default function AddTokens() {
                         variant="secondary-dark"
                         size="small"
                       >
-                        Add liquidity
+                        {tDex('addLiquidityButton')}
                       </AeButton>
                     ) : (
                       <AeButton
                         onClick={() => navigate(`/pool/deploy?token=${t.address}`)}
-                        title="Create new pool and add liquidity"
+                        title={tDex('createNewPoolAndLiquidity')}
                         variant="secondary-dark"
                         size="small"
                       >
-                        Create pool
+                        {tDex('createPool')}
                       </AeButton>
                     )}
                     <AeButton
@@ -252,7 +255,7 @@ export default function AddTokens() {
                       variant="secondary-dark"
                       size="small"
                     >
-                      Swap
+                      {tDex('swapButton')}
                     </AeButton>
                   </div>
                 </td>
@@ -261,7 +264,7 @@ export default function AddTokens() {
             {(!filtered.length && !loading) && (
               <tr>
                 <td colSpan={5} className="text-white/60 p-6 text-center">
-                  No tokens with balance found in your wallet.
+                  {t('noTokensInWallet')}
                 </td>
               </tr>
             )}

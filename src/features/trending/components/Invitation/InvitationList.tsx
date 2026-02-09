@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAeSdk } from '../../../../hooks/useAeSdk';
 import AeButton from '../../../../components/AeButton';
 import { Badge } from '../../../../components/ui/badge';
@@ -9,6 +10,7 @@ import LivePriceFormatter from '../../../shared/components/LivePriceFormatter';
 import { useInvitations } from '../../hooks/useInvitations';
 
 const InvitationList = () => {
+  const { t } = useTranslation('trending');
   const { activeAccount } = useAeSdk();
   const {
     invitations,
@@ -64,7 +66,7 @@ const InvitationList = () => {
       return (
         <>
           <div className="text-[10px] text-green-400/80 font-medium mb-1">
-            {invitation.claimedBy ? 'Invitee' : 'Claimed'}
+            {invitation.claimedBy ? t('invitations.invitee') : t('invitations.claimed')}
           </div>
           {invitation.claimedBy ? (
             <div className="font-mono text-sm text-white truncate">
@@ -75,12 +77,12 @@ const InvitationList = () => {
             </div>
           ) : (
             <div className="text-xs text-white/50">
-              Invitation was claimed
+              {t('invitations.invitationWasClaimed')}
             </div>
           )}
           {invitation.claimedAt && (
             <div className="text-xs text-white/50 mt-1">
-              Claimed on
+              {t('invitations.claimedOn')}
               {' '}
               {invitation.claimedAt}
             </div>
@@ -92,13 +94,13 @@ const InvitationList = () => {
     if (invitation.status === 'revoked') {
       return (
         <>
-          <div className="text-[10px] text-red-400/80 font-medium mb-1">Revoked</div>
+          <div className="text-[10px] text-red-400/80 font-medium mb-1">{t('invitations.revoked')}</div>
           <div className="text-xs text-white/50">
             No one claimed this invite
           </div>
           {invitation.revokedAt && (
             <div className="text-xs text-white/50 mt-1">
-              Revoked on
+              {t('invitations.revokedOn')}
               {' '}
               {invitation.revokedAt}
             </div>
@@ -109,7 +111,7 @@ const InvitationList = () => {
 
     return (
       <>
-        <div className="text-[10px] text-yellow-400/80 font-medium mb-1">Awaiting claim</div>
+        <div className="text-[10px] text-yellow-400/80 font-medium mb-1">{t('invitations.awaitingClaim')}</div>
         <div className="text-xs text-white/50 mb-1">
           Share the link to invite someone
         </div>
@@ -124,7 +126,7 @@ const InvitationList = () => {
               'cursor-pointer relative overflow-hidden',
               copiedInvitee === invitation.invitee && 'bg-green-500/20 border-green-500/30',
             )}
-            title="Click to copy link"
+            title={t('social:clickToCopyLink')}
           >
             <span className="text-yellow-400">🔗</span>
             <span className="font-mono text-[10px] text-white/80 truncate max-w-[140px]">
@@ -156,7 +158,7 @@ const InvitationList = () => {
   return (
     <div className="border border-white/10 rounded-lg bg-white/[0.02] backdrop-blur-sm">
       <div className="flex items-center justify-between p-4 border-b border-white/10">
-        <h3 className="text-lg font-semibold text-white">Your Invitations</h3>
+        <h3 className="text-lg font-semibold text-white">{t('invitations.yourInvitations')}</h3>
       </div>
 
       {loading && (
@@ -176,10 +178,10 @@ const InvitationList = () => {
         {/* Desktop Table Header - Hidden on mobile */}
         <div className="hidden md:grid grid-cols-[auto_1fr_120px_120px_140px] gap-4 px-4 py-3 text-xs font-medium text-white/60 border-b border-white/10">
           <div>#</div>
-          <div>Details</div>
-          <div>Amount</div>
-          <div>Status</div>
-          <div className="text-right">Actions</div>
+          <div>{t('invitations.details')}</div>
+          <div>{t('invitations.amount')}</div>
+          <div>{t('invitations.status')}</div>
+          <div className="text-right">{t('invitations.actions')}</div>
         </div>
 
         {/* Invitation Rows */}
@@ -244,8 +246,8 @@ const InvitationList = () => {
                   className="text-xs text-red-400 hover:text-red-300"
                 >
                   {revokingInvitationInvitee === invitation.invitee
-                    ? 'Revoking...'
-                    : 'Revoke'}
+                    ? t('invitations.revoking')
+                    : t('invitations.revoke')}
                 </AeButton>
                 )}
               </div>
@@ -273,8 +275,8 @@ const InvitationList = () => {
                   {(() => {
                     if (invitation.status === 'claimed') {
                       let claimedLabel: string;
-                      if (invitation.claimedBy) claimedLabel = 'Invitee';
-                      else claimedLabel = 'Claimed';
+                      if (invitation.claimedBy) claimedLabel = t('invitations.invitee');
+                      else claimedLabel = t('invitations.claimed');
                       return (
                         <>
                           <div className="text-xs text-green-400/80 font-medium">
@@ -304,7 +306,7 @@ const InvitationList = () => {
                     if (invitation.status === 'revoked') {
                       return (
                         <>
-                          <div className="text-xs text-red-400/80 font-medium">Revoked</div>
+                          <div className="text-xs text-red-400/80 font-medium">{t('invitations.revoked')}</div>
                           <div className="text-xs text-white/50">
                             Not claimed
                           </div>
@@ -319,7 +321,7 @@ const InvitationList = () => {
                     const isCopied = copiedInvitee === invitation.invitee;
                     return (
                       <>
-                        <div className="text-xs text-yellow-400/80 font-medium">Awaiting</div>
+                        <div className="text-xs text-yellow-400/80 font-medium">{t('invitations.awaiting')}</div>
                         <div className="text-xs text-white/50 mb-1">
                           Share the link
                         </div>
@@ -336,7 +338,7 @@ const InvitationList = () => {
                               'cursor-pointer relative overflow-hidden',
                               isCopied && 'bg-green-500/20 border-green-500/30',
                             )}
-                            title="Click to copy link"
+                            title={t('social:clickToCopyLink')}
                           >
                             <span className="text-yellow-400 text-xs">🔗</span>
                             <span className="font-mono text-white/80 truncate max-w-[80px]">
@@ -361,7 +363,7 @@ const InvitationList = () => {
                   })()}
                 </div>
                 <div className="space-y-1">
-                  <div className="text-xs text-white/60 font-medium">Amount</div>
+                  <div className="text-xs text-white/60 font-medium">{t('invitations.amount')}</div>
                   <div
                     className={cn(
                       'text-sm font-medium',
@@ -397,8 +399,8 @@ const InvitationList = () => {
                   className="text-xs flex-1 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   {revokingInvitationInvitee === invitation.invitee
-                    ? 'Revoking...'
-                    : 'Revoke'}
+                    ? t('invitations.revoking')
+                    : t('invitations.revoke')}
                 </AeButton>
               </div>
               )}

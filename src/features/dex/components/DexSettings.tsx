@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useDex } from '../../../hooks';
 
@@ -7,7 +8,9 @@ interface DexSettingsProps {
   title?: string;
 }
 
-const DexSettings = ({ children, title = 'DEX Settings' }: DexSettingsProps) => {
+const DexSettings = ({ children, title }: DexSettingsProps) => {
+  const { t } = useTranslation('dex');
+  const dialogTitle = title ?? t('settings.title');
   const {
     slippagePct, deadlineMins, setSlippage, setDeadline,
   } = useDex();
@@ -48,7 +51,7 @@ const DexSettings = ({ children, title = 'DEX Settings' }: DexSettingsProps) => 
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <Dialog.Title className="font-bold text-lg m-0 text-standard-font-color">
-              {title}
+              {dialogTitle}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
@@ -63,7 +66,7 @@ const DexSettings = ({ children, title = 'DEX Settings' }: DexSettingsProps) => 
           {/* Slippage Setting */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-standard-font-color mb-2">
-              Slippage Tolerance
+              {t('settings.slippageTolerance')}
             </label>
             <div className="flex gap-2 mb-2">
               {[0.1, 0.5, 1.0].map((preset) => (
@@ -86,7 +89,7 @@ const DexSettings = ({ children, title = 'DEX Settings' }: DexSettingsProps) => 
                   type="number"
                   value={tempSlippage}
                   onChange={(e) => setTempSlippage(e.target.value)}
-                  placeholder="Custom"
+                  placeholder={t('common:placeholders.custom')}
                   min="0.1"
                   max="50"
                   step="0.1"
@@ -98,14 +101,14 @@ const DexSettings = ({ children, title = 'DEX Settings' }: DexSettingsProps) => 
               </div>
             </div>
             <div className="text-[11px] text-light-font-color opacity-80">
-              Your transaction will revert if the price changes unfavorably by more than this percentage.
+              {t('settings.slippageHint')}
             </div>
           </div>
 
           {/* Transaction Deadline */}
           <div className="mb-8">
             <label className="block text-sm font-semibold text-standard-font-color mb-2">
-              Transaction Deadline
+              {t('settings.transactionDeadline')}
             </label>
             <div className="flex gap-2 mb-2">
               {[10, 20, 30].map((preset) => (
@@ -128,7 +131,7 @@ const DexSettings = ({ children, title = 'DEX Settings' }: DexSettingsProps) => 
                   type="number"
                   value={tempDeadline}
                   onChange={(e) => setTempDeadline(e.target.value)}
-                  placeholder="Custom"
+                  placeholder={t('common:placeholders.custom')}
                   min="1"
                   max="180"
                   step="1"
@@ -140,7 +143,7 @@ const DexSettings = ({ children, title = 'DEX Settings' }: DexSettingsProps) => 
               </div>
             </div>
             <div className="text-[11px] text-light-font-color opacity-80">
-              Your transaction will be cancelled if it's pending for more than this long.
+              {t('settings.deadlineHint')}
             </div>
           </div>
 
@@ -151,14 +154,14 @@ const DexSettings = ({ children, title = 'DEX Settings' }: DexSettingsProps) => 
               onClick={handleCancel}
               className="flex-1 px-5 py-3 rounded-xl border border-white/10 bg-white/5 text-standard-font-color text-sm font-semibold cursor-pointer transition-all duration-300"
             >
-              Cancel
+              {t('settings.cancel')}
             </button>
             <button
               type="button"
               onClick={handleSave}
               className="flex-1 px-5 py-3 rounded-xl border-none bg-button-gradient text-white text-sm font-bold cursor-pointer transition-all duration-300"
             >
-              Save
+              {t('settings.save')}
             </button>
           </div>
         </Dialog.Content>

@@ -78,11 +78,11 @@ const ReplyToFeedItem = memo(({
   isActive = false,
   tokenHolderLabel,
 }: ReplyToFeedItemProps) => {
-  const { t } = useTranslation('social');
+  const { t } = useTranslation(['common', 'social']);
   const postId = item.id;
   const authorAddress = item.sender_address;
   const { chainNames } = useWallet();
-  const displayName = chainNames?.[authorAddress] || 'Legend';
+  const displayName = chainNames?.[authorAddress] || t('common:defaultDisplayName');
 
   const parentId = useParentId(item);
   const [parent, setParent] = useState<PostDto | null>(null);
@@ -280,7 +280,7 @@ const ReplyToFeedItem = memo(({
               title={t('openParent')}
             >
               <div className="flex items-end mb-1 min-w-0">
-                <span className="text-[11px] text-white/65 shrink-0 mr-1">Replying to</span>
+                <span className="text-[11px] text-white/65 shrink-0 mr-1">{t('replyingTo')}</span>
                 <div className="flex items-center gap-0.5 min-w-0 h-[18px]">
                   <div className="translate-y-[2px]">
                     <AddressAvatarWithChainName
@@ -291,7 +291,7 @@ const ReplyToFeedItem = memo(({
                     />
                   </div>
                   <div className="text-[12px] font-semibold text-white/90 truncate whitespace-nowrap">
-                    {parent ? chainNames?.[parent.sender_address] || 'Legend' : 'Parent'}
+                    {parent ? chainNames?.[parent.sender_address] || t('common:defaultDisplayName') : t('parent')}
                   </div>
                 </div>
                 <span className="mx-2 text-[11px] text-white/50 shrink-0">·</span>
@@ -305,7 +305,7 @@ const ReplyToFeedItem = memo(({
               </div>
               <div className="text-[12px] text-white line-clamp-2">
                 {parentError || !parent
-                  ? 'Parent unavailable/not visible'
+                  ? t('parentUnavailable')
                   : linkify(parent.content, {
                     knownChainNames: new Set(
                       Object.values(chainNames || {}).map((n) => n?.toLowerCase()),
@@ -314,7 +314,7 @@ const ReplyToFeedItem = memo(({
                     trendMentions: (parent as any)?.trend_mentions,
                   })}
               </div>
-              <div className="mt-1 text-[11px] text-white/70">Show post</div>
+              <div className="mt-1 text-[11px] text-white/70">{t('showPost')}</div>
             </button>
           )}
 
@@ -380,7 +380,7 @@ const ReplyToFeedItem = memo(({
           {showReplies && (
             <div id={`replies-${postId}`} className="mt-3 grid gap-2 pl-3 md:pl-5 border-l border-white/10">
               {childLoading && (
-                <div className="text-[13px] text-white/70">Loading replies…</div>
+                <div className="text-[13px] text-white/70">{t('loadingReplies')}</div>
               )}
               {childError && (
                 <div className="text-[13px] text-white/70">
@@ -396,7 +396,7 @@ const ReplyToFeedItem = memo(({
                 </div>
               )}
               {!childLoading && !childError && childReplies.length === 0 && (
-                <div className="text-[13px] text-white/60">No replies yet.</div>
+                <div className="text-[13px] text-white/60">{t('noRepliesYet')}</div>
               )}
               {childReplies.map((reply: PostDto) => (
                 <ReplyToFeedItem

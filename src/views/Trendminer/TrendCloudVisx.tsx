@@ -3,6 +3,7 @@
   no-nested-ternary
 */
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Wordcloud } from '@visx/wordcloud';
 import { SuperheroApi } from '../../api/backend';
 
@@ -11,6 +12,7 @@ type TrendingTag = { tag: string; score: number; source?: string };
 type Props = { embedded?: boolean; width?: number; height?: number };
 
 export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }: Props) {
+  const { t } = useTranslation('explore');
   const [tags, setTags] = useState<TrendingTag[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -28,7 +30,7 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
         const mapped: TrendingTag[] = items.map((it: any) => ({ tag: it.tag ?? it.name ?? '', score: Number(it.score ?? it.value ?? 0), source: it.source || it.platform || undefined }));
         if (!cancelled) setTags(mapped.filter((t) => t.tag));
       } catch (e: any) {
-        if (!cancelled) setError(e?.message || 'Failed to load trending tags');
+        if (!cancelled) setError(e?.message || t('failedToLoadTrendingTags'));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -79,8 +81,8 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
     <div className="max-w-6xl mx-auto p-4">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <div className="text-3xl font-extrabold text-white">TrendCloud (visx)</div>
-          <div className="text-xs opacity-75 text-white/75">Alternative layout powered by visx wordcloud.</div>
+          <div className="text-3xl font-extrabold text-white">{t('trendCloudVisxTitle')}</div>
+          <div className="text-xs opacity-75 text-white/75">{t('alternativeLayoutVisx')}</div>
         </div>
         <a
           href="/trends"
@@ -90,7 +92,7 @@ export default function TrendCloudVisx({ embedded, width = 1100, height = 520 }:
         </a>
       </div>
 
-      {loading && <div className="p-3 text-white/80">Loading…</div>}
+      {loading && <div className="p-3 text-white/80">{t('loading')}</div>}
       {error && <div className="p-3 text-red-400">{error}</div>}
 
       {cloud}

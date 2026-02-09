@@ -4,6 +4,7 @@
   no-use-before-define
 */
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, Link } from 'react-router-dom';
 import { SuperheroApi } from '../../api/backend';
 import AeButton from '../../components/AeButton';
@@ -20,6 +21,7 @@ type TokenItem = {
 };
 
 export default function AccountDetails() {
+  const { t } = useTranslation('explore');
   const { address } = useParams();
   const [tab, setTab] = useState<'owned'|'created'|'transactions'>('owned');
   const [owned, setOwned] = useState<TokenItem[]>([]);
@@ -47,7 +49,7 @@ export default function AccountDetails() {
           setCreated(createdResp?.items ?? createdResp ?? []);
         }
       } catch (e: any) {
-        if (!cancel) setError(e?.message || 'Failed to load account');
+        if (!cancel) setError(e?.message || t('failedToLoadAccount'));
       } finally {
         if (!cancel) setLoading(false);
       }
@@ -62,7 +64,7 @@ export default function AccountDetails() {
         <div className="w-16 h-16 rounded-lg bg-black/20 border border-white/10" />
         <div>
           <div className="text-2xl font-extrabold text-white">{address}</div>
-          <div className="text-xs opacity-70 text-white/70">Account Details</div>
+          <div className="text-xs opacity-70 text-white/70">{t('accountDetails')}</div>
         </div>
         <div className="ml-auto">
           <AeButton
@@ -98,14 +100,14 @@ export default function AccountDetails() {
         </AeButton>
       </div>
 
-      {loading && <div className="text-white/80">Loading…</div>}
+      {loading && <div className="text-white/80">{t('loading')}</div>}
       {error && <div className="text-red-400">{error}</div>}
 
       {!loading && !error && tab === 'owned' && (
-        <TokenGrid items={owned} />
+        <TokenGrid items={owned} emptyMessage={t('noTokens')} />
       )}
       {!loading && !error && tab === 'created' && (
-        <TokenGrid items={created} />
+        <TokenGrid items={created} emptyMessage={t('noTokens')} />
       )}
       {!loading && !error && tab === 'transactions' && (
         <div className="text-white/60">
@@ -116,7 +118,7 @@ export default function AccountDetails() {
   );
 }
 
-const TokenGrid = ({ items }: { items: TokenItem[] }) => (
+const TokenGrid = ({ items, emptyMessage }: { items: TokenItem[]; emptyMessage: string }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
     {items.map((it) => (
       <Link
@@ -147,6 +149,6 @@ const TokenGrid = ({ items }: { items: TokenItem[] }) => (
         </div>
       </Link>
     ))}
-    {!items.length && <div className="opacity-70 text-white/70 text-center py-8">No tokens</div>}
+    {!items.length && <div className="opacity-70 text-white/70 text-center py-8">{emptyMessage}</div>}
   </div>
 );

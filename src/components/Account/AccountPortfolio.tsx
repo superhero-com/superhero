@@ -1,6 +1,7 @@
 import React, {
   useEffect, useRef, useState, useMemo,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AreaChart, Area, ResponsiveContainer,
@@ -579,6 +580,7 @@ const RechartsChart: React.FC<RechartsChartProps> = ({
 };
 
 const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
+  const { t } = useTranslation('common');
   const portfolioDataRef = useRef<PortfolioSnapshot[] | undefined>(undefined);
   const convertToRef = useRef<string>('ae');
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('1m');
@@ -1514,9 +1516,9 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
         <div className="bg-white/[0.02] border border-red-500/30 rounded-2xl overflow-hidden">
           <div className="px-4 md:px-6 pt-4 pb-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-bold text-white">Portfolio Value</h3>
+              <h3 className="text-lg font-bold text-white">{t('portfolio.portfolioValue')}</h3>
             </div>
-            <div className="text-red-400 text-sm mb-3">Failed to load portfolio data</div>
+            <div className="text-red-400 text-sm mb-3">{t('portfolio.failedToLoad')}</div>
             {process.env.NODE_ENV === 'development' && (
               <div className="text-red-300 text-xs mb-3 opacity-75">{errorMessage}</div>
             )}
@@ -1540,13 +1542,13 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
         <div className="px-4 md:px-6 pt-4 pb-0">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold text-white">Portfolio Value</h3>
+              <h3 className="text-lg font-bold text-white">{t('portfolio.portfolioValue')}</h3>
               {useTouchPopover ? (
                 <>
                   <button
                     ref={tooltipButtonRef}
                     type="button"
-                    aria-label="What does Portfolio Value include?"
+                    aria-label={t('aria.portfolioValueTooltip')}
                     aria-expanded={tooltipOpen}
                     className="relative p-1 rounded-md text-white/60 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 transition-colors touch-none"
                     onClick={(e) => {
@@ -1562,7 +1564,7 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
                       <button
                         type="button"
                         className="fixed inset-0 z-[99]"
-                        aria-label="Close tooltip"
+                        aria-label={t('aria.closeTooltip')}
                         onClick={() => setTooltipOpen(false)}
                       />
                       {/* Tooltip content */}
@@ -1583,7 +1585,7 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        aria-label="What does Portfolio Value include?"
+                        aria-label={t('aria.portfolioValueTooltip')}
                         className="p-1 rounded-md text-white/60 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 transition-colors"
                       >
                         <Info className="w-4 h-4" />
@@ -1620,7 +1622,7 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
             {/* Profit/Loss Display */}
             <div className="mt-1 mb-1 flex flex-col md:flex-row md:items-center md:justify-between gap-1">
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-white/60">Profit/Loss:</span>
+                <span className="text-white/60">{t('portfolio.profitLoss')}</span>
                 {activePnlData ? (
                   <span className={`font-semibold ${getPnlClassName(activePnlData)}`}>
                     {renderPnlValue(activePnlData)}
@@ -1684,7 +1686,7 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
                   <div className="absolute inset-0 flex items-start justify-center pt-10 z-10 px-4 md:px-6">
                     <div className="inline-flex items-center gap-1 text-white text-xs font-medium">
                       <Spinner className="w-8 h-8" />
-                      <span>Loading portfolio data...</span>
+                      <span>{t('portfolio.loadingPortfolio')}</span>
                     </div>
                   </div>
                 );
@@ -1705,7 +1707,7 @@ const AccountPortfolio = ({ address }: AccountPortfolioProps) => {
               }
               return (
                 <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none z-10 px-4 md:px-6">
-                  <div className="text-white/60">No portfolio data available</div>
+                  <div className="text-white/60">{t('portfolio.noDataAvailable')}</div>
                 </div>
               );
             })()}

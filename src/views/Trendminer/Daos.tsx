@@ -8,7 +8,7 @@
 import {
   useEffect, useMemo, useRef, useState,
 } from 'react';
-
+import { useTranslation } from 'react-i18next';
 import { TokensService } from '@/api/generated';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { TokenDto } from '@/api/generated/models/TokenDto';
@@ -35,6 +35,7 @@ const SORT = {
 type OrderByOption = (typeof SORT)[keyof typeof SORT];
 
 export default function Daos() {
+  const { t } = useTranslation('explore');
   const { activeAccount } = useAeSdk();
   const [search, setSearch] = useState('');
   const [orderDirection, setOrderDirection] = useState<'ASC' | 'DESC'>('DESC');
@@ -44,18 +45,9 @@ export default function Daos() {
   const loadMoreBtn = useRef<HTMLButtonElement>(null);
 
   const orderByOptions: SelectOptions<OrderByOption> = [
-    {
-      title: 'Market Cap',
-      value: SORT.marketCap,
-    },
-    {
-      title: 'Newest',
-      value: SORT.newest,
-    },
-    {
-      title: 'Holders Count',
-      value: SORT.holdersCount,
-    },
+    { title: t('marketCapLabel'), value: SORT.marketCap },
+    { title: t('newest'), value: SORT.newest },
+    { title: t('holdersCount'), value: SORT.holdersCount },
   ];
 
   const orderByMapped = useMemo(() => {
@@ -160,7 +152,7 @@ export default function Daos() {
       </div>
 
       {isFetching && (
-        <div className="text-center py-8 text-white/80">Loading…</div>
+        <div className="text-center py-8 text-white/80">{t('loading')}</div>
       )}
       {error && (
         <div className="text-center py-8 text-red-400">{error.message}</div>

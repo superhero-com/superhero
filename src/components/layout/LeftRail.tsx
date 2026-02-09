@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { SuperheroApi } from '../../api/backend';
 import { useAeSdk } from '../../hooks';
 import { formatCompactNumber } from '../../utils/number';
@@ -11,6 +12,7 @@ interface TrendingTag {
 }
 
 const LeftRail = () => {
+  const { t } = useTranslation('common');
   const { currentBlockHeight } = useAeSdk();
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -118,50 +120,44 @@ const LeftRail = () => {
     {
       icon: '💎',
       color: 'var(--neon-teal)',
-      text: 'Use hardware wallets for large amounts',
-      expanded:
-        'Hardware wallets like Ledger or Trezor provide the highest security for storing significant amounts of cryptocurrency.',
-      category: 'Security',
+      textKey: 'tips.hardwareWallets',
+      expandedKey: 'tips.hardwareWalletsExpanded',
+      categoryKey: 'tips.categorySecurity',
     },
     {
       icon: '🔒',
       color: 'var(--neon-pink)',
-      text: 'Always verify contract addresses',
-      expanded:
-        'Double-check contract addresses before interacting. One wrong character can lead to permanent loss of funds.',
-      category: 'Security',
+      textKey: 'tips.verifyAddresses',
+      expandedKey: 'tips.verifyAddressesExpanded',
+      categoryKey: 'tips.categorySecurity',
     },
     {
       icon: '⚡',
       color: 'var(--neon-blue)',
-      text: 'Keep some AE for gas fees',
-      expanded:
-        'Always maintain a small balance of AE tokens to pay for transaction fees on the æternity network.',
-      category: 'Trading',
+      textKey: 'tips.keepAeForGas',
+      expandedKey: 'tips.keepAeForGasExpanded',
+      categoryKey: 'tips.categoryTrading',
     },
     {
       icon: '🛡️',
       color: 'var(--neon-yellow)',
-      text: 'Never share your private keys',
-      expanded:
-        'Your private keys are like the password to your bank account. Never share them with anyone, including support.',
-      category: 'Security',
+      textKey: 'tips.neverShareKeys',
+      expandedKey: 'tips.neverShareKeysExpanded',
+      categoryKey: 'tips.categorySecurity',
     },
     {
       icon: '📱',
       color: 'var(--neon-purple)',
-      text: 'Enable 2FA on exchanges',
-      expanded:
-        'Use two-factor authentication on all cryptocurrency exchanges to add an extra layer of security.',
-      category: 'Security',
+      textKey: 'tips.enable2fa',
+      expandedKey: 'tips.enable2faExpanded',
+      categoryKey: 'tips.categorySecurity',
     },
     {
       icon: '🚀',
       color: 'var(--neon-green)',
-      text: 'Diversify your portfolio',
-      expanded:
-        "Don't put all your eggs in one basket. Spread your investments across different tokens and projects.",
-      category: 'Investment',
+      textKey: 'tips.diversify',
+      expandedKey: 'tips.diversifyExpanded',
+      categoryKey: 'tips.categoryInvestment',
     },
   ];
 
@@ -174,7 +170,7 @@ const LeftRail = () => {
             📊
           </span>
           <h4 className="m-0 text-[var(--neon-teal)] text-base font-bold">
-            Live Dashboard
+            {t('layout.liveDashboard')}
           </h4>
           <div
             className={`ml-auto w-2 h-2 rounded-full ${
@@ -187,7 +183,7 @@ const LeftRail = () => {
 
         <div className="grid gap-2.5">
           <div className="flex justify-between items-center py-3 px-4 bg-white/5 rounded-xl border border-white/10 backdrop-blur-[10px]">
-            <span className="text-xs text-[#b8c5d6]">Blockchain Status</span>
+            <span className="text-xs text-[#b8c5d6]">{t('layout.blockchainStatus')}</span>
             <span
               className={`text-xs font-semibold flex items-center gap-1.5 ${
                 isOnline
@@ -195,7 +191,7 @@ const LeftRail = () => {
                   : 'text-[var(--neon-pink)]'
               }`}
             >
-              {isOnline ? '🟢 Connected' : '🔴 Offline'}
+              {isOnline ? t('layout.connected') : t('layout.offline')}
             </span>
           </div>
 
@@ -208,7 +204,7 @@ const LeftRail = () => {
               {/* Time Emoji and Label */}
               <div className="flex items-center justify-between mb-2">
                 <span className="text-base text-[var(--neon-teal)] font-semibold uppercase tracking-wider">
-                  Current Time
+                  {t('layout.currentTime')}
                 </span>
                 <span className="text-xl drop-shadow-[0_0_8px_rgba(78,205,196,0.5)]">
                   {formatTime(currentTime).timeEmoji}
@@ -234,7 +230,7 @@ const LeftRail = () => {
                 <div className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-white/5 rounded-lg border border-white/10">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--neon-green)] animate-pulse" />
                   <span className="text-[10px] text-[var(--neon-green)] font-semibold font-mono">
-                    Block #
+                    {t('layout.blockNumber')}
                     {currentBlockHeight.toLocaleString()}
                   </span>
                 </div>
@@ -246,7 +242,7 @@ const LeftRail = () => {
             <div className="grid grid-cols-2 gap-2 mt-2">
               <div className="py-2 px-3 bg-teal-500/10 rounded-lg border border-teal-500/20 text-center transition-all duration-300 hover:-translate-y-0.5">
                 <div className="text-[10px] text-[var(--neon-teal)] font-semibold">
-                  Market Cap
+                  {t('layout.marketCap')}
                 </div>
                 <div className="text-[11px] text-white font-bold">
                   {formatMarketCap(marketStats.total_market_cap_sum || 0)}
@@ -254,7 +250,7 @@ const LeftRail = () => {
               </div>
               <div className="py-2 px-3 bg-pink-500/10 rounded-lg border border-pink-500/20 text-center transition-all duration-300 hover:-translate-y-0.5">
                 <div className="text-[10px] text-[var(--neon-pink)] font-semibold">
-                  Total Tokens
+                  {t('layout.totalTokens')}
                 </div>
                 <div className="text-[11px] text-white font-bold">
                   {marketStats.total_tokens || 0}
@@ -283,7 +279,7 @@ const LeftRail = () => {
           <h4
             style={{ margin: 0, color: 'var(--neon-yellow)', fontSize: '16px' }}
           >
-            Live Trending
+            {t('layout.liveTrending')}
           </h4>
           <button
             type="button"
@@ -299,7 +295,7 @@ const LeftRail = () => {
               marginLeft: 'auto',
             }}
             onClick={() => navigate('/trends')}
-            title="Explore all trends"
+            title={t('titles.exploreAllTrends')}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'rgba(0, 255, 157, 0.1)';
               e.currentTarget.style.transform = 'scale(1.1)';
@@ -354,7 +350,7 @@ const LeftRail = () => {
                 e.currentTarget.style.color = '#b8c5d6';
                 e.currentTarget.style.transform = 'translateY(0) scale(1)';
               }}
-              title={`Search for ${tag.tag} (Score: ${tag.score})`}
+              title={t('layout.searchForTag', { tag: tag.tag, score: tag.score })}
             >
               <span
                 style={{
@@ -398,7 +394,7 @@ const LeftRail = () => {
             padding: 0,
           }}
           onClick={() => setShowTips(!showTips)}
-          title="Click to expand tips"
+          title={t('titles.clickToExpandTips')}
         >
           <span style={{ fontSize: '18px' }}>💡</span>
           <h4
@@ -430,7 +426,7 @@ const LeftRail = () => {
           }}
         >
           {enhancedTips.map((tip) => (
-            <div key={`${tip.category}-${tip.text}`} style={{ marginBottom: '12px' }}>
+            <div key={`${tip.categoryKey}-${tip.textKey}`} style={{ marginBottom: '12px' }}>
               <div
                 className="pro-tip"
                 style={
@@ -450,14 +446,14 @@ const LeftRail = () => {
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'transparent';
                 }}
-                title={`${tip.category}: ${tip.text}`}
+                title={`${t(tip.categoryKey)}: ${t(tip.textKey)}`}
               >
                 <strong style={{ color: tip.color, fontSize: '14px' }}>
                   {tip.icon}
                 </strong>
                 <div style={{ flex: 1 }}>
                   <span style={{ fontSize: '11px', fontWeight: '600' }}>
-                    {tip.text}
+                    {t(tip.textKey)}
                   </span>
                   <div
                     style={{
@@ -469,7 +465,7 @@ const LeftRail = () => {
                       letterSpacing: '0.5px',
                     }}
                   >
-                    {tip.category}
+                    {t(tip.categoryKey)}
                   </div>
                 </div>
               </div>
@@ -487,7 +483,7 @@ const LeftRail = () => {
                     border: '1px solid rgba(255,255,255,0.03)',
                   }}
                 >
-                  {tip.expanded}
+                  {t(tip.expandedKey)}
                 </div>
               )}
             </div>

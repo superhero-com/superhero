@@ -2,12 +2,14 @@
 import { HeaderLogo as IconGovernance } from '@/icons';
 import { useAccount, useAeSdk, useGovernance } from '@/hooks';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Encoding, isAddressValid, toAe } from '@aeternity/aepp-sdk';
 import MobileCard from '../MobileCard';
 import MobileInput from '../MobileInput';
 import AeButton from '../AeButton';
 
 export default function GovernanceAccount() {
+  const { t } = useTranslation('governance');
   const { activeAccount } = useAeSdk();
   const { decimalBalance } = useAccount();
   const {
@@ -77,8 +79,8 @@ export default function GovernanceAccount() {
                   <span className="text-lg">👤</span>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white mb-1">Account Information</h2>
-                  <p className="text-sm text-slate-400">Your governance account details</p>
+                  <h2 className="text-xl font-bold text-white mb-1">{t('account.accountInformation')}</h2>
+                  <p className="text-sm text-slate-400">{t('account.accountDetails')}</p>
                 </div>
               </div>
 
@@ -97,7 +99,7 @@ export default function GovernanceAccount() {
                         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
                           <span className="text-sm">📍</span>
                         </div>
-                        <span className="text-sm font-medium text-slate-300">Wallet Address</span>
+                        <span className="text-sm font-medium text-slate-300">{t('account.walletAddress')}</span>
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-mono text-white bg-black/20 px-3 py-1 rounded-lg">
@@ -116,7 +118,7 @@ export default function GovernanceAccount() {
                         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center">
                           <span className="text-sm">💰</span>
                         </div>
-                        <span className="text-sm font-medium text-slate-300">AE Balance</span>
+                        <span className="text-sm font-medium text-slate-300">{t('account.aeBalance')}</span>
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-bold text-white">
@@ -136,13 +138,13 @@ export default function GovernanceAccount() {
                           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
                             <span className="text-sm">🤝</span>
                           </div>
-                          <span className="text-sm font-medium text-slate-300">Active Delegators</span>
+                          <span className="text-sm font-medium text-slate-300">{t('account.activeDelegators')}</span>
                         </div>
                         <div className="text-right">
                           <div className="text-lg font-bold text-white">
                             {delegators.length}
                           </div>
-                          <div className="text-xs text-slate-400">people trust you</div>
+                          <div className="text-xs text-slate-400">{t('account.peopleTrustYou')}</div>
                         </div>
                       </div>
                     </div>
@@ -153,7 +155,7 @@ export default function GovernanceAccount() {
                   <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl">⚠️</span>
                   </div>
-                  <p className="text-slate-400">Unable to load account information</p>
+                  <p className="text-slate-400">{t('account.unableToLoadAccount')}</p>
                 </div>
               )}
             </MobileCard>
@@ -172,8 +174,8 @@ export default function GovernanceAccount() {
                 <span className="text-lg">🤝</span>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white mb-1">Vote Delegation</h2>
-                <p className="text-sm text-slate-400">Delegate your voting power to trusted addresses</p>
+                <h2 className="text-xl font-bold text-white mb-1">{t('account.voteDelegation')}</h2>
+                <p className="text-sm text-slate-400">{t('account.delegatePowerDescription')}</p>
               </div>
             </div>
 
@@ -186,7 +188,7 @@ export default function GovernanceAccount() {
                       <span className="text-sm">✅</span>
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-emerald-300">Currently Delegated</p>
+                      <p className="text-sm font-medium text-emerald-300">{t('account.currentlyDelegated')}</p>
                       <p className="text-xs text-slate-400 font-mono">
                         {delegation.slice(0, 12)}
                         ...
@@ -200,8 +202,8 @@ export default function GovernanceAccount() {
               {/* Delegation Input */}
               <div className="space-y-3">
                 <MobileInput
-                  label="Delegate to address"
-                  placeholder="Enter the address you want to delegate to..."
+                  label={t('account.delegateToAddress')}
+                  placeholder={t('delegateAddressPlaceholder')}
                   value={delegateAddress}
                   onChange={(e) => setDelegateAddress(e.target.value)}
                   variant="filled"
@@ -227,7 +229,7 @@ export default function GovernanceAccount() {
                   loading={isSaving}
                   className="h-14 text-base font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25"
                 >
-                  {isSaving ? 'Saving Delegation...' : '💾 Save Delegation'}
+                  {isSaving ? t('account.savingDelegation') : t('account.saveDelegation')}
                 </AeButton>
 
                 {delegation && (
@@ -240,7 +242,7 @@ export default function GovernanceAccount() {
                     loading={isRevoking}
                     className="h-14 text-base font-semibold rounded-2xl transition-all duration-300"
                   >
-                    {isRevoking ? 'Revoking Delegation...' : '❌ Revoke Delegation'}
+                    {isRevoking ? t('account.revokingDelegation') : t('account.revokeDelegation')}
                   </AeButton>
                 )}
               </div>
@@ -254,7 +256,7 @@ export default function GovernanceAccount() {
                     <span className="text-sm">👥</span>
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">Your Delegators</h3>
+                    <h3 className="text-lg font-bold text-white">{t('account.yourDelegators')}</h3>
                     <p className="text-sm text-slate-400">
                       {delegators.length}
                       {' '}
@@ -295,7 +297,7 @@ export default function GovernanceAccount() {
                               {' '}
                               AE
                             </p>
-                            <p className="text-xs text-slate-400">Voting Power</p>
+                            <p className="text-xs text-slate-400">{t('account.votingPower')}</p>
                           </div>
                         )}
                       </div>
@@ -314,8 +316,8 @@ export default function GovernanceAccount() {
               <div className="flex items-center gap-3">
                 <span className="text-lg">✅</span>
                 <div>
-                  <p className="font-semibold">Delegation Saved!</p>
-                  <p className="text-sm opacity-90">Your voting power has been successfully delegated.</p>
+                  <p className="font-semibold">{t('account.delegationSaved')}</p>
+                  <p className="text-sm opacity-90">{t('account.delegationSavedDesc')}</p>
                 </div>
               </div>
             </div>
@@ -328,8 +330,8 @@ export default function GovernanceAccount() {
               <div className="flex items-center gap-3">
                 <span className="text-lg">🔄</span>
                 <div>
-                  <p className="font-semibold">Delegation Revoked!</p>
-                  <p className="text-sm opacity-90">You now have full control of your voting power.</p>
+                  <p className="font-semibold">{t('account.delegationRevoked')}</p>
+                  <p className="text-sm opacity-90">{t('account.delegationRevokedDesc')}</p>
                 </div>
               </div>
             </div>
@@ -342,8 +344,8 @@ export default function GovernanceAccount() {
               <div className="flex items-center gap-3">
                 <span className="text-lg">❌</span>
                 <div>
-                  <p className="font-semibold">Transaction Failed</p>
-                  <p className="text-sm opacity-90">Please try again or check your connection.</p>
+                  <p className="font-semibold">{t('account.transactionFailed')}</p>
+                  <p className="text-sm opacity-90">{t('account.transactionFailedDesc')}</p>
                 </div>
               </div>
             </div>

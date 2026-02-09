@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -10,6 +11,7 @@ interface TokenCandlestickChartSkeletonProps {
 const TokenCandlestickChartSkeleton = ({
   boilerplate = false,
 }: TokenCandlestickChartSkeletonProps) => {
+  const { t } = useTranslation('explore');
   const skeletonClass = cn(
     'bg-gradient-to-r from-white/10 via-white/20 to-white/10',
     'bg-[length:200%_100%] animate-skeleton-loading rounded',
@@ -68,8 +70,8 @@ const TokenCandlestickChartSkeleton = ({
                   </div>
 
                   <div className="loading-text text-white">
-                    <div className="title text-base">Loading</div>
-                    <div className="subtitle opacity-30">Data will be shown shortly</div>
+                    <div className="title text-base">{t('loadingChart')}</div>
+                    <div className="subtitle opacity-30">{t('dataWillBeShownShortly')}</div>
                   </div>
                 </div>
               </div>

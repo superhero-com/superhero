@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type BackToTopProps = {
   threshold?: number; // optional override; defaults to .right-rail-bleed height
@@ -6,6 +7,7 @@ type BackToTopProps = {
 };
 
 const BackToTop = ({ threshold, bottomOffset = 32 }: BackToTopProps) => {
+  const { t } = useTranslation('common');
   const [visible, setVisible] = useState(false);
   const [leftOffset, setLeftOffset] = useState<number>(16);
   const [computedThreshold, setComputedThreshold] = useState<number>(threshold ?? 400);
@@ -78,7 +80,7 @@ const BackToTop = ({ threshold, bottomOffset = 32 }: BackToTopProps) => {
     >
       <button
         type="button"
-        aria-label="Back to top"
+        aria-label={t('aria.backToTop')}
         onClick={scrollTop}
         className={[
           'pointer-events-auto select-none transition-opacity duration-200',

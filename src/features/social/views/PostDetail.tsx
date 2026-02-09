@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Decimal } from '@/libs/decimal';
 import { useAeSdk } from '@/hooks/useAeSdk';
 import { useWallet } from '@/hooks';
@@ -21,6 +22,7 @@ import { usePostTipSummary } from '../hooks/usePostTipSummary';
 import { usePostTips } from '../hooks/usePostTips';
 
 const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: string }) => {
+  const { t } = useTranslation('social');
   const { chainNames } = useWallet();
   const postId = String(post?.id || '');
   const receiver = String(post?.sender_address || post?.senderAddress || '');
@@ -37,18 +39,18 @@ const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: strin
     <div className="border border-white/10 rounded-2xl p-3 sm:p-4 bg-white/[0.05] backdrop-blur-[10px]">
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm text-white/70">
-          Total tipped:
+          {t('totalTipped')}
           {' '}
           <span className="text-white font-semibold">{Decimal.from(String(totalAe)).prettify()}</span>
           {' '}
           AE
         </div>
-        <div className="text-xs text-white/50">{tips.length ? `${tips.length} tips` : ''}</div>
+        <div className="text-xs text-white/50">{tips.length ? t('tipsCount', { count: tips.length }) : ''}</div>
       </div>
 
-      {isLoading && <div className="text-sm text-white/60">Loading tips…</div>}
+      {isLoading && <div className="text-sm text-white/60">{t('loadingTips')}</div>}
       {!isLoading && tips.length === 0 && (
-        <div className="text-sm text-white/60">No tips yet.</div>
+        <div className="text-sm text-white/60">{t('noTipsYet')}</div>
       )}
 
       {!isLoading && tips.length > 0 && (
@@ -99,6 +101,7 @@ const PostTipOverview = ({ post, explorerUrl }: { post: any; explorerUrl?: strin
 };
 
 const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
+  const { t } = useTranslation(['forms', 'social', 'common']);
   const { slug } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -229,12 +232,12 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
 
   // Render helpers
   const renderLoadingState = () => (
-    <div className="text-center py-8 text-light-font-color">Loading…</div>
+    <div className="text-center py-8 text-light-font-color">{t('social:loading')}</div>
   );
 
   const renderErrorState = () => (
     <div className="text-center py-8 text-light-font-color">
-      Error loading post.
+      {t('social:errorLoadingPost')}
       <AeButton
         variant="ghost"
         size="sm"
@@ -242,7 +245,7 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
           refetchPost();
         }}
       >
-        Retry
+        {t('common:buttons.retry')}
       </AeButton>
     </div>
   );
@@ -273,7 +276,7 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
       {postData ? (
         <Head
           title={`Post on Superhero.com: "${(postData as any)?.content?.slice(0, 100) || 'Post'}"`}
-          description={(postData as any)?.content?.slice(0, 160) || 'View post on Superhero, the crypto social network.'}
+          description={(postData as any)?.content?.slice(0, 160) || t('social:viewPostDefaultDescription')}
           canonicalPath={`/post/${(postData as any)?.slug || String((postData as any)?.id || slug).replace(/_v3$/, '')}`}
           ogImage={(Array.isArray((postData as any)?.media) && (postData as any).media[0]) || undefined}
           jsonLd={{
@@ -300,7 +303,9 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
       ) : null}
       <div className="mb-4">
         <AeButton onClick={() => { navigate('/'); }} variant="ghost" size="sm" outlined className="!border !border-solid !border-white/15 hover:!border-white/35">
-          ← Back
+          ←
+          {' '}
+          {t('common:labels.back')}
         </AeButton>
       </div>
 
@@ -312,15 +317,15 @@ const PostDetail = ({ standalone = true }: { standalone?: boolean } = {}) => {
           {renderStack()}
 
           <section className="mt-2">
-            <h3 className="text-white/90 font-semibold mb-2">Tips</h3>
+            <h3 className="text-white/90 font-semibold mb-2">{t('social:tips')}</h3>
             <PostTipOverview post={postData as any} explorerUrl={activeNetwork?.explorerUrl} />
           </section>
 
           <section className="mt-2">
-            <h3 className="text-white/90 font-semibold mb-2">Replies</h3>
+            <h3 className="text-white/90 font-semibold mb-2">{t('social:replies')}</h3>
             <DirectReplies id={String((postData as any)?.id)} onOpenPost={(idOrSlug) => navigate(`/post/${idOrSlug}`)} />
             <div className="mt-6">
-              <CommentForm postId={String((postData as any)?.id)} onCommentAdded={handleCommentAdded} placeholder="Write a reply..." />
+              <CommentForm postId={String((postData as any)?.id)} onCommentAdded={handleCommentAdded} placeholder={t('forms:writeReply')} />
             </div>
           </section>
         </article>

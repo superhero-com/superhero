@@ -2,6 +2,7 @@
 import { Encoding, isAddressValid } from '@aeternity/aepp-sdk';
 import { useAccount, useAeSdk, useGovernance } from '@/hooks';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import Spinner from '@/components/Spinner';
 import { AddressChip } from '../AddressChip';
@@ -15,6 +16,7 @@ export default function GovernanceVote({
   pollId,
   setActiveTab,
 }: GovernanceVoteProps) {
+  const { t } = useTranslation('governance');
   const { activeAccount } = useAeSdk();
   const { decimalBalance } = useAccount();
   const {
@@ -70,11 +72,11 @@ export default function GovernanceVote({
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-2 h-8 bg-gradient-to-b from-pink-400 to-purple-400 rounded-full" />
                   <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
-                    {poll?.pollState.metadata.title || 'Governance Poll'}
+                    {poll?.pollState.metadata.title || t('vote.defaultPollTitle')}
                   </h1>
                 </div>
                 <p className="text-slate-300 text-sm md:text-base leading-relaxed max-w-2xl">
-                  {poll?.pollState.metadata.description || 'Cast your vote and make your voice heard in the community governance'}
+                  {poll?.pollState.metadata.description || t('vote.defaultPollDescription')}
                 </p>
                 {poll?.pollState.metadata.link && (
                   <a
@@ -88,7 +90,7 @@ export default function GovernanceVote({
                 )}
                 {poll?.pollState.author && (
                   <div className="mt-3 flex items-center gap-2 text-slate-400 text-xs">
-                    <span>By:</span>
+                    <span>{t('vote.byLabel')}</span>
                     <AddressChip address={poll.pollState.author} linkToProfile />
                   </div>
                 )}
@@ -101,7 +103,7 @@ export default function GovernanceVote({
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
-                  Back to Polls
+                  {t('vote.backToPolls')}
                 </span>
               </AeButton>
             </div>
@@ -120,7 +122,7 @@ export default function GovernanceVote({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <h2 className="text-xl md:text-2xl font-bold text-white">Cast Your Vote</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-white">{t('vote.castYourVote')}</h2>
                 </div>
               </div>
 

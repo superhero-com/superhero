@@ -173,7 +173,7 @@ const InviteAndEarnCard = ({
                   step="any"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.0"
+                  placeholder={t('common:placeholders.amount')}
                   disabled={!activeAccount}
                   className="bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 lg:p-5 text-white text-sm md:text-base transition-all duration-300 outline-none font-medium w-full box-border focus:border-[var(--neon-teal)] focus:shadow-[0_0_0_3px_rgba(0,255,157,0.1)] focus:bg-white/8 focus:-translate-y-px placeholder:text-slate-400 placeholder:opacity-60"
                 />
@@ -335,7 +335,7 @@ const InviteAndEarnCard = ({
               disabled={!linkHasBeenCopied}
               onClick={closeCopyInviteLinkDialog}
             >
-              {t('close', { ns: 'common' })}
+              {t('buttons.close', { ns: 'common' })}
             </AeButton>
           </div>
         </DialogContent>

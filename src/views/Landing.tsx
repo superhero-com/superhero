@@ -84,7 +84,7 @@ export default function Landing() {
               <div className="bg-black/20 backdrop-blur-2xl border border-white/10 rounded-2xl p-8 h-full min-w-[280px] lg:min-w-0">
                 <img
                   src={votingSvg}
-                  alt="Decentralized"
+                  alt={t('features.decentralized.alt')}
                   className="max-h-16 max-w-16 mb-8 drop-shadow-[0_0_10px_rgba(255,107,107,0.7)]"
                 />
                 <h4 className="text-[var(--neon-teal)] text-xl font-bold mb-6">
@@ -111,33 +111,25 @@ export default function Landing() {
         <div className="max-w-[1180px] mx-auto px-4">
           <div className="text-center mb-12">
             <span className="text-gray-400 text-base font-semibold uppercase tracking-wide">
-              WHY ON‑CHAIN IDENTITY AND POSTS?
+              {t('valueProposition.badge')}
             </span>
-            <h2 className="text-4xl md:text-5xl font-normal text-white mt-4">
-              Wallet login makes your identity
-              {' '}
-              <b>portable</b>
-              . On‑chain posts are
-              {' '}
-              <b>provable</b>
-              and
-              {' '}
-              <b>remixable</b>
-              .
-            </h2>
+            <h2
+              className="text-4xl md:text-5xl font-normal text-white mt-4"
+              dangerouslySetInnerHTML={{ __html: t('valueProposition.title') }}
+            />
           </div>
           <ul className="list-none mt-8 space-y-3 max-w-2xl mx-auto">
             <li className="text-lg text-gray-200 pl-6 relative before:content-['•'] before:absolute before:left-0 before:text-pink-400">
-              Sign in with your wallet — one identity across apps
+              {t('valueProposition.points.walletIdentity')}
             </li>
             <li className="text-lg text-gray-200 pl-6 relative before:content-['•'] before:absolute before:left-0 before:text-pink-400">
-              Own your social graph and portable reputation
+              {t('valueProposition.points.socialGraph')}
             </li>
             <li className="text-lg text-gray-200 pl-6 relative before:content-['•'] before:absolute before:left-0 before:text-pink-400">
-              Verifiable, timestamped posts (on‑chain option)
+              {t('valueProposition.points.verifiablePosts')}
             </li>
             <li className="text-lg text-gray-200 pl-6 relative before:content-['•'] before:absolute before:left-0 before:text-pink-400">
-              Open source and community‑driven
+              {t('valueProposition.points.openSource')}
             </li>
           </ul>
         </div>
@@ -150,37 +142,33 @@ export default function Landing() {
             <div className="w-full lg:w-1/2 px-4 mb-12 lg:mb-0">
               <div className="mb-8">
                 <h3 className="text-sm font-semibold tracking-wider uppercase mb-3 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-                  TIPPING
+                  {t('tipping.badge')}
                 </h3>
-                <p className="text-3xl md:text-4xl font-bold text-white">
-                  <b>Sending crypto</b>
-                  {' '}
-                  has never been
-                  <b>easier</b>
-                </p>
+                <p
+                  className="text-3xl md:text-4xl font-bold text-white"
+                  dangerouslySetInnerHTML={{ __html: t('tipping.title') }}
+                />
               </div>
               <div className="space-y-6">
                 <p className="text-lg text-slate-300 leading-relaxed">
-                  Superhero's native wallet integrates seamlessly into your daily life and allows you
-                  to tip content and creators instantaneously – at virtually no cost.
+                  {t('tipping.description1')}
                 </p>
                 <p className="text-lg text-slate-300 leading-relaxed">
-                  Create invitation links, track your history, and more –
-                  all in one place.
+                  {t('tipping.description2')}
                 </p>
                 <div className="flex items-center justify-center lg:justify-start gap-4 pt-3">
                   <a href="https://apps.apple.com/app/superhero-wallet/id1502786641" target="_blank" rel="noreferrer">
-                    <img src={appStoreSvg} alt="Download on the App Store" className="h-12 hover:opacity-80 transition-opacity" />
+                    <img src={appStoreSvg} alt={t('tipping.appStoreAlt')} className="h-12 hover:opacity-80 transition-opacity" />
                   </a>
                   <a href="https://play.google.com/store/apps/details?id=com.superhero.cordova" target="_blank" rel="noreferrer">
-                    <img src={googlePlaySvg} alt="Get it on Google Play" className="h-12 hover:opacity-80 transition-opacity" />
+                    <img src={googlePlaySvg} alt={t('tipping.googlePlayAlt')} className="h-12 hover:opacity-80 transition-opacity" />
                   </a>
                 </div>
               </div>
             </div>
             <div className="w-full lg:w-1/2 px-4">
               <div className="bg-gray-200 h-80 flex items-center justify-center rounded-2xl shadow-2xl">
-                Wallet Mockup
+                {t('tipping.walletMockup')}
               </div>
             </div>
           </div>
@@ -191,44 +179,39 @@ export default function Landing() {
       <section className="bg-gray-950 py-24">
         <div className="max-w-[1180px] mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-normal text-white mb-4">
-              Full of
-              {' '}
-              <b>powerful features</b>
-            </h2>
+            <h2
+              className="text-4xl md:text-5xl font-normal text-white mb-4"
+              dangerouslySetInnerHTML={{ __html: t('powerFeatures.title') }}
+            />
             <p className="text-lg text-gray-400 leading-relaxed max-w-4xl mx-auto">
-              Tip what you value, meet with your community, vote on what matters, and embed tipping
-              everywhere with the Superhero Button.
+              {t('powerFeatures.description')}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center mt-16">
               <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-8" />
               <h4 className="text-white text-xl font-semibold mb-5">
-                Superhero Meet
+                {t('powerFeatures.cards.meet.title')}
               </h4>
               <p className="text-gray-400 text-base leading-relaxed pr-0 md:pr-12">
-                Spin up a conference room in seconds – no account required – and even live-stream to
-                YouTube with real-time decentralized tipping.
+                {t('powerFeatures.cards.meet.description')}
               </p>
             </div>
             <div className="text-center mt-16">
               <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-8" />
               <h4 className="text-white text-xl font-semibold mb-5">
-                Superhero Voting
+                {t('powerFeatures.cards.voting.title')}
               </h4>
               <p className="text-gray-400 text-base leading-relaxed pr-0 md:pr-12">
-                Create polls, vote, delegate, and collect voting power from the community. Every vote
-                counts.
+                {t('powerFeatures.cards.voting.description')}
               </p>
             </div>
             <div className="text-center mt-16">
               <h4 className="text-white text-xl font-semibold mb-5">
-                Superhero Button
+                {t('powerFeatures.cards.button.title')}
               </h4>
               <p className="text-gray-400 text-base leading-relaxed pr-0 md:pr-12 mb-6">
-                Add a simple, customizable tip button to your website or blog and let people reward
-                your work.
+                {t('powerFeatures.cards.button.description')}
               </p>
               <a
                 className="inline-block bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-base px-8 py-4 rounded-2xl uppercase tracking-wide transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/30"
@@ -236,7 +219,7 @@ export default function Landing() {
                 target="_blank"
                 rel="noreferrer"
               >
-                Learn More
+                {t('powerFeatures.cards.button.learnMore')}
               </a>
             </div>
           </div>
@@ -251,19 +234,18 @@ export default function Landing() {
             <div className="w-full lg:w-1/2 px-4 pl-8 lg:pl-20">
               <div className="mb-8">
                 <span className="text-gray-600 text-base font-semibold uppercase tracking-wide">
-                  OPEN SOURCE
+                  {t('openSource.badge')}
                 </span>
                 <h2 className="text-4xl md:text-5xl font-normal text-gray-900 mt-2">
-                  Superhero
+                  {t('openSource.title')}
                 </h2>
                 <p className="text-4xl md:text-5xl font-normal text-gray-900">
-                  is open-source
+                  {t('openSource.title2')}
                 </p>
               </div>
               <div>
                 <p className="text-lg text-gray-700 leading-relaxed mb-8">
-                  Dive under the hood, use the code, fork it, or run it locally. Join a global
-                  community pushing the ecosystem forward.
+                  {t('openSource.description')}
                 </p>
                 <a
                   className="inline-flex items-center gap-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-base px-8 py-4 rounded-2xl uppercase tracking-wide transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/30"
@@ -271,8 +253,8 @@ export default function Landing() {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <img src={githubSvg} alt="GitHub" className="w-5 h-5" />
-                  Contribute on GitHub
+                  <img src={githubSvg} alt={t('openSource.githubAlt')} className="w-5 h-5" />
+                  {t('openSource.cta')}
                 </a>
               </div>
             </div>
@@ -287,7 +269,7 @@ export default function Landing() {
             to="/"
             className="inline-block bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-lg px-8 py-4 rounded-2xl uppercase tracking-wide transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/30"
           >
-            Become a Superhero Today
+            {t('cta.becomeToday')}
           </Link>
         </div>
       </section>

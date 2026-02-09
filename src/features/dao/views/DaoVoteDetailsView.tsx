@@ -4,6 +4,7 @@ import { useAeSdk } from '@/hooks';
 import { ensureAddress, ensureString } from '@/utils/common';
 import { Encoded, Encoding } from '@aeternity/aepp-sdk';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 
 // UI Components
@@ -20,7 +21,7 @@ import { AddressAvatarWithChainName } from '@/@components/Address/AddressAvatarW
 import TokenSummary from '@/features/bcl/components/TokenSummary';
 import VoteSubject from '@/features/dao/components/VoteSubject';
 import VotersTable from '@/features/dao/components/VotersTable';
-import TokenRanking from '@/features/trending/components/TokenRanking';
+import { TokenRanking } from '@/features/trending/components/TokenRanking';
 import TokenTradeCard from '@/features/trending/components/TokenTradeCard';
 import Spinner from '@/components/Spinner';
 
@@ -35,6 +36,7 @@ const DaoVoteDetailsContent = ({
   voteAddress,
   voteId,
 }: DaoVoteDetailsParams) => {
+  const { t } = useTranslation('dao');
   const { currentBlockHeight } = useAeSdk();
 
   ensureAddress(saleAddress, Encoding.ContractAddress);
@@ -113,7 +115,7 @@ const DaoVoteDetailsContent = ({
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Spinner className="w-20 h-20 mx-auto" />
-          <div className="text-white/80 mt-4">Loading...</div>
+          <div className="text-white/80 mt-4">{t('loading')}</div>
         </div>
       </div>
     );
@@ -130,7 +132,7 @@ const DaoVoteDetailsContent = ({
   }
 
   if (!token) {
-    return <div className="text-slate-400 p-4">Token not found</div>;
+    return <div className="text-slate-400 p-4">{t('tokenNotFound')}</div>;
   }
 
   return (
@@ -190,7 +192,7 @@ const DaoVoteDetailsContent = ({
                     {voteYesPercentage !== undefined && (
                       <div className="space-y-3">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-white/80">Vote Progress</span>
+                          <span className="text-sm font-medium text-white/80">{t('voteProgress')}</span>
                           <span className="text-sm text-white/60">
                             {Math.round(voteYesPercentage * 100)}
                             % Yes
@@ -219,13 +221,13 @@ const DaoVoteDetailsContent = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-white/60 font-medium min-w-[120px]">Proposed By:</span>
+                          <span className="text-white/60 font-medium min-w-[120px]">{t('proposedBy')}</span>
                           <AddressAvatarWithChainName address={voteState.author} variant="feed" />
                         </div>
 
                         {voteState?.create_height && (
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-white/60 font-medium min-w-[120px]">Created:</span>
+                            <span className="text-white/60 font-medium min-w-[120px]">{t('createdLabel')}</span>
                             <span className="text-white">{formatDate(voteState.create_height)}</span>
                           </div>
                         )}
@@ -233,7 +235,7 @@ const DaoVoteDetailsContent = ({
                         {voteState?.close_height && (
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-white/60 font-medium min-w-[120px]">
-                              {isOpen ? 'Closes:' : 'Closed:'}
+                              {isOpen ? t('closes') : t('closed')}
                             </span>
                             <span className="text-white">
                               {formatDate(voteState.close_height)}
@@ -266,7 +268,7 @@ const DaoVoteDetailsContent = ({
 
                         {userVoteOrLockedInfo && (
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-white/60 font-medium min-w-[120px]">Your Status:</span>
+                            <span className="text-white/60 font-medium min-w-[120px]">{t('yourStatus')}</span>
                             <span className="text-white/80 text-sm">{userVoteOrLockedInfo}</span>
                           </div>
                         )}
@@ -276,7 +278,7 @@ const DaoVoteDetailsContent = ({
                     {/* Description */}
                     {voteState?.metadata?.description && (
                       <div>
-                        <div className="text-white/60 font-medium mb-2">Description:</div>
+                        <div className="text-white/60 font-medium mb-2">{t('descriptionLabel')}</div>
                         <div className="text-white/80 bg-white/5 rounded-lg p-4 border border-white/10">
                           {voteState.metadata.description}
                         </div>
@@ -384,7 +386,7 @@ const DaoVoteDetailsContent = ({
                     {actionLoading && (
                       <div className="flex items-center justify-center py-4">
                         <Spinner className="w-6 h-6" />
-                        <span className="ml-3 text-white/60">Processing...</span>
+                        <span className="ml-3 text-white/60">{t('processing')}</span>
                       </div>
                     )}
                   </CardContent>
@@ -410,10 +412,11 @@ const DaoVoteDetailsContent = ({
 };
 
 const DaoVoteDetailsView = () => {
+  const { t } = useTranslation('dao');
   const { saleAddress, voteAddress, voteId } = useParams<DaoVoteDetailsParams>();
 
   if (!saleAddress || !voteAddress || !voteId) {
-    return <div className="text-red-400 p-4">Missing required parameters</div>;
+    return <div className="text-red-400 p-4">{t('missingRequiredParameters')}</div>;
   }
 
   return (

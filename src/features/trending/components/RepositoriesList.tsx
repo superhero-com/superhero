@@ -1,6 +1,7 @@
 import React, {
   useCallback, useState, useEffect, useMemo,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Decimal } from '@/libs/decimal';
 import { SuperheroApi } from '../../../api/backend';
@@ -67,6 +68,7 @@ function hasToken(repo: Repository): boolean {
 }
 
 const RepositoriesList = ({ className }: RepositoriesListProps) => {
+  const { t } = useTranslation('explore');
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [sortBy] = useState<'score' | 'source'>('score');
@@ -114,7 +116,7 @@ const RepositoriesList = ({ className }: RepositoriesListProps) => {
     <div className={cn('repositories-list ', className)}>
       {/* Header and Controls */}
       <div className="flex flex-col gap-4 mb-6">
-        <h2 className="text-xl font-bold text-white">Explore Trends</h2>
+        <h2 className="text-xl font-bold text-white">{t('exploreTrends')}</h2>
 
         {/* Search and Sort on single line */}
         <div className="flex items-center gap-3">
@@ -122,7 +124,7 @@ const RepositoriesList = ({ className }: RepositoriesListProps) => {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search trends..."
+              placeholder={t('searchTrendsPlaceholder')}
               className="bg-white/[0.02] text-white border border-white/10 backdrop-blur-[10px] rounded-xl placeholder:text-white/50 focus:outline-none focus:border-[#1161FE] transition-all duration-300 hover:bg-white/[0.05] h-10"
             />
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60">
@@ -175,8 +177,8 @@ const RepositoriesList = ({ className }: RepositoriesListProps) => {
       {/* No Results */}
       {!currentRepositoriesList.length && !isLoading && (
         <div className="bg-white/[0.02] border border-white/10 backdrop-blur-[20px] rounded-[24px] p-6 text-center text-white/80">
-          <h3 className="font-semibold mb-2 text-white">No repositories found</h3>
-          <p>Try adjusting your search terms or filters.</p>
+          <h3 className="font-semibold mb-2 text-white">{t('noRepositoriesFound')}</h3>
+          <p>{t('tryAdjustingSearch')}</p>
         </div>
       )}
 

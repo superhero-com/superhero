@@ -1,5 +1,6 @@
 import { TokenChip } from '@/components/TokenChip';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BridgeConstants } from '@/features/ae-eth-bridge/constants';
 import Spinner from '@/components/Spinner';
 import { ConnectWalletButton } from '../../../components/ConnectWalletButton';
@@ -11,6 +12,7 @@ import { usePool } from '../context/PoolProvider';
 import { useAddLiquidity } from '../hooks/useAddLiquidity';
 
 const RemoveLiquidityForm = () => {
+  const { t } = useTranslation('common');
   const { selectedPosition, clearSelection, onPositionUpdated } = usePool();
   const { activeAccount: address } = useAccount();
   const { slippagePct, deadlineMins } = useDex();
@@ -385,7 +387,7 @@ const RemoveLiquidityForm = () => {
               type="number"
               value={customAmount}
               onChange={(e) => setCustomAmount(e.target.value)}
-              placeholder="0.0"
+              placeholder={t('placeholders.amount')}
               max={lpAmount.toString()}
               className="w-full py-3 border-none bg-transparent text-white text-lg font-semibold outline-none"
             />

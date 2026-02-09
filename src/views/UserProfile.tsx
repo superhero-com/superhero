@@ -565,7 +565,7 @@ export default function UserProfile({
             className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
           >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
-              Owned Trends
+              {t('explore:ownedTrends')}
             </div>
             <div className="text-base md:text-lg font-bold text-white">
               {((ownedTokensResp as any)?.meta?.totalItems ?? (Array.isArray(aex9Balances) ? aex9Balances.length : 0)).toLocaleString()}
@@ -576,7 +576,7 @@ export default function UserProfile({
             className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
           >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
-              Created Trends
+              {t('explore:createdTrends')}
             </div>
             <div className="text-base md:text-lg font-bold text-white">
               {((createdTokensResp as any)?.meta?.totalItems ?? accountInfo?.total_created_tokens ?? 0).toLocaleString()}
@@ -587,7 +587,7 @@ export default function UserProfile({
             className="rounded-2xl bg-white/[0.03] border border-solid border-white/10 p-2 md:p-2.5 hover:bg-white/[0.05] transition-all cursor-pointer text-left w-full focus:outline-none"
           >
             <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/60 font-semibold mb-1">
-              Posts
+              {t('explore:posts')}
             </div>
             <div className="text-base md:text-lg font-bold text-white">
               {posts.length.toLocaleString()}
@@ -602,10 +602,10 @@ export default function UserProfile({
         <div>
           <div className="flex items-center justify-start gap-4 border-b border-white/15 w-screen -mx-[calc((100vw-100%)/2)] overflow-x-auto whitespace-nowrap md:w-full md:mx-0 md:overflow-visible md:gap-10">
             {([
-              { key: 'feed', label: 'Feed' },
-              { key: 'owned', label: 'Owned Trends' },
-              { key: 'created', label: 'Created Trends' },
-              { key: 'transactions', label: 'Transactions' },
+              { key: 'feed', label: t('explore:feed') },
+              { key: 'owned', label: t('explore:ownedTrends') },
+              { key: 'created', label: t('explore:createdTrends') },
+              { key: 'transactions', label: t('explore:transactions') },
             ] as const).map(({ key, label }) => (
               <button
                 key={key}

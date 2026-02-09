@@ -31,9 +31,9 @@ const ConnectEthereumWallet = ({
       });
     } catch (error: any) {
       Logger.error('Error opening AppKit:', error);
-      onError?.(error.message || 'Failed to open wallet connection');
+      onError?.(error.message || t('bridge.failedToOpenWallet'));
     }
-  }, [open, onError]);
+  }, [open, onError, t]);
 
   const handleDisconnect = useCallback(async () => {
     try {
@@ -42,9 +42,9 @@ const ConnectEthereumWallet = ({
       onDisconnected?.();
     } catch (error: any) {
       Logger.error('Error disconnecting wallet:', error);
-      onError?.(error.message || 'Failed to disconnect wallet');
+      onError?.(error.message || t('bridge.failedToDisconnect'));
     }
-  }, [disconnect, onDisconnected, onError]);
+  }, [disconnect, onDisconnected, onError, t]);
 
   // Watch for address changes and notify parent
   useEffect(() => {
